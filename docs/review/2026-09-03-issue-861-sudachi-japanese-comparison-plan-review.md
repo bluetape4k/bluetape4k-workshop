@@ -37,6 +37,19 @@ merge 승인은 별도 delivery gate다.
 | docs/CI | English/Korean README parity 0, 한국어 용어 audit 0, workflow YAML parse·shell syntax·diff check PASS, dictionary binary 미추적 |
 | static analysis | `:kotlin-text-processing:detekt`는 project에 등록되지 않은 task라 N/A; `tasks --all`에서 미등록을 확인하고 build/compile 검증으로 대체 |
 
+## Hosted CI ecosystem reuse 보정
+
+초기 PR head에서 hosted `Validate ecosystem reuse contract`가 신규 변경
+경로를 기존 고정 track에서 찾지 못해 fail-closed했다. 구현 범위를 넓히지
+않고 `docs/ecosystem-reuse-train.json`에 `issue-861-sudachi-japanese-comparison`
+child scope를 추가해 PR의 branch/base와 13개 변경 경로를 하나의 허용 범위에
+결속했다. coordinator receipt도
+`20260903T-issue-861-sudachi-japanese-comparison-scope`로 갱신하고 scope
+canonical SHA-256
+`4693182117c2c92f951599841254e3445f586152be0137fdf010a66e2f2e57c3`를
+기록했다. trusted `origin/develop` manifest를 사용한 로컬 checker 재검증은
+새 head에서 PASS를 확인한 뒤 hosted CI를 재실행한다.
+
 ## 구현 완료 및 delivery 조건
 
 1. 구현·로컬 검증은 완료했고, 새 P0/P1은 없다.

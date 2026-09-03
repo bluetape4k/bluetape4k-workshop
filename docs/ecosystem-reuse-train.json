@@ -629,11 +629,35 @@
         "graph/io-pipeline/**"
       ],
       "review_artifact": "docs/review/issue-860-graph-io-micrometer-review.md"
+    },
+    {
+      "scope_id": "issue-861-sudachi-japanese-comparison",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-861-sudachi-japanese-comparison",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [861],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-03-issue-861-sudachi-japanese-comparison.md",
+        "docs/review/2026-09-03-issue-861-sudachi-japanese-comparison-plan-review.md",
+        "docs/superpowers/plans/2026-09-03-issue-861-sudachi-japanese-comparison-plan.md",
+        "docs/superpowers/specs/2026-09-03-issue-861-sudachi-japanese-comparison-design.md",
+        "gradle/libs.versions.toml",
+        "kotlin/text-processing/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-09-03-issue-861-sudachi-japanese-comparison-plan-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260902T-issue-860-graph-io-micrometer-scope",
-    "checksum": "3a2af1dd2677a48d09bb86c72caded61dff25d63d89d34542a38dc052cca2f4b"
+    "receipt_id": "20260903T-issue-861-sudachi-japanese-comparison-scope",
+    "checksum": "4693182117c2c92f951599841254e3445f586152be0137fdf010a66e2f2e57c3"
   },
   "planned_scope_replan_receipts": {
   },
