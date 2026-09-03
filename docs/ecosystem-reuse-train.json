@@ -580,6 +580,30 @@
       "review_artifact": "docs/review/issue-872-s3-cse-transfer-implementation-review.md"
     },
     {
+      "scope_id": "issue-873-aws-sns-publish-batch",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-873-sns-publish-batch",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [873],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "aws/sqs-sns-coroutines/**",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-04-issue-873-sns-publish-batch.md",
+        "docs/review/2026-09-04-issue-873-sns-publish-batch.md",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-09-04-issue-873-sns-publish-batch.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
