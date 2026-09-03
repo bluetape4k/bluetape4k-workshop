@@ -24,6 +24,20 @@
   PostgreSQL benchmark에서 `postgres.registerDynamicProperties(registry)`를
   사용한다.
 
+### Step 2-R 검토 결과 반영
+
+- 성능·안정성 검토에서 확인된 P1은 smoke/container 테스트를 정확한
+  `--tests` selector로 분리하고, Docker 없는 경계를 Gradle task 수준에서
+  고정하는 것이다. 보안 검토에서는 차단 이슈가 없었다.
+- `RedisTestSupport.redis`는 `RedisServer.Launcher.redis` singleton을
+  초기화하므로 helper 객체 접근 자체가 container 시작을 유발할 수 있다.
+  따라서 Docker 없는 보장은 helper 등록 경계가 아니라 fake server를 직접
+  사용하는 bridge contract test에만 적용한다. bridge는 supplier 등록만
+  위임하며 container start/stop이나 JVM system property를 호출하지 않는다.
+- upstream `propertyKeys()`는 `Set`이고 bridge는 등록 순서를 계약으로
+  보장하지 않는다. 테스트는 순서가 아닌 key set과 등록 semantics를
+  검증한다.
+
 ## 선택지
 
 ### A. helper를 upstream bridge에 위임 (채택)
@@ -80,17 +94,29 @@ container 테스트로 남긴다.
    `PropertyExportingServer`와 recording registry로 다음을 Docker 없이 검증한다.
    - `propertyKeys()`의 full key mapping과 빈 key no-op
    - 등록 시 supplier 비평가와 반복 평가 시 최신 값 조회
+   - key set 순서와 무관한 등록 결과 및 key별 `properties()` 재평가
    - 누락 key의 `IllegalStateException`
    - `properties()` 예외의 타입·메시지 전달
    - 중복 등록을 registry 순서에 위임
    - system property를 변경하지 않음
-3. 기존 `RedisTestSupportTest`는 실제 Redis endpoint와 singleton lifecycle을
+3. `PropertyExportingServerDynamicPropertyRegistryContextTest`를 추가해 fake
+   server를 `@DynamicPropertySource`로 연결한 최소 Spring context에서
+   `testcontainers.<namespace>.*` 값이 실제 Environment/property binding에
+   노출되는지 Docker 없이 검증한다. 이 테스트는 helper singleton을 참조하지
+   않는다.
+4. 기존 `RedisTestSupportTest`는 실제 Redis endpoint와 singleton lifecycle을
    검증하는 container 경로로 유지한다. `RedisServer.Launcher.redis` 접근으로
-   singleton을 확보하는 동작은 유지하되, container start/stop을 bridge가
-   호출하지 않는다는 경계는 fake contract 테스트로 분리해 확인한다.
-4. smoke workflow에는 Docker 없는 bridge contract test만 선택 실행하고,
-   container workflow에는 실제 Redis helper 회귀 테스트를 선택 실행한다.
-   두 경로를 한 Gradle test invocation으로 섞지 않는다.
+   singleton을 확보하는 동작은 유지하되, helper 접근 시 container가 시작될
+   수 있다는 사실을 문서화한다. container start/stop을 bridge가 호출하지
+   않는다는 경계는 fake contract/context 테스트로 분리해 확인한다.
+5. smoke workflow에는 다음 Docker 없는 테스트만 별도 invocation으로
+   선택 실행한다.
+   `./gradlew :shared:test --tests '*PropertyExportingServerDynamicPropertyRegistryTest'`
+   및 `./gradlew :shared:test --tests '*PropertyExportingServerDynamicPropertyRegistryContextTest'`.
+   container workflow에는 `./gradlew :shared:test --tests '*RedisTestSupportTest'`
+   및 기존 `:spring-data-redis-examples:test` 경로를 실행한다. 두 경로를 한
+   Gradle test invocation으로 섞지 않는다. 동일 selector를
+   `scripts/smoke-validate.sh`의 smoke/data-access-full 명령에도 반영한다.
 
 ### README/KDoc
 
@@ -99,8 +125,12 @@ container 테스트로 남긴다.
 - `registerDynamicProperties` 사용 예와 `testcontainers.redis.*` key 목록
 - bridge가 supplier 평가만 연결하며 container start/stop, readiness, JVM
   system property를 소유하지 않는다는 lifecycle 경계
+- `RedisTestSupport.redis` singleton 접근은 container 시작을 유발할 수
+  있으므로 helper 자체는 Docker-free API가 아니라는 제한
 - `shared` compile-only와 Redis 소비자 test runtime dependency ownership
 - Docker-free contract test와 Docker-required endpoint test의 실행 구분
+- supplier는 등록 시 평가되지 않지만 key마다 `properties()`를 반복 호출하며,
+  `propertyKeys()` Set의 iteration 순서와 등록 순서는 계약이 아니라는 제한
 
 영문·한국어 README는 구조, 코드, key, 명령, 경계 설명을 동등하게 유지한다.
 
@@ -113,11 +143,14 @@ container 테스트로 남긴다.
 | bridge 누락으로 Redis consumer runtime에서 `NoClassDefFoundError` 발생 | Redis example targeted test 실패 | 해당 소비자에만 `testImplementation` bridge를 추가하고 dependency insight로 runtime classpath를 확인한다. |
 | endpoint key 또는 값이 바뀌어 Spring context가 뜨지 않음 | Redis helper 회귀 테스트와 context test 실패 | `RedisServer.propertyKeys/properties` 계약과 기존 key를 비교하고 변경을 되돌린다. |
 | bridge가 system property/lifecycle을 오염시킴 | fake contract 및 before/after system property 검사 | bridge가 registry만 호출하는지 확인하고 start/stop 코드를 추가하지 않는다. |
+| Docker 없는 selector가 helper singleton을 초기화함 | smoke에서 Docker daemon 오류 또는 context test가 Redis를 참조함 | fake server/context test selector에서 `RedisTestSupport`를 제외하고 container test를 별도 실행한다. |
 
 ## 호환성과 범위
 
 - 기존 `RedisTestSupport.registerRedisProperties(registry)` 호출 시그니처와
   세 가지 property key를 유지한다.
+- helper singleton 접근 시 container가 시작될 수 있다는 기존 lifecycle은
+  유지하며, bridge의 supplier 지연성은 fake server contract에 한정한다.
 - bridge 자체 구현, Spring Boot auto-configuration, container 자동
   start/stop, 모든 workshop 모듈 migration은 범위에서 제외한다.
 - non-Spring 테스트에는 bridge를 추가하지 않으며, shared 의존성을 사용하지
@@ -130,10 +163,14 @@ container 테스트로 남긴다.
 - root BOM만으로 versionless bridge alias가 `2.0.0`으로 해석된다.
 - 기존 Redis key와 singleton lifecycle이 유지되고, helper 회귀 테스트가
   통과한다.
-- Docker 없는 contract test가 lazy/예외/중복/system property 경계를 증명한다.
-- smoke와 container workflow가 각 테스트 경로를 분리한다.
+- Docker 없는 contract/context test가 lazy/예외/중복/system property 및
+  실제 Spring Environment 노출 경계를 증명한다.
+- smoke와 container workflow가 위의 정확한 `--tests` selector로 각 테스트
+  경로를 분리하고, `scripts/smoke-validate.sh`에도 동일하게 반영한다.
 - 한·영 README와 KDoc이 실제 API·의존성 경계를 설명한다.
-- `./gradlew :shared:test` 및
+- `./gradlew :shared:test --tests '*PropertyExportingServerDynamicPropertyRegistryTest'`,
+  `./gradlew :shared:test --tests '*PropertyExportingServerDynamicPropertyRegistryContextTest'`,
+  `./gradlew :shared:test --tests '*RedisTestSupportTest'` 및
   `./gradlew :spring-data-redis-examples:test`의 필요한 targeted test,
   dependency insight, `git diff --check`가 통과한다.
 - PR 제목·본문과 Issue #862의 milestone/labels 정책을 `2.0.0`으로 유지한다.
