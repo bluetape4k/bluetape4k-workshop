@@ -2,6 +2,10 @@ plugins {
     `java-test-fixtures`
 }
 
+tasks.withType<Test>().configureEach {
+    systemProperty("bluetape4k.workshop.shared.projectDir", projectDir.absolutePath)
+}
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
