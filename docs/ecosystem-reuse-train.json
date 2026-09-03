@@ -805,8 +805,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-875-aws-dynamodb-streams-scope",
-    "checksum": "63a7ea8dba29881b39f30dac89de2f5ba5e4e0fc9c876c6947912459b901de3b"
+    "receipt_id": "20260904T-issue-876-aws-modulith-externalization-scope",
+    "checksum": "c1e78395e0463b48055d65ff3992324144cfdd5ff15c2c430e337f60fc046f74"
   },
   "planned_scope_replan_receipts": {
   },
