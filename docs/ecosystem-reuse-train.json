@@ -771,8 +771,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-874-aws-sqs-observation-scope",
-    "checksum": "90c568648432c2614300eafcec2119cf0a9544dc74c1ae8b27206970b258bb8a"
+    "receipt_id": "20260904T-issue-875-aws-dynamodb-streams-scope",
+    "checksum": "63a7ea8dba29881b39f30dac89de2f5ba5e4e0fc9c876c6947912459b901de3b"
   },
   "planned_scope_replan_receipts": {
   },
