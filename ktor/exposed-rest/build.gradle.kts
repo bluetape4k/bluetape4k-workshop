@@ -26,7 +26,8 @@ dependencies {
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.ktor.core)
-    implementation(libs.exposed.ktor)
+    implementation(libs.exposed.ktor.core)
+    implementation(libs.exposed.ktor.jdbc)
     implementation(libs.exposed.jdbc)
 
     implementation(libs.jetbrains.exposed.core)

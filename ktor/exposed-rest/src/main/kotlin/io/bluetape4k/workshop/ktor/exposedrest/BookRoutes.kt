@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.ktor.exposedrest
 
-import io.bluetape4k.exposed.ktor.exposedJdbcTransaction
+import io.bluetape4k.exposed.ktor.jdbc.exposedJdbcTransaction
 import io.bluetape4k.ktor.core.respondApiError
 import io.bluetape4k.support.requireNotNull
 import io.ktor.http.HttpStatusCode

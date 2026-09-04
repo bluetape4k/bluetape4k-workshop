@@ -94,7 +94,6 @@ class KtorExposedRestApplicationTest {
                 status = HttpStatusCode.InternalServerError,
                 error = "EXPOSED_TRANSACTION_FAILED",
                 message = "Exposed transaction failed",
-                path = "/api/books/rollback",
             )
         )
         response.bodyAsText() shouldNotContain "Rollback Candidate"
@@ -122,7 +121,6 @@ class KtorExposedRestApplicationTest {
                 status = HttpStatusCode.ServiceUnavailable,
                 error = "EXPOSED_DATABASE_UNAVAILABLE",
                 message = "Exposed database operation failed",
-                path = "/api/failures/sql",
             )
         )
 
