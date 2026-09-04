@@ -12,6 +12,11 @@ workshop:
     moderation-timeout: 3s
     decision-delay: 1s
     rejected-filename-marker: reject
+    privacy:
+      strip-metadata: true
+      remove-gps: true
+      normalize-orientation: true
+      max-metadata-bytes: 5242880
 
 bluetape4k:
   images:

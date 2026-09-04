@@ -953,6 +953,46 @@
       "review_artifact": "docs/superpowers/specs/2026-09-04-issue-884-tiff-multipage-ocr-implementation-review.md"
     },
     {
+      "scope_id": "issue-885-privacy-derivative",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-885-privacy-derivative",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [883, 884, 885],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-04-issue-883-image-storage-metadata.md",
+        "docs/lessons/2026-09-04-issue-884-tiff-multipage-ocr.md",
+        "docs/lessons/2026-09-04-issue-885-privacy-derivative.md",
+        "docs/superpowers/plans/2026-09-04-issue-883-image-storage-metadata-plan.md",
+        "docs/superpowers/plans/2026-09-04-issue-884-tiff-multipage-ocr-plan.md",
+        "docs/superpowers/plans/2026-09-04-issue-885-privacy-derivative-plan.md",
+        "docs/superpowers/specs/2026-09-04-issue-883-image-storage-metadata-design.md",
+        "docs/superpowers/specs/2026-09-04-issue-883-image-storage-metadata-implementation-review.md",
+        "docs/superpowers/specs/2026-09-04-issue-883-image-storage-metadata-review.md",
+        "docs/superpowers/specs/2026-09-04-issue-884-tiff-multipage-ocr-design.md",
+        "docs/superpowers/specs/2026-09-04-issue-884-tiff-multipage-ocr-implementation-review.md",
+        "docs/superpowers/specs/2026-09-04-issue-884-tiff-multipage-ocr-review.md",
+        "docs/superpowers/specs/2026-09-04-issue-885-privacy-derivative-design.md",
+        "docs/superpowers/specs/2026-09-04-issue-885-privacy-derivative-implementation-review.md",
+        "docs/superpowers/specs/2026-09-04-issue-885-privacy-derivative-review.md",
+        "image-processing/advanced-workflow/**",
+        "image-processing/ocr-api/**",
+        "image-processing/profile-image-moderation/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/superpowers/specs/2026-09-04-issue-885-privacy-derivative-implementation-review.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -1062,8 +1102,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-884-tiff-multipage-ocr-scope",
-    "checksum": "c2204ae18ef4ac9bd79b208df78273cec438b18eb730e81e042e9179848b94a6"
+    "receipt_id": "20260905T-issue-885-privacy-derivative-scope",
+    "checksum": "e22a60cbf72f97a695cbd19fb036e45278a26d8f6978521f2a6eba327211d15e"
   },
   "planned_scope_replan_receipts": {
   },

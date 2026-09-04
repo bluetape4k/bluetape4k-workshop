@@ -3,6 +3,9 @@ package io.bluetape4k.workshop.imageprocessing.profile.service
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.images.analysis.ImageMetadataReadOptions
+import io.bluetape4k.images.analysis.ImageMetadataReadResult
+import io.bluetape4k.images.analysis.readImageMetadataReportStrict
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProfileImageStatus
 import kotlinx.coroutines.delay
@@ -27,6 +30,27 @@ class ProfileImageServiceTest {
             "profile-images/user-1/upload-a/pending/blurred.jpg",
             "profile-images/user-1/upload-a/public/approved.jpg",
         )
+    }
+
+    @Test
+    fun upload_keeps_private_original_bytes_and_publishes_verified_derivatives() = runSuspendIO {
+        val fixture = ProfileImageServiceFixture()
+        val original = fixture.sampleJpeg()
+
+        fixture.service.upload("user-1", MockMultipartFile("file", "safe.jpg", "image/jpeg", original))
+
+        fixture.storage.uploads.first().bytes.contentEquals(original) shouldBeEqualTo true
+        fixture.storage.uploads.drop(1).forEach { upload ->
+            val report = readImageMetadataReportStrict(
+                upload.bytes,
+                ImageMetadataReadOptions(stripSensitiveMetadata = false),
+            ) as ImageMetadataReadResult.Success
+            report.report.containsGps shouldBeEqualTo false
+            report.report.containsExif shouldBeEqualTo false
+            report.report.containsXmp shouldBeEqualTo false
+            report.report.containsIptc shouldBeEqualTo false
+            report.report.containsIccProfile shouldBeEqualTo false
+        }
     }
 
     @Test

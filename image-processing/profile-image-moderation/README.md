@@ -23,6 +23,7 @@ This example demonstrates a production-shaped profile image flow:
 | Moderation policy | profile content policy adapter | `ProfileImageModerationPolicyProvider` |
 | Metrics | low-cardinality Micrometer counters/timers | `ProfileImageMetrics` |
 | ID generation | Base58 upload ids | `ProfileImageService` |
+| Privacy derivatives | strict metadata/GPS removal, orientation normalization, and redaction reports | `ProfileImageProcessor`, `PrivacyDerivativePipeline` |
 
 ## API
 
@@ -95,6 +96,29 @@ Invalid uploads return RFC 9457 ProblemDetail JSON:
 }
 ```
 
+## Privacy-safe Derivatives
+
+Both the pending blurred JPEG and the approved public JPEG are re-encoded through the
+bluetape4k-images `2.0.0` `PrivacyDerivativePipeline`. The default policy strips EXIF, GPS, XMP, IPTC, and ICC
+metadata, normalizes EXIF orientation, and strictly re-reads the output before storage.
+The consumer adapter is `ProfileImageProcessor.processPrivacySafe`.
+The bounded `PrivacyDerivativeReport` records requested/remaining categories and applied
+redaction geometry without raw metadata or image bytes. A metadata reader failure or a
+remaining category fails closed, so no public derivative is uploaded; the private original
+and moderation state machine are unchanged.
+
+The policy can be tuned without changing the example's storage contract:
+
+```yaml
+workshop:
+  profile-image-moderation:
+    privacy:
+      strip-metadata: true
+      remove-gps: true
+      normalize-orientation: true
+      max-metadata-bytes: 5242880
+```
+
 ## Privacy and Storage Boundaries
 
 - `private/original/*` keys are never returned as effective URLs and the local public controller returns `404` for private paths.
@@ -128,4 +152,4 @@ Local storage defaults to `${java.io.tmpdir}/bluetape4k-profile-images`. Remove 
 ./gradlew :image-processing-profile-image-moderation:test
 ```
 
-The tests cover pending/approved/rejected/failed/no-image states, stale moderation completion, private URL denial, cleanup after storage failure, JPEG derivative signatures, no-store pending responses, and low-cardinality metrics.
+The tests cover pending/approved/rejected/failed/no-image states, stale moderation completion, private URL denial, cleanup after storage failure, strict privacy metadata verification, orientation/redaction report geometry, source-reader fail-closed handling, JPEG derivative signatures, no-store pending responses, and low-cardinality metrics.

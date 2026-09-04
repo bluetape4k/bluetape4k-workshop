@@ -48,7 +48,7 @@ class ProfileImageService(
                 validator.validateDeclaredSize(file.size)
                 val bytes = file.bytes
                 val uploadOptions = validator.validate(file.contentType, bytes)
-                val processed = processor.process(bytes)
+                val processed = processor.processPrivacySafe(bytes)
                 val uploadId = uploadIdGenerator()
                 val keys = keyFactory.keys(userId, uploadId, file.originalFilename)
 
