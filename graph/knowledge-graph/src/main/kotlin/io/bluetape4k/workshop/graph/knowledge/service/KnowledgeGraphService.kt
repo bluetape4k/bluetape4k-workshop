@@ -8,6 +8,10 @@ import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.repository.requireEndpoint
+import io.bluetape4k.graph.schema.GraphSchemaPlan
+import io.bluetape4k.graph.schema.GraphSchemaPlanOptions
+import io.bluetape4k.graph.schema.plan
+import io.bluetape4k.graph.schema.schemaManager
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.requireInRange
@@ -16,6 +20,7 @@ import io.bluetape4k.workshop.graph.knowledge.schema.ConceptLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.DocumentLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.EntityLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.IsALabel
+import io.bluetape4k.workshop.graph.knowledge.schema.KnowledgeGraphSchema
 import io.bluetape4k.workshop.graph.knowledge.schema.MentionsLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.RelatedToLabel
 
@@ -26,7 +31,8 @@ import io.bluetape4k.workshop.graph.knowledge.schema.RelatedToLabel
  * 문서 mention을 통한 Entity 조회, 의미 관계 순회, 제한된 path 추론을 보여줍니다.
  *
  * ## 동작 / 계약
- * - named graph가 존재하도록 다른 메서드보다 먼저 [initialize]를 한 번 호출해야 합니다.
+ * - [initialize]는 기본 dry-run schema plan을 먼저 계산하고 named graph를 준비합니다.
+ *   schema plan이 실패하면 graph/seed 쓰기 전에 예외를 전달합니다.
  * - [addEntity], [addConcept], [addDocument]는 멱등이 아닙니다. 호출할 때마다 새 정점을 만듭니다.
  * - [mention]은 Document에서 Entity로 향하는 `MENTIONS` 방향성 간선을 만듭니다.
  * - [relateEntities]는 한 Entity에서 다른 Entity로 향하는 `RELATED_TO` 방향성 간선을 만듭니다.
@@ -58,14 +64,25 @@ class KnowledgeGraphService(
     }
 
     /**
-     * backing graph가 아직 없으면 생성합니다.
+     * schema plan을 먼저 계산한 뒤 backing graph가 아직 없으면 생성합니다.
+     *
+     * 반환된 plan은 자동 적용되지 않습니다. 기존 호출부는 반환 값을 무시해도 됩니다.
      */
-    fun initialize() {
+    fun initialize(options: GraphSchemaPlanOptions = GraphSchemaPlanOptions()): GraphSchemaPlan {
+        val plan = planSchema(options)
         if (!ops.graphExists(graphName)) {
             ops.createGraph(graphName)
             log.info { "Knowledge graph '$graphName' created" }
         }
+        return plan
     }
+
+    /**
+     * 현재 backend schema와 knowledge graph desired schema의 차이를 계산합니다.
+     * 기본값은 dry-run이며 index/constraint DDL을 실행하지 않습니다.
+     */
+    fun planSchema(options: GraphSchemaPlanOptions = GraphSchemaPlanOptions()): GraphSchemaPlan =
+        ops.schemaManager().plan(KnowledgeGraphSchema.desiredSchema(), options)
 
     /**
      * 그래프에 Entity 정점을 추가합니다.

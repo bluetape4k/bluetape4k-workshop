@@ -536,7 +536,7 @@ jobs:
       # - aws-storage-abstraction: Floci-backed S3 storage abstraction plus AES/RSA client-side encryption transfer path
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
       # - graph-recommendation: Neo4j/Memgraph-backed recommendation path
-      # - graph-knowledge-graph: Neo4j/Memgraph-backed knowledge graph path
+      # - graph-knowledge-graph: Neo4j/Memgraph-backed knowledge graph path and 2.0.0 schema drift planner conformance
       # - graph-social-network: Neo4j/Memgraph-backed social graph path and weighted maxDepth conformance
       # - spring-boot-cache-redis: Redis-backed cache path
       # - redis-redisson-examples: Redis-backed RLocalCachedMap numeric atomic update and cross-client invalidation path

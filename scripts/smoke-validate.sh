@@ -964,6 +964,36 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Graph knowledge schema-drift planner guard ==="
+    graph_knowledge_schema="graph/knowledge-graph/src/main/kotlin/io/bluetape4k/workshop/graph/knowledge/schema/KnowledgeGraphSchema.kt"
+    graph_knowledge_service="graph/knowledge-graph/src/main/kotlin/io/bluetape4k/workshop/graph/knowledge/service/KnowledgeGraphService.kt"
+    graph_knowledge_suspend_service="graph/knowledge-graph/src/main/kotlin/io/bluetape4k/workshop/graph/knowledge/service/KnowledgeGraphSuspendService.kt"
+    graph_knowledge_tests="graph/knowledge-graph/src/test/kotlin/io/bluetape4k/workshop/graph/knowledge"
+    graph_knowledge_readme="graph/knowledge-graph/README.md"
+    graph_knowledge_readme_ko="graph/knowledge-graph/README.ko.md"
+    graph_knowledge_lesson="docs/lessons/2026-09-05-issue-887-knowledge-schema-drift.md"
+    graph_knowledge_review="docs/superpowers/specs/2026-09-05-issue-887-knowledge-schema-drift-implementation-review.md"
+    if contains_pattern 'object KnowledgeGraphSchema' "$graph_knowledge_schema" && \
+       contains_pattern 'desiredSchema' "$graph_knowledge_schema" "$graph_knowledge_service" "$graph_knowledge_suspend_service" "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" && \
+       contains_pattern 'planSchema' "$graph_knowledge_service" "$graph_knowledge_suspend_service" "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" && \
+       contains_pattern 'GraphSchemaPlanOptions' "$graph_knowledge_service" "$graph_knowledge_suspend_service" "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" && \
+       contains_pattern 'GraphSchemaPlanAction|UNSUPPORTED' "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" && \
+       contains_pattern 'deterministic|결정적' "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_review" && \
+       contains_pattern 'before graph creation|graph 생성과|plan-first ordering' "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_review" && \
+       contains_pattern ':graph-knowledge-graph:test' README.md README.ko.md && \
+       contains_pattern '#887' docs/coverage-matrix.md docs/lessons/README.md "$graph_knowledge_lesson" && \
+       contains_pattern 'graph/knowledge-graph' .github/workflows/Examples.yml && \
+       contains_pattern '2\.0\.0' "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_lesson" "$graph_knowledge_review" && \
+       contains_pattern '"issue_numbers": \[883, 884, 885, 886, 887\]' docs/ecosystem-reuse-train.json && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$graph_knowledge_schema" "$graph_knowledge_service" "$graph_knowledge_suspend_service" "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_lesson" "$graph_knowledge_review" && \
+       [ -f "$graph_knowledge_lesson" ] && [ -f "$graph_knowledge_review" ]; then
+      echo "Graph knowledge schema-drift planner example and lesson are registered."
+    else
+      echo "ERROR: Graph knowledge schema-drift planner contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

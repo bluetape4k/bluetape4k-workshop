@@ -31,6 +31,8 @@ It shows how to:
 - Classify entities under vocabulary concepts (`IS_A` edges)
 - Traverse the graph at configurable hop depth
 - Infer association paths between distant entities with a bounded depth/count limit
+- Declare Entity/Concept/Document keys and plan schema drift with the 2.0.0
+  `GraphSchemaDriftPlanner` contract (dry-run by default)
 - Run the same service logic against multiple graph backends (TinkerGraph, Neo4j, Memgraph)
 
 ## Domain Model
@@ -91,16 +93,48 @@ val concepts = service.findConceptsForEntity(kotlin.id)
 val paths = service.inferRelationshipPaths(kotlin.id, spring.id, maxDepth = 3, maxPaths = 5)
 ```
 
+### Schema drift planning
+
+`initialize()` plans the desired schema before creating the graph and returns a
+`GraphSchemaPlan`. Planning is read-only by default, so it is safe to run before seed
+writes. Entity, Concept, and Document domain keys each receive a lookup index and a
+unique-constraint plan.
+
+```kotlin
+val plan = service.initialize()
+check(plan.options.dryRun)
+println(plan.items.map { it.action })
+
+// Only an explicitly approved caller may apply DDL:
+val approved = service.planSchema(
+    GraphSchemaPlanOptions(dryRun = false, allowDestructiveDrops = true),
+)
+val report = approved.apply(ops.schemaManager())
+check(report.unsupported.isEmpty() || report.unsupported.all { it.action == GraphSchemaPlanAction.UNSUPPORTED })
+```
+
+The destructive option is never applied by the service automatically. TinkerGraph
+reports unique-constraint creation as `UNSUPPORTED`; Neo4j and Memgraph expose their
+backend capability through the same plan/report model. A schema planning failure is
+raised before graph creation and before any seed data write.
+
+`KnowledgeGraphSchema.desiredSchema()` is deterministic, so the same live metadata and
+desired definition produce the same plan ordering across repeated calls.
+
 ### Coroutine variant
 
 ```kotlin
 val service = KnowledgeGraphSuspendService(ops, "knowledge_graph")
-service.initialize()
+val plan = service.initialize() // dry-run schema plan; no DDL mutation
 
 val mentioned: Flow<GraphVertex> = service.findMentionedEntities(paper.id)
 val related: Flow<GraphVertex> = service.findRelatedEntities(kotlin.id, depth = 2)
 val paths: Flow<GraphPath> = service.inferRelationshipPaths(kotlin.id, spring.id)
 ```
+
+The suspend service also exposes `planSchema()` and reads backend schema metadata through
+the coroutine schema capability without `runBlocking`. The desired schema and the
+default dry-run contract are identical to the blocking service.
 
 ## Supported Backends
 
@@ -131,6 +165,9 @@ dependencies {
     compileOnly(libs.bluetape4k.graph.memgraph)
 }
 ```
+
+The repository root imports `platform(libs.bluetape4k.dependencies)`; these graph aliases
+are intentionally versionless and resolve against the workshop's `2.0.0` BOM.
 
 ## See Also
 

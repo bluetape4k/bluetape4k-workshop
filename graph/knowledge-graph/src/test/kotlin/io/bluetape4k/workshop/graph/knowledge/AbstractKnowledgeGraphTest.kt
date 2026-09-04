@@ -6,9 +6,11 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.graph.schema.schemaManager
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.graph.knowledge.seed.KnowledgeGraphSeed
 import io.bluetape4k.workshop.graph.knowledge.seed.seedKnowledgeGraph
+import io.bluetape4k.workshop.graph.knowledge.schema.KnowledgeGraphSchema
 import io.bluetape4k.workshop.graph.knowledge.service.KnowledgeGraphService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -291,5 +293,22 @@ abstract class AbstractKnowledgeGraphTest {
         assertFailsWith<IllegalArgumentException> {
             service.inferRelationshipPaths(seed.entityKotlin.id, seed.entitySpring.id, maxPaths = 0)
         }
+    }
+
+    @Test
+    fun `planSchema is deterministic and does not mutate live schema`() {
+        val manager = ops.schemaManager()
+        val indexesBefore = manager.listIndexes()
+        val constraintsBefore = manager.listConstraints()
+
+        val first = service.planSchema()
+        val second = service.planSchema()
+
+        first shouldBeEqualTo second
+        first.options.dryRun shouldBeEqualTo true
+        KnowledgeGraphSchema.desiredSchema().indexes.size shouldBeEqualTo 3
+        KnowledgeGraphSchema.desiredSchema().constraints.size shouldBeEqualTo 3
+        manager.listIndexes() shouldBeEqualTo indexesBefore
+        manager.listConstraints() shouldBeEqualTo constraintsBefore
     }
 }

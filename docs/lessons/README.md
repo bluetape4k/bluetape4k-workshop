@@ -6,6 +6,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #882 Spring Data Exposed QBE/FluentQuery](2026-09-04-issue-882-spring-data-qbe.md)
 - [Issue #885 Profile image privacy-safe derivative](2026-09-04-issue-885-privacy-derivative.md)
 - [Issue #886 Social Network weighted shortest path](2026-09-05-issue-886-social-weighted-path.md)
+- [Issue #887 Knowledge Graph schema drift planner](2026-09-05-issue-887-knowledge-schema-drift.md)
 
 Use this structure for each lesson:
 
