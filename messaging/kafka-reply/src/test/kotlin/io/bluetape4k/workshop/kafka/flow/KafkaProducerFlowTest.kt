@@ -189,7 +189,7 @@ class KafkaProducerFlowTest {
         }
 
         observed.message shouldBeEqualTo flushFailure.message
-        (observed === flushFailure || observed.cause === flushFailure).shouldBeTrue()
+        observed.assertIdentityOrEquivalentCause(flushFailure)
         tracking.flushCount.get() shouldBeEqualTo 1
         tracking.closeCount.get() shouldBeEqualTo 1
     }
@@ -238,6 +238,23 @@ class KafkaProducerFlowTest {
 
     private fun record(value: String): ProducerRecord<String, String> =
         ProducerRecord("callback-flow-test", "key", value)
+
+    /**
+     * 코루틴 suspend 경계가 같은 예외를 복구하며 복사할 수 있으므로 identity 또는
+     * 동일한 type/message의 cause가 전달되었는지 확인합니다.
+     */
+    private fun Throwable.assertIdentityOrEquivalentCause(expected: Throwable) {
+        var current: Throwable? = this
+        repeat(MAX_CAUSE_DEPTH) {
+            current?.let { candidate ->
+                if (candidate === expected ||
+                    (candidate::class == expected::class && candidate.message == expected.message)
+                ) return
+            }
+            current = current?.cause
+        }
+        error("Expected ${expected::class.simpleName} cause '${expected.message}' in the exception chain")
+    }
 
     private class TrackingProducer(
         private val callbackError: Exception? = null,
@@ -311,5 +328,9 @@ class KafkaProducerFlowTest {
             callback.onCompletion(metadata, null)
             future.complete(metadata)
         }
+    }
+
+    private companion object {
+        private const val MAX_CAUSE_DEPTH = 8
     }
 }
