@@ -17,7 +17,8 @@ the local storage backend for development.
 
 The controller delegates all upload work to `ImageDerivativeWorkflowService`. The workflow service
 coordinates validation, libvips derivative processing, object-key generation, `ImageStorage`
-uploads, public URL resolution, Micrometer metrics, and Exposed-backed persistence.
+uploads, optional object-metadata snapshots, public URL resolution, Micrometer metrics, and
+Exposed-backed persistence.
 
 ## Processing Flow
 
@@ -45,6 +46,7 @@ The workflow is a small saga:
 | Validation helpers | `bluetape4k-core` support helpers | `ImageProcessingAdvancedProperties`, `PublicImageUrlResolver`, `FfmVipsDerivativeProcessor` | Keeps configuration, URL, and pixel-limit guards consistent with bluetape4k caller validation |
 | Upload validation | `UploadOptions` | `UploadImageValidator` | Enforces a bounded image content-type allowlist plus magic-byte checks |
 | Storage health/metrics | `images-spring-boot` health and metrics auto-config | Actuator endpoints | Storage reachability and upload/download timing without custom wrappers |
+| Object metadata capability | `ImageObjectMetadataReader` | `ImageDerivativeWorkflowService` | Snapshot size/content type/ETag/modified time without downloading the body; explicit upload-result fallback for unsupported backends |
 | Workflow metrics | Micrometer + `bluetape4k-micrometer` ecosystem | `ImageDerivativeWorkflowService` | Low-cardinality upload, duration, failure, and variant counters |
 
 ## Prerequisites
@@ -133,6 +135,27 @@ workshop:
 ```
 
 Unsigned URLs require bucket/CDN policy and object ownership settings that allow public reads. For private or user-sensitive images, use `S3PreSignedUrlSigner` or `CloudFrontUrlSigner` instead of this public URL resolver.
+
+## Object metadata boundary
+
+To preserve compatibility with existing `ImageStorage` implementations, metadata is discovered as
+the optional `ImageObjectMetadataReader` capability rather than a required method. Local/S3
+backends provide one `stat`/`HEAD` snapshot after each upload; the workflow validates and persists
+the snapshot size and content type. ETag and modified time remain opaque values and are recorded in
+the upload event payload. When a backend does not expose the capability, the workflow uses the
+upload result and records `metadataCapability=false`. A reader error or key/size mismatch cleans up
+already-uploaded objects and fails the job, so a replacement race cannot look successful.
+
+```kotlin
+val metadataReader = storage as? ImageObjectMetadataReader
+val metadata = metadataReader?.readMetadata(key)
+val sizeBytes = metadata?.sizeBytes ?: uploadResult.sizeBytes
+val contentType = metadata?.contentType ?: uploadResult.contentType
+```
+
+The boundary never calls `download`, so a large original is not materialized again. When metrics
+wrapping is enabled, use `MetricImageStorageWithMetadata` to preserve the capability; a backend
+without the capability must not be advertised as metadata-capable.
 
 ## Before / After
 

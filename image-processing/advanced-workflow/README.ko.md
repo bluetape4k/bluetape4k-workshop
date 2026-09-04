@@ -17,7 +17,7 @@ bucket을 사용하고, 개발 중에는 local storage backend를 사용하면 �
 
 Controller는 업로드 작업 전체를 `ImageDerivativeWorkflowService`에 위임합니다. Workflow
 service는 검증, libvips 파생 이미지 생성, object key 생성, `ImageStorage` 업로드, public
-URL 해석, Micrometer metric, Exposed 기반 persistence를 조율합니다.
+URL 해석, 선택적 object metadata 기준 정보, Micrometer metric, Exposed 기반 persistence를 조율합니다.
 
 ## 처리 시퀀스
 
@@ -45,6 +45,7 @@ URL 해석, Micrometer metric, Exposed 기반 persistence를 조율합니다.
 | Validation helper | `bluetape4k-core` support helper | `ImageProcessingAdvancedProperties`, `PublicImageUrlResolver`, `FfmVipsDerivativeProcessor` | 설정, URL, pixel limit guard를 bluetape4k caller validation 방식으로 통일 |
 | 업로드 검증 | `UploadOptions` | `UploadImageValidator` | 제한된 image content-type allowlist와 magic-byte 검사 적용 |
 | 저장소 health/metrics | `images-spring-boot` health/metrics auto-config | Actuator endpoints | 별도 wrapper 없이 저장소 상태와 upload/download timing 확인 |
+| Object metadata capability | `ImageObjectMetadataReader` | `ImageDerivativeWorkflowService` | body를 다운로드하지 않고 size/content type/ETag/수정 시각을 기준 정보로 읽고, 미지원 backend는 upload 결과로 명시적으로 fallback |
 | Workflow metrics | Micrometer + `bluetape4k-micrometer` ecosystem | `ImageDerivativeWorkflowService` | 낮은 cardinality의 upload, duration, failure, variant counter |
 
 ## 사전 준비
@@ -133,6 +134,27 @@ workshop:
 ```
 
 Unsigned URL은 bucket/CDN policy와 object ownership 설정이 public read를 허용해야 합니다. 비공개 이미지나 사용자 민감 이미지는 이 public URL resolver 대신 `S3PreSignedUrlSigner` 또는 `CloudFrontUrlSigner`를 사용하세요.
+
+## Object metadata 경계
+
+`ImageStorage`의 기존 구현체 호환성을 유지하기 위해 metadata는 필수 메서드가 아닌
+`ImageObjectMetadataReader` capability로 탐색합니다. capability를 제공하는 Local/S3
+backend에서는 업로드 직후 한 번의 `stat`/`HEAD` 기준 정보를 읽어 영속화할 size와 content
+type을 검증합니다. ETag과 수정 시각은 opaque 값으로 upload event payload에 기록하며,
+backend가 capability를 제공하지 않으면 upload 결과를 사용하고 `metadataCapability=false`를
+기록합니다. metadata key/size가 upload 결과와 불일치하거나 reader가 오류를 반환하면
+이미 업로드한 object를 정리하고 job을 실패시켜 교체 경합을 성공으로 숨기지 않습니다.
+
+```kotlin
+val metadataReader = storage as? ImageObjectMetadataReader
+val metadata = metadataReader?.readMetadata(key)
+val sizeBytes = metadata?.sizeBytes ?: uploadResult.sizeBytes
+val contentType = metadata?.contentType ?: uploadResult.contentType
+```
+
+이 경계는 `download`를 호출하지 않으므로 큰 원본을 다시 materialize하지 않습니다. metrics
+decorator를 사용할 때는 `MetricImageStorageWithMetadata`를 통해 capability를 보존해야
+하며, capability가 없는 구현체에 metadata를 지원한다고 표시해서는 안 됩니다.
 
 ## Before / After
 

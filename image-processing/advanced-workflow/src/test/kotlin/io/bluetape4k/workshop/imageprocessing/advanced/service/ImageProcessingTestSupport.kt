@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageVariantProperties
@@ -65,6 +67,7 @@ internal class RecordingImageStorage(
 
     val uploads = mutableListOf<RecordedUpload>()
     val deletes = mutableListOf<ImageObjectKey>()
+    val downloads = mutableListOf<ImageObjectKey>()
 
     override suspend fun upload(
         key: ImageObjectKey,
@@ -91,9 +94,14 @@ internal class RecordingImageStorage(
     ): ImageUploadResult =
         upload(key, source.toFile().readBytes(), options)
 
-    override suspend fun download(key: ImageObjectKey): ByteArray = ByteArray(0)
+    override suspend fun download(key: ImageObjectKey): ByteArray {
+        downloads += key
+        return ByteArray(0)
+    }
 
-    override suspend fun download(key: ImageObjectKey, destination: Path) = Unit
+    override suspend fun download(key: ImageObjectKey, destination: Path) {
+        downloads += key
+    }
 
     override suspend fun delete(key: ImageObjectKey) {
         deletes += key
@@ -102,6 +110,53 @@ internal class RecordingImageStorage(
     override suspend fun exists(key: ImageObjectKey): Boolean = uploads.any { it.key == key }
 
     override fun list(prefix: ImageObjectKey): Flow<ImageObjectKey> = emptyFlow()
+}
+
+internal data class RecordedEvent(
+    val step: ImageProcessingStep,
+    val status: ImageProcessingEventStatus,
+    val message: String,
+    val payload: Map<String, Any?>,
+)
+
+/** 선택적 metadata capability를 검증하기 위한 in-memory storage입니다. */
+internal class RecordingMetadataImageStorage(
+    private val delegate: RecordingImageStorage = RecordingImageStorage(),
+    private val failOnMetadataKeyPart: String? = null,
+    private val metadataFn: (ImageObjectKey, RecordedUpload) -> ImageObjectMetadata = { key, upload ->
+        ImageObjectMetadata(
+            key = key,
+            sizeBytes = upload.bytes.size.toLong(),
+            etag = "\"opaque-${upload.bytes.size}\"",
+            contentType = upload.options.contentType,
+            lastModified = Instant.EPOCH,
+        )
+    },
+) : ImageStorage by delegate, ImageObjectMetadataReader {
+
+    val uploads: MutableList<RecordedUpload>
+        get() = delegate.uploads
+
+    val deletes: MutableList<ImageObjectKey>
+        get() = delegate.deletes
+
+    val downloads: MutableList<ImageObjectKey>
+        get() = delegate.downloads
+
+    val metadataReads = mutableListOf<ImageObjectKey>()
+
+    override suspend fun readMetadata(key: ImageObjectKey): ImageObjectMetadata {
+        if (failOnMetadataKeyPart != null && key.fullKey.contains(failOnMetadataKeyPart)) {
+            throw ImageStorageException.TransientException(
+                key = key,
+                message = "forced metadata failure: ${key.fullKey}",
+            )
+        }
+        val upload = uploads.singleOrNull { it.key == key }
+            ?: throw ImageStorageException.NotFoundException(key)
+        metadataReads += key
+        return metadataFn(key, upload)
+    }
 }
 
 /**
@@ -114,6 +169,8 @@ internal class StubImagePersistenceService(
     private val startResultFn: (() -> JobStartResult)? = null,
     private val detailResponseFn: ((String) -> ImageAssetDetailResponse?)? = null,
 ) : ImagePersistenceService {
+
+    val events = mutableListOf<RecordedEvent>()
 
     override fun recordJobStart(metadata: AssetMetadataInput): JobStartResult =
         startResultFn?.invoke() ?: JobStartResult.NewAsset(
@@ -132,7 +189,9 @@ internal class StubImagePersistenceService(
         status: ImageProcessingEventStatus,
         message: String,
         payload: Map<String, Any?>,
-    ) {}
+    ) {
+        events += RecordedEvent(step, status, message, payload)
+    }
 
     override fun findAssetByExternalId(externalId: String): ImageAssetDetailResponse? =
         detailResponseFn?.invoke(externalId)

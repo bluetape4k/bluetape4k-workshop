@@ -32,6 +32,7 @@ on:
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
       - 'image-processing/barcode-api/**'
+      - 'image-processing/advanced-workflow/**'
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
@@ -96,6 +97,7 @@ on:
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
       - 'image-processing/barcode-api/**'
+      - 'image-processing/advanced-workflow/**'
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
@@ -302,6 +304,7 @@ jobs:
           :graph-recommendation:test
           :graph-knowledge-graph:test
           :graph-social-network:test
+          :image-processing-advanced-workflow:test
           :image-processing-ocr-api:test
           :image-processing-profile-image-moderation:test
           :image-processing-barcode-api:test
