@@ -33,6 +33,8 @@ coroutine `Flow` 소비자가 다룰 때 필요한 소유권·취소·backpressu
 - `./gradlew :messaging-kafka-reply:build -x test --no-daemon`: successful
 - `scripts/smoke-validate.sh stale-check`: all registration guards passing
 - README parity/language, `actionlint .github/workflows/Examples.yml`, JSON validation, and `git diff --check`: passing
+- stacked PR scope checker: `PASS ecosystem-reuse inventory and train contract`; #878 parent paths are included in
+  the #879 `stacked-parent-head` scope with fresh coordinator receipt `20260904T-issue-879-kafka-callbackflow-scope`
 
 ## Future Guidance
 

@@ -24,6 +24,9 @@
 - `flush`와 `close`는 bounded timeout으로 감싸지만, timeout 시 broker가 이미 수락한 record의 최종 상태는
   broker 설정과 producer 구현에 의존한다.
 - Testcontainers 실연동은 대표 round trip으로 제한하고, 대규모 throughput benchmark는 별도 이슈로 분리한다.
+- #878에서 누적된 stacked diff가 #879 PR에서도 ecosystem 경계에 포함되도록 #879 scope에 #878의 README, Redis,
+  lesson/review 경로를 함께 선언하고 fresh coordinator receipt를 발행했다. exact `--pr-scope` checker는
+  `PASS ecosystem-reuse inventory and train contract`를 반환했다.
 
 ## 리뷰 결론
 
