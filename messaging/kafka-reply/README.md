@@ -70,6 +70,33 @@ fun handle(request: String): String {
 }
 ```
 
+## Producer callbackFlow bridge
+
+The `KafkaProducerFlow` example adapts Kafka's callback-based `Producer.send` API to a cold Kotlin `Flow` without
+leaking a producer across collections. Each collection creates and owns one producer, limits outstanding sends with
+`maxInFlight`, and keeps callback metadata in the bounded downstream channel. Normal completion and cancellation
+both wait for in-flight callbacks before a bounded `flush`/`close`; a late callback cannot re-open a completed flow.
+
+```kotlin
+val metadataFlow = KafkaProducerFlow(
+    producerFactory = { producer },
+    channelCapacity = 16,
+    maxInFlight = 16,
+).send(records)
+
+metadataFlow.collect { metadata ->
+    log.info { "record committed at ${metadata.topic()}-${metadata.partition()}:${metadata.offset()}" }
+}
+```
+
+`KafkaProducerFlowTest` covers successful and failed callbacks, malformed callback payloads, bounded backpressure,
+collector cancellation with late callbacks, primary-cause/suppressed-cleanup preservation, and a Kafka Testcontainers
+round trip. Run the complete example with:
+
+```bash
+./gradlew :messaging-kafka-reply:test
+```
+
 ## Running
 
 ```bash

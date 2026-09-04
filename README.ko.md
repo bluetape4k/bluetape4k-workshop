@@ -123,13 +123,14 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`jackson-examples`](json/jackson-examples/) | `jackson3`, `logging` | In-memory | Jackson 3 데이터타입, 다형성, 커스텀 직렬화 |
 | Basic | [`jsonview-examples`](json/jsonview-examples/) | `jackson3` | In-memory | 선택적 필드 프로젝션을 위한 `@JsonView` |
 | Basic | [`messaging-kafka`](messaging/kafka/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | 코루틴을 활용한 Kafka 프로듀서/컨슈머 |
-| Advanced | [`messaging-kafka-reply`](messaging/kafka-reply/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | `ReplyingKafkaTemplate`을 활용한 Kafka 요청-응답 패턴 |
+| Advanced | [`messaging-kafka-reply`](messaging/kafka-reply/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | `ReplyingKafkaTemplate` 요청-응답과 collection-scoped producer `callbackFlow` bridge |
 | Advanced | [`messaging-kafka-outbox-fallback`](messaging/kafka-outbox-fallback/) | `jackson3`, `exposed-jdbc`, `testcontainers`, `micrometer` | PostgreSQL + Kafka (TC) | Kafka 직접 발행과 durable outbox fallback, relay/reconciler 복구 패턴 |
 | Advanced | [`messaging-kafka-multi-broker-failover`](messaging/kafka-multi-broker-failover/) | `jackson3`, `kafka4`, `testcontainers` | Kafka (3-node KRaft TC) | Leader/coordinator failover, replica/ISR 복구, redacted evidence |
 
 ```bash
 ./gradlew :jackson-examples:test
 ./gradlew :messaging-kafka:test
+./gradlew :messaging-kafka-reply:test
 ./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1
 ./gradlew :messaging-kafka-multi-broker-failover:test --tests '*KafkaMultiBrokerFailoverIntegrationTest.dataLeaderFailover' --max-workers=1
 ```
