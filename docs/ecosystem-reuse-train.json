@@ -733,6 +733,31 @@
       "review_artifact": "docs/review/2026-09-04-issue-877-tenant-context.md"
     },
     {
+      "scope_id": "issue-878-rlocalcachedmap",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-878-rlocalcachedmap",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [878],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-04-issue-878-rlocalcachedmap.md",
+        "docs/review/2026-09-04-issue-878-rlocalcachedmap.md",
+        "redis/redisson-examples/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-09-04-issue-878-rlocalcachedmap.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -842,8 +867,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-877-tenant-context-scope",
-    "checksum": "80d36a10e741cd8cd0b0543fd16abbe27ac1d483d674459238e08d7c915b13f7"
+    "receipt_id": "20260904T-issue-878-rlocalcachedmap-scope",
+    "checksum": "fcfeb0cce375024b4aca77265cd9453f8de44edcd5e379c5acf40822e9841d18"
   },
   "planned_scope_replan_receipts": {
   },

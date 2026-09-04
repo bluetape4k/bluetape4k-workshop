@@ -660,6 +660,32 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Redisson RLocalCachedMap numeric update example guard ==="
+    rlocal_map_examples="redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapExamples.kt"
+    rlocal_map_tests="redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapTest.kt"
+    rlocal_map_await_test="redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/AwaitRedisTest.kt"
+    rlocal_map_fixture="redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/AbstractRedissonTest.kt"
+    rlocal_map_readme="redis/redisson-examples/README.md"
+    rlocal_map_readme_ko="redis/redisson-examples/README.ko.md"
+    rlocal_map_lesson="docs/lessons/2026-09-04-issue-878-rlocalcachedmap.md"
+    if contains_pattern 'CompositeCodec' "$rlocal_map_examples" "$rlocal_map_tests" "$rlocal_map_readme" "$rlocal_map_readme_ko" && \
+       contains_pattern 'RedissonCodecs\.Int' "$rlocal_map_examples" "$rlocal_map_tests" && \
+       contains_pattern 'RedissonCodecs\.Double' "$rlocal_map_examples" "$rlocal_map_tests" && \
+       contains_pattern 'addAndGetAsync' "$rlocal_map_examples" "$rlocal_map_tests" "$rlocal_map_readme" "$rlocal_map_readme_ko" && \
+       contains_pattern 'withLocalCacheClearBarrier' "$rlocal_map_tests" && \
+       contains_pattern 'SuspendedJobTester' "$rlocal_map_tests" && \
+       contains_pattern 'awaitRedis' "$rlocal_map_fixture" "$rlocal_map_tests" "$rlocal_map_await_test" "$rlocal_map_readme" "$rlocal_map_readme_ko" && \
+       contains_pattern 'CancellationException' "$rlocal_map_fixture" "$rlocal_map_await_test" && \
+       contains_pattern ':redis-redisson-examples:test' README.md README.ko.md && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$rlocal_map_examples" "$rlocal_map_tests" "$rlocal_map_fixture" "$rlocal_map_readme" "$rlocal_map_readme_ko" && \
+       [ -f "$rlocal_map_lesson" ]; then
+      echo "Redisson RLocalCachedMap numeric update example and lesson are registered."
+    else
+      echo "ERROR: Redisson RLocalCachedMap numeric update example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== TenantContext carrier example guard ==="
     tenant_context_build="spring-boot/multi-tenant-data-isolation/build.gradle.kts"
     tenant_context_service="spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/service/TenantContextCarrierService.kt"

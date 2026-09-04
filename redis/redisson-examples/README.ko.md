@@ -14,6 +14,26 @@
 
 `AbstractRedissonTest`는 `RedisServer.Launcher.redis`로 Redis를 시작하고, `RedissonCodecs.LZ4FastForyComposite`와 `VirtualThreadExecutor`를 사용하는 `RedissonClient`를 만듭니다. 또한 raw Lettuce command로 Redis keyspace notification을 켜고, 각 예제에 재현 가능한 random name을 제공합니다.
 
+## 숫자 `RLocalCachedMap` 원자 갱신
+
+`RMap.addAndGetAsync`는 Redis `HINCRBYFLOAT`를 실행합니다. 따라서 숫자 값에는 Redis 숫자 payload를 바로 decode하면서 String key를 유지하는 map codec이 필요하며, 압축 `LZ4FastForyComposite` codec은 이 연산에 사용할 수 없습니다.
+
+```kotlin
+private val intCodec = CompositeCodec(
+    RedissonCodecs.String,
+    RedissonCodecs.Int,
+    RedissonCodecs.Int,
+)
+
+val counter = localCachedMap<String, Int>("counter", redisson) {
+    codec(intCodec)
+}
+
+counter.addAndGetAsync("count", 1).await() // HINCRBYFLOAT 기반 원자 갱신
+```
+
+소수 값에는 이에 맞는 `CompositeCodec(String, Double, Double)`을 사용합니다. `LocalCachedMapTest`는 독립적인 두 client를 미리 읽기 상태로 만든 뒤 Int/Double 동시 증가를 수행하고, bounded 시간 내 cross-client 무효화를 기다린 후 두 local view와 remote map을 함께 검증합니다. `awaitRedis`는 timeout 또는 호출자 취소를 대기 중인 `RFuture`에 전파합니다.
+
 ## 예제 범주
 
 ### Distributed Locks (`locks/`)
@@ -75,6 +95,8 @@
 |---|---|---|---|
 | `RedissonCodecs.LZ4FastForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | 휘발성/cache 예제에서 LZ4 압축 + FastFory serialization을 사용합니다 |
 | `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | `LocalCachedMapOptions` DSL과 map 생성 호출을 결합해 Near Cache 설정 중복을 줄입니다 |
+| `RedissonCodecs.Int` / `Double` + `CompositeCodec` | `bluetape4k-redisson` | `LocalCachedMapExamples`, `LocalCachedMapTest` | String map key를 유지하면서 `addAndGetAsync`가 Redis hash 숫자 payload를 처리하도록 합니다 |
+| `awaitRedis` | workshop test fixture | `AbstractRedissonTest` | 비동기 Redis 대기를 제한하고 timeout/취소를 underlying future에 전파합니다 |
 | `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Kotlin 친화적인 helper로 Redis Stream append arguments를 만듭니다 |
 | `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Virtual Threads로 Redisson I/O를 처리합니다 |
 | `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractRedissonTest` | 자동으로 시작하고 중지하는 Testcontainers Redis singleton입니다 |
