@@ -604,6 +604,31 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== AWS DynamoDB Streams Flow example guard ==="
+    dynamodb_streams_build="aws/ktor-dynamodb/build.gradle.kts"
+    dynamodb_streams_config="aws/ktor-dynamodb/src/main/kotlin/io/bluetape4k/workshop/aws/ktordynamodb/DynamoDbStreamsWorkshopConfig.kt"
+    dynamodb_streams_service="aws/ktor-dynamodb/src/main/kotlin/io/bluetape4k/workshop/aws/ktordynamodb/DynamoDbStreamsOrderSessionService.kt"
+    dynamodb_streams_tests="aws/ktor-dynamodb/src/test/kotlin/io/bluetape4k/workshop/aws/ktordynamodb/DynamoDbStreamsOrderSessionServiceTest.kt"
+    dynamodb_streams_emulator_test="aws/ktor-dynamodb/src/test/kotlin/io/bluetape4k/workshop/aws/ktordynamodb/OrderSessionDynamoDbEmulatorTest.kt"
+    dynamodb_streams_readme="aws/ktor-dynamodb/README.md"
+    dynamodb_streams_readme_ko="aws/ktor-dynamodb/README.ko.md"
+    dynamodb_streams_lesson="docs/lessons/2026-09-04-issue-875-dynamodb-streams.md"
+    if contains_pattern 'aws\.kotlin\.dynamodbstreams' "$dynamodb_streams_build" && \
+       contains_pattern 'DynamoDbStreamsWorkshopConfig' "$dynamodb_streams_config" "$dynamodb_streams_service" && \
+       contains_pattern 'shardRecordFlow' "$dynamodb_streams_service" && \
+       contains_pattern 'DynamoDbStreamsStartingPosition' "$dynamodb_streams_config" "$dynamodb_streams_service" "$dynamodb_streams_emulator_test" && \
+       contains_pattern 'checkpointStore\.save' "$dynamodb_streams_service" && \
+       contains_pattern 'duplicate' "$dynamodb_streams_service" "$dynamodb_streams_tests" "$dynamodb_streams_emulator_test" && \
+       contains_pattern 'streams/consume' "$dynamodb_streams_readme" "$dynamodb_streams_readme_ko" "$dynamodb_streams_emulator_test" && \
+       contains_pattern 'DynamoDB Streams' "$dynamodb_streams_readme" "$dynamodb_streams_readme_ko" && \
+       [ -f "$dynamodb_streams_lesson" ]; then
+      echo "AWS DynamoDB Streams Flow example and lesson are registered."
+    else
+      echo "ERROR: AWS DynamoDB Streams Flow example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== AWS S3 client-side encryption storage example guard ==="
     cse_build="aws/storage-abstraction/build.gradle.kts"
     cse_config="aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3Config.kt"

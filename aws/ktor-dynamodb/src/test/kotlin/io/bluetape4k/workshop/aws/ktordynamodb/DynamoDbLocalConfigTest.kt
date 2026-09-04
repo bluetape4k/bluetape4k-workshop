@@ -64,8 +64,32 @@ class DynamoDbLocalConfigTest {
         config.region shouldBeEqualTo "us-east-1"
     }
 
+    @Test
+    fun `streams config defaults to trim horizon and can select latest`() {
+        val defaultConfig = DynamoDbStreamsWorkshopConfig.fromProperties(::emptyProperty)
+        defaultConfig.enabled shouldBeEqualTo false
+        defaultConfig.startingPosition shouldBeEqualTo
+            io.bluetape4k.aws.kotlin.dynamodbstreams.DynamoDbStreamsStartingPosition.TrimHorizon
+
+        val latestConfig = DynamoDbStreamsWorkshopConfig.fromProperties(
+            properties(
+                "bluetape4k.aws.dynamodb.streams.enabled" to "true",
+                "bluetape4k.aws.dynamodb.streams.starting-position" to "latest",
+                "bluetape4k.aws.dynamodb.streams.max-records" to "2",
+                "bluetape4k.aws.dynamodb.streams.poll-interval-millis" to "200",
+                "bluetape4k.aws.dynamodb.streams.empty-backoff-millis" to "200",
+            ),
+        )
+        latestConfig.enabled shouldBeEqualTo true
+        latestConfig.startingPosition shouldBeEqualTo
+            io.bluetape4k.aws.kotlin.dynamodbstreams.DynamoDbStreamsStartingPosition.Latest
+        latestConfig.maxRecords shouldBeEqualTo 2
+    }
+
     private fun properties(vararg pairs: Pair<String, String>): (String) -> String? {
         val values = pairs.toMap()
         return values::get
     }
+
+    private fun emptyProperty(name: String): String? = null
 }

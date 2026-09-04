@@ -7,7 +7,8 @@ scheduled workflows, queue/topic messaging, vector search, access decisions, and
 `s3-spring-cloud/` when you want to see Spring Cloud AWS and `S3Template` in a small runnable sample. Use
 `storage-abstraction/` when you want a service boundary that can switch between local files, S3, and
 pre-signed S3 URLs through Spring profiles. Use `ktor-dynamodb/` when you want Ktor routes,
-DynamoDB table bootstrap, conditional writes, and optimistic updates against a local AWS emulator.
+DynamoDB table bootstrap, conditional writes, optimistic updates, and an opt-in DynamoDB Streams
+coroutine Flow consumer against a local AWS emulator.
 Use `eventbridge-scheduler/` when you want to map an order workflow into an EventBridge event and a
 delayed Scheduler request without real AWS credentials. Use `sqs-sns-coroutines/` when you want to
 publish order notifications to SNS, consume SQS messages, and classify ack, retry, or dead-letter
@@ -40,7 +41,7 @@ profile creates the upstream AWS SDK v2 async client.
 | --- | --- | --- |
 | `s3-spring-cloud/` | `:aws-s3-spring-cloud` | Spring Cloud AWS `S3Template`, AWS SDK v2 `S3Client`, bucket creation, object upload, object listing, and `ResourceLoader` access. |
 | `storage-abstraction/` | `:aws-storage-abstraction` | `StorageService` with `local`, `s3`, and `s3-presigned` profiles, coroutine-friendly blocking I/O boundaries, and pre-signed URL behavior. |
-| `ktor-dynamodb/` | `:aws-ktor-dynamodb` | Ktor REST routes, `DynamoDbKtorPlugin` table bootstrap, conditional writes, optimistic version updates, and local emulator readiness checks. |
+| `ktor-dynamodb/` | `:aws-ktor-dynamodb` | Ktor REST routes, `DynamoDbKtorPlugin` table bootstrap with Streams, conditional writes, optimistic version updates, local readiness, and an opt-in bounded coroutine Flow consumer. |
 | `eventbridge-scheduler/` | `:aws-eventbridge-scheduler` | Order workflow event envelopes, EventBridge publish status, delayed Scheduler request mapping, idempotency keys, and correlation ids. |
 | `sqs-sns-coroutines/` | `:aws-sqs-sns-coroutines` | SNS publish requests, SQS polling, coroutine cancellation propagation, retry visibility changes, dead-letter reports, and Micrometer outcome metrics. |
 | `kinesis-coroutines/` | `:aws-kinesis-coroutines` | Kinesis stream readiness, partition-key publish, shard/sequence consumption, coroutine cancellation, bounded retry/backoff, local fake behavior, and explicit `real-aws` opt-in. |
@@ -56,7 +57,7 @@ profile creates the upstream AWS SDK v2 async client.
 | AWS endpoint | Local AWS-compatible emulator from `bluetape4k-testcontainers`, started by the sample or tests for emulator-backed modules. |
 | Credentials | Static local credentials from the emulator; real AWS credentials are not required for local verification. |
 | S3 client | AWS SDK v2 `S3Client`; blocking calls are wrapped in `Dispatchers.IO` in the storage abstraction module. |
-| DynamoDB client | AWS Kotlin SDK `DynamoDbClient` installed through `DynamoDbKtorPlugin` in `ktor-dynamodb/`. |
+| DynamoDB client | AWS Kotlin SDK `DynamoDbClient` installed through `DynamoDbKtorPlugin`; `ktor-dynamodb/` optionally pairs it with the native Kotlin `DynamoDbStreamsClient` and checkpointed `shardRecordFlow`. |
 | EventBridge and Scheduler | AWS SDK v2 `PutEventsRequestEntry` model plus local publisher/scheduler boundaries in `eventbridge-scheduler/`. |
 | SQS and SNS messaging | bluetape4k `SqsOperations` and `SnsOperations` with local adapters plus Floci integration tests in `sqs-sns-coroutines/`. |
 | Kinesis messaging | bluetape4k `KinesisOperations` with a deterministic local fake by default; `real-aws` explicitly enables AWS SDK v2 `KinesisAsyncClient` and the upstream coroutine template. |
@@ -72,7 +73,7 @@ profile creates the upstream AWS SDK v2 async client.
 | --- | --- | --- |
 | `s3-spring-cloud/` | Floci-backed S3 integration | Spring Boot test starts `FlociServer.Launcher.floci`, then verifies `S3Template`, `S3Client`, and `ResourceLoader` against the same S3-compatible endpoint. |
 | `storage-abstraction/` | Floci-backed S3 integration | `s3` and `s3-presigned` profiles use `S3Config.floci` and exercise upload, download, delete, and pre-signed URL behavior. |
-| `ktor-dynamodb/` | Floci-backed DynamoDB integration | The Ktor route test uses `FlociServer.Launcher.floci` with the AWS Kotlin `DynamoDbClient` and `DynamoDbKtorPlugin` table bootstrap. |
+| `ktor-dynamodb/` | Floci-backed DynamoDB + Streams integration | Ktor tests use `FlociServer.Launcher.floci` with the AWS Kotlin `DynamoDbClient`, stream-enabled `DynamoDbKtorPlugin` table bootstrap, bounded Flow consumption, checkpoint resume, and duplicate reporting. |
 | `sqs-sns-coroutines/` | Floci-backed SNS/SQS integration plus local adapters | Unit tests keep local fake boundaries small; the integration test publishes through `SnsCoroutinesTemplate` and consumes through `SqsCoroutinesTemplate` against Floci. |
 | `kinesis-coroutines/` | deterministic local adapter | Default tests never resolve AWS credentials or call a network endpoint. The module teaches cancellation, retry/backoff, partition keys, and shard sequence reports without exactly-once or global-ordering claims. |
 | `eventbridge-scheduler/` | local adapter only | Floci coverage is not used because the lesson focuses on EventBridge entry and Scheduler request mapping, idempotency, and failure/cancellation boundaries without provisioning real AWS targets. |

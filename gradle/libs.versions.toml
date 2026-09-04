@@ -714,6 +714,7 @@ aws2-s3-transfer-manager = { module = "software.amazon.awssdk:s3-transfer-manage
 aws2-s3vectors-lib = { module = "software.amazon.awssdk:s3vectors" }
 aws2-aws-crt-client = { module = "software.amazon.awssdk:aws-crt-client" }
 aws-kotlin-dynamodb = { module = "aws.sdk.kotlin:dynamodb", version.ref = "aws-kotlin" }
+aws-kotlin-dynamodbstreams = { module = "aws.sdk.kotlin:dynamodbstreams", version.ref = "aws-kotlin" }
 aws-kotlin-bedrock-runtime = { module = "aws.sdk.kotlin:bedrockruntime", version.ref = "aws-kotlin" }
 aws-kotlin-secretsmanager = { module = "aws.sdk.kotlin:secretsmanager", version.ref = "aws-kotlin" }
 aws-kotlin-ssm = { module = "aws.sdk.kotlin:ssm", version.ref = "aws-kotlin" }

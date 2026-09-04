@@ -513,7 +513,7 @@ jobs:
       # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC consumer path
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + Exposed transaction path
-      # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB path
+      # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB/Streams Flow path
       # - aws-s3-spring-cloud: Floci-backed Spring Cloud AWS S3 path
       # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine + PublishBatch + opt-in Observation listener path
       # - aws-storage-abstraction: Floci-backed S3 storage abstraction plus AES/RSA client-side encryption transfer path

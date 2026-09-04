@@ -10,8 +10,12 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
+import io.bluetape4k.aws.kotlin.dynamodbstreams.DynamoDbStreamsStartingPosition
 
-internal fun Application.orderSessionRoutes(service: OrderSessionService) {
+internal fun Application.orderSessionRoutes(
+    service: OrderSessionService,
+    streamsService: DynamoDbStreamsOrderSessionService? = null,
+) {
     routing {
         post("/dynamodb/order-sessions") {
             val request = call.receive<CreateOrderSessionRequest>()
@@ -50,6 +54,25 @@ internal fun Application.orderSessionRoutes(service: OrderSessionService) {
                         message = "DynamoDB table '${readiness.tableName}' is not ready.",
                     ),
                 )
+            }
+        }
+
+        streamsService?.let { consumer ->
+            post("/dynamodb/order-sessions/streams/consume") {
+                val maxRecords = call.request.queryParameters["maxRecords"]?.let { raw ->
+                    raw.toIntOrNull()?.takeIf { it > 0 }
+                        ?: throw OrderSessionValidationException("maxRecords must be a positive integer.")
+                }
+                val position = call.request.queryParameters["startingPosition"]?.let { raw ->
+                    when (raw.trim().lowercase()) {
+                        "trim_horizon", "trim-horizon" -> DynamoDbStreamsStartingPosition.TrimHorizon
+                        "latest" -> DynamoDbStreamsStartingPosition.Latest
+                        else -> throw OrderSessionValidationException(
+                            "startingPosition must be trim_horizon or latest.",
+                        )
+                    }
+                }
+                call.respond(consumer.consume(maxRecords = maxRecords, position = position))
             }
         }
     }
