@@ -25,7 +25,8 @@ class ImageOcrController(
 ) {
 
     /**
-     * JPEG, PNG, WebP multipart 파일 하나와 선택적 Tesseract 언어 코드 및 구조화 상세 수준을 받습니다.
+     * JPEG, PNG, WebP 또는 다중 페이지 TIFF multipart 파일과 선택적 Tesseract 언어 코드 및
+     * 구조화 상세 수준을 받습니다.
      */
     @PostMapping(
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
@@ -41,7 +42,7 @@ class ImageOcrController(
             "Image upload exceeds ${properties.maxUploadBytes} bytes"
         }
         require(file.contentType in SUPPORTED_CONTENT_TYPES) {
-            "Unsupported image content type. Use JPEG, PNG, or WebP."
+            "Unsupported image content type. Use JPEG, PNG, WebP, or TIFF."
         }
 
         return service.recognize(
@@ -60,6 +61,9 @@ class ImageOcrController(
             "image/jpg",
             "image/png",
             "image/webp",
+            "image/tiff",
+            "image/tif",
+            "image/x-tiff",
         )
     }
 }

@@ -5,10 +5,11 @@
 ## Overview
 
 **image-processing-ocr-api** is a Spring Boot 4 multipart API example for
-`bluetape4k-images-ocr`. It validates JPEG, PNG, or WebP uploads, decodes the
-image with `immutableImageOf`, and returns a structured OCR response. The default
-path validates the image and returns a deterministic `UNAVAILABLE` fallback
-without requiring native Tesseract.
+`bluetape4k-images-ocr`. It validates JPEG, PNG, WebP, or bounded multi-page TIFF
+uploads and returns a structured OCR response. Single-page inputs use
+`immutableImageOf`; TIFF inputs use `TiffMultiPageOcr.suspendRecognize` after a
+metadata preflight. The default path validates the input and returns a deterministic
+`UNAVAILABLE` fallback without requiring native Tesseract.
 
 Use this module when you want to learn the OCR API boundary. It is not a
 production upload service.
@@ -22,7 +23,9 @@ The flow is top-to-bottom: `ImageOcrController` accepts multipart input,
 short-circuits to a fallback response or calls a bounded native `OcrEngine`.
 The capability branch is explicit: a plain engine preserves `PLAIN_TEXT`, while
 `StructuredOcrEngine` maps `pages`, `lines`, and `words` without inventing
-non-null `confidence` or `boundingBox` values.
+non-null `confidence` or `boundingBox` values. TIFF requests require the structured
+capability and aggregate pages in input order; all page, pixel, metadata, and result
+budgets are checked before a partial response can escape.
 
 ## Request Flow
 
@@ -42,7 +45,7 @@ runtime capability check, and the final response mapping in one contract.
 POST /api/images/ocr
 Content-Type: multipart/form-data
 
-file      required image/jpeg, image/png, or image/webp
+file      required image/jpeg, image/png, image/webp, or image/tiff
 language  optional repeated or comma-separated Tesseract language codes
 structuredDetail optional PLAIN_TEXT, LINE, or WORD (default PLAIN_TEXT)
 ```
@@ -61,6 +64,11 @@ OCR return structured `200 OK` data with `status=UNAVAILABLE`.
 implements `StructuredOcrEngine`. Older/plain engines are detected at runtime;
 the service falls back to text and reports `effectiveStructuredDetail=PLAIN_TEXT`
 with empty `pages`, `lines`, and `words` lists.
+
+TIFF requests always use the structured capability because each page is decoded and
+processed in order. A validation or processing failure returns a sanitized
+`ProblemDetail` with `reason`, `phase`, and optional `pageIndex`; native causes,
+payload bytes, and filesystem paths are never exposed.
 
 ## Fallback Response
 
@@ -131,6 +139,14 @@ consumers and now carry optional `pageIndex` and `boundingBox` metadata.
 | `workshop.ocr.timeout` | `10s` | Native OCR timeout |
 | `workshop.ocr.languages` | `eng` | Default language list |
 | `workshop.ocr.tessdata-path` | empty | Optional Tesseract trained-data directory |
+| `workshop.ocr.tiff.max-encoded-bytes` | `5242880` | TIFF encoded input budget |
+| `workshop.ocr.tiff.max-pages` | `16` | Maximum TIFF page count |
+| `workshop.ocr.tiff.max-pixels-per-page` | `12000000` | Per-page pixel budget |
+| `workshop.ocr.tiff.max-total-pixels` | `64000000` | Aggregate pixel budget |
+| `workshop.ocr.tiff.max-decoded-side` | `8192` | Maximum decoded width/height |
+| `workshop.ocr.tiff.max-metadata-bytes` | `2097152` | ImageIO metadata preflight budget |
+| `workshop.ocr.tiff.max-result-text-chars` | `1000000` | Aggregate OCR text budget |
+| `workshop.ocr.tiff.max-result-entries` | `100000` | Aggregate page/block/line/word budget |
 | `spring.servlet.multipart.max-file-size` | `5MB` | Container multipart limit |
 | `spring.servlet.multipart.max-request-size` | `5MB` | Container multipart request limit |
 
@@ -184,9 +200,11 @@ For Korean OCR, install and verify `kor.traineddata`, then send
 |---|---|---|
 | Missing Tesseract library or tessdata | `200 OK`, `status=UNAVAILABLE` | Install Tesseract and set `workshop.ocr.tessdata-path` when needed |
 | Missing language pack | `200 OK`, `status=UNAVAILABLE` or low-quality text | Verify `eng.traineddata`, `kor.traineddata`, or the requested pack |
-| Empty, corrupt, or non-image bytes | `400 Bad Request` | Use a real JPEG, PNG, or WebP file |
+| Empty, corrupt, or non-image bytes | `400 Bad Request` | Use a real JPEG, PNG, WebP, or TIFF file |
 | Declared type does not match bytes | `400 Bad Request` | Keep `;type=image/png` aligned with the actual file format |
-| Unsupported subtype such as GIF | `400 Bad Request` | Convert to JPEG, PNG, or WebP |
+| Unsupported subtype such as GIF | `400 Bad Request` | Convert to JPEG, PNG, WebP, or TIFF |
+| TIFF page/pixel/metadata/result budget exceeded | `400 Bad Request` with sanitized `reason`/`phase`/`pageIndex` | Lower the input size or raise the matching `workshop.ocr.tiff.*` budget |
+| TIFF decoder or OCR engine failure | `422 Unprocessable Entity` with sanitized `reason`/`phase`/`pageIndex` | Check the TIFF reader, Tesseract, and language packs |
 | Image exceeds pixel budget | `400 Bad Request` | Resize below `workshop.ocr.max-image-pixels` |
 
 ## Workshop Boundary
@@ -209,9 +227,9 @@ retention policies.
 
 The tests inject fake `OcrEngine` and `StructuredOcrEngine` implementations for
 completed responses, so the deterministic suite does not require native
-Tesseract. They verify structured mapping, capability fallback, validation,
-sanitized failure mapping, language normalization, timeout, and cancellation
-propagation.
+Tesseract. They verify structured mapping, capability fallback, three-page TIFF
+ordering, preflight/result budgets, sanitized failure mapping, language
+normalization, timeout, and cancellation propagation.
 
 ## Dependency Note
 

@@ -432,7 +432,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/advanced-workflow image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
+    for module in image-processing/advanced-workflow image-processing/ocr-api image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"

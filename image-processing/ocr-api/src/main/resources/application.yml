@@ -15,3 +15,12 @@ workshop:
     languages:
       - eng
     tessdata-path:
+    tiff:
+      max-encoded-bytes: 5242880
+      max-pages: 16
+      max-pixels-per-page: 12000000
+      max-total-pixels: 64000000
+      max-decoded-side: 8192
+      max-metadata-bytes: 2097152
+      max-result-text-chars: 1000000
+      max-result-entries: 100000
