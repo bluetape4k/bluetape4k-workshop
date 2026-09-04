@@ -48,6 +48,25 @@ class UserHandler(private val service: UserService) {
         }
     }
 
+    suspend fun queryByExample(request: ServerRequest): ServerResponse {
+        val page = request.queryParam("page").orElse("0").toIntOrNull()
+        val size = request.queryParam("size").orElse("20").toIntOrNull()
+        if (page == null || size == null || page < 0 || size !in 1..100) {
+            return errorResponse(
+                HttpStatus.BAD_REQUEST,
+                "page must be non-negative and size must be between 1 and 100",
+            )
+        }
+
+        val response = service.queryByExample(
+            loginPrefix = request.queryParam("loginPrefix").orElse(null),
+            email = request.queryParam("email").orElse(null),
+            page = page,
+            size = size,
+        )
+        return ServerResponse.ok().json().bodyValueAndAwait(response)
+    }
+
     suspend fun findUser(request: ServerRequest): ServerResponse {
         val id = request.pathVariable("id").asIntOrNull() ?: return errorResponse(
             HttpStatus.BAD_REQUEST,

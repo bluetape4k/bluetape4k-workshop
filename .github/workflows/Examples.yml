@@ -524,6 +524,7 @@ jobs:
       # Representative Testcontainers examples run in one sequential lane:
       # - exposed-mvc-jdbc: PostgreSQL-backed Exposed JDBC offset + cursor consumer path
       # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC cursor consumer path
+      # - spring-data-r2dbc-webflux-exposed: Spring Data Exposed QBE/FluentQuery projection and paging path (#882)
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + selective core/JDBC health/readiness and transaction path
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB/Streams Flow path

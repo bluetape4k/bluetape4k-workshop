@@ -70,7 +70,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`spring-data-r2dbc-coroutines`](spring-data/r2dbc-coroutines/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 코루틴을 활용한 R2DBC 레포지토리 |
 | Basic | [`spring-data-r2dbc-examples`](spring-data/r2dbc-examples/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC 기본 예제와 DSL |
 | Advanced | [`spring-data-r2dbc-webflux`](spring-data/r2dbc-webflux/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC + WebFlux REST API |
-| Advanced | [`spring-data-r2dbc-webflux-exposed`](spring-data/r2dbc-webflux-exposed/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC + WebFlux + Exposed 조합 |
+| Advanced | [`spring-data-r2dbc-webflux-exposed`](spring-data/r2dbc-webflux-exposed/) | `logging`, `coroutines`, `testcontainers`, `exposed-spring-boot-r2dbc` | PostgreSQL (TC) | R2DBC + WebFlux + Exposed CRUD와 Query by Example, FluentQuery projection, paging, count/exists |
 | Basic | [`spring-data-jpa-querydsl`](spring-data/jpa-querydsl/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | JPA + QueryDSL 타입 안전 쿼리 |
 | Basic | [`spring-data-mongodb-coroutines`](spring-data/mongodb-coroutines/) | `coroutines`, `testcontainers` | MongoDB (TC) | 코루틴을 활용한 MongoDB 리액티브 레포지토리 |
 | Advanced | [`spring-data-mongodb-transactions`](spring-data/mongodb-transactions/) | `coroutines`, `testcontainers` | MongoDB (TC) | MongoDB 멀티 도큐먼트 트랜잭션 |
@@ -83,6 +83,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :exposed-webflux-r2dbc:test
 ./gradlew :ktor-exposed-rest:test --max-workers=1
 ./gradlew :spring-data-r2dbc-coroutines:test
+./gradlew :spring-data-r2dbc-webflux-exposed:test
 ```
 
 ---

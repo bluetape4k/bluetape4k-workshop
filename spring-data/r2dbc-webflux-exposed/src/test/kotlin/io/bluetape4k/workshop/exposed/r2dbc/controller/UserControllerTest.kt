@@ -122,6 +122,40 @@ class UserControllerTest(
     }
 
     @Nested
+    inner class QueryByExample {
+        @Test
+        fun `QBE endpoint combines matcher sort projection count and exists`() = runSuspendIO {
+            val marker = "qbe-http-${System.nanoTime()}"
+            service.addUser(createUserRecord().copy(name = "Alice", login = "$marker-alice"))
+            service.addUser(createUserRecord().copy(name = "Bob", login = "$marker-bob"))
+
+            webTestClient
+                .get()
+                .uri("/api/users/qbe?loginPrefix=$marker&size=1")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$.items").isArray
+                .jsonPath("$.items.length()").isEqualTo(1)
+                .jsonPath("$.items[0].name").isEqualTo("Alice")
+                .jsonPath("$.items[0].login").isEqualTo("$marker-alice")
+                .jsonPath("$.items[0].email").doesNotExist()
+                .jsonPath("$.count").isEqualTo(2)
+                .jsonPath("$.exists").isEqualTo(true)
+                .jsonPath("$.hasNext").isEqualTo(true)
+        }
+
+        @Test
+        fun `QBE endpoint rejects invalid page size`() {
+            webTestClient
+                .get()
+                .uri("/api/users/qbe?size=0")
+                .exchange()
+                .expectStatus().isBadRequest
+        }
+    }
+
+    @Nested
     inner class Add {
         @Test
         fun `add new user`() = runSuspendIO {

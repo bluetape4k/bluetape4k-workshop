@@ -850,6 +850,55 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Spring Data Exposed QBE/FluentQuery guard ==="
+    qbe_catalog="gradle/libs.versions.toml"
+    qbe_build="spring-data/r2dbc-webflux-exposed/build.gradle.kts"
+    qbe_app="spring-data/r2dbc-webflux-exposed/src/main/kotlin/io/bluetape4k/workshop/exposed/r2dbc/WebfluxR2dbcExposedApplication.kt"
+    qbe_config="spring-data/r2dbc-webflux-exposed/src/main/kotlin/io/bluetape4k/workshop/exposed/r2dbc/config/ExposedSpringDataR2dbcConfig.kt"
+    qbe_repo="spring-data/r2dbc-webflux-exposed/src/main/kotlin/io/bluetape4k/workshop/exposed/r2dbc/domain/repository/UserQueryByExampleRepository.kt"
+    qbe_models="spring-data/r2dbc-webflux-exposed/src/main/kotlin/io/bluetape4k/workshop/exposed/r2dbc/domain/model/UserQbeModels.kt"
+    qbe_service="spring-data/r2dbc-webflux-exposed/src/main/kotlin/io/bluetape4k/workshop/exposed/r2dbc/service/UserService.kt"
+    qbe_controller="spring-data/r2dbc-webflux-exposed/src/main/kotlin/io/bluetape4k/workshop/exposed/r2dbc/controller/UserController.kt"
+    qbe_handler="spring-data/r2dbc-webflux-exposed/src/main/kotlin/io/bluetape4k/workshop/exposed/r2dbc/handler/UserHandler.kt"
+    qbe_test="spring-data/r2dbc-webflux-exposed/src/test/kotlin/io/bluetape4k/workshop/exposed/r2dbc/domain/repository/UserQueryByExampleRepositoryTest.kt"
+    qbe_api_test="spring-data/r2dbc-webflux-exposed/src/test/kotlin/io/bluetape4k/workshop/exposed/r2dbc/controller/UserControllerTest.kt"
+    qbe_route_test="spring-data/r2dbc-webflux-exposed/src/test/kotlin/io/bluetape4k/workshop/exposed/r2dbc/handler/UserHandlerIT.kt"
+    qbe_test_base="spring-data/r2dbc-webflux-exposed/src/test/kotlin/io/bluetape4k/workshop/exposed/r2dbc/AbstractWebfluxR2dbcExposedApplicationTest.kt"
+    qbe_readme="spring-data/r2dbc-webflux-exposed/README.md"
+    qbe_readme_ko="spring-data/r2dbc-webflux-exposed/README.ko.md"
+    qbe_lesson="docs/lessons/2026-09-04-issue-882-spring-data-qbe.md"
+    qbe_review="docs/review/2026-09-04-issue-882-spring-data-qbe.md"
+    if contains_pattern 'exposed-spring-boot-r2dbc.*bluetape4k-exposed-spring-boot-r2dbc' "$qbe_catalog" && \
+       contains_pattern 'libs\.exposed\.spring\.boot\.r2dbc' "$qbe_build" && \
+       contains_pattern 'DataR2dbcRepositoriesAutoConfiguration' "$qbe_app" && \
+       contains_pattern 'EnableExposedR2dbcRepositories' "$qbe_config" && \
+       contains_pattern 'ExposedR2dbcQueryByExampleRepository' "$qbe_repo" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern 'UserQbeResponse' "$qbe_models" "$qbe_service" "$qbe_controller" && \
+       contains_pattern 'ExampleMatcher' "$qbe_service" "$qbe_test" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern 'findBy' "$qbe_service" "$qbe_test" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern 'project' "$qbe_service" "$qbe_test" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern 'count' "$qbe_service" "$qbe_test" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern 'exists' "$qbe_service" "$qbe_test" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern 'cold' "$qbe_test" "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" && \
+       contains_pattern 'Flow' "$qbe_test" "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" && \
+       contains_pattern '(cancellation|취소)' "$qbe_test" "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" "$qbe_review" && \
+       contains_pattern 'TransactionManager\.defaultDatabase' "$qbe_test_base" && \
+       contains_pattern '/api/users/qbe' "$qbe_api_test" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern '/users/qbe' "$qbe_app" "$qbe_route_test" "$qbe_readme" "$qbe_readme_ko" && \
+       contains_pattern '2\.0\.0' "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" "$qbe_review" && \
+       contains_pattern ':spring-data-r2dbc-webflux-exposed:test' README.md README.ko.md && \
+       contains_pattern '#882' docs/coverage-matrix.md docs/lessons/README.md && \
+       contains_pattern 'spring-data/r2dbc-webflux-exposed' .github/workflows/Examples.yml && \
+       contains_pattern '"issue_numbers": \[882\]' docs/ecosystem-reuse-train.json && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$qbe_build" "$qbe_app" "$qbe_config" "$qbe_repo" "$qbe_models" "$qbe_service" "$qbe_controller" "$qbe_handler" "$qbe_test" "$qbe_api_test" "$qbe_route_test" "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" "$qbe_review" && \
+       [ -f "$qbe_lesson" ] && [ -f "$qbe_review" ]; then
+      echo "Spring Data Exposed QBE/FluentQuery example and lesson are registered."
+    else
+      echo "ERROR: Spring Data Exposed QBE/FluentQuery contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

@@ -41,6 +41,7 @@ dependencies {
 
     // Exposed R2DBC 의존성
     implementation(libs.exposed.r2dbc)
+    implementation(libs.exposed.spring.boot.r2dbc)
     implementation(libs.jetbrains.exposed.r2dbc)
 
     // Spring Boot 의존성
