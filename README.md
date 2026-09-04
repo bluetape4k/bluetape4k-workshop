@@ -124,13 +124,14 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`jackson-examples`](json/jackson-examples/) | `jackson3`, `logging` | In-memory | Jackson 3 datatype, polymorphism, custom serializers |
 | Basic | [`jsonview-examples`](json/jsonview-examples/) | `jackson3` | In-memory | `@JsonView` for selective field projection |
 | Basic | [`messaging-kafka`](messaging/kafka/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | Kafka producer/consumer with coroutines |
-| Advanced | [`messaging-kafka-reply`](messaging/kafka-reply/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | Kafka request-reply pattern with `ReplyingKafkaTemplate` |
+| Advanced | [`messaging-kafka-reply`](messaging/kafka-reply/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | Kafka request-reply with `ReplyingKafkaTemplate` plus a collection-scoped producer `callbackFlow` bridge |
 | Advanced | [`messaging-kafka-outbox-fallback`](messaging/kafka-outbox-fallback/) | `jackson3`, `exposed-jdbc`, `testcontainers`, `micrometer` | PostgreSQL + Kafka (TC) | Kafka-first publication with durable outbox fallback and relay/reconciler recovery |
 | Advanced | [`messaging-kafka-multi-broker-failover`](messaging/kafka-multi-broker-failover/) | `jackson3`, `kafka4`, `testcontainers` | Kafka (3-node KRaft TC) | Leader/coordinator failover, replica/ISR recovery, and redacted evidence |
 
 ```bash
 ./gradlew :jackson-examples:test
 ./gradlew :messaging-kafka:test
+./gradlew :messaging-kafka-reply:test
 ./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1
 ./gradlew :messaging-kafka-multi-broker-failover:test --tests '*KafkaMultiBrokerFailoverIntegrationTest.dataLeaderFailover' --max-workers=1
 ```

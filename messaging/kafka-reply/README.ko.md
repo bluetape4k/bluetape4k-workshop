@@ -70,6 +70,33 @@ fun handle(request: String): String {
 }
 ```
 
+## Producer callbackFlow bridge
+
+`KafkaProducerFlow` 예제는 Kafka의 callback 기반 `Producer.send` API를 collection 간 producer가 누수되지 않는
+cold Kotlin `Flow`로 변환한다. collection마다 producer 하나를 만들고 소유하며, `maxInFlight`로 미완료 send 수를
+제한하고 callback metadata를 bounded downstream channel에 보존한다. 정상 완료와 취소 모두 in-flight callback을
+기다린 뒤 bounded `flush`/`close`를 수행하고, 늦게 도착한 callback은 완료된 flow를 다시 열지 않는다.
+
+```kotlin
+val metadataFlow = KafkaProducerFlow(
+    producerFactory = { producer },
+    channelCapacity = 16,
+    maxInFlight = 16,
+).send(records)
+
+metadataFlow.collect { metadata ->
+    log.info { "record committed at ${metadata.topic()}-${metadata.partition()}:${metadata.offset()}" }
+}
+```
+
+`KafkaProducerFlowTest`는 성공/실패 callback, malformed callback payload, bounded backpressure, 늦은 callback을
+동반한 collector 취소, primary cause와 suppressed cleanup 보존, Kafka Testcontainers round trip을 검증한다.
+전체 예제 테스트는 다음과 같이 실행한다.
+
+```bash
+./gradlew :messaging-kafka-reply:test
+```
+
 ## 실행
 
 ```bash

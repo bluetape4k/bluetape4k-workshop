@@ -745,6 +745,34 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Kafka producer callbackFlow example guard ==="
+    kafka_flow_source="messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/flow/KafkaProducerFlow.kt"
+    kafka_flow_tests="messaging/kafka-reply/src/test/kotlin/io/bluetape4k/workshop/kafka/flow/KafkaProducerFlowTest.kt"
+    kafka_flow_readme="messaging/kafka-reply/README.md"
+    kafka_flow_readme_ko="messaging/kafka-reply/README.ko.md"
+    kafka_flow_lesson="docs/lessons/2026-09-04-issue-879-kafka-callbackflow.md"
+    if contains_pattern 'class KafkaProducerFlow' "$kafka_flow_source" && \
+       contains_pattern 'callbackFlow' "$kafka_flow_source" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       contains_pattern 'awaitClose' "$kafka_flow_source" && \
+       contains_pattern 'maxInFlight' "$kafka_flow_source" "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       contains_pattern 'channelCapacity' "$kafka_flow_source" "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       contains_pattern 'flush' "$kafka_flow_source" "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       contains_pattern 'close' "$kafka_flow_source" "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       contains_pattern 'malformed callback' "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       contains_pattern '(late callback|늦게 도착한 callback)' "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       contains_pattern 'KafkaProducerFlowTest' "$kafka_flow_tests" && \
+       contains_pattern ':messaging-kafka-reply:test' README.md README.ko.md && \
+       contains_pattern '#879' docs/coverage-matrix.md docs/lessons/README.md && \
+       contains_pattern '"issue_numbers": \[879\]' docs/ecosystem-reuse-train.json && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$kafka_flow_source" "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       [ -f "$kafka_flow_lesson" ]; then
+      echo "Kafka producer callbackFlow example and lesson are registered."
+    else
+      echo "ERROR: Kafka producer callbackFlow example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

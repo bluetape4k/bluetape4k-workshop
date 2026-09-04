@@ -51,6 +51,7 @@ on:
       - 'leader/job-safety-lab/**'
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
+      - 'messaging/kafka-reply/**'
       - 'messaging/kafka-outbox-fallback/**'
       - 'messaging/kafka-multi-broker-failover/**'
       - 'spring-modulith/module-boundaries/**'
@@ -113,6 +114,7 @@ on:
       - 'leader/job-safety-lab/**'
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
+      - 'messaging/kafka-reply/**'
       - 'messaging/kafka-outbox-fallback/**'
       - 'messaging/kafka-multi-broker-failover/**'
       - 'spring-modulith/module-boundaries/**'
@@ -532,6 +534,7 @@ jobs:
       # - spring-boot-cache-redis: Redis-backed cache path
       # - redis-redisson-examples: Redis-backed RLocalCachedMap numeric atomic update and cross-client invalidation path
       # - messaging-kafka: Kafka-backed messaging path
+      # - messaging-kafka-reply: Kafka request-reply plus collection-scoped producer callbackFlow path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - messaging-kafka-multi-broker-failover: three-broker KRaft leader/coordinator recovery path
       # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
@@ -570,6 +573,7 @@ jobs:
           :spring-boot-cache-redis:test
           :redis-redisson-examples:test
           :messaging-kafka:test
+          :messaging-kafka-reply:test
           :messaging-kafka-outbox-fallback:test
           :optimization-planning-contracts:test
           :optimization-field-service-dispatch:test
@@ -748,6 +752,8 @@ jobs:
             redis/redisson-examples/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml
             messaging/kafka/build/reports/tests/test/
+            messaging/kafka-reply/build/test-results/test/*.xml
+            messaging/kafka-reply/build/reports/tests/test/
             messaging/kafka-outbox-fallback/build/test-results/test/*.xml
             messaging/kafka-outbox-fallback/build/reports/tests/test/
             messaging/kafka-multi-broker-failover/build/test-results/test/*.xml
