@@ -11,6 +11,15 @@ bluetape4k:
       wait-time-seconds: 1
       visibility-timeout-seconds: 30
       max-receive-count: 3
+    modulith:
+      example:
+        enabled: false
+      events:
+        enabled: false
+        producer:
+          enabled: false
+        consumer:
+          enabled: false
 
 management:
   endpoints:

@@ -45,6 +45,79 @@ data class OrderNotificationEvent(
 }
 
 /**
+ * Spring Modulith가 원격 외부화 전에 받는 도메인 이벤트입니다.
+ *
+ * `privateNote`와 원본 `correlationId`는 외부 payload로 전달하지 않습니다.
+ */
+data class ModulithOrderPlacedEvent(
+    val eventId: String,
+    val orderId: String,
+    val correlationId: String,
+    val message: String,
+    val privateNote: String,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = -5961684298745017327L
+    }
+}
+
+/**
+ * 원격 consumer가 복원하는 비민감 integration DTO입니다.
+ *
+ * correlation은 안정적인 short hash로만 envelope header에 기록됩니다.
+ */
+data class ModulithOrderPlacedIntegrationEvent(
+    val eventId: String,
+    val orderId: String,
+    val message: String,
+    val correlationRef: String,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 6167017129168737702L
+    }
+}
+
+/** Modulith outbound publication의 bounded 상태입니다. */
+enum class ModulithPublishState {
+    PUBLISHED,
+    FAILED,
+}
+
+/** Modulith inbound 처리와 acknowledgement의 bounded 상태입니다. */
+enum class ModulithConsumeState {
+    EMPTY,
+    ACKED,
+    RETRY_REQUESTED,
+}
+
+/** 실제 transport completion까지 기다린 외부화 결과입니다. */
+data class ModulithPublishReport(
+    val state: ModulithPublishState,
+    val eventId: String,
+    val targetAlias: String,
+    val message: String,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
+/** consumer outcome과 manual acknowledgement 순서를 보존하는 결과입니다. */
+data class ModulithConsumeReport(
+    val state: ModulithConsumeState,
+    val messageId: String? = null,
+    val eventId: String? = null,
+    val receiveCount: Int = 0,
+    val outcome: String? = null,
+    val acknowledgementCalls: Int = 0,
+    val message: String = "",
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
+/**
  * SNS 발행 경계 상태입니다.
  */
 enum class PublishState {

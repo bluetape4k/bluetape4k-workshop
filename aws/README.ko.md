@@ -43,7 +43,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | `storage-abstraction/` | `:aws-storage-abstraction` | `local`, `s3`, `s3-presigned` profile을 가진 `StorageService`, coroutine 친화적인 blocking I/O 경계, pre-signed URL 동작을 확인합니다. |
 | `ktor-dynamodb/` | `:aws-ktor-dynamodb` | Ktor REST route, Streams를 켠 `DynamoDbKtorPlugin` table bootstrap, conditional write, optimistic version update, local readiness, opt-in bounded coroutine Flow consumer를 확인합니다. |
 | `eventbridge-scheduler/` | `:aws-eventbridge-scheduler` | Order workflow event envelope, EventBridge publish status, 지연 Scheduler request mapping, idempotency key, correlation id를 확인합니다. |
-| `sqs-sns-coroutines/` | `:aws-sqs-sns-coroutines` | SNS publish request, SQS polling, coroutine cancellation propagation, retry visibility change, dead-letter report, Micrometer outcome metric을 확인합니다. |
+| `sqs-sns-coroutines/` | `:aws-sqs-sns-coroutines` | SNS publish/PublishBatch, SQS polling과 observation, Spring Modulith SNS/SQS externalization, coroutine cancellation propagation, retry visibility change, dead-letter report, Micrometer outcome metric을 확인합니다. |
 | `kinesis-coroutines/` | `:aws-kinesis-coroutines` | Kinesis stream readiness, partition-key publish, shard/sequence consume, coroutine cancellation, bounded retry/backoff, local fake와 명시적 `real-aws` opt-in을 확인합니다. |
 | `cloudwatch-imds-observability/` | `:aws-cloudwatch-imds-observability` | CloudWatch metric/log publish intent, Micrometer meter publishing, failure isolation, 명시적 IMDS metadata opt-in을 실제 자격 증명 없이 확인합니다. |
 | `s3-vectors-access-grants/` | `:aws-s3-vectors-access-grants` | S3 Vectors 문서 upsert/query 경계, deterministic local vector ranking, redacted S3 Access Grants read-decision report를 확인합니다. |
@@ -74,7 +74,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | `s3-spring-cloud/` | Floci 기반 S3 통합 테스트 | Spring Boot 테스트가 `FlociServer.Launcher.floci`를 시작하고, 같은 S3 호환 endpoint에서 `S3Template`, `S3Client`, `ResourceLoader`를 검증합니다. |
 | `storage-abstraction/` | Floci 기반 S3 통합 테스트 | `s3`, `s3-presigned` profile이 `S3Config.floci`를 사용하며 upload, download, delete, pre-signed URL 동작을 검증합니다. |
 | `ktor-dynamodb/` | Floci 기반 DynamoDB + Streams 통합 테스트 | Ktor 테스트가 `FlociServer.Launcher.floci`, AWS Kotlin `DynamoDbClient`, Streams-enabled `DynamoDbKtorPlugin` table bootstrap, bounded Flow consume, checkpoint resume, duplicate report를 함께 검증합니다. |
-| `sqs-sns-coroutines/` | Floci 기반 SNS/SQS 통합 테스트와 local adapter | Unit test는 local fake 경계를 작게 유지하고, 통합 테스트는 Floci에서 `SnsCoroutinesTemplate` publish와 `SqsCoroutinesTemplate` consume을 검증합니다. |
+| `sqs-sns-coroutines/` | Floci 기반 SNS/SQS/Modulith 통합 테스트와 local adapter | Unit test는 local fake 경계를 작게 유지하고, 통합 fixture는 Floci에서 `SnsCoroutinesTemplate` publish, Spring Modulith externalization, `SqsCoroutinesTemplate` consume을 검증합니다. |
 | `kinesis-coroutines/` | deterministic local adapter | 기본 테스트는 AWS credential resolution이나 network endpoint를 사용하지 않습니다. exactly-once/global ordering을 주장하지 않고 cancellation, retry/backoff, partition key, shard sequence report를 학습합니다. |
 | `eventbridge-scheduler/` | local adapter only | 이 lesson은 실제 AWS target provisioning 없이 EventBridge entry, Scheduler request mapping, idempotency, failure/cancellation 경계를 배우는 데 집중합니다. |
 | `cloudwatch-imds-observability/` | local adapter only | metadata 접근을 명시적이고 안전하게 유지하기 위해 기본 테스트에서는 CloudWatch와 IMDS network call을 피합니다. |

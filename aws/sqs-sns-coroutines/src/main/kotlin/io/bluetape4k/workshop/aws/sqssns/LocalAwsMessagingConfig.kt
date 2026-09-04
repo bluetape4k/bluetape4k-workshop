@@ -9,6 +9,7 @@ import io.bluetape4k.aws.spring.sns.SnsPublishBatchResult
 import io.bluetape4k.aws.spring.sns.SnsPublishBatchSuccess
 import io.bluetape4k.aws.spring.sns.SnsPublishRequest
 import io.bluetape4k.aws.spring.sns.SnsSmsRequest
+import io.bluetape4k.aws.spring.sqs.SqsFullRequestOperations
 import io.bluetape4k.aws.spring.sqs.SqsOperations
 import io.bluetape4k.aws.spring.sqs.SqsReceivedMessage
 import io.bluetape4k.aws.spring.sqs.SqsSendRequest
@@ -118,7 +119,7 @@ class LocalSnsOperations: SnsOperations {
 /**
  * 실제 bean이 제공되지 않을 때만 사용하는 인메모리 SQS 작업입니다.
  */
-class LocalSqsOperations: SqsOperations {
+class LocalSqsOperations: SqsFullRequestOperations {
     private val messagesByQueue: MutableMap<String, CopyOnWriteArrayList<Message>> = ConcurrentHashMap()
     private val invisibleUntil: MutableMap<String, Long> = ConcurrentHashMap()
     private val ids = AtomicInteger()
@@ -154,7 +155,13 @@ class LocalSqsOperations: SqsOperations {
             .receiptHandle(receiptHandle)
             .body(request.body)
             .messageAttributes(request.messageAttributes)
-            .attributes(mapOf(MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT to "0"))
+            .attributes(
+                buildMap {
+                    put(MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT, "0")
+                    request.component4()?.let { put(MessageSystemAttributeName.MESSAGE_GROUP_ID, it) }
+                    request.component5()?.let { put(MessageSystemAttributeName.MESSAGE_DEDUPLICATION_ID, it) }
+                },
+            )
             .build()
         messagesByQueue.computeIfAbsent(request.queueUrl) { CopyOnWriteArrayList() } += message
         return SendMessageResponse.builder().messageId(messageId).build()

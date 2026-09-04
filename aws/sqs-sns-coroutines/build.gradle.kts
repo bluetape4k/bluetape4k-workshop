@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.micrometer.core)
     implementation(libs.micrometer.observation.lib)
+    implementation(libs.spring.modulith.events.core)
 
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
@@ -35,6 +36,7 @@ dependencies {
     implementation(libs.spring.boot.starter.webmvc.lib)
 
     implementation(libs.kotlinx.coroutines.reactor)
+    implementation(libs.kotlinx.coroutines.jdk8)
     implementation(libs.reactor.core)
 
     testImplementation(libs.bluetape4k.assertions)

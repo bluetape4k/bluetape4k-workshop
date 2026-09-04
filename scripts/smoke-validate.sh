@@ -629,6 +629,35 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== AWS Spring Modulith SNS/SQS externalization example guard ==="
+    modulith_build="aws/sqs-sns-coroutines/build.gradle.kts"
+    modulith_config="aws/sqs-sns-coroutines/src/main/kotlin/io/bluetape4k/workshop/aws/sqssns/ModulithExternalizationExample.kt"
+    modulith_models="aws/sqs-sns-coroutines/src/main/kotlin/io/bluetape4k/workshop/aws/sqssns/OrderNotificationModels.kt"
+    modulith_local="aws/sqs-sns-coroutines/src/main/kotlin/io/bluetape4k/workshop/aws/sqssns/LocalAwsMessagingConfig.kt"
+    modulith_tests="aws/sqs-sns-coroutines/src/test/kotlin/io/bluetape4k/workshop/aws/sqssns/ModulithExternalizationExampleTest.kt"
+    modulith_readme="aws/sqs-sns-coroutines/README.md"
+    modulith_readme_ko="aws/sqs-sns-coroutines/README.ko.md"
+    modulith_resources="aws/sqs-sns-coroutines/src/main/resources/application.yml"
+    modulith_lesson="docs/lessons/2026-09-04-issue-876-modulith-externalization.md"
+    if contains_pattern 'spring\.modulith\.events\.core' "$modulith_build" && \
+       contains_pattern 'AwsModulithMessagingExampleConfiguration' "$modulith_config" "$modulith_tests" "$modulith_readme" "$modulith_readme_ko" && \
+       contains_pattern 'EventExternalizationConfiguration' "$modulith_config" && \
+       contains_pattern 'EventExternalizerModuleListener' "$modulith_config" && \
+       contains_pattern 'AwsModulithSqsEventConsumer' "$modulith_config" && \
+       contains_pattern 'ModulithOrderPlacedIntegrationEvent' "$modulith_models" "$modulith_config" "$modulith_tests" && \
+       contains_pattern 'RETRY_REQUESTED' "$modulith_models" "$modulith_config" "$modulith_tests" && \
+       contains_pattern 'visibilityChanges' "$modulith_local" "$modulith_tests" && \
+       contains_pattern 'externalization' "$modulith_readme" "$modulith_readme_ko" && \
+       contains_pattern 'modulith:' "$modulith_resources" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$modulith_build" "$modulith_config" "$modulith_tests" "$modulith_readme" "$modulith_readme_ko" "$modulith_resources" && \
+       [ -f "$modulith_lesson" ]; then
+      echo "AWS Spring Modulith SNS/SQS externalization example and lesson are registered."
+    else
+      echo "ERROR: AWS Spring Modulith SNS/SQS externalization example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== AWS S3 client-side encryption storage example guard ==="
     cse_build="aws/storage-abstraction/build.gradle.kts"
     cse_config="aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3Config.kt"
