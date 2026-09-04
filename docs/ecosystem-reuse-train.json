@@ -867,8 +867,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-877-tenant-context-scope",
-    "checksum": "80d36a10e741cd8cd0b0543fd16abbe27ac1d483d674459238e08d7c915b13f7"
+    "receipt_id": "20260904T-issue-878-rlocalcachedmap-scope",
+    "checksum": "fcfeb0cce375024b4aca77265cd9453f8de44edcd5e379c5acf40822e9841d18"
   },
   "planned_scope_replan_receipts": {
   },
