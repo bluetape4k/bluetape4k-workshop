@@ -432,7 +432,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/advanced-workflow image-processing/ocr-api image-processing/profile-image-moderation image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
+    for module in image-processing/advanced-workflow image-processing/ocr-api image-processing/profile-image-moderation image-processing/barcode-api graph/social-network commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"
@@ -931,6 +931,35 @@ case "${1:-help}" in
       echo "Profile image privacy-safe derivative example and lesson are registered."
     else
       echo "ERROR: Profile image privacy-safe derivative contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Graph social weighted shortest-path guard ==="
+    graph_social_service="graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/service/SocialNetworkService.kt"
+    graph_social_suspend_service="graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/service/SocialNetworkSuspendService.kt"
+    graph_social_tests="graph/social-network/src/test/kotlin/io/bluetape4k/workshop/graph/social"
+    graph_social_readme="graph/social-network/README.md"
+    graph_social_readme_ko="graph/social-network/README.ko.md"
+    graph_social_lesson="docs/lessons/2026-09-05-issue-886-social-weighted-path.md"
+    graph_social_review="docs/superpowers/specs/2026-09-05-issue-886-social-weighted-path-implementation-review.md"
+    if contains_pattern 'findWeightedConnectionPath' "$graph_social_service" "$graph_social_suspend_service" "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" && \
+       contains_pattern 'PathOptions' "$graph_social_service" "$graph_social_suspend_service" "$graph_social_tests" && \
+       contains_pattern 'totalWeight' "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" && \
+       contains_pattern 'MissingWeightPolicy' "$graph_social_service" "$graph_social_suspend_service" "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" && \
+       contains_pattern 'maxVisited' "$graph_social_service" "$graph_social_suspend_service" "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" && \
+       contains_pattern 'maxDepth' "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" && \
+       contains_pattern 'deterministic|결정적' "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" "$graph_social_review" && \
+       contains_pattern ':graph-social-network:test' README.md README.ko.md && \
+       contains_pattern '#886' docs/coverage-matrix.md docs/lessons/README.md "$graph_social_lesson" && \
+       contains_pattern 'graph/social-network' .github/workflows/Examples.yml && \
+       contains_pattern '"issue_numbers": \[883, 884, 885, 886\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$graph_social_readme" "$graph_social_readme_ko" "$graph_social_lesson" "$graph_social_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$graph_social_service" "$graph_social_suspend_service" "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" "$graph_social_lesson" "$graph_social_review" && \
+       [ -f "$graph_social_lesson" ] && [ -f "$graph_social_review" ]; then
+      echo "Graph social weighted shortest-path example and lesson are registered."
+    else
+      echo "ERROR: Graph social weighted shortest-path contract is missing or stale."
       exit 1
     fi
 

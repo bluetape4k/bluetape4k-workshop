@@ -537,7 +537,7 @@ jobs:
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
       # - graph-recommendation: Neo4j/Memgraph-backed recommendation path
       # - graph-knowledge-graph: Neo4j/Memgraph-backed knowledge graph path
-      # - graph-social-network: Neo4j/Memgraph-backed social graph path
+      # - graph-social-network: Neo4j/Memgraph-backed social graph path and weighted maxDepth conformance
       # - spring-boot-cache-redis: Redis-backed cache path
       # - redis-redisson-examples: Redis-backed RLocalCachedMap numeric atomic update and cross-client invalidation path
       # - messaging-kafka: Kafka-backed messaging path

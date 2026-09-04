@@ -3,10 +3,16 @@ package io.bluetape4k.workshop.graph.social
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeNear
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.graph.model.Direction
+import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.graph.model.MissingWeightException
+import io.bluetape4k.graph.model.MissingWeightPolicy
+import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.workshop.graph.social.model.ConnectionRecommendation
 import io.bluetape4k.workshop.graph.social.schema.CompanyLabel
@@ -458,6 +464,153 @@ abstract class AbstractSocialNetworkTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // 10b. weighted findWeightedConnectionPath
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `findWeightedConnectionPath prefers lower cumulative strength over fewer hops`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val bob = service.addPerson("bob", "Bob Jones")
+        val carol = service.addPerson("carol", "Carol Park")
+        val eve = service.addPerson("eve", "Eve Lee")
+        val dave = service.addPerson("dave", "Dave Kim")
+
+        // 2-hop path cost 18 versus 3-hop path cost 6.
+        addKnows(alice, bob, "9")
+        addKnows(bob, dave, "9")
+        addKnows(alice, carol, "2")
+        addKnows(carol, eve, "2")
+        addKnows(eve, dave, "2")
+
+        val path = service.findWeightedConnectionPath(alice.id, dave.id).shouldNotBeNull()
+
+        path.totalWeight.shouldBeNear(6.0, 0.0001)
+        path.vertices.map { it.properties[PersonLabel.personId.name] } shouldBeEqualTo
+            listOf("alice", "carol", "eve", "dave")
+    }
+
+    @Test
+    fun `findWeightedConnectionPath enforces inclusive maxDepth without returning a partial path`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val bob = service.addPerson("bob", "Bob Jones")
+        val carol = service.addPerson("carol", "Carol Park")
+        val dave = service.addPerson("dave", "Dave Kim")
+        addKnows(alice, bob, "1")
+        addKnows(bob, carol, "1")
+        addKnows(carol, dave, "1")
+
+        service.findWeightedConnectionPath(alice.id, dave.id, maxDepth = 2) shouldBeEqualTo null
+        service.findWeightedConnectionPath(alice.id, dave.id, maxDepth = 3)
+            .shouldNotBeNull().totalWeight.shouldBeNear(3.0, 0.0001)
+    }
+
+    @Test
+    fun `findWeightedConnectionPath allows a zero-depth vertex-only path`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+
+        val path = service.findWeightedConnectionPath(alice.id, alice.id, maxDepth = 0).shouldNotBeNull()
+
+        path.length shouldBeEqualTo 0
+        path.totalWeight.shouldBeNear(0.0, 0.0001)
+        path.vertices.map { it.properties[PersonLabel.personId.name] } shouldBeEqualTo listOf("alice")
+    }
+
+    @Test
+    fun `findWeightedConnectionPath returns null after maxVisited is exceeded`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val bob = service.addPerson("bob", "Bob Jones")
+        val carol = service.addPerson("carol", "Carol Park")
+        val dave = service.addPerson("dave", "Dave Kim")
+        addKnows(alice, bob, "1")
+        addKnows(bob, carol, "1")
+        addKnows(carol, dave, "1")
+
+        service.findWeightedConnectionPath(alice.id, dave.id, maxVisited = 1) shouldBeEqualTo null
+    }
+
+    @Test
+    fun `findWeightedConnectionPath exposes missing weight policies`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val bob = service.addPerson("bob", "Bob Jones")
+        val carol = service.addPerson("carol", "Carol Park")
+        addKnows(alice, bob, null)
+        addKnows(bob, carol, "1")
+
+        assertFailsWith<MissingWeightException> {
+            service.findWeightedConnectionPath(alice.id, carol.id)
+        }
+        service.findWeightedConnectionPath(
+            alice.id,
+            carol.id,
+            missingWeightPolicy = MissingWeightPolicy.Skip,
+        ) shouldBeEqualTo null
+        service.findWeightedConnectionPath(
+            alice.id,
+            carol.id,
+            missingWeightPolicy = MissingWeightPolicy.UseDefault(1.0),
+        ).shouldNotBeNull().totalWeight.shouldBeNear(2.0, 0.0001)
+    }
+
+    @Test
+    fun `findWeightedConnectionPath rejects non-positive non-finite and non-numeric weights`() {
+        listOf("-1", "0", "NaN", "Infinity", "not-a-number").forEachIndexed { index, raw ->
+            val from = service.addPerson("invalid-from-$index", "Invalid From $index")
+            val to = service.addPerson("invalid-to-$index", "Invalid To $index")
+            addKnows(from, to, raw)
+
+            assertFailsWith<IllegalArgumentException> {
+                service.findWeightedConnectionPath(from.id, to.id)
+            }
+        }
+    }
+
+    @Test
+    fun `findWeightedConnectionPath honors direction`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val bob = service.addPerson("bob", "Bob Jones")
+        addKnows(alice, bob, "1")
+
+        service.findWeightedConnectionPath(alice.id, bob.id, direction = Direction.OUTGOING)
+            .shouldNotBeNull().totalWeight.shouldBeNear(1.0, 0.0001)
+        service.findWeightedConnectionPath(alice.id, bob.id, direction = Direction.INCOMING) shouldBeEqualTo null
+    }
+
+    @Test
+    fun `findWeightedConnectionPath is deterministic for equal-cost paths`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val bob = service.addPerson("bob", "Bob Jones")
+        val carol = service.addPerson("carol", "Carol Park")
+        val dave = service.addPerson("dave", "Dave Kim")
+        addKnows(alice, bob, "1")
+        addKnows(bob, dave, "1")
+        addKnows(alice, carol, "1")
+        addKnows(carol, dave, "1")
+
+        val first = service.findWeightedConnectionPath(alice.id, dave.id).shouldNotBeNull()
+        val second = service.findWeightedConnectionPath(alice.id, dave.id).shouldNotBeNull()
+
+        first.vertices.map { it.id } shouldBeEqualTo second.vertices.map { it.id }
+        first.totalWeight.shouldBeNear(second.totalWeight, 0.0001)
+    }
+
+    @Test
+    fun `findWeightedConnectionPath matches the backend PathOptions result`() {
+        val seed = seedSocialNetwork(service)
+        val options = PathOptions(
+            edgeLabel = KnowsLabel.label,
+            maxDepth = SocialNetworkService.MAX_TRAVERSAL_DEPTH,
+            weightProperty = KnowsLabel.strength.name,
+            direction = Direction.OUTGOING,
+        )
+
+        val servicePath = service.findWeightedConnectionPath(seed.alice.id, seed.dave.id)
+        val backendPath = ops.shortestPath(seed.alice.id, seed.dave.id, options)
+
+        servicePath?.vertices?.map { it.id } shouldBeEqualTo backendPath?.vertices?.map { it.id }
+        servicePath?.totalWeight?.shouldBeNear(backendPath?.totalWeight ?: 0.0, 0.0001)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // 11. findAllConnectionPaths
     // ─────────────────────────────────────────────────────────────────────
 
@@ -479,6 +632,11 @@ abstract class AbstractSocialNetworkTest {
         val paths = service.findAllConnectionPaths(alice.id, isolated.id)
 
         paths.shouldBeEmpty()
+    }
+
+    private fun addKnows(from: GraphVertex, to: GraphVertex, weight: Any?) {
+        val properties = weight?.let { mapOf(KnowsLabel.strength.name to it) } ?: emptyMap()
+        ops.createEdge(from.id, to.id, KnowsLabel.label, properties)
     }
 
     // ─────────────────────────────────────────────────────────────────────

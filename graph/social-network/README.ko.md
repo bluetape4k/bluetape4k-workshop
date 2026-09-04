@@ -8,9 +8,11 @@
 사용한 LinkedIn 스타일 그래프 도메인 예제입니다. 사람, 회사, 전문 네트워크 관계, 탐색
 쿼리를 TinkerGraph, Neo4j, Memgraph에서 같은 서비스 계약으로 다루는 방법을 보여줍니다.
 
+이 예제는 `bluetape4k-dependencies` `2.0.0` BOM을 기준으로 합니다.
+
 작지만 완전한 소셜 그래프를 확인하고 싶을 때 이 모듈을 보면 됩니다. 멱등 vertex 생성,
 양방향 `KNOWS`, 단방향 `FOLLOWS`, 회사 연결 `WORKS_AT`, FOAF 추천, 동료 탐색,
-최단 경로 탐색을 한 흐름에서 확인할 수 있습니다.
+hop/weighted 최단 경로 탐색을 한 흐름에서 확인할 수 있습니다.
 
 ---
 
@@ -35,8 +37,8 @@ graph/social-network/
 │           └── SocialNetworkSuspendService.kt # 코루틴/Flow 서비스
 └── src/test/kotlin/
     └── io/bluetape4k/workshop/graph/social/
-        ├── AbstractSocialNetworkTest.kt         # 34개 블로킹 테스트
-        ├── AbstractSocialNetworkSuspendTest.kt  # 34개 suspend 테스트
+        ├── AbstractSocialNetworkTest.kt         # 50개 블로킹 테스트
+        ├── AbstractSocialNetworkSuspendTest.kt  # 50개 suspend 테스트
         ├── SocialNetworkTinkerGraphTest.kt      # 인메모리 TinkerGraph
         ├── SocialNetworkSuspendTinkerGraphTest.kt
         ├── Neo4jSocialNetworkTest.kt            # @Tag("integration")
@@ -115,6 +117,16 @@ val colleagues: List<GraphVertex> = service.findColleagues(alice.id)
 val path: GraphPath? = service.findConnectionPath(alice.id, dave.id)
 // path.vertices.size == 3  (alice → bob → dave)
 
+// 가중치 최단 경로 (KNOWS.strength가 낮을수록 누적 비용이 낮음)
+val weighted: GraphPath? = service.findWeightedConnectionPath(
+    alice.id,
+    dave.id,
+    maxDepth = 6,
+    maxVisited = 10_000,
+)
+// weighted?.totalWeight에서 누적 strength 비용을 확인합니다.
+// 동일 비용 경로는 결정적인 vertex ID 순서를 사용합니다.
+
 // maxDepth 이내 모든 경로
 val paths: List<GraphPath> = service.findAllConnectionPaths(alice.id, dave.id, maxDepth = 3)
 
@@ -132,6 +144,12 @@ val service = SocialNetworkSuspendService(ops, graphName)
 val direct: Flow<GraphVertex>  = service.getDirectConnections(alice.id)
 val paths:  Flow<GraphPath>    = service.findAllConnectionPaths(alice.id, dave.id)
 val recs:   List<ConnectionRecommendation> = service.recommendConnections(alice.id)  // suspend
+
+val weighted: GraphPath? = service.findWeightedConnectionPath(
+    alice.id,
+    dave.id,
+    missingWeightPolicy = MissingWeightPolicy.Fail,
+)
 ```
 
 ## 상수
@@ -139,6 +157,8 @@ val recs:   List<ConnectionRecommendation> = service.recommendConnections(alice.
 ```kotlin
 SocialNetworkService.MAX_TRAVERSAL_DEPTH        // 6
 SocialNetworkSuspendService.MAX_TRAVERSAL_DEPTH // 6
+SocialNetworkService.DEFAULT_WEIGHTED_MAX_VISITED        // 10_000
+SocialNetworkSuspendService.DEFAULT_WEIGHTED_MAX_VISITED // 10_000
 ```
 
 ## 테스트 실행
