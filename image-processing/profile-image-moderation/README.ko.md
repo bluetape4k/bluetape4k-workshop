@@ -23,6 +23,7 @@
 | Moderation policy | profile content policy adapter | `ProfileImageModerationPolicyProvider` |
 | Metrics | 낮은 cardinality의 Micrometer counter/timer | `ProfileImageMetrics` |
 | ID 생성 | Base58 upload id | `ProfileImageService` |
+| Privacy derivative | strict metadata/GPS 제거, orientation normalization, redaction report | `ProfileImageProcessor`, `PrivacyDerivativePipeline` |
 
 ## API
 
@@ -51,6 +52,29 @@ Pending 응답:
   "defaultImageUrl": "http://localhost:8080/public-images/profile-images/default/default-profile.jpg",
   "reason": null
 }
+```
+
+## Privacy-safe Derivatives
+
+Pending blurred JPEG와 승인된 public JPEG는 모두 bluetape4k-images `2.0.0`의
+`PrivacyDerivativePipeline`으로 다시 인코딩합니다. 기본 정책은 EXIF, GPS, XMP, IPTC, ICC metadata를 제거하고 EXIF orientation을
+정규화한 뒤 output을 strict하게 다시 읽어 storage 전에 검증합니다. 소비자 adapter는
+`ProfileImageProcessor.processPrivacySafe`입니다. 제한된
+`PrivacyDerivativeReport`에는 요청/잔존 category와 적용한 redaction geometry만 기록하며
+raw metadata나 image bytes는 포함하지 않습니다. metadata reader failure 또는 category
+잔존은 fail-closed로 처리하므로 public derivative를 업로드하지 않고 private 원본과
+moderation state machine은 변경하지 않습니다.
+
+Storage 계약을 바꾸지 않고 정책을 조정할 수 있습니다.
+
+```yaml
+workshop:
+  profile-image-moderation:
+    privacy:
+      strip-metadata: true
+      remove-gps: true
+      normalize-orientation: true
+      max-metadata-bytes: 5242880
 ```
 
 현재 프로필 이미지를 조회합니다.
@@ -128,4 +152,4 @@ Local storage 기본 경로는 `${java.io.tmpdir}/bluetape4k-profile-images`입�
 ./gradlew :image-processing-profile-image-moderation:test
 ```
 
-테스트는 pending/approved/rejected/failed/no-image 상태, stale moderation completion, private URL denial, storage failure cleanup, JPEG derivative signature, pending 응답의 no-store cache, low-cardinality metrics를 검증합니다.
+테스트는 pending/approved/rejected/failed/no-image 상태, stale moderation completion, private URL denial, storage failure cleanup, strict privacy metadata verification, orientation/redaction report geometry, source-reader fail-closed 처리, JPEG derivative signature, pending 응답의 no-store cache, low-cardinality metrics를 검증합니다.

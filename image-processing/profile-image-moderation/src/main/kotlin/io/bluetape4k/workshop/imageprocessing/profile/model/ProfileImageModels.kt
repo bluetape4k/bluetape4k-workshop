@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.imageprocessing.profile.model
 
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.privacy.PrivacyDerivativeReport
 import java.io.Serializable
 import java.time.Instant
+import kotlin.jvm.Transient
 
 /**
  * 예제 API가 반환하는 유효 프로필 이미지 URL의 생명주기 상태입니다.
@@ -64,6 +66,8 @@ data class ProcessedProfileImage(
     val pendingBytes: ByteArray,
     val approvedBytes: ByteArray,
     val contentType: String = "image/jpeg",
+    @Transient val pendingPrivacyReport: PrivacyDerivativeReport? = null,
+    @Transient val approvedPrivacyReport: PrivacyDerivativeReport? = null,
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L

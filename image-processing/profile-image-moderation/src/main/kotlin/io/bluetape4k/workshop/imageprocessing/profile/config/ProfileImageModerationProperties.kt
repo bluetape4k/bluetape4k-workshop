@@ -26,6 +26,7 @@ data class ProfileImageModerationProperties(
     val moderationTimeout: Duration = Duration.ofSeconds(3),
     val decisionDelay: Duration = Duration.ofSeconds(1),
     val rejectedFilenameMarker: String = "reject",
+    val privacy: ProfileImagePrivacyProperties = ProfileImagePrivacyProperties(),
 ) : Serializable {
 
     companion object {
@@ -45,5 +46,24 @@ data class ProfileImageModerationProperties(
         moderationTimeout.requireGt(Duration.ZERO, "moderationTimeout")
         require(!decisionDelay.isNegative) { "decisionDelay must be zero or positive" }
         rejectedFilenameMarker.requireNotBlank("rejectedFilenameMarker")
+    }
+}
+
+/**
+ * 공개 프로필 derivative에 적용하는 privacy 정책과 bounded metadata reader 설정입니다.
+ */
+data class ProfileImagePrivacyProperties(
+    val stripMetadata: Boolean = true,
+    val removeGps: Boolean = true,
+    val normalizeOrientation: Boolean = true,
+    val maxMetadataBytes: Int = 5 * 1024 * 1024,
+) : Serializable {
+
+    init {
+        maxMetadataBytes.requirePositiveNumber("maxMetadataBytes")
+    }
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }

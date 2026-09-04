@@ -432,7 +432,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/advanced-workflow image-processing/ocr-api image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
+    for module in image-processing/advanced-workflow image-processing/ocr-api image-processing/profile-image-moderation image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"
@@ -895,6 +895,42 @@ case "${1:-help}" in
       echo "Spring Data Exposed QBE/FluentQuery example and lesson are registered."
     else
       echo "ERROR: Spring Data Exposed QBE/FluentQuery contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Profile image privacy-safe derivative guard ==="
+    privacy_build="image-processing/profile-image-moderation/build.gradle.kts"
+    privacy_config="image-processing/profile-image-moderation/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/profile/config/ProfileImageModerationProperties.kt"
+    privacy_processor="image-processing/profile-image-moderation/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/profile/service/ProfileImageProcessor.kt"
+    privacy_service="image-processing/profile-image-moderation/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/profile/service/ProfileImageService.kt"
+    privacy_model="image-processing/profile-image-moderation/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/profile/model/ProfileImageModels.kt"
+    privacy_tests="image-processing/profile-image-moderation/src/test/kotlin/io/bluetape4k/workshop/imageprocessing/profile/service"
+    privacy_readme="image-processing/profile-image-moderation/README.md"
+    privacy_readme_ko="image-processing/profile-image-moderation/README.ko.md"
+    privacy_yaml="image-processing/profile-image-moderation/src/main/resources/application.yml"
+    privacy_lesson="docs/lessons/2026-09-04-issue-885-privacy-derivative.md"
+    privacy_review="docs/superpowers/specs/2026-09-04-issue-885-privacy-derivative-implementation-review.md"
+    if contains_pattern 'libs\.bluetape4k\.images' "$privacy_build" && \
+       contains_pattern 'ProfileImagePrivacyProperties' "$privacy_config" && \
+       contains_pattern 'strip-metadata|remove-gps|max-metadata-bytes' "$privacy_yaml" "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern 'processPrivacySafe' "$privacy_processor" "$privacy_service" "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern 'PrivacyDerivativePipeline|suspendPrivacyDerivative|PrivacyDerivativeOptions' "$privacy_processor" && \
+       contains_pattern 'PrivacyMetadataCategory|PrivacyRedaction|privacy_safe_derivatives' "$privacy_tests" && \
+       contains_pattern 'PrivacyDerivativePipeline' "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern 'PrivacyDerivativeReport' "$privacy_processor" "$privacy_model" "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern 'readImageMetadataReportStrict' "$privacy_processor" "$privacy_tests" && \
+       contains_pattern 'redaction|Redaction' "$privacy_processor" "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern ':image-processing-profile-image-moderation:test' README.md README.ko.md && \
+       contains_pattern '#885' docs/coverage-matrix.md docs/lessons/README.md "$privacy_lesson" && \
+       contains_pattern '"issue_numbers": \[883, 884, 885\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern 'image-processing/profile-image-moderation' .github/workflows/Examples.yml && \
+       contains_pattern '2\.0\.0' "$privacy_readme" "$privacy_readme_ko" "$privacy_lesson" "$privacy_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$privacy_build" "$privacy_config" "$privacy_processor" "$privacy_service" "$privacy_model" "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" "$privacy_yaml" "$privacy_lesson" "$privacy_review" && \
+       [ -f "$privacy_lesson" ] && [ -f "$privacy_review" ]; then
+      echo "Profile image privacy-safe derivative example and lesson are registered."
+    else
+      echo "ERROR: Profile image privacy-safe derivative contract is missing or stale."
       exit 1
     fi
 
