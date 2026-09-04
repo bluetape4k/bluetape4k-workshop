@@ -31,7 +31,7 @@ Issue #885의 `ProfileImageProcessor`, privacy configuration/model, service uplo
 - `:image-processing-profile-image-moderation:test`: 27 passing
 - `detekt`: PASS
 - README language/parity, stale-check, `git diff --check`: 모두 PASS
-- ecosystem follow-up scope canonical JSON SHA-256: `ad52d6d99c893e83aa28417ddfa8b5a002d39d503ffefa6bfe4e990f650b4b83`
+- ecosystem follow-up scope canonical JSON SHA-256: `e22a60cbf72f97a695cbd19fb036e45278a26d8f6978521f2a6eba327211d15e`
   (fresh coordinator receipt `20260905T-issue-885-privacy-derivative-scope`)
 
 ## 잔여 위험과 후속 범위

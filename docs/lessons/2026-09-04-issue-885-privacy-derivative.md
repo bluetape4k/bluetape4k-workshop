@@ -30,7 +30,7 @@ fail-closed 된다.
 - privacy processor/service targeted tests: 5 passing
 - repository `detekt`: PASS
 - README language/parity, stale-check, `git diff --check`: 모두 PASS
-- ecosystem reuse follow-up scope canonical SHA-256 `ad52d6d99c893e83aa28417ddfa8b5a002d39d503ffefa6bfe4e990f650b4b83`, fresh coordinator receipt
+- ecosystem reuse follow-up scope canonical SHA-256 `e22a60cbf72f97a695cbd19fb036e45278a26d8f6978521f2a6eba327211d15e`, fresh coordinator receipt
   `20260905T-issue-885-privacy-derivative-scope`
 
 ## Future Guidance
