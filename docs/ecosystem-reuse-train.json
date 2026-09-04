@@ -696,6 +696,43 @@
       "review_artifact": "docs/review/2026-09-04-issue-876-modulith-externalization.md"
     },
     {
+      "scope_id": "issue-877-tenant-context",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-877-tenant-context",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [877],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "aws/README.md",
+        "aws/README.ko.md",
+        "aws/ktor-dynamodb/**",
+        "aws/sqs-sns-coroutines/**",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-04-issue-873-sns-publish-batch.md",
+        "docs/lessons/2026-09-04-issue-874-sqs-observation.md",
+        "docs/lessons/2026-09-04-issue-875-dynamodb-streams.md",
+        "docs/lessons/2026-09-04-issue-876-modulith-externalization.md",
+        "docs/lessons/2026-09-04-issue-877-tenant-context.md",
+        "docs/review/2026-09-04-issue-873-sns-publish-batch.md",
+        "docs/review/2026-09-04-issue-874-sqs-observation.md",
+        "docs/review/2026-09-04-issue-875-dynamodb-streams.md",
+        "docs/review/2026-09-04-issue-876-modulith-externalization.md",
+        "docs/review/2026-09-04-issue-877-tenant-context.md",
+        "gradle/libs.versions.toml",
+        "scripts/smoke-validate.sh",
+        "spring-boot/multi-tenant-data-isolation/**"
+      ],
+      "review_artifact": "docs/review/2026-09-04-issue-877-tenant-context.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -805,8 +842,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-876-aws-modulith-externalization-scope",
-    "checksum": "c1e78395e0463b48055d65ff3992324144cfdd5ff15c2c430e337f60fc046f74"
+    "receipt_id": "20260904T-issue-877-tenant-context-scope",
+    "checksum": "80d36a10e741cd8cd0b0543fd16abbe27ac1d483d674459238e08d7c915b13f7"
   },
   "planned_scope_replan_receipts": {
   },

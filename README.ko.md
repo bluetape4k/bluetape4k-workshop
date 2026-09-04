@@ -104,7 +104,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`spring-boot-chaos-monkey`](spring-boot/chaos-monkey/) | `logging` | In-memory | Spring Boot용 Chaos Monkey — 지연/예외 주입 |
 | Basic | [`spring-boot-problem`](spring-boot/problem/) | `logging` | In-memory | RFC 9457 Problem Details 에러 응답 |
 | Advanced | [`spring-boot-application-event-demo`](spring-boot/application-event-demo/) | `coroutines` | In-memory | 코루틴 리스너를 활용한 Spring 애플리케이션 이벤트 |
-| Advanced | [`spring-boot-multi-tenant-data-isolation`](spring-boot/multi-tenant-data-isolation/) | `exposed-jdbc`, `spring-boot4-core`, `micrometer` | H2 | 테넌트별 repository, cache key, lock key, rate-limit, metrics 격리 |
+| Advanced | [`spring-boot-multi-tenant-data-isolation`](spring-boot/multi-tenant-data-isolation/) | `exposed-jdbc`, `spring-boot4-core`, `micrometer`, `tenant`, `tenant-reactor` | H2 | 테넌트별 repository/cache/lock/rate-limit 격리와 ThreadLocal·ScopedValue·Reactor carrier 정리 |
 
 ```bash
 ./gradlew :spring-boot-cache-redis:test

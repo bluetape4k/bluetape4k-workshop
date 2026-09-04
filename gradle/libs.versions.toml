@@ -183,6 +183,8 @@ bluetape4k-dependencies = { module = "io.github.bluetape4k:bluetape4k-dependenci
 bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" }
 bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" }
 bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" }
+bluetape4k-tenant = { module = "io.github.bluetape4k:bluetape4k-tenant" }
+bluetape4k-tenant-reactor = { module = "io.github.bluetape4k:bluetape4k-tenant-reactor" }
 bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" }
 bluetape4k-assertions = { module = "io.github.bluetape4k:bluetape4k-assertions" }
 bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" }
