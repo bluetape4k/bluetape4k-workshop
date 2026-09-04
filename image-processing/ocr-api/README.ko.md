@@ -5,8 +5,10 @@
 ## 개요
 
 **image-processing-ocr-api**는 `bluetape4k-images-ocr`를 Spring Boot 4
-multipart API로 노출하는 예제입니다. JPEG, PNG, WebP 업로드를 검증하고,
-`immutableImageOf`로 실제 이미지인지 확인한 뒤 구조화된 OCR 응답을 반환합니다.
+multipart API로 노출하는 예제입니다. JPEG, PNG, WebP와 bounded 다중 페이지 TIFF
+업로드를 검증하고 구조화된 OCR 응답을 반환합니다. 단일 페이지는
+`immutableImageOf`를 사용하고 TIFF는 metadata preflight 뒤
+`TiffMultiPageOcr.suspendRecognize`를 사용합니다.
 기본 경로는 native Tesseract 없이도 동작하도록 이미지를 검증한 다음
 `UNAVAILABLE` fallback 응답을 돌려줍니다.
 
@@ -22,7 +24,9 @@ multipart API로 노출하는 예제입니다. JPEG, PNG, WebP 업로드를 검�
 short-circuit하거나 제한된 native `OcrEngine`을 호출합니다. Capability 분기에서
 plain engine은 `PLAIN_TEXT`를 유지하고 `StructuredOcrEngine`은 `pages`, `lines`,
 `words`를 매핑합니다. `confidence`와 `boundingBox`는 실제 engine metadata가 없으면
-억지로 채우지 않고 nullable 상태를 보존합니다.
+억지로 채우지 않고 nullable 상태를 보존합니다. TIFF 요청은 structured capability를
+필수로 하며 입력 순서대로 페이지를 합산하고 page/pixel/metadata/result budget을
+partial response 전에 모두 검사합니다.
 
 ## 요청 흐름
 
@@ -42,7 +46,7 @@ public upload error message는 명시적인 메시지를 유지합니다. 번호
 POST /api/images/ocr
 Content-Type: multipart/form-data
 
-file      필수 image/jpeg, image/png, image/webp
+file      필수 image/jpeg, image/png, image/webp, image/tiff
 language  선택 반복 파라미터 또는 comma-separated Tesseract language code
 structuredDetail 선택 PLAIN_TEXT, LINE, WORD (기본값 PLAIN_TEXT)
 ```
@@ -61,6 +65,10 @@ curl -F "file=@docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.
 구현한 경우에만 사용합니다. 기존 plain engine은 runtime에 capability를 확인한 뒤
 text로 fallback하고, `effectiveStructuredDetail=PLAIN_TEXT`와 빈
 `pages`, `lines`, `words` 목록을 반환합니다.
+
+TIFF는 페이지별 structured capability를 사용합니다. validation 또는 processing
+실패는 native cause, payload bytes, filesystem path를 노출하지 않고
+`reason`, `phase`, 선택적 `pageIndex`를 담은 sanitized `ProblemDetail`로 반환합니다.
 
 ## Fallback 응답
 
@@ -130,6 +138,14 @@ text로 fallback하고, `effectiveStructuredDetail=PLAIN_TEXT`와 빈
 | `workshop.ocr.timeout` | `10s` | native OCR timeout |
 | `workshop.ocr.languages` | `eng` | 기본 language 목록 |
 | `workshop.ocr.tessdata-path` | empty | 선택 Tesseract trained-data 디렉터리 |
+| `workshop.ocr.tiff.max-encoded-bytes` | `5242880` | TIFF encoded input budget |
+| `workshop.ocr.tiff.max-pages` | `16` | 최대 TIFF page 수 |
+| `workshop.ocr.tiff.max-pixels-per-page` | `12000000` | page별 pixel budget |
+| `workshop.ocr.tiff.max-total-pixels` | `64000000` | 전체 pixel budget |
+| `workshop.ocr.tiff.max-decoded-side` | `8192` | decode width/height 상한 |
+| `workshop.ocr.tiff.max-metadata-bytes` | `2097152` | ImageIO metadata preflight budget |
+| `workshop.ocr.tiff.max-result-text-chars` | `1000000` | 전체 OCR text budget |
+| `workshop.ocr.tiff.max-result-entries` | `100000` | 전체 page/block/line/word budget |
 | `spring.servlet.multipart.max-file-size` | `5MB` | container multipart 제한 |
 | `spring.servlet.multipart.max-request-size` | `5MB` | container multipart request 제한 |
 
@@ -183,9 +199,11 @@ Tesseract가 trained data를 기본 lookup path에서 찾지 못하면
 |---|---|---|
 | Tesseract library 또는 tessdata가 없음 | `200 OK`, `status=UNAVAILABLE` | Tesseract를 설치하고 필요하면 `workshop.ocr.tessdata-path`를 지정 |
 | language pack이 없음 | `200 OK`, `status=UNAVAILABLE` 또는 낮은 품질의 text | `eng.traineddata`, `kor.traineddata` 등 요청한 pack 확인 |
-| 빈 파일, 깨진 파일, 이미지가 아닌 bytes | `400 Bad Request` | 실제 JPEG, PNG, WebP 파일 사용 |
+| 빈 파일, 깨진 파일, 이미지가 아닌 bytes | `400 Bad Request` | 실제 JPEG, PNG, WebP, TIFF 파일 사용 |
 | 선언한 type과 실제 bytes가 다름 | `400 Bad Request` | `;type=image/png`와 실제 파일 형식 맞추기 |
-| GIF 같은 미지원 subtype | `400 Bad Request` | JPEG, PNG, WebP로 변환 |
+| GIF 같은 미지원 subtype | `400 Bad Request` | JPEG, PNG, WebP, TIFF로 변환 |
+| TIFF page/pixel/metadata/result budget 초과 | `400 Bad Request` 및 sanitized `reason`/`phase`/`pageIndex` | 입력을 줄이거나 해당 `workshop.ocr.tiff.*` budget을 조정 |
+| TIFF decoder 또는 OCR engine 실패 | `422 Unprocessable Entity` 및 sanitized `reason`/`phase`/`pageIndex` | TIFF reader, Tesseract, language pack 확인 |
 | 이미지가 pixel budget을 초과 | `400 Bad Request` | `workshop.ocr.max-image-pixels`보다 작게 resize |
 
 ## 워크숍 경계
@@ -206,9 +224,9 @@ queueing, audit workflow, PII 관리, 운영용 upload hardening이 없습니다
 ```
 
 테스트는 완료 응답을 위해 fake `OcrEngine`과 `StructuredOcrEngine`을 주입하므로 native
-Tesseract가 없어도 결정적으로 실행됩니다. 구조화 매핑, capability fallback, validation,
-sanitized failure mapping, language normalization, timeout, cancellation propagation을
-검증합니다.
+Tesseract가 없어도 결정적으로 실행됩니다. 구조화 매핑, capability fallback, 3-page TIFF
+순서, preflight/result budget, sanitized failure mapping, language normalization,
+timeout, cancellation propagation을 검증합니다.
 
 ## 의존성 메모
 

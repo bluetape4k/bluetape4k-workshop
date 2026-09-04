@@ -13,6 +13,11 @@ import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
 import io.bluetape4k.images.ocr.OcrTextLine as SourceOcrTextLine
 import io.bluetape4k.images.ocr.OcrWord as SourceOcrWord
 import io.bluetape4k.images.ocr.StructuredOcrEngine
+import io.bluetape4k.images.ocr.TiffMultiPageOcr
+import io.bluetape4k.images.ocr.TiffMultiPageOcrException
+import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
+import io.bluetape4k.images.ocr.TiffMultiPageOcrLimits
+import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
@@ -54,9 +59,14 @@ class ImageOcrServiceImpl(
 
         validateBytes(request.bytes)
         val contentType = validateContentType(request.contentType)
+        val tiffInput = contentType in TIFF_CONTENT_TYPES
 
         if (!properties.effectiveNativeEnabled) {
-            decodeAndValidateImage(request.bytes, contentType)
+            if (tiffInput) {
+                validateTiffInput(request.bytes, contentType)
+            } else {
+                decodeAndValidateImage(request.bytes, contentType)
+            }
             return recordOutcome(
                 response = ImageOcrResponse(
                     requestId = requestId,
@@ -77,34 +87,50 @@ class ImageOcrServiceImpl(
         return try {
             nativeSemaphore.withPermit {
                 withTimeout(properties.timeout.toMillis()) {
-                    runInterruptible(Dispatchers.IO) {
-                        val image = decodeAndValidateImage(request.bytes, contentType)
-                        val engine = ocrEngineProvider.get() ?: throw OcrConfigurationException("Native OCR engine is not configured")
-                        val options = OcrOptions(
-                            languages = languages,
-                            tessdataPath = properties.tessdataPath,
-                            structuredDetail = request.structuredDetail,
+                    val engine = ocrEngineProvider.get() ?: throw OcrConfigurationException("Native OCR engine is not configured")
+                    val options = OcrOptions(
+                        languages = languages,
+                        tessdataPath = properties.tessdataPath,
+                        structuredDetail = request.structuredDetail,
+                    )
+                    val response = if (tiffInput) {
+                        val structuredEngine = engine as? StructuredOcrEngine
+                            ?: throw TiffMultiPageOcrException(
+                                reason = TiffMultiPageOcrFailureReason.ENGINE_FAILED,
+                                pageIndex = null,
+                                message = "TIFF OCR requires a structured engine (phase=engine, pageIndex=none).",
+                            )
+                        val result = TiffMultiPageOcr(structuredEngine).suspendRecognize(
+                            bytes = request.bytes,
+                            options = options,
+                            limits = properties.toTiffLimits(),
+                            dispatcher = Dispatchers.IO,
                         )
-                        val response = when {
-                            request.structuredDetail == OcrStructuredDetail.PLAIN_TEXT ->
-                                completed(requestId, languages, engine.recognize(image, options).text.trim())
-                            engine is StructuredOcrEngine ->
-                                completed(requestId, languages, engine.recognizeStructured(image, options))
-                            else ->
-                                plainFallback(
-                                    requestId = requestId,
-                                    languages = languages,
-                                    requestedDetail = request.structuredDetail,
-                                    text = engine.recognize(image, options).text.trim(),
-                                )
+                        completed(requestId, languages, result)
+                    } else {
+                        runInterruptible(Dispatchers.IO) {
+                            val image = decodeAndValidateImage(request.bytes, contentType)
+                            when {
+                                request.structuredDetail == OcrStructuredDetail.PLAIN_TEXT ->
+                                    completed(requestId, languages, engine.recognize(image, options).text.trim())
+                                engine is StructuredOcrEngine ->
+                                    completed(requestId, languages, engine.recognizeStructured(image, options))
+                                else ->
+                                    plainFallback(
+                                        requestId = requestId,
+                                        languages = languages,
+                                        requestedDetail = request.structuredDetail,
+                                        text = engine.recognize(image, options).text.trim(),
+                                    )
+                            }
                         }
-                        recordOutcome(
-                            response = response,
-                            nativeEnabled = true,
-                            failureCategory = "none",
-                            startedAtNanos = startedAtNanos,
-                        )
                     }
+                    recordOutcome(
+                        response = response,
+                        nativeEnabled = true,
+                        failureCategory = if (tiffInput) "tiff" else "none",
+                        startedAtNanos = startedAtNanos,
+                    )
                 }
             }
         } catch (e: TimeoutCancellationException) {
@@ -115,6 +141,10 @@ class ImageOcrServiceImpl(
                 startedAtNanos = startedAtNanos,
             )
         } catch (e: CancellationException) {
+            throw e
+        } catch (e: TiffMultiPageOcrValidationException) {
+            throw e
+        } catch (e: TiffMultiPageOcrException) {
             throw e
         } catch (e: OcrConfigurationException) {
             recordOutcome(
@@ -271,17 +301,21 @@ class ImageOcrServiceImpl(
 
     private fun validateContentType(contentType: String?): String {
         val declaredContentType = requireNotNull(contentType) {
-            "Unsupported image content type. Use JPEG, PNG, or WebP."
+            "Unsupported image content type. Use JPEG, PNG, WebP, or TIFF."
         }
         require(declaredContentType in SUPPORTED_CONTENT_TYPES) {
-            "Unsupported image content type. Use JPEG, PNG, or WebP."
+            "Unsupported image content type. Use JPEG, PNG, WebP, or TIFF."
         }
         return declaredContentType
     }
 
     private fun decodeAndValidateImage(bytes: ByteArray, declaredContentType: String): ImmutableImage {
         val detectedContentType = detectContentType(bytes)
-        require(detectedContentType == declaredContentType || declaredContentType == "image/jpg" && detectedContentType == "image/jpeg") {
+        require(
+            detectedContentType == declaredContentType ||
+                declaredContentType == "image/jpg" && detectedContentType == "image/jpeg" ||
+                declaredContentType in TIFF_CONTENT_TYPES && detectedContentType == "image/tiff",
+        ) {
             "Uploaded bytes do not match the declared image content type"
         }
         val dimensions = readDimensions(bytes, detectedContentType)
@@ -296,6 +330,9 @@ class ImageOcrServiceImpl(
     }
 
     private fun detectContentType(bytes: ByteArray): String {
+        if (bytes.isTiffHeader()) {
+            return "image/tiff"
+        }
         if (bytes.size >= 8 &&
             bytes[0] == 0x89.toByte() &&
             bytes[1] == 0x50.toByte() &&
@@ -329,6 +366,26 @@ class ImageOcrServiceImpl(
         }
         throw IllegalArgumentException("Undecodable image upload")
     }
+
+    private fun validateTiffInput(bytes: ByteArray, declaredContentType: String) {
+        require(bytes.isTiffHeader()) { "Undecodable TIFF upload" }
+        val detectedContentType = detectContentType(bytes)
+        require(declaredContentType in TIFF_CONTENT_TYPES && detectedContentType == "image/tiff") {
+            "Uploaded bytes do not match the declared image content type"
+        }
+    }
+
+    private fun ImageOcrProperties.toTiffLimits(): TiffMultiPageOcrLimits =
+        TiffMultiPageOcrLimits(
+            maxEncodedBytes = tiff.maxEncodedBytes,
+            maxPages = tiff.maxPages,
+            maxPixelsPerPage = tiff.maxPixelsPerPage,
+            maxTotalPixels = tiff.maxTotalPixels,
+            maxDecodedSide = tiff.maxDecodedSide,
+            maxMetadataBytes = tiff.maxMetadataBytes,
+            maxResultTextChars = tiff.maxResultTextChars,
+            maxResultEntries = tiff.maxResultEntries,
+        )
 
     private fun readDimensions(bytes: ByteArray, contentType: String): ImageDimensions =
         when (contentType) {
@@ -472,7 +529,11 @@ class ImageOcrServiceImpl(
             "image/jpg",
             "image/png",
             "image/webp",
+            "image/tiff",
+            "image/tif",
+            "image/x-tiff",
         )
+        private val TIFF_CONTENT_TYPES = setOf("image/tiff", "image/tif", "image/x-tiff")
     }
 }
 
@@ -508,3 +569,10 @@ private fun ByteArray.readUInt32LE(offset: Int): Long =
 
 private fun ByteArray.hasAscii(offset: Int, value: String): Boolean =
     size >= offset + value.length && value.indices.all { index -> this[offset + index] == value[index].code.toByte() }
+
+private fun ByteArray.isTiffHeader(): Boolean =
+    size >= 4 &&
+        ((this[0] == 'I'.code.toByte() && this[1] == 'I'.code.toByte() &&
+            (this[2] == 0x2A.toByte() || this[2] == 0x2B.toByte()) && this[3] == 0.toByte()) ||
+            (this[0] == 'M'.code.toByte() && this[1] == 'M'.code.toByte() &&
+                this[2] == 0.toByte() && (this[3] == 0x2A.toByte() || this[3] == 0x2B.toByte())))

@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.imageprocessing.ocr.web
 
 import com.ninjasquad.springmockk.MockkBean
 import io.bluetape4k.images.ocr.OcrStructuredDetail
+import io.bluetape4k.images.ocr.TiffMultiPageOcrException
+import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
+import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
@@ -204,8 +207,60 @@ class ImageOcrControllerTest {
             .andExpect(jsonPath("$.detail").value("Undecodable image"))
     }
 
-    private fun imageFile(bytes: ByteArray = byteArrayOf(1, 2, 3)): MockMultipartFile =
-        MockMultipartFile("file", "sample.png", "image/png", bytes)
+    @Test
+    fun `TIFF validation failure returns sanitized reason phase and page`() {
+        coEvery { service.recognize(any()) } throws TiffMultiPageOcrValidationException(
+            reason = TiffMultiPageOcrFailureReason.PIXELS_PER_PAGE_LIMIT_EXCEEDED,
+            pageIndex = 2,
+            message = "internal payload and path must not leak",
+        )
+
+        val asyncResult = mockMvc.perform(
+            multipart("/api/images/ocr")
+                .file(imageFile(bytes = tiffHeader(), contentType = "image/tiff")),
+        )
+            .andExpect(request().asyncStarted())
+            .andReturn()
+
+        mockMvc.perform(asyncDispatch(asyncResult))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.detail").value("TIFF OCR input was rejected."))
+            .andExpect(jsonPath("$.reason").value("PIXELS_PER_PAGE_LIMIT_EXCEEDED"))
+            .andExpect(jsonPath("$.phase").value("metadata"))
+            .andExpect(jsonPath("$.pageIndex").value(2))
+            .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("internal"))))
+    }
+
+    @Test
+    fun `TIFF processing failure returns sanitized engine reason`() {
+        coEvery { service.recognize(any()) } throws TiffMultiPageOcrException(
+            reason = TiffMultiPageOcrFailureReason.ENGINE_FAILED,
+            pageIndex = 1,
+            message = "native path /secret must not leak",
+        )
+
+        val asyncResult = mockMvc.perform(
+            multipart("/api/images/ocr")
+                .file(imageFile(bytes = tiffHeader(), contentType = "image/tiff")),
+        )
+            .andExpect(request().asyncStarted())
+            .andReturn()
+
+        mockMvc.perform(asyncDispatch(asyncResult))
+            .andExpect(status().is(422))
+            .andExpect(jsonPath("$.detail").value("TIFF OCR processing failed."))
+            .andExpect(jsonPath("$.reason").value("ENGINE_FAILED"))
+            .andExpect(jsonPath("$.phase").value("engine"))
+            .andExpect(jsonPath("$.pageIndex").value(1))
+    }
+
+    private fun imageFile(
+        bytes: ByteArray = byteArrayOf(1, 2, 3),
+        contentType: String = "image/png",
+    ): MockMultipartFile =
+        MockMultipartFile("file", "sample.${if (contentType == "image/tiff") "tiff" else "png"}", contentType, bytes)
+
+    private fun tiffHeader(): ByteArray = byteArrayOf('I'.code.toByte(), 'I'.code.toByte(), 0x2A, 0x00)
 
     private fun response(languages: List<String> = listOf("eng")): ImageOcrResponse =
         ImageOcrResponse(

@@ -33,4 +33,14 @@ class ImageOcrPropertiesTest {
             ImageOcrProperties(languages = emptyList())
         }
     }
+
+    @Test
+    fun `TIFF page and result budgets must be positive`() {
+        assertFailsWith<IllegalArgumentException> {
+            TiffMultiPageOcrProperties(maxPages = 0)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            TiffMultiPageOcrProperties(maxResultEntries = 0)
+        }
+    }
 }

@@ -18,15 +18,20 @@ import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
 import io.bluetape4k.images.ocr.OcrTextLine
 import io.bluetape4k.images.ocr.OcrWord
 import io.bluetape4k.images.ocr.StructuredOcrEngine
+import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
+import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.images.coroutines.SuspendTiffMultiPageWriter
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
+import io.bluetape4k.workshop.imageprocessing.ocr.config.TiffMultiPageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.time.Duration
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -174,6 +179,100 @@ class ImageOcrServiceImplTest {
         response.words.single().confidence shouldBeEqualTo 88.0
         response.words.single().boundingBox?.height shouldBeEqualTo 12
         engine.lastOptions.structuredDetail shouldBeEqualTo OcrStructuredDetail.WORD
+    }
+
+    @Test
+    fun `multi-page TIFF uses suspend structured OCR and preserves input page order`() = runSuspendIO {
+        val engine = FakeStructuredOcrEngine(structuredResult())
+        val response = service(properties(nativeEnabled = true), engine = engine)
+            .recognize(
+                request(
+                    bytes = threePageTiff(),
+                    contentType = "image/tiff",
+                    structuredDetail = OcrStructuredDetail.LINE,
+                ),
+            )
+
+        response.status shouldBeEqualTo OcrStatus.COMPLETED
+        response.text shouldBeEqualTo "Bluetape OCR\n\nBluetape OCR\n\nBluetape OCR"
+        response.pages.map { it.pageIndex } shouldBeEqualTo listOf(0, 1, 2)
+        response.blocks.map { it.pageIndex } shouldBeEqualTo listOf(0, 1, 2)
+        response.lines.map { it.pageIndex } shouldBeEqualTo listOf(0, 1, 2)
+        response.words.size shouldBeEqualTo 0
+        engine.structuredCalls shouldBeEqualTo 3
+        engine.recognizeCalls shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `multi-page TIFF preflight rejects page limit before invoking engine`() = runSuspendIO {
+        val engine = FakeStructuredOcrEngine(structuredResult())
+        val error = assertFailsWith<TiffMultiPageOcrValidationException> {
+            service(
+                properties(
+                    nativeEnabled = true,
+                    tiff = TiffMultiPageOcrProperties(maxPages = 2),
+                ),
+                engine = engine,
+            ).recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
+        }
+
+        error.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.PAGE_LIMIT_EXCEEDED
+        error.pageIndex shouldBeEqualTo null
+        engine.structuredCalls shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `multi-page TIFF result limit fails without returning partial response`() = runSuspendIO {
+        val engine = FakeStructuredOcrEngine(structuredResult())
+        val error = assertFailsWith<TiffMultiPageOcrValidationException> {
+            service(
+                properties(
+                    nativeEnabled = true,
+                    tiff = TiffMultiPageOcrProperties(maxResultTextChars = 20),
+                ),
+                engine = engine,
+            ).recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
+        }
+
+        error.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED
+        error.pageIndex shouldBeEqualTo 1
+        engine.structuredCalls shouldBeEqualTo 2
+    }
+
+    @Test
+    fun `native disabled validates TIFF header without invoking OCR`() = runSuspendIO {
+        val invoked = AtomicBoolean(false)
+        val service = service(
+            properties = properties(nativeEnabled = false),
+            engine = OcrEngine { _, options ->
+                invoked.set(true)
+                OcrResult("should not run", options)
+            },
+        )
+
+        val response = service.recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
+
+        response.status shouldBeEqualTo OcrStatus.UNAVAILABLE
+        response.pages.size shouldBeEqualTo 0
+        invoked.get().shouldBeFalse()
+    }
+
+    @Test
+    fun `multi-page TIFF cancellation is rethrown`() = runSuspendIO {
+        val service = service(
+            properties = properties(nativeEnabled = true),
+            engine = object : StructuredOcrEngine {
+                override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
+                    OcrResult("plain", options)
+
+                override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult =
+                    throw CancellationException("tiff cancelled")
+            },
+        )
+
+        assertFailsWith<CancellationException> {
+            service.recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
+        }
     }
 
     @Test
@@ -426,6 +525,7 @@ class ImageOcrServiceImplTest {
         maxImagePixels: Long = 12_000_000,
         timeout: Duration = Duration.ofSeconds(10),
         tessdataPath: String? = null,
+        tiff: TiffMultiPageOcrProperties = TiffMultiPageOcrProperties(maxEncodedBytes = maxUploadBytes),
     ): ImageOcrProperties =
         ImageOcrProperties(
             nativeEnabled = nativeEnabled,
@@ -434,6 +534,7 @@ class ImageOcrServiceImplTest {
             timeout = timeout,
             languages = listOf("eng"),
             tessdataPath = tessdataPath,
+            tiff = tiff,
         )
 
     private fun request(
@@ -488,6 +589,23 @@ class ImageOcrServiceImplTest {
         graphics.dispose()
         return ByteArrayOutputStream().use { output ->
             ImageIO.write(image, "png", output)
+            output.toByteArray()
+        }
+    }
+
+    private fun threePageTiff(): ByteArray = runBlocking {
+        val pages = listOf("PAGE ONE", "PAGE TWO", "PAGE THREE").map { label ->
+            val image = BufferedImage(64, 32, BufferedImage.TYPE_INT_RGB)
+            val graphics = image.createGraphics()
+            graphics.color = Color.WHITE
+            graphics.fillRect(0, 0, image.width, image.height)
+            graphics.color = Color.BLACK
+            graphics.drawString(label, 4, 18)
+            graphics.dispose()
+            ImmutableImage.fromAwt(image)
+        }
+        ByteArrayOutputStream().use { output ->
+            SuspendTiffMultiPageWriter().suspendWrite(pages, output)
             output.toByteArray()
         }
     }
