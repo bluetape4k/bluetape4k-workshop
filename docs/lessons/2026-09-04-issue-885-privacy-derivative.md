@@ -32,6 +32,9 @@ fail-closed 된다.
 - README language/parity, stale-check, `git diff --check`: 모두 PASS
 - ecosystem reuse follow-up scope canonical SHA-256 `e22a60cbf72f97a695cbd19fb036e45278a26d8f6978521f2a6eba327211d15e`, fresh coordinator receipt
   `20260905T-issue-885-privacy-derivative-scope`
+- 첫 hosted Smoke matrix는 누적 #884 테스트의 Java `is` matcher 호출이 Kotlin
+  예약어 문법으로 파싱되지 않는 문제를 발견했다. Java matcher를 백틱 호출 문법으로
+  수정한 뒤 OCR 42개와 profile 27개 모듈 테스트가 다시 통과했다.
 
 ## Future Guidance
 

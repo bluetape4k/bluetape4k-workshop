@@ -33,6 +33,8 @@ Issue #885의 `ProfileImageProcessor`, privacy configuration/model, service uplo
 - README language/parity, stale-check, `git diff --check`: 모두 PASS
 - ecosystem follow-up scope canonical JSON SHA-256: `e22a60cbf72f97a695cbd19fb036e45278a26d8f6978521f2a6eba327211d15e`
   (fresh coordinator receipt `20260905T-issue-885-privacy-derivative-scope`)
+- 첫 hosted Smoke matrix에서 누적 #884의 `status().is(422)` Kotlin parser 오류를
+  확인해 backtick 호출로 교정했고, OCR/profile 모듈 재검증이 통과했다.
 
 ## 잔여 위험과 후속 범위
 
