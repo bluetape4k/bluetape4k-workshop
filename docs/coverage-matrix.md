@@ -56,7 +56,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-junit5` | All test modules | ✅ Good | `SuspendedJobTester` / `MultithreadingTester` 미노출 | concurrency test harness demo | — | — |
 | `bluetape4k-assertions` | All test modules | ⚠️ Partial | module별 matcher 적용 편차; #776 guard는 consumer generic Boolean/null을 0건으로 유지 | assertion migration + raw fallback inventory | exact-head matcher migration with failure-message parity | #776, #792 |
 | `bluetape4k-testcontainers` | `exposed-*`, `spring-data-*`, `redis-*`, `messaging-*` | ✅ Good | — | — | — | — |
-| `bluetape4k-graph` | `graph/social-network`, `graph/knowledge-graph` | ✅ Good | 기존 social path 예제가 hop 수만 비교하고 weighted cost·`maxDepth` conformance를 노출하지 않았음 | `PathOptions.weightProperty`와 누적 `GraphPath.totalWeight`를 사용하는 deterministic social path | Neo4j/Memgraph backend의 `maxDepth`/`maxVisited`·missing-weight conformance | #886 |
+| `bluetape4k-graph` | `graph/social-network`, `graph/knowledge-graph` | ✅ Good | 기존 social path 예제가 hop 수만 비교하고 knowledge graph가 schema drift를 계획하지 않았음 | `PathOptions.weightProperty`와 누적 `GraphPath.totalWeight`를 사용하는 deterministic social path | Neo4j/Memgraph backend의 `maxDepth`/`maxVisited`·missing-weight conformance, Entity/Concept/Document `GraphSchemaDriftPlanner` 계획과 unsupported 보고 | #886, #887 |
 | `bluetape4k-graph-io` | `graph/io-pipeline` | ✅ Good | 운영용 durable store와 graph+store atomic exactly-once는 범위 밖 | `InMemoryGraphImportCheckpointStore`를 사용한 CSV 실패·재개 | 공유 CAS/lease store와 backend transaction을 포함한 운영 연동 | #863 |
 
 ---
