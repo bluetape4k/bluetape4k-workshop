@@ -3,7 +3,9 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
+import io.bluetape4k.images.spring.metrics.MetricImageStorageWithMetadata
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetDetailResponse
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectDTO
@@ -35,6 +37,79 @@ class ImageDerivativeWorkflowServiceTest {
         response.thumbnailUrl shouldBeEqualTo response.variants.first { it.name == "thumb-128" }.url
         response.variants.map { it.name } shouldBeEqualTo listOf("thumb-128", "card-320", "detail-1024")
         meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_VARIANT_GENERATED, "variant", "thumb-128").count() shouldBeEqualTo 1.0
+        meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_UNAVAILABLE).count() shouldBeEqualTo 4.0
+    }
+
+    @Test
+    fun `workflow reads optional metadata once per object and records opaque snapshot`() = runSuspendIO {
+        val properties = testProperties(maxInputBytes = 1024)
+        val storage = RecordingMetadataImageStorage()
+        val meterRegistry = SimpleMeterRegistry()
+        val persistence = StubImagePersistenceService()
+        val service = service(
+            properties = properties,
+            storage = MetricImageStorageWithMetadata(
+                delegate = storage,
+                registry = meterRegistry,
+                metadataDelegate = storage,
+            ),
+            meterRegistry = meterRegistry,
+            persistenceService = persistence,
+        )
+        val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
+
+        val response = service.processUpload(file)
+
+        storage.metadataReads.size shouldBeEqualTo 4
+        storage.downloads.size shouldBeEqualTo 0
+        response.original.sizeBytes shouldBeEqualTo SAMPLE_JPEG_BYTES.size.toLong()
+        response.original.contentType shouldBeEqualTo "image/jpeg"
+        response.variants.all { it.contentType == "image/webp" } shouldBeEqualTo true
+        meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_READ).count() shouldBeEqualTo 4.0
+        meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_UNAVAILABLE).count() shouldBeEqualTo 0.0
+
+        val uploadEvent = persistence.events.single { it.message.startsWith("S3 upload complete") }
+        uploadEvent.payload["metadataCapability"] shouldBeEqualTo true
+        @Suppress("UNCHECKED_CAST")
+        val metadata = uploadEvent.payload["metadata"] as List<Map<String, Any?>>
+        metadata.size shouldBeEqualTo 4
+        metadata.all { it["available"] == true && it["etag"] is String && it["lastModified"] == "1970-01-01T00:00:00Z" } shouldBeEqualTo true
+    }
+
+    @Test
+    fun `workflow fails closed when metadata capability reports an error`() = runSuspendIO {
+        val storage = RecordingMetadataImageStorage(failOnMetadataKeyPart = "/original/")
+        val service = service(testProperties(), storage)
+        val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
+
+        assertFailsWith<Exception> {
+            service.processUpload(file)
+        }
+
+        storage.uploads.size shouldBeEqualTo 1
+        storage.deletes.map { it.fullKey } shouldBeEqualTo storage.uploads.map { it.key.fullKey }.asReversed()
+    }
+
+    @Test
+    fun `workflow fails closed when metadata size does not match upload`() = runSuspendIO {
+        val storage = RecordingMetadataImageStorage(
+            metadataFn = { key, upload ->
+                ImageObjectMetadata(
+                    key = key,
+                    sizeBytes = upload.bytes.size.toLong() + 1,
+                    contentType = upload.options.contentType,
+                )
+            },
+        )
+        val service = service(testProperties(), storage)
+        val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
+
+        assertFailsWith<IllegalArgumentException> {
+            service.processUpload(file)
+        }
+
+        storage.uploads.size shouldBeEqualTo 1
+        storage.deletes.map { it.fullKey } shouldBeEqualTo storage.uploads.map { it.key.fullKey }.asReversed()
     }
 
     @Test
@@ -131,7 +206,7 @@ class ImageDerivativeWorkflowServiceTest {
 
     private fun service(
         properties: io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties,
-        storage: RecordingImageStorage,
+        storage: io.bluetape4k.images.spring.storage.ImageStorage,
         meterRegistry: SimpleMeterRegistry = SimpleMeterRegistry(),
         persistenceService: ImagePersistenceService = StubImagePersistenceService(),
     ): ImageDerivativeWorkflowService =

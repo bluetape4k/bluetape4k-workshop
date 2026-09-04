@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
@@ -33,6 +35,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.security.MessageDigest
 import java.time.Duration
+import java.time.Instant
 
 /**
  * 이미지 업로드 → 처리 → 저장 → 영속화 사가를 조율합니다.
@@ -61,6 +64,7 @@ class ImageDerivativeWorkflowService(
 ) {
 
     private val requestSemaphore = Semaphore(properties.requestConcurrency)
+    private val metadataReader = storage as? ImageObjectMetadataReader
 
     suspend fun processUpload(file: MultipartFile): ImageProcessingResponse {
         val sample = Timer.start(meterRegistry)
@@ -142,6 +146,7 @@ class ImageDerivativeWorkflowService(
 
         val uploadedKeys = mutableListOf<ImageObjectKey>()
         val imageObjects = mutableListOf<ImageObjectInput>()
+        val metadataSnapshots = mutableListOf<ResolvedStorageMetadata>()
         try {
             // --- 처리 ---
             val processed = processor.process(bytes, imageId)
@@ -157,6 +162,8 @@ class ImageDerivativeWorkflowService(
             val originalKey = keyFactory.originalKey(imageId, file.originalFilename)
             val originalUpload = storage.upload(originalKey, bytes, uploadOptions)
             uploadedKeys += originalKey
+            val originalMetadata = resolveStorageMetadata(originalKey, originalUpload)
+            metadataSnapshots += originalMetadata
             imageObjects += ImageObjectInput(
                 kind = ImageObjectKind.ORIGINAL,
                 variantName = null,
@@ -164,8 +171,8 @@ class ImageDerivativeWorkflowService(
                 publicUrl = urlResolver.resolve(originalKey),
                 width = processed.original.width,
                 height = processed.original.height,
-                byteSize = originalUpload.sizeBytes,
-                format = originalUpload.contentType,
+                byteSize = originalMetadata.sizeBytes,
+                format = originalMetadata.contentType,
             )
 
             // --- 변형 업로드 ---
@@ -176,6 +183,8 @@ class ImageDerivativeWorkflowService(
                     options = UploadOptions(contentType = variant.contentType),
                 )
                 uploadedKeys += variant.key
+                val variantMetadata = resolveStorageMetadata(variant.key, variantUpload)
+                metadataSnapshots += variantMetadata
                 imageObjects += ImageObjectInput(
                     kind = ImageObjectKind.VARIANT,
                     variantName = variant.name,
@@ -183,8 +192,8 @@ class ImageDerivativeWorkflowService(
                     publicUrl = urlResolver.resolve(variant.key),
                     width = variant.width,
                     height = variant.height,
-                    byteSize = variantUpload.sizeBytes,
-                    format = variantUpload.contentType,
+                    byteSize = variantMetadata.sizeBytes,
+                    format = variantMetadata.contentType,
                 )
                 meterRegistry.counter(METRIC_VARIANT_GENERATED, "variant", variant.name).increment()
                 ImageVariantMetadata(
@@ -193,8 +202,8 @@ class ImageDerivativeWorkflowService(
                     url = urlResolver.resolve(variant.key),
                     width = variant.width,
                     height = variant.height,
-                    contentType = variantUpload.contentType,
-                    sizeBytes = variantUpload.sizeBytes,
+                    contentType = variantMetadata.contentType,
+                    sizeBytes = variantMetadata.sizeBytes,
                 )
             }
 
@@ -203,7 +212,11 @@ class ImageDerivativeWorkflowService(
                 step = ImageProcessingStep.S3_UPLOAD,
                 status = ImageProcessingEventStatus.COMPLETED,
                 message = "S3 upload complete: ${uploadedKeys.size} object(s)",
-                payload = mapOf("objectCount" to uploadedKeys.size),
+                payload = mapOf(
+                    "objectCount" to uploadedKeys.size,
+                    "metadataCapability" to (metadataReader != null),
+                    "metadata" to metadataSnapshots.map { it.toEventPayload() },
+                ),
             )
 
             // --- T2: recordJobSuccess ---
@@ -230,8 +243,8 @@ class ImageDerivativeWorkflowService(
                     url = urlResolver.resolve(originalKey),
                     width = processed.original.width,
                     height = processed.original.height,
-                    contentType = originalUpload.contentType,
-                    sizeBytes = originalUpload.sizeBytes,
+                    contentType = originalMetadata.contentType,
+                    sizeBytes = originalMetadata.sizeBytes,
                 ),
                 thumbnailUrl = primary.url,
                 variants = variants,
@@ -288,6 +301,64 @@ class ImageDerivativeWorkflowService(
                 }
             }
         }
+    }
+
+    /**
+     * 업로드 결과와 선택적 metadata snapshot을 하나의 persistence 입력으로 정규화합니다.
+     *
+     * metadata capability가 없으면 upload 결과를 명시적으로 fallback으로 사용합니다.
+     * capability가 있으면 key와 size를 검증한 뒤 snapshot을 우선하며, provider 오류나
+     * 교체 경합으로 불일치가 생기면 호출자에게 전파해 saga를 fail-closed로 종료합니다.
+     */
+    private suspend fun resolveStorageMetadata(
+        key: ImageObjectKey,
+        upload: ImageUploadResult,
+    ): ResolvedStorageMetadata {
+        val metadata = metadataReader?.readMetadata(key)
+        if (metadata == null) {
+            meterRegistry.counter(METRIC_METADATA_UNAVAILABLE).increment()
+            return ResolvedStorageMetadata(
+                key = key,
+                sizeBytes = upload.sizeBytes,
+                contentType = upload.contentType,
+                etag = null,
+                lastModified = null,
+                available = false,
+            )
+        }
+        require(metadata.key == key) {
+            "Storage metadata key mismatch: expected=${key.fullKey}, actual=${metadata.key.fullKey}"
+        }
+        require(metadata.sizeBytes == upload.sizeBytes) {
+            "Storage metadata size mismatch for ${key.fullKey}: upload=${upload.sizeBytes}, metadata=${metadata.sizeBytes}"
+        }
+        meterRegistry.counter(METRIC_METADATA_READ).increment()
+        return ResolvedStorageMetadata(
+            key = key,
+            sizeBytes = metadata.sizeBytes,
+            contentType = metadata.contentType ?: upload.contentType,
+            etag = metadata.etag,
+            lastModified = metadata.lastModified,
+            available = true,
+        )
+    }
+
+    private data class ResolvedStorageMetadata(
+        val key: ImageObjectKey,
+        val sizeBytes: Long,
+        val contentType: String,
+        val etag: String?,
+        val lastModified: Instant?,
+        val available: Boolean,
+    ) {
+        fun toEventPayload(): Map<String, Any?> = mapOf(
+            "key" to key.fullKey,
+            "available" to available,
+            "sizeBytes" to sizeBytes,
+            "contentType" to contentType,
+            "etag" to etag,
+            "lastModified" to lastModified?.toString(),
+        )
     }
 
     /** 정상 경로의 최선 노력 이벤트 발행입니다. 취소가 아닌 예외는 삼킵니다. */
@@ -380,5 +451,7 @@ class ImageDerivativeWorkflowService(
         const val METRIC_PROCESSING_DURATION = "workshop.images.processing.duration"
         const val METRIC_PROCESSING_FAILURES = "workshop.images.processing.failures"
         const val METRIC_VARIANT_GENERATED = "workshop.images.variant.generated"
+        const val METRIC_METADATA_READ = "workshop.images.storage.metadata.read"
+        const val METRIC_METADATA_UNAVAILABLE = "workshop.images.storage.metadata.unavailable"
     }
 }
