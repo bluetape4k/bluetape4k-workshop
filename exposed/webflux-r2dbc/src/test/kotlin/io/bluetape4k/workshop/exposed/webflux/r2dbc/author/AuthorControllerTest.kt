@@ -2,10 +2,14 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.author
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.AuthorDTO
+import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookDTO
+import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookCursorPageResponse
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateAuthorRequest
 import org.junit.jupiter.api.Test
@@ -14,6 +18,8 @@ import org.springframework.test.annotation.DirtiesContext
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
+
+    // findCursorPage endpoint 계약을 HTTP 응답으로 고정합니다.
 
     @Test
     fun `create and retrieve author`() {
@@ -64,6 +70,66 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .expectBodyList(AuthorDTO::class.java)
             .returnResult().responseBody.shouldNotBeNull()
         authors.shouldNotBeEmpty()
+    }
+
+    @Test
+    fun `cursor books returns bounded pages and advances by next cursor`() {
+        val authorRequest = CreateAuthorRequest(
+            firstName = faker.name().firstName(),
+            lastName = faker.name().lastName(),
+            email = faker.internet().emailAddress(),
+        )
+        val author = webTestClient.post()
+            .uri("/api/authors")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(authorRequest)
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody(AuthorDTO::class.java)
+            .returnResult().responseBody.shouldNotBeNull()
+        repeat(5) { index ->
+            webTestClient.post()
+                .uri("/api/books")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(
+                    CreateBookRequest(
+                        title = "Cursor book $index",
+                        publishDate = "2026-07-05",
+                        authorId = author.id,
+                    )
+                )
+                .exchange()
+                .expectStatus().isCreated
+        }
+
+        val first = webTestClient.get()
+            .uri("/api/books/cursor?pageSize=2")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(BookCursorPageResponse::class.java)
+            .returnResult().responseBody.shouldNotBeNull()
+
+        first.content shouldHaveSize 2
+        first.hasNext.shouldBeTrue()
+        val cursor = first.nextCursor.shouldNotBeNull()
+
+        val second = webTestClient.get()
+            .uri("/api/books/cursor?pageSize=2&cursor=$cursor")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(BookCursorPageResponse::class.java)
+            .returnResult().responseBody.shouldNotBeNull()
+
+        second.content shouldHaveSize 2
+        second.content.map(BookDTO::id).intersect(first.content.map(BookDTO::id).toSet()) shouldBeEqualTo emptySet()
+    }
+
+    @Test
+    fun `cursor books rejects page size outside upstream guard`() {
+        webTestClient.get()
+            .uri("/api/books/cursor?pageSize=0")
+            .exchange()
+            .expectStatus().isBadRequest
     }
 
     @Test

@@ -16,6 +16,7 @@
 | R2DBC runtime | `ExposedR2dbcConfig`가 `ConnectionFactoryOptions`, `ConnectionPool`, `R2dbcDatabase`를 만듭니다. | Exposed R2DBC 작업은 pool-backed database와 `Dispatchers.IO`에서 실행됩니다. |
 | Service transaction boundary | `AuthorService`, `BookService`, `OrderService`가 `suspendTransaction(db = db)`를 호출합니다. | 같은 connection에서 write하기 전에 Flow read를 transaction 안에서 collect합니다. |
 | Repository primitives | Repository는 select에 `Flow<DTO>`, insert/update/delete에 suspend method를 제공합니다. | Repository는 얇게 유지되고 transaction lifetime을 결정하지 않습니다. |
+| Book cursor pagination | `BookRepository.findCursorPage`, `GET /api/books/cursor` | Exposed 2.0.0 `LongR2dbcRepository` keyset pagination이 bounded `pageSize + 1` query로 `nextCursor`/`hasNext`를 반환하며 cursor token 인코딩·서명·만료·범위는 호출자 책임입니다. |
 | Schema initialization | `DatabaseInitializer`가 R2DBC URL을 JDBC URL로 바꾸고 startup 시 Hikari를 한 번 사용합니다. | Blocking JDBC는 schema creation에만 쓰이고 request processing에는 쓰이지 않습니다. |
 
 ## 주문 처리 시퀀스
@@ -44,8 +45,9 @@
 | `config/DatabaseInitializer.kt` | Hikari를 통한 one-shot JDBC schema creation. |
 | `author/service/*Service.kt` | `suspendTransaction` ownership과 Flow collection rule. |
 | `order/service/OrderService.kt` | Product lock ordering, stock conflict, order write transaction. |
-| `*/repository/*Repository.kt` | 얇은 Flow/suspend query primitive. |
-| `*/schema/*Table.kt` | ERD에 표시한 plain Exposed table definitions. |
+| `author/repository/BookRepository.kt` | `LongR2dbcRepository` adapter, Flow CRUD, suspend `findCursorPage` extension. |
+| `author/controller/BookController.kt` | Cursor endpoint parameter와 `BookCursorPageResponse` wire shape. |
+| `*/schema/*Table.kt` | Exposed table 정의이며 `BookTable : LongIdTable`이 typed keyset ID를 제공합니다. |
 
 ## 실행
 
@@ -64,6 +66,21 @@
 
 | 테스트 클래스 | 범위 |
 |---|---|
-| `AuthorControllerTest` | Author, book CRUD endpoint. |
+| `AuthorControllerTest` | Author/book CRUD와 bounded cursor endpoint, 잘못된 page size 응답. |
+| `CursorPaginationRepositoryTest` | sparse ID insert/delete boundary, page-size guard, size-one R2DBC pool의 cancellation/resource release. |
 | `OrderControllerTest` | Order placement, cancellation, 404, stock-conflict case. |
 | `ConcurrentPlaceOrderTest` | 마지막 stock item을 여러 coroutine request가 동시에 소비하려 할 때 하나만 성공하는지 확인합니다. |
+
+## Cursor Pagination
+
+```text
+GET /api/books/cursor?pageSize=2&cursor=3&sortOrder=ASC
+```
+
+`BookRepository.findCursorPage`는 Exposed 2.0.0 `LongR2dbcRepository` extension을
+사용합니다. Primary-key predicate와 `pageSize + 1` sentinel로 count query 없이
+bounded query를 실행하고, `suspendTransaction`이 connection을 소유하므로 cooperative
+cancellation 때 반환됩니다. `hasNext`가 `false`이면 `nextCursor`는 `null`입니다.
+이 workshop은 raw ID를 투명한 token으로만 보내므로 운영 호출자는 token을 인코딩·서명·
+만료·범위 검증하고 같은 sort/filter 계약을 재사용해야 합니다. Repository test는
+sparse ID, insert/delete boundary, 잘못된 size, size-one pool cancellation을 포함합니다.

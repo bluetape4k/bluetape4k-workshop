@@ -61,8 +61,8 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 | 수준 | 모듈 | bluetape4k 라이브러리 | 인프라 | 학습 목표 |
 |------|------|----------------------|-------|-----------|
-| Basic | [`exposed-mvc-jdbc`](exposed/mvc-jdbc/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | Spring MVC JDBC로 Exposed DAO/SQL DSL 사용 |
-| Basic | [`exposed-webflux-r2dbc`](exposed/webflux-r2dbc/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed R2DBC + WebFlux 코루틴 핸들러 |
+| Basic | [`exposed-mvc-jdbc`](exposed/mvc-jdbc/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | Spring MVC JDBC에서 Exposed DAO/SQL DSL과 offset·primary-key cursor pagination 사용 |
+| Basic | [`exposed-webflux-r2dbc`](exposed/webflux-r2dbc/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed R2DBC keyset cursor pagination + WebFlux 코루틴 핸들러 |
 | Advanced | [`exposed-mvc-virtualthread`](exposed/mvc-virtualthread/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | 가상 스레드를 활용한 Exposed JDBC + Spring MVC |
 | Basic | [`exposed-javers-approval-workflow`](exposed/javers-approval-workflow/) | `javers-core` | H2 | Approval/rejection decision을 포함한 JaVers pre-commit diff review |
 | Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `testcontainers` | Redis (TC) + H2 | Exposed current-row persistence와 Redis-backed JaVers audit history |
@@ -80,6 +80,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 ```bash
 ./gradlew :exposed-mvc-jdbc:test
+./gradlew :exposed-webflux-r2dbc:test
 ./gradlew :ktor-exposed-rest:test --max-workers=1
 ./gradlew :spring-data-r2dbc-coroutines:test
 ```

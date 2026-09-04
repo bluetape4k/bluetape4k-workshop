@@ -811,6 +811,45 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Exposed JDBC/R2DBC cursor pagination guard ==="
+    cursor_jdbc_repo="exposed/mvc-jdbc/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/repository/BookRepository.kt"
+    cursor_jdbc_controller="exposed/mvc-jdbc/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/controller/BookController.kt"
+    cursor_jdbc_test="exposed/mvc-jdbc/src/test/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/CursorPaginationRepositoryTest.kt"
+    cursor_jdbc_api_test="exposed/mvc-jdbc/src/test/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/AuthorControllerTest.kt"
+    cursor_jdbc_readme="exposed/mvc-jdbc/README.md"
+    cursor_jdbc_readme_ko="exposed/mvc-jdbc/README.ko.md"
+    cursor_r2dbc_repo="exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/repository/BookRepository.kt"
+    cursor_r2dbc_controller="exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/controller/BookController.kt"
+    cursor_r2dbc_test="exposed/webflux-r2dbc/src/test/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/CursorPaginationRepositoryTest.kt"
+    cursor_r2dbc_api_test="exposed/webflux-r2dbc/src/test/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/AuthorControllerTest.kt"
+    cursor_r2dbc_readme="exposed/webflux-r2dbc/README.md"
+    cursor_r2dbc_readme_ko="exposed/webflux-r2dbc/README.ko.md"
+    cursor_lesson="docs/lessons/2026-09-04-issue-881-exposed-cursor-pagination.md"
+    cursor_review="docs/review/2026-09-04-issue-881-exposed-cursor-pagination.md"
+    if contains_pattern 'findCursorPage' "$cursor_jdbc_repo" "$cursor_jdbc_controller" "$cursor_jdbc_api_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" && \
+       contains_pattern 'LongR2dbcRepository' "$cursor_r2dbc_repo" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
+       contains_pattern 'findCursorPage' "$cursor_r2dbc_repo" "$cursor_r2dbc_controller" "$cursor_r2dbc_api_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
+       contains_pattern 'pageSize' "$cursor_jdbc_controller" "$cursor_r2dbc_controller" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
+       contains_pattern 'nextCursor' "$cursor_jdbc_api_test" "$cursor_r2dbc_api_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
+       contains_pattern 'sparse ID' "$cursor_jdbc_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
+       contains_pattern '(cancellation|취소)' "$cursor_r2dbc_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
+       contains_pattern '2\.0\.0' "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" "$cursor_lesson" "$cursor_review" && \
+       contains_pattern ':exposed-mvc-jdbc:test' README.md README.ko.md && \
+       contains_pattern ':exposed-webflux-r2dbc:test' README.md README.ko.md && \
+       contains_pattern '#881' docs/coverage-matrix.md docs/lessons/README.md && \
+       contains_pattern 'CursorPaginationRepositoryTest' "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
+       contains_pattern 'exposed/mvc-jdbc' .github/workflows/Examples.yml && \
+       contains_pattern 'exposed/webflux-r2dbc' .github/workflows/Examples.yml && \
+       contains_pattern '"issue_numbers": \[881\]' docs/ecosystem-reuse-train.json && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$cursor_jdbc_repo" "$cursor_jdbc_controller" "$cursor_jdbc_test" "$cursor_jdbc_api_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_repo" "$cursor_r2dbc_controller" "$cursor_r2dbc_test" "$cursor_r2dbc_api_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" "$cursor_lesson" "$cursor_review" && \
+       [ -f "$cursor_lesson" ] && [ -f "$cursor_review" ]; then
+      echo "Exposed JDBC/R2DBC cursor pagination examples and lesson are registered."
+    else
+      echo "ERROR: Exposed JDBC/R2DBC cursor pagination contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

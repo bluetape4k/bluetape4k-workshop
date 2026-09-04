@@ -62,8 +62,8 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 
 | Level | Module | bluetape4k libs | Infra | Learning outcome |
 |-------|--------|-----------------|-------|-----------------|
-| Basic | [`exposed-mvc-jdbc`](exposed/mvc-jdbc/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | Exposed DAO/SQL DSL with Spring MVC JDBC |
-| Basic | [`exposed-webflux-r2dbc`](exposed/webflux-r2dbc/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed R2DBC + WebFlux coroutine handlers |
+| Basic | [`exposed-mvc-jdbc`](exposed/mvc-jdbc/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | Exposed DAO/SQL DSL, offset and primary-key cursor pagination with Spring MVC JDBC |
+| Basic | [`exposed-webflux-r2dbc`](exposed/webflux-r2dbc/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed R2DBC keyset cursor pagination + WebFlux coroutine handlers |
 | Advanced | [`exposed-mvc-virtualthread`](exposed/mvc-virtualthread/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed JDBC with Spring MVC virtual threads |
 | Basic | [`exposed-javers-approval-workflow`](exposed/javers-approval-workflow/) | `javers-core` | H2 | JaVers pre-commit diff review with approval/rejection decisions |
 | Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `testcontainers` | Redis (TC) + H2 | Redis-backed JaVers audit history with Exposed current-row persistence |
@@ -81,6 +81,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 
 ```bash
 ./gradlew :exposed-mvc-jdbc:test
+./gradlew :exposed-webflux-r2dbc:test
 ./gradlew :ktor-exposed-rest:test --max-workers=1
 ./gradlew :spring-data-r2dbc-coroutines:test
 ```
