@@ -522,7 +522,7 @@ jobs:
       # Representative Testcontainers examples run in one sequential lane:
       # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC consumer path
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
-      # - ktor-exposed-rest: PostgreSQL-backed Ktor + Exposed transaction path
+      # - ktor-exposed-rest: PostgreSQL-backed Ktor + selective core/JDBC health/readiness and transaction path
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB/Streams Flow path
       # - aws-s3-spring-cloud: Floci-backed Spring Cloud AWS S3 path
       # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine + PublishBatch + opt-in Observation/Modulith externalization path

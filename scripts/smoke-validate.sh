@@ -773,6 +773,44 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Ktor Exposed backend-selective health/readiness guard ==="
+    ktor_selective_build="ktor/exposed-rest/build.gradle.kts"
+    ktor_selective_catalog="gradle/libs.versions.toml"
+    ktor_selective_app="ktor/exposed-rest/src/main/kotlin/io/bluetape4k/workshop/ktor/exposedrest/KtorExposedRestApplication.kt"
+    ktor_selective_routes="ktor/exposed-rest/src/main/kotlin/io/bluetape4k/workshop/ktor/exposedrest/BookRoutes.kt"
+    ktor_selective_tests="ktor/exposed-rest/src/test/kotlin/io/bluetape4k/workshop/ktor/exposedrest/KtorExposedSelectiveHealthTest.kt"
+    ktor_selective_readme="ktor/exposed-rest/README.md"
+    ktor_selective_readme_ko="ktor/exposed-rest/README.ko.md"
+    ktor_selective_lesson="docs/lessons/2026-09-04-issue-880-ktor-selective-health.md"
+    ktor_selective_review="docs/review/2026-09-04-issue-880-ktor-selective-health.md"
+    if contains_pattern 'exposed-ktor-core.*bluetape4k-exposed-ktor-core' "$ktor_selective_catalog" && \
+       contains_pattern 'exposed-ktor-jdbc.*bluetape4k-exposed-ktor-jdbc' "$ktor_selective_catalog" && \
+       contains_pattern 'libs\.exposed\.ktor\.core' "$ktor_selective_build" && \
+       contains_pattern 'libs\.exposed\.ktor\.jdbc' "$ktor_selective_build" && \
+       ! contains_pattern 'libs\.exposed\.ktor\)' "$ktor_selective_build" && \
+       ! contains_pattern 'libs\.exposed\.ktor\.(r2dbc|cache)' "$ktor_selective_build" && \
+       contains_pattern 'bluetape4kExposedCoreErrors' "$ktor_selective_app" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
+       contains_pattern 'bluetape4kExposedJdbcErrors' "$ktor_selective_app" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
+       contains_pattern 'bluetape4kExposedHealthRoutes' "$ktor_selective_app" "$ktor_selective_tests" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
+       contains_pattern 'exposedKtorJdbcReadinessProbe' "$ktor_selective_app" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
+       contains_pattern 'exposedJdbcTransaction' "$ktor_selective_routes" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
+       contains_pattern 'TIMEOUT' "$ktor_selective_tests" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
+       contains_pattern 'jdbc:postgresql://db\.internal' "$ktor_selective_tests" && \
+       contains_pattern '2\.0\.0' "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" "$ktor_selective_review" && \
+       contains_pattern 'R2DBC' "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" && \
+       contains_pattern 'cache' "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" && \
+       contains_pattern ':ktor-exposed-rest:test' README.md README.ko.md && \
+       contains_pattern '#880' docs/coverage-matrix.md docs/lessons/README.md && \
+       contains_pattern '"issue_numbers": \[880\]' docs/ecosystem-reuse-train.json && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$ktor_selective_build" "$ktor_selective_app" "$ktor_selective_routes" "$ktor_selective_tests" "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" "$ktor_selective_review" && \
+       [ -f "$ktor_selective_lesson" ] && [ -f "$ktor_selective_review" ]; then
+      echo "Ktor Exposed backend-selective health/readiness example and lesson are registered."
+    else
+      echo "ERROR: Ktor Exposed backend-selective health/readiness contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

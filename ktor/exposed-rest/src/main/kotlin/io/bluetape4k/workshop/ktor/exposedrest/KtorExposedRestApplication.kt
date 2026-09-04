@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.ktor.exposedrest
 
-import io.bluetape4k.exposed.ktor.Bluetape4kExposedKtorConfig
-import io.bluetape4k.exposed.ktor.bluetape4kExposedErrors
-import io.bluetape4k.exposed.ktor.installBluetape4kExposedKtor
+import io.bluetape4k.exposed.ktor.core.bluetape4kExposedCoreErrors
+import io.bluetape4k.exposed.ktor.core.bluetape4kExposedHealthRoutes
+import io.bluetape4k.exposed.ktor.jdbc.bluetape4kExposedJdbcErrors
+import io.bluetape4k.exposed.ktor.jdbc.exposedKtorJdbcReadinessProbe
 import io.bluetape4k.ktor.core.Bluetape4kKtorCoreConfig
 import io.bluetape4k.ktor.core.bluetape4kErrorResponses
 import io.bluetape4k.ktor.core.installBluetape4kKtorCore
@@ -27,20 +28,24 @@ internal fun Application.installKtorExposedRest(resources: KtorExposedRestResour
         )
     )
     install(StatusPages) {
-        bluetape4kExposedErrors()
         bluetape4kErrorResponses()
+        bluetape4kExposedCoreErrors()
+        bluetape4kExposedJdbcErrors()
     }
-    installBluetape4kExposedKtor(
-        Bluetape4kExposedKtorConfig(
-            jdbcDatabase = resources.jdbcDatabase,
-            jdbcBlockingDispatcher = resources.jdbcDispatcher,
-            installHealthRoutes = true,
-            readinessProbeTimeout = 2.seconds,
+
+    val readinessProbes = listOf(
+        exposedKtorJdbcReadinessProbe(
+            db = resources.jdbcDatabase,
+            blockingDispatcher = resources.jdbcDispatcher,
             jdbcQueryTimeout = 2.seconds,
-        )
+        ),
     )
 
     routing {
+        bluetape4kExposedHealthRoutes(
+            probes = readinessProbes,
+            readinessProbeTimeout = 2.seconds,
+        )
         bookRoutes(resources)
     }
 }

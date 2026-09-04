@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #880 Ktor Exposed backend-selective health/readiness](2026-09-04-issue-880-ktor-selective-health.md)
 - [Issue #879 Kafka producer callbackFlow bridge](2026-09-04-issue-879-kafka-callbackflow.md)
 - [Issue #878 RLocalCachedMap 숫자 원자 갱신과 client 무효화](2026-09-04-issue-878-rlocalcachedmap.md)
 - [Stacked child merge 뒤 ecosystem reuse parent scope 재결속](2026-08-31-ecosystem-reuse-parent-stack-scope.md)

@@ -214,6 +214,10 @@ exposed-core = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-core"
 exposed-dao = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-dao" }
 exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" }
 exposed-ktor = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-ktor" }
+exposed-ktor-core = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-ktor-core" }
+exposed-ktor-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-ktor-jdbc" }
+exposed-ktor-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-ktor-r2dbc" }
+exposed-ktor-cache = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-ktor-cache" }
 exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jackson3" }
 exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" }
 exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" }
