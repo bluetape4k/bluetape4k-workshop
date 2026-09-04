@@ -223,6 +223,7 @@ exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed
 exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" }
 exposed-r2dbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc-tests" }
 exposed-spring-boot-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-spring-boot-jdbc" }
+exposed-spring-boot-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-spring-boot-r2dbc" }
 exposed-spring-modulith = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-spring-modulith" }
 bluetape4k-hibernate = { module = "io.github.bluetape4k:bluetape4k-hibernate" }
 bluetape4k-jdbc = { module = "io.github.bluetape4k:bluetape4k-jdbc" }

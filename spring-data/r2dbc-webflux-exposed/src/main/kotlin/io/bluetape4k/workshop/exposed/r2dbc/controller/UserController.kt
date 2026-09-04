@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.r2dbc.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
+import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserQbeResponse
 import io.bluetape4k.workshop.exposed.r2dbc.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -34,6 +35,22 @@ class UserController(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Not provide email to search")
         }
         return service.findByEmail(email)
+    }
+
+    @GetMapping("/users/qbe")
+    suspend fun queryByExample(
+        @RequestParam(name = "loginPrefix", required = false) loginPrefix: String?,
+        @RequestParam(name = "email", required = false) email: String?,
+        @RequestParam(name = "page", defaultValue = "0") page: Int,
+        @RequestParam(name = "size", defaultValue = "20") size: Int,
+    ): UserQbeResponse {
+        if (page < 0 || size !in 1..100) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "page must be non-negative and size must be between 1 and 100",
+            )
+        }
+        return service.queryByExample(loginPrefix, email, page, size)
     }
 
     @GetMapping("/users/{id}")

@@ -3,6 +3,7 @@
 Store durable bluetape4k-workshop lessons in this directory.
 
 - [Issue #881 Exposed JDBC/R2DBC cursor pagination](2026-09-04-issue-881-exposed-cursor-pagination.md)
+- [Issue #882 Spring Data Exposed QBE/FluentQuery](2026-09-04-issue-882-spring-data-qbe.md)
 
 Use this structure for each lesson:
 

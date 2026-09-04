@@ -115,6 +115,23 @@ class UserHandlerIT(
         }
     }
 
+    @Test
+    fun `QBE functional route exposes projected users`() = runSuspendIO {
+        val marker = "qbe-route-${System.nanoTime()}"
+        service.addUser(createUserRecord().copy(name = "Alice", login = "$marker-alice"))
+        service.addUser(createUserRecord().copy(name = "Bob", login = "$marker-bob"))
+
+        webTestClient
+            .httpGet("/users/qbe?loginPrefix=$marker&size=1")
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.items.length()").isEqualTo(1)
+            .jsonPath("$.items[0].name").isEqualTo("Alice")
+            .jsonPath("$.items[0].email").doesNotExist()
+            .jsonPath("$.count").isEqualTo(2)
+            .jsonPath("$.hasNext").isEqualTo(true)
+    }
+
     @Nested
     inner class Add {
         @Test

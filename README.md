@@ -71,7 +71,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`spring-data-r2dbc-coroutines`](spring-data/r2dbc-coroutines/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC repositories with coroutines |
 | Basic | [`spring-data-r2dbc-examples`](spring-data/r2dbc-examples/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC raw examples and DSL |
 | Advanced | [`spring-data-r2dbc-webflux`](spring-data/r2dbc-webflux/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC + WebFlux REST API |
-| Advanced | [`spring-data-r2dbc-webflux-exposed`](spring-data/r2dbc-webflux-exposed/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC + WebFlux + Exposed combined |
+| Advanced | [`spring-data-r2dbc-webflux-exposed`](spring-data/r2dbc-webflux-exposed/) | `logging`, `coroutines`, `testcontainers`, `exposed-spring-boot-r2dbc` | PostgreSQL (TC) | R2DBC + WebFlux + Exposed CRUD plus Query by Example, FluentQuery projection, paging, count/exists |
 | Basic | [`spring-data-jpa-querydsl`](spring-data/jpa-querydsl/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | JPA + QueryDSL type-safe queries |
 | Basic | [`spring-data-mongodb-coroutines`](spring-data/mongodb-coroutines/) | `coroutines`, `testcontainers` | MongoDB (TC) | MongoDB reactive repositories with coroutines |
 | Advanced | [`spring-data-mongodb-transactions`](spring-data/mongodb-transactions/) | `coroutines`, `testcontainers` | MongoDB (TC) | MongoDB multi-document transactions |
@@ -84,6 +84,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :exposed-webflux-r2dbc:test
 ./gradlew :ktor-exposed-rest:test --max-workers=1
 ./gradlew :spring-data-r2dbc-coroutines:test
+./gradlew :spring-data-r2dbc-webflux-exposed:test
 ```
 
 ---

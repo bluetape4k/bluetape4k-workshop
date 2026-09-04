@@ -5,6 +5,8 @@ import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.domain.schema.SchemaInitializer
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -42,6 +44,9 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
     @Autowired
     private var injectedSchemaInitializer: SchemaInitializer? = null
 
+    @Autowired
+    private var injectedDatabase: R2dbcDatabase? = null
+
     private val schemaInitializer: SchemaInitializer
         get() = checkNotNull(injectedSchemaInitializer) { "schemaInitializer is not injected." }
 
@@ -51,6 +56,11 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
 
     @BeforeEach
     fun ensureSchema() {
+        // QBE/FluentQuery terminal은 Exposed 기본 DB를 사용하므로, 다이얼렉트 계약
+        // 테스트가 전역 값을 바꾼 뒤에도 애플리케이션 DB를 복원한다.
+        TransactionManager.defaultDatabase = checkNotNull(injectedDatabase) {
+            "r2dbcDatabase is not injected."
+        }
         schemaInitializer.initializeSchema()
     }
 
