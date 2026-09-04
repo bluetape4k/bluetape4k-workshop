@@ -20,6 +20,7 @@ on:
       - 'spring-boot/resilience4j-coroutines/**'
       - 'spring-boot/text-moderation-api/**'
       - 'spring-boot/multi-tenant-data-isolation/**'
+      - 'redis/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/event-lineage/**'
@@ -81,6 +82,7 @@ on:
       - 'spring-boot/resilience4j-coroutines/**'
       - 'spring-boot/text-moderation-api/**'
       - 'spring-boot/multi-tenant-data-isolation/**'
+      - 'redis/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/event-lineage/**'
@@ -528,6 +530,7 @@ jobs:
       # - graph-knowledge-graph: Neo4j/Memgraph-backed knowledge graph path
       # - graph-social-network: Neo4j/Memgraph-backed social graph path
       # - spring-boot-cache-redis: Redis-backed cache path
+      # - redis-redisson-examples: Redis-backed RLocalCachedMap numeric atomic update and cross-client invalidation path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - messaging-kafka-multi-broker-failover: three-broker KRaft leader/coordinator recovery path
@@ -565,6 +568,7 @@ jobs:
           :graph-knowledge-graph:integrationTest
           :graph-social-network:integrationTest
           :spring-boot-cache-redis:test
+          :redis-redisson-examples:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
           :optimization-planning-contracts:test
@@ -740,6 +744,8 @@ jobs:
             graph/social-network/build/reports/tests/integrationTest/
             spring-boot/cache-redis/build/test-results/test/*.xml
             spring-boot/cache-redis/build/reports/tests/test/
+            redis/redisson-examples/build/test-results/test/*.xml
+            redis/redisson-examples/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml
             messaging/kafka/build/reports/tests/test/
             messaging/kafka-outbox-fallback/build/test-results/test/*.xml

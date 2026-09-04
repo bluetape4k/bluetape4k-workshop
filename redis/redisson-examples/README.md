@@ -14,6 +14,26 @@ This module is a test-backed catalog of [Redisson](https://redisson.org/) featur
 
 `AbstractRedissonTest` starts Redis with `RedisServer.Launcher.redis`, creates a tuned `RedissonClient` with `RedissonCodecs.LZ4FastForyComposite` and `VirtualThreadExecutor`, enables Redis keyspace notifications through raw Lettuce commands, and gives each example reproducible random names.
 
+## Numeric `RLocalCachedMap` updates
+
+`RMap.addAndGetAsync` executes Redis `HINCRBYFLOAT`. Numeric values therefore need a map codec that keeps string keys and decodes the Redis numeric payload directly; the compressed `LZ4FastForyComposite` codec cannot be used for this operation.
+
+```kotlin
+private val intCodec = CompositeCodec(
+    RedissonCodecs.String,
+    RedissonCodecs.Int,
+    RedissonCodecs.Int,
+)
+
+val counter = localCachedMap<String, Int>("counter", redisson) {
+    codec(intCodec)
+}
+
+counter.addAndGetAsync("count", 1).await() // atomic HINCRBYFLOAT-backed update
+```
+
+Use the matching `CompositeCodec(String, Double, Double)` for fractional values. `LocalCachedMapTest` warms two independent clients, applies concurrent Int/Double increments, and waits for bounded cross-client invalidation before asserting both local views and the remote map. `awaitRedis` propagates timeout or caller cancellation to the pending `RFuture`.
+
 ## Example Categories
 
 ### Distributed Locks (`locks/`)
@@ -75,6 +95,8 @@ This module is a test-backed catalog of [Redisson](https://redisson.org/) featur
 |---|---|---|---|
 | `RedissonCodecs.LZ4FastForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | LZ4 compression + FastFory serialization for volatile/cache examples |
 | `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | Combines the `LocalCachedMapOptions` DSL and map creation call to reduce duplicate Near Cache configuration |
+| `RedissonCodecs.Int` / `Double` + `CompositeCodec` | `bluetape4k-redisson` | `LocalCachedMapExamples`, `LocalCachedMapTest` | Keeps Redis hash numeric payloads compatible with `addAndGetAsync` while retaining String map keys |
+| `awaitRedis` | workshop test fixture | `AbstractRedissonTest` | Bounds async Redis waits and propagates timeout/cancellation to the underlying future |
 | `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Creates Redis Stream append arguments with a Kotlin-friendly helper |
 | `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Handles Redisson I/O with Virtual Threads |
 | `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractRedissonTest` | Testcontainers Redis singleton that starts and stops automatically |

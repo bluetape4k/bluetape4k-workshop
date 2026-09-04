@@ -231,7 +231,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`ratelimit-bucker4j-bluetape4k-webflux`](ratelimit/bucker4j-bluetape4k-webflux/) | `redis`, `coroutines`, `testcontainers` | Redis (TC) | bluetape4k WebFlux 속도 제한 통합 |
 | Advanced | [`redis-distributed-lock`](redis/distributed-lock/) | `redis`, `redisson`, `coroutines` | Redis (TC) | Redisson + 코루틴 suspend를 활용한 분산 락 |
 | Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `lettuce`, `redisson` | Redis Cluster (TC) | Redis 클러스터 토폴로지, 장애 조치 및 typed Lettuce codec |
-| Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson 데이터 구조와 Pub/Sub |
+| Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson 데이터 구조, 숫자 `RLocalCachedMap` 원자 갱신, client 간 cache 무효화 |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | Spring Cloud AWS + LocalStack으로 AWS S3 사용 |
 | Advanced | [`aws-ktor-dynamodb`](aws/ktor-dynamodb/) | `aws`, `ktor`, `coroutines`, `testcontainers` | Floci/LocalStack (TC) | fail-closed local mode의 Ktor REST + DynamoDB conditional write와 opt-in Streams coroutine Flow checkpoint resume |
 | Advanced | [`aws-eventbridge-scheduler`](aws/eventbridge-scheduler/) | `aws`, `coroutines` | Local adapters | EventBridge event envelope와 지연 Scheduler request mapping |
@@ -255,6 +255,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ```bash
 ./gradlew :spring-security-mvc:test
 ./gradlew :redis-distributed-lock:test
+./gradlew :redis-redisson-examples:test
 ./gradlew :aws-s3-spring-cloud:test
 ./gradlew :aws-ktor-dynamodb:test --max-workers=1
 ./gradlew :aws-eventbridge-scheduler:test

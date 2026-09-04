@@ -11,12 +11,18 @@ import io.bluetape4k.utils.ShutdownQueue
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.BeforeAll
 import org.redisson.Redisson
+import org.redisson.api.RFuture
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
 import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 abstract class AbstractRedissonTest {
 
@@ -76,8 +82,8 @@ abstract class AbstractRedissonTest {
         RedisServer.Launcher.LettuceLib.getRedisCommands(redis.host, redis.port)
     }
 
-    protected fun newRedisson(): RedissonClient {
-        return createRedisson()
+    protected fun newRedisson(registerShutdown: Boolean = true): RedissonClient {
+        return createRedisson(registerShutdown)
     }
 
     protected fun newRedissonConfig(): Config {
@@ -93,6 +99,25 @@ abstract class AbstractRedissonTest {
             }
             throw RuntimeException("Fail to execute in coroutine", error)
         }
+
+    /**
+     * Redisson 비동기 호출을 bounded coroutine suspension으로 소비합니다.
+     *
+     * 호출자 취소 또는 timeout이 발생하면 아직 완료되지 않은 Redis future에도
+     * 취소를 전파하여 테스트 종료 뒤 pending operation을 남기지 않습니다.
+     */
+    protected suspend fun <T> awaitRedis(
+        future: RFuture<T>,
+        timeout: kotlin.time.Duration = 5.seconds,
+    ): T = try {
+        withTimeout(timeout) { future.await() }
+    } catch (cause: TimeoutCancellationException) {
+        future.cancel(false)
+        throw cause
+    } catch (cause: CancellationException) {
+        future.cancel(false)
+        throw cause
+    }
 
     @BeforeAll
     fun beforeAll() {

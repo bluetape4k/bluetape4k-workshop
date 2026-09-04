@@ -69,7 +69,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-spring-boot-r2dbc` | `spring-data-r2dbc-webflux-exposed` | ⚠️ Partial | auto-config 사용이 명시적이지 않음 | BT auto-config를 쓰는 simple R2DBC CRUD | full WebFlux CRUD + integration test | #79 |
 | `bluetape4k-spring-boot-redis` | `spring-boot-cache-redis` | ⚠️ Partial | custom codec, key별 TTL | Redis L2 fallback을 가진 Caffeine-first cache | TTL override를 포함한 distributed cache cluster | — |
 | `bluetape4k-redis` | `redis-redisson-examples`, `redis-distributed-lock` | ✅ Good | reactive Redisson 미노출 | — | Reactive Redisson RMapReactive example | — |
-| `bluetape4k-redisson` | `redis-distributed-lock`, `redis-cluster-demo` | ✅ Good | Redisson Spring Boot auto-config | — | — | — |
+| `bluetape4k-redisson` | `redis-distributed-lock`, `redis-cluster-demo` | ✅ Good | Redisson Spring Boot auto-config 및 `RLocalCachedMap` 숫자 원자 갱신/다중 client 무효화가 별도 경계였음 | `CompositeCodec(String, Int/Double, Int/Double)`과 `addAndGetAsync` | 두 독립 client의 bounded 무효화와 취소 전파를 포함한 Redis-backed 검증 | #878 |
 | `bluetape4k-lettuce` | `redis/cluster-demo` | ✅ Good | low-level typed codec 소비가 기존 Long 중심 | — | `LettuceIntCodec`와 `LettuceLongCodec`의 coroutine async round trip | — |
 | `bluetape4k-idgenerators` | `redis-distributed-lock` (indirect) | ❌ Missing | standalone ID generator demo 없음 | `SnowflakeId` / `TimebasedUuid` generation benchmark | concurrent load에서 distributed unique ID | #62 |
 
