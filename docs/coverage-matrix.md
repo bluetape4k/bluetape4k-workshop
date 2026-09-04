@@ -64,9 +64,9 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 
 | bluetape4k lib | Existing example | Coverage | Gap | Proposed Basic | Proposed Advanced | Issue |
 |----------------|-----------------|----------|-----|----------------|-------------------|-------|
-| `bluetape4k-exposed` (JDBC) | `exposed-mvc-jdbc` | ✅ Good | batch insert, custom columns | — | — | #79 |
+| `bluetape4k-exposed` (JDBC) | `exposed-mvc-jdbc` | ✅ Good | cursor token의 인코딩·서명·tenant scope는 caller-owned | — | `BookRepository.findCursorPage`의 primary-key keyset, pageSize+1 sentinel, sparse ID mutation boundary | #79, #881 |
 | `bluetape4k-exposed-ktor` | `ktor/exposed-rest` | ✅ Good | legacy aggregator가 core/backend 경계를 함께 노출했음 | backend-neutral core health/readiness와 선택형 JDBC adapter | R2DBC/cache adapter를 classpath 조건으로 추가하는 Ktor consumer fixture | #880 |
-| `bluetape4k-exposed` (R2DBC) | `exposed-webflux-r2dbc` | ✅ Good | coroutine transaction rollback | — | — | — |
+| `bluetape4k-exposed` (R2DBC) | `exposed-webflux-r2dbc` | ✅ Good | cursor token의 인코딩·서명·tenant scope는 caller-owned | — | `LongR2dbcRepository.findCursorPage`, suspend cancellation/resource release, sparse ID mutation boundary | #881 |
 | `bluetape4k-spring-boot-r2dbc` | `spring-data-r2dbc-webflux-exposed` | ⚠️ Partial | auto-config 사용이 명시적이지 않음 | BT auto-config를 쓰는 simple R2DBC CRUD | full WebFlux CRUD + integration test | #79 |
 | `bluetape4k-spring-boot-redis` | `spring-boot-cache-redis` | ⚠️ Partial | custom codec, key별 TTL | Redis L2 fallback을 가진 Caffeine-first cache | TTL override를 포함한 distributed cache cluster | — |
 | `bluetape4k-redis` | `redis-redisson-examples`, `redis-distributed-lock` | ✅ Good | reactive Redisson 미노출 | — | Reactive Redisson RMapReactive example | — |

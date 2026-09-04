@@ -12,6 +12,7 @@ on:
       - 'profiles/high-contention/**'
       - 'scripts/high-contention/**'
       - 'exposed/webflux-r2dbc/**'
+      - 'exposed/mvc-jdbc/**'
       - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
       - 'spring-data/r2dbc-webflux-exposed/**'
@@ -75,6 +76,7 @@ on:
       - 'profiles/high-contention/**'
       - 'scripts/high-contention/**'
       - 'exposed/webflux-r2dbc/**'
+      - 'exposed/mvc-jdbc/**'
       - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
       - 'spring-data/r2dbc-webflux-exposed/**'
@@ -520,7 +522,8 @@ jobs:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
 
       # Representative Testcontainers examples run in one sequential lane:
-      # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC consumer path
+      # - exposed-mvc-jdbc: PostgreSQL-backed Exposed JDBC offset + cursor consumer path
+      # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC cursor consumer path
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + selective core/JDBC health/readiness and transaction path
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB/Streams Flow path
@@ -559,6 +562,7 @@ jobs:
           ./gradlew
           -x detekt
           -x collectReachabilityMetadata
+          :exposed-mvc-jdbc:test
           :exposed-webflux-r2dbc:test
           :exposed-javers-persistence-audit:test
           :ktor-exposed-rest:test
@@ -726,6 +730,8 @@ jobs:
             spring-data/redis-examples/build/reports/tests/test/
             exposed/webflux-r2dbc/build/test-results/test/*.xml
             exposed/webflux-r2dbc/build/reports/tests/test/
+            exposed/mvc-jdbc/build/test-results/test/*.xml
+            exposed/mvc-jdbc/build/reports/tests/test/
             exposed/javers-persistence-audit/build/test-results/test/*.xml
             exposed/javers-persistence-audit/build/reports/tests/test/
             ktor/exposed-rest/build/test-results/test/*.xml

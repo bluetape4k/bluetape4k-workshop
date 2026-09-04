@@ -4,12 +4,14 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.AuthorDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.AuthorWithBooksDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
+import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookCursorPageResponse
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateAuthorRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.repository.AuthorRepository
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.repository.BookRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.jetbrains.exposed.v1.core.SortOrder
 
 @Service
 class AuthorService(
@@ -27,6 +29,20 @@ class AuthorService(
 
     @Transactional(readOnly = true)
     fun findAllBooks(): List<BookDTO> = bookRepo.findAll()
+
+    @Transactional(readOnly = true)
+    fun findBooksCursor(
+        pageSize: Int,
+        cursor: Long?,
+        sortOrder: SortOrder,
+    ): BookCursorPageResponse {
+        val page = bookRepo.findCursorPage(pageSize = pageSize, cursor = cursor, sortOrder = sortOrder)
+        return BookCursorPageResponse(
+            content = page.content,
+            nextCursor = page.nextCursor,
+            hasNext = page.hasNext,
+        )
+    }
 
     @Transactional(readOnly = true)
     fun findBooksBy(authorId: Long): List<BookDTO> = bookRepo.findByAuthorId(authorId)

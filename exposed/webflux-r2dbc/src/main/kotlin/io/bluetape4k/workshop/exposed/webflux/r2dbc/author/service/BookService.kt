@@ -2,12 +2,14 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.author.service
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookDTO
+import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookCursorPageResponse
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.repository.AuthorRepository
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.repository.BookRepository
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.springframework.stereotype.Service
 
 @Service
@@ -20,6 +22,19 @@ class BookService(
 
     suspend fun findAll(): List<BookDTO> = suspendTransaction(db = db) {
         bookRepo.findAll().toList()
+    }
+
+    suspend fun findCursorPage(
+        pageSize: Int,
+        cursor: Long?,
+        sortOrder: SortOrder,
+    ): BookCursorPageResponse = suspendTransaction(db = db) {
+        val page = bookRepo.findCursorPage(pageSize = pageSize, cursor = cursor, sortOrder = sortOrder)
+        BookCursorPageResponse(
+            content = page.content,
+            nextCursor = page.nextCursor,
+            hasNext = page.hasNext,
+        )
     }
 
     suspend fun findById(id: Long): BookDTO = suspendTransaction(db = db) {

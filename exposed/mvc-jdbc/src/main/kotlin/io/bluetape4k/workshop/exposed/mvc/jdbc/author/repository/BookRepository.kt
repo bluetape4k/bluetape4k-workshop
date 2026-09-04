@@ -1,12 +1,15 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.author.repository
 
 import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
+import io.bluetape4k.exposed.jdbc.repository.findCursorPage as findCursorPageExtension
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
+import io.bluetape4k.exposed.core.ExposedCursorPage
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.mapper.toBookDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.schema.AuthorTable
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.schema.BookTable
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -26,6 +29,21 @@ class BookRepository : LongJdbcRepository<BookDTO> {
     override fun extractId(entity: BookDTO) = entity.id
 
     override fun ResultRow.toEntity() = toBookDTO()
+
+    /**
+     * 기본 키 keyset과 `pageSize + 1` sentinel을 사용하는 cursor 조회입니다.
+     * offset 기반 [findPage]와 별도의 예제로 유지하여 기존 호출자 ABI를 보존합니다.
+     */
+    fun findCursorPage(
+        pageSize: Int,
+        cursor: Long? = null,
+        sortOrder: SortOrder = SortOrder.ASC,
+    ): ExposedCursorPage<BookDTO, Long> =
+        this.findCursorPageExtension(
+            pageSize = pageSize,
+            cursor = cursor,
+            sortOrder = sortOrder,
+        )
 
     /**
      * 지정한 author가 쓴 모든 book을 반환한다.
