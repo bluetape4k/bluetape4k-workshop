@@ -582,6 +582,28 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== AWS SQS Observation listener example guard ==="
+    sqs_observation_config="aws/sqs-sns-coroutines/src/main/kotlin/io/bluetape4k/workshop/aws/sqssns/SqsObservationExampleConfiguration.kt"
+    sqs_observation_local="aws/sqs-sns-coroutines/src/main/kotlin/io/bluetape4k/workshop/aws/sqssns/LocalAwsMessagingConfig.kt"
+    sqs_observation_tests="aws/sqs-sns-coroutines/src/test/kotlin/io/bluetape4k/workshop/aws/sqssns/SqsObservationExampleTest.kt"
+    sqs_observation_readme="aws/sqs-sns-coroutines/README.md"
+    sqs_observation_readme_ko="aws/sqs-sns-coroutines/README.ko.md"
+    sqs_observation_lesson="docs/lessons/2026-09-04-issue-874-sqs-observation.md"
+    if contains_pattern 'SqsObservationExampleConfiguration' "$sqs_observation_config" "$sqs_observation_tests" "$sqs_observation_readme" "$sqs_observation_readme_ko" && \
+       contains_pattern '@SqsListener' "$sqs_observation_config" && \
+       contains_pattern 'messageVisibilityHeartbeatIntervalSeconds' "$sqs_observation_config" && \
+       contains_pattern 'ObservationRegistry.NOOP' "$sqs_observation_tests" && \
+       contains_pattern 'CancellationException' "$sqs_observation_config" "$sqs_observation_tests" && \
+       contains_pattern 'visibilityChanges' "$sqs_observation_local" "$sqs_observation_tests" && \
+       contains_pattern 'observation.enabled' "$sqs_observation_readme" "$sqs_observation_readme_ko" && \
+       [ -f "$sqs_observation_lesson" ]; then
+      echo "AWS SQS Observation listener example and lesson are registered."
+    else
+      echo "ERROR: AWS SQS Observation listener example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== AWS S3 client-side encryption storage example guard ==="
     cse_build="aws/storage-abstraction/build.gradle.kts"
     cse_config="aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3Config.kt"

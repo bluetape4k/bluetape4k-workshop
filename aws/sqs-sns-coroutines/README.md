@@ -39,6 +39,7 @@ cancellation is not converted into a report.
 | SNS publish boundary | Builds `SnsPublishRequest` with JSON body, subject, correlation id, idempotency key, and event type attributes. |
 | SNS PublishBatch boundary | Maps up to 10 order events to `SnsPublishBatchRequest` and keeps successful, per-entry failed, and unresolved transport entries visible. |
 | SQS consume boundary | Polls once with learner-visible queue settings and returns one report per delivered message. |
+| SQS Observation listener | Opt-in `@SqsListener` fixture keeps receive/process/ack observations parented across coroutine suspension, with manual ack and visibility heartbeat. |
 | Retry classification | Handler failures call `changeVisibility(..., timeoutSeconds = 0)` and return `RETRY_REQUESTED`. |
 | Dead-letter classification | Messages at or above `maxReceiveCount` are deleted and returned as local `DEAD_LETTER` discard reports; durable DLQ handoff is intentionally out of scope. |
 | Metrics | `OrderNotificationMetrics` records publish timing and consume counters, classifying success, retry, failure, and cancellation without counting cancelled work as success. |
@@ -114,6 +115,55 @@ The Floci integration test exercises the real `SnsCoroutinesTemplate.publishBatc
 mapping without AWS credentials. The unit tests cover the 1–10 boundary, duplicate
 IDs, blank payload, partial response mapping, cancellation propagation, and the
 no-automatic-retry transport boundary.
+
+## SQS Observation listener walkthrough
+
+`SqsObservationExampleConfiguration` is an opt-in consumer fixture for the
+bluetape4k 2.0.0 SQS listener observation lifecycle. The default remains disabled,
+so the existing one-shot `consumeOnce` path and its retry/redelivery behavior are
+unchanged. Enable the fixture only when you want to inspect listener lifecycle
+telemetry:
+
+```yaml
+bluetape4k:
+  aws:
+    sqs:
+      observation:
+        enabled: true
+```
+
+The equivalent flat property is `bluetape4k.aws.sqs.observation.enabled=true`.
+
+The example listener is deliberately `autoStartup = false`. Start it explicitly
+after the application has been wired:
+
+```kotlin
+val listeners = context.getBean(SqsMessageListenerContainerRegistry::class.java)
+listeners.start(OrderNotificationObservationListener.LISTENER_ID)
+```
+
+`OrderNotificationObservationListener` receives an `SqsReceivedMessage`, creates a
+small child `Observation` while the SQS process observation is current, calls the
+existing `OrderNotificationHandler`, and acknowledges only after the handler
+returns. The listener container owns receive/process/ack observations, propagates
+Micrometer context across coroutine suspension, and issues a one-second visibility
+heartbeat while the handler is running. A `CancellationException` is rethrown, so
+it cannot be reported as success or trigger an acknowledgement. The bounded
+`OrderNotificationObservationRecorder` stores only stage, outcome, attempt,
+delivery, and acknowledgement action; message bodies, receipt handles, and full
+queue URLs are not retained.
+
+The executable tests cover four boundaries:
+
+```bash
+./gradlew :aws-sqs-sns-coroutines:test \
+  --tests '*SqsObservationExampleTest'
+```
+
+They prove the default-disabled path, active process parentage plus heartbeat and
+ack, `ObservationRegistry.NOOP` compatibility, and cancellation without an ack.
+No durable DLQ, exactly-once delivery, global tracing backend, or real AWS
+credentials are required.
 
 ## Test Coverage
 

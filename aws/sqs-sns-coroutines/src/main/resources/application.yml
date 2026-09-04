@@ -1,5 +1,8 @@
 bluetape4k:
   aws:
+    sqs:
+      observation:
+        enabled: false
     sqs-sns:
       topic-arn: arn:aws:sns:ap-northeast-2:123456789012:order-notifications
       queue-url: https://sqs.ap-northeast-2.amazonaws.com/123456789012/order-notifications
