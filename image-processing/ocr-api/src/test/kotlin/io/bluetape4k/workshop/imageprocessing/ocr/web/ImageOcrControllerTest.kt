@@ -247,7 +247,7 @@ class ImageOcrControllerTest {
             .andReturn()
 
         mockMvc.perform(asyncDispatch(asyncResult))
-            .andExpect(status().is(422))
+            .andExpect(status().`is`(422))
             .andExpect(jsonPath("$.detail").value("TIFF OCR processing failed."))
             .andExpect(jsonPath("$.reason").value("ENGINE_FAILED"))
             .andExpect(jsonPath("$.phase").value("engine"))
