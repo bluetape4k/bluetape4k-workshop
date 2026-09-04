@@ -5,6 +5,7 @@ import io.bluetape4k.graph.model.GraphEdge
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphPath
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.graph.model.MissingWeightPolicy
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
@@ -60,6 +61,9 @@ class SocialNetworkService(
          * LinkedIn의 "6 degrees of separation"에 해당하는 상한입니다.
          */
         const val MAX_TRAVERSAL_DEPTH: Int = 6
+
+        /** weighted path 탐색에서 backend 방문 정점 수를 제한하는 기본값입니다. */
+        const val DEFAULT_WEIGHTED_MAX_VISITED: Int = 10_000
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -349,6 +353,46 @@ class SocialNetworkService(
             fromVertexId,
             toVertexId,
             PathOptions(edgeLabel = KnowsLabel.label, direction = Direction.OUTGOING),
+        )
+    }
+
+    /**
+     * [fromVertexId]에서 [toVertexId]까지 connection strength의 누적 비용이 가장 낮은 path를 반환합니다.
+     *
+     * `KNOWS.strength`는 숫자 또는 숫자 문자열로 해석되며, 값이 작을수록 traversal 비용이 낮습니다.
+     * 반환된 [GraphPath.totalWeight]에서 실제 누적 비용을 확인할 수 있습니다. [maxDepth]는 source와
+     * target을 잇는 hop 수에 대해 inclusive하게 적용하고, [maxVisited]는 탐색 중 방문할 수 있는
+     * 정점 수를 제한합니다. weight가 없을 때의 동작과 방향은 각각 [missingWeightPolicy]와 [direction]으로
+     * 명시할 수 있습니다.
+     *
+     * @param fromVertexId 시작 Person 정점의 graph ID입니다.
+     * @param toVertexId 대상 Person 정점의 graph ID입니다.
+     * @param maxDepth 허용할 최대 hop 수입니다. 0..[MAX_TRAVERSAL_DEPTH] 범위여야 합니다.
+     * @param maxVisited 탐색 중 방문할 최대 정점 수입니다. 양수여야 합니다.
+     * @param missingWeightPolicy weight 속성이 없을 때의 정책입니다.
+     * @param direction 간선을 따라갈 방향입니다.
+     * @return weighted 최단 path이며 도달할 수 없으면 `null`입니다.
+     */
+    fun findWeightedConnectionPath(
+        fromVertexId: GraphElementId,
+        toVertexId: GraphElementId,
+        maxDepth: Int = MAX_TRAVERSAL_DEPTH,
+        maxVisited: Int = DEFAULT_WEIGHTED_MAX_VISITED,
+        missingWeightPolicy: MissingWeightPolicy = MissingWeightPolicy.Fail,
+        direction: Direction = Direction.OUTGOING,
+    ): GraphPath? {
+        maxDepth.requireInRange(0, MAX_TRAVERSAL_DEPTH, "maxDepth")
+        return ops.shortestPath(
+            fromVertexId,
+            toVertexId,
+            PathOptions(
+                edgeLabel = KnowsLabel.label,
+                maxDepth = maxDepth,
+                weightProperty = KnowsLabel.strength.name,
+                missingWeightPolicy = missingWeightPolicy,
+                direction = direction,
+                maxVisited = maxVisited,
+            ),
         )
     }
 

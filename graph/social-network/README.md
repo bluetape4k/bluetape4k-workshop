@@ -9,9 +9,11 @@
 companies, professional relationships, and traversal queries with the same service contract across
 TinkerGraph, Neo4j, and Memgraph.
 
+The example targets the `bluetape4k-dependencies` `2.0.0` BOM.
+
 Use this module when you want to inspect a small but complete social graph: idempotent vertex
 creation, bidirectional `KNOWS` edges, one-way `FOLLOWS` edges, `WORKS_AT` company links,
-FOAF recommendations, colleague lookup, and path traversal.
+FOAF recommendations, colleague lookup, and hop/weighted path traversal.
 
 ---
 
@@ -36,8 +38,8 @@ graph/social-network/
 │           └── SocialNetworkSuspendService.kt # Coroutine/Flow service
 └── src/test/kotlin/
     └── io/bluetape4k/workshop/graph/social/
-        ├── AbstractSocialNetworkTest.kt         # 34 blocking test cases
-        ├── AbstractSocialNetworkSuspendTest.kt  # 34 suspend test cases
+        ├── AbstractSocialNetworkTest.kt         # 50 blocking test cases
+        ├── AbstractSocialNetworkSuspendTest.kt  # 50 suspend test cases
         ├── SocialNetworkTinkerGraphTest.kt      # In-memory TinkerGraph
         ├── SocialNetworkSuspendTinkerGraphTest.kt
         ├── Neo4jSocialNetworkTest.kt            # @Tag("integration")
@@ -116,6 +118,16 @@ val colleagues: List<GraphVertex> = service.findColleagues(alice.id)
 val path: GraphPath? = service.findConnectionPath(alice.id, dave.id)
 // path.vertices.size == 3  (alice → bob → dave)
 
+// Weighted shortest path (lower KNOWS.strength means lower cumulative cost)
+val weighted: GraphPath? = service.findWeightedConnectionPath(
+    alice.id,
+    dave.id,
+    maxDepth = 6,
+    maxVisited = 10_000,
+)
+// weighted?.totalWeight contains the accumulated strength cost
+// Equal-cost frontiers use deterministic vertex-id ordering.
+
 // All paths within depth limit
 val paths: List<GraphPath> = service.findAllConnectionPaths(alice.id, dave.id, maxDepth = 3)
 
@@ -133,6 +145,12 @@ val service = SocialNetworkSuspendService(ops, graphName)
 val direct: Flow<GraphVertex>    = service.getDirectConnections(alice.id)
 val paths:  Flow<GraphPath>      = service.findAllConnectionPaths(alice.id, dave.id)
 val recs:   List<ConnectionRecommendation> = service.recommendConnections(alice.id)  // suspend
+
+val weighted: GraphPath? = service.findWeightedConnectionPath(
+    alice.id,
+    dave.id,
+    missingWeightPolicy = MissingWeightPolicy.Fail,
+)
 ```
 
 ## Constants
@@ -140,6 +158,8 @@ val recs:   List<ConnectionRecommendation> = service.recommendConnections(alice.
 ```kotlin
 SocialNetworkService.MAX_TRAVERSAL_DEPTH        // 6
 SocialNetworkSuspendService.MAX_TRAVERSAL_DEPTH // 6
+SocialNetworkService.DEFAULT_WEIGHTED_MAX_VISITED        // 10_000
+SocialNetworkSuspendService.DEFAULT_WEIGHTED_MAX_VISITED // 10_000
 ```
 
 ## Running Tests
