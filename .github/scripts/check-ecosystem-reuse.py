@@ -1526,13 +1526,21 @@ def is_outside_train_scope_change(
     manifest: Dict[str, object],
     changed_paths: Sequence[str],
 ) -> bool:
-    """Return whether no changed path belongs to any manifest train scope.
+    """Return whether no product path belongs to any manifest train scope.
 
-    The exemption is intentionally all-or-nothing. A diff that combines a
-    mapped train path with an unrelated path remains subject to the existing
-    fail-closed scope validation.
+    Explicit ecosystem policy paths are control-plane changes and are already
+    covered by their dedicated maintenance exemption. The remaining product
+    paths are evaluated all-or-nothing: a diff that combines a mapped train
+    path with an unrelated path remains subject to the existing fail-closed
+    scope validation.
     """
     if not changed_paths:
+        return False
+    product_paths = [
+        path for path in changed_paths
+        if not _is_ecosystem_policy_maintenance_path(path)
+    ]
+    if not product_paths:
         return False
     scope_entries = list(manifest_nodes(manifest).values()) + manifest_follow_up_scopes(manifest)
     allowed_paths = [
@@ -1543,7 +1551,7 @@ def is_outside_train_scope_change(
     ]
     return bool(allowed_paths) and all(
         not any(_path_matches_allowed(path, allowed) for allowed in allowed_paths)
-        for path in changed_paths
+        for path in product_paths
     )
 
 

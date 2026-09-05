@@ -31,12 +31,13 @@ checker 자체와 회귀 테스트, Action pin 원장, 이 정책 lesson만 바�
 `actions/checkout`·`actions/upload-artifact` v7.0.1 SHA도 원장과 동기화한다.
 
 workflow의 PR 경로 필터는 여러 workshop 예제의 `src/test` 변경을 넓게
-포착할 수 있다. 따라서 manifest의 어떤 `allowed_paths`에도 속하지 않는
-변경만 있는 PR은 `outside-train-scope`로 분류해 train scope를 요구하지
-않는다. 단 하나라도 manifest track 경로가 섞이면 이 면제를 적용하지 않고
-기존의 exactly-one-track 검사를 유지한다. 이렇게 해야 train에 아직
-등록되지 않은 예제 수정은 통과시키면서, 등록된 track과 비대상 경로를
-우연히 섞은 변경은 fail closed로 차단할 수 있다.
+포착할 수 있다. 따라서 명시된 ecosystem policy control-plane 경로를
+제외한 product 경로가 manifest의 어떤 `allowed_paths`에도 속하지 않는
+PR은 `outside-train-scope`로 분류해 train scope를 요구하지 않는다. 단
+하나라도 manifest track 경로가 섞이면 이 면제를 적용하지 않고 기존의
+exactly-one-track 검사를 유지한다. 이렇게 해야 train에 아직 등록되지
+않은 예제 수정은 통과시키면서, 등록된 track과 비대상 경로를 우연히 섞은
+변경은 fail closed로 차단할 수 있다.
 
 ## 검증
 

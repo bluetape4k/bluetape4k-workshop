@@ -1308,16 +1308,43 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
 
     def test_outside_train_scope_change_exempts_only_when_all_paths_are_unmapped(self):
         manifest = self.manifest()
+        manifest["nodes"][0]["allowed_paths"].extend(
+            [
+                ".github/scripts/check-ecosystem-reuse.py",
+                ".github/scripts/test_check_ecosystem_reuse.py",
+                "docs/lessons/2026-08-31-ecosystem-dependency-maintenance-scope.md",
+            ]
+        )
         self.assertTrue(
             CHECKER.is_outside_train_scope_change(
                 manifest,
                 ["virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt"],
             )
         )
+        self.assertTrue(
+            CHECKER.is_outside_train_scope_change(
+                manifest,
+                [
+                    ".github/scripts/check-ecosystem-reuse.py",
+                    "docs/lessons/2026-08-31-ecosystem-dependency-maintenance-scope.md",
+                    "virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt",
+                ],
+            )
+        )
         self.assertFalse(
             CHECKER.is_outside_train_scope_change(
                 manifest,
                 [
+                    "src/A1/Changed.kt",
+                    "virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt",
+                ],
+            )
+        )
+        self.assertFalse(
+            CHECKER.is_outside_train_scope_change(
+                manifest,
+                [
+                    ".github/scripts/check-ecosystem-reuse.py",
                     "src/A1/Changed.kt",
                     "virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt",
                 ],
