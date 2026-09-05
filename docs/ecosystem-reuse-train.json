@@ -1103,6 +1103,7 @@
       "issue_numbers": [888],
       "allowed_paths": [
         ".github/workflows/Examples.yml",
+        ".github/workflows/ci.yml",
         "README.md",
         "README.ko.md",
         "docs/coverage-matrix.md",
@@ -1229,8 +1230,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260905T-issue-888-native-algorithm-observation-scope",
-    "checksum": "0689b05e36cf4cfc90b06724e498a53c9388c42fb7681dd8a4eb35803e2b1b64"
+    "receipt_id": "20260905T-issue-888-native-algorithm-observation-ci-stacked-scope",
+    "checksum": "4c62c344be2abe362454f7d9ba7c8cebdfaa399648a1f23dddc01c3167744163"
   },
   "planned_scope_replan_receipts": {
   },
