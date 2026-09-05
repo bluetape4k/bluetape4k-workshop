@@ -442,8 +442,9 @@ class AbuserDetectionSuspendService(
     /**
      * PageRank Flow를 모두 수집하고 호출별 알고리즘 실행 경로와 함께 반환합니다.
      *
-     * 수집 중 coroutine이 취소되면 observer를 호출하지 않습니다. 정상 수집 뒤에도
-     * observer 호출 직전에 취소 상태를 다시 확인합니다.
+     * 수집 중 coroutine이 취소되면 observer를 호출하지 않습니다. 정상 수집 뒤에는
+     * observer 호출 직전과 직후에 취소 상태를 확인해 callback이 시작된 경합에서도
+     * 취소된 호출이 결과를 반환하지 않게 합니다.
      *
      * @param limit 반환할 점수의 최대 개수입니다.
      * @param policy native provider 선택 정책입니다.
@@ -461,6 +462,7 @@ class AbuserDetectionSuspendService(
         val scores = rankSuspiciousUsers(limit).toList()
         currentCoroutineContext().ensureActive()
         notifyExecution(execution)
+        currentCoroutineContext().ensureActive()
         return SuspiciousUserRanking(scores, boundedExecution)
     }
 

@@ -269,7 +269,7 @@ Run: blocking은 `MultithreadingTester`와 `CyclicBarrier`, suspend는
 - Create: `docs/lessons/2026-09-05-issue-888-native-algorithm-observation.md`
 - Modify: `docs/lessons/README.md`
 
-- [ ] **Step 1: README 양국어에 같은 계약을 기록한다**
+- [x] **Step 1: README 양국어에 같은 계약을 기록한다**
 
 `AUTO=NO_PROVIDER`, `JVM_ONLY=JVM_ONLY_POLICY`, `NATIVE_ONLY=실행 전 실패`, 현재
 native SDK/executor 미포함, 기존 점수 API 호환, provider ID 제한과 suspend cancellation
@@ -277,13 +277,13 @@ native SDK/executor 미포함, 기존 점수 API 호환, provider ID 제한과 s
 기준으로 고친다. 새 public model과 서비스 API에는 실제 계약과 같은 한국어 KDoc을
 작성한다.
 
-- [ ] **Step 2: module validation matrix를 확장한다**
+- [x] **Step 2: module validation matrix를 확장한다**
 
 `.github/workflows/Examples.yml`의 graph path, smoke test, integration test와 artifact
 목록에 `graph/abuser-detection`을 추가한다. `scripts/smoke-validate.sh`에는 새 model,
 두 API, policy, lesson/review, `2.0.0` 및 `2.1.0-SNAPSHOT` 금지 guard를 추가한다.
 
-- [ ] **Step 3: coverage와 durable evidence를 기록한다**
+- [x] **Step 3: coverage와 durable evidence를 기록한다**
 
 `docs/coverage-matrix.md`의 graph 행에 #888과 provider 관찰을 추가하고 lesson에는
 upstream API, baseline ID drift, 설계 결정, 검증 결과를 기록한다.
@@ -297,7 +297,7 @@ implementation review를 등록한다.
 - Create: `docs/superpowers/specs/2026-09-05-issue-888-native-algorithm-observation-implementation-review.md`
 - Modify: `docs/superpowers/plans/2026-09-05-issue-888-native-algorithm-observation-plan.md`
 
-- [ ] **Step 1: fresh module 검증을 실행한다**
+- [x] **Step 1: fresh module 검증을 실행한다**
 
 ```bash
 ./gradlew :graph-abuser-detection:clean :graph-abuser-detection:test --no-build-cache --rerun-tasks --max-workers=1
@@ -308,7 +308,7 @@ implementation review를 등록한다.
 Container 환경이 가용하지 않으면 Colima/Docker 상태를 먼저 분류하고 integration
 gap을 숨기지 않는다.
 
-- [ ] **Step 2: 문서·workflow·dependency 검증을 실행한다**
+- [x] **Step 2: 문서·workflow·dependency 검증을 실행한다**
 
 ```bash
 node scripts/validate-readme-language.mjs
@@ -325,13 +325,13 @@ actionlint .github/workflows/Examples.yml
 git diff --check
 ```
 
-- [ ] **Step 3: Type A verifier와 six-lens implementation review를 수렴시킨다**
+- [x] **Step 3: Type A verifier와 six-lens implementation review를 수렴시킨다**
 
 Spec 요구사항·계획 단계·changed paths·test evidence를 traceability 표로 만들고,
 performance/stability/security/ops/API/user review에서 P0=0, P1=0을 확인한다. P2/P3는
 수정하거나 근거와 후속 issue를 기록한다.
 
-- [ ] **Step 4: 구현을 Lore commit으로 고정한다**
+- [x] **Step 4: 구현을 Lore commit으로 고정한다**
 
 ```bash
 git add \

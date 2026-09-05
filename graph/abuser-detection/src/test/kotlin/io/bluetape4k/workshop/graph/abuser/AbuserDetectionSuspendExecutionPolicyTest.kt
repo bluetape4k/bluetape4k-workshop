@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecution
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecutionObserver
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecutionPath
@@ -22,6 +23,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.awaitAll
@@ -32,7 +34,10 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 class AbuserDetectionSuspendExecutionPolicyTest {
 
@@ -138,6 +143,36 @@ class AbuserDetectionSuspendExecutionPolicyTest {
         assertFailsWith<CancellationException> {
             service.rankSuspiciousUsersWithExecution(limit = 1)
         }
+    }
+
+    @Test
+    fun `observer callback 중 취소되면 event는 최대 한 번이고 결과는 반환하지 않는다`() = runSuspendIO {
+        val ops = pageRankOperations()
+        val observerStarted = CountDownLatch(1)
+        val releaseObserver = CountDownLatch(1)
+        val observed = AtomicInteger(0)
+        val returned = AtomicReference<Any?>()
+        val service = AbuserDetectionSuspendService(
+            ops,
+            "test",
+            GraphAlgorithmExecutionObserver {
+                observed.incrementAndGet()
+                observerStarted.countDown()
+                check(releaseObserver.await(5, TimeUnit.SECONDS))
+            },
+        )
+
+        val job = launch(Dispatchers.Default) {
+            returned.set(service.rankSuspiciousUsersWithExecution())
+        }
+        observerStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        job.cancel()
+        releaseObserver.countDown()
+        job.join()
+
+        observed.get() shouldBeEqualTo 1
+        returned.get().shouldBeNull()
+        job.isCancelled.shouldBeTrue()
     }
 
     @Test

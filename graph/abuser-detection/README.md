@@ -71,6 +71,7 @@ from `IdentifierEdgeLabel.all` — referral alone does not imply shared identity
 | `explainSuspicion(userId)` | Returns all outgoing identifier paths from a user as a list (blocking) or cold `Flow` (coroutine). Each `AbusePath` names the target identifier vertex and the edge type. |
 | `detectReferralLoops(maxDepth, maxCycles)` | Detects directed cycles in the `REFERRED_BY` subgraph among User vertices. Returns `List<GraphCycle>` (blocking) or cold `Flow<GraphCycle>` (coroutine). |
 | `rankSuspiciousUsers(limit)` | Runs PageRank over User vertices and returns results sorted descending by score. Each `SuspiciousUserScore` carries a 1-based rank. Higher PageRank correlates with more shared-identifier connections, which is a proxy for abuse risk. |
+| `rankSuspiciousUsersWithExecution(limit, policy)` | Preserves the existing score semantics and returns the selected provider path in the same `SuspiciousUserRanking`. The suspend variant collects the PageRank flow before returning. |
 
 Service constructors reject blank graph names. Both service variants use the released
 `io.bluetape4k.graph.repository.requireEndpoint` extension to validate endpoint existence
@@ -98,6 +99,12 @@ data class SuspiciousUserScore(
     val user: GraphVertex,
     val score: Double,   // raw PageRank value; higher = more suspicious
     val rank: Int        // 1-based position
+)
+
+// Scores and the execution path selected for this exact call
+data class SuspiciousUserRanking(
+    val scores: List<SuspiciousUserScore>,
+    val execution: AbuserAlgorithmExecution
 )
 ```
 
@@ -134,6 +141,13 @@ val loops = service.detectReferralLoops()
 // PageRank-based risk ranking
 val top10 = service.rankSuspiciousUsers(limit = 10)
 top10.forEach { println("#${it.rank} ${it.user.id} score=${it.score}") }
+
+// Return the same scores together with this call's provider decision
+val ranking = service.rankSuspiciousUsersWithExecution(
+    limit = 10,
+    policy = GraphAlgorithmProviderPolicy.AUTO,
+)
+println("path=${ranking.execution.path}, reason=${ranking.execution.fallbackReason}")
 ```
 
 ### Coroutine service
@@ -165,7 +179,32 @@ service.detectReferralLoops(maxDepth = 4).collect { cycle ->
 service.rankSuspiciousUsers(limit = 5).collect { score ->
     println("#${score.rank} score=${score.score}")
 }
+
+// Collect the flow and return scores with this suspend call's provider decision
+val ranking = service.rankSuspiciousUsersWithExecution(
+    limit = 5,
+    policy = GraphAlgorithmProviderPolicy.JVM_ONLY,
+)
 ```
+
+## Algorithm Execution Policy
+
+This consumer example uses the `bluetape4k-dependencies` BOM at `2.0.0` and the released graph
+provider-selection API. It intentionally ships no native GDS/MAGE SDK or executor, so the policy
+matrix is explicit:
+
+| Policy | Current result | PageRank execution |
+|---|---|---|
+| `AUTO` | `JVM_FALLBACK` / `NO_PROVIDER` | Runs once through the portable JVM path |
+| `JVM_ONLY` | `JVM_FALLBACK` / `JVM_ONLY_POLICY` | Runs once through the portable JVM path |
+| `NATIVE_ONLY` | `GraphAlgorithmProviderUnavailableException` | Fails before PageRank starts |
+
+The returned `AbuserAlgorithmExecution` accepts only a lowercase, bounded provider ID matching
+`[a-z0-9][a-z0-9._-]{0,63}`. Observer failures do not discard a successful PageRank result, but
+`CancellationException` is always propagated. The suspend API emits no observation when flow
+collection is cancelled before completion. If cancellation races with observer callback start, at
+most one event can be emitted, but the cancelled call returns no result. Existing
+`rankSuspiciousUsers(limit)` callers remain source- and behavior-compatible.
 
 ## Security Notes
 
@@ -209,7 +248,9 @@ io.bluetape4k.workshop.graph.abuser
 ├── model
 │   ├── AbuseCluster.kt          — cluster result holding co-connected users + shared identifiers
 │   ├── AbusePath.kt             — single user-to-identifier edge path
+│   ├── AbuserAlgorithmExecution.kt — bounded provider execution path for one call
 │   ├── IdentifierEdgeLabel.kt   — typed enum of the four identifier edge types
+│   ├── SuspiciousUserRanking.kt — scores and execution path bound to one call
 │   └── SuspiciousUserScore.kt   — PageRank result for one user
 ├── schema
 │   └── AbuserDetectionSchema.kt — vertex labels (User, Device, IpAddress, PhoneNumber, PaymentMethod)
