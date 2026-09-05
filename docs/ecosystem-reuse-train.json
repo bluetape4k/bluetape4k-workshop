@@ -1173,7 +1173,8 @@
         "docs/superpowers/specs/2026-09-05-issue-890-versioned-dictionary-runtime-implementation-review.md",
         "kotlin/text-processing/**",
         "spring-boot/text-moderation-api/**",
-        "scripts/smoke-validate.sh"
+        "scripts/smoke-validate.sh",
+        "scripts/validate-readme-language.mjs"
       ],
       "review_artifact": "docs/superpowers/specs/2026-09-05-issue-890-versioned-dictionary-runtime-implementation-review.md"
     },
