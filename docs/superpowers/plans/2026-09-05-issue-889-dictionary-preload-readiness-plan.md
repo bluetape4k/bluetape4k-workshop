@@ -45,6 +45,6 @@ JUnit 5, bluetape assertions
 
 - [x] implementation traceability와 six-lens review에서 P0/P1=0 수렴
 - [x] fresh module test와 repository detekt 실행
-- [ ] Lore commit과 `[2.0.0]` Korean PR 생성
+- [x] Lore commit과 `[2.0.0]` Korean PR 생성
 - [ ] milestone `2.0.0`, assignee, exact head, 12/12 hosted checks, review thread 0 확인
 - [ ] PR을 OPEN으로 유지하고 #890으로 순차 전환
