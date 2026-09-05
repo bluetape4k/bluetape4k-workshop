@@ -16,22 +16,22 @@ JUnit 5, bluetape assertions
 - Create: `kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadiness.kt`
 - Create: `kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadinessTest.kt`
 
-- [ ] 초기 `NOT_READY` snapshot과 block 미실행 RED 테스트
-- [ ] 상태·result model과 `runWhenReady` 최소 구현
-- [ ] snapshot invariant와 ready result 테스트
+- [x] 초기 `NOT_READY` snapshot과 block 미실행 RED 테스트
+- [x] 상태·result model과 `runWhenReady` 최소 구현
+- [x] snapshot invariant와 ready result 테스트
 
 ### Task 2: concurrent preload와 retry 경계를 TDD로 구현한다
 
-- [ ] 16개 동시 caller에서 두 loader가 각각 한 번만 실행되는 RED 테스트
-- [ ] `Mutex` 기반 single initializer와 `ensureActive()` 구현
-- [ ] cancellation 뒤 `NOT_READY`, 원래 cancellation 전파, 다음 attempt 성공 검증
-- [ ] 일반 실패 뒤 `NOT_READY`, 원래 예외 전파, 다음 attempt 성공 검증
+- [x] 16개 동시 caller에서 두 loader가 각각 한 번만 실행되는 RED 테스트
+- [x] `Mutex` 기반 single initializer와 `ensureActive()` 구현
+- [x] cancellation 뒤 `NOT_READY`, 원래 cancellation 전파, 다음 attempt 성공 검증
+- [x] 일반 실패 뒤 `NOT_READY`, 원래 예외 전파, 다음 attempt 성공 검증
 
 ### Task 3: 실제 processor와 기존 index 호환성을 검증한다
 
-- [ ] 기본 loader가 `KoreanProcessor.preload()`와 `JapaneseProcessor.preload()`를 호출하도록 연결
-- [ ] 실제 preload → coroutine index 생성 → gated search 성공 테스트
-- [ ] 기존 synchronous index와 hit ID·score·highlight parity 테스트
+- [x] 기본 loader가 `KoreanProcessor.preload()`와 `JapaneseProcessor.preload()`를 호출하도록 연결
+- [x] 실제 preload → coroutine index 생성 → gated search 성공 테스트
+- [x] 기존 synchronous index와 hit ID·score·highlight parity 테스트
 - [ ] module full test 실행
 
 ### Task 4: 문서와 저장소 검증 표면을 갱신한다
