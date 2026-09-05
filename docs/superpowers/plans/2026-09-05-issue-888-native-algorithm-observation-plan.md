@@ -54,7 +54,7 @@ git commit -m "2.0.0 그래프 ID 입력 계약을 예제에 맞춘다" \
 - Create: `graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/model/SuspiciousUserRanking.kt`
 - Create: `graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/model/AbuserAlgorithmExecutionTest.kt`
 
-- [ ] **Step 1: bounded projection의 실패 테스트를 먼저 작성한다**
+- [x] **Step 1: bounded projection의 실패 테스트를 먼저 작성한다**
 
 ```kotlin
 @Test
@@ -78,13 +78,13 @@ fun `provider ID는 안전한 64자 경계만 허용한다`() {
 }
 ```
 
-- [ ] **Step 2: RED를 확인한다**
+- [x] **Step 2: RED를 확인한다**
 
 Run: `./gradlew :graph-abuser-detection:test --tests '*AbuserAlgorithmExecutionTest' --no-build-cache --rerun-tasks`
 
 Expected: 새 model이 없어 compile 실패한다.
 
-- [ ] **Step 3: 최소 model을 구현한다**
+- [x] **Step 3: 최소 model을 구현한다**
 
 ```kotlin
 data class AbuserAlgorithmExecution(
@@ -117,7 +117,7 @@ data class SuspiciousUserRanking(
 ) : Serializable
 ```
 
-- [ ] **Step 4: model 테스트를 통과시킨다**
+- [x] **Step 4: model 테스트를 통과시킨다**
 
 Run: `./gradlew :graph-abuser-detection:test --tests '*AbuserAlgorithmExecutionTest' --no-build-cache --rerun-tasks`
 
