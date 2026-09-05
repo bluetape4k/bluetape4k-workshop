@@ -15,6 +15,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #893 JaVers Kafka snapshot projection](2026-09-06-issue-893-javers-kafka-projection.md)
 - [Issue #894 JaVers Redis head metadata fail-closed](2026-09-06-issue-894-javers-redis-head-fail-closed.md)
 - [Issue #923 NATS JetStream Consumer Flow](2026-09-06-issue-923-nats-jetstream-flow.md)
+- [Issue #940 cache-redis VirtualThreads executor 소유권](2026-09-06-issue-940-cache-redis-virtualthreads.md)
 
 Use this structure for each lesson:
 

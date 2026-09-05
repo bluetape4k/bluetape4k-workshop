@@ -1265,6 +1265,35 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== cache-redis VirtualThreads executor lifecycle guard ==="
+    cache_redis_async="spring-boot/cache-redis/src/main/kotlin/io/bluetape4k/workshop/cache/redis/config/AsyncConfig.kt"
+    cache_redis_test="spring-boot/cache-redis/src/test/kotlin/io/bluetape4k/workshop/cache/redis/config/AsyncConfigTest.kt"
+    cache_redis_build="spring-boot/cache-redis/build.gradle.kts"
+    cache_redis_readme="spring-boot/cache-redis/README.md"
+    cache_redis_readme_ko="spring-boot/cache-redis/README.ko.md"
+    cache_redis_lesson="docs/lessons/2026-09-06-issue-940-cache-redis-virtualthreads.md"
+    cache_redis_review="docs/superpowers/specs/2026-09-06-issue-940-cache-redis-virtualthreads-implementation-review.md"
+    if contains_pattern 'VirtualThreads\.executorService\(\)' "$cache_redis_async" && \
+       contains_pattern 'destroyMethod = "shutdown"' "$cache_redis_async" && \
+       contains_pattern 'CACHE_REDIS_EXECUTOR_BEAN_NAME' "$cache_redis_async" "$cache_redis_test" && \
+       contains_pattern 'finally' "$cache_redis_async" && \
+       contains_pattern 'MDC\.clear\(\)' "$cache_redis_async" && \
+       contains_pattern 'DestructionAwareBeanPostProcessor' "$cache_redis_test" && \
+       contains_pattern 'RejectedExecutionException' "$cache_redis_test" && \
+       contains_pattern 'libs\.bluetape4k\.virtualthread\.api' "$cache_redis_build" && \
+       contains_pattern 'libs\.bluetape4k\.virtualthread\.jdk25' "$cache_redis_build" && \
+       contains_pattern '#940' docs/coverage-matrix.md docs/lessons/README.md "$cache_redis_lesson" && \
+       contains_pattern '"issue_numbers": \[940\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$cache_redis_readme" "$cache_redis_readme_ko" "$cache_redis_lesson" "$cache_redis_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$cache_redis_async" "$cache_redis_test" "$cache_redis_build" "$cache_redis_readme" "$cache_redis_readme_ko" "$cache_redis_lesson" "$cache_redis_review" && \
+       [ -f "$cache_redis_lesson" ] && [ -f "$cache_redis_review" ]; then
+      echo "cache-redis VirtualThreads executor lifecycle and lesson are registered."
+    else
+      echo "ERROR: cache-redis VirtualThreads executor lifecycle contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do
