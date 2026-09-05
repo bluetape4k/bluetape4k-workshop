@@ -1374,8 +1374,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260905T-issue-892-javers-history-limit-stacked-base",
-    "checksum": "1a6a434b31ae7a591b0c7f7be2c67bd5e3ccc4617d38efecbe0a4e36d70a1366"
+    "receipt_id": "20260906T-issue-893-javers-kafka-projection-scope",
+    "checksum": "be29d3e390c6ec35aa59e6f6def13154ecec7700cb08bedd4f8c3a0acfba92f5"
   },
   "planned_scope_replan_receipts": {
   },
