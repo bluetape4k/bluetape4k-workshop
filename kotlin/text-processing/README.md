@@ -53,17 +53,17 @@ Choose NFKC when a policy term must also match compatibility characters:
 
 ```kotlin
 val corporateFilter = AbuseWordFilter(
-    abuseWords = listOf("(주)"),
+    abuseWords = listOf("(\uC8FC)"),
     normalization = NormalizationForm.NFKC,
 )
 
-corporateFilter.findMatches("Company: ㈜ Bluetape").single().let { it.start to it.end }
-// source range of ㈜, not the three-character normalized range
-corporateFilter.filterText("Company: ㈜ Bluetape")
+corporateFilter.findMatches("Company: \u3231 Bluetape").single().let { it.start to it.end }
+// source range of U+3231, not the three-character normalized range
+corporateFilter.filterText("Company: \u3231 Bluetape")
 // "Company: * Bluetape"
 ```
 
-NFC remains the default. NFKC expands the compatibility character only for matching; returned
+NFC remains the default. NFKC expands the U+3231 compatibility character only for matching; returned
 offsets and masking still use the original Kotlin `String` span. An interacting normalization
 segment longer than 1,024 code units fails fast without echoing caller text.
 
@@ -123,12 +123,12 @@ For NFKC keyword redaction, set the policy explicitly:
 
 ```kotlin
 val policy = SensitiveRedactionPolicy.of(
-    rules = listOf(SensitiveRedactionRule.keyword("keyword.corp", "keyword", "(주)")),
+    rules = listOf(SensitiveRedactionRule.keyword("keyword.corp", "keyword", "(\uC8FC)")),
     keywordNormalization = NormalizationForm.NFKC,
 )
-val result = SensitiveTextRedactionPipeline.of(policy).redact("Company: ㈜ Bluetape")
+val result = SensitiveTextRedactionPipeline.of(policy).redact("Company: \u3231 Bluetape")
 
-result.spans.single().matchedLength // 1: the original ㈜ span
+result.spans.single().matchedLength // 1: the original U+3231 span
 ```
 
 ### Multilingual search index

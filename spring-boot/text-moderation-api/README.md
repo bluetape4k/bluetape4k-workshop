@@ -136,11 +136,12 @@ workshop:
   text-moderation:
     normalization: NFKC
     blockwords:
-      - "(주)"
+      - "(\uC8FC)"
 ```
 
-This configuration also detects source text containing `㈜`. The automaton maps the normalized
-match back to the one-code-unit source span, so `Company: ㈜ Bluetape` becomes
+This configuration also detects source text containing the U+3231 compatibility character. The
+automaton maps the normalized match back to the one-code-unit source span, so
+`Company: \u3231 Bluetape` becomes
 `Company: * Bluetape`. NFC remains the backward-compatible default. A normalization segment over
 1,024 code units is rejected without echoing request text.
 
