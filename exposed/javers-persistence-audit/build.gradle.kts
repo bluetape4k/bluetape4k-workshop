@@ -16,8 +16,12 @@ dependencies {
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.javers.core)
+    implementation(libs.bluetape4k.javers.persistence.kafka)
     implementation(libs.bluetape4k.javers.persistence.redis)
+    implementation(libs.bluetape4k.lettuce)
     implementation(libs.bluetape4k.redisson)
+    implementation(libs.kafka.clients)
+    implementation(libs.lettuce.core)
     implementation(libs.redisson.lib)
 
     implementation(libs.exposed.core)
@@ -28,4 +32,5 @@ dependencies {
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.kafka)
 }

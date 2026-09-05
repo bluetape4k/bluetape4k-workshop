@@ -3,7 +3,7 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-09-05
+> 마지막 갱신: 2026-09-06
 
 ## 2026-08-25 ecosystem 재사용 2차 gate
 
@@ -71,7 +71,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-exposed` (JDBC) | `exposed-mvc-jdbc` | ✅ Good | cursor token의 인코딩·서명·tenant scope는 caller-owned | — | `BookRepository.findCursorPage`의 primary-key keyset, pageSize+1 sentinel, sparse ID mutation boundary | #79, #881 |
 | `bluetape4k-exposed-ktor` | `ktor/exposed-rest` | ✅ Good | legacy aggregator가 core/backend 경계를 함께 노출했음 | backend-neutral core health/readiness와 선택형 JDBC adapter | R2DBC/cache adapter를 classpath 조건으로 추가하는 Ktor consumer fixture | #880 |
 | `bluetape4k-exposed` (R2DBC) | `exposed-webflux-r2dbc` | ✅ Good | cursor token의 인코딩·서명·tenant scope는 caller-owned | — | `LongR2dbcRepository.findCursorPage`, suspend cancellation/resource release, sparse ID mutation boundary | #881 |
-| `bluetape4k-javers` / `bluetape4k-javers-persistence-redis` | `exposed-javers-approval-workflow`, `exposed-javers-persistence-audit` | ✅ Good | cursor pagination과 filtered Redis query pushdown은 범위 밖 | `QueryBuilder.limit` 기반 `1..100` approved history와 newest-first ordering | Exact-instance `RListMultimap.range(-limit, -1)` read/decode bound와 filtered-query fallback | #892 |
+| `bluetape4k-javers` / `bluetape4k-javers-persistence-redis` / `bluetape4k-javers-persistence-kafka` | `exposed-javers-approval-workflow`, `exposed-javers-persistence-audit` | ✅ Good | multi-partition ordering, Redis post-EXEC commit-unknown 자동 복구, cursor pagination과 filtered Redis query pushdown은 범위 밖 | `QueryBuilder.limit` 기반 `1..100` approved history와 newest-first ordering | Exact-instance Redisson read/decode bound와 single-partition Kafka snapshot을 Lettuce Redis read model로 projection하는 restart/retry 예제 | #892, #893 |
 | `bluetape4k-spring-boot-r2dbc` | `spring-data-r2dbc-webflux-exposed` | ✅ Good | QBE matcher의 ignore-case는 upstream compiler 범위 밖 | Spring Data Exposed QBE + FluentQuery projection/page/count/exists를 사용하는 WebFlux CRUD | production query policy와 projection contract를 포함한 full WebFlux CRUD | #79, #882 |
 | `bluetape4k-spring-boot-redis` | `spring-boot-cache-redis` | ⚠️ Partial | custom codec, key별 TTL | Redis L2 fallback을 가진 Caffeine-first cache | TTL override를 포함한 distributed cache cluster | — |
 | `bluetape4k-redis` | `redis-redisson-examples`, `redis-distributed-lock` | ✅ Good | reactive Redisson 미노출 | — | Reactive Redisson RMapReactive example | — |

@@ -3,10 +3,10 @@
 [English](README.md) | 한국어
 
 이 모듈은 작은 `exposed/javers-audit` 경계를 durable JaVers repository로 확장합니다.
-Exposed JDBC는 여전히 `OrderTable`의 현재 row만 담당하고, Redis는
-`RedissonCdoSnapshotRepository`를 통해 조회 가능한 JaVers snapshot을 저장합니다.
-Exact-instance adapter는 결과가 service에 도달하기 전에 Redis range와 snapshot decode를
-요청 상한으로 제한합니다.
+직접 저장 경로는 Issue #892의 Exposed current row와 bounded Redisson history를 유지합니다.
+최초 모듈 Issue #290의 후속 projection 경로는 snapshot을 Kafka에 발행하고,
+dependencies 2.0.0이 관리하는 JaVers Kafka projection API로 조회 가능한 Lettuce Redis
+repository를 복원합니다.
 
 In-memory JaVers history에서 외부 audit store로 넘어가면 무엇이 달라지는지
 학습자가 확인할 수 있도록, 웹 컨트롤러나 분산 트랜잭션 없이 저장소 경계만 드러냅니다.
@@ -27,6 +27,7 @@ In-memory JaVers history에서 외부 audit store로 넘어가면 무엇이 달�
 | `getHistory(orderId, limit = 100)` | `1..100` 상한을 instance query에 pushdown하고 bounded snapshot을 newest-first로 반환 |
 | `getLatestSnapshot(orderId)` | bluetape4k `latestSnapshotOrNull<Order>()`로 최신 snapshot 조회 |
 | `diff(old, new)` | JaVers나 Exposed에 쓰지 않고 두 immutable order를 비교 |
+| `replayUntilIdle(maxIdlePolls = 3)` | 기본 연속 idle poll 3회까지 single-partition Kafka stream을 Redis로 replay |
 
 ## Persistence 선택지
 
@@ -34,11 +35,47 @@ In-memory JaVers history에서 외부 audit store로 넘어가면 무엇이 달�
 |---|---|---|
 | In-memory JaVers | `exposed/javers-audit`의 첫 audit-boundary 학습 | 서비스를 다시 만들면 history가 사라짐 |
 | Redis / Redisson | 이 모듈의 durable audit history 경로 | Exact-instance history에서 요청한 tail range만 읽고 newest-first로 decode |
-| Kafka JaVers repository | Event-stream fan-out과 downstream projection | Write-only stream이므로 history 조회 전 Redis, Exposed 또는 다른 read model로 projection 필요 |
+| Kafka → Lettuce Redis | Event-stream fan-out, restart rebuild, 조회 가능한 projection | Kafka는 write-only이고 `KafkaCdoSnapshotProjector`가 Redis read/head repository를 복원 |
 
-이 모듈은 snapshot을 저장하고 다시 읽을 수 있는 Redis 경로를 구현합니다.
-Kafka는 write-only audit stream boundary로 설명하여, `getHistory()`를 Kafka repository가
-직접 처리한다고 오해하지 않게 합니다.
+`KafkaRedisOrderAuditPipeline`은 command와 Redis query만 노출하고 write-only Kafka
+repository를 숨깁니다. JaVers가 다음 version과 snapshot type을 계산하려면 projected Redis
+head가 필요하므로 `place` 뒤 `markPaid` 또는 `delete` 전에 replay해야 합니다. Facade는 해당
+head가 없으면 fail-closed로 거부합니다.
+
+## Kafka에서 Redis로 Projection
+
+```kotlin
+KafkaRedisOrderAuditFactory.create(
+    repositoryName = "workshop-orders-projection",
+    topic = "order-audit-snapshots",
+    producerConfigs = producerConfigs,
+    consumerConfigs = consumerConfigs + (ConsumerConfig.GROUP_ID_CONFIG to "order-audit-projector"),
+    redisClient = lettuceClient,
+).use { pipeline ->
+    // Single-partition topic은 application/operator가 미리 provision합니다.
+    pipeline.replayUntilIdle()
+    pipeline.place("alice", order)
+    pipeline.replayUntilIdle()
+
+    pipeline.markPaid("bob", order.id)
+    pipeline.replayUntilIdle()
+
+    val latest = pipeline.getLatestSnapshot(order.id)
+}
+```
+
+Consumer 계약은 nonblank group id를 요구하고 auto commit을 끄며 `earliest`를 사용합니다.
+Application/operator는 topic을 partition 하나로 미리 provision합니다. 새 pipeline은 첫 mutation
+전에 initial catch-up을 요구하므로 재시작한 process가 stale Redis head에서 write할 수 없습니다.
+성공했거나 commit-unknown인 모든 mutation 뒤에는 다음 mutation 전 catch-up이 필요합니다.
+Projector는 multi-partition topic을 poll하거나 Redis head를 변경하기 전에 거부합니다.
+Batch가 실패하면 Kafka committed offset은 전진하지 않습니다.
+실패한 instance를 닫고 같은 group의 새 consumer/projector를 시작하면 이미 projected된 snapshot은
+skip하고 실패한 snapshot부터 replay한 뒤 batch를 commit합니다.
+
+`replayUntilIdle`은 daemon이 아닌 finite catch-up helper입니다. 기본 연속 empty poll 3회는 최초
+assignment empty poll을 허용합니다. 실제 application은 외부 startup deadline, retry budget,
+continuous worker lifecycle을 별도로 소유해야 합니다.
 
 ## Bounded History 계약
 
@@ -98,12 +135,24 @@ Redis-backed audit sink가 실패하면 예외를 그대로 전파하고, audit 
 성공으로 처리하지 않습니다. 이 규칙은 워크숍에서 경계를 명확히 보여주기 위한 계약이며,
 cross-store distributed transaction을 대체하지는 않습니다.
 
+Kafka projection은 Lettuce `MULTI`/`EXEC`를 사용합니다. `EXEC` 전 실패는 target, head,
+Kafka offset을 그대로 유지합니다. Redis는 `EXEC` 안의 개별 command error를 rollback하지 않으므로
+`EXEC` 뒤 command error나 connection loss는 commit-unknown이고 partial projection을 남길 수
+있습니다. 이 workshop은 이 경계의 자동 복구를 약속하지 않습니다. 직접 Redisson history 경로만
+bounded decode query 예제이며 Lettuce projection 경로는 같은 storage-decode bound를 주장하지 않습니다.
+
+Kafka와 Redis transport security는 caller-owned입니다. Workshop 밖에서는 TLS/SASL, ACL,
+credential, topic authorization, snapshot redaction, query authorization을 구성해야 합니다.
+
+`close()`는 idempotent하며 owned resource를 각각 한 번씩 닫습니다. Cleanup이 실패하면 후속
+실패를 첫 예외에 suppress하며, `close()`를 다시 호출해 실패 resource를 재시도한다고 가정하면 안 됩니다.
+
 ## 테스트
 
 ```bash
 ./gradlew :exposed-javers-persistence-audit:test
 ```
 
-테스트는 service rebuild 이후 Redis-backed history 유지, bounded decode count,
-newest-first ordering, fallback query semantics, JVM overload, terminal delete snapshot,
-audit sink failure propagation을 검증합니다.
+테스트는 Redis-backed history 유지, bounded Redisson decode, Kafka projection과 duplicate replay,
+restart rebuild, 최초 empty poll, mutation 전 single-partition 거부, pre-EXEC batch failure 뒤
+same-group retry, lifecycle cleanup, newest-first ordering, audit sink failure propagation을 검증합니다.

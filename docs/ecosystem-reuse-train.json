@@ -1237,6 +1237,34 @@
       "review_artifact": "docs/superpowers/specs/2026-09-05-issue-892-javers-history-limit-implementation-review.md"
     },
     {
+      "scope_id": "issue-893-javers-kafka-projection",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-893-javers-kafka-projection",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [893],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-06-issue-893-javers-kafka-projection.md",
+        "docs/review/2026-09-06-issue-893-javers-kafka-projection-plan-review.md",
+        "docs/superpowers/plans/2026-09-06-issue-893-javers-kafka-projection-plan.md",
+        "docs/superpowers/specs/2026-09-06-issue-893-javers-kafka-projection-design.md",
+        "docs/superpowers/specs/2026-09-06-issue-893-javers-kafka-projection-implementation-review.md",
+        "exposed/javers-persistence-audit/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/superpowers/specs/2026-09-06-issue-893-javers-kafka-projection-implementation-review.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
