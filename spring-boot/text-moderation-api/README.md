@@ -102,6 +102,7 @@ PY
 |---|---:|---|
 | `workshop.text-moderation.max-text-characters` | `2000` | Maximum accepted request text length |
 | `workshop.text-moderation.blockwords` | `spam,badword,abuse,hate` | Terms registered in the moderation automaton |
+| `workshop.text-moderation.normalization` | `NFC` | Unicode normalization applied to blockwords and request text (`NONE`, `NFC`, or `NFKC`) |
 
 The default blockwords are intentionally small so learners can follow the full
 flow from configuration to response.
@@ -127,6 +128,22 @@ the same revision. Failed or stale candidates preserve both the current dictiona
 history. Logs contain only the dictionary name, revision, word count, and total character count;
 raw blockwords and moderation text are never logged. The loader collection is copied and bounded
 while iterating, and shared Lingua detector access is serialized for concurrent singleton calls.
+
+Use NFKC only when compatibility characters are part of the moderation policy:
+
+```yaml
+workshop:
+  text-moderation:
+    normalization: NFKC
+    blockwords:
+      - "(\uC8FC)"
+```
+
+This configuration also detects source text containing the U+3231 compatibility character. The
+automaton maps the normalized match back to the one-code-unit source span, so
+`Company: \u3231 Bluetape` becomes
+`Company: * Bluetape`. NFC remains the backward-compatible default. A normalization segment over
+1,024 code units is rejected without echoing request text.
 
 ## Used Bluetape4k features
 
@@ -161,6 +178,7 @@ The focused test suite verifies:
 - singleton reuse for the language detector and automaton beans
 - reload, rollback, bounded history, and stale/failed candidate preservation
 - concurrent requests observing only one complete old or new revision
+- NFKC property binding, compatibility-character matching, and source-length masking
 
 ## Dependency Note
 

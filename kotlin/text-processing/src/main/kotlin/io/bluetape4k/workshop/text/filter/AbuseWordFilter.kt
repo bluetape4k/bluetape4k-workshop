@@ -11,7 +11,9 @@ import io.bluetape4k.text.search.ahoCorasick
 /**
  * AhoCorasick automaton 을 기반으로 하는 thread-safe abuse-word filter 입니다.
  *
- * 등록된 모든 단어는 case-insensitive 방식과 NFC normalization 아래에서 matching 되므로 같은 Unicode sequence 의 변형을 비교 전에 통합합니다. overlapping match 를 허용해 한 번의 pass 에서 모든 위반을 드러냅니다.
+ * 등록된 모든 단어는 case-insensitive 방식과 선택한 [normalization] 아래에서 matching 됩니다.
+ * 기본 NFC는 기존 동작을 유지하고 NFKC는 compatibility 문자를 원문 offset으로 복원합니다.
+ * overlapping match 를 허용해 한 번의 pass 에서 모든 위반을 드러냅니다.
  *
  * ## Behavior / Contract
  * - construction 비용은 O(total keyword length) 입니다. 이후 [containsAbuse], [filterText], [findMatches] 호출은 O(text length + number of matches) 입니다.
@@ -25,15 +27,19 @@ import io.bluetape4k.text.search.ahoCorasick
  * ```
  *
  * @param abuseWords abuse 로 표시할 단어 collection 입니다.
+ * @param normalization keyword와 입력에 적용할 Unicode normalization 형식입니다.
  */
-class AbuseWordFilter(abuseWords: Collection<String>) {
+class AbuseWordFilter @JvmOverloads constructor(
+    abuseWords: Collection<String>,
+    private val normalization: NormalizationForm = NormalizationForm.NFC,
+) {
 
     companion object : KLogging()
 
     private val automaton: AhoCorasickAutomaton<String> = ahoCorasick {
         ignoreCase = true
         allowOverlaps = true
-        normalization = NormalizationForm.NFC
+        normalization = this@AbuseWordFilter.normalization
         abuseWords.filter { it.isNotBlank() }.forEach { word -> keyword(word, word) }
     }
 
@@ -53,7 +59,7 @@ class AbuseWordFilter(abuseWords: Collection<String>) {
     /**
      * [text] 안에서 match 된 모든 abuse word 를 `*` 문자로 바꾼 결과를 반환합니다.
      *
-     * 각 matched span 은 같은 byte length 의 `*` 문자열로 대체되므로 반환 문자열은 [text] 와 같은 길이를 가집니다.
+     * 각 matched 원문 span 은 같은 code-unit length의 `*` 문자열로 대체되므로 반환 문자열은 [text] 와 같은 길이를 가집니다.
      *
      * @param text filter 할 입력 text 입니다.
      * @return 모든 abuse-word occurrence 가 masking 된 text 입니다.

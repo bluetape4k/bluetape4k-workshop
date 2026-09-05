@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.textmoderation
 
 import com.github.pemistahl.lingua.api.LanguageDetector
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.text.search.AhoCorasickAutomaton
 import io.bluetape4k.workshop.textmoderation.service.VersionedModerationDictionary
+import io.bluetape4k.workshop.textmoderation.service.TextModerationService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
@@ -30,5 +32,20 @@ class TextModerationContextTest {
             automaton1 shouldBeSameInstanceAs automaton2
             dictionary1 shouldBeSameInstanceAs dictionary2
         }
+    }
+
+    @Test
+    fun `NFKC property detects compatibility input and preserves source length`() {
+        contextRunner
+            .withPropertyValues(
+                "workshop.text-moderation.normalization=NFKC",
+                "workshop.text-moderation.blockwords[0]=(주)",
+            )
+            .run { context ->
+                val response = context.getBean(TextModerationService::class.java).analyze("회사명: ㈜블루테이프")
+
+                response.matchedTerms shouldBeEqualTo listOf("(주)")
+                response.maskedText shouldBeEqualTo "회사명: *블루테이프"
+            }
     }
 }

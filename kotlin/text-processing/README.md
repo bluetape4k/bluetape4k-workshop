@@ -24,7 +24,7 @@ audit-safe span metadata.
 
 | class | backing API | contract |
 |---|---|---|
-| `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC matching with overlaps; masks matched spans with `*` |
+| `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC/NFKC matching with overlaps; maps matches back to source spans and masks them with `*` |
 | `LanguageDetectionService` | Lingua detector from `bluetape4k-text-lingua` | Reuses one detector and returns `null` for blank or unknown text |
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | Serializes detector access for concurrent coroutine callers |
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
@@ -32,7 +32,7 @@ audit-safe span metadata.
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | Shares one suspend preload attempt and rejects request work until both dictionaries are ready |
 | `VersionedMultilingualSearchIndex` | Korean `DictionarySnapshot`, exact-noun Aho-Corasick matcher, `VersionedDictionary` | Publishes one completed noun-dictionary/index generation and returns the exact revision used by each search |
-| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Validates a small policy, finds email/phone/token/keyword spans, merges overlaps, masks same-length output, and returns safe metadata |
+| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Applies a selectable keyword normalization policy, restores source spans, merges overlaps, masks same-length output, and returns safe metadata |
 
 ## Usage
 
@@ -48,6 +48,24 @@ filter.findMatches("spam and abuse")              // AhoCorasickMatch list
 
 The automaton is built once from the keyword collection. After construction, matching is a single
 pass over the input text plus the number of matches.
+
+Choose NFKC when a policy term must also match compatibility characters:
+
+```kotlin
+val corporateFilter = AbuseWordFilter(
+    abuseWords = listOf("(\uC8FC)"),
+    normalization = NormalizationForm.NFKC,
+)
+
+corporateFilter.findMatches("Company: \u3231 Bluetape").single().let { it.start to it.end }
+// source range of U+3231, not the three-character normalized range
+corporateFilter.filterText("Company: \u3231 Bluetape")
+// "Company: * Bluetape"
+```
+
+NFC remains the default. NFKC expands the U+3231 compatibility character only for matching; returned
+offsets and masking still use the original Kotlin `String` span. An interacting normalization
+segment longer than 1,024 code units fails fast without echoing caller text.
 
 ### Language detection
 
@@ -100,6 +118,18 @@ matter in application logs and support-ticket examples:
 Use a stronger detector when the input contains jurisdiction-specific identifiers, free-form
 addresses, names, OCR output, multilingual PII beyond the fixture rules, or compliance-driven DLP
 requirements. This workshop pipeline is a learning example, not a full classifier.
+
+For NFKC keyword redaction, set the policy explicitly:
+
+```kotlin
+val policy = SensitiveRedactionPolicy.of(
+    rules = listOf(SensitiveRedactionRule.keyword("keyword.corp", "keyword", "(\uC8FC)")),
+    keywordNormalization = NormalizationForm.NFKC,
+)
+val result = SensitiveTextRedactionPipeline.of(policy).redact("Company: \u3231 Bluetape")
+
+result.spans.single().matchedLength // 1: the original U+3231 span
+```
 
 ### Multilingual search index
 
