@@ -44,6 +44,8 @@ class ProductPolicyApprovalService(
     companion object: KLogging() {
         private const val CURRENCY_CODE_LENGTH = 3
         private const val MONEY_SCALE = 2
+        private const val DEFAULT_HISTORY_LIMIT = 100
+        private const val MAX_HISTORY_LIMIT = 100
     }
 
     /**
@@ -147,14 +149,24 @@ class ProductPolicyApprovalService(
         }
 
     /**
-     * 승인된 JaVers snapshot만 오래된 순서로 반환한다.
+     * 승인된 JaVers snapshot을 [limit]개까지 newest-first 순서로 반환한다.
+     *
+     * 빈 목록은 unknown policy와 아직 audit commit이 없는 policy를 구분하지 않는다.
+     * 반환 snapshot을 외부 API로 노출할 때는 호출자가 authorization과 redaction을 적용해야 한다.
      */
-    fun getHistory(policyId: Long): List<CdoSnapshot> {
+    @JvmOverloads
+    fun getHistory(
+        policyId: Long,
+        limit: Int = DEFAULT_HISTORY_LIMIT,
+    ): List<CdoSnapshot> {
         val validPolicyId = policyId.requirePositiveNumber("policyId")
+        require(limit in 1..MAX_HISTORY_LIMIT) {
+            "limit must be between 1 and $MAX_HISTORY_LIMIT."
+        }
         val query = QueryBuilder.byInstanceId(validPolicyId, ProductPolicy::class.java)
+            .limit(limit)
             .build()
         return javers.findSnapshots(query)
-            .sortedBy { it.commitMetadata.commitDate }
     }
 
     private fun upsertCurrentPolicy(policy: ProductPolicy) {

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.concurrent.atomic.AtomicInteger
 
 class OrderAuditServiceTest {
 
@@ -56,8 +57,10 @@ class OrderAuditServiceTest {
 
         val history = rebuilt.getHistory(order.id)
         history shouldHaveSize 2
-        history.first().type shouldBeEqualTo SnapshotType.INITIAL
-        history.last().type shouldBeEqualTo SnapshotType.UPDATE
+        history.first().type shouldBeEqualTo SnapshotType.UPDATE
+        history.first().version shouldBeEqualTo 2L
+        history.last().type shouldBeEqualTo SnapshotType.INITIAL
+        history.last().version shouldBeEqualTo 1L
         rebuilt.getLatestSnapshot(order.id)
             .shouldNotBeNull()
             .getPropertyValue("status") shouldBeEqualTo OrderStatus.PAID
@@ -85,8 +88,64 @@ class OrderAuditServiceTest {
 
         val history = service.getHistory(order.id)
         history shouldHaveSize 2
-        history.last().type shouldBeEqualTo SnapshotType.TERMINAL
+        history.first().type shouldBeEqualTo SnapshotType.TERMINAL
+        history.first().version shouldBeEqualTo 2L
         service.findCurrent(order.id) shouldBeEqualTo null
+    }
+
+    @Test
+    fun `bounded history decodes only the requested newest Redis snapshots`() {
+        val codec = CountingCodec()
+        val service = RedisOrderAuditFactory.create(repositoryName("bounded"), redis, codec)
+        val order = sampleOrder("order-350")
+        service.place("alice", order)
+        service.markPaid("bob", order.id)
+        service.delete("carol", order.id)
+
+        codec.resetDecodeCount()
+        val latest = service.getHistory(order.id, 1)
+
+        latest shouldHaveSize 1
+        latest.single().type shouldBeEqualTo SnapshotType.TERMINAL
+        latest.single().version shouldBeEqualTo 3L
+        codec.decodeCount.get() shouldBeEqualTo 1
+
+        codec.resetDecodeCount()
+        val recent = service.getHistory(order.id, 2)
+
+        recent.map { it.type } shouldBeEqualTo listOf(SnapshotType.TERMINAL, SnapshotType.UPDATE)
+        recent.map { it.version } shouldBeEqualTo listOf(3L, 2L)
+        codec.decodeCount.get() shouldBeEqualTo 2
+    }
+
+    @Test
+    fun `history validates bounds preserves empty semantics and JVM overloads`() {
+        val codec = CountingCodec()
+        val service = RedisOrderAuditFactory.create(repositoryName("contract"), redis, codec)
+        val order = sampleOrder("order-360")
+        service.place("alice", order)
+
+        codec.resetDecodeCount()
+        service.getHistory(order.id, 100) shouldHaveSize 1
+        codec.decodeCount.get() shouldBeEqualTo 1
+        service.getHistory("unknown-order") shouldHaveSize 0
+
+        codec.resetDecodeCount()
+        listOf(0, -1, 101).forEach { invalidLimit ->
+            assertFailsWith<IllegalArgumentException> {
+                service.getHistory(order.id, invalidLimit)
+            }
+        }
+        codec.decodeCount.get() shouldBeEqualTo 0
+
+        val oneArgument = service.javaClass.getMethod("getHistory", String::class.java)
+        val twoArguments = service.javaClass.getMethod(
+            "getHistory",
+            String::class.java,
+            Int::class.javaPrimitiveType,
+        )
+        (oneArgument.invoke(service, order.id) as List<*>) shouldHaveSize 1
+        (twoArguments.invoke(service, order.id, 1) as List<*>) shouldHaveSize 1
     }
 
     @Test
@@ -129,6 +188,23 @@ class OrderAuditServiceTest {
 
         override fun decode(encodedData: ByteArray): JsonObject? =
             JaversCodecs.Fory.decode(encodedData)
+    }
+
+    private class CountingCodec(
+        private val delegate: JaversCodec<ByteArray> = JaversCodecs.LZ4Fory,
+    ): JaversCodec<ByteArray> {
+        val decodeCount = AtomicInteger()
+
+        override fun encode(jsonElement: JsonObject): ByteArray = delegate.encode(jsonElement)
+
+        override fun decode(encodedData: ByteArray): JsonObject? {
+            decodeCount.incrementAndGet()
+            return delegate.decode(encodedData)
+        }
+
+        fun resetDecodeCount() {
+            decodeCount.set(0)
+        }
     }
 
     private companion object {

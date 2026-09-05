@@ -1207,6 +1207,36 @@
       "review_artifact": "docs/superpowers/specs/2026-09-05-issue-891-nfkc-offset-normalization-implementation-review.md"
     },
     {
+      "scope_id": "issue-892-javers-history-limit",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-892-javers-history-limit",
+      "expected_base_ref": "feat/issue-891-nfkc-offset-normalization",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [892],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-05-issue-892-javers-history-limit.md",
+        "docs/review/2026-09-05-issue-892-javers-history-limit-plan-review.md",
+        "docs/superpowers/plans/2026-09-05-issue-892-javers-history-limit-plan.md",
+        "docs/superpowers/specs/2026-09-05-issue-892-javers-history-limit-design.md",
+        "docs/superpowers/specs/2026-09-05-issue-892-javers-history-limit-review.md",
+        "docs/superpowers/specs/2026-09-05-issue-892-javers-history-limit-implementation-review.md",
+        "exposed/javers-approval-workflow/**",
+        "exposed/javers-persistence-audit/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/superpowers/specs/2026-09-05-issue-892-javers-history-limit-implementation-review.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -1316,8 +1346,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260905T-issue-891-nfkc-offset-normalization-stacked-base",
-    "checksum": "a4dfa55b837cbcc5085e4d99d102883f21ceb12c481e6f133fca89be8ed10a6e"
+    "receipt_id": "20260905T-issue-892-javers-history-limit-stacked-base",
+    "checksum": "1a6a434b31ae7a591b0c7f7be2c67bd5e3ccc4617d38efecbe0a4e36d70a1366"
   },
   "planned_scope_replan_receipts": {
   },

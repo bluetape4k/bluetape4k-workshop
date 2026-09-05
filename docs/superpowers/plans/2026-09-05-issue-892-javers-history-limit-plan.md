@@ -36,10 +36,10 @@ query pushdown·newest-first ordering·validation·JVM 호환성을 테스트와
 
 - [x] GNO/live/upstream/current-code 조사
 - [x] 설계와 구현 계획 작성
-- [ ] 독립 설계 리뷰 P0/P1 0건
-- [ ] baseline 및 failing regression 증거
-- [ ] production 구현
-- [ ] 문서·manifest·workflow guard
-- [ ] clean tests와 정적/계약 검증
-- [ ] 독립 구현 리뷰 P0/P1 0건
+- [x] 독립 설계 리뷰 P0/P1 0건
+- [x] baseline 및 failing regression 증거
+- [x] production 구현
+- [x] 문서·manifest·workflow guard
+- [x] clean tests와 정적/계약 검증
+- [x] 독립 구현 리뷰 P0/P1 0건
 - [ ] PR exact-head hosted CI와 metadata 확인

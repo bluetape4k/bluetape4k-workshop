@@ -1131,6 +1131,44 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== JaVers bounded history query guard ==="
+    javers_order_build="exposed/javers-persistence-audit/build.gradle.kts"
+    javers_order_service="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/OrderAuditService.kt"
+    javers_order_repository="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/BoundedRedissonCdoSnapshotRepository.kt"
+    javers_order_tests="exposed/javers-persistence-audit/src/test/kotlin/io/bluetape4k/workshop/exposed/javers/persistence"
+    javers_order_readme="exposed/javers-persistence-audit/README.md"
+    javers_order_readme_ko="exposed/javers-persistence-audit/README.ko.md"
+    javers_approval_service="exposed/javers-approval-workflow/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/approval/service/ProductPolicyApprovalService.kt"
+    javers_approval_tests="exposed/javers-approval-workflow/src/test/kotlin/io/bluetape4k/workshop/exposed/javers/approval"
+    javers_approval_readme="exposed/javers-approval-workflow/README.md"
+    javers_approval_readme_ko="exposed/javers-approval-workflow/README.ko.md"
+    javers_history_lesson="docs/lessons/2026-09-05-issue-892-javers-history-limit.md"
+    javers_history_review="docs/superpowers/specs/2026-09-05-issue-892-javers-history-limit-implementation-review.md"
+    if contains_pattern '@JvmOverloads' "$javers_order_service" "$javers_approval_service" && \
+       contains_pattern '\.limit\(limit\)' "$javers_order_service" "$javers_approval_service" && \
+       contains_pattern 'limit in 1\.\.MAX_HISTORY_LIMIT' "$javers_order_service" "$javers_approval_service" && \
+       contains_pattern 'range\(-queryParams\.limit\(\), -1\)' "$javers_order_repository" && \
+       contains_pattern 'supportsBoundedExactInstanceHistory' "$javers_order_repository" && \
+       contains_pattern 'delegate\.getStateHistory' "$javers_order_repository" && \
+       contains_pattern 'decodeCount' "$javers_order_tests" && \
+       contains_pattern 'unsupported query parameters delegate' "$javers_order_tests" && \
+       contains_pattern 'newest-first' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" && \
+       contains_pattern 'authorization.*redaction' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" && \
+       contains_pattern 'libs\.bluetape4k\.redisson' "$javers_order_build" && \
+       contains_pattern ':exposed-javers-approval-workflow:test' .github/workflows/Examples.yml && \
+       contains_pattern ':exposed-javers-persistence-audit:test' .github/workflows/Examples.yml && \
+       contains_pattern '#892' docs/coverage-matrix.md docs/lessons/README.md "$javers_history_lesson" && \
+       contains_pattern '"issue_numbers": \[892\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_order_service" "$javers_order_repository" "$javers_order_tests" "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_service" "$javers_approval_tests" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
+       [ -f "$javers_history_lesson" ] && [ -f "$javers_history_review" ]; then
+      echo "JaVers bounded history query examples and lesson are registered."
+    else
+      echo "ERROR: JaVers bounded history query contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

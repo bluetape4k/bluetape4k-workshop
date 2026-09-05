@@ -72,7 +72,9 @@ val query = QueryBuilder.byInstanceId(orderId, Order::class.java)
 - 저장 순서는 oldest-first이므로 선택된 byte 구간만 역순으로 decode해 newest-first로 반환한다.
 - adapter와 delegate는 동일 `JaversCodec`과 Redis key/Redisson codec을 사용한다.
 - `setJsonConverter`를 delegate와 adapter 양쪽에 전달한다.
-- 새 dependency, schema, snapshot/commit policy 변경은 없다.
+- adapter가 upstream과 동일한 Redis codec을 명시적으로 사용하도록 기존 versionless
+  `libs.bluetape4k.redisson` alias를 direct dependency로 선언한다. 새 외부 dependency, schema,
+  snapshot/commit policy 변경은 없다.
 
 이 경계는 `limit=1/2`일 때 실제 decode 횟수가 각각 1/2임을 counting codec으로 검증한다.
 
@@ -121,7 +123,7 @@ val query = QueryBuilder.byInstanceId(orderId, Order::class.java)
 - root `platform(libs.bluetape4k.dependencies)` 2.0.0만 version authority로 사용한다.
 - `libs.bluetape4k.javers.*` alias는 versionless 상태를 유지한다.
 - 개별 JaVers BOM, explicit module version, 2.1.0-SNAPSHOT을 추가하지 않는다.
-- mocking/testing dependency를 새로 추가하지 않는다.
+- 기존 versionless `libs.bluetape4k.redisson` alias 외에 dependency를 새로 추가하지 않는다.
 
 ## 8. 문서·운영 가드
 
