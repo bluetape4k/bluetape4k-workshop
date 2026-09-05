@@ -1026,6 +1026,32 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Tokenizer dictionary preload readiness guard ==="
+    tokenizer_readiness="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadiness.kt"
+    tokenizer_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadinessTest.kt"
+    tokenizer_readme="kotlin/text-processing/README.md"
+    tokenizer_readme_ko="kotlin/text-processing/README.ko.md"
+    tokenizer_lesson="docs/lessons/2026-09-05-issue-889-dictionary-preload-readiness.md"
+    tokenizer_review="docs/superpowers/specs/2026-09-05-issue-889-dictionary-preload-readiness-implementation-review.md"
+    if contains_pattern 'TokenizerDictionaryReadiness' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'KoreanProcessor\.preload' "$tokenizer_readiness" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'JapaneseProcessor\.preload' "$tokenizer_readiness" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'NOT_READY' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'LOADING' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'CancellationException' "$tokenizer_readiness" "$tokenizer_tests" && \
+       contains_pattern ':kotlin-text-processing:test' .github/workflows/Examples.yml scripts/smoke-validate.sh && \
+       contains_pattern '#889' docs/coverage-matrix.md docs/lessons/README.md "$tokenizer_lesson" && \
+       contains_pattern '"issue_numbers": \[889\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
+       [ -f "$tokenizer_lesson" ] && [ -f "$tokenizer_review" ]; then
+      echo "Tokenizer dictionary preload readiness example and lesson are registered."
+    else
+      echo "ERROR: Tokenizer dictionary preload readiness contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

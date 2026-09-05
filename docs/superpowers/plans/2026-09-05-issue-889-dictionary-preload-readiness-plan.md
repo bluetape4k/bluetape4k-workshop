@@ -3,7 +3,7 @@
 **Goal:** Korean/Japanese dictionary preload를 요청 경로 밖에서 공유하고 readiness 미완료
 요청을 명시적으로 거절하면서 기존 multilingual index 결과를 보존한다.
 
-**Architecture:** `TokenizerDictionaryReadiness`가 `Mutex`와 immutable volatile snapshot으로
+**Architecture:** `TokenizerDictionaryReadiness`가 `Mutex`와 immutable volatile 상태 값으로
 두 processor preload의 lifecycle을 소유한다. `runWhenReady`는 `READY`일 때만 기존 search
 block을 실행한다.
 
@@ -16,9 +16,9 @@ JUnit 5, bluetape assertions
 - Create: `kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadiness.kt`
 - Create: `kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadinessTest.kt`
 
-- [x] 초기 `NOT_READY` snapshot과 block 미실행 RED 테스트
+- [x] 초기 `NOT_READY` 상태 값과 block 미실행 RED 테스트
 - [x] 상태·result model과 `runWhenReady` 최소 구현
-- [x] snapshot invariant와 ready result 테스트
+- [x] readiness 상태 invariant와 ready result 테스트
 
 ### Task 2: concurrent preload와 retry 경계를 TDD로 구현한다
 
@@ -32,19 +32,19 @@ JUnit 5, bluetape assertions
 - [x] 기본 loader가 `KoreanProcessor.preload()`와 `JapaneseProcessor.preload()`를 호출하도록 연결
 - [x] 실제 preload → coroutine index 생성 → gated search 성공 테스트
 - [x] 기존 synchronous index와 hit ID·score·highlight parity 테스트
-- [ ] module full test 실행
+- [x] module full test 실행
 
 ### Task 4: 문서와 저장소 검증 표면을 갱신한다
 
-- [ ] module/root README 양국어에 startup/readiness/retry 예제 추가
-- [ ] `Examples.yml`, stale-check, coverage matrix, lesson/index 갱신
-- [ ] ecosystem reuse manifest에 #889 독립 PR scope 등록
-- [ ] README language/parity, terminology, actionlint, stale, ecosystem 검증
+- [x] module/root README 양국어에 startup/readiness/retry 예제 추가
+- [x] `Examples.yml` 기존 등록 확인, stale-check, coverage matrix, lesson/index 갱신
+- [x] ecosystem reuse manifest에 #889 독립 PR scope 등록
+- [x] README language/parity, terminology, actionlint, stale, ecosystem 검증
 
 ### Task 5: Type A review, commit, PR, exact-head CI를 완료한다
 
-- [ ] implementation traceability와 six-lens review에서 P0/P1=0 수렴
-- [ ] fresh module test와 repository detekt 실행
+- [x] implementation traceability와 six-lens review에서 P0/P1=0 수렴
+- [x] fresh module test와 repository detekt 실행
 - [ ] Lore commit과 `[2.0.0]` Korean PR 생성
 - [ ] milestone `2.0.0`, assignee, exact head, 12/12 hosted checks, review thread 0 확인
 - [ ] PR을 OPEN으로 유지하고 #890으로 순차 전환

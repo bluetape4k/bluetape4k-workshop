@@ -28,21 +28,21 @@ preload하고, 완료 전 요청에는 부분 tokenizer 결과 대신 명시적�
 
 `TokenizerDictionaryReadiness.preload()`는 하나의 `Mutex`에서 다음 순서를 수행한다.
 
-1. 이미 `READY`이면 저장된 동일 snapshot을 반환한다.
-2. 새 attempt의 `LOADING` snapshot을 공개한다.
+1. 이미 `READY`이면 저장된 동일 readiness 상태 값을 반환한다.
+2. 새 attempt의 `LOADING` 상태 값을 공개한다.
 3. Korean과 Japanese processor의 suspend preload를 순서대로 호출한다.
-4. coroutine cancellation을 다시 확인한 뒤 `READY` snapshot을 공개한다.
+4. coroutine cancellation을 다시 확인한 뒤 `READY` 상태 값을 공개한다.
 5. 실패나 cancellation이면 `NOT_READY`로 복귀하고 원래 예외를 재전파한다.
 
 동시 caller는 같은 mutex를 기다린다. 첫 성공 뒤 대기 caller는 loader를 다시 호출하지 않고
-동일한 `READY` snapshot을 받는다. 첫 caller가 실패·취소되면 다음 caller가 새 attempt로
+동일한 `READY` 상태 값을 받는다. 첫 caller가 실패·취소되면 다음 caller가 새 attempt로
 재시도한다. 별도 scope나 `GlobalScope`를 만들지 않으므로 caller cancellation과 ownership을
 보존한다.
 
 ### 요청 gate
 
-`runWhenReady`는 호출 시점의 snapshot이 `READY`가 아니면 block을 실행하지 않고
-`DictionaryReadyResult.NotReady`를 반환한다. `READY`이면 block 결과와 관찰한 snapshot을
+`runWhenReady`는 호출 시점의 readiness 상태가 `READY`가 아니면 block을 실행하지 않고
+`DictionaryReadyResult.NotReady`를 반환한다. `READY`이면 block 결과와 관찰한 상태 값을
 `DictionaryReadyResult.Ready`로 반환한다. Readiness가 준비되지 않았을 때 search block을
 평가하지 않으므로 partial tokenizer 결과가 외부로 나가지 않는다.
 
@@ -56,7 +56,7 @@ Startup 사용 순서는 다음과 같다.
 
 ## 오류·보안·운영 경계
 
-- Loader 예외 메시지나 dictionary 경로를 snapshot 또는 `toString()`에 저장하지 않는다.
+- Loader 예외 메시지나 dictionary 경로를 readiness 상태 값 또는 `toString()`에 저장하지 않는다.
 - 실패와 cancellation은 삼키거나 결과 객체로 바꾸지 않고 원래 throwable을 재전파한다.
 - `LOADING`은 진행 상태일 뿐 health 성공이 아니다. Readiness 성공은 `READY`만 허용한다.
 - 외부 config server, dictionary 파일 배포, tokenizer 품질 변경은 범위 밖이다.
