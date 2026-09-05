@@ -9,6 +9,8 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmFallbackReason
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmProviderPolicy
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
@@ -156,7 +158,7 @@ abstract class AbstractAbuserDetectionTest {
 
     @Test
     fun `findAbuseCluster returns empty cluster for unknown vertex ID`() {
-        val unknownId = GraphElementId("non-existent-vertex-id-9999")
+        val unknownId = GraphElementId("99999999")
 
         val cluster = service.findAbuseCluster(unknownId)
 
@@ -209,7 +211,7 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
 
         assertFailsWith<IllegalArgumentException> {
-            service.linkDevice(seed.user1.id, GraphElementId("missing-device-id"), "2026-01-01T00:00:00Z")
+            service.linkDevice(seed.user1.id, GraphElementId("99999998"), "2026-01-01T00:00:00Z")
         }
     }
 
@@ -267,6 +269,21 @@ abstract class AbstractAbuserDetectionTest {
         scores shouldHaveSize 2
         scores.first().rank shouldBeEqualTo 1
         scores.last().rank shouldBeEqualTo 2
+    }
+
+    @Test
+    fun `rankSuspiciousUsersWithExecution preserves scores and reports AUTO fallback`() {
+        val seed = seedSharedIdentifiers(service)
+        seedReferralLoop(service, seed)
+
+        val existingScores = service.rankSuspiciousUsers(limit = 10)
+        val ranking = service.rankSuspiciousUsersWithExecution(
+            limit = 10,
+            policy = GraphAlgorithmProviderPolicy.AUTO,
+        )
+
+        ranking.scores shouldBeEqualTo existingScores
+        ranking.execution.fallbackReason shouldBeEqualTo GraphAlgorithmFallbackReason.NO_PROVIDER
     }
 
     @Test

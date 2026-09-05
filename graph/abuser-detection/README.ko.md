@@ -63,6 +63,7 @@ bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시
 | `explainSuspicion(userId)` | 사용자의 모든 식별자 연결 경로를 반환합니다. 블로킹 서비스는 `List<AbusePath>`, 코루틴 서비스는 cold `Flow<AbusePath>`를 반환합니다. 각 `AbusePath`에는 대상 식별자 정점 ID와 엣지 타입이 포함됩니다. |
 | `detectReferralLoops(maxDepth, maxCycles)` | `REFERRED_BY` 서브그래프 내 User 정점 사이의 방향성 사이클을 탐지합니다. 블로킹 서비스는 `List<GraphCycle>`, 코루틴 서비스는 cold `Flow<GraphCycle>`을 반환합니다. |
 | `rankSuspiciousUsers(limit)` | User 정점에 대해 PageRank를 계산하고 점수 내림차순으로 결과를 반환합니다. 각 `SuspiciousUserScore`에는 1-based 순위가 포함됩니다. PageRank 점수가 높을수록 공유 식별자 연결이 많다는 의미이며, 이는 어뷰징 위험의 지표가 됩니다. |
+| `rankSuspiciousUsersWithExecution(limit, policy)` | 기존 점수 의미를 그대로 유지하면서 선택된 provider 경로를 같은 `SuspiciousUserRanking`에 반환합니다. suspend 버전은 PageRank flow를 수집한 뒤 반환합니다. |
 
 서비스 생성자는 blank graph name을 거부합니다. 두 서비스는 출시된
 `io.bluetape4k.graph.repository.requireEndpoint` extension으로 graph edge를 만들기 전에
@@ -90,6 +91,12 @@ data class SuspiciousUserScore(
     val user: GraphVertex,
     val score: Double,   // 원시 PageRank 값; 높을수록 더 의심스러움
     val rank: Int        // 1-based 순위
+)
+
+// 이 호출에서 계산한 점수와 선택된 실행 경로
+data class SuspiciousUserRanking(
+    val scores: List<SuspiciousUserScore>,
+    val execution: AbuserAlgorithmExecution
 )
 ```
 
@@ -126,6 +133,13 @@ val loops = service.detectReferralLoops()
 // PageRank 기반 위험 순위
 val top10 = service.rankSuspiciousUsers(limit = 10)
 top10.forEach { println("#${it.rank} ${it.user.id} score=${it.score}") }
+
+// 같은 점수와 이 호출의 provider 결정을 함께 반환
+val ranking = service.rankSuspiciousUsersWithExecution(
+    limit = 10,
+    policy = GraphAlgorithmProviderPolicy.AUTO,
+)
+println("path=${ranking.execution.path}, reason=${ranking.execution.fallbackReason}")
 ```
 
 ### 코루틴 서비스
@@ -157,7 +171,32 @@ service.detectReferralLoops(maxDepth = 4).collect { cycle ->
 service.rankSuspiciousUsers(limit = 5).collect { score ->
     println("#${score.rank} score=${score.score}")
 }
+
+// flow를 수집하고 이 suspend 호출의 provider 결정과 함께 반환
+val ranking = service.rankSuspiciousUsersWithExecution(
+    limit = 5,
+    policy = GraphAlgorithmProviderPolicy.JVM_ONLY,
+)
 ```
+
+## 알고리즘 실행 정책
+
+이 consumer 예제는 `2.0.0`의 `bluetape4k-dependencies` BOM과 출시된 graph provider 선택
+API를 사용합니다. Native GDS/MAGE SDK나 executor는 의도적으로 포함하지 않으므로 현재
+정책 행렬은 다음과 같습니다.
+
+| 정책 | 현재 결과 | PageRank 실행 |
+|---|---|---|
+| `AUTO` | `JVM_FALLBACK` / `NO_PROVIDER` | portable JVM 경로로 한 번 실행 |
+| `JVM_ONLY` | `JVM_FALLBACK` / `JVM_ONLY_POLICY` | portable JVM 경로로 한 번 실행 |
+| `NATIVE_ONLY` | `GraphAlgorithmProviderUnavailableException` | PageRank 시작 전에 실패 |
+
+반환되는 `AbuserAlgorithmExecution`의 provider ID는
+`[a-z0-9][a-z0-9._-]{0,63}`에 맞는 소문자 bounded 문자열만 허용합니다. Observer 일반
+실패는 성공한 PageRank 결과를 버리지 않지만 `CancellationException`은 항상 전파합니다.
+Suspend API는 flow 수집이 완료되기 전에 취소되면 관찰 event를 남기지 않습니다. Observer
+callback 시작과 취소가 경합하면 event는 최대 한 번 발생할 수 있지만 취소된 호출은 결과를
+반환하지 않습니다. 기존 `rankSuspiciousUsers(limit)` 호출은 source·동작 호환성을 유지합니다.
 
 ## 보안 유의사항
 
@@ -198,7 +237,9 @@ io.bluetape4k.workshop.graph.abuser
 ├── model
 │   ├── AbuseCluster.kt          — 공유 식별자로 연결된 사용자 클러스터 결과
 │   ├── AbusePath.kt             — 사용자-식별자 단일 연결 경로
+│   ├── AbuserAlgorithmExecution.kt — 단일 호출의 bounded provider 실행 경로
 │   ├── IdentifierEdgeLabel.kt   — 네 가지 식별자 엣지 타입의 타입 안전 열거
+│   ├── SuspiciousUserRanking.kt — 단일 호출에 귀속된 점수와 실행 경로
 │   └── SuspiciousUserScore.kt   — 단일 사용자의 PageRank 결과
 ├── schema
 │   └── AbuserDetectionSchema.kt — 정점 레이블(User, Device, IpAddress, PhoneNumber, PaymentMethod)

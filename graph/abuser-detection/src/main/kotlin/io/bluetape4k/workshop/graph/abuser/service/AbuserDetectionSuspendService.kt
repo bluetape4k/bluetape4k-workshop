@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.graph.abuser.service
 
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecution
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecutionObserver
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmId
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmProviderPolicy
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmProviderSelector
 import io.bluetape4k.graph.model.CycleOptions
 import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphCycle
@@ -16,8 +21,10 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.graph.abuser.model.AbuseCluster
+import io.bluetape4k.workshop.graph.abuser.model.AbuserAlgorithmExecution
 import io.bluetape4k.workshop.graph.abuser.model.AbusePath
 import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
+import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserRanking
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
 import io.bluetape4k.workshop.graph.abuser.schema.DeviceLabel
 import io.bluetape4k.workshop.graph.abuser.schema.HasPhoneLabel
@@ -29,6 +36,7 @@ import io.bluetape4k.workshop.graph.abuser.schema.UserLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesDeviceLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesIpLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesPaymentLabel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
@@ -51,6 +59,7 @@ import kotlinx.coroutines.flow.withIndex
  * - 간선 변경 메서드는 [GraphSuspendOperations.createEdge]를 직접 호출하므로 호출자는 중복 링크를 피해야 합니다.
  * - [findAbuseCluster]는 seed 사용자를 [AbuseCluster.users]에서 제외합니다.
  * - [rankSuspiciousUsers]는 PageRank로 순위화한 User 정점의 cold [Flow]를 반환하며 순위는 1부터 시작합니다.
+ * - [rankSuspiciousUsersWithExecution]은 Flow 수집을 완료한 뒤 점수와 실제 실행 경로를 함께 반환합니다.
  * - suspend 호출을 `runCatching`으로 감싸면 안 됩니다. [kotlinx.coroutines.CancellationException]은 전파되어야 합니다.
  *
  * ## 사용 예
@@ -67,6 +76,7 @@ import kotlinx.coroutines.flow.withIndex
 class AbuserDetectionSuspendService(
     private val ops: GraphSuspendOperations,
     private val graphName: String,
+    private val executionObserver: GraphAlgorithmExecutionObserver = GraphAlgorithmExecutionObserver.Noop,
 ) {
 
     init {
@@ -427,6 +437,43 @@ class AbuserDetectionSuspendService(
                     rank  = index + 1,
                 )
             }
+    }
+
+    /**
+     * PageRank Flow를 모두 수집하고 호출별 알고리즘 실행 경로와 함께 반환합니다.
+     *
+     * 수집 중 coroutine이 취소되면 observer를 호출하지 않습니다. 정상 수집 뒤에는
+     * observer 호출 직전과 직후에 취소 상태를 확인해 callback이 시작된 경합에서도
+     * 취소된 호출이 결과를 반환하지 않게 합니다.
+     *
+     * @param limit 반환할 점수의 최대 개수입니다.
+     * @param policy native provider 선택 정책입니다.
+     */
+    suspend fun rankSuspiciousUsersWithExecution(
+        limit: Int = 20,
+        policy: GraphAlgorithmProviderPolicy = GraphAlgorithmProviderPolicy.AUTO,
+    ): SuspiciousUserRanking {
+        limit.requirePositiveNumber("limit")
+        val execution = GraphAlgorithmProviderSelector.select(
+            algorithm = GraphAlgorithmId.PAGE_RANK,
+            policy = policy,
+        )
+        val boundedExecution = AbuserAlgorithmExecution.from(execution)
+        val scores = rankSuspiciousUsers(limit).toList()
+        currentCoroutineContext().ensureActive()
+        notifyExecution(execution)
+        currentCoroutineContext().ensureActive()
+        return SuspiciousUserRanking(scores, boundedExecution)
+    }
+
+    private fun notifyExecution(execution: GraphAlgorithmExecution) {
+        try {
+            executionObserver.onExecution(execution)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            log.warn { "Graph algorithm execution observer failed" }
+        }
     }
 
 }

@@ -149,6 +149,7 @@ case "${1:-help}" in
       :leader-tenant-scheduler:test \
       :okio-examples:test \
       :graph-event-lineage:test \
+      :graph-abuser-detection:test \
       :graph-io-pipeline:test \
       :graph-recommendation:test \
       :graph-knowledge-graph:test \
@@ -990,6 +991,37 @@ case "${1:-help}" in
       echo "Graph knowledge schema-drift planner example and lesson are registered."
     else
       echo "ERROR: Graph knowledge schema-drift planner contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Graph abuser algorithm execution observation guard ==="
+    graph_abuser_build="graph/abuser-detection/build.gradle.kts"
+    graph_abuser_model="graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/model"
+    graph_abuser_service="graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/service/AbuserDetectionService.kt"
+    graph_abuser_suspend_service="graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/service/AbuserDetectionSuspendService.kt"
+    graph_abuser_tests="graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser"
+    graph_abuser_readme="graph/abuser-detection/README.md"
+    graph_abuser_readme_ko="graph/abuser-detection/README.ko.md"
+    graph_abuser_lesson="docs/lessons/2026-09-05-issue-888-native-algorithm-observation.md"
+    graph_abuser_review="docs/superpowers/specs/2026-09-05-issue-888-native-algorithm-observation-implementation-review.md"
+    if contains_pattern 'rankSuspiciousUsersWithExecution' "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'AbuserAlgorithmExecution' "$graph_abuser_model" "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'GraphAlgorithmProviderPolicy' "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'NO_PROVIDER' "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'JVM_ONLY_POLICY' "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'NATIVE_ONLY' "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'CancellationException' "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern ':graph-abuser-detection:test' README.md README.ko.md && \
+       contains_pattern '#888' docs/coverage-matrix.md docs/lessons/README.md "$graph_abuser_lesson" && \
+       contains_pattern 'graph/abuser-detection' .github/workflows/Examples.yml && \
+       contains_pattern '"issue_numbers": \[888\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$graph_abuser_build" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$graph_abuser_build" "$graph_abuser_model" "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
+       [ -f "$graph_abuser_lesson" ] && [ -f "$graph_abuser_review" ]; then
+      echo "Graph abuser algorithm execution observation example and lesson are registered."
+    else
+      echo "ERROR: Graph abuser algorithm execution observation contract is missing or stale."
       exit 1
     fi
 
