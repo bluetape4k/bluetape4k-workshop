@@ -1437,6 +1437,7 @@ def is_train_scope_exempt_change(
     base_ref: str,
     head_ref: str,
     changed_paths: Sequence[str],
+    manifest: Optional[Dict[str, object]] = None,
 ) -> Optional[str]:
     """Return the narrow exemption reason, or ``None`` when train scope applies."""
     if is_dependency_maintenance_change(root, base_ref, head_ref, changed_paths):
@@ -1463,6 +1464,8 @@ def is_train_scope_exempt_change(
         )
     ):
         return "dependency-and-ecosystem-policy-maintenance"
+    if manifest is not None and is_outside_train_scope_change(manifest, changed_paths):
+        return "outside-train-scope"
     return None
 
 
@@ -1517,6 +1520,39 @@ def _path_matches_allowed(path: str, allowed_path: str) -> bool:
         prefix = allowed[:-3].rstrip("/")
         return path == prefix or path.startswith(prefix + "/")
     return path == allowed
+
+
+def is_outside_train_scope_change(
+    manifest: Dict[str, object],
+    changed_paths: Sequence[str],
+) -> bool:
+    """Return whether no product path belongs to any manifest train scope.
+
+    Explicit ecosystem policy paths are control-plane changes and are already
+    covered by their dedicated maintenance exemption. The remaining product
+    paths are evaluated all-or-nothing: a diff that combines a mapped train
+    path with an unrelated path remains subject to the existing fail-closed
+    scope validation.
+    """
+    if not changed_paths:
+        return False
+    product_paths = [
+        path for path in changed_paths
+        if not _is_ecosystem_policy_maintenance_path(path)
+    ]
+    if not product_paths:
+        return False
+    scope_entries = list(manifest_nodes(manifest).values()) + manifest_follow_up_scopes(manifest)
+    allowed_paths = [
+        str(allowed)
+        for scope in scope_entries
+        if isinstance(scope.get("allowed_paths", []), list)
+        for allowed in scope.get("allowed_paths", [])
+    ]
+    return bool(allowed_paths) and all(
+        not any(_path_matches_allowed(path, allowed) for allowed in allowed_paths)
+        for path in product_paths
+    )
 
 
 def validate_train_scope(
@@ -1703,6 +1739,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             args.base_ref,
             args.head_ref,
             changed_files,
+            manifest_data,
         )):
             print("INFO %s diff: train scope checks not applicable" % exemption_reason)
         else:

@@ -30,6 +30,15 @@ checker 자체와 회귀 테스트, Action pin 원장, 이 정책 lesson만 바�
 다른 문서가 섞이면 이 예외를 받지 않는다. 현재 workflow가 사용하는
 `actions/checkout`·`actions/upload-artifact` v7.0.1 SHA도 원장과 동기화한다.
 
+workflow의 PR 경로 필터는 여러 workshop 예제의 `src/test` 변경을 넓게
+포착할 수 있다. 따라서 명시된 ecosystem policy control-plane 경로를
+제외한 product 경로가 manifest의 어떤 `allowed_paths`에도 속하지 않는
+PR은 `outside-train-scope`로 분류해 train scope를 요구하지 않는다. 단
+하나라도 manifest track 경로가 섞이면 이 면제를 적용하지 않고 기존의
+exactly-one-track 검사를 유지한다. 이렇게 해야 train에 아직 등록되지
+않은 예제 수정은 통과시키면서, 등록된 track과 비대상 경로를 우연히 섞은
+변경은 fail closed로 차단할 수 있다.
+
 ## 검증
 
 - 외부 catalog와 module build dependency 변경은 maintenance로 분류된다.
@@ -37,9 +46,15 @@ checker 자체와 회귀 테스트, Action pin 원장, 이 정책 lesson만 바�
   예외를 받지 않는다.
 - 실제 Hibernate PR diff를 대상으로 checker가 `INFO dependency-maintenance`
   후 `PASS ecosystem-reuse inventory and train contract`를 출력한다.
+- manifest track 밖의 virtualthreads 예제 PR diff는 `INFO outside-train-scope`
+  후 동일한 `PASS`를 출력한다.
+- manifest track 경로와 track 밖 경로를 섞은 diff는 train scope 검사를
+  계속 호출하고 실패한다.
 
 ## 향후 지침
 
 새로운 dependency declaration 경로를 workflow trigger에 추가할 때는 외부
 maintenance와 ecosystem train의 의미를 함께 정의하고, 외부-only 통과와
-Bluetape 변경 차단 회귀 테스트를 유지한다.
+Bluetape 변경 차단 회귀 테스트를 유지한다. 새 예제 경로를 추가할 때도
+manifest에 등록하기 전의 단독 변경과 등록 경로가 섞인 변경을 각각 검증해
+`outside-train-scope` 면제가 train 경계 우회 수단이 되지 않도록 한다.
