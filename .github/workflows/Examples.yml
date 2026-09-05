@@ -24,6 +24,7 @@ on:
       - 'redis/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
+      - 'io/okio-examples/**'
       - 'graph/event-lineage/**'
       - 'graph/abuser-detection/**'
       - 'graph/io-pipeline/**'
@@ -91,6 +92,7 @@ on:
       - 'redis/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
+      - 'io/okio-examples/**'
       - 'graph/event-lineage/**'
       - 'graph/abuser-detection/**'
       - 'graph/io-pipeline/**'
@@ -284,6 +286,7 @@ jobs:
       # - aws-settings-boundary: credential-free Secrets Manager/secure SSM plus AppConfig ConfigData/runtime reload contract
       # - leader-backend-comparison-lab: passive diagnostics plus opt-in health/Micrometer contract without external backends
       # - jackson/jsonview examples: serialization path
+      # - okio-examples: stable 2.0.0 public buffered coroutine sink contract
       # - operations-job-console-core: framework-neutral state machine and queue projections
       # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
       # - commerce-event-sourced-promotion-voucher-campaign: container-free domain and web contract tests
@@ -303,6 +306,7 @@ jobs:
           :spring-boot-text-moderation-api:test
           :jackson-examples:test
           :jsonview-examples:test
+          :okio-examples:test
           :graph-event-lineage:test
           :graph-abuser-detection:test
           :graph-io-pipeline:test
@@ -384,6 +388,8 @@ jobs:
             json/jackson-examples/build/reports/tests/test/
             json/jsonview-examples/build/test-results/test/*.xml
             json/jsonview-examples/build/reports/tests/test/
+            io/okio-examples/build/test-results/test/*.xml
+            io/okio-examples/build/reports/tests/test/
             graph/event-lineage/build/test-results/test/*.xml
             graph/event-lineage/build/reports/tests/test/
             graph/abuser-detection/build/test-results/test/*.xml

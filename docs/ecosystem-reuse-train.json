@@ -1416,6 +1416,33 @@
       "review_artifact": "docs/superpowers/specs/2026-09-06-issue-940-cache-redis-virtualthreads-implementation-review.md"
     },
     {
+      "scope_id": "issue-953-okio-buffered-suspended-sink",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "refactor/issue-953-okio-buffered-suspended-sink",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [953],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-06-issue-953-okio-buffered-suspended-sink.md",
+        "docs/review/2026-09-06-issue-953-okio-buffered-suspended-sink-plan-review.md",
+        "docs/superpowers/plans/2026-09-06-issue-953-okio-buffered-suspended-sink-plan.md",
+        "docs/superpowers/specs/2026-09-06-issue-953-okio-buffered-suspended-sink-design.md",
+        "docs/superpowers/specs/2026-09-06-issue-953-okio-buffered-suspended-sink-implementation-review.md",
+        "io/okio-examples/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/superpowers/specs/2026-09-06-issue-953-okio-buffered-suspended-sink-implementation-review.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "lifecycle": "MERGED",
       "scope_kind": "child",
@@ -1529,8 +1556,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T0707Z-issue-940-develop-rebind-scope",
-    "checksum": "2796a28e417b4080cbb106177935c82ac911b7844f12e3a864ceac1fcc61ab61"
+    "receipt_id": "20260906T0905Z-issue-953-develop-rebind-scope",
+    "checksum": "d4e0ee2ae075b6e71c74933be69e52cdb6303848cbfe1b35a17fd61e1635c0c9"
   },
   "planned_scope_replan_receipts": {
   },
