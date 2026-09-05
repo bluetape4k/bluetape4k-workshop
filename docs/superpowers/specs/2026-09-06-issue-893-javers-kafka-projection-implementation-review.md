@@ -53,6 +53,9 @@
   membership을 이미 포함해 no-op으로 유지한다.
 - Root `detekt`, `data-access-full`, stale-check, ecosystem checker 113 tests, assertion governance,
   README language/diagram, `actionlint`, `git diff --check`를 단일 검증 lane에서 통과했다.
+- Hosted ecosystem gate의 trusted manifest 비교가 새 follow-up scope에 기존 coordinator receipt를
+  재사용한 것을 거부했다. Scope canonical JSON SHA-256 `be29d3e390c6ec35aa59e6f6def13154ecec7700cb08bedd4f8c3a0acfba92f5`와
+  fresh receipt `20260906T-issue-893-javers-kafka-projection-scope`로 갱신했다.
 
 ## 운영 교훈
 
