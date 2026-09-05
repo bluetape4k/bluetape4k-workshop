@@ -1,10 +1,15 @@
 package io.bluetape4k.workshop.graph.abuser
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.graph.GraphQueryException
+import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphSuspendOperations
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.graph.abuser.service.AbuserDetectionSuspendService
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
@@ -22,6 +27,13 @@ class AbuserDetectionSuspendTinkerGraphTest : AbstractAbuserDetectionSuspendTest
     override val graphName = "test_abuser_suspend"
     override val ops: GraphSuspendOperations = TinkerGraphSuspendOperations()
     override val service = AbuserDetectionSuspendService(ops, graphName)
+
+    @Test
+    fun `malformed TinkerGraph vertex ID is rejected`() = runSuspendIO {
+        assertFailsWith<GraphQueryException> {
+            service.findAbuseCluster(GraphElementId("malformed-id"))
+        }
+    }
 
     @AfterAll
     fun tearDown() {

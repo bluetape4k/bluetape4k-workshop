@@ -156,7 +156,7 @@ abstract class AbstractAbuserDetectionTest {
 
     @Test
     fun `findAbuseCluster returns empty cluster for unknown vertex ID`() {
-        val unknownId = GraphElementId("non-existent-vertex-id-9999")
+        val unknownId = GraphElementId("99999999")
 
         val cluster = service.findAbuseCluster(unknownId)
 
@@ -209,7 +209,7 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
 
         assertFailsWith<IllegalArgumentException> {
-            service.linkDevice(seed.user1.id, GraphElementId("missing-device-id"), "2026-01-01T00:00:00Z")
+            service.linkDevice(seed.user1.id, GraphElementId("99999998"), "2026-01-01T00:00:00Z")
         }
     }
 

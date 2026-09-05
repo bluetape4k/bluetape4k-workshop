@@ -18,14 +18,14 @@
 - Test: `graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbuserDetectionTinkerGraphTest.kt`
 - Test: `graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbuserDetectionSuspendTinkerGraphTest.kt`
 
-- [ ] **Step 1: 기존 missing ID fixture를 numeric missing ID로 바꾼다**
+- [x] **Step 1: 기존 missing ID fixture를 numeric missing ID로 바꾼다**
 
 ```kotlin
 val unknownId = GraphElementId("99999999")
 val missingDeviceId = GraphElementId("99999998")
 ```
 
-- [ ] **Step 2: malformed TinkerGraph ID 계약을 backend 전용 RED/characterization 테스트로 추가한다**
+- [x] **Step 2: malformed TinkerGraph ID 계약을 backend 전용 RED/characterization 테스트로 추가한다**
 
 ```kotlin
 assertFailsWith<GraphQueryException> {
@@ -33,13 +33,13 @@ assertFailsWith<GraphQueryException> {
 }
 ```
 
-- [ ] **Step 3: 기준선 테스트를 실행한다**
+- [x] **Step 3: 기준선 테스트를 실행한다**
 
 Run: `./gradlew :graph-abuser-detection:test --no-build-cache --rerun-tasks --max-workers=1`
 
 Expected: 기존 네 실패가 사라지고 numeric missing과 malformed 입력이 구분되어 PASS한다.
 
-- [ ] **Step 4: 기준선 호환성 변경을 커밋한다**
+- [x] **Step 4: 기준선 호환성 변경을 커밋한다**
 
 ```bash
 git add graph/abuser-detection/src/test
