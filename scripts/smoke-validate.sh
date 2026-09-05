@@ -1203,6 +1203,33 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== JaVers Redis head metadata fail-closed guard ==="
+    javers_order_factory="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/RedisOrderAuditFactory.kt"
+    javers_head_validator="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/RedisOrderAuditHeadValidator.kt"
+    javers_head_redisson_test="exposed/javers-persistence-audit/src/test/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/OrderAuditServiceTest.kt"
+    javers_head_lettuce_test="exposed/javers-persistence-audit/src/test/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/KafkaRedisOrderAuditPipelineTest.kt"
+    javers_head_lesson="docs/lessons/2026-09-06-issue-894-javers-redis-head-fail-closed.md"
+    javers_head_review="docs/superpowers/specs/2026-09-06-issue-894-javers-redis-head-fail-closed-implementation-review.md"
+    if contains_pattern 'requireConsistentOrderAuditHead' "$javers_head_validator" "$javers_order_factory" "$javers_kafka_pipeline" && \
+       contains_pattern 'persisted Order snapshots exist without head metadata' "$javers_head_validator" "$javers_head_redisson_test" "$javers_head_lettuce_test" && \
+       contains_pattern 'malformed Redisson commit id fails closed' "$javers_head_redisson_test" && \
+       contains_pattern 'malformed Lettuce sequence fails closed' "$javers_head_lettuce_test" && \
+       contains_pattern 'snapshots without.*head metadata' "$javers_head_redisson_test" "$javers_head_lettuce_test" && \
+       contains_pattern 'startup/rebuild' "$javers_order_readme" "$javers_order_readme_ko" && \
+       contains_pattern 'startup' "$javers_head_lesson" && \
+       contains_pattern '#894' docs/coverage-matrix.md docs/lessons/README.md "$javers_head_lesson" && \
+       contains_pattern '"issue_numbers": \[894\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern ':exposed-javers-persistence-audit:test' .github/workflows/Examples.yml && \
+       contains_pattern '2\.0\.0' "$javers_order_readme" "$javers_order_readme_ko" "$javers_head_lesson" "$javers_head_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_order_factory" "$javers_kafka_pipeline" "$javers_head_validator" "$javers_head_redisson_test" "$javers_head_lettuce_test" "$javers_order_readme" "$javers_order_readme_ko" "$javers_head_lesson" "$javers_head_review" && \
+       [ -f "$javers_head_lesson" ] && [ -f "$javers_head_review" ]; then
+      echo "JaVers Redis head metadata fail-closed example and lesson are registered."
+    else
+      echo "ERROR: JaVers Redis head metadata fail-closed contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do
