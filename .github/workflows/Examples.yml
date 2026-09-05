@@ -57,6 +57,7 @@ on:
       - 'messaging/kafka-reply/**'
       - 'messaging/kafka-outbox-fallback/**'
       - 'messaging/kafka-multi-broker-failover/**'
+      - 'messaging/nats-jetstream-flow/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -123,6 +124,7 @@ on:
       - 'messaging/kafka-reply/**'
       - 'messaging/kafka-outbox-fallback/**'
       - 'messaging/kafka-multi-broker-failover/**'
+      - 'messaging/nats-jetstream-flow/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -550,6 +552,7 @@ jobs:
       # - messaging-kafka-reply: Kafka request-reply plus collection-scoped producer callbackFlow path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - messaging-kafka-multi-broker-failover: three-broker KRaft leader/coordinator recovery path
+      # - messaging-nats-jetstream-flow: NATS JetStream cold pull/push Flow and manual acknowledgement path
       # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
       # - optimization-field-service-dispatch: PostgreSQL Field Service dispatch and replay path on Java 25
       # - optimization-last-mile-routing: PostgreSQL fixed-matrix routing, callback/outbox, and browser projection on Java 25
@@ -590,6 +593,7 @@ jobs:
           :messaging-kafka:test
           :messaging-kafka-reply:test
           :messaging-kafka-outbox-fallback:test
+          :messaging-nats-jetstream-flow:test
           :optimization-planning-contracts:test
           :optimization-field-service-dispatch:test
           :optimization-last-mile-routing:test
@@ -778,6 +782,8 @@ jobs:
             messaging/kafka-multi-broker-failover/build/test-results/test/*.xml
             messaging/kafka-multi-broker-failover/build/reports/tests/test/
             messaging/kafka-multi-broker-failover/build/reports/kafka-failover/sanitized/**
+            messaging/nats-jetstream-flow/build/test-results/test/*.xml
+            messaging/nats-jetstream-flow/build/reports/tests/test/
             optimization/planning-contracts/build/test-results/test/*.xml
             optimization/planning-contracts/build/reports/tests/test/
             optimization/field-service-dispatch/build/test-results/test/*.xml
