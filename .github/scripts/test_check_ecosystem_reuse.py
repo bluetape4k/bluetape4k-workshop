@@ -1306,6 +1306,111 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             )
         )
 
+    def test_outside_train_scope_change_exempts_only_when_all_paths_are_unmapped(self):
+        manifest = self.manifest()
+        self.assertTrue(
+            CHECKER.is_outside_train_scope_change(
+                manifest,
+                ["virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt"],
+            )
+        )
+        self.assertFalse(
+            CHECKER.is_outside_train_scope_change(
+                manifest,
+                [
+                    "src/A1/Changed.kt",
+                    "virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt",
+                ],
+            )
+        )
+
+    def test_pr_scope_uses_outside_train_scope_exemption(self):
+        (self.root / "manifest.json").write_text(json.dumps(self.manifest()), encoding="utf-8")
+        self.inventory([self.row()])
+        output = io.StringIO()
+        with (
+            patch.object(CHECKER, "repo_root", return_value=self.root),
+            patch.object(CHECKER, "validate_inventory", return_value=[]),
+            patch.object(CHECKER, "validate_manifest", return_value=[]),
+            patch.object(
+                CHECKER,
+                "changed_files_between_refs",
+                return_value=(
+                    ["virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt"],
+                    [],
+                ),
+            ),
+            patch.object(CHECKER, "validate_train_scope") as train_scope,
+            redirect_stdout(output),
+        ):
+            result = CHECKER.main(
+                [
+                    "--inventory",
+                    "inventory.md",
+                    "--manifest",
+                    "manifest.json",
+                    "--base-ref",
+                    "a" * 40,
+                    "--head-ref",
+                    "b" * 40,
+                    "--pr-scope",
+                    "--base-ref-name",
+                    "develop",
+                    "--head-ref-name",
+                    "fix/nightly-structured-subtask",
+                ]
+            )
+        self.assertEqual(0, result)
+        train_scope.assert_not_called()
+        self.assertIn("outside-train-scope diff", output.getvalue())
+
+    def test_pr_scope_keeps_mapped_and_unmapped_paths_fail_closed(self):
+        (self.root / "manifest.json").write_text(json.dumps(self.manifest()), encoding="utf-8")
+        self.inventory([self.row()])
+        output = io.StringIO()
+        with (
+            patch.object(CHECKER, "repo_root", return_value=self.root),
+            patch.object(CHECKER, "validate_inventory", return_value=[]),
+            patch.object(CHECKER, "validate_manifest", return_value=[]),
+            patch.object(
+                CHECKER,
+                "changed_files_between_refs",
+                return_value=(
+                    [
+                        "src/A1/Changed.kt",
+                        "virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt",
+                    ],
+                    [],
+                ),
+            ),
+            patch.object(
+                CHECKER,
+                "validate_train_scope",
+                return_value=["mixed train scope paths must be rejected"],
+            ) as train_scope,
+            redirect_stdout(output),
+        ):
+            result = CHECKER.main(
+                [
+                    "--inventory",
+                    "inventory.md",
+                    "--manifest",
+                    "manifest.json",
+                    "--base-ref",
+                    "a" * 40,
+                    "--head-ref",
+                    "b" * 40,
+                    "--pr-scope",
+                    "--base-ref-name",
+                    "develop",
+                    "--head-ref-name",
+                    "fix/mixed-scope",
+                ]
+            )
+        self.assertEqual(1, result)
+        train_scope.assert_called_once()
+        self.assertIn("mixed train scope paths must be rejected", output.getvalue())
+
     def test_dependency_and_ecosystem_policy_maintenance_can_be_combined(self):
         with patch.object(
             CHECKER,
