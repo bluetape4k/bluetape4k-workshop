@@ -1169,6 +1169,40 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== JaVers Kafka snapshot projection guard ==="
+    javers_kafka_pipeline="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/KafkaRedisOrderAuditPipeline.kt"
+    javers_kafka_test="exposed/javers-persistence-audit/src/test/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/KafkaRedisOrderAuditPipelineTest.kt"
+    javers_kafka_lesson="docs/lessons/2026-09-06-issue-893-javers-kafka-projection.md"
+    javers_kafka_review="docs/superpowers/specs/2026-09-06-issue-893-javers-kafka-projection-implementation-review.md"
+    if contains_pattern 'libs\.bluetape4k\.javers\.persistence\.kafka' "$javers_order_build" && \
+       contains_pattern 'libs\.bluetape4k\.lettuce' "$javers_order_build" && \
+       contains_pattern 'KafkaRedisOrderAuditPipeline' "$javers_kafka_pipeline" "$javers_kafka_test" && \
+       contains_pattern 'KafkaCdoSnapshotProjector' "$javers_kafka_pipeline" "$javers_kafka_test" && \
+       contains_pattern 'LettuceCdoSnapshotRepository' "$javers_kafka_pipeline" "$javers_kafka_test" && \
+       contains_pattern 'validatedProjectionConfigs' "$javers_kafka_pipeline" && \
+       contains_pattern 'pendingProjection = AtomicBoolean\(true\)' "$javers_kafka_pipeline" && \
+       contains_pattern 'DEFAULT_MAX_IDLE_POLLS = 3' "$javers_kafka_pipeline" && \
+       contains_pattern 'FailOnSecondProjectionRepository' "$javers_kafka_test" && \
+       contains_pattern 'initial empty poll' "$javers_kafka_test" && \
+       contains_pattern 'multi partition topic is rejected' "$javers_kafka_test" && \
+       contains_pattern 'same group before offsets advance' "$javers_kafka_test" && \
+       contains_pattern 'restart.*existing Kafka backlog' "$javers_kafka_test" && \
+       contains_pattern 'single-partition' "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" && \
+       contains_pattern 'commit-unknown' "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" && \
+       contains_pattern '#290' "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" && \
+       contains_pattern '#893' docs/coverage-matrix.md docs/lessons/README.md "$javers_kafka_lesson" && \
+       contains_pattern '"issue_numbers": \[893\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern ':exposed-javers-persistence-audit:test' .github/workflows/Examples.yml && \
+       contains_pattern '2\.0\.0' "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" "$javers_kafka_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_kafka_pipeline" "$javers_kafka_test" "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" "$javers_kafka_review" && \
+       [ -f "$javers_kafka_lesson" ] && [ -f "$javers_kafka_review" ]; then
+      echo "JaVers Kafka snapshot projection example and lesson are registered."
+    else
+      echo "ERROR: JaVers Kafka snapshot projection contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do
