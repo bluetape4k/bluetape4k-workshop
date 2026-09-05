@@ -1,4 +1,4 @@
-"""Resolve Nightly mock image tags from the consumer BOM and verify local images."""
+"""소비자 BOM에서 Nightly mock 이미지 태그를 결정하고 로컬 이미지를 검증한다."""
 
 import argparse
 import re

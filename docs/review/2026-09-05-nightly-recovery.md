@@ -25,7 +25,10 @@
 - 기존 ecosystem 검사 단위 테스트: 113건 통과.
 - Nightly 이미지·범위 계약 테스트: 6건 통과. 잘못된 branch와 추가 파일은 거부한다.
 - 실제 변경 경로를 넣은 ecosystem 검사, `actionlint`, `git diff --check`: 통과.
-- `slow-provider`, `worker-restart`, full Nightly: 커밋된 head에서 추가 검증 필요.
+- 구현 커밋 `2408448daedcca5f904735d71d215e1e03acda6d`의 `slow-provider` 단독 실행과
+  job-core 전체 local-reference 프로필 실행: 통과. 후자는 `nightly-949-all-20260905` 보고서로
+  `worker-restart`를 포함하며, 종료 시 남은 토폴로지는 0이다.
+- full Nightly: 최종 PR head에서 추가 검증 필요.
 
 ## 판정
 
@@ -35,5 +38,5 @@
 - 코드 검토: `P0=0 P1=0`. catalog 값은 안정 버전 형식을 검증한 후 사용하고, Docker 호출은
   shell 보간 없이 인자 배열로 실행하며 실패를 전파한다. 전용 풀은 executor보다 바깥 `use`가
   소유한다. 기존 예외·fencing·불변식 검사는 약화하지 않았다.
-- 단위 테스트와 정적 검사는 통과했다. 부하 검증 및 full Nightly는 아직 남아 있으므로 현재
+- 단위 테스트·정적 검사·job-core 부하 검증은 통과했다. full Nightly는 아직 남아 있으므로 현재
   문서는 Nightly 성공이나 병합 준비 완료를 뜻하지 않는다.
