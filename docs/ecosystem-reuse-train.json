@@ -1399,8 +1399,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260905T122947Z-9dcedafd",
-    "checksum": "486bd50f1cadbf2cbdf3f9c8b595f0b17eb2547b7892aca56add2ca5d714edc5"
+    "receipt_id": "20260906T-issue-893-javers-kafka-projection-scope",
+    "checksum": "be29d3e390c6ec35aa59e6f6def13154ecec7700cb08bedd4f8c3a0acfba92f5"
   },
   "planned_scope_replan_receipts": {
   },
