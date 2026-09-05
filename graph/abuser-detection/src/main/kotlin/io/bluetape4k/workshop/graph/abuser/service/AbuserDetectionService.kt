@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.graph.abuser.service
 
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecution
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecutionObserver
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmId
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmProviderPolicy
+import io.bluetape4k.graph.algo.provider.GraphAlgorithmProviderSelector
 import io.bluetape4k.graph.model.CycleOptions
 import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphCycle
@@ -16,8 +21,10 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.graph.abuser.model.AbuseCluster
+import io.bluetape4k.workshop.graph.abuser.model.AbuserAlgorithmExecution
 import io.bluetape4k.workshop.graph.abuser.model.AbusePath
 import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
+import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserRanking
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
 import io.bluetape4k.workshop.graph.abuser.schema.DeviceLabel
 import io.bluetape4k.workshop.graph.abuser.schema.HasPhoneLabel
@@ -29,6 +36,7 @@ import io.bluetape4k.workshop.graph.abuser.schema.UserLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesDeviceLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesIpLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesPaymentLabel
+import kotlinx.coroutines.CancellationException
 
 /**
  * 어뷰저 감지용 블로킹 그래프 서비스입니다.
@@ -42,6 +50,7 @@ import io.bluetape4k.workshop.graph.abuser.schema.UsesPaymentLabel
  * - 간선 변경 메서드는 [GraphOperations.createEdge]를 직접 호출하므로 호출자는 중복 링크를 피해야 합니다.
  * - [findAbuseCluster]는 seed 사용자를 [AbuseCluster.users]에서 제외합니다.
  * - [rankSuspiciousUsers]는 User 정점을 PageRank 점수로 순위화하며 [limit]은 사용자 수에 직접 적용됩니다.
+ * - [rankSuspiciousUsersWithExecution]은 점수와 provider 정책의 실제 실행 경로를 한 호출 결과로 반환합니다.
  *
  * ## 사용 예
  * ```kotlin
@@ -56,6 +65,7 @@ import io.bluetape4k.workshop.graph.abuser.schema.UsesPaymentLabel
 class AbuserDetectionService(
     private val ops: GraphOperations,
     private val graphName: String,
+    private val executionObserver: GraphAlgorithmExecutionObserver = GraphAlgorithmExecutionObserver.Noop,
 ) {
 
     init {
@@ -395,6 +405,41 @@ class AbuserDetectionService(
                     rank  = index + 1,
                 )
             }
+    }
+
+    /**
+     * PageRank 의심 점수와 호출별 알고리즘 실행 경로를 함께 반환합니다.
+     *
+     * 현재 workshop의 portable PageRank 경로에는 native provider를 등록하지 않으므로
+     * [GraphAlgorithmProviderPolicy.AUTO]와 [GraphAlgorithmProviderPolicy.JVM_ONLY]은 JVM fallback을 선택합니다.
+     * [GraphAlgorithmProviderPolicy.NATIVE_ONLY]은 PageRank를 실행하기 전에 실패합니다.
+     *
+     * @param limit 반환할 점수의 최대 개수입니다.
+     * @param policy native provider 선택 정책입니다.
+     */
+    fun rankSuspiciousUsersWithExecution(
+        limit: Int = 20,
+        policy: GraphAlgorithmProviderPolicy = GraphAlgorithmProviderPolicy.AUTO,
+    ): SuspiciousUserRanking {
+        limit.requirePositiveNumber("limit")
+        val execution = GraphAlgorithmProviderSelector.select(
+            algorithm = GraphAlgorithmId.PAGE_RANK,
+            policy = policy,
+        )
+        val boundedExecution = AbuserAlgorithmExecution.from(execution)
+        val scores = rankSuspiciousUsers(limit)
+        notifyExecution(execution)
+        return SuspiciousUserRanking(scores, boundedExecution)
+    }
+
+    private fun notifyExecution(execution: GraphAlgorithmExecution) {
+        try {
+            executionObserver.onExecution(execution)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            log.warn { "Graph algorithm execution observer failed" }
+        }
     }
 
 }

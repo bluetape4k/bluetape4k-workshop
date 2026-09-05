@@ -130,7 +130,7 @@ Expected: safe provider, invalid provider, native/fallback invariant tests가 �
 - Modify: `graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbstractAbuserDetectionTest.kt`
 - Create: `graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbuserDetectionExecutionPolicyTest.kt`
 
-- [ ] **Step 1: AUTO/JVM_ONLY/NATIVE_ONLY와 단일 호출 RED 테스트를 작성한다**
+- [x] **Step 1: AUTO/JVM_ONLY/NATIVE_ONLY와 단일 호출 RED 테스트를 작성한다**
 
 ```kotlin
 val ops = mockk<GraphOperations>()
@@ -153,13 +153,13 @@ observed shouldHaveSize 1
 `NATIVE_ONLY` 테스트는 `assertFailsWith<GraphAlgorithmProviderUnavailableException>`와
 `verify(exactly = 0) { ops.pageRank(any()) }`를 사용한다.
 
-- [ ] **Step 2: RED를 확인한다**
+- [x] **Step 2: RED를 확인한다**
 
 Run: `./gradlew :graph-abuser-detection:test --tests '*AbuserDetectionExecutionPolicyTest' --no-build-cache --rerun-tasks`
 
 Expected: 새 생성자 인자와 메서드가 없어 compile 실패한다.
 
-- [ ] **Step 3: blocking API를 최소 구현한다**
+- [x] **Step 3: blocking API를 최소 구현한다**
 
 ```kotlin
 fun rankSuspiciousUsersWithExecution(
@@ -180,7 +180,7 @@ fun rankSuspiciousUsersWithExecution(
 해당 observer가 예외를 던져도 blocking PageRank 결과가 반환되고 observer가 정확히
 한 번 호출됐는지 테스트한다.
 
-- [ ] **Step 4: targeted blocking 테스트를 통과시킨다**
+- [x] **Step 4: targeted blocking 테스트를 통과시킨다**
 
 Run: `./gradlew :graph-abuser-detection:test --tests '*AbuserDetectionExecutionPolicyTest' --tests '*AbuserDetectionTinkerGraphTest' --no-build-cache --rerun-tasks`
 
@@ -193,7 +193,7 @@ Expected: PageRank 단일 호출, policy reason, observer 1회, 기존 점수 pa
 - Modify: `graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbstractAbuserDetectionSuspendTest.kt`
 - Create: `graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbuserDetectionSuspendExecutionPolicyTest.kt`
 
-- [ ] **Step 1: suspend policy parity와 cancellation RED 테스트를 작성한다**
+- [x] **Step 1: suspend policy parity와 cancellation RED 테스트를 작성한다**
 
 ```kotlin
 val firstEmission = CompletableDeferred<Unit>()
@@ -215,13 +215,13 @@ parity도 assertion한다. observer가 `CancellationException`을 던지는 테�
 `assertFailsWith<CancellationException>`으로 재전파를 직접 증명하고, 일반
 `Exception`은 결과를 실패시키지 않는지 별도로 검증한다.
 
-- [ ] **Step 2: RED를 확인한다**
+- [x] **Step 2: RED를 확인한다**
 
 Run: `./gradlew :graph-abuser-detection:test --tests '*AbuserDetectionSuspendExecutionPolicyTest' --no-build-cache --rerun-tasks`
 
 Expected: 새 suspend API가 없어 compile 실패한다.
 
-- [ ] **Step 3: suspend API를 최소 구현한다**
+- [x] **Step 3: suspend API를 최소 구현한다**
 
 ```kotlin
 suspend fun rankSuspiciousUsersWithExecution(
@@ -237,13 +237,13 @@ suspend fun rankSuspiciousUsersWithExecution(
 }
 ```
 
-- [ ] **Step 4: suspend targeted 테스트를 통과시킨다**
+- [x] **Step 4: suspend targeted 테스트를 통과시킨다**
 
 Run: `./gradlew :graph-abuser-detection:test --tests '*AbuserDetectionSuspendExecutionPolicyTest' --tests '*AbuserDetectionSuspendTinkerGraphTest' --no-build-cache --rerun-tasks`
 
 Expected: parity, cancellation 전파, observer 미호출과 단일 PageRank collection이 PASS한다.
 
-- [ ] **Step 5: concurrency attribution을 검증한다**
+- [x] **Step 5: concurrency attribution을 검증한다**
 
 Run: blocking은 `MultithreadingTester`와 `CyclicBarrier`, suspend는
 `coroutineScope { List(20) { async { ... } }.awaitAll() }`을 사용한다. 짝수 요청은
