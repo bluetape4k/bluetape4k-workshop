@@ -1322,6 +1322,31 @@
       "review_artifact": "docs/superpowers/specs/2026-09-06-issue-923-nats-jetstream-flow-implementation-review.md"
     },
     {
+      "scope_id": "issue-940-cache-redis-virtualthreads",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "refactor/issue-940-cache-redis-virtualthreads",
+      "expected_base_ref": "feat/issue-923-nats-jetstream-flow",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [940],
+      "allowed_paths": [
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-06-issue-940-cache-redis-virtualthreads.md",
+        "docs/review/2026-09-06-issue-940-cache-redis-virtualthreads-plan-review.md",
+        "docs/superpowers/plans/2026-09-06-issue-940-cache-redis-virtualthreads-plan.md",
+        "docs/superpowers/specs/2026-09-06-issue-940-cache-redis-virtualthreads-design.md",
+        "docs/superpowers/specs/2026-09-06-issue-940-cache-redis-virtualthreads-implementation-review.md",
+        "scripts/smoke-validate.sh",
+        "spring-boot/cache-redis/**"
+      ],
+      "review_artifact": "docs/superpowers/specs/2026-09-06-issue-940-cache-redis-virtualthreads-implementation-review.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -1431,8 +1456,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T-issue-923-nats-jetstream-flow-scope",
-    "checksum": "27f05d2bfb332c536c490ae48d72f118652870fbe1f4b09e32604980674f6308"
+    "receipt_id": "20260906T-issue-940-cache-redis-virtualthreads-scope",
+    "checksum": "878dc7fa8764aeab9495d3a82e727a74f351426ea1061b7e71d4d06bcc8f13ac"
   },
   "planned_scope_replan_receipts": {
   },
