@@ -135,6 +135,12 @@ Redis-backed audit sink가 실패하면 예외를 그대로 전파하고, audit 
 성공으로 처리하지 않습니다. 이 규칙은 워크숍에서 경계를 명확히 보여주기 위한 계약이며,
 cross-store distributed transaction을 대체하지는 않습니다.
 
+두 Redis factory는 service를 반환하거나 Kafka producer/consumer를 열기 전에 persisted head
+metadata를 검증합니다. Malformed sequence/commit id는 type, 짧은 SHA-256 fingerprint, length만
+포함한 예외로 fail-closed됩니다. Head가 없을 때 documented provider snapshot-index key도 없어야
+초기 상태로 허용하며, snapshot만 남은 상태는 corruption으로 거부합니다. Provider가 읽은 head를
+cache하므로 이 검증은 startup/rebuild 경계에만 적용되고 실행 중 외부 metadata 변경 감지를 약속하지 않습니다.
+
 Kafka projection은 Lettuce `MULTI`/`EXEC`를 사용합니다. `EXEC` 전 실패는 target, head,
 Kafka offset을 그대로 유지합니다. Redis는 `EXEC` 안의 개별 command error를 rollback하지 않으므로
 `EXEC` 뒤 command error나 connection loss는 commit-unknown이고 partial projection을 남길 수
@@ -153,6 +159,7 @@ credential, topic authorization, snapshot redaction, query authorization을 구�
 ./gradlew :exposed-javers-persistence-audit:test
 ```
 
-테스트는 Redis-backed history 유지, bounded Redisson decode, Kafka projection과 duplicate replay,
+테스트는 Redis-backed history 유지, malformed/missing Redis head startup fail-closed,
+bounded Redisson decode, Kafka projection과 duplicate replay,
 restart rebuild, 최초 empty poll, mutation 전 single-partition 거부, pre-EXEC batch failure 뒤
 same-group retry, lifecycle cleanup, newest-first ordering, audit sink failure propagation을 검증합니다.
