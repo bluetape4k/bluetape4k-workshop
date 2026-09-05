@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.textmoderation.config
 import com.github.pemistahl.lingua.api.LanguageDetector
 import io.bluetape4k.lingua.allLanguageDetector
 import io.bluetape4k.text.search.AhoCorasickAutomaton
-import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.text.search.ahoCorasick
 import io.bluetape4k.tokenizer.utils.DictionaryVersion
 import io.bluetape4k.workshop.textmoderation.service.VersionedModerationDictionary
@@ -28,7 +27,7 @@ class TextModerationConfig {
         ahoCorasick {
             ignoreCase = true
             allowOverlaps = true
-            normalization = NormalizationForm.NFC
+            normalization = properties.normalization
             canonicalBlockwords(properties)
                 .forEach { word -> keyword(word, word) }
         }

@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.text.filter
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.text.search.NormalizationForm
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -70,5 +74,32 @@ class AbuseWordFilterTest {
         val emptyFilter = AbuseWordFilter(emptyList())
         emptyFilter.containsAbuse("any text including badword").shouldBeFalse()
         emptyFilter.findMatches("spam") shouldHaveSize 0
+    }
+
+    @Test
+    fun `NFKC maps compatibility expansion to the original source range`() {
+        val nfkcFilter = AbuseWordFilter(listOf("(주)"), NormalizationForm.NFKC)
+        val input = "회사명: ㈜블루테이프"
+
+        AbuseWordFilter(listOf("(주)")).containsAbuse(input).shouldBeFalse()
+        val match = nfkcFilter.findMatches(input).single()
+
+        match.start shouldBeEqualTo input.indexOf('㈜')
+        match.end shouldBeEqualTo input.indexOf('㈜')
+        nfkcFilter.filterText(input) shouldBeEqualTo "회사명: *블루테이프"
+    }
+
+    @Test
+    fun `NFKC rejects an oversized normalization segment without exposing input`() {
+        val nfkcFilter = AbuseWordFilter(listOf("safe"), NormalizationForm.NFKC)
+        val raw = "a" + "\u0301".repeat(1_025)
+
+        val failure = assertFailsWith<IllegalArgumentException> {
+            nfkcFilter.findMatches(raw)
+        }
+
+        failure.message.orEmpty() shouldContain "normalization segment too long"
+        failure.message.orEmpty() shouldContain "max 1024"
+        failure.message.orEmpty() shouldNotContain raw.take(80)
     }
 }

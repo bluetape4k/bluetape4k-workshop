@@ -57,7 +57,7 @@ data class SensitiveTextRange private constructor(
  *
  * ## Behavior / Contract
  * - [id] 와 [category] 는 안전한 metadata slug 이며 caller secret 을 절대 포함하지 않습니다.
- * - keyword rule 은 NFC normalization 아래에서 bluetape4k Aho-Corasick detector 로 match 합니다.
+ * - keyword rule 은 policy가 선택한 normalization 아래에서 bluetape4k Aho-Corasick detector 로 match 합니다.
  * - regex rule 은 ambiguous 하거나 느린 matching 을 흔히 만드는 unsafe expression 을 거부합니다.
  */
 class SensitiveRedactionRule private constructor(
@@ -168,15 +168,18 @@ class SensitiveRedactionRule private constructor(
  * - rule 은 construction 시점에 copy 되므로 이후 caller mutation 이 pipeline 을 바꿀 수 없습니다.
  * - [maskChar] 는 visible non-whitespace character 여야 합니다.
  * - [maxTextLength] 는 example pipeline 을 unbounded caller input 으로부터 보호합니다.
+ * - [keywordNormalization] 은 keyword와 입력에 함께 적용하며 match range는 원문 offset으로 복원됩니다.
  */
 class SensitiveRedactionPolicy private constructor(
     val rules: List<SensitiveRedactionRule>,
     val maskChar: Char,
     val maxTextLength: Int,
+    val keywordNormalization: NormalizationForm,
 ): Serializable {
 
     override fun toString(): String =
-        "SensitiveRedactionPolicy(ruleCount=${rules.size}, maskChar=<redacted>, maxTextLength=$maxTextLength)"
+        "SensitiveRedactionPolicy(ruleCount=${rules.size}, maskChar=<redacted>, " +
+            "maxTextLength=$maxTextLength, keywordNormalization=$keywordNormalization)"
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -189,6 +192,7 @@ class SensitiveRedactionPolicy private constructor(
             rules: Collection<SensitiveRedactionRule>,
             maskChar: Char = '*',
             maxTextLength: Int = DEFAULT_MAX_TEXT_LENGTH,
+            keywordNormalization: NormalizationForm = NormalizationForm.NFC,
         ): SensitiveRedactionPolicy {
             rules.requireNotEmpty("rules")
             maskChar.isWhitespace().requireFalse("maskChar.whitespace")
@@ -197,6 +201,7 @@ class SensitiveRedactionPolicy private constructor(
                 rules = Collections.unmodifiableList(rules.toList()),
                 maskChar = maskChar,
                 maxTextLength = maxTextLength,
+                keywordNormalization = keywordNormalization,
             )
         }
 
@@ -328,7 +333,7 @@ class SensitiveTextRedactionPipeline private constructor(
                 ahoCorasick {
                     ignoreCase = true
                     allowOverlaps = true
-                    normalization = NormalizationForm.NFC
+                    normalization = policy.keywordNormalization
                     rules.forEach { rule -> keyword(rule.keywordText.orEmpty(), rule) }
                 }
             }

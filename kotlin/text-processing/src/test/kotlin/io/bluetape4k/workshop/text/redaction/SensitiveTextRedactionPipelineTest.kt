@@ -16,6 +16,7 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.coroutines.runSuspendDefault
+import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.workshop.text.detection.LanguageDetectionService
 import io.bluetape4k.workshop.text.filter.AbuseWordFilter
 import io.bluetape4k.workshop.text.normalize.TextNormalizer
@@ -178,6 +179,58 @@ class SensitiveTextRedactionPipelineTest {
         result.redactedText.substring(result.spans.single().range.startInclusive, result.spans.single().range.endExclusive)
             .all { it == '*' }
             .shouldBeTrue()
+    }
+
+    @Test
+    fun `NFKC redacts compatibility expansion with the original source span`() {
+        val input = "계약 대상은 ㈜블루테이프입니다"
+        val result = SensitiveTextRedactionPipeline.of(
+            SensitiveRedactionPolicy.of(
+                rules = listOf(SensitiveRedactionRule.keyword("keyword.corp", "keyword", "(주)")),
+                keywordNormalization = NormalizationForm.NFKC,
+            )
+        ).redact(input)
+
+        val originalIndex = input.indexOf('㈜')
+        result.spans.single().range shouldBeEqualTo SensitiveTextRange.of(originalIndex, originalIndex + 1)
+        result.spans.single().matchedLength shouldBeEqualTo 1
+        result.redactedText shouldBeEqualTo input.replace('㈜', '*')
+        result.redactedText.length shouldBeEqualTo input.length
+    }
+
+    @Test
+    fun `NFKC keeps adjacent compatibility matches separate`() {
+        val result = SensitiveTextRedactionPipeline.of(
+            SensitiveRedactionPolicy.of(
+                rules = listOf(SensitiveRedactionRule.keyword("keyword.corp", "keyword", "(주)")),
+                keywordNormalization = NormalizationForm.NFKC,
+            )
+        ).redact("㈜㈜")
+
+        result.spans.map { it.range } shouldBeEqualTo listOf(
+            SensitiveTextRange.of(0, 1),
+            SensitiveTextRange.of(1, 2),
+        )
+        result.redactedText shouldBeEqualTo "**"
+    }
+
+    @Test
+    fun `NFKC rejects an oversized normalization segment without exposing input`() {
+        val pipeline = SensitiveTextRedactionPipeline.of(
+            SensitiveRedactionPolicy.of(
+                rules = listOf(SensitiveRedactionRule.keyword("keyword.safe", "keyword", "safe")),
+                keywordNormalization = NormalizationForm.NFKC,
+            )
+        )
+        val raw = "a" + "\u0301".repeat(1_025)
+
+        val failure = assertFailsWith<IllegalArgumentException> {
+            pipeline.redact(raw)
+        }
+
+        failure.message.orEmpty() shouldContain "normalization segment too long"
+        failure.message.orEmpty() shouldContain "max 1024"
+        failure.message.orEmpty() shouldNotContain raw.take(80)
     }
 
     @Test
