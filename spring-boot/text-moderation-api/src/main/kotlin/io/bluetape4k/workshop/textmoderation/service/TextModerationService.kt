@@ -10,6 +10,8 @@ import io.bluetape4k.workshop.textmoderation.config.TextModerationProperties
 import io.bluetape4k.workshop.textmoderation.model.ModerationResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * request validation, language detection, blockword masking 을 조율합니다.
@@ -20,6 +22,7 @@ class TextModerationService @Autowired constructor(
     private val languageDetector: LanguageDetector,
     private val moderationDictionary: VersionedModerationDictionary,
 ) {
+    private val detectorLock = ReentrantLock()
 
     /** 기존 direct-construction caller가 automaton을 그대로 전달할 수 있는 호환 constructor입니다. */
     constructor(
@@ -50,8 +53,9 @@ class TextModerationService @Autowired constructor(
         validate(text)
 
         val dictionary = moderationDictionary.snapshot()
-        val detectedLanguage = detectLanguage(text)
-        val confidenceValues = languageDetector.computeLanguageConfidenceValues(text)
+        val (detectedLanguage, confidenceValues) = detectorLock.withLock {
+            detectLanguage(text) to languageDetector.computeLanguageConfidenceValues(text)
+        }
         val matches = dictionary.value.automaton.parseText(text)
         val matchedTerms = matches.map { it.keyword }.distinct()
         val maskedText = dictionary.value.automaton.replaceAll(text) { match ->

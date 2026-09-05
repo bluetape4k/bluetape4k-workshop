@@ -25,20 +25,28 @@
 
 ## Kotlin text-processing 설계
 
-`VersionedMultilingualSearchIndex`는
-`VersionedDictionary<MultilingualSearchIndex>`를 application-owned store로 가진다.
+`VersionedMultilingualSearchIndex`는 upstream 공개
+`currentDictionarySnapshot()`에서 받은 Korean noun map과 그 map으로 만든
+`MultilingualSearchIndex`를 하나의 application-owned generation으로 보관한다.
 
-- `indexOf(version, documents, historyCapacity, detectionService)`가 최초 완성된
+- `VersionedMultilingualSearchSource`는 `DictionarySnapshot<Map<KoreanPos, Set<String>>>`와
+  document collection을 묶는다. 이름은 upstream과 같은 `korean-dictionary`로 고정한다.
+- `indexOf(source, historyCapacity, detectionService, limits)`가 최초 완성된
   index generation을 만든다.
 - `search(query, limit)`는 store의 snapshot을 정확히 한 번 읽고, 그 snapshot의
   index로 검색한 결과와 `DictionaryVersion`을 함께 반환한다.
-- `reload(version, loader)`는 loader가 반환한 document를 독립 collection으로
-  복사하고 새 `MultilingualSearchIndex`를 lock 밖에서 완성한 뒤
+- `reload(loader)`는 loader가 반환한 Korean noun snapshot과 document를 순회하면서 bounded
+  defensive snapshot으로 복사하고, 개별·aggregate character 상한을 검증한다.
+  Snapshot noun으로 Aho-Corasick exact-noun matcher와 새 `MultilingualSearchIndex`를
+  lock 밖에서 완성한 뒤
   `reload(DictionarySnapshot(...))`으로 publish한다.
 - `rollback()`은 bounded journal의 최근 generation으로 되돌아간다.
-- 기존 `MultilingualSearchIndex`는 변경하지 않는다. 외부에서 upstream global
-  Korean/Japanese provider를 독립 변경하는 행위는 이 store의 generation 계약에
-  포함하지 않는다. query tokenizer만 따로 reload하는 부분 갱신은 지원하지 않는다.
+- 기존 `MultilingualSearchIndex.indexOf`와 `search`는 유지한다. Versioned 경로만
+  snapshot 전용 `SearchTermTokenizer`를 document와 query에 함께 주입한다. 이 tokenizer는
+  global Korean provider를 다시 읽지 않으므로 외부 provider가 바뀌어도 공개 generation은
+  섞이지 않는다. Japanese/English 경로는 기존 tokenizer 계약을 유지한다.
+- `LanguageDetectionService`와 Spring `TextModerationService`는 shared Lingua detector 접근을
+  동기 lock으로 보호한다.
 - `CoroutineMultilingualSearchIndex`는 이번 sync wrapper의 적용 대상이 아니다.
   coroutine caller는 blocking loader를 넘기지 말고 자신의 `Dispatchers.IO` 또는
   `Dispatchers.Default` 경계에서 document를 준비한 뒤 sync publish API를 호출한다.
@@ -52,19 +60,24 @@ data class VersionedSearchResult(
     val hits: List<SearchHighlightHit>,
 )
 
+data class VersionedMultilingualSearchSource(
+    val koreanDictionary: DictionarySnapshot<Map<KoreanPos, Set<String>>>,
+    val documents: Collection<SearchDocument>,
+)
+
 class VersionedMultilingualSearchIndex {
     fun currentVersion(): DictionaryVersion
     fun search(query: String, limit: Int = 10): VersionedSearchResult
-    fun reload(version: DictionaryVersion, documents: Collection<SearchDocument>): DictionaryVersion
-    fun reload(version: DictionaryVersion, loader: () -> Collection<SearchDocument>): DictionaryVersion
+    fun reload(source: VersionedMultilingualSearchSource): DictionaryVersion
+    fun reload(loader: () -> VersionedMultilingualSearchSource): DictionaryVersion
     fun rollback(): DictionaryVersion
 
     companion object {
         fun indexOf(
-            version: DictionaryVersion,
-            documents: Collection<SearchDocument>,
+            source: VersionedMultilingualSearchSource,
             historyCapacity: Int = 1,
             detectionService: LanguageDetectionService = LanguageDetectionService(),
+            limits: VersionedSearchLimits = VersionedSearchLimits(),
         ): VersionedMultilingualSearchIndex
     }
 }
@@ -140,7 +153,9 @@ singleton automaton을 versioned bean의 initial value로 재사용해 이중 bu
   호출자에게 반환하고 current/history를 바꾸지 않는다.
 - 동시 candidate build에서는 먼저 publish된 높은 revision이 권위가 된다. 늦게
   도착한 낮은 revision은 upstream monotonic 검증으로 거부한다.
-- 성공 로그는 operation, dictionary name, old/new revision, word count,
+- dictionary name은 `korean-dictionary`와 `moderation-blockwords`로 고정해 control
+  character를 포함한 log injection을 거부한다.
+- 성공 로그는 operation, old/new revision, word count,
   total characters만 기록한다. raw text, matched terms, word list, loader source,
   credential, 예외 payload는 기록하지 않는다.
 - rollback할 snapshot이 없으면 upstream `IllegalStateException`을 그대로 전달한다.
@@ -150,8 +165,8 @@ singleton automaton을 versioned bean의 initial value로 재사용해 이중 bu
 1. 두 store의 v1→v2 reload와 bounded rollback을 검증한다.
 2. name mismatch, equal/lower revision, loader failure, 입력 제한 실패 뒤 current
    snapshot과 rollback 순서가 유지되는지 검증한다.
-3. search reader가 reload 중 old/new 전체 index 결과 중 하나만 반환하고 version과
-   결과가 일치하는지 검증한다.
+3. Korean noun v1/v2 snapshot 교체에서 document와 query가 같은 exact-noun matcher를
+   사용하고, search reader가 old/new 전체 index 결과 중 하나만 반환하는지 검증한다.
 4. moderation reader가 `matchedTerms`와 `maskedText`에 같은 revision의 automaton을
    사용하며 혼합 결과를 만들지 않는지 동시성 테스트로 검증한다.
 5. 느린 loader가 candidate를 준비하는 동안 current snapshot 검색/분석이 막히지
@@ -159,7 +174,8 @@ singleton automaton을 versioned bean의 initial value로 재사용해 이중 bu
    barrier 테스트로 검증한다.
 6. 기존 `MultilingualSearchIndex`와 `TextModerationService` 생성자/동기 API 및 Spring
    singleton bean 회귀 테스트를 유지한다.
-7. 로그 캡처에서는 version/count metadata만 허용하고 dictionary contents를 금지한다.
+7. 로그 캡처에서는 old/new version/count metadata만 허용하고 dictionary contents와
+   unsafe dictionary name을 금지한다.
 
 ## 범위 밖
 

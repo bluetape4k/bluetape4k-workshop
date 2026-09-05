@@ -119,6 +119,11 @@ data class SearchHighlightHit(
     }
 }
 
+/** 하나의 검색 generation에서 document와 query가 공유하는 term 추출 계약입니다. */
+internal fun interface SearchTermTokenizer: Serializable {
+    fun tokenize(text: String, language: Language?): List<String>
+}
+
 /**
  * Lingua, Korean/Japanese tokenizer, English normalization, Aho-Corasick highlighting 을 기반으로 하는 in-memory multilingual search index 입니다.
  *
@@ -145,6 +150,7 @@ data class SearchHighlightHit(
 class MultilingualSearchIndex private constructor(
     val indexedDocuments: List<IndexedDocument>,
     private val detectionService: LanguageDetectionService,
+    private val termTokenizer: SearchTermTokenizer,
 ): Serializable {
 
     private val documentsById: Map<String, IndexedDocument> =
@@ -160,7 +166,7 @@ class MultilingualSearchIndex private constructor(
      */
     fun search(query: String, limit: Int = DEFAULT_LIMIT): List<SearchHighlightHit> {
         if (query.isBlank()) return emptyList()
-        val queryTerms = tokenizeSearchText(query, detectionService.detectLanguage(query))
+        val queryTerms = termTokenizer.tokenize(query, detectionService.detectLanguage(query))
         if (queryTerms.isEmpty()) return emptyList()
 
         val candidateIds = queryTerms
@@ -211,6 +217,14 @@ class MultilingualSearchIndex private constructor(
         fun indexOf(
             documents: Collection<SearchDocument>,
             detectionService: LanguageDetectionService = LanguageDetectionService(),
+        ): MultilingualSearchIndex =
+            indexOf(documents, detectionService, DefaultSearchTermTokenizer)
+
+        /** Versioned wrapper가 고정된 dictionary tokenizer를 document/query에 함께 주입합니다. */
+        internal fun indexOf(
+            documents: Collection<SearchDocument>,
+            detectionService: LanguageDetectionService,
+            termTokenizer: SearchTermTokenizer,
         ): MultilingualSearchIndex {
             validateSearchDocuments(documents)
             val indexed = documents.map { document ->
@@ -218,12 +232,17 @@ class MultilingualSearchIndex private constructor(
                 IndexedDocument(
                     document = document,
                     language = language,
-                    terms = tokenizeSearchText(document.text, language).toCollection(linkedSetOf()),
+                    terms = termTokenizer.tokenize(document.text, language).toCollection(linkedSetOf()),
                 )
             }
-            return MultilingualSearchIndex(indexed, detectionService)
+            return MultilingualSearchIndex(indexed, detectionService, termTokenizer)
         }
     }
+}
+
+private object DefaultSearchTermTokenizer: SearchTermTokenizer {
+    override fun tokenize(text: String, language: Language?): List<String> =
+        tokenizeSearchText(text, language)
 }
 
 internal fun validateSearchDocuments(documents: Collection<SearchDocument>) {

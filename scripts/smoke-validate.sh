@@ -1055,6 +1055,8 @@ case "${1:-help}" in
     echo "=== Versioned text dictionary runtime guard ==="
     versioned_search="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/search/VersionedMultilingualSearchIndex.kt"
     versioned_search_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/search/VersionedMultilingualSearchIndexTest.kt"
+    versioned_detection="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/detection/LanguageDetectionService.kt"
+    versioned_detection_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/detection/LanguageDetectionServiceTest.kt"
     versioned_moderation="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/service/VersionedModerationDictionary.kt"
     versioned_service="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/service/TextModerationService.kt"
     versioned_moderation_tests="spring-boot/text-moderation-api/src/test/kotlin/io/bluetape4k/workshop/textmoderation/service/VersionedModerationDictionaryTest.kt"
@@ -1068,16 +1070,24 @@ case "${1:-help}" in
        contains_pattern 'historyCapacity' "$versioned_search" "$versioned_moderation" "$versioned_search_tests" "$versioned_moderation_tests" && \
        contains_pattern 'VersionedSearchResult' "$versioned_search" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
        contains_pattern 'result\.version' "$versioned_search_tests" && \
+       contains_pattern 'SnapshotKoreanNounTokenizer' "$versioned_search" && \
+       contains_pattern 'koreanDictionary' "$versioned_search" "$versioned_search_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
+       contains_pattern 'detectorLock' "$versioned_detection" "$versioned_service" && \
+       contains_pattern '여러 동기 caller' "$versioned_detection_tests" && \
+       contains_pattern 'toBoundedSnapshot|maxTotalDocumentCharacters|maxTotalKoreanNounCharacters' "$versioned_search" && \
+       contains_pattern 'mutable source' "$versioned_search_tests" && \
+       contains_pattern 'mutable words' "$versioned_moderation_tests" && \
        contains_pattern 'analyzeWithVersion' "$versioned_service" "$versioned_service_tests" spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md && \
        contains_pattern '@Autowired' "$versioned_service" && \
        contains_pattern 'bluetape4k\.text\.core' kotlin/text-processing/build.gradle.kts spring-boot/text-moderation-api/build.gradle.kts && \
        contains_pattern 'stale|Stale' "$versioned_search_tests" "$versioned_moderation_tests" "$versioned_lesson" "$versioned_review" && \
+       contains_pattern 'previousRevision' "$versioned_search" "$versioned_moderation" "$versioned_moderation_tests" "$versioned_review" && \
        contains_pattern 'kotlin/text-processing' .github/workflows/Examples.yml && \
        contains_pattern 'spring-boot/text-moderation-api' .github/workflows/Examples.yml && \
        contains_pattern '#890' docs/coverage-matrix.md docs/lessons/README.md "$versioned_lesson" && \
        contains_pattern '"issue_numbers": \[890\]' docs/ecosystem-reuse-train.json && \
        contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$versioned_search" "$versioned_search_tests" "$versioned_moderation" "$versioned_service" "$versioned_moderation_tests" "$versioned_service_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$versioned_search" "$versioned_search_tests" "$versioned_detection" "$versioned_detection_tests" "$versioned_moderation" "$versioned_service" "$versioned_moderation_tests" "$versioned_service_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
        [ -f "$versioned_lesson" ] && [ -f "$versioned_review" ]; then
       echo "Versioned text dictionary runtime examples and lesson are registered."
     else

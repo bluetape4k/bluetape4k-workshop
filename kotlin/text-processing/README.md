@@ -31,7 +31,7 @@ audit-safe span metadata.
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | Detects document/query language, builds an inverted term index, ranks matched documents, and emits source-span highlights |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | Shares one suspend preload attempt and rejects request work until both dictionaries are ready |
-| `VersionedMultilingualSearchIndex` | `VersionedDictionary`, `DictionarySnapshot`, `MultilingualSearchIndex` | Publishes only a completed whole-index generation and returns the exact revision used by each search |
+| `VersionedMultilingualSearchIndex` | Korean `DictionarySnapshot`, exact-noun Aho-Corasick matcher, `VersionedDictionary` | Publishes one completed noun-dictionary/index generation and returns the exact revision used by each search |
 | `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Validates a small policy, finds email/phone/token/keyword spans, merges overlaps, masks same-length output, and returns safe metadata |
 
 ## Usage
@@ -138,6 +138,41 @@ inspect:
 - Overlapping matches are preserved in `SearchHighlightHit.matches`. The rendered
   `highlightedText` uses deterministic non-overlapping fragments from Aho-Corasick tokenization,
   so nested `<mark>` tags are intentionally avoided.
+
+### Versioned runtime search index
+
+Use `VersionedMultilingualSearchIndex` when Korean noun dictionaries and documents must change
+without exposing a partially rebuilt search generation:
+
+```kotlin
+val index = VersionedMultilingualSearchIndex.indexOf(
+    source = VersionedMultilingualSearchSource(
+        koreanDictionary = KoreanDictionaryProvider.currentDictionarySnapshot(),
+        documents = v1Documents,
+    ),
+    historyCapacity = 2,
+)
+
+val v1 = index.search("서울카페")
+val v2Dictionary = KoreanDictionaryProvider.reloadDictionaries(
+    DictionaryVersion("korean-dictionary", 2),
+    newKoreanDictionaries,
+)
+index.reload(VersionedMultilingualSearchSource(v2Dictionary, v2Documents))
+val v2 = index.search("서울카페")
+index.rollback()
+```
+
+`search` returns `VersionedSearchResult`, which pairs the captured revision with its hits. The
+versioned path builds an exact Korean noun Aho-Corasick matcher from the supplied public snapshot
+and injects that same matcher into document and query tokenization. It therefore never reads the
+global Korean provider after publication. The loader and full `MultilingualSearchIndex` build
+finish before the completed `DictionarySnapshot` is published. Failed or stale candidates leave
+the current generation and bounded rollback history unchanged. This exact-noun behavior is
+deliberately narrower than the existing morphology-oriented `MultilingualSearchIndex`; Japanese
+and English retain their existing tokenizer paths. Coroutine callers should prepare source data on
+their own dispatcher before synchronous publication. Candidate documents and nouns are copied into
+bounded snapshots with per-entry and aggregate character limits before index construction.
 
 ### Coroutine-safe search index
 

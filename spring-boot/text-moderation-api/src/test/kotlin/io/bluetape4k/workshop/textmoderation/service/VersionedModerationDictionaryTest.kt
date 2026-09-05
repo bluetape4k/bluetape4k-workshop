@@ -12,6 +12,9 @@ import io.bluetape4k.tokenizer.utils.DictionaryVersion
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /** moderation blockword의 copy-on-write, bounded history, safe metadata 계약을 검증합니다. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -86,9 +89,62 @@ class VersionedModerationDictionaryTest {
         }.joinToString("\n")
 
         logs shouldContain "operation=reload"
+        logs shouldContain "previousRevision=1"
         logs shouldContain "revision=2"
         logs shouldContain "wordCount=1"
         logs shouldNotContain "private-blockword"
+    }
+
+    @Test
+    fun `느린 loader 중에도 현재 snapshot reader는 진행된다`() {
+        val dictionary = dictionary(historyCapacity = 1)
+        val loaderStarted = CountDownLatch(1)
+        val releaseLoader = CountDownLatch(1)
+        val executor = Executors.newSingleThreadExecutor()
+
+        try {
+            val reload = executor.submit<ModerationDictionaryMetadata> {
+                dictionary.reload(version(2)) {
+                    loaderStarted.countDown()
+                    releaseLoader.await(5, TimeUnit.SECONDS)
+                    listOf("beta")
+                }
+            }
+            loaderStarted.await(5, TimeUnit.SECONDS) shouldBeEqualTo true
+
+            dictionary.currentMetadata().version shouldBeEqualTo version(1)
+
+            releaseLoader.countDown()
+            val updated = reload.get(5, TimeUnit.SECONDS)
+            updated.version shouldBeEqualTo version(2)
+        } finally {
+            releaseLoader.countDown()
+            executor.shutdownNow()
+            executor.awaitTermination(5, TimeUnit.SECONDS)
+        }
+    }
+
+    @Test
+    fun `dictionary name은 고정된 safe metadata만 허용한다`() {
+        assertFailsWith<IllegalArgumentException> {
+            VersionedModerationDictionary(
+                initialVersion = DictionaryVersion("moderation-blockwords\nforged", 1),
+                initialWords = listOf("alpha"),
+            )
+        }
+    }
+
+    @Test
+    fun `caller의 mutable words는 candidate build 시점에 복사된다`() {
+        val words = mutableListOf("alpha")
+        val dictionary = VersionedModerationDictionary(
+            initialVersion = version(1),
+            initialWords = words,
+        )
+
+        words.clear()
+
+        dictionary.snapshot().value.automaton.parseText("alpha").single().keyword shouldBeEqualTo "alpha"
     }
 
     private fun dictionary(historyCapacity: Int): VersionedModerationDictionary =

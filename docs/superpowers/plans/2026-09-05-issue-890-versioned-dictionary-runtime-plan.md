@@ -8,7 +8,8 @@
    snapshot, bounded history, safe metadata 경계를 설계와 review로 고정한다.
 3. TDD red 단계에서 search와 moderation의 reload/rollback, stale/failure/history,
    concurrent reader, compatibility 테스트를 먼저 추가한다.
-4. `VersionedMultilingualSearchIndex`와 `VersionedModerationDictionary`를 구현하고
+4. Public Korean dictionary snapshot의 noun set을 document/query가 공유하는 exact matcher로
+   고정한 `VersionedMultilingualSearchIndex`와 `VersionedModerationDictionary`를 구현하고
    `TextModerationService` 및 Spring configuration에 `@Autowired` primary와 기존
    automaton secondary constructor 호환 경계로 연결한다. 두 module
    `build.gradle.kts`에는 versionless `bluetape4k-text-core` 직접 의존성을 추가한다.
@@ -66,9 +67,9 @@ git diff --check
 
 - [x] Issue/GNO/upstream API/BOM 2.0.0 baseline 확인
 - [x] immutable whole-generation 설계와 독립 review 완료
-- [x] red compile 후 reload·rollback·stale·failure·history·concurrency 구현
+- [x] red compile 후 Korean noun snapshot 결합, reload·rollback·stale·failure·history·concurrency 구현
 - [x] root/module EN·KO README, coverage, manifest, stale guard, lesson 갱신
-- [x] clean module tests 78/78 및 root detekt 통과
+- [x] clean module tests 86/86 및 root detekt 통과
 - [x] README language/parity, stale-check, ecosystem unit 113/113, actionlint 통과
 - [x] 두 module `tokenizer-core:1.0.0` dependency resolution 확인
 - [ ] PR exact-head hosted CI와 metadata 확인

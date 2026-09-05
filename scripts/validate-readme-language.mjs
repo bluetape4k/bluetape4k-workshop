@@ -7,6 +7,7 @@ const root = process.cwd();
 const skippedDirs = new Set([".git", ".gradle", ".omx", ".omc", ".worktrees", "build", "buildSrc", "node_modules"]);
 const allowedKoreanTokens = new Map([
   ["image-processing/profile-image-moderation/README.md", ["욱일기"]],
+  ["kotlin/text-processing/README.md", ["서울카페"]],
 ]);
 
 function walk(dir, out = []) {

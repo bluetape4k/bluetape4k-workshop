@@ -125,7 +125,8 @@ Loader execution, bounded input validation, and Aho-Corasick construction finish
 `DictionarySnapshot` is published. Each request captures one snapshot, so parsing and masking use
 the same revision. Failed or stale candidates preserve both the current dictionary and rollback
 history. Logs contain only the dictionary name, revision, word count, and total character count;
-raw blockwords and moderation text are never logged.
+raw blockwords and moderation text are never logged. The loader collection is copied and bounded
+while iterating, and shared Lingua detector access is serialized for concurrent singleton calls.
 
 ## Used Bluetape4k features
 

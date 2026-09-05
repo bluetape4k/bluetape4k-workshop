@@ -11,11 +11,16 @@ history, exact-head PR 검증이 명시됐다.
 - candidate build 이후 publish 순서와 요청당 snapshot 1회 캡처를 코드와 테스트로
   확인한다. slow-loader 중 current reader non-blocking과 늦은 낮은 revision 거부를
   barrier로 고정한다.
+- Korean public dictionary snapshot에서 만든 exact noun matcher를 document/query에 함께
+  주입하고, shared language detector contention을 직렬화한다.
 - loader/stale/input-limit 실패 뒤 current와 rollback journal이 유지돼야 한다.
+- 외부 collection은 bounded defensive snapshot으로 복사하고 개별·aggregate character 상한을
+  초과하면 candidate publish 전에 거부해야 한다.
 - 기존 `TextModerationService(..., moderationAutomaton=...)`, `analyze`,
   `MultilingualSearchIndex.search`, Spring singleton bean 테스트가 계속 통과해야 한다.
 - HTTP reload endpoint, raw dictionary log, 개별 library BOM, 2.1.0-SNAPSHOT은
   추가하지 않는다.
+- dictionary name을 고정하고 old/new revision과 count만 audit metadata로 남긴다.
 - 두 module은 transitive dependency에 기대지 않고 versionless
   `libs.bluetape4k.text.core`를 직접 선언한다.
 - README/test에 service-level v1→v2→rollback과 metadata 관찰 경로를 제공하고,

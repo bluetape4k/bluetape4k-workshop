@@ -123,7 +123,9 @@ Loader 실행, bounded input 검증, Aho-Corasick 생성이 모두 끝난 뒤 �
 `DictionarySnapshot`을 공개합니다. 각 요청은 snapshot을 한 번 캡처하므로 parsing과 masking이
 같은 revision을 사용합니다. 실패하거나 stale인 candidate는 현재 dictionary와 rollback
 history를 모두 보존합니다. Log에는 dictionary name, revision, word count, total character
-count만 남기며 raw blockword와 moderation text는 기록하지 않습니다.
+count만 남기며 raw blockword와 moderation text는 기록하지 않습니다. Loader collection은
+순회하면서 bounded snapshot으로 복사하고, 동시 singleton 호출의 shared Lingua detector 접근은
+직렬화합니다.
 
 ## Used Bluetape4k features
 

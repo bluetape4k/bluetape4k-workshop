@@ -41,9 +41,8 @@ class TextModerationConfig {
         val words = canonicalBlockwords(properties)
         return VersionedModerationDictionary.fromAutomaton(
             automaton = moderationAutomaton,
+            words = words,
             version = DictionaryVersion("moderation-blockwords", 1),
-            wordCount = words.size,
-            totalCharacters = words.sumOf(String::length),
             historyCapacity = 2,
         )
     }

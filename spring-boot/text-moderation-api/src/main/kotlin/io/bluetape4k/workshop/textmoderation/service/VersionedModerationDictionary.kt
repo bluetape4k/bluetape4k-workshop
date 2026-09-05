@@ -10,6 +10,8 @@ import io.bluetape4k.tokenizer.utils.DictionaryVersion
 import io.bluetape4k.tokenizer.utils.VersionedDictionary
 import io.bluetape4k.workshop.textmoderation.model.ModerationResponse
 import java.io.Serializable
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /** moderation dictionary가 허용하는 bounded input입니다. */
 data class ModerationDictionaryLimits(
@@ -65,6 +67,13 @@ class VersionedModerationDictionary private constructor(
 ) {
 
     private val versions = VersionedDictionary(initial, historyCapacity)
+    private val mutationLock = ReentrantLock()
+
+    init {
+        require(initial.version.name == COMPATIBILITY_DICTIONARY_NAME) {
+            "Expected $COMPATIBILITY_DICTIONARY_NAME version"
+        }
+    }
 
     @JvmOverloads
     constructor(
@@ -73,7 +82,7 @@ class VersionedModerationDictionary private constructor(
         historyCapacity: Int = 1,
         limits: ModerationDictionaryLimits = ModerationDictionaryLimits(),
     ) : this(
-        initial = DictionarySnapshot(initialVersion, buildValue(initialWords, limits)),
+        initial = initialSnapshot(initialVersion, initialWords, limits),
         historyCapacity = historyCapacity,
         limits = limits,
     )
@@ -92,32 +101,69 @@ class VersionedModerationDictionary private constructor(
         version: DictionaryVersion,
         loader: () -> Collection<String>,
     ): ModerationDictionaryMetadata {
-        val candidate = buildValue(loader().toList(), limits)
-        val updated = versions.reload(DictionarySnapshot(version, candidate))
-        return updated.toMetadata().also { metadata ->
+        require(version.name == COMPATIBILITY_DICTIONARY_NAME) {
+            "Expected $COMPATIBILITY_DICTIONARY_NAME version"
+        }
+        val candidate = buildValue(loader(), limits)
+        return mutationLock.withLock {
+            val previous = versions.snapshot()
+            val updated = versions.reload(DictionarySnapshot(version, candidate))
+            updated.toMetadata().also { metadata ->
+                log.info {
+                    "dictionary operation=reload previousRevision=${previous.version.revision}, " +
+                            "revision=${metadata.version.revision}, wordCount=${metadata.wordCount}, " +
+                            "totalCharacters=${metadata.totalCharacters}"
+                }
+            }
+        }
+    }
+
+    /** bounded history의 가장 최근 dictionary revision으로 되돌아갑니다. */
+    fun rollback(): ModerationDictionaryMetadata = mutationLock.withLock {
+        val previous = versions.snapshot()
+        versions.rollback().toMetadata().also { metadata ->
             log.info {
-                "dictionary operation=reload name=${metadata.version.name}, " +
+                "dictionary operation=rollback previousRevision=${previous.version.revision}, " +
                         "revision=${metadata.version.revision}, wordCount=${metadata.wordCount}, " +
                         "totalCharacters=${metadata.totalCharacters}"
             }
         }
     }
 
-    /** bounded history의 가장 최근 dictionary revision으로 되돌아갑니다. */
-    fun rollback(): ModerationDictionaryMetadata =
-        versions.rollback().toMetadata().also { metadata ->
-            log.info {
-                "dictionary operation=rollback name=${metadata.version.name}, " +
-                        "revision=${metadata.version.revision}, wordCount=${metadata.wordCount}, " +
-                        "totalCharacters=${metadata.totalCharacters}"
-            }
-        }
-
     /** 한 요청이 parse와 mask에 재사용할 내부 immutable snapshot입니다. */
     internal fun snapshot(): DictionarySnapshot<ModerationDictionaryValue> = versions.snapshot()
 
     companion object : KLogging() {
         private const val COMPATIBILITY_DICTIONARY_NAME = "moderation-blockwords"
+
+        private fun initialSnapshot(
+            version: DictionaryVersion,
+            words: Collection<String>,
+            limits: ModerationDictionaryLimits,
+        ): DictionarySnapshot<ModerationDictionaryValue> {
+            require(version.name == COMPATIBILITY_DICTIONARY_NAME) {
+                "Expected $COMPATIBILITY_DICTIONARY_NAME version"
+            }
+            return DictionarySnapshot(version, buildValue(words, limits))
+        }
+
+        internal fun fromAutomaton(
+            automaton: AhoCorasickAutomaton<String>,
+            words: Collection<String>,
+            version: DictionaryVersion = DictionaryVersion(COMPATIBILITY_DICTIONARY_NAME, 0),
+            historyCapacity: Int = 1,
+            limits: ModerationDictionaryLimits = ModerationDictionaryLimits(),
+        ): VersionedModerationDictionary {
+            val canonicalWords = canonicalizeWords(words, limits)
+            return fromAutomaton(
+                automaton = automaton,
+                version = version,
+                wordCount = canonicalWords.size,
+                totalCharacters = canonicalWords.sumOf(String::length),
+                historyCapacity = historyCapacity,
+                limits = limits,
+            )
+        }
 
         internal fun fromAutomaton(
             automaton: AhoCorasickAutomaton<String>,
@@ -143,23 +189,8 @@ class VersionedModerationDictionary private constructor(
             words: Collection<String>,
             limits: ModerationDictionaryLimits,
         ): ModerationDictionaryValue {
-            val canonicalWords = words
-                .map(String::trim)
-                .filter(String::isNotEmpty)
-                .distinct()
-
-            require(canonicalWords.size <= limits.maxWords) {
-                "dictionary word count exceeds ${limits.maxWords}"
-            }
-            canonicalWords.forEach { word ->
-                require(word.length <= limits.maxWordCharacters) {
-                    "dictionary word length exceeds ${limits.maxWordCharacters}"
-                }
-            }
+            val canonicalWords = canonicalizeWords(words, limits)
             val totalCharacters = canonicalWords.sumOf(String::length)
-            require(totalCharacters <= limits.maxTotalCharacters) {
-                "dictionary total characters exceed ${limits.maxTotalCharacters}"
-            }
 
             val automaton = ahoCorasick<String> {
                 ignoreCase = true
@@ -172,6 +203,33 @@ class VersionedModerationDictionary private constructor(
                 wordCount = canonicalWords.size,
                 totalCharacters = totalCharacters,
             )
+        }
+
+        private fun canonicalizeWords(
+            words: Collection<String>,
+            limits: ModerationDictionaryLimits,
+        ): Set<String> {
+            val canonicalWords = linkedSetOf<String>()
+            var sourceWordCount = 0
+            var totalCharacters = 0L
+            for (rawWord in words) {
+                sourceWordCount++
+                require(sourceWordCount <= limits.maxWords) {
+                    "dictionary word count exceeds ${limits.maxWords}"
+                }
+                val word = rawWord.trim()
+                if (word.isEmpty()) continue
+                require(word.length <= limits.maxWordCharacters) {
+                    "dictionary word length exceeds ${limits.maxWordCharacters}"
+                }
+                if (canonicalWords.add(word)) {
+                    totalCharacters += word.length
+                    require(totalCharacters <= limits.maxTotalCharacters) {
+                        "dictionary total characters exceed ${limits.maxTotalCharacters}"
+                    }
+                }
+            }
+            return canonicalWords
         }
 
         private fun DictionarySnapshot<ModerationDictionaryValue>.toMetadata(): ModerationDictionaryMetadata =
