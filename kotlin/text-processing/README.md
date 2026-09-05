@@ -3,8 +3,8 @@
 [한국어](README.ko.md) | English
 
 This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
-helpers. It covers six reader-visible tasks: abuse-word filtering, language detection, text
-normalization before indexing, sync/coroutine multilingual search indexes with highlighted results,
+helpers. It covers abuse-word filtering, language detection, text normalization before indexing,
+startup dictionary readiness, sync/coroutine multilingual search indexes with highlighted results,
 and a small sensitive-text redaction pipeline with audit-safe span metadata.
 
 ## Architecture
@@ -29,6 +29,7 @@ and a small sensitive-text redaction pipeline with audit-safe span metadata.
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | Detects document/query language, builds an inverted term index, ranks matched documents, and emits source-span highlights |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
+| `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | Shares one suspend preload attempt and rejects request work until both dictionaries are ready |
 | `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Validates a small policy, finds email/phone/token/keyword spans, merges overlaps, masks same-length output, and returns safe metadata |
 
 ## Usage
@@ -155,6 +156,34 @@ small for single-threaded examples, while `CoroutineMultilingualSearchIndex` add
 wrapper, an immutable index snapshot, and suspend APIs that run CPU-bound text work on
 `Dispatchers.Default`.
 
+### Dictionary preload and readiness
+
+Preload both tokenizer dictionaries during startup, before building an index or accepting requests:
+
+```kotlin
+val dictionaries = TokenizerDictionaryReadiness()
+dictionaries.preload()
+
+val index = CoroutineMultilingualSearchIndex.indexOf(documents)
+val result = dictionaries.runWhenReady { index.search("\uC11C\uC6B8 \uCE74\uD398") }
+
+when (result) {
+    is DictionaryReadyResult.Ready -> result.value
+    is DictionaryReadyResult.NotReady -> emptyList()
+}
+```
+
+The initial state is `NOT_READY`; an active attempt publishes `LOADING`, and `READY` is visible only
+after both `KoreanProcessor.preload()` and `JapaneseProcessor.preload()` complete. Concurrent startup
+callers share one attempt. Failure or cancellation is rethrown after the state returns to `NOT_READY`,
+so the next caller can retry with a new attempt number. A cancellation check after both loaders also
+prevents a loader that accidentally swallows cancellation from publishing `READY`.
+
+`runWhenReady` returns `NotReady` without running its block while startup is incomplete. This avoids
+partially initialized request results. The existing synchronous tokenizer facade is still compatible,
+but it may block on first use when startup preload is skipped. For predictable request latency, use the
+order shown above: preload, build the existing index, then expose the readiness-gated search path.
+
 ### Japanese tokenizer backend comparison
 
 Compare the existing Kuromoji IPADic path with Sudachi JVM using one dictionary session and the
@@ -192,7 +221,8 @@ are never committed.
 
 ## Dependencies
 
-The module uses the repository version catalog:
+The module uses the repository version catalog and resolves bluetape4k modules through the single
+`bluetape4k-dependencies:2.0.0` BOM:
 
 ```kotlin
 dependencies {

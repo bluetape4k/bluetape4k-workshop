@@ -3,10 +3,9 @@
 [English](README.md) | 한국어
 
 이 모듈은 `bluetape4k-text`와 작은 Kotlin helper로 애플리케이션 내부에서 실행하는
-텍스트 처리 유틸리티를 보여줍니다. 예제에서 바로 확인할 수 있는 작업은 여섯 가지입니다.
-금칙어 필터링, 언어 감지, 검색/색인 전 텍스트 정규화, highlight 결과를 반환하는
-동기/코루틴 다국어 검색 인덱스, 그리고 audit-safe span metadata를 반환하는 작은
-sensitive text redaction pipeline입니다.
+텍스트 처리 유틸리티를 보여줍니다. 금칙어 필터링, 언어 감지, 검색/색인 전 텍스트 정규화,
+시작 단계 사전 준비 상태, highlight 결과를 반환하는 동기/코루틴 다국어 검색 인덱스,
+그리고 audit-safe span metadata를 반환하는 작은 sensitive text redaction pipeline을 다룹니다.
 
 ## 아키텍처
 
@@ -30,6 +29,7 @@ sensitive text redaction pipeline입니다.
 | `TextNormalizer` | pure Kotlin object | 소문자 변환, 공백 정리, 중복 제거 keyword extraction |
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | 문서와 query의 언어를 감지하고, inverted term index를 만든 뒤, match 점수와 source-span highlight를 반환 |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index 기준 상태, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
+| `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | suspend preload attempt 하나를 공유하고 두 dictionary 준비 전에는 요청 작업을 거절 |
 | `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 작은 policy를 검증하고 email/phone/token/keyword span을 찾은 뒤, overlap merge, same-length masking, safe metadata 반환 |
 
 ## 사용 예
@@ -149,6 +149,35 @@ Coroutine index는 동기 API와 일부러 분리했습니다. `MultilingualSear
 예제를 이해하기 쉽게 유지하고, `CoroutineMultilingualSearchIndex`는 guarded detector wrapper,
 immutable index 기준 상태, `Dispatchers.Default` 기반 suspend API를 추가합니다.
 
+### Dictionary preload와 readiness
+
+Index를 만들거나 요청을 받기 전에 startup 단계에서 두 tokenizer dictionary를 preload합니다.
+
+```kotlin
+val dictionaries = TokenizerDictionaryReadiness()
+dictionaries.preload()
+
+val index = CoroutineMultilingualSearchIndex.indexOf(documents)
+val result = dictionaries.runWhenReady { index.search("서울 카페") }
+
+when (result) {
+    is DictionaryReadyResult.Ready -> result.value
+    is DictionaryReadyResult.NotReady -> emptyList()
+}
+```
+
+초기 상태는 `NOT_READY`이고 실행 중인 attempt는 `LOADING`을 공개합니다. 두
+`KoreanProcessor.preload()`와 `JapaneseProcessor.preload()`가 모두 끝난 뒤에만 `READY`가
+보입니다. 동시에 시작한 caller는 attempt 하나를 공유합니다. 실패나 취소가 발생하면 상태를
+`NOT_READY`로 되돌린 뒤 원래 예외를 다시 던지므로 다음 caller가 새 attempt 번호로 재시도할
+수 있습니다. 두 loader 뒤의 취소 검사로 잘못된 loader가 취소를 삼켜도 `READY`를 공개하지
+않습니다.
+
+`runWhenReady`는 startup이 끝나지 않았을 때 block을 실행하지 않고 `NotReady`를 반환하므로
+부분 초기화된 요청 결과를 만들지 않습니다. 기존 동기 tokenizer facade와는 호환되지만 startup
+preload를 생략하면 첫 호출이 blocking될 수 있습니다. 예측 가능한 요청 latency를 위해 위 순서인
+preload, 기존 index 생성, readiness gate가 있는 search 경로 공개를 따릅니다.
+
 ### 일본어 tokenizer backend 비교
 
 승인된 corpus(`選挙管理委員会`, `東京都へ行く`, `外国人参政権`)를 하나의 dictionary session에서
@@ -186,7 +215,8 @@ commit하지 않습니다.
 
 ## 의존성
 
-이 모듈은 repository version catalog alias를 사용합니다.
+이 모듈은 repository version catalog alias를 사용하며 bluetape4k module version은 단일
+`bluetape4k-dependencies:2.0.0` BOM으로 해석합니다.
 
 ```kotlin
 dependencies {
