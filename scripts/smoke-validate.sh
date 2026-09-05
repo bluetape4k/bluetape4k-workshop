@@ -1294,6 +1294,44 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Okio BufferedSuspendedSink public API guard ==="
+    okio_buffered_interface="io/okio-examples/src/main/kotlin/io/bluetape4k/okio/coroutines/BufferedSuspendedSink.kt"
+    okio_buffered_impl="io/okio-examples/src/main/kotlin/io/bluetape4k/okio/coroutines/RealBufferedSuspendedSink.kt"
+    okio_buffered_test="io/okio-examples/src/test/kotlin/io/bluetape4k/okio/coroutines/BufferedSuspendedSinkTest.kt"
+    okio_interop_test="io/okio-examples/src/test/kotlin/io/bluetape4k/okio/coroutines/SuspendInteropTest.kt"
+    okio_readme="io/okio-examples/README.md"
+    okio_readme_ko="io/okio-examples/README.ko.md"
+    okio_lesson="docs/lessons/2026-09-06-issue-953-okio-buffered-suspended-sink.md"
+    okio_review="docs/superpowers/specs/2026-09-06-issue-953-okio-buffered-suspended-sink-implementation-review.md"
+    if [ ! -e "$okio_buffered_interface" ] && [ ! -e "$okio_buffered_impl" ] && \
+       contains_pattern 'FakeSuspendedSink\(\)\.buffered\(\)' "$okio_buffered_test" && \
+       contains_pattern 'FakeSuspendedSink\(\)\.buffered\(\)' "$okio_interop_test" && \
+       contains_pattern 'all buffered write overloads preserve exact payload' "$okio_buffered_test" && \
+       contains_pattern 'write-all-sentinel' "$okio_buffered_test" && \
+       contains_pattern 'sensitive-tail-payload' "$okio_buffered_test" && \
+       contains_pattern 'shouldNotContain payload' "$okio_buffered_test" && \
+       contains_pattern 'write from suspended source fails after eight no progress reads' "$okio_buffered_test" && \
+       contains_pattern 'writeAll from suspended source fails after eight no progress reads' "$okio_buffered_test" && \
+       contains_pattern 'Unable to write from SuspendedSource: no progress\.' "$okio_buffered_test" && \
+       contains_pattern 'Unable to writeAll from SuspendedSource: no progress\.' "$okio_buffered_test" && \
+       [ "$(grep -c 'source.readCount shouldBeEqualTo 8' "$okio_buffered_test")" -eq 2 ] && \
+       [ "$(grep -c 'fakeSink.writeCount shouldBeEqualTo 1' "$okio_buffered_test")" -eq 2 ] && \
+       [ "$(grep -c 'fakeSink.closeCount shouldBeEqualTo 1' "$okio_buffered_test")" -ge 3 ] && \
+       contains_pattern 'io/okio-examples/\*\*' .github/workflows/Examples.yml && \
+       contains_pattern ':okio-examples:test' .github/workflows/Examples.yml "$0" && \
+       contains_pattern 'io/okio-examples/build/test-results/test/\*\.xml' .github/workflows/Examples.yml && \
+       contains_pattern '#953' docs/coverage-matrix.md docs/lessons/README.md "$okio_lesson" && \
+       contains_pattern '"issue_numbers": \[953\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$okio_readme" "$okio_readme_ko" "$okio_lesson" "$okio_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$okio_buffered_test" "$okio_interop_test" "$okio_readme" "$okio_readme_ko" "$okio_lesson" "$okio_review" && \
+       [ -f "$okio_lesson" ] && [ -f "$okio_review" ]; then
+      echo "Okio BufferedSuspendedSink public API and lesson are registered."
+    else
+      echo "ERROR: Okio BufferedSuspendedSink public API contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

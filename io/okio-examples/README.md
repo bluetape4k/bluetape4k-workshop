@@ -249,6 +249,18 @@ source.readUtf8() // restore original string
 
 ## Coroutine support
 
+### Stable BufferedSuspendedSink consumer boundary
+
+The root `bluetape4k-dependencies` BOM resolves `bluetape4k-okio` to stable `2.0.0`. Create a
+`BufferedSuspendedSink` through the public `SuspendedSink.buffered()` extension instead of copying or
+constructing its internal implementation.
+
+- All write overloads preserve the exact Okio payload and emit complete segments before the tail.
+- `write(SuspendedSource, byteCount)` and `writeAll(SuspendedSource)` reject eight consecutive zero-byte
+  reads with a bounded `IOException` instead of spinning forever.
+- The caller owns the source/sink scope. `close()` attempts the underlying close even if the buffered tail
+  write fails, preserves the first write failure, and is idempotent.
+
 ### SuspendedSocket — Non-blocking socket I/O
 
 `asSuspendedSource()` / `asSuspendedSink()` extension functions convert `java.net.Socket` to a coroutine-friendly Okio Source/Sink. Internally, NIO treats `SelectionKey` in `SocketChannel` as `await()` to avoid blocking the thread.

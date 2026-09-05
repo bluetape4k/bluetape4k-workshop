@@ -111,6 +111,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | bluetape4k lib | Existing example | Coverage | Gap | Proposed Basic | Proposed Advanced | Issue |
 |----------------|-----------------|----------|-----|----------------|-------------------|-------|
 | `bluetape4k-coroutines` | `kotlin/coroutines` | ⚠️ Partial | Flow backpressure, SharedFlow 미노출 | Flow + StateFlow producer/consumer | backpressure가 있는 coroutine channel fan-out | — |
+| `bluetape4k-okio` | `io/okio-examples` | ✅ Good | local buffered sink 복제와 zero-byte read 무한 반복 가능성 | 공개 `SuspendedSink.buffered()`와 exact payload/complete segment 회귀 | bounded no-progress, close 최초 원인·idempotence, socket/file-channel ABI | #953 |
 | Virtual threads (JDK 21) | `virtualthreads-*` | ✅ Good | pinning detection tooling 미노출 | — | async profiler pinning report | — |
 | Vert.x + coroutines | `vertx-*` | ✅ Good | — | — | — | — |
 

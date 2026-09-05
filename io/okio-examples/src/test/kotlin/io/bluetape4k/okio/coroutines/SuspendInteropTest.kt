@@ -82,7 +82,7 @@ class SuspendInteropTest: AbstractOkioTest() {
 
     @Test
     fun `BufferedSuspendedSink suspendWrite는 Source에서 byteCount만큼 읽는다`() = runSuspendIO {
-        val sink = RealBufferedSuspendedSink(FakeSuspendedSink())
+        val sink = FakeSuspendedSink().buffered()
 
         val source = mockk<Source>()
         coEvery { source.read(any(), any()) } returnsMany listOf(2L, 3L)

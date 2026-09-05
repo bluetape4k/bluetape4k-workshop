@@ -249,6 +249,17 @@ source.readUtf8() // restore original string
 
 ## 코루틴 지원
 
+### 안정판 BufferedSuspendedSink 소비자 경계
+
+루트 `bluetape4k-dependencies` BOM은 `bluetape4k-okio`를 안정판 `2.0.0`으로 해석합니다. 내부 구현을
+복제하거나 직접 생성하지 않고 공개 `SuspendedSink.buffered()` 확장 함수로 `BufferedSuspendedSink`를 만듭니다.
+
+- 모든 write overload는 Okio payload를 정확히 보존하고 tail보다 먼저 complete segment를 방출합니다.
+- `write(SuspendedSource, byteCount)`와 `writeAll(SuspendedSource)`는 연속 zero-byte read 8회를 bounded
+  `IOException`으로 거부해 무한 반복을 방지합니다.
+- source/sink scope의 소유자는 caller입니다. `close()`는 buffered tail write가 실패해도 underlying close를
+  시도하고 최초 write 오류를 보존하며, 반복 호출해도 한 번만 정리합니다.
+
 ### SuspendedSocket — 논블로킹 socket I/O
 
 `asSuspendedSource()` / `asSuspendedSink()` 확장 함수는 `java.net.Socket`을 코루틴 친화적인 Okio Source/Sink로 변환합니다. 내부적으로 NIO는 `SocketChannel`의 `SelectionKey`를 `await()`로 처리해 스레드 blocking을 피합니다.
