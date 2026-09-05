@@ -5,7 +5,8 @@
 This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
 helpers. It covers abuse-word filtering, language detection, text normalization before indexing,
 startup dictionary readiness, sync/coroutine multilingual search indexes with highlighted results,
-and a small sensitive-text redaction pipeline with audit-safe span metadata.
+atomic whole-index generation replacement, and a small sensitive-text redaction pipeline with
+audit-safe span metadata.
 
 ## Architecture
 
@@ -30,6 +31,7 @@ and a small sensitive-text redaction pipeline with audit-safe span metadata.
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | Detects document/query language, builds an inverted term index, ranks matched documents, and emits source-span highlights |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | Shares one suspend preload attempt and rejects request work until both dictionaries are ready |
+| `VersionedMultilingualSearchIndex` | `VersionedDictionary`, `DictionarySnapshot`, `MultilingualSearchIndex` | Publishes only a completed whole-index generation and returns the exact revision used by each search |
 | `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Validates a small policy, finds email/phone/token/keyword spans, merges overlaps, masks same-length output, and returns safe metadata |
 
 ## Usage

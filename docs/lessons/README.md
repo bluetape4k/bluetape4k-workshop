@@ -9,6 +9,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #887 Knowledge Graph schema drift planner](2026-09-05-issue-887-knowledge-schema-drift.md)
 - [Issue #888 native graph algorithm 실행 관찰](2026-09-05-issue-888-native-algorithm-observation.md)
 - [Issue #889 tokenizer dictionary preload와 readiness](2026-09-05-issue-889-dictionary-preload-readiness.md)
+- [Issue #890 VersionedDictionary 런타임 reload와 rollback](2026-09-05-issue-890-versioned-dictionary-runtime.md)
 
 Use this structure for each lesson:
 

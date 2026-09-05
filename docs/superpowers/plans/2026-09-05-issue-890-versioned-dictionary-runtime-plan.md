@@ -61,3 +61,14 @@ git diff --check
   호출한 것이므로 candidate build와 `DictionarySnapshot` publish를 다시 분리한다.
 - ecosystem scope가 문서/guard 경로를 누락하면 manifest와 stale rule을 같은
   branch에서 보완하고 PR 생성 전에 다시 검증한다.
+
+## 완료 증거
+
+- [x] Issue/GNO/upstream API/BOM 2.0.0 baseline 확인
+- [x] immutable whole-generation 설계와 독립 review 완료
+- [x] red compile 후 reload·rollback·stale·failure·history·concurrency 구현
+- [x] root/module EN·KO README, coverage, manifest, stale guard, lesson 갱신
+- [x] clean module tests 78/78 및 root detekt 통과
+- [x] README language/parity, stale-check, ecosystem unit 113/113, actionlint 통과
+- [x] 두 module `tokenizer-core:1.0.0` dependency resolution 확인
+- [ ] PR exact-head hosted CI와 metadata 확인

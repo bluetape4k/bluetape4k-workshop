@@ -5,7 +5,8 @@
 이 모듈은 `bluetape4k-text`와 작은 Kotlin helper로 애플리케이션 내부에서 실행하는
 텍스트 처리 유틸리티를 보여줍니다. 금칙어 필터링, 언어 감지, 검색/색인 전 텍스트 정규화,
 시작 단계 사전 준비 상태, highlight 결과를 반환하는 동기/코루틴 다국어 검색 인덱스,
-그리고 audit-safe span metadata를 반환하는 작은 sensitive text redaction pipeline을 다룹니다.
+전체 index generation 원자 교체, 그리고 audit-safe span metadata를 반환하는 작은
+sensitive text redaction pipeline을 다룹니다.
 
 ## 아키텍처
 
@@ -30,6 +31,7 @@
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | 문서와 query의 언어를 감지하고, inverted term index를 만든 뒤, match 점수와 source-span highlight를 반환 |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index 기준 상태, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | suspend preload attempt 하나를 공유하고 두 dictionary 준비 전에는 요청 작업을 거절 |
+| `VersionedMultilingualSearchIndex` | `VersionedDictionary`, `DictionarySnapshot`, `MultilingualSearchIndex` | 완성된 전체 index generation만 공개하고 각 검색이 사용한 정확한 revision을 반환 |
 | `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 작은 policy를 검증하고 email/phone/token/keyword span을 찾은 뒤, overlap merge, same-length masking, safe metadata 반환 |
 
 ## 사용 예

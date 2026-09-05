@@ -1149,6 +1149,35 @@
       "review_artifact": "docs/superpowers/specs/2026-09-05-issue-889-dictionary-preload-readiness-implementation-review.md"
     },
     {
+      "scope_id": "issue-890-versioned-dictionary-runtime",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-890-versioned-dictionary-runtime",
+      "expected_base_ref": "feat/issue-889-dictionary-preload-readiness",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [890],
+      "allowed_paths": [
+        "README.md",
+        "README.ko.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-05-issue-890-versioned-dictionary-runtime.md",
+        "docs/review/2026-09-05-issue-890-versioned-dictionary-runtime-plan-review.md",
+        "docs/superpowers/plans/2026-09-05-issue-890-versioned-dictionary-runtime-plan.md",
+        "docs/superpowers/specs/2026-09-05-issue-890-versioned-dictionary-runtime-design.md",
+        "docs/superpowers/specs/2026-09-05-issue-890-versioned-dictionary-runtime-review.md",
+        "docs/superpowers/specs/2026-09-05-issue-890-versioned-dictionary-runtime-implementation-review.md",
+        "kotlin/text-processing/**",
+        "spring-boot/text-moderation-api/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/superpowers/specs/2026-09-05-issue-890-versioned-dictionary-runtime-implementation-review.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -1258,8 +1287,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260905T-issue-889-dictionary-preload-readiness-stacked-base",
-    "checksum": "93aa72a1bf1783de5a4586d5831b099efd8bf94f7a686e60c102e335b8be3edf"
+    "receipt_id": "20260905T-issue-890-versioned-dictionary-runtime-stacked-base",
+    "checksum": "39782576a4343197d524b24ecfd627b0352ad1cb7f49cad9bbaba844215011eb"
   },
   "planned_scope_replan_receipts": {
   },
