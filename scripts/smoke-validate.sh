@@ -251,6 +251,7 @@ case "${1:-help}" in
       :messaging-kafka:test \
       :messaging-kafka-reply:test \
       :messaging-kafka-outbox-fallback:test \
+      :messaging-nats-jetstream-flow:test \
       --continue --max-workers=1"
     ;;
 
@@ -433,7 +434,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/advanced-workflow image-processing/ocr-api image-processing/profile-image-moderation image-processing/barcode-api graph/social-network commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
+    for module in image-processing/advanced-workflow image-processing/ocr-api image-processing/profile-image-moderation image-processing/barcode-api graph/social-network commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover messaging/nats-jetstream-flow; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"
@@ -1226,6 +1227,40 @@ case "${1:-help}" in
       echo "JaVers Redis head metadata fail-closed example and lesson are registered."
     else
       echo "ERROR: JaVers Redis head metadata fail-closed contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== NATS JetStream Consumer Flow guard ==="
+    nats_flow_source="messaging/nats-jetstream-flow/src/main/kotlin/io/bluetape4k/workshop/messaging/nats/JetStreamConsumerFlows.kt"
+    nats_flow_unit_test="messaging/nats-jetstream-flow/src/test/kotlin/io/bluetape4k/workshop/messaging/nats/JetStreamConsumerFlowsTest.kt"
+    nats_flow_integration_test="messaging/nats-jetstream-flow/src/test/kotlin/io/bluetape4k/workshop/messaging/nats/NatsJetStreamFlowIntegrationTest.kt"
+    nats_flow_build="messaging/nats-jetstream-flow/build.gradle.kts"
+    nats_flow_readme="messaging/nats-jetstream-flow/README.md"
+    nats_flow_readme_ko="messaging/nats-jetstream-flow/README.ko.md"
+    nats_flow_lesson="docs/lessons/2026-09-06-issue-923-nats-jetstream-flow.md"
+    nats_flow_review="docs/superpowers/specs/2026-09-06-issue-923-nats-jetstream-flow-implementation-review.md"
+    if contains_pattern 'JetStreamConsumerFlows' "$nats_flow_source" "$nats_flow_unit_test" "$nats_flow_integration_test" && \
+       contains_pattern 'consumeAsFlow' "$nats_flow_source" && \
+       contains_pattern 'AckDecision\.ACK' "$nats_flow_source" "$nats_flow_unit_test" && \
+       contains_pattern 'AckDecision\.NAK' "$nats_flow_source" "$nats_flow_unit_test" && \
+       contains_pattern 'AckDecision\.TERM' "$nats_flow_source" "$nats_flow_unit_test" && \
+       contains_pattern 'NatsConsumerFlowException' "$nats_flow_integration_test" && \
+       contains_pattern 'droppedMessages > 0' "$nats_flow_integration_test" && \
+       contains_pattern 'NatsServer\.Launcher' "$nats_flow_integration_test" && \
+       contains_pattern 'libs\.bluetape4k\.nats' "$nats_flow_build" && \
+       contains_pattern 'bluetape4k-nats = \{ module = "io\.github\.bluetape4k:bluetape4k-nats" \}' gradle/libs.versions.toml && \
+       contains_pattern 'pendingMessageLimit \+ capacity \+ 1' "$nats_flow_readme" "$nats_flow_readme_ko" && \
+       contains_pattern '#923' docs/coverage-matrix.md docs/lessons/README.md "$nats_flow_lesson" && \
+       contains_pattern '"issue_numbers": \[923\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern 'messaging/nats-jetstream-flow/\*\*' .github/workflows/Examples.yml && \
+       contains_pattern ':messaging-nats-jetstream-flow:test' .github/workflows/Examples.yml "$0" && \
+       contains_pattern '2\.0\.0' "$nats_flow_readme" "$nats_flow_readme_ko" "$nats_flow_lesson" "$nats_flow_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$nats_flow_build" "$nats_flow_source" "$nats_flow_unit_test" "$nats_flow_integration_test" "$nats_flow_readme" "$nats_flow_readme_ko" "$nats_flow_lesson" "$nats_flow_review" && \
+       [ -f "$nats_flow_lesson" ] && [ -f "$nats_flow_review" ]; then
+      echo "NATS JetStream Consumer Flow example and lesson are registered."
+    else
+      echo "ERROR: NATS JetStream Consumer Flow contract is missing or stale."
       exit 1
     fi
 
