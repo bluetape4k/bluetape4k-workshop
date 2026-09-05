@@ -119,7 +119,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 
 ### 3. Serialization & Messaging
 
-> Jackson 3, JsonView, Kafka, Kafka Reply, Outbox fallback, multi-broker failover
+> Jackson 3, JsonView, Kafka, Kafka Reply, NATS JetStream Flow, Outbox fallback, multi-broker failover
 
 | Level | Module | bluetape4k libs | Infra | Learning outcome |
 |-------|--------|-----------------|-------|-----------------|
@@ -127,6 +127,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`jsonview-examples`](json/jsonview-examples/) | `jackson3` | In-memory | `@JsonView` for selective field projection |
 | Basic | [`messaging-kafka`](messaging/kafka/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | Kafka producer/consumer with coroutines |
 | Advanced | [`messaging-kafka-reply`](messaging/kafka-reply/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | Kafka request-reply with `ReplyingKafkaTemplate` plus a collection-scoped producer `callbackFlow` bridge |
+| Advanced | [`messaging-nats-jetstream-flow`](messaging/nats-jetstream-flow/) | `nats`, `coroutines`, `testcontainers` | NATS JetStream (TC) | Cold pull/push Flow, bounded pending queues, manual acknowledgement, redelivery, and cancellation cleanup |
 | Advanced | [`messaging-kafka-outbox-fallback`](messaging/kafka-outbox-fallback/) | `jackson3`, `exposed-jdbc`, `testcontainers`, `micrometer` | PostgreSQL + Kafka (TC) | Kafka-first publication with durable outbox fallback and relay/reconciler recovery |
 | Advanced | [`messaging-kafka-multi-broker-failover`](messaging/kafka-multi-broker-failover/) | `jackson3`, `kafka4`, `testcontainers` | Kafka (3-node KRaft TC) | Leader/coordinator failover, replica/ISR recovery, and redacted evidence |
 
@@ -134,6 +135,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :jackson-examples:test
 ./gradlew :messaging-kafka:test
 ./gradlew :messaging-kafka-reply:test
+./gradlew :messaging-nats-jetstream-flow:test --max-workers=1
 ./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1
 ./gradlew :messaging-kafka-multi-broker-failover:test --tests '*KafkaMultiBrokerFailoverIntegrationTest.dataLeaderFailover' --max-workers=1
 ```
@@ -308,8 +310,9 @@ bluetape4k-workshop/
 ├── json/                   # Jackson 3 serialization
 ├── kotlin/                 # Coroutines, design patterns
 ├── leader/                 # Distributed leader election
-├── messaging/              # Kafka
-│   └── kafka-multi-broker-failover/ # Three-broker KRaft failover reference
+├── messaging/              # Kafka and NATS JetStream
+│   ├── kafka-multi-broker-failover/ # Three-broker KRaft failover reference
+│   └── nats-jetstream-flow/         # Cold pull/push Flow and manual ack lifecycle
 ├── observability/          # Micrometer Observation + Tracing
 ├── optimization/           # Java 25 planning/optimization contracts
 ├── operations/             # Durable job console core + Spring MVC/Ktor adapters
