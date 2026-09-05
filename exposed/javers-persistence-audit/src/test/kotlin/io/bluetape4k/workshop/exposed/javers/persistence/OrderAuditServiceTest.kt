@@ -18,6 +18,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.redisson.client.codec.LongCodec
+import org.redisson.client.codec.StringCodec
+import org.redisson.codec.CompositeCodec
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -161,6 +164,56 @@ class OrderAuditServiceTest {
             service.place("dave", order)
         }
         service.findCurrent(order.id) shouldBeEqualTo null
+    }
+
+    @Test
+    fun `missing head metadata remains an empty initial audit state`() {
+        val service = redisService(repositoryName("missing-head"))
+
+        service.getHistory("unknown-order") shouldHaveSize 0
+        service.getLatestSnapshot("unknown-order") shouldBeEqualTo null
+    }
+
+    @Test
+    fun `malformed Redisson commit id fails closed without exposing identifiers`() {
+        val repositoryName = repositoryName("corrupt-head")
+        val service = redisService(repositoryName)
+        val order = sampleOrder("order-sensitive-894")
+        service.place("alice", order)
+        val rawCommitId = "customer-secret-order-894"
+        val sequenceKey = "javers:$repositoryName:sequence"
+        redis.getMap<String, Long>(
+            sequenceKey,
+            CompositeCodec(StringCodec.INSTANCE, LongCodec.INSTANCE),
+        ).fastPut(rawCommitId, Long.MAX_VALUE)
+
+        val failure = assertFailsWith<IllegalStateException> {
+            RedisOrderAuditFactory.create(repositoryName, redis)
+        }
+        val message = failure.message.orEmpty()
+        message.contains("type=commitId").shouldBeTrue()
+        message.contains(Regex("fingerprint=[0-9a-f]{16}")).shouldBeTrue()
+        message.contains("length=${rawCommitId.length}").shouldBeTrue()
+        message.contains(rawCommitId) shouldBeEqualTo false
+        message.contains(repositoryName) shouldBeEqualTo false
+        message.contains(sequenceKey) shouldBeEqualTo false
+        message.contains(order.id) shouldBeEqualTo false
+    }
+
+    @Test
+    fun `snapshots without Redisson head metadata are not treated as an initial state`() {
+        val repositoryName = repositoryName("missing-head-with-snapshot")
+        redisService(repositoryName).place("alice", sampleOrder("order-existing-894"))
+        redis.keys.delete("javers:$repositoryName:sequence")
+
+        val failure = assertFailsWith<IllegalStateException> {
+            RedisOrderAuditFactory.create(repositoryName, redis)
+        }
+
+        failure.message shouldBeEqualTo
+            "Corrupted Redis audit metadata. persisted Order snapshots exist without head metadata."
+        failure.message.orEmpty().contains(repositoryName) shouldBeEqualTo false
+        failure.message.orEmpty().contains("order-existing-894") shouldBeEqualTo false
     }
 
     private fun redisService(repositoryName: String): OrderAuditService =

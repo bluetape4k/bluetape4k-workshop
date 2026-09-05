@@ -10,6 +10,7 @@ import io.bluetape4k.javers.persistence.kafka.projection.KafkaCdoSnapshotProject
 import io.bluetape4k.javers.persistence.kafka.projection.KafkaCdoSnapshotProjector
 import io.bluetape4k.javers.persistence.redis.repository.LettuceCdoSnapshotRepository
 import io.bluetape4k.javers.repository.CdoSnapshotRepository
+import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodecs
 import io.bluetape4k.testcontainers.mq.KafkaServer
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.apache.kafka.clients.admin.Admin
@@ -185,6 +186,64 @@ class KafkaRedisOrderAuditPipelineTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun `malformed Lettuce sequence fails closed on factory restart`() {
+        val topic = uniqueName("corrupt-sequence")
+        val repositoryName = repositoryName("corrupt-sequence")
+        val rawSequence = "customer-secret-sequence-894"
+        val sequenceKey = "javers:$repositoryName:sequence:set"
+
+        lettuceClient.connect(LettuceBinaryCodecs.lz4Fory<Any>()).use { connection ->
+            connection.sync().hset(sequenceKey, "1.00", rawSequence)
+        }
+
+        val restartFailure = assertFailsWith<IllegalStateException> {
+            KafkaRedisOrderAuditFactory.create(
+                repositoryName = repositoryName,
+                topic = topic,
+                producerConfigs = mapOf(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to ""),
+                consumerConfigs = consumerConfigs(uniqueName("corrupt-restart-group")),
+                redisClient = lettuceClient,
+            )
+        }
+        assertSanitizedHeadFailure(
+            failure = restartFailure,
+            type = "sequence",
+            rawValue = rawSequence,
+            repositoryName = repositoryName,
+            redisKey = sequenceKey,
+        )
+    }
+
+    @Test
+    fun `Lettuce snapshots without head metadata fail before Kafka resources are created`() {
+        val repositoryName = repositoryName("missing-head-with-snapshot")
+        LettuceCdoSnapshotRepository(repositoryName, lettuceClient).use { repository ->
+            JaversBuilder.javers()
+                .registerJaversRepository(repository)
+                .build()
+                .commit("alice", sampleOrder("order-existing-894"))
+        }
+        lettuceClient.connect(LettuceBinaryCodecs.lz4Fory<Any>()).use { connection ->
+            connection.sync().del("javers:$repositoryName:sequence:set")
+        }
+
+        val failure = assertFailsWith<IllegalStateException> {
+            KafkaRedisOrderAuditFactory.create(
+                repositoryName = repositoryName,
+                topic = uniqueName("missing-head-with-snapshot"),
+                producerConfigs = mapOf(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to ""),
+                consumerConfigs = consumerConfigs(uniqueName("missing-head-group")),
+                redisClient = lettuceClient,
+            )
+        }
+
+        failure.message shouldBeEqualTo
+            "Corrupted Redis audit metadata. persisted Order snapshots exist without head metadata."
+        failure.message.orEmpty().contains(repositoryName) shouldBeEqualTo false
+        failure.message.orEmpty().contains("order-existing-894") shouldBeEqualTo false
     }
 
     @Test
@@ -418,6 +477,23 @@ class KafkaRedisOrderAuditPipelineTest {
         val javers = JaversBuilder.javers().build()
         val snapshot = javers.commit("fixture", sampleOrder(orderId)).snapshots.single()
         return JaversCodecs.String.encode(javers.jsonConverter.toJsonElement(snapshot) as JsonObject)
+    }
+
+    private fun assertSanitizedHeadFailure(
+        failure: IllegalStateException,
+        type: String,
+        rawValue: String,
+        repositoryName: String,
+        redisKey: String,
+    ) {
+        val message = failure.message.orEmpty()
+        message.contains("type=$type") shouldBeEqualTo true
+        message.contains(Regex("fingerprint=[0-9a-f]{16}")) shouldBeEqualTo true
+        message.contains("length=${rawValue.length}") shouldBeEqualTo true
+        message.contains(rawValue) shouldBeEqualTo false
+        message.contains(repositoryName) shouldBeEqualTo false
+        message.contains(redisKey) shouldBeEqualTo false
+        message.contains("order-sensitive-894") shouldBeEqualTo false
     }
 
     private fun partitionInfo(topic: String, partition: Int): PartitionInfo =
