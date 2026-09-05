@@ -10,7 +10,10 @@ from pathlib import Path
 def image_names(version: str) -> list[str]:
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
         raise ValueError("Nightly requires an official stable dependencies version")
-    return [f"bluetape4k/{name}:{version}" for name in ("mock-web-server", "mock-webflux-server")]
+    return [
+        f"bluetape4k/{name}:{version}"
+        for name in ("mock-web-server", "mock-webflux-server")
+    ]
 
 
 def read_version(catalog: Path) -> str:
@@ -26,7 +29,9 @@ def inspect_images(version: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--catalog", type=Path, default=Path("gradle/libs.versions.toml"))
+    parser.add_argument(
+        "--catalog", type=Path, default=Path("gradle/libs.versions.toml")
+    )
     parser.add_argument("--github-output", type=Path)
     parser.add_argument("--inspect", action="store_true")
     args = parser.parse_args()

@@ -25,6 +25,9 @@
 - 기존 ecosystem 검사 단위 테스트: 113건 통과.
 - Nightly 이미지·범위 계약 테스트: 6건 통과. 잘못된 branch와 추가 파일은 거부한다.
 - 실제 변경 경로를 넣은 ecosystem 검사, `actionlint`, `git diff --check`: 통과.
+- Python 3.13 기준 `ruff check`와 `ruff format --check`: 통과. 추가 정적 검사에서 발견한
+  테스트 import·중첩 context manager·dict 생성 구문을 정리하고 계약 테스트 6건을 다시 통과했다.
+  해당 후속 diff는 inline으로 재검토했으며 동작·예외·외부 호출 인자 변경은 없다.
 - 구현 커밋 `2408448daedcca5f904735d71d215e1e03acda6d`의 `slow-provider` 단독 실행과
   job-core 전체 local-reference 프로필 실행: 통과. 후자는 `nightly-949-all-20260905` 보고서로
   `worker-restart`를 포함하며, 종료 시 남은 토폴로지는 0이다.
