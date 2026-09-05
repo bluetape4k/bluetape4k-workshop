@@ -53,6 +53,31 @@
   },
   "follow_up_scopes": [
     {
+      "scope_id": "issue-948-949-nightly-recovery",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "fix/nightly-mock-server-2-0-0",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [948, 949],
+      "allowed_paths": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/nightly.yml",
+        ".github/scripts/nightly-mock-images.py",
+        ".github/scripts/test_nightly_mock_images.py",
+        "graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbstractAbuserDetectionTest.kt",
+        "graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser/AbstractAbuserDetectionSuspendTest.kt",
+        "operations/job-console-core/src/testFixtures/kotlin/io/bluetape4k/workshop/operations/jobconsole/highcontention/JobConsoleHighContentionAdapter.kt",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-05-nightly-mock-server-version-pin.md",
+        "docs/review/2026-09-05-nightly-recovery.md"
+      ],
+      "review_artifact": "docs/review/2026-09-05-nightly-recovery.md"
+    },
+    {
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
@@ -1200,8 +1225,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260905T-issue-887-knowledge-schema-drift-scope",
-    "checksum": "4f8e19840e1d8f4c778ac12f234d0713db5c8946f48e5d4c8032f3ec953b7847"
+    "receipt_id": "20260905T122947Z-9dcedafd",
+    "checksum": "486bd50f1cadbf2cbdf3f9c8b595f0b17eb2547b7892aca56add2ca5d714edc5"
   },
   "planned_scope_replan_receipts": {
   },

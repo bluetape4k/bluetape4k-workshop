@@ -15,7 +15,9 @@ Nightly가 `bluetape4k-projects`의 `develop`을 checkout했다. 현재 `develop
 
 ## 결정
 
-`.github/workflows/nightly.yml`의 mock 서버 소스 checkout을 공식 `2.0.0` tag로 고정한다.
+`.github/scripts/nightly-mock-images.py`가 소비자 BOM 버전을 읽어 mock 서버 소스 checkout에
+전달한다. 현재 공식 `2.0.0` tag를 선택하며, snapshot이나 branch 이름은 거부한다.
+이미지 빌드 직후 두 소비자 태그를 `docker image inspect`로 확인하여 테스트 전에 실패를 감지한다.
 소비자 BOM을 올릴 때는 헬퍼 artifact 버전과 두 mock 이미지 tag를 함께 확인하고, `develop`
 checkout을 사용하지 않는다.
 
@@ -34,7 +36,17 @@ checkout을 사용하지 않는다.
   `bluetape4k-testcontainers`와 Spring 변형 모두 2.0.0으로 해석됐다.
 - `actionlint .github/workflows/nightly.yml`: 통과.
 - 수정 PR head `26c23afe2e92f00f922252015b5b9d4bfa0afc0c` 수동 Nightly `33959370148`:
-  wrapper/compile-only 통과, mock 이미지 빌드 통과 후 테스트 단계로 진입했다.
+  wrapper/compile-only와 mock 이미지 빌드는 통과했다. 전체 실행은 별도 graph 테스트 4건과
+  job-core `slow-provider` 검사 실패로 종료됐다.
+
+## 함께 확인한 테스트 경계
+
+- 존재하지 않는 TinkerGraph 정점은 유효한 숫자 ID로 조회한다. 문자열 형식 오류와
+  존재하지 않는 ID를 혼동하지 않는다. 해당 수정 후 graph 테스트 45건이 통과했다.
+- 일시 정지한 worker의 연결 수는 그 worker 전용 풀에서 측정한다. 병렬 작업이 사용하는
+  전체 풀을 측정하면 정상 연결도 누수로 오판한다. core도 Spring/Ktor의 전용 풀 방식을 따른다.
+- 기존 train의 넓은 경로 규칙이 일반 버그 수정 PR과 충돌하면 정확한 head/base와 파일 목록을
+  후속 범위로 등록한다. 이번 수정은 검사 비활성화나 과거 train 전체 상태 개편을 포함하지 않는다.
 
 ## 향후 지침
 

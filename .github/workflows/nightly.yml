@@ -108,17 +108,22 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: true
+      - name: Resolve mock image version from consumer BOM
+        id: mock-version
+        run: python3 .github/scripts/nightly-mock-images.py --github-output "$GITHUB_OUTPUT"
       - name: Checkout bluetape4k projects
         uses: actions/checkout@v7.0.1
         with:
           repository: bluetape4k/bluetape4k-projects
-          ref: 2.0.0
+          ref: ${{ steps.mock-version.outputs.version }}
           path: .bluetape4k-projects
       - name: Build bluetape4k mock server images
         working-directory: .bluetape4k-projects
         run: ./gradlew -x detekt :bluetape4k-mock-web-server:jibDockerBuild :bluetape4k-mock-webflux-server:jibDockerBuild --no-configuration-cache --max-workers=1
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+      - name: Verify consumer mock images exist locally
+        run: python3 .github/scripts/nightly-mock-images.py --inspect
       - name: Run tests
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
