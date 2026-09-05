@@ -5,6 +5,8 @@
 This module extends the small `exposed/javers-audit` boundary with a durable
 JaVers repository. Exposed JDBC still owns only the current `OrderTable` row,
 while Redis stores queryable JaVers snapshots through `RedissonCdoSnapshotRepository`.
+An exact-instance adapter limits the Redis range and snapshot decoding before
+the result reaches the service.
 
 Use it when learners need to see what changes after moving from in-memory
 JaVers history to an external audit store, without adding web controllers or a
@@ -23,7 +25,7 @@ distributed transaction.
 | `place(author, order)` | Validates the author, commits the initial JaVers snapshot to Redis, then upserts the current Exposed row |
 | `markPaid(author, orderId)` | Reads the current row, commits an updated JaVers snapshot, then materializes the paid row |
 | `delete(author, orderId)` | Records a terminal JaVers snapshot with `commitShallowDelete`, then deletes the current row |
-| `getHistory(orderId)` | Queries Redis-backed JaVers snapshots by instance id and returns them oldest-first |
+| `getHistory(orderId, limit = 100)` | Pushes a `1..100` limit into the instance query and returns bounded snapshots newest-first |
 | `getLatestSnapshot(orderId)` | Uses bluetape4k `latestSnapshotOrNull<Order>()` to read the latest snapshot |
 | `diff(old, new)` | Compares two immutable orders without writing to JaVers or Exposed |
 
@@ -32,12 +34,32 @@ distributed transaction.
 | Backend | Best fit | Read behavior |
 |---|---|---|
 | In-memory JaVers | First audit-boundary lesson in `exposed/javers-audit` | History is lost when the service is rebuilt |
-| Redis / Redisson | This module's durable audit history path | History and latest snapshots remain queryable after rebuilding the service |
+| Redis / Redisson | This module's durable audit history path | Exact-instance history reads only the requested tail range and decodes it newest-first |
 | Kafka JaVers repository | Event-stream fan-out and downstream projections | Write-only stream; project events into Redis, Exposed, or another read model before querying history |
 
 The module intentionally implements the Redis path because it can both persist
 and read JaVers snapshots. Kafka is documented as a write-only audit stream
 boundary so learners do not assume it can answer `getHistory()` by itself.
+
+## Bounded History Contract
+
+`getHistory(orderId, limit)` accepts `1..100`; the one-argument JVM overload
+uses 100. The service passes the limit to `QueryBuilder.limit` and does not sort
+or truncate an already materialized result. Results follow the JaVers 2.0.0
+consumer contract: newest-first. This intentionally changes the former
+oldest-first workshop behavior, so callers that used `first()` as the initial
+snapshot must migrate to `last()` or request an explicit presentation order.
+
+For the filter-free exact-instance query, `BoundedRedissonCdoSnapshotRepository`
+reads `range(-limit, -1)` from the existing snapshot list and decodes only that
+range. Queries with skip, aggregate, author/date/version, commit, property, or
+snapshot-type filters fall back to the upstream repository to preserve their
+semantics.
+
+An empty result can mean either an unknown order or an order with no audit
+commit; determine existence from the materialized store. `CdoSnapshot` contains
+domain fields, so an HTTP/API caller must enforce authorization and redaction
+before exposing it.
 
 ## Order Schema
 
@@ -66,7 +88,7 @@ val order = Order(
 service.place("alice", order)
 val paid = service.markPaid("alice", order.id)
 
-val history = service.getHistory(order.id)
+val history = service.getHistory(order.id, limit = 2)
 val latest = service.getLatestSnapshot(order.id)
 val diff = service.diff(order, paid)
 
@@ -87,4 +109,5 @@ contract, not a replacement for a cross-store distributed transaction.
 ```
 
 The test suite covers Redis-backed history survival after service rebuild,
-read-only diffs, terminal delete snapshots, and audit sink failure propagation.
+bounded decode counts, newest-first ordering, fallback query semantics, JVM
+overloads, terminal delete snapshots, and audit sink failure propagation.

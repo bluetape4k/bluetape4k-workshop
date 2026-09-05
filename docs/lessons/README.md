@@ -11,6 +11,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #889 tokenizer dictionary preload와 readiness](2026-09-05-issue-889-dictionary-preload-readiness.md)
 - [Issue #890 VersionedDictionary 런타임 reload와 rollback](2026-09-05-issue-890-versioned-dictionary-runtime.md)
 - [Issue #891 NFKC offset와 normalization 경계](2026-09-05-issue-891-nfkc-offset-normalization.md)
+- [Issue #892 JaVers history limit pushdown](2026-09-05-issue-892-javers-history-limit.md)
 
 Use this structure for each lesson:
 

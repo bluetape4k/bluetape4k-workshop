@@ -24,7 +24,7 @@ review decision을 저장하고, 승인된 제안만 current row와 JaVers audit
 | `submitProposal(requester, proposed)` | current row를 읽고 current/proposed를 JaVers로 비교한 뒤 changed-field summary와 함께 pending proposal 저장 |
 | `approveProposal(reviewer, proposalId, reason)` | proposed aggregate를 JaVers에 commit하고 current row를 갱신한 뒤 proposal을 approved로 표시 |
 | `rejectProposal(reviewer, proposalId, reason)` | rejection reason만 기록하고 current row와 JaVers snapshot은 변경하지 않음 |
-| `getHistory(policyId)` | approved JaVers snapshot만 오래된 순서로 반환 |
+| `getHistory(policyId, limit = 100)` | `1..100` query limit을 pushdown하고 approved JaVers snapshot을 newest-first로 반환 |
 
 ## Approval Workflow와 Append-Only Audit의 차이
 
@@ -33,6 +33,18 @@ review decision을 저장하고, 승인된 제안만 current row와 JaVers audit
 | Append-only audit (`exposed/javers-audit`) | save 작업마다 aggregate state를 commit | 별도 모델 없음. 이미 저장된 state가 audit history |
 | Approval workflow (이 모듈) | 최초 publish와 approved proposal만 aggregate state commit | `PolicyProposalTable`의 durable decision이며 JaVers snapshot이 아님 |
 | Redis-backed audit (`exposed/javers-persistence-audit`) | Redis-backed JaVers repository에 commit 저장 | Approval gate가 아니라 persistence concern |
+
+## Bounded History 계약
+
+`getHistory(policyId, limit)`은 `1..100`을 허용하고 한 인자 JVM overload는 100을 사용합니다.
+JaVers가 snapshot을 반환하기 전에 `QueryBuilder.limit`을 적용하며 materialize된 목록을 다시
+정렬하거나 잘라내지 않습니다. Approved snapshot은 2.0.0 consumer 계약에 맞춰
+newest-first로 반환합니다. 이는 이전 oldest-first 예제에서의 behavioral migration입니다.
+
+Rejected proposal은 계속 snapshot을 추가하지 않습니다. 빈 history는 unknown policy와
+approved commit이 없는 policy를 구분하지 않으므로 존재 확인 수단으로 사용하면 안 됩니다.
+`CdoSnapshot`은 policy field를 포함하므로 HTTP/API 경계로 노출하는 호출자가 authorization과 redaction을
+추가해야 합니다.
 
 ## Domain Schema
 
@@ -71,7 +83,7 @@ val proposal = service.submitProposal("bob", proposed)
 proposal.changedFields.map { it.path } // ["pricing.amount", "title"]
 
 service.approveProposal("carol", proposal.id, "Pricing reviewed")
-val approvedHistory = service.getHistory(100L)
+val approvedHistory = service.getHistory(100L, limit = 10)
 ```
 
 ## 테스트
@@ -80,5 +92,6 @@ val approvedHistory = service.getHistory(100L)
 ./gradlew :exposed-javers-approval-workflow:test
 ```
 
-테스트는 scalar 및 nested value-object diff, 승인 시 current row와 JaVers history 갱신,
-거절 시 둘 다 변경되지 않는 동작, audit lookup이 approved snapshot만 반환하는 동작을 검증합니다.
+테스트는 scalar 및 nested value-object diff, bounded newest-first history, JVM overload,
+invalid limit, 승인 시 current row와 JaVers history 갱신, 거절 시 둘 다 변경되지 않는 동작을
+검증합니다.

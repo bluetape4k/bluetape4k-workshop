@@ -73,7 +73,7 @@ class ProductPolicyApprovalServiceTest {
             stored.shouldNotBeNull()
             stored.status shouldBeEqualTo PolicyStatus.RETIRED
             stored.pricing.approvalLimit shouldBeEqualTo BigDecimal("1000.00")
-            service.getHistory(110L).map { it.type } shouldBeEqualTo listOf(SnapshotType.INITIAL, SnapshotType.UPDATE)
+            service.getHistory(110L).map { it.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
         }
 
     @Test
@@ -116,7 +116,8 @@ class ProductPolicyApprovalServiceTest {
 
             val history = service.getHistory(130L)
             history shouldHaveSize 2
-            history.map { it.type } shouldBeEqualTo listOf(SnapshotType.INITIAL, SnapshotType.UPDATE)
+            history.map { it.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
+            history.map { it.version } shouldBeEqualTo listOf(2L, 1L)
             service.findProposal(rejected.id).shouldNotBeNull().status shouldBeEqualTo ProposalStatus.REJECTED
         }
 
@@ -135,7 +136,42 @@ class ProductPolicyApprovalServiceTest {
             assertFailsWith<IllegalArgumentException> {
                 service.approveProposal("dave", proposal.id, "Duplicate approval")
             }
-            service.getHistory(135L).map { it.type } shouldBeEqualTo listOf(SnapshotType.INITIAL, SnapshotType.UPDATE)
+            service.getHistory(135L).map { it.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
+        }
+
+    @Test
+    fun `bounded history returns newest approved snapshots and preserves JVM overloads`() =
+        withApprovalService(TestDB.H2) { service ->
+            val current = activePolicy(id = 138L)
+            service.publishInitial("alice", current)
+            val proposal = service.submitProposal("bob", current.copy(title = "Bounded Policy"))
+            service.approveProposal("carol", proposal.id, "Approved")
+
+            val latest = service.getHistory(138L, 1)
+            latest shouldHaveSize 1
+            latest.single().type shouldBeEqualTo SnapshotType.UPDATE
+            latest.single().version shouldBeEqualTo 2L
+            service.getHistory(138L, 100) shouldHaveSize 2
+            service.getHistory(999_999L).shouldBeEmpty()
+
+            val oneArgument = service.javaClass.getMethod("getHistory", Long::class.javaPrimitiveType)
+            val twoArguments = service.javaClass.getMethod(
+                "getHistory",
+                Long::class.javaPrimitiveType,
+                Int::class.javaPrimitiveType,
+            )
+            (oneArgument.invoke(service, 138L) as List<*>) shouldHaveSize 2
+            (twoArguments.invoke(service, 138L, 1) as List<*>) shouldHaveSize 1
+        }
+
+    @Test
+    fun `history rejects invalid limits before querying JaVers`() =
+        withApprovalService(TestDB.H2) { service ->
+            listOf(0, -1, 101).forEach { invalidLimit ->
+                assertFailsWith<IllegalArgumentException> {
+                    service.getHistory(140L, invalidLimit)
+                }
+            }
         }
 
     @Test
