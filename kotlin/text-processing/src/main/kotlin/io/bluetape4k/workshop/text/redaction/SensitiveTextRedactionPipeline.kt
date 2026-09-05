@@ -188,6 +188,7 @@ class SensitiveRedactionPolicy private constructor(
         /**
          * immutable policy snapshot 을 생성합니다.
          */
+        @JvmOverloads
         fun of(
             rules: Collection<SensitiveRedactionRule>,
             maskChar: Char = '*',

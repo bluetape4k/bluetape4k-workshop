@@ -77,6 +77,13 @@ class AbuseWordFilterTest {
     }
 
     @Test
+    fun `preserves the JVM one argument constructor`() {
+        val constructor = AbuseWordFilter::class.java.getConstructor(Collection::class.java)
+
+        constructor.newInstance(listOf("spam")).containsAbuse("spam").shouldBeTrue()
+    }
+
+    @Test
     fun `NFKC maps compatibility expansion to the original source range`() {
         val nfkcFilter = AbuseWordFilter(listOf("(주)"), NormalizationForm.NFKC)
         val input = "회사명: ㈜블루테이프"

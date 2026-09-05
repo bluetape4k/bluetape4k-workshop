@@ -28,19 +28,23 @@
   `ApplicationContextRunner`에서 `NFKC` property와 compatibility fixture를 실행한다.
 - 과도한 combining sequence가 CPU 경로를 다시 열 수 있음 — 1,025 mark 회귀가
   `IllegalArgumentException`과 raw-free message를 고정한다.
+- normalization 인자 추가로 기존 JVM descriptor가 사라질 수 있음 — `@JvmOverloads`와 reflection
+  회귀 테스트로 `AbuseWordFilter(Collection)` 및 `SensitiveRedactionPolicy.of(Collection, char, int)`를 보존한다.
+- English README의 language guard를 지키기 위해 compatibility 문자를 `U+3231`/`\u3231`로 표기했지만
+  stale guard가 literal `㈜`만 요구해 GNU grep 환경에서 실패함 — English와 Korean 표기 계약을 분리해 검증한다.
 
 ## 검증 증거
 
 - Targeted NFKC red 단계가 기존 signature 부재로 compile fail한 뒤 구현 후 통과
-- Clean module tests: `kotlin-text-processing` 63개, `spring-boot-text-moderation-api` 11개,
-  합계 74개 통과, failure/error 0
+- Clean module tests: `kotlin-text-processing` 65개, `spring-boot-text-moderation-api` 11개,
+  합계 76개 통과, failure/error 0
 - Root detekt 112 task, README language/parity, stale guard, ecosystem checker unit 113개,
   actionlint, manifest JSON과 diff-check 통과
 - 두 module에서 `io.github.bluetape4k.text:text-search:1.0.0`이 root
   `bluetape4k-dependencies:2.0.0` constraint로 resolve됨
-- Exact-head hosted CI와 GitHub metadata는 PR 생성 후 확인한다.
+- BSD/GNU grep stale guard, README language/parity와 exact-head hosted CI는 PR head 갱신 후 확인한다.
 
 ## 판정
 
-현재 diff 기준 P0/P1 0건이다. Locale 자동 선택, streaming scanner와 새 PII classifier는
+현재 diff 기준 P0/P1/P2 0건이다. Locale 자동 선택, streaming scanner와 새 PII classifier는
 Issue #891 범위 밖이다.

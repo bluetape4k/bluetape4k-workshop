@@ -41,6 +41,24 @@ class SensitiveTextRedactionPipelineTest {
     private val keyword = "account number"
 
     @Test
+    fun `preserves the JVM three argument policy factory`() {
+        val factory = SensitiveRedactionPolicy.Companion::class.java.getMethod(
+            "of",
+            Collection::class.java,
+            Char::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType,
+        )
+        val rules = listOf(SensitiveRedactionRule.keyword("keyword.safe", "keyword", "safe"))
+
+        val policy = factory.invoke(SensitiveRedactionPolicy.Companion, rules, '#', 1_024)
+            as SensitiveRedactionPolicy
+
+        policy.maskChar shouldBeEqualTo '#'
+        policy.maxTextLength shouldBeEqualTo 1_024
+        policy.keywordNormalization shouldBeEqualTo NormalizationForm.NFC
+    }
+
+    @Test
     fun `redacts email phone token and configured keyword deterministically`() {
         val input = "Contact $email at $phone with $token for $keyword review."
         val expected = "Contact ${"*".repeat(email.length)} at ${"*".repeat(phone.length)} " +

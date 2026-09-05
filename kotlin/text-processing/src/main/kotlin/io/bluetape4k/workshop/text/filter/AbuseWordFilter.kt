@@ -29,7 +29,7 @@ import io.bluetape4k.text.search.ahoCorasick
  * @param abuseWords abuse 로 표시할 단어 collection 입니다.
  * @param normalization keyword와 입력에 적용할 Unicode normalization 형식입니다.
  */
-class AbuseWordFilter(
+class AbuseWordFilter @JvmOverloads constructor(
     abuseWords: Collection<String>,
     private val normalization: NormalizationForm = NormalizationForm.NFC,
 ) {

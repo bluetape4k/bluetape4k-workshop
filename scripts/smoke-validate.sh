@@ -1112,7 +1112,9 @@ case "${1:-help}" in
        contains_pattern 'properties\.normalization' "$nfkc_config" && \
        contains_pattern 'NormalizationForm\.NFKC' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
        contains_pattern 'normalization=NFKC' "$nfkc_context_tests" && \
-       contains_pattern '㈜' "$nfkc_filter_tests" "$nfkc_redaction_tests" "$nfkc_context_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md && \
+       contains_pattern '㈜' "$nfkc_filter_tests" "$nfkc_redaction_tests" "$nfkc_context_tests" kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.ko.md && \
+       contains_pattern 'U\+3231' kotlin/text-processing/README.md spring-boot/text-moderation-api/README.md && \
+       contains_pattern '\\u3231' kotlin/text-processing/README.md spring-boot/text-moderation-api/README.md && \
        contains_pattern '1_025' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
        contains_pattern 'shouldNotContain raw' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
        contains_pattern '#891' docs/coverage-matrix.md docs/lessons/README.md "$nfkc_lesson" && \

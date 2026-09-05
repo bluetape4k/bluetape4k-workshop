@@ -46,5 +46,5 @@ git diff --check
 - [x] NFC default·NFKC 원문 range·bounded failure 설계와 사전 review 완료
 - [x] red tests와 normalization option 구현
 - [x] EN/KO 문서·coverage·manifest·stale guard·lesson 갱신
-- [x] clean tests 74/74, detekt, README, stale/ecosystem/actionlint와 implementation review 완료
+- [x] clean tests 76/76, detekt, README, BSD/GNU stale guard, ecosystem/actionlint와 implementation review 완료
 - [ ] PR exact-head hosted CI와 metadata 확인
