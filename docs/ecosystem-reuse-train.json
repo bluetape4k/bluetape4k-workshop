@@ -1125,7 +1125,7 @@
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-889-dictionary-preload-readiness",
-      "expected_base_ref": "develop",
+      "expected_base_ref": "feat/issue-888-native-algorithm-observation",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -1258,8 +1258,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260905T-issue-889-dictionary-preload-readiness-scope",
-    "checksum": "6a8dd4a9ad99189149c06791b666566cf2e832c03d04324e2f3a47ac6db45cd1"
+    "receipt_id": "20260905T-issue-889-dictionary-preload-readiness-stacked-base",
+    "checksum": "93aa72a1bf1783de5a4586d5831b099efd8bf94f7a686e60c102e335b8be3edf"
   },
   "planned_scope_replan_receipts": {
   },
