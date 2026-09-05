@@ -5,6 +5,8 @@ import io.bluetape4k.lingua.allLanguageDetector
 import io.bluetape4k.text.search.AhoCorasickAutomaton
 import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.text.search.ahoCorasick
+import io.bluetape4k.tokenizer.utils.DictionaryVersion
+import io.bluetape4k.workshop.textmoderation.service.VersionedModerationDictionary
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -27,9 +29,27 @@ class TextModerationConfig {
             ignoreCase = true
             allowOverlaps = true
             normalization = NormalizationForm.NFC
-            properties.blockwords
-                .filter { it.isNotBlank() }
-                .distinct()
+            canonicalBlockwords(properties)
                 .forEach { word -> keyword(word, word) }
         }
+
+    @Bean
+    fun versionedModerationDictionary(
+        properties: TextModerationProperties,
+        moderationAutomaton: AhoCorasickAutomaton<String>,
+    ): VersionedModerationDictionary {
+        val words = canonicalBlockwords(properties)
+        return VersionedModerationDictionary.fromAutomaton(
+            automaton = moderationAutomaton,
+            words = words,
+            version = DictionaryVersion("moderation-blockwords", 1),
+            historyCapacity = 2,
+        )
+    }
+
+    private fun canonicalBlockwords(properties: TextModerationProperties): List<String> =
+        properties.blockwords
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .distinct()
 }

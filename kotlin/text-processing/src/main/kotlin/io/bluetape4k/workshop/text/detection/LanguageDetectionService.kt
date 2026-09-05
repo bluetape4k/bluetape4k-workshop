@@ -5,6 +5,8 @@ import com.github.pemistahl.lingua.api.LanguageDetector
 import io.bluetape4k.lingua.allLanguageDetector
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Lingua library 를 기반으로 하는 language detection service 입니다.
@@ -30,6 +32,7 @@ class LanguageDetectionService {
         withMinimumRelativeDistance(0.0)
         withLowAccuracyMode()
     }
+    private val detectorLock = ReentrantLock()
 
     /**
      * 주어진 [text] 에 가장 가능성이 높은 언어를 감지합니다.
@@ -41,7 +44,7 @@ class LanguageDetectionService {
      */
     fun detectLanguage(text: String): Language? {
         if (text.isBlank()) return null
-        val detected = detector.detectLanguageOf(text)
+        val detected = detectorLock.withLock { detector.detectLanguageOf(text) }
         log.debug { "detectLanguage length=${text.length} -> $detected" }
         return if (detected == Language.UNKNOWN) null else detected
     }
@@ -56,7 +59,7 @@ class LanguageDetectionService {
      */
     fun computeConfidenceValues(text: String): Map<Language, Double> {
         if (text.isBlank()) return emptyMap()
-        val values = detector.computeLanguageConfidenceValues(text)
+        val values = detectorLock.withLock { detector.computeLanguageConfidenceValues(text) }
         log.debug { "computeConfidenceValues length=${text.length} -> top=${values.entries.firstOrNull()?.key}" }
         return values.entries
             .sortedByDescending { it.value }

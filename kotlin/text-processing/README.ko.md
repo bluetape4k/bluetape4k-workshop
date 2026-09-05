@@ -5,7 +5,8 @@
 이 모듈은 `bluetape4k-text`와 작은 Kotlin helper로 애플리케이션 내부에서 실행하는
 텍스트 처리 유틸리티를 보여줍니다. 금칙어 필터링, 언어 감지, 검색/색인 전 텍스트 정규화,
 시작 단계 사전 준비 상태, highlight 결과를 반환하는 동기/코루틴 다국어 검색 인덱스,
-그리고 audit-safe span metadata를 반환하는 작은 sensitive text redaction pipeline을 다룹니다.
+전체 index generation 원자 교체, 그리고 audit-safe span metadata를 반환하는 작은
+sensitive text redaction pipeline을 다룹니다.
 
 ## 아키텍처
 
@@ -30,6 +31,7 @@
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | 문서와 query의 언어를 감지하고, inverted term index를 만든 뒤, match 점수와 source-span highlight를 반환 |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index 기준 상태, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | suspend preload attempt 하나를 공유하고 두 dictionary 준비 전에는 요청 작업을 거절 |
+| `VersionedMultilingualSearchIndex` | Korean `DictionarySnapshot`, exact-noun Aho-Corasick matcher, `VersionedDictionary` | 완성된 noun-dictionary/index generation만 공개하고 각 검색이 사용한 정확한 revision을 반환 |
 | `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 작은 policy를 검증하고 email/phone/token/keyword span을 찾은 뒤, overlap merge, same-length masking, safe metadata 반환 |
 
 ## 사용 예
@@ -130,6 +132,42 @@ hits.first().matches           // match term의 원문 start/end offset
 - Lingua detector 생성 비용이 크므로 문서와 query 모두 같은 `LanguageDetectionService`를 재사용합니다.
 - Highlighting은 원문에 대한 literal term matching입니다. stemming, semantic search, typo-tolerant search는 이 예제의 범위가 아닙니다.
 - Overlap match는 `SearchHighlightHit.matches`에 보존합니다. 다만 `highlightedText`는 Aho-Corasick tokenization의 deterministic non-overlap fragment를 사용하므로 중첩 `<mark>` tag는 만들지 않습니다.
+
+### Versioned runtime 검색 인덱스
+
+부분적으로 다시 만들어진 검색 generation을 노출하지 않고 Korean noun dictionary와 문서를
+함께 교체해야 한다면
+`VersionedMultilingualSearchIndex`를 사용합니다.
+
+```kotlin
+val index = VersionedMultilingualSearchIndex.indexOf(
+    source = VersionedMultilingualSearchSource(
+        koreanDictionary = KoreanDictionaryProvider.currentDictionarySnapshot(),
+        documents = v1Documents,
+    ),
+    historyCapacity = 2,
+)
+
+val v1 = index.search("서울카페")
+val v2Dictionary = KoreanDictionaryProvider.reloadDictionaries(
+    DictionaryVersion("korean-dictionary", 2),
+    newKoreanDictionaries,
+)
+index.reload(VersionedMultilingualSearchSource(v2Dictionary, v2Documents))
+val v2 = index.search("서울카페")
+index.rollback()
+```
+
+`search`는 캡처한 revision과 hit를 묶은 `VersionedSearchResult`를 반환합니다. Versioned 경로는
+전달받은 public snapshot으로 Korean noun exact-match Aho-Corasick matcher를 만들고 document와
+query tokenization에 같은 matcher를 주입합니다. 공개 후에는 global Korean provider를 다시 읽지
+않습니다. Loader와 전체 `MultilingualSearchIndex` build가 끝난 뒤 완성된
+`DictionarySnapshot`만 공개하므로 실패하거나 stale인 candidate는 현재 generation과 제한된
+rollback history를 바꾸지 않습니다. 이 exact-noun 동작은 기존 morphology 중심
+`MultilingualSearchIndex`보다 의도적으로 좁고 Japanese/English는 기존 tokenizer 경로를
+유지합니다. Coroutine caller는 자신이 소유한 dispatcher에서 source를 준비한 뒤 동기 publish
+API를 호출해야 합니다. Candidate document와 noun은 index 생성 전에 per-entry와 aggregate
+character limit을 적용한 bounded snapshot으로 복사합니다.
 
 ### Coroutine-safe 검색 인덱스
 

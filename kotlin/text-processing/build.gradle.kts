@@ -329,6 +329,8 @@ configurations {
 }
 
 dependencies {
+    // bluetape4k-text — VersionedDictionary runtime snapshot 예제입니다.
+    implementation(libs.bluetape4k.text.core)
     // bluetape4k-text — AhoCorasick pattern search 예제입니다.
     implementation(libs.bluetape4k.text.search)
     // bluetape4k-text — Lingua language detection 예제입니다.
