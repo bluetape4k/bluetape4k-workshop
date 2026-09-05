@@ -100,6 +100,7 @@ PY
 |---|---:|---|
 | `workshop.text-moderation.max-text-characters` | `2000` | 허용하는 request text 최대 길이 |
 | `workshop.text-moderation.blockwords` | `spam,badword,abuse,hate` | moderation automaton에 등록되는 단어 |
+| `workshop.text-moderation.normalization` | `NFC` | blockword와 request text에 적용할 Unicode normalization (`NONE`, `NFC`, `NFKC`) |
 
 기본 blockword 목록은 의도적으로 작게 유지했습니다. 학습자가 configuration에서 response까지
 전체 흐름을 쉽게 따라갈 수 있게 하기 위한 선택입니다.
@@ -126,6 +127,21 @@ history를 모두 보존합니다. Log에는 dictionary name, revision, word cou
 count만 남기며 raw blockword와 moderation text는 기록하지 않습니다. Loader collection은
 순회하면서 bounded snapshot으로 복사하고, 동시 singleton 호출의 shared Lingua detector 접근은
 직렬화합니다.
+
+Compatibility 문자가 moderation 정책에 포함될 때만 NFKC를 선택합니다.
+
+```yaml
+workshop:
+  text-moderation:
+    normalization: NFKC
+    blockwords:
+      - "(주)"
+```
+
+이 설정에서는 `(주)`가 원문의 `㈜`도 탐지합니다. Automaton이 normalized match를 원문의
+한 code-unit span으로 복원하므로 `회사명: ㈜블루테이프`는 `회사명: *블루테이프`가 됩니다.
+기본값은 하위 호환되는 NFC입니다. Normalization segment가 1,024 code-unit을 넘으면 request
+원문을 노출하지 않고 거부합니다.
 
 ## Used Bluetape4k features
 
@@ -160,6 +176,7 @@ count만 남기며 raw blockword와 moderation text는 기록하지 않습니다
 - language detector와 automaton bean의 singleton 재사용
 - reload, rollback, bounded history, stale/실패 candidate 보존
 - 동시 요청이 완성된 이전 또는 새 revision 하나만 관찰하는지 검증
+- NFKC property binding, compatibility 문자 matching, 원문 길이 masking
 
 ## 의존성 메모
 

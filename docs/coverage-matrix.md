@@ -60,6 +60,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-graph-io` | `graph/io-pipeline` | ✅ Good | 운영용 durable store와 graph+store atomic exactly-once는 범위 밖 | `InMemoryGraphImportCheckpointStore`를 사용한 CSV 실패·재개 | 공유 CAS/lease store와 backend transaction을 포함한 운영 연동 | #863 |
 | `bluetape4k-text-korean` / `bluetape4k-text-japanese` | `kotlin/text-processing` | ✅ Good | 기존 동기 facade는 첫 요청에서 dictionary load가 발생할 수 있고 준비 중 요청의 명시적 거절 경계가 없었음 | 두 processor suspend preload의 단일 startup attempt와 `NOT_READY`/`LOADING`/`READY` gate | 실패·취소 뒤 원래 예외 전파와 retry, 동시 caller single initializer, 기존 index 결과 parity | #889 |
 | `bluetape4k-text-core` | `kotlin/text-processing`, `spring-boot/text-moderation-api` | ✅ Good | application-owned control plane과 durable revision 저장소는 범위 밖 | `VersionedDictionary`로 완성된 검색 index·blockword automaton generation을 원자 교체하고 bounded rollback | 인증·감사·durable revision store를 갖춘 운영 control plane | #890 |
+| `bluetape4k-text-search` | `kotlin/text-processing`, `spring-boot/text-moderation-api` | ✅ Good | locale 자동 정책과 streaming normalization은 범위 밖 | 선택형 NFC/NFKC matching, compatibility expansion의 원문 offset 복원, 1,024 segment fail-fast | locale별 정책 registry와 streaming offset mapping | #891 |
 
 ---
 

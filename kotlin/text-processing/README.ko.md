@@ -24,7 +24,7 @@ sensitive text redaction pipeline을 다룹니다.
 
 | class | 사용 API | 계약 |
 |---|---|---|
-| `AbuseWordFilter` | `text-search`의 `AhoCorasickAutomaton` | 대소문자 무시, NFC 정규화, overlap 허용; match span을 `*`로 masking |
+| `AbuseWordFilter` | `text-search`의 `AhoCorasickAutomaton` | 대소문자를 무시한 NFC/NFKC matching과 overlap을 지원하고 match를 원문 span으로 복원해 `*`로 masking |
 | `LanguageDetectionService` | `bluetape4k-text-lingua`의 Lingua detector | detector를 한 번 만들고 재사용하며, blank/unknown text는 `null` 반환 |
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | 여러 coroutine caller가 공유해도 detector 접근을 직렬화 |
 | `TextNormalizer` | pure Kotlin object | 소문자 변환, 공백 정리, 중복 제거 keyword extraction |
@@ -32,7 +32,7 @@ sensitive text redaction pipeline을 다룹니다.
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index 기준 상태, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | suspend preload attempt 하나를 공유하고 두 dictionary 준비 전에는 요청 작업을 거절 |
 | `VersionedMultilingualSearchIndex` | Korean `DictionarySnapshot`, exact-noun Aho-Corasick matcher, `VersionedDictionary` | 완성된 noun-dictionary/index generation만 공개하고 각 검색이 사용한 정확한 revision을 반환 |
-| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 작은 policy를 검증하고 email/phone/token/keyword span을 찾은 뒤, overlap merge, same-length masking, safe metadata 반환 |
+| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 선택형 keyword normalization policy로 원문 span을 복원하고 overlap merge, same-length masking, safe metadata 반환 |
 
 ## 사용 예
 
@@ -48,6 +48,24 @@ filter.findMatches("spam and abuse")              // AhoCorasickMatch list
 
 Automaton은 keyword collection으로 한 번 구성됩니다. 이후 match는 입력 text를 한 번 훑고,
 match 개수만큼만 추가 비용이 듭니다.
+
+정책 단어가 compatibility 문자와도 일치해야 한다면 NFKC를 선택합니다.
+
+```kotlin
+val corporateFilter = AbuseWordFilter(
+    abuseWords = listOf("(주)"),
+    normalization = NormalizationForm.NFKC,
+)
+
+corporateFilter.findMatches("회사명: ㈜블루테이프").single().let { it.start to it.end }
+// 정규화된 (주) 세 글자 범위가 아니라 원문 ㈜ 범위
+corporateFilter.filterText("회사명: ㈜블루테이프")
+// "회사명: *블루테이프"
+```
+
+기본값은 NFC입니다. NFKC는 matching할 때만 compatibility 문자를 확장하며, 반환 offset과
+masking은 원본 Kotlin `String` span을 사용합니다. 서로 영향을 주는 normalization segment가
+1,024 code-unit을 넘으면 caller text를 노출하지 않고 빠르게 거부합니다.
 
 ### 언어 감지
 
@@ -99,6 +117,18 @@ result.spans.map { it.category }
 지역별 식별자, 자유 형식 주소/이름, OCR 결과, fixture rule을 넘어서는 다국어 PII,
 컴플라이언스 목적의 DLP 요구가 있다면 더 강한 detector를 사용해야 합니다. 이 pipeline은
 학습용 예제이지 완전한 classifier가 아닙니다.
+
+NFKC keyword redaction은 policy에서 명시적으로 선택합니다.
+
+```kotlin
+val policy = SensitiveRedactionPolicy.of(
+    rules = listOf(SensitiveRedactionRule.keyword("keyword.corp", "keyword", "(주)")),
+    keywordNormalization = NormalizationForm.NFKC,
+)
+val result = SensitiveTextRedactionPipeline.of(policy).redact("계약 대상은 ㈜블루테이프입니다")
+
+result.spans.single().matchedLength // 원문 ㈜ span 길이인 1
+```
 
 ### 다국어 검색 인덱스
 

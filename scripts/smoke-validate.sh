@@ -1096,6 +1096,39 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== NFKC source-offset normalization guard ==="
+    nfkc_filter="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilter.kt"
+    nfkc_filter_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilterTest.kt"
+    nfkc_redaction="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/redaction/SensitiveTextRedactionPipeline.kt"
+    nfkc_redaction_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/redaction/SensitiveTextRedactionPipelineTest.kt"
+    nfkc_properties="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/config/TextModerationProperties.kt"
+    nfkc_config="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/config/TextModerationConfig.kt"
+    nfkc_context_tests="spring-boot/text-moderation-api/src/test/kotlin/io/bluetape4k/workshop/textmoderation/TextModerationContextTest.kt"
+    nfkc_lesson="docs/lessons/2026-09-05-issue-891-nfkc-offset-normalization.md"
+    nfkc_review="docs/superpowers/specs/2026-09-05-issue-891-nfkc-offset-normalization-implementation-review.md"
+    if contains_pattern 'normalization: NormalizationForm = NormalizationForm\.NFC' "$nfkc_filter" "$nfkc_properties" && \
+       contains_pattern 'keywordNormalization: NormalizationForm = NormalizationForm\.NFC' "$nfkc_redaction" && \
+       contains_pattern 'policy\.keywordNormalization' "$nfkc_redaction" && \
+       contains_pattern 'properties\.normalization' "$nfkc_config" && \
+       contains_pattern 'NormalizationForm\.NFKC' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
+       contains_pattern 'normalization=NFKC' "$nfkc_context_tests" && \
+       contains_pattern '㈜' "$nfkc_filter_tests" "$nfkc_redaction_tests" "$nfkc_context_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md && \
+       contains_pattern '1_025' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
+       contains_pattern 'shouldNotContain raw' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
+       contains_pattern '#891' docs/coverage-matrix.md docs/lessons/README.md "$nfkc_lesson" && \
+       contains_pattern 'kotlin/text-processing' .github/workflows/Examples.yml && \
+       contains_pattern 'spring-boot/text-moderation-api' .github/workflows/Examples.yml && \
+       contains_pattern '"issue_numbers": \[891\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$nfkc_filter" "$nfkc_filter_tests" "$nfkc_redaction" "$nfkc_redaction_tests" "$nfkc_properties" "$nfkc_config" "$nfkc_context_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
+       [ -f "$nfkc_lesson" ] && [ -f "$nfkc_review" ]; then
+      echo "NFKC source-offset normalization examples and lesson are registered."
+    else
+      echo "ERROR: NFKC source-offset normalization contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do
