@@ -17,6 +17,8 @@ dependencies {
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.spring.boot4.core)
     implementation(libs.bluetape4k.spring.boot4.redis)
+    implementation(libs.bluetape4k.virtualthread.api)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
     testImplementation(libs.bluetape4k.junit5)
     implementation(libs.bluetape4k.testcontainers)
 

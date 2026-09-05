@@ -21,7 +21,7 @@
 | 클래스 | 역할 |
 |---|---|
 | `LettuceRedisCacheConfiguration` | `RedisCacheManager`, `RedisTemplate`, binary serialization, Lettuce connection factory를 구성합니다. |
-| `AsyncConfig` | virtual thread와 MDC propagation을 사용하는 primary `AsyncTaskExecutor`를 제공합니다. |
+| `AsyncConfig` | 공통 `VirtualThreads` executor를 소유하고 Spring adapter와 작업별 MDC 복원을 제공합니다. |
 | `CountryRepository` | bluetape4k 검증과 `@Cacheable`, `@CacheEvict`를 Redis-backed country lookup에 적용합니다. |
 
 ## 사용한 bluetape4k 기능
@@ -31,7 +31,27 @@
 | `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `RedisCacheApplication` | 테스트와 로컬 실행을 위한 shared Redis Testcontainers 인스턴스 시작 |
 | `RedisBinarySerializers.LZ4Kryo` | `bluetape4k-spring-boot4-redis` | `LettuceRedisCacheConfiguration.redisTemplate()` | Redis 값을 compact binary 형태로 저장 |
 | `requireNotBlank()` | `bluetape4k-core` | `CountryRepository.findByCode()`, `evictCache()` | 잘못된 cache key를 loading/eviction 전에 거부 |
+| `VirtualThreads.executorService()` | `bluetape4k-virtualthread-api` + `bluetape4k-virtualthread-jdk25` | `AsyncConfig` | 지원 provider 또는 platform fallback을 선택하고 Spring이 shutdown을 소유 |
 | `CountryPrefetcher` | `app` profile에서 무작위 국가 코드를 예열합니다. |
+
+## Executor 소유권
+
+```kotlin
+@Bean(name = ["cacheRedisVirtualThreadExecutor"], destroyMethod = "shutdown")
+fun cacheRedisVirtualThreadExecutor(): ExecutorService = VirtualThreads.executorService()
+
+@Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
+fun asyncTaskExecutor(executorService: ExecutorService): AsyncTaskExecutor =
+    TaskExecutorAdapter(executorService).apply {
+        setTaskDecorator(LoggingTaskDecorator())
+    }
+```
+
+Spring이 `@Async`와 Lettuce가 함께 사용하는 delegate 하나를 소유합니다. Context shutdown은 신규 작업을
+거부하지만 이미 제출된 작업을 interrupt하거나 무한히 기다리지 않습니다. Provider가 정한 thread name을
+그대로 사용하며 운영 관측에는 `cacheRedisVirtualThreadExecutor` bean name과 `VirtualThreads.runtimeName()`을
+사용합니다. MDC decorator는 오류와 빈 caller context를 포함해 `finally`에서 worker의 이전 context를 복원합니다.
+두 virtual-thread artifact는 module에서 version 없이 선언하고 `bluetape4k-dependencies:2.0.0`으로 resolve합니다.
 
 ## Redis 설정 예제
 
@@ -64,3 +84,4 @@ fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<Any,
 - [Spring Data Redis](https://docs.spring.io/spring-data/redis/reference/)
 - [Lettuce](https://lettuce.io/)
 - [bluetape4k-spring-boot4-redis](https://github.com/bluetape4k/bluetape4k-projects)
+- [bluetape4k virtual-thread API](https://github.com/bluetape4k/bluetape4k-projects/tree/develop/virtualthread)
