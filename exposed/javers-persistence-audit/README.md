@@ -144,6 +144,14 @@ If the Redis-backed audit sink fails, the exception is propagated and the
 example does not accept an unaudited current-row write. This is a clear workshop
 contract, not a replacement for a cross-store distributed transaction.
 
+Both Redis factories validate persisted head metadata before returning a service
+or opening Kafka producer/consumer resources. A malformed sequence or commit id
+fails closed with only its type, a short SHA-256 fingerprint, and length. A
+missing head is accepted only when the documented provider snapshot-index key is
+also absent; snapshots without head metadata are treated as corruption. The
+check is startup/rebuild-only because the provider caches a loaded head. It does
+not promise detection of external metadata changes during a running instance.
+
 The Kafka projection uses Lettuce `MULTI`/`EXEC`. A failure before `EXEC` leaves
 the target, head, and Kafka offset unchanged. Redis does not roll back an
 individual command error inside `EXEC`; a command error or connection loss
@@ -166,7 +174,8 @@ assume that calling `close()` again retries a failed resource.
 ./gradlew :exposed-javers-persistence-audit:test
 ```
 
-The test suite covers Redis-backed history survival, bounded Redisson decoding,
+The test suite covers Redis-backed history survival, malformed and missing Redis
+head fail-closed startup, bounded Redisson decoding,
 Kafka projection and duplicate replay, restart rebuild, an initial empty poll,
 single-partition rejection before mutation, same-group retry after a pre-EXEC
 batch failure, lifecycle cleanup, newest-first ordering, and audit sink failure

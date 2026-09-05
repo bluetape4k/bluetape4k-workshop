@@ -13,6 +13,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #891 NFKC offset와 normalization 경계](2026-09-05-issue-891-nfkc-offset-normalization.md)
 - [Issue #892 JaVers history limit pushdown](2026-09-05-issue-892-javers-history-limit.md)
 - [Issue #893 JaVers Kafka snapshot projection](2026-09-06-issue-893-javers-kafka-projection.md)
+- [Issue #894 JaVers Redis head metadata fail-closed](2026-09-06-issue-894-javers-redis-head-fail-closed.md)
 
 Use this structure for each lesson:
 

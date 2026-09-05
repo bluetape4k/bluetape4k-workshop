@@ -1265,6 +1265,34 @@
       "review_artifact": "docs/superpowers/specs/2026-09-06-issue-893-javers-kafka-projection-implementation-review.md"
     },
     {
+      "scope_id": "issue-894-javers-redis-head-fail-closed",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-894-javers-redis-head-fail-closed",
+      "expected_base_ref": "feat/issue-893-javers-kafka-projection",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [894],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-06-issue-894-javers-redis-head-fail-closed.md",
+        "docs/review/2026-09-06-issue-894-javers-redis-head-fail-closed-plan-review.md",
+        "docs/superpowers/plans/2026-09-06-issue-894-javers-redis-head-fail-closed-plan.md",
+        "docs/superpowers/specs/2026-09-06-issue-894-javers-redis-head-fail-closed-design.md",
+        "docs/superpowers/specs/2026-09-06-issue-894-javers-redis-head-fail-closed-implementation-review.md",
+        "exposed/javers-persistence-audit/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/superpowers/specs/2026-09-06-issue-894-javers-redis-head-fail-closed-implementation-review.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -1374,8 +1402,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T-issue-893-javers-kafka-projection-scope",
-    "checksum": "be29d3e390c6ec35aa59e6f6def13154ecec7700cb08bedd4f8c3a0acfba92f5"
+    "receipt_id": "20260906T-issue-894-javers-redis-head-fail-closed-scope",
+    "checksum": "955e19284dfe5744f89f58e830f7b76dd6de0c84142e35bac57c02c283c6d861"
   },
   "planned_scope_replan_receipts": {
   },

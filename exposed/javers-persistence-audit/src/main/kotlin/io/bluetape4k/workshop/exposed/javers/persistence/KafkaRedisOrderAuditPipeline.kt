@@ -7,6 +7,7 @@ import io.bluetape4k.javers.persistence.kafka.repository.VanillaKafkaCdoSnapshot
 import io.bluetape4k.javers.persistence.kafka.repository.VanillaKafkaCdoSnapshotRepositoryOptions
 import io.bluetape4k.javers.persistence.redis.repository.LettuceCdoSnapshotRepository
 import io.bluetape4k.javers.repository.CdoSnapshotRepository
+import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodecs
 import io.bluetape4k.support.requireNotBlank
 import io.lettuce.core.RedisClient
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -164,6 +165,16 @@ object KafkaRedisOrderAuditFactory {
         try {
             val readRepository = LettuceCdoSnapshotRepository(repositoryName, redisClient)
                 .also(ownedResources::add)
+            readRepository.requireConsistentOrderAuditHead {
+                redisClient.connect(LettuceBinaryCodecs.lz4Fory<Any>()).use { connection ->
+                    connection.sync().exists("javers:$repositoryName:globalId:set") > 0L
+                }
+            }
+            val readJavers = JaversBuilder.javers()
+                .registerJaversRepository(readRepository)
+                .build()
+            val reader = OrderAuditService(readJavers)
+
             val writeRepository = VanillaKafkaCdoSnapshotRepository(
                 producerConfigs = producerConfigs,
                 options = VanillaKafkaCdoSnapshotRepositoryOptions(
@@ -180,11 +191,6 @@ object KafkaRedisOrderAuditFactory {
                     .registerJaversRepository(commandRepository)
                     .build(),
             )
-
-            val readJavers = JaversBuilder.javers()
-                .registerJaversRepository(readRepository)
-                .build()
-            val reader = OrderAuditService(readJavers)
 
             val consumer = KafkaConsumer(
                 validatedConsumerConfigs,
