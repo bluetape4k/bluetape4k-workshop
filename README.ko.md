@@ -65,7 +65,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`exposed-webflux-r2dbc`](exposed/webflux-r2dbc/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed R2DBC keyset cursor pagination + WebFlux 코루틴 핸들러 |
 | Advanced | [`exposed-mvc-virtualthread`](exposed/mvc-virtualthread/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | 가상 스레드를 활용한 Exposed JDBC + Spring MVC |
 | Basic | [`exposed-javers-approval-workflow`](exposed/javers-approval-workflow/) | `javers-core` | H2 | Bounded newest-first approved history를 포함한 JaVers pre-commit diff review |
-| Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `redisson`, `testcontainers` | Redis (TC) + H2 | Exposed current-row persistence와 bounded Redis-range JaVers history |
+| Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `javers-persistence-kafka`, `redisson`, `lettuce`, `testcontainers` | Kafka + Redis (TC) + H2 | Bounded Redisson history와 single-partition Kafka snapshot의 Lettuce Redis read model projection |
 | Advanced | [`ktor-exposed-rest`](ktor/exposed-rest/) | `ktor-core`, `exposed-ktor-core`, `exposed-ktor-jdbc`, `exposed-jdbc`, `testcontainers` | PostgreSQL (TC) | backend-selective Ktor health/readiness와 Exposed JDBC transaction, 안전한 database error mapping |
 | Basic | [`spring-data-r2dbc-coroutines`](spring-data/r2dbc-coroutines/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 코루틴을 활용한 R2DBC 레포지토리 |
 | Basic | [`spring-data-r2dbc-examples`](spring-data/r2dbc-examples/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC 기본 예제와 DSL |

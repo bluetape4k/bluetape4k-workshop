@@ -2,11 +2,12 @@
 
 [한국어](README.ko.md) | English
 
-This module extends the small `exposed/javers-audit` boundary with a durable
-JaVers repository. Exposed JDBC still owns only the current `OrderTable` row,
-while Redis stores queryable JaVers snapshots through `RedissonCdoSnapshotRepository`.
-An exact-instance adapter limits the Redis range and snapshot decoding before
-the result reaches the service.
+This module extends the small `exposed/javers-audit` boundary with durable
+JaVers repositories. The direct path keeps the Exposed current row and bounded
+Redisson history from Issue #892. The projection path added as a follow-up to
+the original module Issue #290 publishes snapshots to Kafka and rebuilds a
+queryable Lettuce Redis repository with the dependencies 2.0.0-managed JaVers
+Kafka projection API.
 
 Use it when learners need to see what changes after moving from in-memory
 JaVers history to an external audit store, without adding web controllers or a
@@ -28,6 +29,7 @@ distributed transaction.
 | `getHistory(orderId, limit = 100)` | Pushes a `1..100` limit into the instance query and returns bounded snapshots newest-first |
 | `getLatestSnapshot(orderId)` | Uses bluetape4k `latestSnapshotOrNull<Order>()` to read the latest snapshot |
 | `diff(old, new)` | Compares two immutable orders without writing to JaVers or Exposed |
+| `replayUntilIdle(maxIdlePolls = 3)` | Replays a single-partition Kafka stream into Redis until three consecutive idle polls by default |
 
 ## Persistence Choices
 
@@ -35,11 +37,51 @@ distributed transaction.
 |---|---|---|
 | In-memory JaVers | First audit-boundary lesson in `exposed/javers-audit` | History is lost when the service is rebuilt |
 | Redis / Redisson | This module's durable audit history path | Exact-instance history reads only the requested tail range and decodes it newest-first |
-| Kafka JaVers repository | Event-stream fan-out and downstream projections | Write-only stream; project events into Redis, Exposed, or another read model before querying history |
+| Kafka → Lettuce Redis | Event-stream fan-out, restart rebuild, and queryable projection | Kafka remains write-only; `KafkaCdoSnapshotProjector` restores the Redis read/head repository |
 
-The module intentionally implements the Redis path because it can both persist
-and read JaVers snapshots. Kafka is documented as a write-only audit stream
-boundary so learners do not assume it can answer `getHistory()` by itself.
+`KafkaRedisOrderAuditPipeline` deliberately exposes commands and Redis queries,
+not the write-only Kafka repository. JaVers needs the projected Redis head to
+calculate the next version and snapshot type, so callers replay after `place`
+before `markPaid` or `delete`; the facade fails closed when that head is absent.
+
+## Kafka to Redis Projection
+
+```kotlin
+KafkaRedisOrderAuditFactory.create(
+    repositoryName = "workshop-orders-projection",
+    topic = "order-audit-snapshots",
+    producerConfigs = producerConfigs,
+    consumerConfigs = consumerConfigs + (ConsumerConfig.GROUP_ID_CONFIG to "order-audit-projector"),
+    redisClient = lettuceClient,
+).use { pipeline ->
+    // The single-partition topic is provisioned by the application/operator.
+    pipeline.replayUntilIdle()
+    pipeline.place("alice", order)
+    pipeline.replayUntilIdle()
+
+    pipeline.markPaid("bob", order.id)
+    pipeline.replayUntilIdle()
+
+    val latest = pipeline.getLatestSnapshot(order.id)
+}
+```
+
+The consumer contract requires a nonblank group id, disables auto commit, and
+uses `earliest`. The application or operator pre-provisions the topic with
+exactly one partition. A new pipeline requires an initial catch-up before its
+first mutation, so a restarted process cannot write from a stale Redis head.
+Every successful or commit-unknown mutation requires another catch-up before a
+later mutation. The projector rejects a multi-partition topic before polling
+or changing the Redis head. A failed
+batch does not advance the committed Kafka offset. Close the failed instance
+and start a new consumer/projector with the same group: already projected
+snapshots are skipped and the failed snapshot is replayed before the batch is
+committed.
+
+`replayUntilIdle` is a finite catch-up helper, not a daemon. Its default of
+three consecutive empty polls tolerates an initial empty assignment poll. An
+application still owns its outer startup deadline, retry budget, and continuous
+worker lifecycle.
 
 ## Bounded History Contract
 
@@ -102,12 +144,30 @@ If the Redis-backed audit sink fails, the exception is propagated and the
 example does not accept an unaudited current-row write. This is a clear workshop
 contract, not a replacement for a cross-store distributed transaction.
 
+The Kafka projection uses Lettuce `MULTI`/`EXEC`. A failure before `EXEC` leaves
+the target, head, and Kafka offset unchanged. Redis does not roll back an
+individual command error inside `EXEC`; a command error or connection loss
+after `EXEC` is therefore commit-unknown and may leave a partial projection.
+This workshop does not promise automatic repair for that boundary. The direct
+Redisson history path remains the bounded-decode query example; the Lettuce
+projection path does not claim the same storage-decode bound.
+
+Kafka and Redis transport security is caller-owned: configure TLS/SASL, ACLs,
+credentials, topic authorization, snapshot redaction, and query authorization
+before using this pattern outside the workshop.
+
+`close()` is idempotent and attempts every owned resource once. If cleanup
+fails, later failures are suppressed on the first exception; callers must not
+assume that calling `close()` again retries a failed resource.
+
 ## Tests
 
 ```bash
 ./gradlew :exposed-javers-persistence-audit:test
 ```
 
-The test suite covers Redis-backed history survival after service rebuild,
-bounded decode counts, newest-first ordering, fallback query semantics, JVM
-overloads, terminal delete snapshots, and audit sink failure propagation.
+The test suite covers Redis-backed history survival, bounded Redisson decoding,
+Kafka projection and duplicate replay, restart rebuild, an initial empty poll,
+single-partition rejection before mutation, same-group retry after a pre-EXEC
+batch failure, lifecycle cleanup, newest-first ordering, and audit sink failure
+propagation.
