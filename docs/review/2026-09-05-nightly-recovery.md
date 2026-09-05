@@ -31,7 +31,14 @@
 - 구현 커밋 `2408448daedcca5f904735d71d215e1e03acda6d`의 `slow-provider` 단독 실행과
   job-core 전체 local-reference 프로필 실행: 통과. 후자는 `nightly-949-all-20260905` 보고서로
   `worker-restart`를 포함하며, 종료 시 남은 토폴로지는 0이다.
-- full Nightly: 최종 PR head에서 추가 검증 필요.
+- full Nightly `33968155595`의 `Run tests`, commerce 보고서 검사, Kafka 보고서 검사 및
+  고경합 4개 작업은 모두 통과했다. 전체 실행은 Kafka 산출물 정리 명령의 YAML 줄 접기 오류로
+  실패했으므로 Nightly 성공으로 표기하지 않는다.
+- 후속 수정은 정리 명령을 `run: |` 블록으로 바꿔 Bash 줄바꿈을 보존한다. 새 회귀 검사는
+  기존 YAML에서 실패했고 수정 후 실제 Bash에 전달되는 6개 인자를 검증했다. 총 7건 통과,
+  `actionlint`, `ruff check`, `ruff format --check`, `git diff --check` 통과.
+- 후속 diff inline 검토: `P0=0 P1=0`. 기존 정리 스크립트, 실패 전파, 업로드 조건 및
+  산출물 경로는 유지된다. 최종 PR head의 full Nightly 재검증은 남아 있다.
 
 ## 판정
 

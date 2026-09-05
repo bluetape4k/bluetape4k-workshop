@@ -102,6 +102,35 @@ class NightlyMockImagesTest(unittest.TestCase):
             )
         )
 
+    def test_kafka_sanitizer_preserves_shell_argument_boundaries(self):
+        workflow = (Path(__file__).parents[1] / "workflows/nightly.yml").read_text()
+        step = workflow.split("- name: Sanitize Kafka failover artifacts", 1)[1]
+        step = step.split("- name: Upload test results", 1)[0]
+        self.assertIn("        run: |\n", step)
+        command = step.split("        run: |\n", 1)[1]
+        command = "\n".join(line[10:] for line in command.splitlines())
+        capture = command.replace(
+            "./scripts/validate-kafka-failover-artifacts.sh", "printf '%s\\0'", 1
+        )
+        result = subprocess.run(
+            ["bash", "-c", capture],
+            env={"KAFKA_FAILOVER_RUN_ID": "nightly-contract"},
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(
+            result.stdout.split("\0")[:-1],
+            [
+                "--module",
+                "messaging/kafka-multi-broker-failover",
+                "--run-id",
+                "nightly-contract",
+                "--staging",
+                "messaging/kafka-multi-broker-failover/build/reports/kafka-failover/sanitized",
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

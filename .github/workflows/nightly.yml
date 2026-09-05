@@ -190,10 +190,11 @@ jobs:
         if: always()
         env:
           KAFKA_FAILOVER_RUN_ID: nightly-${{ github.run_id }}-${{ github.run_attempt }}
-        run: ./scripts/validate-kafka-failover-artifacts.sh \
-          --module messaging/kafka-multi-broker-failover \
-          --run-id "$KAFKA_FAILOVER_RUN_ID" \
-          --staging messaging/kafka-multi-broker-failover/build/reports/kafka-failover/sanitized
+        run: |
+          ./scripts/validate-kafka-failover-artifacts.sh \
+            --module messaging/kafka-multi-broker-failover \
+            --run-id "$KAFKA_FAILOVER_RUN_ID" \
+            --staging messaging/kafka-multi-broker-failover/build/reports/kafka-failover/sanitized
 
       - name: Upload test results
         if: ${{ always() && steps.kafka_failover_sanitize.outcome == 'success' }}

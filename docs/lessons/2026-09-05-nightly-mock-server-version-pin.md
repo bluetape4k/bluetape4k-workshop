@@ -50,6 +50,11 @@ checkout을 사용하지 않는다.
 
 ## 향후 지침
 
+Nightly `33968155595`에서는 전체 테스트가 통과한 뒤 Kafka 산출물 정리 단계가
+`Unknown option:  --module`로 실패했다. YAML의 일반 scalar는 줄바꿈을 공백으로 접으므로
+shell의 `\` 줄 연결과 함께 사용하지 않는다. 여러 줄 shell 명령은 `run: |`로 보존하고,
+회귀 검사에서 실제 Bash에 전달되는 인자와 실행 후 산출물 검증까지 확인한다.
+
 Nightly에서 외부 `bluetape4k-projects` 소스를 checkout할 때는 워크숍 소비자 BOM과 같은
 release tag를 사용한다. BOM 또는 mock 서버 release를 변경하면 catalog 해석,
 `Bluetape*Server.TAG`, 이미지 build log를 한 번에 확인하고, 독립적인 high-contention이나
