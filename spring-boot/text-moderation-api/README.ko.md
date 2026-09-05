@@ -24,9 +24,9 @@ validation, 재사용 가능한 moderation service, 그리고 Spring configurati
 
 ![spring-boot-text-moderation-api sequence](../../docs/images/readme-diagrams/spring-boot-text-moderation-api-readme-sequence-01.png)
 
-성공 경로는 singleton `LanguageDetector`와 `AhoCorasickAutomaton`을 재사용합니다.
-잘못된 요청은 `400 Bad Request`로, 너무 큰 요청은 `413 Content Too Large`로
-짧게 종료됩니다.
+성공 경로는 singleton `LanguageDetector`를 재사용하고 matching과 masking에 사용할 immutable
+`VersionedModerationDictionary` snapshot을 한 번 캡처합니다. 잘못된 요청은
+`400 Bad Request`로, 너무 큰 요청은 `413 Content Too Large`로 짧게 종료됩니다.
 
 ## 엔드포인트
 
@@ -100,14 +100,54 @@ PY
 |---|---:|---|
 | `workshop.text-moderation.max-text-characters` | `2000` | 허용하는 request text 최대 길이 |
 | `workshop.text-moderation.blockwords` | `spam,badword,abuse,hate` | moderation automaton에 등록되는 단어 |
+| `workshop.text-moderation.normalization` | `NFC` | blockword와 request text에 적용할 Unicode normalization (`NONE`, `NFC`, `NFKC`) |
 
 기본 blockword 목록은 의도적으로 작게 유지했습니다. 학습자가 configuration에서 response까지
 전체 흐름을 쉽게 따라갈 수 있게 하기 위한 선택입니다.
+
+## 런타임 dictionary 교체
+
+관리 경계는 service layer에 남겨 둡니다. 이 workshop은 공개 reload endpoint를 제공하지
+않습니다. 인증된 application-owned control plane은 기존 HTTP response를 바꾸지 않으면서 다음
+API로 완성된 candidate를 검증하고 공개할 수 있습니다.
+
+```kotlin
+val v1 = service.analyzeWithVersion("spam")
+service.reloadDictionary(DictionaryVersion("moderation-blockwords", 2)) {
+    listOf("phishing", "malware")
+}
+val v2 = service.analyzeWithVersion("phishing")
+service.rollbackDictionary()
+```
+
+Loader 실행, bounded input 검증, Aho-Corasick 생성이 모두 끝난 뒤 새
+`DictionarySnapshot`을 공개합니다. 각 요청은 snapshot을 한 번 캡처하므로 parsing과 masking이
+같은 revision을 사용합니다. 실패하거나 stale인 candidate는 현재 dictionary와 rollback
+history를 모두 보존합니다. Log에는 dictionary name, revision, word count, total character
+count만 남기며 raw blockword와 moderation text는 기록하지 않습니다. Loader collection은
+순회하면서 bounded snapshot으로 복사하고, 동시 singleton 호출의 shared Lingua detector 접근은
+직렬화합니다.
+
+Compatibility 문자가 moderation 정책에 포함될 때만 NFKC를 선택합니다.
+
+```yaml
+workshop:
+  text-moderation:
+    normalization: NFKC
+    blockwords:
+      - "(주)"
+```
+
+이 설정에서는 `(주)`가 원문의 `㈜`도 탐지합니다. Automaton이 normalized match를 원문의
+한 code-unit span으로 복원하므로 `회사명: ㈜블루테이프`는 `회사명: *블루테이프`가 됩니다.
+기본값은 하위 호환되는 NFC입니다. Normalization segment가 1,024 code-unit을 넘으면 request
+원문을 노출하지 않고 거부합니다.
 
 ## Used Bluetape4k features
 
 | Feature | 위치 | 왜 중요한가 |
 |---|---|---|
+| `bluetape4k-tokenizer-core` | `VersionedDictionary`와 `DictionarySnapshot` | 완성된 blockword generation을 bounded rollback history와 함께 원자적으로 공개합니다 |
 | `bluetape4k-text-search` | `ahoCorasick { ... }` | 단어마다 직접 scan하지 않고 하나의 재사용 가능한 multi-keyword matcher를 만듭니다 |
 | `bluetape4k-text-lingua` | `allLanguageDetector { ... }` | remote API 없이 결정적인 language detection을 제공합니다 |
 | `bluetape4k-logging` | `KLogging`과 lazy `debug` logging | 원문 moderation text를 로그에 남기지 않고 운영 metadata만 기록합니다 |
@@ -134,9 +174,12 @@ PY
 - 빈 text 또는 누락된 text에 대한 `400 Bad Request`
 - 너무 큰 text에 대한 `413 Content Too Large`
 - language detector와 automaton bean의 singleton 재사용
+- reload, rollback, bounded history, stale/실패 candidate 보존
+- 동시 요청이 완성된 이전 또는 새 revision 하나만 관찰하는지 검증
+- NFKC property binding, compatibility 문자 matching, 원문 길이 masking
 
 ## 의존성 메모
 
-이 모듈은 root `bluetape4k-dependencies` BOM과 repository catalog에 이미 있는
-`bluetape4k-text` aliases를 사용합니다. 이 예제를 위해 module-local version pin이나
-별도 BOM을 추가하지 않습니다.
+이 모듈은 root `bluetape4k-dependencies` 2.0.0 BOM과 repository catalog alias를 사용합니다.
+`VersionedDictionary`를 위해 versionless `bluetape4k-text-core`도 직접 의존합니다. 이 예제를
+위해 module-local version pin이나 별도 BOM을 추가하지 않습니다.

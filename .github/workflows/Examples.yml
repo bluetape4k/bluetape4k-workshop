@@ -25,6 +25,7 @@ on:
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/event-lineage/**'
+      - 'graph/abuser-detection/**'
       - 'graph/io-pipeline/**'
       - 'graph/recommendation/**'
       - 'graph/knowledge-graph/**'
@@ -90,6 +91,7 @@ on:
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/event-lineage/**'
+      - 'graph/abuser-detection/**'
       - 'graph/io-pipeline/**'
       - 'graph/recommendation/**'
       - 'graph/knowledge-graph/**'
@@ -271,7 +273,7 @@ jobs:
 
       # Representative non-container examples:
       # - spring-data-r2dbc-webflux-exposed: data access + Exposed consumer path
-      # - exposed-javers-approval-workflow: in-memory JaVers approval decision path
+      # - exposed-javers-approval-workflow: in-memory JaVers approval decision and bounded newest-first history path
       # - spring-boot-cache-caffeine: local cache path
       # - spring-boot-multi-tenant-data-isolation: TenantContext carrier propagation and cleanup
       # - spring-boot-resilience4j-coroutines: resilience path
@@ -300,6 +302,7 @@ jobs:
           :jackson-examples:test
           :jsonview-examples:test
           :graph-event-lineage:test
+          :graph-abuser-detection:test
           :graph-io-pipeline:test
           :graph-recommendation:test
           :graph-knowledge-graph:test
@@ -381,6 +384,8 @@ jobs:
             json/jsonview-examples/build/reports/tests/test/
             graph/event-lineage/build/test-results/test/*.xml
             graph/event-lineage/build/reports/tests/test/
+            graph/abuser-detection/build/test-results/test/*.xml
+            graph/abuser-detection/build/reports/tests/test/
             graph/io-pipeline/build/test-results/test/*.xml
             graph/io-pipeline/build/reports/tests/test/
             graph/recommendation/build/test-results/test/*.xml
@@ -528,13 +533,14 @@ jobs:
       # - exposed-mvc-jdbc: PostgreSQL-backed Exposed JDBC offset + cursor consumer path
       # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC cursor consumer path
       # - spring-data-r2dbc-webflux-exposed: Spring Data Exposed QBE/FluentQuery projection and paging path (#882)
-      # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
+      # - exposed-javers-persistence-audit: bounded Redis-range JaVers audit history
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + selective core/JDBC health/readiness and transaction path
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB/Streams Flow path
       # - aws-s3-spring-cloud: Floci-backed Spring Cloud AWS S3 path
       # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine + PublishBatch + opt-in Observation/Modulith externalization path
       # - aws-storage-abstraction: Floci-backed S3 storage abstraction plus AES/RSA client-side encryption transfer path
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
+      # - graph-abuser-detection: Neo4j/Memgraph-backed PageRank provider fallback observation path
       # - graph-recommendation: Neo4j/Memgraph-backed recommendation path
       # - graph-knowledge-graph: Neo4j/Memgraph-backed knowledge graph path and 2.0.0 schema drift planner conformance
       # - graph-social-network: Neo4j/Memgraph-backed social graph path and weighted maxDepth conformance
@@ -575,6 +581,7 @@ jobs:
           :aws-sqs-sns-coroutines:test
           :aws-storage-abstraction:test
           :graph-event-lineage:integrationTest
+          :graph-abuser-detection:integrationTest
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
           :graph-social-network:integrationTest
@@ -750,6 +757,8 @@ jobs:
             aws/storage-abstraction/build/reports/tests/test/
             graph/event-lineage/build/test-results/integrationTest/*.xml
             graph/event-lineage/build/reports/tests/integrationTest/
+            graph/abuser-detection/build/test-results/integrationTest/*.xml
+            graph/abuser-detection/build/reports/tests/integrationTest/
             graph/recommendation/build/test-results/integrationTest/*.xml
             graph/recommendation/build/reports/tests/integrationTest/
             graph/knowledge-graph/build/test-results/integrationTest/*.xml

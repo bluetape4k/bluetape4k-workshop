@@ -2,11 +2,12 @@
 
 ## 범위와 기준
 
-- PR #951, 기준 `75a5280102ae1de9709aeafea47151901be0fe70`.
+- PR #951, 최초 기준 `75a5280102ae1de9709aeafea47151901be0fe70`, 병합 전 동기화 기준
+  `972283d1166215077797ecda460b85c6c7f267a0`.
 - 공식 `bluetape4k-dependencies:2.0.0` 유지. 라이브러리 코드·개별 BOM·버전 override 변경 없음.
 - 이미지 버전 계약, graph 테스트 ID, job-core 일시 정지 worker의 연결 측정, 정확한 PR 범위 등록.
-- graph의 숫자 ID 수정은 PR #945 / #888에도 존재한다. 새 기능은 가져오지 않았으며 해당 PR의
-  rebase 시 동일한 수정은 중복으로 적용하지 않는다.
+- graph의 숫자 ID 수정은 PR #945 / #888에도 존재했다. 해당 변경이 먼저 develop에 병합되어
+  기준 브랜치 동기화 후 Nightly PR의 graph 변경은 사라졌다. 최신 develop 대비 변경은 8개 파일이다.
 
 ## 설계 검토
 
@@ -39,6 +40,11 @@
   `actionlint`, `ruff check`, `ruff format --check`, `git diff --check` 통과.
 - 후속 diff inline 검토: `P0=0 P1=0`. 기존 정리 스크립트, 실패 전파, 업로드 조건 및
   산출물 경로는 유지된다. 최종 PR head의 full Nightly 재검증은 남아 있다.
+- head `238345851`의 full Nightly `33971289472`: 전체 테스트, 산출물 정리·업로드,
+  고경합 4개 작업 및 최종 집계 모두 통과. PR 검사 12개도 통과했다.
+- 검증 중 develop이 전진하여 manifest receipt만 충돌했다. 새 develop의 모든 scope는 보존하고
+  현재 작업의 유효한 receipt를 유지했다. 동기화 후 계약 7건·정책 113건·actionlint와 diff 검사
+  통과, inline 재검토 `P0=0 P1=0`. 새 통합 head의 원격 검증은 별도로 수행한다.
 
 ## 판정
 

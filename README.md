@@ -65,8 +65,8 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`exposed-mvc-jdbc`](exposed/mvc-jdbc/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | Exposed DAO/SQL DSL, offset and primary-key cursor pagination with Spring MVC JDBC |
 | Basic | [`exposed-webflux-r2dbc`](exposed/webflux-r2dbc/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed R2DBC keyset cursor pagination + WebFlux coroutine handlers |
 | Advanced | [`exposed-mvc-virtualthread`](exposed/mvc-virtualthread/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed JDBC with Spring MVC virtual threads |
-| Basic | [`exposed-javers-approval-workflow`](exposed/javers-approval-workflow/) | `javers-core` | H2 | JaVers pre-commit diff review with approval/rejection decisions |
-| Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `testcontainers` | Redis (TC) + H2 | Redis-backed JaVers audit history with Exposed current-row persistence |
+| Basic | [`exposed-javers-approval-workflow`](exposed/javers-approval-workflow/) | `javers-core` | H2 | JaVers pre-commit diff review with bounded newest-first approved history |
+| Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `redisson`, `testcontainers` | Redis (TC) + H2 | Bounded Redis-range JaVers history with Exposed current-row persistence |
 | Advanced | [`ktor-exposed-rest`](ktor/exposed-rest/) | `ktor-core`, `exposed-ktor-core`, `exposed-ktor-jdbc`, `exposed-jdbc`, `testcontainers` | PostgreSQL (TC) | Backend-selective Ktor health/readiness plus Exposed JDBC transactions and safe database error mapping |
 | Basic | [`spring-data-r2dbc-coroutines`](spring-data/r2dbc-coroutines/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC repositories with coroutines |
 | Basic | [`spring-data-r2dbc-examples`](spring-data/r2dbc-examples/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC raw examples and DSL |
@@ -196,7 +196,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`graph-io-pipeline`](graph/io-pipeline/) | `graph-core`, `graph-tinkerpop`, `graph-io-csv`, `graph-io-jackson3`, `graph-io-graphml` | In-memory | CSV fixture import, Jackson3 NDJSON export/import, GraphML export/import, and graph-io report checks |
 | Basic | [`graph-social-network`](graph/social-network/) | `graph-core`, `graph-tinkerpop` | In-memory | Social graph modeling, hop traversal, and weighted shortest paths |
 | Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop`, Neo4j/Memgraph adapters | In-memory + Testcontainers | Heterogeneous knowledge graph, traversal, and 2.0.0 schema drift planning |
-| Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse relationship analysis |
+| Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse analysis with per-call PageRank provider fallback observation |
 | Advanced | [`graph-event-lineage`](graph/event-lineage/) | `graph-core`, `graph-tinkerpop`, `graph-neo4j`, `testcontainers` | TinkerGraph + Neo4j Testcontainer | Event lineage graph modeling, impact traversal, and audit trail assembly |
 | Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | Explainable recommendation graph traversal |
 
@@ -205,6 +205,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :graph-event-lineage:test
 ./gradlew :graph-social-network:test
 ./gradlew :graph-knowledge-graph:test
+./gradlew :graph-abuser-detection:test
 ```
 
 ---
@@ -217,7 +218,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 |-------|--------|-----------------|-------|-----------------|
 | Basic | [`spring-security-mvc`](spring-security/mvc/) | `logging`, `spring-boot4-core` | In-memory | Spring Security MVC: JWT, method security |
 | Basic | [`spring-security-webflux`](spring-security/webflux/) | `coroutines`, `spring-boot4-core` | In-memory | Spring Security WebFlux: reactive filter chain |
-| Basic | [`kotlin-text-processing`](kotlin/text-processing/) | `text-search`, `lingua`, `text-korean`, `text-japanese`, `coroutines` | In-memory | Multilingual text normalization, language detection, sync/coroutine search indexing, and source-span highlighting |
+| Basic | [`kotlin-text-processing`](kotlin/text-processing/) | `tokenizer-core`, `text-search`, `lingua`, `text-korean`, `text-japanese`, `coroutines` | In-memory | Multilingual NFC/NFKC normalization, startup dictionary readiness, atomic whole-index generation reload/rollback, bounded source-span mapping, and highlighting |
 | Basic | [`spring-modulith-module-boundaries`](spring-modulith/module-boundaries/) | Spring Modulith | In-memory | Module-boundary verification with named interfaces and event contracts |
 | Advanced | [`spring-modulith-events-deep-dive`](spring-modulith/events-deep-dive/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | Modulith application events with persistence |
 | Advanced | [`spring-modulith-jpa-demo`](spring-modulith/jpa-demo/) | `logging`, `testcontainers` | PostgreSQL (TC) | Modulith module encapsulation with JPA |

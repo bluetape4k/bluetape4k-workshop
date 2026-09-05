@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.javers.core)
     implementation(libs.bluetape4k.javers.persistence.redis)
+    implementation(libs.bluetape4k.redisson)
     implementation(libs.redisson.lib)
 
     implementation(libs.exposed.core)

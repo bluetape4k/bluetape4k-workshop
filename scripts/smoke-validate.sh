@@ -149,6 +149,7 @@ case "${1:-help}" in
       :leader-tenant-scheduler:test \
       :okio-examples:test \
       :graph-event-lineage:test \
+      :graph-abuser-detection:test \
       :graph-io-pipeline:test \
       :graph-recommendation:test \
       :graph-knowledge-graph:test \
@@ -990,6 +991,180 @@ case "${1:-help}" in
       echo "Graph knowledge schema-drift planner example and lesson are registered."
     else
       echo "ERROR: Graph knowledge schema-drift planner contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Graph abuser algorithm execution observation guard ==="
+    graph_abuser_build="graph/abuser-detection/build.gradle.kts"
+    graph_abuser_model="graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/model"
+    graph_abuser_service="graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/service/AbuserDetectionService.kt"
+    graph_abuser_suspend_service="graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/service/AbuserDetectionSuspendService.kt"
+    graph_abuser_tests="graph/abuser-detection/src/test/kotlin/io/bluetape4k/workshop/graph/abuser"
+    graph_abuser_readme="graph/abuser-detection/README.md"
+    graph_abuser_readme_ko="graph/abuser-detection/README.ko.md"
+    graph_abuser_lesson="docs/lessons/2026-09-05-issue-888-native-algorithm-observation.md"
+    graph_abuser_review="docs/superpowers/specs/2026-09-05-issue-888-native-algorithm-observation-implementation-review.md"
+    if contains_pattern 'rankSuspiciousUsersWithExecution' "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'AbuserAlgorithmExecution' "$graph_abuser_model" "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'GraphAlgorithmProviderPolicy' "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'NO_PROVIDER' "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'JVM_ONLY_POLICY' "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'NATIVE_ONLY' "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern 'CancellationException' "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" && \
+       contains_pattern ':graph-abuser-detection:test' README.md README.ko.md && \
+       contains_pattern '#888' docs/coverage-matrix.md docs/lessons/README.md "$graph_abuser_lesson" && \
+       contains_pattern 'graph/abuser-detection' .github/workflows/Examples.yml && \
+       contains_pattern '"issue_numbers": \[888\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$graph_abuser_build" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$graph_abuser_build" "$graph_abuser_model" "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
+       [ -f "$graph_abuser_lesson" ] && [ -f "$graph_abuser_review" ]; then
+      echo "Graph abuser algorithm execution observation example and lesson are registered."
+    else
+      echo "ERROR: Graph abuser algorithm execution observation contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Tokenizer dictionary preload readiness guard ==="
+    tokenizer_readiness="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadiness.kt"
+    tokenizer_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/readiness/TokenizerDictionaryReadinessTest.kt"
+    tokenizer_readme="kotlin/text-processing/README.md"
+    tokenizer_readme_ko="kotlin/text-processing/README.ko.md"
+    tokenizer_lesson="docs/lessons/2026-09-05-issue-889-dictionary-preload-readiness.md"
+    tokenizer_review="docs/superpowers/specs/2026-09-05-issue-889-dictionary-preload-readiness-implementation-review.md"
+    if contains_pattern 'TokenizerDictionaryReadiness' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'KoreanProcessor\.preload' "$tokenizer_readiness" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'JapaneseProcessor\.preload' "$tokenizer_readiness" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'NOT_READY' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'LOADING' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" && \
+       contains_pattern 'CancellationException' "$tokenizer_readiness" "$tokenizer_tests" && \
+       contains_pattern ':kotlin-text-processing:test' .github/workflows/Examples.yml scripts/smoke-validate.sh && \
+       contains_pattern '#889' docs/coverage-matrix.md docs/lessons/README.md "$tokenizer_lesson" && \
+       contains_pattern '"issue_numbers": \[889\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
+       [ -f "$tokenizer_lesson" ] && [ -f "$tokenizer_review" ]; then
+      echo "Tokenizer dictionary preload readiness example and lesson are registered."
+    else
+      echo "ERROR: Tokenizer dictionary preload readiness contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Versioned text dictionary runtime guard ==="
+    versioned_search="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/search/VersionedMultilingualSearchIndex.kt"
+    versioned_search_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/search/VersionedMultilingualSearchIndexTest.kt"
+    versioned_detection="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/detection/LanguageDetectionService.kt"
+    versioned_detection_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/detection/LanguageDetectionServiceTest.kt"
+    versioned_moderation="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/service/VersionedModerationDictionary.kt"
+    versioned_service="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/service/TextModerationService.kt"
+    versioned_moderation_tests="spring-boot/text-moderation-api/src/test/kotlin/io/bluetape4k/workshop/textmoderation/service/VersionedModerationDictionaryTest.kt"
+    versioned_service_tests="spring-boot/text-moderation-api/src/test/kotlin/io/bluetape4k/workshop/textmoderation/service/TextModerationServiceTest.kt"
+    versioned_lesson="docs/lessons/2026-09-05-issue-890-versioned-dictionary-runtime.md"
+    versioned_review="docs/superpowers/specs/2026-09-05-issue-890-versioned-dictionary-runtime-implementation-review.md"
+    if contains_pattern 'VersionedDictionary' "$versioned_search" "$versioned_moderation" && \
+       contains_pattern 'DictionarySnapshot' "$versioned_search" "$versioned_moderation" && \
+       contains_pattern 'reload\(DictionarySnapshot' "$versioned_search" "$versioned_moderation" && \
+       contains_pattern 'versions\.snapshot\(\)' "$versioned_search" "$versioned_moderation" && \
+       contains_pattern 'historyCapacity' "$versioned_search" "$versioned_moderation" "$versioned_search_tests" "$versioned_moderation_tests" && \
+       contains_pattern 'VersionedSearchResult' "$versioned_search" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
+       contains_pattern 'result\.version' "$versioned_search_tests" && \
+       contains_pattern 'SnapshotKoreanNounTokenizer' "$versioned_search" && \
+       contains_pattern 'koreanDictionary' "$versioned_search" "$versioned_search_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
+       contains_pattern 'detectorLock' "$versioned_detection" "$versioned_service" && \
+       contains_pattern '여러 동기 caller' "$versioned_detection_tests" && \
+       contains_pattern 'toBoundedSnapshot|maxTotalDocumentCharacters|maxTotalKoreanNounCharacters' "$versioned_search" && \
+       contains_pattern 'mutable source' "$versioned_search_tests" && \
+       contains_pattern 'mutable words' "$versioned_moderation_tests" && \
+       contains_pattern 'analyzeWithVersion' "$versioned_service" "$versioned_service_tests" spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md && \
+       contains_pattern '@Autowired' "$versioned_service" && \
+       contains_pattern 'bluetape4k\.text\.core' kotlin/text-processing/build.gradle.kts spring-boot/text-moderation-api/build.gradle.kts && \
+       contains_pattern 'stale|Stale' "$versioned_search_tests" "$versioned_moderation_tests" "$versioned_lesson" "$versioned_review" && \
+       contains_pattern 'previousRevision' "$versioned_search" "$versioned_moderation" "$versioned_moderation_tests" "$versioned_review" && \
+       contains_pattern 'kotlin/text-processing' .github/workflows/Examples.yml && \
+       contains_pattern 'spring-boot/text-moderation-api' .github/workflows/Examples.yml && \
+       contains_pattern '#890' docs/coverage-matrix.md docs/lessons/README.md "$versioned_lesson" && \
+       contains_pattern '"issue_numbers": \[890\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$versioned_search" "$versioned_search_tests" "$versioned_detection" "$versioned_detection_tests" "$versioned_moderation" "$versioned_service" "$versioned_moderation_tests" "$versioned_service_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
+       [ -f "$versioned_lesson" ] && [ -f "$versioned_review" ]; then
+      echo "Versioned text dictionary runtime examples and lesson are registered."
+    else
+      echo "ERROR: Versioned text dictionary runtime contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== NFKC source-offset normalization guard ==="
+    nfkc_filter="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilter.kt"
+    nfkc_filter_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilterTest.kt"
+    nfkc_redaction="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/redaction/SensitiveTextRedactionPipeline.kt"
+    nfkc_redaction_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/redaction/SensitiveTextRedactionPipelineTest.kt"
+    nfkc_properties="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/config/TextModerationProperties.kt"
+    nfkc_config="spring-boot/text-moderation-api/src/main/kotlin/io/bluetape4k/workshop/textmoderation/config/TextModerationConfig.kt"
+    nfkc_context_tests="spring-boot/text-moderation-api/src/test/kotlin/io/bluetape4k/workshop/textmoderation/TextModerationContextTest.kt"
+    nfkc_lesson="docs/lessons/2026-09-05-issue-891-nfkc-offset-normalization.md"
+    nfkc_review="docs/superpowers/specs/2026-09-05-issue-891-nfkc-offset-normalization-implementation-review.md"
+    if contains_pattern 'normalization: NormalizationForm = NormalizationForm\.NFC' "$nfkc_filter" "$nfkc_properties" && \
+       contains_pattern 'keywordNormalization: NormalizationForm = NormalizationForm\.NFC' "$nfkc_redaction" && \
+       contains_pattern 'policy\.keywordNormalization' "$nfkc_redaction" && \
+       contains_pattern 'properties\.normalization' "$nfkc_config" && \
+       contains_pattern 'NormalizationForm\.NFKC' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
+       contains_pattern 'normalization=NFKC' "$nfkc_context_tests" && \
+       contains_pattern '㈜' "$nfkc_filter_tests" "$nfkc_redaction_tests" "$nfkc_context_tests" kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.ko.md && \
+       contains_pattern 'U\+3231' kotlin/text-processing/README.md spring-boot/text-moderation-api/README.md && \
+       contains_pattern '\\u3231' kotlin/text-processing/README.md spring-boot/text-moderation-api/README.md && \
+       contains_pattern '1_025' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
+       contains_pattern 'shouldNotContain raw' "$nfkc_filter_tests" "$nfkc_redaction_tests" && \
+       contains_pattern '#891' docs/coverage-matrix.md docs/lessons/README.md "$nfkc_lesson" && \
+       contains_pattern 'kotlin/text-processing' .github/workflows/Examples.yml && \
+       contains_pattern 'spring-boot/text-moderation-api' .github/workflows/Examples.yml && \
+       contains_pattern '"issue_numbers": \[891\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$nfkc_filter" "$nfkc_filter_tests" "$nfkc_redaction" "$nfkc_redaction_tests" "$nfkc_properties" "$nfkc_config" "$nfkc_context_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
+       [ -f "$nfkc_lesson" ] && [ -f "$nfkc_review" ]; then
+      echo "NFKC source-offset normalization examples and lesson are registered."
+    else
+      echo "ERROR: NFKC source-offset normalization contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== JaVers bounded history query guard ==="
+    javers_order_build="exposed/javers-persistence-audit/build.gradle.kts"
+    javers_order_service="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/OrderAuditService.kt"
+    javers_order_repository="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/BoundedRedissonCdoSnapshotRepository.kt"
+    javers_order_tests="exposed/javers-persistence-audit/src/test/kotlin/io/bluetape4k/workshop/exposed/javers/persistence"
+    javers_order_readme="exposed/javers-persistence-audit/README.md"
+    javers_order_readme_ko="exposed/javers-persistence-audit/README.ko.md"
+    javers_approval_service="exposed/javers-approval-workflow/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/approval/service/ProductPolicyApprovalService.kt"
+    javers_approval_tests="exposed/javers-approval-workflow/src/test/kotlin/io/bluetape4k/workshop/exposed/javers/approval"
+    javers_approval_readme="exposed/javers-approval-workflow/README.md"
+    javers_approval_readme_ko="exposed/javers-approval-workflow/README.ko.md"
+    javers_history_lesson="docs/lessons/2026-09-05-issue-892-javers-history-limit.md"
+    javers_history_review="docs/superpowers/specs/2026-09-05-issue-892-javers-history-limit-implementation-review.md"
+    if contains_pattern '@JvmOverloads' "$javers_order_service" "$javers_approval_service" && \
+       contains_pattern '\.limit\(limit\)' "$javers_order_service" "$javers_approval_service" && \
+       contains_pattern 'limit in 1\.\.MAX_HISTORY_LIMIT' "$javers_order_service" "$javers_approval_service" && \
+       contains_pattern 'range\(-queryParams\.limit\(\), -1\)' "$javers_order_repository" && \
+       contains_pattern 'supportsBoundedExactInstanceHistory' "$javers_order_repository" && \
+       contains_pattern 'delegate\.getStateHistory' "$javers_order_repository" && \
+       contains_pattern 'decodeCount' "$javers_order_tests" && \
+       contains_pattern 'unsupported query parameters delegate' "$javers_order_tests" && \
+       contains_pattern 'newest-first' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" && \
+       contains_pattern 'authorization.*redaction' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" && \
+       contains_pattern 'libs\.bluetape4k\.redisson' "$javers_order_build" && \
+       contains_pattern ':exposed-javers-approval-workflow:test' .github/workflows/Examples.yml && \
+       contains_pattern ':exposed-javers-persistence-audit:test' .github/workflows/Examples.yml && \
+       contains_pattern '#892' docs/coverage-matrix.md docs/lessons/README.md "$javers_history_lesson" && \
+       contains_pattern '"issue_numbers": \[892\]' docs/ecosystem-reuse-train.json && \
+       contains_pattern '2\.0\.0' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_order_service" "$javers_order_repository" "$javers_order_tests" "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_service" "$javers_approval_tests" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
+       [ -f "$javers_history_lesson" ] && [ -f "$javers_history_review" ]; then
+      echo "JaVers bounded history query examples and lesson are registered."
+    else
+      echo "ERROR: JaVers bounded history query contract is missing or stale."
       exit 1
     fi
 

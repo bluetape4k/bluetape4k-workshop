@@ -24,7 +24,7 @@ before the current Exposed row and JaVers audit history are updated.
 | `submitProposal(requester, proposed)` | Loads the current row, compares current vs proposed with JaVers, and stores a pending proposal with changed-field summaries |
 | `approveProposal(reviewer, proposalId, reason)` | Commits the proposed aggregate to JaVers, updates the current row, and marks the proposal approved |
 | `rejectProposal(reviewer, proposalId, reason)` | Records the rejection reason without changing the current row or adding a JaVers snapshot |
-| `getHistory(policyId)` | Returns approved JaVers snapshots only, oldest-first |
+| `getHistory(policyId, limit = 100)` | Pushes a `1..100` query limit and returns approved JaVers snapshots newest-first |
 
 ## Approval Workflow vs Append-Only Audit
 
@@ -33,6 +33,19 @@ before the current Exposed row and JaVers audit history are updated.
 | Append-only audit (`exposed/javers-audit`) | Every save operation commits the aggregate state | Not modeled; the saved state is already audit history |
 | Approval workflow (this module) | Only initial publish and approved proposals commit aggregate state | Durable proposal decisions in `PolicyProposalTable`, not JaVers snapshots |
 | Redis-backed audit (`exposed/javers-persistence-audit`) | Commits are persisted to Redis-backed JaVers repository | Persistence concern, not approval-gate behavior |
+
+## Bounded History Contract
+
+`getHistory(policyId, limit)` accepts `1..100`; the one-argument JVM overload
+uses 100. It applies `QueryBuilder.limit` before JaVers returns snapshots and
+does not sort or truncate the materialized list. Approved snapshots are
+newest-first, matching the 2.0.0 consumer contract. This is a behavioral
+migration from the former oldest-first example.
+
+Rejected proposals still add no snapshot. An empty history can mean either an
+unknown policy or one without an approved commit, so it is not an existence
+check. `CdoSnapshot` contains policy fields; callers that expose history through
+an HTTP/API boundary must add authorization and redaction.
 
 ## Domain Schema
 
@@ -72,7 +85,7 @@ val proposal = service.submitProposal("bob", proposed)
 proposal.changedFields.map { it.path } // ["pricing.amount", "title"]
 
 service.approveProposal("carol", proposal.id, "Pricing reviewed")
-val approvedHistory = service.getHistory(100L)
+val approvedHistory = service.getHistory(100L, limit = 10)
 ```
 
 ## Tests
@@ -81,6 +94,6 @@ val approvedHistory = service.getHistory(100L)
 ./gradlew :exposed-javers-approval-workflow:test
 ```
 
-The test suite covers scalar and nested value-object diffs, approval updating
-the current row and JaVers history, rejection leaving both unchanged, and audit
-lookup returning approved snapshots only.
+The test suite covers scalar and nested value-object diffs, bounded newest-first
+history, JVM overloads, invalid limits, approval updating the current row and
+JaVers history, and rejection leaving both unchanged.

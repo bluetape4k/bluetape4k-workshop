@@ -8,7 +8,11 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.lingua.allLanguageDetector
 import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.text.search.ahoCorasick
+import io.bluetape4k.tokenizer.utils.DictionaryVersion
 import io.bluetape4k.workshop.textmoderation.config.TextModerationProperties
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -61,5 +65,63 @@ class TextModerationServiceTest {
         assertFailsWith<PayloadTooLargeException> {
             service.analyze("x".repeat(121))
         }
+    }
+
+    @Test
+    fun `versioned analyze는 parse와 mask에 같은 snapshot을 사용한다`() {
+        val dictionary = VersionedModerationDictionary(
+            initialVersion = DictionaryVersion("moderation-blockwords", 1),
+            initialWords = listOf("spam"),
+            historyCapacity = 1,
+        )
+        val versionedService = TextModerationService(
+            properties = TextModerationProperties(maxTextCharacters = 120),
+            languageDetector = allLanguageDetector {
+                withMinimumRelativeDistance(0.0)
+                withLowAccuracyMode()
+            },
+            moderationDictionary = dictionary,
+        )
+        val executor = Executors.newFixedThreadPool(5)
+        val start = CountDownLatch(1)
+
+        try {
+            val readers = List(4) {
+                executor.submit<List<VersionedModerationResult>> {
+                    start.await(5, TimeUnit.SECONDS)
+                    List(100) { versionedService.analyzeWithVersion("spam ham") }
+                }
+            }
+            val writer = executor.submit {
+                start.await(5, TimeUnit.SECONDS)
+                versionedService.reloadDictionary(DictionaryVersion("moderation-blockwords", 2)) {
+                    listOf("ham")
+                }
+            }
+
+            start.countDown()
+            writer.get(5, TimeUnit.SECONDS)
+            readers.flatMap { it.get(15, TimeUnit.SECONDS) }.forEach { result ->
+                when (result.dictionary.version.revision) {
+                    1L -> {
+                        result.response.matchedTerms shouldBeEqualTo listOf("spam")
+                        result.response.maskedText shouldBeEqualTo "**** ham"
+                    }
+                    2L -> {
+                        result.response.matchedTerms shouldBeEqualTo listOf("ham")
+                        result.response.maskedText shouldBeEqualTo "spam ***"
+                    }
+                    else -> error("unexpected revision=${result.dictionary.version.revision}")
+                }
+            }
+        } finally {
+            executor.shutdownNow()
+            executor.awaitTermination(5, TimeUnit.SECONDS)
+        }
+    }
+
+    @Test
+    fun `기존 analyze와 automaton constructor는 호환된다`() {
+        service.analyze("spam").maskedText shouldBeEqualTo "****"
     }
 }

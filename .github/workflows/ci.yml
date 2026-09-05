@@ -14,8 +14,8 @@ on:
       - 'LICENSE'
       - '.omc/**'
       - '.claude/**'
+  # Stacked child PRs may target a non-default base; paths still bound the workload.
   pull_request:
-    branches: [ develop, main ]
     paths-ignore:
       - '**.md'
       - 'docs/**'

@@ -32,7 +32,7 @@ tasks.register<Test>("integrationTest") {
 
 dependencies {
     // Graph core + TinkerGraph: in-memory 백엔드라 기본 테스트에 Docker가 필요하지 않다.
-    // 버전은 bluetape4k-dependencies BOM이 관리한다. 현재 기준은 0.4.1이다.
+    // 버전은 bluetape4k-dependencies BOM이 관리한다. 현재 기준은 2.0.0이다.
     implementation(libs.bluetape4k.graph.core)
     implementation(libs.bluetape4k.graph.tinkerpop)
 

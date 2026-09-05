@@ -8,6 +8,8 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LanguageDetectionServiceTest {
@@ -60,5 +62,22 @@ class LanguageDetectionServiceTest {
         val detected = service.detectLanguage(text)
         val topConfidence = service.computeConfidenceValues(text).keys.firstOrNull()
         detected shouldBeEqualTo topConfidence
+    }
+
+    @Test
+    fun `shared detector는 여러 동기 caller의 접근을 안전하게 직렬화한다`() {
+        val executor = Executors.newFixedThreadPool(8)
+        try {
+            val results = List(80) {
+                executor.submit<Language?> {
+                    service.detectLanguage("안녕하세요. 오늘 날씨가 참 좋네요.")
+                }
+            }.map { it.get(10, TimeUnit.SECONDS) }
+
+            results.forEach { it shouldBeEqualTo Language.KOREAN }
+        } finally {
+            executor.shutdownNow()
+            executor.awaitTermination(5, TimeUnit.SECONDS)
+        }
     }
 }

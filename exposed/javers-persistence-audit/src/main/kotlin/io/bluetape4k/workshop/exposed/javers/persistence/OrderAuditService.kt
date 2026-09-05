@@ -20,7 +20,7 @@ import org.jetbrains.exposed.v1.jdbc.upsert
  * ## 동작 / 계약
  * - [place]는 현재 row를 upsert하기 전에 초기 [Order] snapshot을 commit한다.
  * - [markPaid]는 paid 상태를 materialize하기 전에 갱신 snapshot을 commit한다.
- * - [getHistory]는 Redis-backed JaVers snapshot을 오래된 순서로 읽는다.
+ * - [getHistory]는 Redis-backed JaVers snapshot을 bounded newest-first 순서로 읽는다.
  * - [delete]는 현재 row를 제거하기 전에 terminal snapshot을 쓴다.
  *
  * ```kotlin
@@ -32,7 +32,10 @@ import org.jetbrains.exposed.v1.jdbc.upsert
 class OrderAuditService(
     private val javers: Javers,
 ) {
-    companion object: KLogging()
+    companion object: KLogging() {
+        private const val DEFAULT_HISTORY_LIMIT = 100
+        private const val MAX_HISTORY_LIMIT = 100
+    }
 
     /**
      * [order]를 JaVers에 commit하고 현재 Exposed row를 upsert한다.
@@ -89,14 +92,24 @@ class OrderAuditService(
     }
 
     /**
-     * [orderId]의 모든 JaVers snapshot을 오래된 순서로 반환한다.
+     * [orderId]의 JaVers snapshot을 [limit]개까지 newest-first 순서로 반환한다.
+     *
+     * 빈 목록은 unknown order와 아직 audit commit이 없는 order를 구분하지 않는다.
+     * 반환 snapshot을 외부 API로 노출할 때는 호출자가 authorization과 redaction을 적용해야 한다.
      */
-    fun getHistory(orderId: String): List<CdoSnapshot> {
+    @JvmOverloads
+    fun getHistory(
+        orderId: String,
+        limit: Int = DEFAULT_HISTORY_LIMIT,
+    ): List<CdoSnapshot> {
         orderId.requireNotBlank("orderId")
+        require(limit in 1..MAX_HISTORY_LIMIT) {
+            "limit must be between 1 and $MAX_HISTORY_LIMIT."
+        }
         val query = QueryBuilder.byInstanceId(orderId, Order::class.java)
+            .limit(limit)
             .build()
         return javers.findSnapshots(query)
-            .sortedBy { it.commitMetadata.commitDate }
     }
 
     /**

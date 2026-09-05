@@ -3,9 +3,10 @@
 [한국어](README.ko.md) | English
 
 This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
-helpers. It covers six reader-visible tasks: abuse-word filtering, language detection, text
-normalization before indexing, sync/coroutine multilingual search indexes with highlighted results,
-and a small sensitive-text redaction pipeline with audit-safe span metadata.
+helpers. It covers abuse-word filtering, language detection, text normalization before indexing,
+startup dictionary readiness, sync/coroutine multilingual search indexes with highlighted results,
+atomic whole-index generation replacement, and a small sensitive-text redaction pipeline with
+audit-safe span metadata.
 
 ## Architecture
 
@@ -23,13 +24,15 @@ and a small sensitive-text redaction pipeline with audit-safe span metadata.
 
 | class | backing API | contract |
 |---|---|---|
-| `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC matching with overlaps; masks matched spans with `*` |
+| `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC/NFKC matching with overlaps; maps matches back to source spans and masks them with `*` |
 | `LanguageDetectionService` | Lingua detector from `bluetape4k-text-lingua` | Reuses one detector and returns `null` for blank or unknown text |
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | Serializes detector access for concurrent coroutine callers |
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | Detects document/query language, builds an inverted term index, ranks matched documents, and emits source-span highlights |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
-| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Validates a small policy, finds email/phone/token/keyword spans, merges overlaps, masks same-length output, and returns safe metadata |
+| `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | Shares one suspend preload attempt and rejects request work until both dictionaries are ready |
+| `VersionedMultilingualSearchIndex` | Korean `DictionarySnapshot`, exact-noun Aho-Corasick matcher, `VersionedDictionary` | Publishes one completed noun-dictionary/index generation and returns the exact revision used by each search |
+| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Applies a selectable keyword normalization policy, restores source spans, merges overlaps, masks same-length output, and returns safe metadata |
 
 ## Usage
 
@@ -45,6 +48,24 @@ filter.findMatches("spam and abuse")              // AhoCorasickMatch list
 
 The automaton is built once from the keyword collection. After construction, matching is a single
 pass over the input text plus the number of matches.
+
+Choose NFKC when a policy term must also match compatibility characters:
+
+```kotlin
+val corporateFilter = AbuseWordFilter(
+    abuseWords = listOf("(\uC8FC)"),
+    normalization = NormalizationForm.NFKC,
+)
+
+corporateFilter.findMatches("Company: \u3231 Bluetape").single().let { it.start to it.end }
+// source range of U+3231, not the three-character normalized range
+corporateFilter.filterText("Company: \u3231 Bluetape")
+// "Company: * Bluetape"
+```
+
+NFC remains the default. NFKC expands the U+3231 compatibility character only for matching; returned
+offsets and masking still use the original Kotlin `String` span. An interacting normalization
+segment longer than 1,024 code units fails fast without echoing caller text.
 
 ### Language detection
 
@@ -98,6 +119,18 @@ Use a stronger detector when the input contains jurisdiction-specific identifier
 addresses, names, OCR output, multilingual PII beyond the fixture rules, or compliance-driven DLP
 requirements. This workshop pipeline is a learning example, not a full classifier.
 
+For NFKC keyword redaction, set the policy explicitly:
+
+```kotlin
+val policy = SensitiveRedactionPolicy.of(
+    rules = listOf(SensitiveRedactionRule.keyword("keyword.corp", "keyword", "(\uC8FC)")),
+    keywordNormalization = NormalizationForm.NFKC,
+)
+val result = SensitiveTextRedactionPipeline.of(policy).redact("Company: \u3231 Bluetape")
+
+result.spans.single().matchedLength // 1: the original U+3231 span
+```
+
 ### Multilingual search index
 
 ```kotlin
@@ -136,6 +169,41 @@ inspect:
   `highlightedText` uses deterministic non-overlapping fragments from Aho-Corasick tokenization,
   so nested `<mark>` tags are intentionally avoided.
 
+### Versioned runtime search index
+
+Use `VersionedMultilingualSearchIndex` when Korean noun dictionaries and documents must change
+without exposing a partially rebuilt search generation:
+
+```kotlin
+val index = VersionedMultilingualSearchIndex.indexOf(
+    source = VersionedMultilingualSearchSource(
+        koreanDictionary = KoreanDictionaryProvider.currentDictionarySnapshot(),
+        documents = v1Documents,
+    ),
+    historyCapacity = 2,
+)
+
+val v1 = index.search("서울카페")
+val v2Dictionary = KoreanDictionaryProvider.reloadDictionaries(
+    DictionaryVersion("korean-dictionary", 2),
+    newKoreanDictionaries,
+)
+index.reload(VersionedMultilingualSearchSource(v2Dictionary, v2Documents))
+val v2 = index.search("서울카페")
+index.rollback()
+```
+
+`search` returns `VersionedSearchResult`, which pairs the captured revision with its hits. The
+versioned path builds an exact Korean noun Aho-Corasick matcher from the supplied public snapshot
+and injects that same matcher into document and query tokenization. It therefore never reads the
+global Korean provider after publication. The loader and full `MultilingualSearchIndex` build
+finish before the completed `DictionarySnapshot` is published. Failed or stale candidates leave
+the current generation and bounded rollback history unchanged. This exact-noun behavior is
+deliberately narrower than the existing morphology-oriented `MultilingualSearchIndex`; Japanese
+and English retain their existing tokenizer paths. Coroutine callers should prepare source data on
+their own dispatcher before synchronous publication. Candidate documents and nouns are copied into
+bounded snapshots with per-entry and aggregate character limits before index construction.
+
 ### Coroutine-safe search index
 
 Use the coroutine variant when the same index is queried from many coroutine workers:
@@ -154,6 +222,34 @@ The coroutine index keeps the synchronous API separate on purpose. `Multilingual
 small for single-threaded examples, while `CoroutineMultilingualSearchIndex` adds a guarded detector
 wrapper, an immutable index snapshot, and suspend APIs that run CPU-bound text work on
 `Dispatchers.Default`.
+
+### Dictionary preload and readiness
+
+Preload both tokenizer dictionaries during startup, before building an index or accepting requests:
+
+```kotlin
+val dictionaries = TokenizerDictionaryReadiness()
+dictionaries.preload()
+
+val index = CoroutineMultilingualSearchIndex.indexOf(documents)
+val result = dictionaries.runWhenReady { index.search("\uC11C\uC6B8 \uCE74\uD398") }
+
+when (result) {
+    is DictionaryReadyResult.Ready -> result.value
+    is DictionaryReadyResult.NotReady -> emptyList()
+}
+```
+
+The initial state is `NOT_READY`; an active attempt publishes `LOADING`, and `READY` is visible only
+after both `KoreanProcessor.preload()` and `JapaneseProcessor.preload()` complete. Concurrent startup
+callers share one attempt. Failure or cancellation is rethrown after the state returns to `NOT_READY`,
+so the next caller can retry with a new attempt number. A cancellation check after both loaders also
+prevents a loader that accidentally swallows cancellation from publishing `READY`.
+
+`runWhenReady` returns `NotReady` without running its block while startup is incomplete. This avoids
+partially initialized request results. The existing synchronous tokenizer facade is still compatible,
+but it may block on first use when startup preload is skipped. For predictable request latency, use the
+order shown above: preload, build the existing index, then expose the readiness-gated search path.
 
 ### Japanese tokenizer backend comparison
 
@@ -192,7 +288,8 @@ are never committed.
 
 ## Dependencies
 
-The module uses the repository version catalog:
+The module uses the repository version catalog and resolves bluetape4k modules through the single
+`bluetape4k-dependencies:2.0.0` BOM:
 
 ```kotlin
 dependencies {

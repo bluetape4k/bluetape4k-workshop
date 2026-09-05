@@ -64,8 +64,8 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`exposed-mvc-jdbc`](exposed/mvc-jdbc/) | `logging`, `junit5`, `testcontainers` | PostgreSQL (TC) | Spring MVC JDBC에서 Exposed DAO/SQL DSL과 offset·primary-key cursor pagination 사용 |
 | Basic | [`exposed-webflux-r2dbc`](exposed/webflux-r2dbc/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | Exposed R2DBC keyset cursor pagination + WebFlux 코루틴 핸들러 |
 | Advanced | [`exposed-mvc-virtualthread`](exposed/mvc-virtualthread/) | `logging`, `coroutines`, `testcontainers` | PostgreSQL (TC) | 가상 스레드를 활용한 Exposed JDBC + Spring MVC |
-| Basic | [`exposed-javers-approval-workflow`](exposed/javers-approval-workflow/) | `javers-core` | H2 | Approval/rejection decision을 포함한 JaVers pre-commit diff review |
-| Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `testcontainers` | Redis (TC) + H2 | Exposed current-row persistence와 Redis-backed JaVers audit history |
+| Basic | [`exposed-javers-approval-workflow`](exposed/javers-approval-workflow/) | `javers-core` | H2 | Bounded newest-first approved history를 포함한 JaVers pre-commit diff review |
+| Advanced | [`exposed-javers-persistence-audit`](exposed/javers-persistence-audit/) | `javers-core`, `javers-persistence-redis`, `redisson`, `testcontainers` | Redis (TC) + H2 | Exposed current-row persistence와 bounded Redis-range JaVers history |
 | Advanced | [`ktor-exposed-rest`](ktor/exposed-rest/) | `ktor-core`, `exposed-ktor-core`, `exposed-ktor-jdbc`, `exposed-jdbc`, `testcontainers` | PostgreSQL (TC) | backend-selective Ktor health/readiness와 Exposed JDBC transaction, 안전한 database error mapping |
 | Basic | [`spring-data-r2dbc-coroutines`](spring-data/r2dbc-coroutines/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 코루틴을 활용한 R2DBC 레포지토리 |
 | Basic | [`spring-data-r2dbc-examples`](spring-data/r2dbc-examples/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | R2DBC 기본 예제와 DSL |
@@ -195,7 +195,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`graph-io-pipeline`](graph/io-pipeline/) | `graph-core`, `graph-tinkerpop`, `graph-io-csv`, `graph-io-jackson3`, `graph-io-graphml` | In-memory | CSV fixture import, Jackson3 NDJSON export/import, GraphML export/import, graph-io report 확인 |
 | Basic | [`graph-social-network`](graph/social-network/) | `graph-core`, `graph-tinkerpop` | In-memory | Social graph modeling, hop traversal, weighted shortest path |
 | Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop`, Neo4j/Memgraph adapters | In-memory + Testcontainers | Heterogeneous knowledge graph, traversal, 2.0.0 schema drift 계획 |
-| Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse 관계 분석 |
+| Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | 호출별 PageRank provider fallback 관찰을 포함한 Fraud/abuse 관계 분석 |
 | Advanced | [`graph-event-lineage`](graph/event-lineage/) | `graph-core`, `graph-tinkerpop`, `graph-neo4j`, `testcontainers` | TinkerGraph + Neo4j Testcontainer | Event lineage graph modeling, 영향도 traversal, audit trail 조립 |
 | Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | 설명 가능한 추천 graph traversal |
 
@@ -204,6 +204,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :graph-event-lineage:test
 ./gradlew :graph-social-network:test
 ./gradlew :graph-knowledge-graph:test
+./gradlew :graph-abuser-detection:test
 ```
 
 ---
@@ -216,7 +217,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 |------|------|----------------------|-------|-----------|
 | Basic | [`spring-security-mvc`](spring-security/mvc/) | `logging`, `spring-boot4-core` | In-memory | Spring Security MVC: JWT, 메서드 보안 |
 | Basic | [`spring-security-webflux`](spring-security/webflux/) | `coroutines`, `spring-boot4-core` | In-memory | Spring Security WebFlux: 리액티브 필터 체인 |
-| Basic | [`kotlin-text-processing`](kotlin/text-processing/) | `text-search`, `lingua`, `text-korean`, `text-japanese`, `coroutines` | In-memory | 다국어 텍스트 정규화, 언어 감지, 동기/코루틴 검색 색인, 원문 span highlighting |
+| Basic | [`kotlin-text-processing`](kotlin/text-processing/) | `tokenizer-core`, `text-search`, `lingua`, `text-korean`, `text-japanese`, `coroutines` | In-memory | 다국어 NFC/NFKC 정규화, 시작 단계 dictionary readiness, 전체 index generation 원자 교체·rollback, bounded 원문 span 복원·highlighting |
 | Basic | [`spring-modulith-module-boundaries`](spring-modulith/module-boundaries/) | Spring Modulith | In-memory | Named interface와 event contract로 module boundary 검증 |
 | Advanced | [`spring-modulith-events-deep-dive`](spring-modulith/events-deep-dive/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 영속성을 갖춘 Modulith 애플리케이션 이벤트 |
 | Advanced | [`spring-modulith-jpa-demo`](spring-modulith/jpa-demo/) | `logging`, `testcontainers` | PostgreSQL (TC) | JPA를 활용한 Modulith 모듈 캡슐화 |

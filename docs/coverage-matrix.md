@@ -3,7 +3,7 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-09-04
+> 마지막 갱신: 2026-09-05
 
 ## 2026-08-25 ecosystem 재사용 2차 gate
 
@@ -56,8 +56,11 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-junit5` | All test modules | ✅ Good | `SuspendedJobTester` / `MultithreadingTester` 미노출 | concurrency test harness demo | — | — |
 | `bluetape4k-assertions` | All test modules | ⚠️ Partial | module별 matcher 적용 편차; #776 guard는 consumer generic Boolean/null을 0건으로 유지 | assertion migration + raw fallback inventory | exact-head matcher migration with failure-message parity | #776, #792 |
 | `bluetape4k-testcontainers` | `exposed-*`, `spring-data-*`, `redis-*`, `messaging-*` | ✅ Good | — | — | — | — |
-| `bluetape4k-graph` | `graph/social-network`, `graph/knowledge-graph` | ✅ Good | 기존 social path 예제가 hop 수만 비교하고 knowledge graph가 schema drift를 계획하지 않았음 | `PathOptions.weightProperty`와 누적 `GraphPath.totalWeight`를 사용하는 deterministic social path | Neo4j/Memgraph backend의 `maxDepth`/`maxVisited`·missing-weight conformance, Entity/Concept/Document `GraphSchemaDriftPlanner` 계획과 unsupported 보고 | #886, #887 |
+| `bluetape4k-graph` | `graph/social-network`, `graph/knowledge-graph`, `graph/abuser-detection` | ✅ Good | 기존 social path 예제가 hop 수만 비교하고 knowledge graph가 schema drift를 계획하지 않았으며 PageRank 실행 경로가 호출 결과에 귀속되지 않았음 | `PathOptions.weightProperty`와 누적 `GraphPath.totalWeight`를 사용하는 deterministic social path | Neo4j/Memgraph backend의 `maxDepth`/`maxVisited`·missing-weight conformance, Entity/Concept/Document `GraphSchemaDriftPlanner` 계획과 unsupported 보고, `GraphAlgorithmProviderSelector` 기반 호출별 PageRank fallback 관찰 | #886, #887, #888 |
 | `bluetape4k-graph-io` | `graph/io-pipeline` | ✅ Good | 운영용 durable store와 graph+store atomic exactly-once는 범위 밖 | `InMemoryGraphImportCheckpointStore`를 사용한 CSV 실패·재개 | 공유 CAS/lease store와 backend transaction을 포함한 운영 연동 | #863 |
+| `bluetape4k-text-korean` / `bluetape4k-text-japanese` | `kotlin/text-processing` | ✅ Good | 기존 동기 facade는 첫 요청에서 dictionary load가 발생할 수 있고 준비 중 요청의 명시적 거절 경계가 없었음 | 두 processor suspend preload의 단일 startup attempt와 `NOT_READY`/`LOADING`/`READY` gate | 실패·취소 뒤 원래 예외 전파와 retry, 동시 caller single initializer, 기존 index 결과 parity | #889 |
+| `bluetape4k-text-core` | `kotlin/text-processing`, `spring-boot/text-moderation-api` | ✅ Good | application-owned control plane과 durable revision 저장소는 범위 밖 | `VersionedDictionary`로 완성된 검색 index·blockword automaton generation을 원자 교체하고 bounded rollback | 인증·감사·durable revision store를 갖춘 운영 control plane | #890 |
+| `bluetape4k-text-search` | `kotlin/text-processing`, `spring-boot/text-moderation-api` | ✅ Good | locale 자동 정책과 streaming normalization은 범위 밖 | 선택형 NFC/NFKC matching, compatibility expansion의 원문 offset 복원, 1,024 segment fail-fast | locale별 정책 registry와 streaming offset mapping | #891 |
 
 ---
 
@@ -68,6 +71,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-exposed` (JDBC) | `exposed-mvc-jdbc` | ✅ Good | cursor token의 인코딩·서명·tenant scope는 caller-owned | — | `BookRepository.findCursorPage`의 primary-key keyset, pageSize+1 sentinel, sparse ID mutation boundary | #79, #881 |
 | `bluetape4k-exposed-ktor` | `ktor/exposed-rest` | ✅ Good | legacy aggregator가 core/backend 경계를 함께 노출했음 | backend-neutral core health/readiness와 선택형 JDBC adapter | R2DBC/cache adapter를 classpath 조건으로 추가하는 Ktor consumer fixture | #880 |
 | `bluetape4k-exposed` (R2DBC) | `exposed-webflux-r2dbc` | ✅ Good | cursor token의 인코딩·서명·tenant scope는 caller-owned | — | `LongR2dbcRepository.findCursorPage`, suspend cancellation/resource release, sparse ID mutation boundary | #881 |
+| `bluetape4k-javers` / `bluetape4k-javers-persistence-redis` | `exposed-javers-approval-workflow`, `exposed-javers-persistence-audit` | ✅ Good | cursor pagination과 filtered Redis query pushdown은 범위 밖 | `QueryBuilder.limit` 기반 `1..100` approved history와 newest-first ordering | Exact-instance `RListMultimap.range(-limit, -1)` read/decode bound와 filtered-query fallback | #892 |
 | `bluetape4k-spring-boot-r2dbc` | `spring-data-r2dbc-webflux-exposed` | ✅ Good | QBE matcher의 ignore-case는 upstream compiler 범위 밖 | Spring Data Exposed QBE + FluentQuery projection/page/count/exists를 사용하는 WebFlux CRUD | production query policy와 projection contract를 포함한 full WebFlux CRUD | #79, #882 |
 | `bluetape4k-spring-boot-redis` | `spring-boot-cache-redis` | ⚠️ Partial | custom codec, key별 TTL | Redis L2 fallback을 가진 Caffeine-first cache | TTL override를 포함한 distributed cache cluster | — |
 | `bluetape4k-redis` | `redis-redisson-examples`, `redis-distributed-lock` | ✅ Good | reactive Redisson 미노출 | — | Reactive Redisson RMapReactive example | — |
@@ -125,7 +129,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | bluetape4k lib | Existing example | Coverage | Gap | Proposed Basic | Proposed Advanced | Issue |
 |----------------|-----------------|----------|-----|----------------|-------------------|-------|
 | `bluetape4k-leader` (Redis) | `leader-leader-election` | ✅ Good | virtual thread variant가 덜 두드러짐 | — | health endpoint가 있는 leader election | — |
-| `bluetape4k-leader` audit exporter | `leader/job-safety-lab` | ✅ Good | Redis acquire/release lifecycle과 bounded audit export 경계가 없었음 | `MEMORY` redacted report와 queue/drop/retry snapshot | trusted HTTPS endpoint, allow-list/header 검증, bounded shutdown | #867 |
+| `bluetape4k-leader` audit exporter | `leader/job-safety-lab` | ✅ Good | Redis acquire/release lifecycle과 bounded audit export 경계가 없었음 | `MEMORY` redacted report와 queue/drop/retry 상태 기록 | trusted HTTPS endpoint, allow-list/header 검증, bounded shutdown | #867 |
 | `bluetape4k-leader` lease-extension observation | `leader/job-safety-lab` | ✅ Good | watchdog와 사용자 extension terminal outcome을 Micrometer에서 확인할 수 없었음 | global observer 등록/해제, `source`·`outcome` bounded tag, owner-thread proxy | released scoped-registration ABI와 context별 isolation | #868 |
 | `bluetape4k-leader-spring-boot` / `bluetape4k-leader-micrometer` | `leader/backend-comparison-lab` | ✅ Good | 정적 descriptor, bounded connectivity probe, Actuator health, low-cardinality metric 계약을 credential-free로 검증 | — | 실제 backend practice module에서 client lifecycle·failover 및 credential 경계 검증 | #866 |
 | `bluetape4k-leader-spring-boot` scheduled policy | `leader/tenant-scheduler` | ✅ Good | 기존 reducer에는 YAML `@Scheduled` selector와 policy precedence/lifecycle 실행 예제가 없었음 | exact selector, fail-fast binding, `@LeaderScheduled` precedence, Spring proxy observation, context close | 실제 backend의 distributed scheduler failover와 hot reload | #869 |

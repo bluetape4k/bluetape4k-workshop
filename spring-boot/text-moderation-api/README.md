@@ -26,9 +26,9 @@ components built once by Spring configuration.
 
 ![spring-boot-text-moderation-api sequence](../../docs/images/readme-diagrams/spring-boot-text-moderation-api-readme-sequence-01.png)
 
-The success path reuses the singleton `LanguageDetector` and
-`AhoCorasickAutomaton`. Invalid requests short-circuit to `400 Bad Request`;
-oversized requests return `413 Content Too Large`.
+The success path reuses the singleton `LanguageDetector` and captures one immutable
+`VersionedModerationDictionary` snapshot for matching and masking. Invalid requests short-circuit
+to `400 Bad Request`; oversized requests return `413 Content Too Large`.
 
 ## Endpoint
 
@@ -102,14 +102,54 @@ PY
 |---|---:|---|
 | `workshop.text-moderation.max-text-characters` | `2000` | Maximum accepted request text length |
 | `workshop.text-moderation.blockwords` | `spam,badword,abuse,hate` | Terms registered in the moderation automaton |
+| `workshop.text-moderation.normalization` | `NFC` | Unicode normalization applied to blockwords and request text (`NONE`, `NFC`, or `NFKC`) |
 
 The default blockwords are intentionally small so learners can follow the full
 flow from configuration to response.
+
+## Runtime dictionary replacement
+
+The management boundary stays at the service layer; this workshop does not expose a public reload
+endpoint. An authenticated application-owned control plane can validate and publish a complete
+candidate through these APIs while the existing HTTP response remains unchanged:
+
+```kotlin
+val v1 = service.analyzeWithVersion("spam")
+service.reloadDictionary(DictionaryVersion("moderation-blockwords", 2)) {
+    listOf("phishing", "malware")
+}
+val v2 = service.analyzeWithVersion("phishing")
+service.rollbackDictionary()
+```
+
+Loader execution, bounded input validation, and Aho-Corasick construction finish before the new
+`DictionarySnapshot` is published. Each request captures one snapshot, so parsing and masking use
+the same revision. Failed or stale candidates preserve both the current dictionary and rollback
+history. Logs contain only the dictionary name, revision, word count, and total character count;
+raw blockwords and moderation text are never logged. The loader collection is copied and bounded
+while iterating, and shared Lingua detector access is serialized for concurrent singleton calls.
+
+Use NFKC only when compatibility characters are part of the moderation policy:
+
+```yaml
+workshop:
+  text-moderation:
+    normalization: NFKC
+    blockwords:
+      - "(\uC8FC)"
+```
+
+This configuration also detects source text containing the U+3231 compatibility character. The
+automaton maps the normalized match back to the one-code-unit source span, so
+`Company: \u3231 Bluetape` becomes
+`Company: * Bluetape`. NFC remains the backward-compatible default. A normalization segment over
+1,024 code units is rejected without echoing request text.
 
 ## Used Bluetape4k features
 
 | Feature | Where | Why it matters |
 |---|---|---|
+| `bluetape4k-tokenizer-core` | `VersionedDictionary` and `DictionarySnapshot` | Atomically publishes completed blockword generations with bounded rollback history |
 | `bluetape4k-text-search` | `ahoCorasick { ... }` | Builds one reusable multi-keyword matcher instead of scanning each word manually |
 | `bluetape4k-text-lingua` | `allLanguageDetector { ... }` | Provides deterministic language detection without a remote API |
 | `bluetape4k-logging` | `KLogging` and lazy `debug` logging | Records operational metadata without logging raw moderation text |
@@ -136,9 +176,12 @@ The focused test suite verifies:
 - `400 Bad Request` for blank or missing text
 - `413 Content Too Large` for oversized text
 - singleton reuse for the language detector and automaton beans
+- reload, rollback, bounded history, and stale/failed candidate preservation
+- concurrent requests observing only one complete old or new revision
+- NFKC property binding, compatibility-character matching, and source-length masking
 
 ## Dependency Note
 
-The module uses the root `bluetape4k-dependencies` BOM and the existing
-`bluetape4k-text` aliases from the repository catalog. Do not add a module-local
-version pin or a separate BOM for this example.
+The module uses the root `bluetape4k-dependencies` 2.0.0 BOM and repository catalog aliases,
+including a direct versionless `bluetape4k-text-core` dependency for `VersionedDictionary`. Do not
+add a module-local version pin or a separate BOM for this example.
