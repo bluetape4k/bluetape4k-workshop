@@ -921,6 +921,10 @@ case "${1:-help}" in
        contains_pattern 'PrivacyMetadataCategory|PrivacyRedaction|privacy_safe_derivatives' "$privacy_tests" && \
        contains_pattern 'PrivacyDerivativePipeline' "$privacy_readme" "$privacy_readme_ko" && \
        contains_pattern 'PrivacyDerivativeReport' "$privacy_processor" "$privacy_model" "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern 'toPayload' "$privacy_processor" && \
+       contains_pattern 'PrivacyDerivativePayload' "$privacy_model" "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern 'PrivacyDerivativeJackson|encodePayload|decodePayload' "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" && \
+       contains_pattern 'LIMIT_EXCEEDED|MALFORMED_JSON|TRAILING_DATA' "$privacy_tests" && \
        contains_pattern 'readImageMetadataReportStrict' "$privacy_processor" "$privacy_tests" && \
        contains_pattern 'redaction|Redaction' "$privacy_processor" "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" && \
        contains_pattern ':image-processing-profile-image-moderation:test' README.md README.ko.md && \
