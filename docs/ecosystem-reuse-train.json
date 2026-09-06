@@ -1580,7 +1580,7 @@
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-966-text-matches-flow",
-      "expected_base_ref": "feat/issue-965-privacy-derivative-payload",
+      "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -1596,8 +1596,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T-issue-966-parent-rebind-scope",
-    "checksum": "ee9ec62abe8af111b112709eb9795033b8464c749bb5bdc7841875257875a692"
+    "receipt_id": "20260907T-issue-966-develop-rebind-scope",
+    "checksum": "5a3bde6f89de65efd56f5d5c960f19a29558a43ab75146d6c5c8e36a50094d4e"
   },
   "planned_scope_replan_receipts": {
   },
