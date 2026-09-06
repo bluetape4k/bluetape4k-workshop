@@ -147,6 +147,8 @@ class SensitiveRedactionRule private constructor(
  *
  * 실제 redaction 설정은 provider [CoreRedactionPolicy]로 방어적으로 복사합니다. Workshop은
  * [keywordNormalization]과 기존 default composition을 독자가 확인할 수 있도록 노출합니다.
+ * provider delegate에는 `policy.keywordNormalization`을 그대로 전달해 원문 offset 계약을
+ * 유지합니다.
  */
 class SensitiveRedactionPolicy private constructor(
     val rules: List<SensitiveRedactionRule>,
