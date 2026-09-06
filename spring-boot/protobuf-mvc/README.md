@@ -119,8 +119,8 @@ val course: Course? = messageFromJsonOrNull<Course>(json)
 
 ### Caller-owned `ByteBuffer` Serialization
 
-The root `bluetape4k-dependencies:2.0.0` BOM resolves the versionless
-`bluetape4k-protobuf` alias to stable `2.0.0`. The `serializeTo` extension delegates to
+The root `bluetape4k-dependencies:2.1.0-SNAPSHOT` BOM resolves the versionless
+`bluetape4k-protobuf` alias to `2.1.0-SNAPSHOT`. The `serializeTo` extension delegates to
 `ProtobufSerializer.serializeTo` and lets the caller reuse heap or direct buffers:
 
 ```kotlin

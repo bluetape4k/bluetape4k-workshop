@@ -251,7 +251,7 @@ source.readUtf8() // restore original string
 
 ### 안정판 BufferedSuspendedSink 소비자 경계
 
-루트 `bluetape4k-dependencies` BOM은 `bluetape4k-okio`를 안정판 `2.0.0`으로 해석합니다. 내부 구현을
+루트 `bluetape4k-dependencies` BOM은 `bluetape4k-okio`를 `2.1.0-SNAPSHOT`으로 해석합니다. 내부 구현을
 복제하거나 직접 생성하지 않고 공개 `SuspendedSink.buffered()` 확장 함수로 `BufferedSuspendedSink`를 만듭니다.
 
 - 모든 write overload는 Okio payload를 정확히 보존하고 tail보다 먼저 complete segment를 방출합니다.

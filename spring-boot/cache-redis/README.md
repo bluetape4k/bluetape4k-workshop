@@ -51,7 +51,7 @@ Spring owns one delegate used by both `@Async` and Lettuce. Context shutdown rej
 interrupt already submitted tasks or wait indefinitely for them. The provider-defined thread name is intentional;
 use the `cacheRedisVirtualThreadExecutor` bean name and `VirtualThreads.runtimeName()` for observation. The MDC
 decorator restores the worker's previous context in `finally`, including error and empty-caller paths.
-Both virtual-thread artifacts are versionless module declarations resolved by `bluetape4k-dependencies:2.0.0`.
+Both virtual-thread artifacts are versionless module declarations resolved by `bluetape4k-dependencies:2.1.0-SNAPSHOT`.
 
 ## Redis Configuration Example
 

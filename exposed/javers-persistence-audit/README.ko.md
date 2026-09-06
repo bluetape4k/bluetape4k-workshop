@@ -5,7 +5,7 @@
 이 모듈은 작은 `exposed/javers-audit` 경계를 durable JaVers repository로 확장합니다.
 직접 저장 경로는 Issue #892의 Exposed current row와 bounded Redisson history를 유지합니다.
 최초 모듈 Issue #290의 후속 projection 경로는 snapshot을 Kafka에 발행하고,
-dependencies 2.0.0이 관리하는 JaVers Kafka projection API로 조회 가능한 Lettuce Redis
+dependencies 2.1.0-SNAPSHOT이 관리하는 JaVers Kafka projection API로 조회 가능한 Lettuce Redis
 repository를 복원합니다.
 
 In-memory JaVers history에서 외부 audit store로 넘어가면 무엇이 달라지는지
@@ -81,7 +81,7 @@ continuous worker lifecycle을 별도로 소유해야 합니다.
 
 `getHistory(orderId, limit)`은 `1..100`을 허용하고 한 인자 JVM overload는 100을 사용합니다.
 Service는 상한을 `QueryBuilder.limit`에 전달하며, 이미 materialize한 결과를 다시 정렬하거나
-잘라내지 않습니다. 반환 순서는 JaVers 2.0.0 consumer 계약인 newest-first입니다. 이는 이전
+잘라내지 않습니다. 반환 순서는 JaVers 2.1.0-SNAPSHOT consumer 계약인 newest-first입니다. 이는 이전
 workshop의 oldest-first 동작을 의도적으로 바꾸므로 `first()`를 초기 snapshot으로 사용한
 호출자는 `last()`를 사용하거나 presentation ordering을 명시적으로 적용해야 합니다.
 

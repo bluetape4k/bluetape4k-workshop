@@ -24,7 +24,7 @@ database failures leak JDBC URLs, SQL text, usernames, or passwords.
 ## Dependency Shape
 
 The module uses the root `bluetape4k-dependencies` BOM only. The important
-consumer aliases are versionless and resolve from the `2.0.0` BOM:
+consumer aliases are versionless and resolve from the `2.1.0-SNAPSHOT` BOM:
 
 ```kotlin
 implementation(libs.bluetape4k.ktor.core)

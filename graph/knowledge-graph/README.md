@@ -31,7 +31,7 @@ It shows how to:
 - Classify entities under vocabulary concepts (`IS_A` edges)
 - Traverse the graph at configurable hop depth
 - Infer association paths between distant entities with a bounded depth/count limit
-- Declare Entity/Concept/Document keys and plan schema drift with the 2.0.0
+- Declare Entity/Concept/Document keys and plan schema drift with the 2.1.0-SNAPSHOT
   `GraphSchemaDriftPlanner` contract (dry-run by default)
 - Run the same service logic against multiple graph backends (TinkerGraph, Neo4j, Memgraph)
 
@@ -167,7 +167,7 @@ dependencies {
 ```
 
 The repository root imports `platform(libs.bluetape4k.dependencies)`; these graph aliases
-are intentionally versionless and resolve against the workshop's `2.0.0` BOM.
+are intentionally versionless and resolve against the workshop's `2.1.0-SNAPSHOT` BOM.
 
 ## See Also
 

@@ -28,7 +28,7 @@ endpoint를 검증합니다. 정점이 없거나 label이 일치하지 않으면
 - 엔티티를 어휘 개념으로 분류 (`IS_A` 엣지)
 - 설정 가능한 hop 깊이로 그래프 탐색
 - 두 엔티티 사이의 연관 경로 추론 (깊이/건수 제한)
-- Entity/Concept/Document 키의 schema drift를 `2.0.0`의
+- Entity/Concept/Document 키의 schema drift를 `2.1.0-SNAPSHOT`의
   `GraphSchemaDriftPlanner` 계약으로 계획 (기본 dry-run)
 - 동일한 서비스 로직을 여러 그래프 백엔드(TinkerGraph, Neo4j, Memgraph)에서 실행
 
@@ -164,7 +164,7 @@ dependencies {
 ```
 
 저장소 root는 `platform(libs.bluetape4k.dependencies)`를 import하므로 graph alias는
-의도적으로 versionless이며 workshop `2.0.0` BOM을 사용합니다.
+의도적으로 versionless이며 workshop `2.1.0-SNAPSHOT` BOM을 사용합니다.
 
 ## 관련 문서
 

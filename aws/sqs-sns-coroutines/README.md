@@ -90,7 +90,7 @@ boundaries; they do not simulate SNS-to-SQS fanout or delayed visibility.
 ## PublishBatch walkthrough
 
 `OrderNotificationMessagingService.publishBatch` is the consumer example for the
-new bluetape4k 2.0.0 SNS batch contract. It validates a non-empty list of at most
+new bluetape4k 2.1.0-SNAPSHOT SNS batch contract. It validates a non-empty list of at most
 10 requests, uses each trimmed `idempotencyKey` as the AWS entry ID, and preserves
 the `SnsPublishBatchResult` split between `successful` and `failed` entries. A
 duplicate entry ID or blank payload fails before the SNS call. A transport or
@@ -119,7 +119,7 @@ no-automatic-retry transport boundary.
 ## SQS Observation listener walkthrough
 
 `SqsObservationExampleConfiguration` is an opt-in consumer fixture for the
-bluetape4k 2.0.0 SQS listener observation lifecycle. The default remains disabled,
+bluetape4k 2.1.0-SNAPSHOT SQS listener observation lifecycle. The default remains disabled,
 so the existing one-shot `consumeOnce` path and its retry/redelivery behavior are
 unchanged. Enable the fixture only when you want to inspect listener lifecycle
 telemetry:

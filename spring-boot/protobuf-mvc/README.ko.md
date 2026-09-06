@@ -118,8 +118,8 @@ val course: Course? = messageFromJsonOrNull<Course>(json)
 
 ### Caller-owned `ByteBuffer` 직렬화
 
-root `bluetape4k-dependencies:2.0.0` BOM은 versionless `bluetape4k-protobuf` alias를 안정판
-`2.0.0`으로 해석합니다. `serializeTo` extension은 `ProtobufSerializer.serializeTo`에 위임하며
+root `bluetape4k-dependencies:2.1.0-SNAPSHOT` BOM은 versionless `bluetape4k-protobuf` alias를
+`2.1.0-SNAPSHOT`으로 해석합니다. `serializeTo` extension은 `ProtobufSerializer.serializeTo`에 위임하며
 caller가 heap 또는 direct buffer를 재사용하게 합니다.
 
 ```kotlin

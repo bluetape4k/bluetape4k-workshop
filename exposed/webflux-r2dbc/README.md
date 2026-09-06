@@ -16,7 +16,7 @@ The module keeps transaction ownership in the service layer. Repositories expose
 | R2DBC runtime | `ExposedR2dbcConfig` creates `ConnectionFactoryOptions`, a `ConnectionPool`, and `R2dbcDatabase`. | Exposed R2DBC work runs through the pool-backed database with `Dispatchers.IO`. |
 | Service transaction boundary | `AuthorService`, `BookService`, and `OrderService` call `suspendTransaction(db = db)`. | Flow reads are collected inside the transaction before writes on the same connection. |
 | Repository primitives | Repositories return `Flow<DTO>` for selects and provide suspend insert/update/delete methods. | Repositories stay thin and do not decide transaction lifetime. |
-| Book cursor pagination | `BookRepository.findCursorPage`, `GET /api/books/cursor` | Exposed 2.0.0 `LongR2dbcRepository` keyset pagination returns `nextCursor`/`hasNext` with a bounded `pageSize + 1` query; cursor token encoding, signing, expiry, and scope remain caller-owned. |
+| Book cursor pagination | `BookRepository.findCursorPage`, `GET /api/books/cursor` | Exposed 2.1.0-SNAPSHOT `LongR2dbcRepository` keyset pagination returns `nextCursor`/`hasNext` with a bounded `pageSize + 1` query; cursor token encoding, signing, expiry, and scope remain caller-owned. |
 | Schema initialization | `DatabaseInitializer` converts the R2DBC URL to JDBC and uses Hikari once at startup. | Blocking JDBC is limited to schema creation, not request processing. |
 
 ## Order Placement Flow
@@ -77,7 +77,7 @@ The application expects PostgreSQL at `r2dbc:postgresql://localhost:5432/exposed
 GET /api/books/cursor?pageSize=2&cursor=3&sortOrder=ASC
 ```
 
-`BookRepository.findCursorPage` adapts the Exposed 2.0.0 `LongR2dbcRepository`
+`BookRepository.findCursorPage` adapts the Exposed 2.1.0-SNAPSHOT `LongR2dbcRepository`
 extension. The primary-key predicate and `pageSize + 1` sentinel keep the query
 bounded without a count query; `suspendTransaction` owns the connection and
 cooperative cancellation releases it. `nextCursor` is `null` when `hasNext` is

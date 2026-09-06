@@ -180,6 +180,6 @@ workshop:
 
 ## 의존성 메모
 
-이 모듈은 root `bluetape4k-dependencies` 2.0.0 BOM과 repository catalog alias를 사용합니다.
+이 모듈은 root `bluetape4k-dependencies` 2.1.0-SNAPSHOT BOM과 repository catalog alias를 사용합니다.
 `VersionedDictionary`를 위해 versionless `bluetape4k-text-core`도 직접 의존합니다. 이 예제를
 위해 module-local version pin이나 별도 BOM을 추가하지 않습니다.

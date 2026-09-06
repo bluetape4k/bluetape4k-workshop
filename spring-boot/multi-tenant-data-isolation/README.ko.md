@@ -3,7 +3,7 @@
 [English](README.md) | 한국어
 
 이 모듈은 tenant-safe read/write, cache key, lock key, rate-limit bucket,
-Micrometer tag와 `2.0.0` tenant context carrier를 함께 검증합니다. 실행 환경은
+Micrometer tag와 `2.1.0-SNAPSHOT` tenant context carrier를 함께 검증합니다. 실행 환경은
 H2와 인메모리 helper로 가볍게 유지해서 테스트에서 격리 계약을 바로 확인할 수 있게 했습니다.
 
 ## 아키텍처 다이어그램
@@ -74,7 +74,7 @@ tenant:tenant-alpha:lock:invoice:42
 tenant:tenant-alpha:rate-limit:reader
 ```
 
-## TenantContext carrier (2.0.0)
+## TenantContext carrier (2.1.0-SNAPSHOT)
 
 `TenantContextCarrierService`는 기존의 명시적인 `TenantId` repository predicate를
 유지하면서 실행 경계에서 값을 안전하게 공급합니다. 의존성은 루트

@@ -58,7 +58,7 @@ Pending 응답:
 ## Privacy-safe Derivatives
 
 Pending blurred JPEG와 승인된 public JPEG는 모두 workshop의
-`bluetape4k-dependencies:2.0.0` BOM이 제공하는 bluetape4k-images `1.0.0`
+`bluetape4k-dependencies:2.1.0-SNAPSHOT` BOM이 제공하는 bluetape4k-images `1.1.0-SNAPSHOT`
 `PrivacyDerivativePipeline`으로 다시 인코딩합니다. 기본 정책은 EXIF, GPS, XMP, IPTC, ICC metadata를 제거하고 EXIF orientation을
 정규화한 뒤 output을 strict하게 다시 읽어 storage 전에 검증합니다. 소비자 adapter는
 `ProfileImageProcessor.processPrivacySafe`입니다. 제한된

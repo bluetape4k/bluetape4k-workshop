@@ -189,7 +189,7 @@ val ranking = service.rankSuspiciousUsersWithExecution(
 
 ## Algorithm Execution Policy
 
-This consumer example uses the `bluetape4k-dependencies` BOM at `2.0.0` and the released graph
+This consumer example uses the `bluetape4k-dependencies` BOM at `2.1.0-SNAPSHOT` and the graph
 provider-selection API. It intentionally ships no native GDS/MAGE SDK or executor, so the policy
 matrix is explicit:
 

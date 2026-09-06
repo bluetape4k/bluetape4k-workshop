@@ -39,7 +39,7 @@ before the current Exposed row and JaVers audit history are updated.
 `getHistory(policyId, limit)` accepts `1..100`; the one-argument JVM overload
 uses 100. It applies `QueryBuilder.limit` before JaVers returns snapshots and
 does not sort or truncate the materialized list. Approved snapshots are
-newest-first, matching the 2.0.0 consumer contract. This is a behavioral
+newest-first, matching the 2.1.0-SNAPSHOT consumer contract. This is a behavioral
 migration from the former oldest-first example.
 
 Rejected proposals still add no snapshot. An empty history can mean either an

@@ -251,7 +251,7 @@ source.readUtf8() // restore original string
 
 ### Stable BufferedSuspendedSink consumer boundary
 
-The root `bluetape4k-dependencies` BOM resolves `bluetape4k-okio` to stable `2.0.0`. Create a
+The root `bluetape4k-dependencies` BOM resolves `bluetape4k-okio` to `2.1.0-SNAPSHOT`. Create a
 `BufferedSuspendedSink` through the public `SuspendedSink.buffered()` extension instead of copying or
 constructing its internal implementation.
 

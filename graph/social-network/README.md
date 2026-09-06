@@ -9,7 +9,7 @@
 companies, professional relationships, and traversal queries with the same service contract across
 TinkerGraph, Neo4j, and Memgraph.
 
-The example targets the `bluetape4k-dependencies` `2.0.0` BOM.
+The example targets the `bluetape4k-dependencies` `2.1.0-SNAPSHOT` BOM.
 
 Use this module when you want to inspect a small but complete social graph: idempotent vertex
 creation, bidirectional `KNOWS` edges, one-way `FOLLOWS` edges, `WORKS_AT` company links,

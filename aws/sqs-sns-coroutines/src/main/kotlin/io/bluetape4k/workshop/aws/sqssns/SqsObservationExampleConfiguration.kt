@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 2.0.0 SQS observation listener를 명시적으로 켰을 때만 등록하는 워크숍 설정입니다.
+ * 2.1.0-SNAPSHOT SQS observation listener를 명시적으로 켰을 때만 등록하는 워크숍 설정입니다.
  *
  * 기본 one-shot 소비 경로에는 영향을 주지 않습니다. listener는 자동 시작하지 않으므로
  * 실습자는 [io.bluetape4k.aws.spring.sqs.SqsMessageListenerContainerRegistry]에서

@@ -141,7 +141,7 @@ class KafkaRedisOrderAuditPipeline internal constructor(
 }
 
 /**
- * dependencies 2.0.0이 관리하는 JaVers Kafka writer와 Lettuce Redis projector를 연결한다.
+ * dependencies 2.1.0-SNAPSHOT이 관리하는 JaVers Kafka writer와 Lettuce Redis projector를 연결한다.
  *
  * [consumerConfigs]는 nonblank group id를 포함해야 한다. 수동 batch commit과 restart replay 계약을
  * 보존하기 위해 auto commit은 `false`, offset reset은 `earliest`만 허용한다. [redisClient]는 caller가

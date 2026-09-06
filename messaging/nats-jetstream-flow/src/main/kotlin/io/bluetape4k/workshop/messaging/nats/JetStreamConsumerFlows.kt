@@ -29,7 +29,7 @@ enum class AckDecision {
 }
 
 /**
- * dependencies 2.0.0의 공개 NATS Flow를 소비자 경계에서 조립합니다.
+ * dependencies 2.1.0-SNAPSHOT의 공개 NATS Flow를 소비자 경계에서 조립합니다.
  *
  * Flow adapter는 message를 자동 승인하지 않으며, adapter가 만든 handle만 collection
  * 종료 시 정리합니다. Connection과 [ConsumerContext]의 소유권은 caller에게 있습니다.

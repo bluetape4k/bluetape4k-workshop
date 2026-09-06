@@ -38,7 +38,7 @@ review decision을 저장하고, 승인된 제안만 current row와 JaVers audit
 
 `getHistory(policyId, limit)`은 `1..100`을 허용하고 한 인자 JVM overload는 100을 사용합니다.
 JaVers가 snapshot을 반환하기 전에 `QueryBuilder.limit`을 적용하며 materialize된 목록을 다시
-정렬하거나 잘라내지 않습니다. Approved snapshot은 2.0.0 consumer 계약에 맞춰
+정렬하거나 잘라내지 않습니다. Approved snapshot은 2.1.0-SNAPSHOT consumer 계약에 맞춰
 newest-first로 반환합니다. 이는 이전 oldest-first 예제에서의 behavioral migration입니다.
 
 Rejected proposal은 계속 snapshot을 추가하지 않습니다. 빈 history는 unknown policy와
