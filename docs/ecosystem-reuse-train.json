@@ -1600,7 +1600,7 @@
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-967-protobuf-byte-buffer",
-      "expected_base_ref": "feat/issue-966-text-matches-flow",
+      "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -1616,8 +1616,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260907T-issue-967-train-rebind-scope",
-    "checksum": "b00e03197dd918cc8d5c9e82446aad5f17fb773e8c0248fc82f6aaaf30124f82"
+    "receipt_id": "20260907T-issue-967-develop-rebind-scope",
+    "checksum": "33e6509335522ac5914a2b16cd2307f544dd3931fa5469b8dd880a6849312153"
   },
   "planned_scope_replan_receipts": {
   },
