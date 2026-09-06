@@ -8,10 +8,17 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.text.search.NormalizationForm
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.text.Normalizer
+import kotlin.coroutines.cancellation.CancellationException
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AbuseWordFilterTest {
@@ -67,6 +74,64 @@ class AbuseWordFilterTest {
     fun `findMatches returns empty list for clean text`() {
         val matches = filter.findMatches("everything is fine here")
         matches shouldHaveSize 0
+    }
+
+    @Test
+    fun `findMatchesAsFlow preserves synchronous match order and overlap`() = runSuspendIO {
+        val overlapFilter = AbuseWordFilter(listOf("he", "she", "hers"))
+        val input = "ushers"
+
+        val synchronous = overlapFilter.findMatches(input)
+        val flow = overlapFilter.findMatchesAsFlow(input)
+        val firstCollection = flow.toList()
+        val secondCollection = flow.toList()
+
+        firstCollection shouldBeEqualTo synchronous
+        secondCollection shouldBeEqualTo synchronous
+        firstCollection.map { it.value } shouldBeEqualTo listOf("he", "she", "hers")
+    }
+
+    @Test
+    fun `findMatchesAsFlow returns empty for empty dictionary and clean text`() = runSuspendIO {
+        AbuseWordFilter(emptyList()).findMatchesAsFlow("spam").toList() shouldHaveSize 0
+        filter.findMatchesAsFlow("everything is fine here").toList() shouldHaveSize 0
+    }
+
+    @Test
+    fun `findMatchesAsFlow take one cancels upstream after the first emitted match`() = runSuspendIO {
+        var emitted = 0
+        var completionCause: Throwable? = null
+        val input = List(1_024) { "spam" }.joinToString(" ")
+        val matches = filter.findMatchesAsFlow(input)
+            .onCompletion { completionCause = it }
+            .onEach { emitted++ }
+            .take(1)
+            .toList()
+
+        matches shouldHaveSize 1
+        matches.single().value shouldBeEqualTo "spam"
+        emitted shouldBeEqualTo 1
+        (completionCause is CancellationException).shouldBeTrue()
+    }
+
+    @Test
+    fun `findMatchesAsFlow preserves NFC and NFKC source offsets`() = runSuspendIO {
+        val decomposed = Normalizer.normalize("café", Normalizer.Form.NFD)
+        val nfcInput = "menu: $decomposed"
+        val nfcMatch = AbuseWordFilter(listOf("café"))
+            .findMatchesAsFlow(nfcInput)
+            .toList()
+            .single()
+        val nfkcInput = "회사명: ㈜블루테이프"
+        val nfkcMatch = AbuseWordFilter(listOf("(주)"), NormalizationForm.NFKC)
+            .findMatchesAsFlow(nfkcInput)
+            .toList()
+            .single()
+
+        nfcMatch.start shouldBeEqualTo nfcInput.indexOf('c')
+        nfcMatch.end shouldBeEqualTo nfcInput.lastIndex
+        nfkcMatch.start shouldBeEqualTo nfkcInput.indexOf('㈜')
+        nfkcMatch.end shouldBeEqualTo nfkcInput.indexOf('㈜')
     }
 
     @Test

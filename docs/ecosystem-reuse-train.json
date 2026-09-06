@@ -1573,11 +1573,31 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/2026-09-06-issue-965-privacy-derivative-payload-implementation-review.md"
+    },
+    {
+      "scope_id": "issue-966-text-matches-flow",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-966-text-matches-flow",
+      "expected_base_ref": "feat/issue-965-privacy-derivative-payload",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [966],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        "docs/review/2026-09-06-issue-966-text-matches-flow-implementation-review.md",
+        "kotlin/text-processing/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-09-06-issue-966-text-matches-flow-implementation-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T-issue-965-develop-rebind-scope",
-    "checksum": "7391d2255451dad5c83f334a2396627f1ea1c65dad3b088bd4d20267414e142a"
+    "receipt_id": "20260906T-issue-966-parent-rebind-scope",
+    "checksum": "ee9ec62abe8af111b112709eb9795033b8464c749bb5bdc7841875257875a692"
   },
   "planned_scope_replan_receipts": {
   },

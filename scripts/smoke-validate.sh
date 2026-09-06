@@ -1136,6 +1136,22 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Aho-Corasick Flow match guard ==="
+    flow_filter="kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilter.kt"
+    flow_filter_tests="kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilterTest.kt"
+    if contains_pattern 'findMatchesAsFlow' "$flow_filter" "$flow_filter_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
+       contains_pattern 'flow\.matchesAsFlow|matchesAsFlow' "$flow_filter" && \
+       contains_pattern 'take\(1\)' "$flow_filter" "$flow_filter_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
+       contains_pattern 'NormalizationForm\.NFKC' "$flow_filter_tests" && \
+       contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$flow_filter" "$flow_filter_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md; then
+      echo "Aho-Corasick Flow match example is registered."
+    else
+      echo "ERROR: Aho-Corasick Flow match contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== JaVers bounded history query guard ==="
     javers_order_build="exposed/javers-persistence-audit/build.gradle.kts"
     javers_order_service="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/OrderAuditService.kt"

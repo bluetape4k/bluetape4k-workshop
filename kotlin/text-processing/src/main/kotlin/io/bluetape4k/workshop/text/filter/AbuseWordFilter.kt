@@ -7,6 +7,8 @@ import io.bluetape4k.text.search.AhoCorasickMatch
 import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.text.search.SearchOptions
 import io.bluetape4k.text.search.ahoCorasick
+import io.bluetape4k.text.search.flow.matchesAsFlow
+import kotlinx.coroutines.flow.Flow
 
 /**
  * AhoCorasick automaton 을 기반으로 하는 thread-safe abuse-word filter 입니다.
@@ -16,7 +18,7 @@ import io.bluetape4k.text.search.ahoCorasick
  * overlapping match 를 허용해 한 번의 pass 에서 모든 위반을 드러냅니다.
  *
  * ## Behavior / Contract
- * - construction 비용은 O(total keyword length) 입니다. 이후 [containsAbuse], [filterText], [findMatches] 호출은 O(text length + number of matches) 입니다.
+ * - construction 비용은 O(total keyword length) 입니다. 이후 [containsAbuse], [filterText], [findMatches], [findMatchesAsFlow] 호출은 O(text length + number of matches) 입니다.
  * - [filterText] 는 matched span 마다 span 길이와 같은 개수의 `*` 문자열로 바꾸며, abuse 가 아닌 text 는 그대로 보존합니다.
  * - [abuseWords] 가 empty 이면 empty list 또는 변경되지 않은 text 를 반환합니다.
  *
@@ -75,7 +77,7 @@ class AbuseWordFilter @JvmOverloads constructor(
     /**
      * [text] 에서 찾은 모든 [AhoCorasickMatch] object 를 반환합니다.
      *
-     * 결과는 start position ascending 순서입니다. overlapping match 도 모두 포함합니다.
+     * 결과는 automaton emission 순서이며 overlapping match 도 모두 포함합니다.
      *
      * @param text 검색할 입력 text 입니다.
      */
@@ -84,4 +86,16 @@ class AbuseWordFilter @JvmOverloads constructor(
         log.debug { "findMatches length=${text.length} matches=${matches.size}" }
         return matches
     }
+
+    /**
+     * [text]에서 찾은 match를 automaton emission 순서의 cold [Flow]로 반환합니다.
+     *
+     * collection마다 automaton scan을 새로 수행합니다. `take(1)` 같은 downstream 연산자는
+     * 첫 emission 뒤 collection을 취소하며, normalization, overlap, 원문 offset 계약은
+     * [findMatches]와 같습니다. 내부 buffering과 scan 시점은 upstream 구현 계약을 따릅니다.
+     *
+     * @param text 검색할 입력 text입니다.
+     */
+    fun findMatchesAsFlow(text: String): Flow<AhoCorasickMatch<String>> =
+        automaton.matchesAsFlow(text)
 }
