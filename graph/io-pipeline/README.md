@@ -10,7 +10,7 @@ free: the smoke path reads local CSV fixtures, writes a TinkerGraph through
 `GraphOperations`, exports Jackson 3 NDJSON and GraphML, then imports each file
 into a fresh TinkerGraph and checks the resulting reports.
 
-> **Related issues:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287), [#860](https://github.com/bluetape4k/bluetape4k-workshop/issues/860)
+> **Related issues:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287), [#860](https://github.com/bluetape4k/bluetape4k-workshop/issues/860), [#964](https://github.com/bluetape4k/bluetape4k-workshop/issues/964)
 
 ![Graph IO Pipeline Architecture](../../docs/images/readme-diagrams/graph-io-pipeline-readme-architecture-01.png)
 
@@ -27,6 +27,7 @@ It shows how to:
 - preserve the original fixture ids in `_graphIoExternalId`;
 - export the imported graph through `Jackson3NdJsonBulkExporter` and `GraphMlBulkExporter`;
 - import NDJSON and GraphML into fresh `TinkerGraphOperations` instances;
+- preview ordered raw vertex and edge records with `GraphRecordFlowReader` before graph mutation;
 - assert `GraphIoStatus.COMPLETED`, empty `failures`, vertex and edge counts,
   labels, properties, and topology;
 - keep generated files inside JUnit `@TempDir`.
@@ -97,6 +98,36 @@ to metric tags. `graph.io.active` returns to zero after a terminal event, while
 failed runs remain visible through the `status=failed` counter and timer.
 
 ## Usage
+
+### Bounded raw-record preview
+
+`GraphIoRecordPreview` uses the stable CSV, Jackson 3 NDJSON, and GraphML
+`GraphRecordFlowReader` implementations. Each cold Flow opens its source when
+collected, preserves input order, and stops through `take(limit)` without
+materializing the whole file. Raw edge endpoints remain external IDs; resolving
+them and mutating the graph are still bulk-importer responsibilities.
+
+```kotlin
+import io.bluetape4k.workshop.graph.io.GraphIoRecordPreview
+import java.nio.file.Path
+import kotlinx.coroutines.runBlocking
+
+val preview = runBlocking {
+    GraphIoRecordPreview().csv(
+        vertices = Path.of("src/test/resources/graph-io-pipeline/vertices.csv"),
+        edges = Path.of("src/test/resources/graph-io-pipeline/edges.csv"),
+        limit = 2,
+    )
+}
+check(preview.vertices.map { it.externalId } == listOf("person-alice", "person-bob"))
+check(preview.edges.first().fromExternalId == "person-alice")
+```
+
+Path sources and `InputStreamSource(closeInput = true)` are closed by the
+reader. A caller-owned stream (`closeInput = false`) remains open, and every
+one-shot stream needs a fresh source for another collection. Parse failures are
+reported as redacted `GraphIoReadException` values containing only a safe phase
+and line/row location.
 
 ### CSV import
 
