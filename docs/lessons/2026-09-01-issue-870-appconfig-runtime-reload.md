@@ -71,6 +71,13 @@ command-line property로 전달해 이 경계를 명시했다.
 server를 `finally`에서 중지한 뒤 active handler 0, executor terminated,
 1초 quiescence 동안 request count 불변을 확인한다.
 
+Issue #963의 Nightly smoke에서는 모든 Spring 통합 테스트에 direct SDK timeout
+검증용 `500ms`를 적용한 탓에 loopback 404 응답이 지연되면 optional 처리 전에
+`ApiCallTimeoutException`이 발생했다. 일반 Spring 통합 client는 production과
+같은 API timeout 10초와 attempt timeout 5초를 사용하고, `500ms`는 1.2초 지연을
+검증하는 direct SDK 테스트에서만 명시한다. optional 404 fake에 750ms bounded
+delay를 둔 회귀 테스트로 두 timeout 용도가 다시 섞이지 않도록 고정한다.
+
 성능 검토에서 in-flight poll 종료가 실제 취소 경계를 통과하는지 확인하도록
 8초 지연 응답을 추가하고, close 직전에 request count를 캡처하도록 보강했다.
 endpoint guard는 IMDS·임의 외부 host·region 불일치 host와 공통 endpoint
