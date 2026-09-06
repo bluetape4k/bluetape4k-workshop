@@ -1560,7 +1560,7 @@
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-965-privacy-derivative-payload",
-      "expected_base_ref": "feat/issue-964-graph-record-flow-reader",
+      "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -1576,8 +1576,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T-issue-965-privacy-derivative-payload-scope",
-    "checksum": "6dd2fdbcce554bd31634965d8123d448150410d23901cb40209694c2f1e23288"
+    "receipt_id": "20260906T-issue-965-develop-rebind-scope",
+    "checksum": "7391d2255451dad5c83f334a2396627f1ea1c65dad3b088bd4d20267414e142a"
   },
   "planned_scope_replan_receipts": {
   },
