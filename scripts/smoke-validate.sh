@@ -1152,6 +1152,25 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Protobuf caller-owned ByteBuffer guard ==="
+    protobuf_buffer_source="spring-boot/protobuf-mvc/src/main/kotlin/io/bluetape4k/workshop/protobuf/convert/ProtobufByteBufferConverter.kt"
+    protobuf_buffer_test="spring-boot/protobuf-mvc/src/test/kotlin/io/bluetape4k/workshop/protobuf/convert/ProtobufByteBufferConverterTest.kt"
+    protobuf_buffer_build="spring-boot/protobuf-mvc/build.gradle.kts"
+    if contains_pattern 'fun Message\.serializeTo\(target: ByteBuffer\)' "$protobuf_buffer_source" && \
+       contains_pattern 'ProtobufSerializer' "$protobuf_buffer_source" "$protobuf_buffer_test" && \
+       contains_pattern 'implementation\(libs\.bluetape4k\.protobuf\)' "$protobuf_buffer_build" && \
+       contains_pattern 'allocateDirect' "$protobuf_buffer_test" && \
+       contains_pattern 'BufferOverflowException' "$protobuf_buffer_test" && \
+       contains_pattern 'ReadOnlyBufferException' "$protobuf_buffer_test" && \
+       contains_pattern 'bluetape4k-dependencies:2\.0\.0' spring-boot/protobuf-mvc/README.md spring-boot/protobuf-mvc/README.ko.md && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$protobuf_buffer_source" "$protobuf_buffer_test" "$protobuf_buffer_build" spring-boot/protobuf-mvc/README.md spring-boot/protobuf-mvc/README.ko.md; then
+      echo "Protobuf caller-owned ByteBuffer example is registered."
+    else
+      echo "ERROR: Protobuf caller-owned ByteBuffer contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== JaVers bounded history query guard ==="
     javers_order_build="exposed/javers-persistence-audit/build.gradle.kts"
     javers_order_service="exposed/javers-persistence-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/persistence/OrderAuditService.kt"
