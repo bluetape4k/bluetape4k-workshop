@@ -1391,7 +1391,7 @@
     },
     {
       "scope_id": "issue-940-cache-redis-virtualthreads",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "refactor/issue-940-cache-redis-virtualthreads",
@@ -1417,7 +1417,7 @@
     },
     {
       "scope_id": "issue-953-okio-buffered-suspended-sink",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "refactor/issue-953-okio-buffered-suspended-sink",
@@ -1556,7 +1556,7 @@
     },
     {
       "scope_id": "issue-965-privacy-derivative-payload",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-965-privacy-derivative-payload",
@@ -1576,7 +1576,7 @@
     },
     {
       "scope_id": "issue-966-text-matches-flow",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-966-text-matches-flow",
@@ -1596,7 +1596,7 @@
     },
     {
       "scope_id": "issue-967-protobuf-byte-buffer",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-967-protobuf-byte-buffer",
