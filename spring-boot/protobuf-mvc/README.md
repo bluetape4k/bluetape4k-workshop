@@ -65,6 +65,7 @@ Kotlin DSL builders (`course { }`, `student { }`, `phoneNumber { }`) make Protob
 | Protobuf converter registration | `ConurceConfig` | Registers the `ProtobufHttpMessageConverter` bean |
 | Course lookup | `CourseController.course()` | `GET /courses/{id}` — Protobuf-serialized response |
 | JSON conversion utility | `ProtobufConverter` | `MessageOrBuilder.toJson()`, `messageFromJsonOrNull<T>()` |
+| Caller-owned buffer serialization | `ProtobufByteBufferConverter` | Writes a `Message` to reusable heap/direct `ByteBuffer` targets |
 | In-memory repository | `CourseRepository` | Simple repository based on `Map<Int, Course>` |
 
 ## API Endpoints
@@ -115,6 +116,27 @@ val json: String = course.toJson()
 // Convert a JSON string to a Protobuf message
 val course: Course? = messageFromJsonOrNull<Course>(json)
 ```
+
+### Caller-owned `ByteBuffer` Serialization
+
+The root `bluetape4k-dependencies:2.0.0` BOM resolves the versionless
+`bluetape4k-protobuf` alias to stable `2.0.0`. The `serializeTo` extension delegates to
+`ProtobufSerializer.serializeTo` and lets the caller reuse heap or direct buffers:
+
+```kotlin
+val target = ByteBuffer.allocateDirect(4 * 1024)
+val written = course.serializeTo(target)
+
+target.flip()
+val envelope = ByteArray(written).also(target::get)
+target.clear() // the caller owns buffer reuse and lifecycle
+```
+
+The returned bytes are the same Protobuf `Any` envelope produced by the allocating
+`ProtobufSerializer.serialize` API; they are not raw `Course.toByteArray()` bytes. Success advances
+the target position by `written`. Insufficient capacity and read-only targets throw
+`BufferOverflowException` and `ReadOnlyBufferException`, respectively, without committing a new
+position. This example makes no allocation or throughput benchmark claim.
 
 ## Build Configuration
 

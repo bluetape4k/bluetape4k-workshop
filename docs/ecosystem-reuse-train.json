@@ -1593,11 +1593,31 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/2026-09-06-issue-966-text-matches-flow-implementation-review.md"
+    },
+    {
+      "scope_id": "issue-967-protobuf-byte-buffer",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-967-protobuf-byte-buffer",
+      "expected_base_ref": "feat/issue-966-text-matches-flow",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [967],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        "docs/review/2026-09-06-issue-967-protobuf-byte-buffer-implementation-review.md",
+        "scripts/smoke-validate.sh",
+        "spring-boot/protobuf-mvc/**"
+      ],
+      "review_artifact": "docs/review/2026-09-06-issue-967-protobuf-byte-buffer-implementation-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260907T-issue-966-develop-rebind-scope",
-    "checksum": "5a3bde6f89de65efd56f5d5c960f19a29558a43ab75146d6c5c8e36a50094d4e"
+    "receipt_id": "20260907T-issue-967-train-rebind-scope",
+    "checksum": "b00e03197dd918cc8d5c9e82446aad5f17fb773e8c0248fc82f6aaaf30124f82"
   },
   "planned_scope_replan_receipts": {
   },
