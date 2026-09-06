@@ -24,7 +24,7 @@ sensitive text redaction pipeline을 다룹니다.
 
 | class | 사용 API | 계약 |
 |---|---|---|
-| `AbuseWordFilter` | `text-search`의 `AhoCorasickAutomaton` | 대소문자를 무시한 NFC/NFKC matching과 overlap을 지원하고 match를 원문 span으로 복원해 `*`로 masking |
+| `AbuseWordFilter` | `text-search`의 `AhoCorasickAutomaton`, `matchesAsFlow` | 대소문자를 무시한 NFC/NFKC matching과 overlap을 지원하고 sync list와 source offset을 보존한 cold Flow 결과 제공 |
 | `LanguageDetectionService` | `bluetape4k-text-lingua`의 Lingua detector | detector를 한 번 만들고 재사용하며, blank/unknown text는 `null` 반환 |
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | 여러 coroutine caller가 공유해도 detector 접근을 직렬화 |
 | `TextNormalizer` | pure Kotlin object | 소문자 변환, 공백 정리, 중복 제거 keyword extraction |
@@ -44,10 +44,23 @@ val filter = AbuseWordFilter(listOf("spam", "abuse", "badword"))
 filter.containsAbuse("There is some spam here")   // true
 filter.filterText("No spam allowed")              // "No **** allowed"
 filter.findMatches("spam and abuse")              // AhoCorasickMatch list
+filter.findMatchesAsFlow("spam and abuse")        // cold Flow<AhoCorasickMatch<String>>
 ```
 
 Automaton은 keyword collection으로 한 번 구성됩니다. 이후 match는 입력 text를 한 번 훑고,
 match 개수만큼만 추가 비용이 듭니다.
+
+Flow API는 `findMatches`와 같은 automaton emission 순서, overlap, normalization, 원문 offset을
+보존합니다. cold Flow이므로 collection마다 scan을 새로 시작합니다. 전체 결과 list를 만들 필요가
+없다면 downstream operator로 첫 emission 뒤 collection을 취소할 수 있습니다. 내부 buffering과
+scan 시점은 upstream 구현 세부사항입니다.
+
+```kotlin
+val firstMatch = filter.findMatchesAsFlow("spam abuse badword")
+    .take(1)
+    .toList()
+    .single()
+```
 
 정책 단어가 compatibility 문자와도 일치해야 한다면 NFKC를 선택합니다.
 
@@ -63,8 +76,8 @@ corporateFilter.filterText("회사명: ㈜블루테이프")
 // "회사명: *블루테이프"
 ```
 
-기본값은 NFC입니다. NFKC는 matching할 때만 compatibility 문자를 확장하며, 반환 offset과
-masking은 원본 Kotlin `String` span을 사용합니다. 서로 영향을 주는 normalization segment가
+기본값은 NFC입니다. NFKC는 matching할 때만 compatibility 문자를 확장하며, sync/Flow API가
+반환하는 offset과 masking은 원본 Kotlin `String` span을 사용합니다. 서로 영향을 주는 normalization segment가
 1,024 code-unit을 넘으면 caller text를 노출하지 않고 빠르게 거부합니다.
 
 ### 언어 감지

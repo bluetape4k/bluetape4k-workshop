@@ -24,7 +24,7 @@ audit-safe span metadata.
 
 | class | backing API | contract |
 |---|---|---|
-| `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC/NFKC matching with overlaps; maps matches back to source spans and masks them with `*` |
+| `AbuseWordFilter` | `AhoCorasickAutomaton` and `matchesAsFlow` from `text-search` | Case-insensitive NFC/NFKC matching with overlaps; exposes sync lists and cold Flow results with source offsets |
 | `LanguageDetectionService` | Lingua detector from `bluetape4k-text-lingua` | Reuses one detector and returns `null` for blank or unknown text |
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | Serializes detector access for concurrent coroutine callers |
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
@@ -44,10 +44,23 @@ val filter = AbuseWordFilter(listOf("spam", "abuse", "badword"))
 filter.containsAbuse("There is some spam here")   // true
 filter.filterText("No spam allowed")              // "No **** allowed"
 filter.findMatches("spam and abuse")              // AhoCorasickMatch list
+filter.findMatchesAsFlow("spam and abuse")        // cold Flow<AhoCorasickMatch<String>>
 ```
 
 The automaton is built once from the keyword collection. After construction, matching is a single
 pass over the input text plus the number of matches.
+
+The Flow API preserves the same automaton emission order, overlaps, normalization, and source
+offsets as `findMatches`. It is cold, so every collection starts a new scan. Downstream operators
+can cancel collection after the first emitted result without first collecting a result list;
+internal buffering and scan timing remain upstream implementation details:
+
+```kotlin
+val firstMatch = filter.findMatchesAsFlow("spam abuse badword")
+    .take(1)
+    .toList()
+    .single()
+```
 
 Choose NFKC when a policy term must also match compatibility characters:
 
@@ -64,7 +77,7 @@ corporateFilter.filterText("Company: \u3231 Bluetape")
 ```
 
 NFC remains the default. NFKC expands the U+3231 compatibility character only for matching; returned
-offsets and masking still use the original Kotlin `String` span. An interacting normalization
+offsets from both sync and Flow APIs, and masking, still use the original Kotlin `String` span. An interacting normalization
 segment longer than 1,024 code units fails fast without echoing caller text.
 
 ### Language detection
