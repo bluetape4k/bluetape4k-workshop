@@ -48,6 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: gradle/actions/wrapper-validation@v6.3.0
+      - name: Validate Nightly mock image version contract
+        run: python3 -m unittest discover -s .github/scripts -p test_nightly_mock_images.py
 
   build:
     name: Build (compile only)

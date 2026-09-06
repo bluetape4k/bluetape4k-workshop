@@ -309,39 +309,52 @@ class JobConsoleHighContentionAdapter private constructor(
         val oldClaim = repository.claimNext(scenario.scope.tenantId, Duration.ofMillis(10))
             .requireNotNull("old worker claim")
         val barrier = JobConsoleBarrier(1)
-        Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-            val staleAttempt = executor.submit<JobProblemCode> {
-                check(barrier.readyAndAwait(Duration.ofSeconds(5))) {
-                    "stale attempt barrier timed out"
+        // 다른 정상 작업의 연결을 일시 정지한 worker의 자원으로 계산하지 않는다.
+        HikariDataSource(
+            HikariConfig().apply {
+                jdbcUrl = fixture.jdbcUrl
+                username = fixture.databaseUsername
+                password = fixture.databasePassword
+                schema = fixture.schema
+                maximumPoolSize = 1
+                poolName = "job-core-stale-attempt"
+            },
+        ).use { staleDataSource ->
+            val staleRepository = JobRepository(staleDataSource)
+            Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                val staleAttempt = executor.submit<JobProblemCode> {
+                    check(barrier.readyAndAwait(Duration.ofSeconds(5))) {
+                        "stale attempt barrier timed out"
+                    }
+                    try {
+                        staleRepository.checkpoint(oldClaim.lease, completedChunk = 1, progress = 100)
+                        error("stale checkpoint unexpectedly committed")
+                    } catch (failure: JobRepositoryException) {
+                        failure.code
+                    }
                 }
-                try {
-                    repository.checkpoint(oldClaim.lease, completedChunk = 1, progress = 100)
-                    error("stale checkpoint unexpectedly committed")
-                } catch (failure: JobRepositoryException) {
-                    failure.code
+                check(barrier.awaitReady(Duration.ofSeconds(5))) {
+                    "stale attempt did not reach its transaction-free pause"
                 }
+                val pausedConnections = staleDataSource.hikariPoolMXBean.activeConnections
+                val replacement = awaitReplacementClaim(scenario.scope.tenantId)
+                val checkpoint = repository.checkpoint(replacement.lease, completedChunk = 1, progress = 100)
+                repository.complete(checkpoint.lease, JobSignal.SUCCESS)
+                val beforeRelease = authorityBaseline(submitted.jobId)
+                barrier.release()
+                val staleCode = staleAttempt.get(5, TimeUnit.SECONDS)
+                check(staleCode == JobProblemCode.LEASE_LOST)
+                check(repository.load(submitted.jobId)?.state?.terminal == true)
+                val afterRelease = authorityBaseline(submitted.jobId)
+                staleAttemptEvidence = JobConsoleStaleAttemptEvidence(
+                    pausedConnections = pausedConnections,
+                    pausedTransactions = 0,
+                    pausedLocks = 0,
+                    staleErrorCode = staleCode,
+                    lateEffectCount = afterRelease.effects - beforeRelease.effects,
+                    lateReceiptCount = afterRelease.receipts - beforeRelease.receipts,
+                )
             }
-            check(barrier.awaitReady(Duration.ofSeconds(5))) {
-                "stale attempt did not reach its transaction-free pause"
-            }
-            val pausedConnections = dataSource.hikariPoolMXBean.activeConnections
-            val replacement = awaitReplacementClaim(scenario.scope.tenantId)
-            val checkpoint = repository.checkpoint(replacement.lease, completedChunk = 1, progress = 100)
-            repository.complete(checkpoint.lease, JobSignal.SUCCESS)
-            val beforeRelease = authorityBaseline(submitted.jobId)
-            barrier.release()
-            val staleCode = staleAttempt.get(5, TimeUnit.SECONDS)
-            check(staleCode == JobProblemCode.LEASE_LOST)
-            check(repository.load(submitted.jobId)?.state?.terminal == true)
-            val afterRelease = authorityBaseline(submitted.jobId)
-            staleAttemptEvidence = JobConsoleStaleAttemptEvidence(
-                pausedConnections = pausedConnections,
-                pausedTransactions = 0,
-                pausedLocks = 0,
-                staleErrorCode = staleCode,
-                lateEffectCount = afterRelease.effects - beforeRelease.effects,
-                lateReceiptCount = afterRelease.receipts - beforeRelease.receipts,
-            )
         }
         return submitted.jobId
     }
