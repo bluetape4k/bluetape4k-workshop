@@ -10,7 +10,7 @@ import/export adapter를 학습하는 예제입니다. smoke 경로는 의도적
 Jackson 3 NDJSON과 GraphML로 export하고, 각 파일을 새 TinkerGraph에 다시 import하여
 report를 확인합니다.
 
-> **관련 이슈:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287), [#860](https://github.com/bluetape4k/bluetape4k-workshop/issues/860)
+> **관련 이슈:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287), [#860](https://github.com/bluetape4k/bluetape4k-workshop/issues/860), [#964](https://github.com/bluetape4k/bluetape4k-workshop/issues/964)
 
 ![Graph IO Pipeline Architecture](../../docs/images/readme-diagrams/graph-io-pipeline-readme-architecture-01.png)
 
@@ -27,6 +27,7 @@ adapter로 graph fixture를 넣어야 할 때가 언제인가?
 - 원래 fixture id를 `_graphIoExternalId`에 보존합니다.
 - import한 graph를 `Jackson3NdJsonBulkExporter`와 `GraphMlBulkExporter`로 export합니다.
 - NDJSON과 GraphML을 새 `TinkerGraphOperations` 인스턴스에 import합니다.
+- graph 변경 전에 `GraphRecordFlowReader`로 순서가 보존된 원시 정점/간선을 미리 봅니다.
 - `GraphIoStatus.COMPLETED`, 빈 `failures`, vertex/edge 수, label, property, topology를 검증합니다.
 - 생성 파일은 JUnit `@TempDir` 아래에만 둡니다.
 
@@ -92,6 +93,35 @@ tag는 `operation`, `format`, `status`, `kind`, `phase`의 소문자 enum 값만
 돌아가며, 실패한 실행도 `status=failed` counter와 timer로 확인할 수 있습니다.
 
 ## 사용 예
+
+### 제한된 원시 레코드 미리보기
+
+`GraphIoRecordPreview`는 안정판 CSV, Jackson 3 NDJSON, GraphML
+`GraphRecordFlowReader` 구현을 사용합니다. 각 cold Flow는 collect할 때 source를
+열고 입력 순서를 유지하며, 전체 파일을 materialize하지 않고 `take(limit)`에서
+멈춥니다. 원시 edge endpoint는 외부 ID인 상태이므로 resolve와 graph 변경은 계속
+bulk importer의 책임입니다.
+
+```kotlin
+import io.bluetape4k.workshop.graph.io.GraphIoRecordPreview
+import java.nio.file.Path
+import kotlinx.coroutines.runBlocking
+
+val preview = runBlocking {
+    GraphIoRecordPreview().csv(
+        vertices = Path.of("src/test/resources/graph-io-pipeline/vertices.csv"),
+        edges = Path.of("src/test/resources/graph-io-pipeline/edges.csv"),
+        limit = 2,
+    )
+}
+check(preview.vertices.map { it.externalId } == listOf("person-alice", "person-bob"))
+check(preview.edges.first().fromExternalId == "person-alice")
+```
+
+Path source와 `InputStreamSource(closeInput = true)`는 reader가 닫습니다.
+caller-owned stream(`closeInput = false`)은 열린 상태로 유지되며, one-shot stream을
+다시 collect하려면 새 source가 필요합니다. parse failure는 안전한 phase와 line/row
+위치만 담은 redacted `GraphIoReadException`으로 보고됩니다.
 
 ### CSV import
 
