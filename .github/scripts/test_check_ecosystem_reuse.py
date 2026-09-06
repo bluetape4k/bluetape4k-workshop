@@ -148,6 +148,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         *,
         scope_id="F1-child",
         scope_kind="child",
+        lifecycle="ACTIVE",
         oid_policy="exact",
         base_oid=UNSET,
         head_oid=UNSET,
@@ -159,6 +160,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         return {
             "scope_id": scope_id,
             "scope_kind": scope_kind,
+            "lifecycle": lifecycle,
             "parent_track": "F1",
             "expected_head_ref": "branch/F1-child",
             "expected_base_ref": "branch/F1",
@@ -851,6 +853,22 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         errors = CHECKER.validate_manifest(self.root, path)
         self.assertTrue(any("invalid base_ref_policy" in error for error in errors))
 
+    def test_manifest_rejects_missing_follow_up_lifecycle(self):
+        manifest = self.manifest_with_follow_up_scope()
+        del manifest["follow_up_scopes"][0]["lifecycle"]
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("missing fields lifecycle" in error for error in errors))
+
+    def test_manifest_rejects_unknown_follow_up_lifecycle(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0]["lifecycle"] = "ARCHIVED"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("invalid lifecycle" in error for error in errors))
+
     def test_manifest_rejects_repository_base_policy_with_parent_ref(self):
         manifest = self.manifest_with_follow_up_scope()
         scope = self.follow_up_scope(oid_policy="rebase-aware")
@@ -933,6 +951,21 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         current_path.write_text(json.dumps(current), encoding="utf-8")
         errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
         self.assertTrue(any("follow_up_scopes changed without a fresh coordinator receipt" in error for error in errors))
+
+    def test_trusted_manifest_rejects_merged_follow_up_scope_reactivation(self):
+        trusted = self.manifest_with_follow_up_scope()
+        trusted["follow_up_scopes"][0]["lifecycle"] = "MERGED"
+        current = self.manifest_with_follow_up_scope()
+        current["coordinator_scope_receipt"] = {
+            "receipt_id": "run-2",
+            "checksum": "e" * 64,
+        }
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "manifest.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
+        self.assertTrue(any("MERGED follow-up scope cannot be reactivated" in error for error in errors))
 
     def _single_track_manifest(self):
         manifest = self.manifest()
@@ -1291,7 +1324,9 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
                     ".github/scripts/check-ecosystem-reuse.py",
                     ".github/scripts/test_check_ecosystem_reuse.py",
                     "docs/governance/github-action-pins.json",
+                    "docs/ecosystem-reuse-train.json",
                     "docs/lessons/2026-08-31-ecosystem-dependency-maintenance-scope.md",
+                    "docs/lessons/2026-09-06-ecosystem-reuse-scope-lifecycle.md",
                 ]
             )
         )
@@ -1348,6 +1383,34 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
                     "src/A1/Changed.kt",
                     "virtualthreads/rules/src/test/kotlin/StructuredConcurrencyExamples.kt",
                 ],
+            )
+        )
+
+    def test_outside_train_scope_ignores_merged_fixed_and_follow_up_scopes(self):
+        manifest = self.manifest(state="MERGED", receipt_status="PASS")
+        manifest["follow_up_scopes"] = [self.follow_up_scope(lifecycle="MERGED")]
+        manifest["coordinator_scope_receipt"] = {
+            "receipt_id": "run-1",
+            "checksum": "c" * 64,
+        }
+        self.assertTrue(
+            CHECKER.is_outside_train_scope_change(
+                manifest,
+                ["src/F1/Changed.kt"],
+            )
+        )
+
+    def test_outside_train_scope_keeps_active_mapped_and_unmapped_diff_fail_closed(self):
+        manifest = self.manifest(state="MERGED", receipt_status="PASS")
+        manifest["follow_up_scopes"] = [self.follow_up_scope(lifecycle="ACTIVE")]
+        manifest["coordinator_scope_receipt"] = {
+            "receipt_id": "run-1",
+            "checksum": "c" * 64,
+        }
+        self.assertFalse(
+            CHECKER.is_outside_train_scope_change(
+                manifest,
+                ["src/F1/Changed.kt", "src/unmapped/Changed.kt"],
             )
         )
 
@@ -1720,6 +1783,31 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         )
         self.assertEqual([], errors)
 
+    def test_train_scope_ignores_merged_follow_up_scope(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0]["lifecycle"] = "MERGED"
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
+            base_ref_name="branch/F1",
+            head_ref_name="branch/F1-child",
+            base_oid="b" * 40,
+            head_oid="a" * 40,
+        )
+        self.assertTrue(any("exactly one manifest track (found 0)" in error for error in errors))
+
+    def test_train_scope_ignores_merged_fixed_node(self):
+        manifest = self.manifest(state="MERGED", receipt_status="PASS")
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid="b" * 40,
+            head_oid="a" * 40,
+        )
+        self.assertTrue(any("exactly one manifest track (found 0)" in error for error in errors))
+
     def test_train_scope_rejects_follow_up_scope_with_wrong_recorded_oid(self):
         manifest = self.manifest_with_follow_up_scope()
         manifest["follow_up_scopes"][0]["head_oid"] = "f" * 40
@@ -1779,7 +1867,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         )
         self.assertEqual([], errors)
 
-    def test_real_manifest_accepts_parent_diff_after_stacked_child_merge(self):
+    def test_real_manifest_retires_parent_diff_after_stacked_child_merge(self):
         repository_root = Path(__file__).resolve().parents[2]
         manifest_path = repository_root / "docs/ecosystem-reuse-train.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -1788,15 +1876,20 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             "docs/lessons/2026-08-30-issue-867-leader-audit-export.md",
             "docs/lessons/2026-08-31-issue-868-lease-extension-observation.md",
         ]
-        errors = CHECKER.validate_train_scope(
-            manifest,
-            changed_paths,
-            base_ref_name="develop",
-            head_ref_name="feat/issue-867-leader-audit-export",
-            base_oid="9" * 40,
-            head_oid="c" * 40,
+        self.assertTrue(CHECKER.is_outside_train_scope_change(manifest, changed_paths))
+
+    def test_real_manifest_retires_nightly_171_test_path(self):
+        repository_root = Path(__file__).resolve().parents[2]
+        manifest_path = repository_root / "docs/ecosystem-reuse-train.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertTrue(
+            CHECKER.is_outside_train_scope_change(
+                manifest,
+                [
+                    "leader/job-safety-lab/src/test/kotlin/io/bluetape4k/workshop/leader/jobsafety/audit/JobSafetyAuditPayloadEncoderTest.kt",
+                ],
+            )
         )
-        self.assertEqual([], errors)
 
     def test_train_scope_rejects_repository_base_follow_up_with_parent_ref(self):
         manifest = self.manifest_with_follow_up_scope()

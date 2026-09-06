@@ -54,6 +54,7 @@
   "follow_up_scopes": [
     {
       "scope_id": "issue-948-949-nightly-recovery",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "fix/nightly-mock-server-2-0-0",
@@ -79,6 +80,7 @@
     },
     {
       "scope_id": "coordinator-child-scope",
+      "lifecycle": "MERGED",
       "scope_kind": "coordinator",
       "parent_track": "P0",
       "expected_head_ref": "chore/ecosystem-reuse-manifest-transition-1",
@@ -107,6 +109,7 @@
     },
     {
       "scope_id": "f1-followup",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "fix/ecosystem-reuse-field-service-followups",
@@ -127,6 +130,7 @@
     },
     {
       "scope_id": "a2-followup",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "test/ecosystem-reuse-assertions-followups",
@@ -156,6 +160,7 @@
     },
     {
       "scope_id": "aws-bedrock-followup",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/aws-bedrock-converse-741",
@@ -186,6 +191,7 @@
     },
     {
       "scope_id": "aws-settings-followup",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/aws-settings-boundary-742",
@@ -214,6 +220,7 @@
     },
     {
       "scope_id": "assertion-governance-followup",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/assertion-governance-776",
@@ -250,6 +257,7 @@
     },
     {
       "scope_id": "epic-792-train-promotion",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/epic-792-train-promotion",
@@ -280,6 +288,7 @@
     },
     {
       "scope_id": "epic-792-final-closeout",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "chore/epic-792-final-closeout-final",
@@ -298,6 +307,7 @@
     },
     {
       "scope_id": "issue-863-ci-compatibility",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-863-graphio-checkpoint",
@@ -329,6 +339,7 @@
     },
     {
       "scope_id": "issue-864-ci-compatibility",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-864-kinesis-consumer",
@@ -360,6 +371,7 @@
     },
     {
       "scope_id": "issue-865-ci-compatibility",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-865-strict-image-decode",
@@ -391,6 +403,7 @@
     },
     {
       "scope_id": "issue-866-ci-compatibility",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-866-leader-diagnostics",
@@ -417,6 +430,7 @@
     },
     {
       "scope_id": "issue-867-leader-audit",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-867-leader-audit-export",
@@ -442,6 +456,7 @@
     },
     {
       "scope_id": "issue-868-leader-observation",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-868-lease-extension",
@@ -469,6 +484,7 @@
     },
     {
       "scope_id": "issue-867-868-leader-stack",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-867-leader-audit-export",
@@ -499,6 +515,7 @@
     },
     {
       "scope_id": "issue-869-leader-scheduled-policy",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-869-scheduled-policy",
@@ -527,6 +544,7 @@
     },
     {
       "scope_id": "issue-870-aws-appconfig-runtime-reload",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-870-appconfig-runtime-reload",
@@ -554,6 +572,7 @@
     },
     {
       "scope_id": "issue-871-aws-s3-resource-pattern",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-871-s3-resource-pattern-resolver",
@@ -578,6 +597,7 @@
     },
     {
       "scope_id": "issue-872-aws-s3-cse-transfer",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-872-s3-cse-transfer",
@@ -606,6 +626,7 @@
     },
     {
       "scope_id": "issue-873-aws-sns-publish-batch",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-873-sns-publish-batch",
@@ -630,6 +651,7 @@
     },
     {
       "scope_id": "issue-874-aws-sqs-observation",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-874-sqs-observation",
@@ -656,6 +678,7 @@
     },
     {
       "scope_id": "issue-875-aws-dynamodb-streams",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-875-dynamodb-streams",
@@ -688,6 +711,7 @@
     },
     {
       "scope_id": "issue-876-aws-modulith-externalization",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-876-modulith-externalization",
@@ -722,6 +746,7 @@
     },
     {
       "scope_id": "issue-877-tenant-context",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-877-tenant-context",
@@ -759,6 +784,7 @@
     },
     {
       "scope_id": "issue-878-rlocalcachedmap",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-878-rlocalcachedmap",
@@ -784,6 +810,7 @@
     },
     {
       "scope_id": "issue-879-kafka-callbackflow",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-879-kafka-callbackflow",
@@ -812,6 +839,7 @@
     },
     {
       "scope_id": "issue-880-ktor-selective-health",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-880-ktor-selective-health",
@@ -844,6 +872,7 @@
     },
     {
       "scope_id": "issue-881-exposed-cursor-pagination",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-881-exposed-cursor-pagination",
@@ -880,6 +909,7 @@
     },
     {
       "scope_id": "issue-882-spring-data-qbe",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-882-spring-data-qbe",
@@ -919,6 +949,7 @@
     },
     {
       "scope_id": "issue-883-image-storage-metadata",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-883-image-storage-metadata",
@@ -946,6 +977,7 @@
     },
     {
       "scope_id": "issue-884-tiff-multipage-ocr",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-884-tiff-multipage-ocr",
@@ -979,6 +1011,7 @@
     },
     {
       "scope_id": "issue-885-privacy-derivative",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-885-privacy-derivative",
@@ -1019,6 +1052,7 @@
     },
     {
       "scope_id": "issue-886-social-weighted-path",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-886-social-weighted-path",
@@ -1065,6 +1099,7 @@
     },
     {
       "scope_id": "issue-887-knowledge-schema-drift",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-887-knowledge-schema-drift",
@@ -1117,6 +1152,7 @@
     },
     {
       "scope_id": "issue-888-native-algorithm-observation",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-888-native-algorithm-observation",
@@ -1147,6 +1183,7 @@
     },
     {
       "scope_id": "issue-889-dictionary-preload-readiness",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-889-dictionary-preload-readiness",
@@ -1175,6 +1212,7 @@
     },
     {
       "scope_id": "issue-890-versioned-dictionary-runtime",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-890-versioned-dictionary-runtime",
@@ -1205,6 +1243,7 @@
     },
     {
       "scope_id": "issue-891-nfkc-offset-normalization",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-891-nfkc-offset-normalization",
@@ -1233,6 +1272,7 @@
     },
     {
       "scope_id": "issue-892-javers-history-limit",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-892-javers-history-limit",
@@ -1263,6 +1303,7 @@
     },
     {
       "scope_id": "issue-893-javers-kafka-projection",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-893-javers-kafka-projection",
@@ -1291,6 +1332,7 @@
     },
     {
       "scope_id": "issue-894-javers-redis-head-fail-closed",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-894-javers-redis-head-fail-closed",
@@ -1319,6 +1361,7 @@
     },
     {
       "scope_id": "issue-923-nats-jetstream-flow",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-923-nats-jetstream-flow",
@@ -1348,6 +1391,7 @@
     },
     {
       "scope_id": "issue-915-dependencies-2.0.0",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "chore/issue-915-dependencies-2.0.0",
@@ -1380,6 +1424,7 @@
     },
     {
       "scope_id": "issue-860-graph-io-micrometer",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-860-graph-io-micrometer",
@@ -1399,6 +1444,7 @@
     },
     {
       "scope_id": "issue-861-sudachi-japanese-comparison",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-861-sudachi-japanese-comparison",
@@ -1424,6 +1470,7 @@
     },
     {
       "scope_id": "issue-862-testcontainers-spring-bridge",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-862-testcontainers-spring-bridge",
@@ -1456,8 +1503,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T0601Z-issue-923-develop-rebind-scope",
-    "checksum": "f61af945afa0a9b8254657481e70c6b60fb04d055b104760aa73a3f077e5eaf9"
+    "receipt_id": "20260906T-issue-961-scope-lifecycle-rebase-923",
+    "checksum": "5f1fb07c27c5ce31729bb25fa8aa4d65c987ea68976620c080ba3eab6af51cd3"
   },
   "planned_scope_replan_receipts": {
   },

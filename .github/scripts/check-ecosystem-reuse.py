@@ -58,6 +58,7 @@ CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
+FOLLOW_UP_LIFECYCLE_VALUES = {"ACTIVE", "MERGED"}
 OID_POLICIES = {"exact", "rebase-aware"}
 FOLLOW_UP_BASE_REF_POLICIES = {
     "parent-head",
@@ -69,16 +70,20 @@ REVIEWED_MARKER_BINDINGS = {"manifest", "lineage"}
 REVIEWED_MARKER_LABEL_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:")
 REVIEWED_MARKER_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:\s*([0-9a-f]{40})\b")
 FOLLOW_UP_SCOPE_FIELDS = {
-    "scope_id", "scope_kind", "parent_track", "expected_head_ref", "expected_base_ref",
+    "scope_id", "scope_kind", "lifecycle", "parent_track", "expected_head_ref", "expected_base_ref",
     "base_ref_policy", "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
 }
 DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
 ECOSYSTEM_POLICY_MAINTENANCE_PATHS = {
     ".github/scripts/check-ecosystem-reuse.py",
     ".github/scripts/test_check_ecosystem_reuse.py",
+    "docs/ecosystem-reuse-train.json",
     "docs/governance/github-action-pins.json",
 }
-ECOSYSTEM_POLICY_LESSON_NAME = "ecosystem-dependency-maintenance-scope.md"
+ECOSYSTEM_POLICY_LESSON_NAMES = {
+    "ecosystem-dependency-maintenance-scope.md",
+    "ecosystem-reuse-scope-lifecycle.md",
+}
 BLUETAPE_MARKER_RE = re.compile(r"(?i)bluetape4k")
 BLUETAPE_PLATFORM_VERSION_RE = re.compile(
     r"^\s*bluetape4k-dependencies-version\s*="
@@ -670,6 +675,22 @@ def manifest_follow_up_scopes(manifest: Dict[str, object]) -> List[Dict[str, obj
     return [scope for scope in scopes if isinstance(scope, dict)]
 
 
+def manifest_active_scope_entries(
+    manifest: Dict[str, object],
+) -> List[Tuple[str, Dict[str, object]]]:
+    fixed = [
+        (label, node)
+        for label, node in manifest_nodes(manifest).items()
+        if node.get("state") != "MERGED"
+    ]
+    follow_up = [
+        (str(scope.get("scope_id")), scope)
+        for scope in manifest_follow_up_scopes(manifest)
+        if scope.get("lifecycle") == "ACTIVE"
+    ]
+    return fixed + follow_up
+
+
 def _scope_path_prefix(raw: object) -> str:
     return clean_cell(str(raw)).removesuffix("/**")
 
@@ -705,6 +726,9 @@ def _validate_follow_up_scopes(
         scope_kind = scope.get("scope_kind")
         if scope_kind not in FOLLOW_UP_SCOPE_KINDS:
             errors.append("%s: invalid scope_kind %s" % (prefix, escaped(scope_kind)))
+        lifecycle = scope.get("lifecycle")
+        if lifecycle not in FOLLOW_UP_LIFECYCLE_VALUES:
+            errors.append("%s: invalid lifecycle %s" % (prefix, escaped(lifecycle)))
         base_ref_policy = scope.get("base_ref_policy")
         if base_ref_policy not in FOLLOW_UP_BASE_REF_POLICIES:
             errors.append("%s: invalid base_ref_policy %s" % (prefix, escaped(base_ref_policy)))
@@ -1056,6 +1080,26 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                     errors.append("follow_up_scopes changed without a fresh coordinator receipt")
             elif current_scope_receipt != trusted_scope_receipt:
                 errors.append("coordinator_scope_receipt changed without follow_up_scopes update")
+            trusted_scope_entries = trusted_scopes if isinstance(trusted_scopes, list) else []
+            current_scope_entries = current_scopes if isinstance(current_scopes, list) else []
+            trusted_scopes_by_id = {
+                scope.get("scope_id"): scope
+                for scope in trusted_scope_entries
+                if isinstance(scope, dict)
+            }
+            for scope in current_scope_entries:
+                if not isinstance(scope, dict):
+                    continue
+                trusted_scope = trusted_scopes_by_id.get(scope.get("scope_id"))
+                if (
+                    isinstance(trusted_scope, dict)
+                    and trusted_scope.get("lifecycle") == "MERGED"
+                    and scope.get("lifecycle") == "ACTIVE"
+                ):
+                    errors.append(
+                        "%s: MERGED follow-up scope cannot be reactivated" %
+                        escaped(scope.get("scope_id"))
+                    )
             current_nodes = manifest_nodes(manifest)
             trusted_nodes = manifest_nodes(trusted)
             current_replan_receipts = manifest.get("planned_scope_replan_receipts", {}) or {}
@@ -1419,7 +1463,10 @@ def _is_ecosystem_policy_maintenance_path(path: str) -> bool:
         clean_cell(path) in ECOSYSTEM_POLICY_MAINTENANCE_PATHS
         or (
             clean_cell(path).startswith("docs/lessons/")
-            and Path(clean_cell(path)).name.endswith(ECOSYSTEM_POLICY_LESSON_NAME)
+            and any(
+                Path(clean_cell(path)).name.endswith(name)
+                for name in ECOSYSTEM_POLICY_LESSON_NAMES
+            )
         )
     )
 
@@ -1542,14 +1589,14 @@ def is_outside_train_scope_change(
     ]
     if not product_paths:
         return False
-    scope_entries = list(manifest_nodes(manifest).values()) + manifest_follow_up_scopes(manifest)
+    scope_entries = [scope for _, scope in manifest_active_scope_entries(manifest)]
     allowed_paths = [
         str(allowed)
         for scope in scope_entries
         if isinstance(scope.get("allowed_paths", []), list)
         for allowed in scope.get("allowed_paths", [])
     ]
-    return bool(allowed_paths) and all(
+    return all(
         not any(_path_matches_allowed(path, allowed) for allowed in allowed_paths)
         for path in product_paths
     )
@@ -1577,11 +1624,7 @@ def validate_train_scope(
         errors.append("base_ref_name is required for PR scope")
     if not clean_cell(head_ref_name):
         errors.append("head_ref_name is required for PR scope")
-    nodes = manifest_nodes(manifest)
-    scope_entries = list(nodes.items()) + [
-        (str(scope.get("scope_id")), scope)
-        for scope in manifest_follow_up_scopes(manifest)
-    ]
+    scope_entries = manifest_active_scope_entries(manifest)
     matching_scopes = []
     for label, node in scope_entries:
         allowed_paths = node.get("allowed_paths", [])
