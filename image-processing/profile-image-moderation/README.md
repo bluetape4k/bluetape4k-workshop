@@ -24,6 +24,7 @@ This example demonstrates a production-shaped profile image flow:
 | Metrics | low-cardinality Micrometer counters/timers | `ProfileImageMetrics` |
 | ID generation | Base58 upload ids | `ProfileImageService` |
 | Privacy derivatives | strict metadata/GPS removal, orientation normalization, and redaction reports | `ProfileImageProcessor`, `PrivacyDerivativePipeline` |
+| Privacy payload persistence | defensive derivative bytes and bounded report snapshots with a stable JSON envelope | `ProcessedProfileImage`, `PrivacyDerivativeJackson` |
 
 ## API
 
@@ -99,13 +100,22 @@ Invalid uploads return RFC 9457 ProblemDetail JSON:
 ## Privacy-safe Derivatives
 
 Both the pending blurred JPEG and the approved public JPEG are re-encoded through the
-bluetape4k-images `2.0.0` `PrivacyDerivativePipeline`. The default policy strips EXIF, GPS, XMP, IPTC, and ICC
+bluetape4k-images `1.0.0` `PrivacyDerivativePipeline`, resolved by the workshop's
+`bluetape4k-dependencies:2.0.0` BOM. The default policy strips EXIF, GPS, XMP, IPTC, and ICC
 metadata, normalizes EXIF orientation, and strictly re-reads the output before storage.
 The consumer adapter is `ProfileImageProcessor.processPrivacySafe`.
 The bounded `PrivacyDerivativeReport` records requested/remaining categories and applied
 redaction geometry without raw metadata or image bytes. A metadata reader failure or a
 remaining category fails closed, so no public derivative is uploaded; the private original
 and moderation state machine are unchanged.
+
+`ProcessedProfileImage` keeps the runtime reports transient and stores
+`PrivacyDerivativePayload` snapshots for persistence or messaging boundaries. Each payload
+contains a defensive copy of the derivative bytes and a bounded report snapshot whose opaque
+`sourceId` is the generated upload id. `PrivacyDerivativeJackson.encodePayload` and
+`decodePayload` use the stable `schemaVersion`/`kind` envelope and stable codec reason codes.
+The byte-array APIs are the persistence boundary in this example. Stream helpers leave
+caller-owned streams open; callers remain responsible for closing them.
 
 The policy can be tuned without changing the example's storage contract:
 
@@ -152,4 +162,4 @@ Local storage defaults to `${java.io.tmpdir}/bluetape4k-profile-images`. Remove 
 ./gradlew :image-processing-profile-image-moderation:test
 ```
 
-The tests cover pending/approved/rejected/failed/no-image states, stale moderation completion, private URL denial, cleanup after storage failure, strict privacy metadata verification, orientation/redaction report geometry, source-reader fail-closed handling, JPEG derivative signatures, no-store pending responses, and low-cardinality metrics.
+The tests cover pending/approved/rejected/failed/no-image states, stale moderation completion, private URL denial, cleanup after storage failure, strict privacy metadata verification, orientation/redaction report geometry, payload round trips and defensive copies, stable codec failures, caller-owned streams, source-reader fail-closed handling, JPEG derivative signatures, no-store pending responses, and low-cardinality metrics.

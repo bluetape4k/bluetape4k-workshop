@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.profile.model
 
-import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.privacy.PrivacyDerivativePayload
 import io.bluetape4k.images.privacy.PrivacyDerivativeReport
+import io.bluetape4k.images.spring.ImageObjectKey
 import java.io.Serializable
 import java.time.Instant
 import kotlin.jvm.Transient
@@ -68,6 +69,15 @@ data class ProcessedProfileImage(
     val contentType: String = "image/jpeg",
     @Transient val pendingPrivacyReport: PrivacyDerivativeReport? = null,
     @Transient val approvedPrivacyReport: PrivacyDerivativeReport? = null,
+    /**
+     * pending 산출물과 bounded privacy report를 함께 보존하는 영속화 payload입니다.
+     *
+     * runtime report는 진단용으로만 transient하게 유지하고, 재시작·메시지 경계에서는
+     * 이 snapshot을 사용합니다.
+     */
+    val pendingPrivacyPayload: PrivacyDerivativePayload? = null,
+    /** approved public 산출물과 bounded privacy report를 함께 보존하는 영속화 payload입니다. */
+    val approvedPrivacyPayload: PrivacyDerivativePayload? = null,
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L

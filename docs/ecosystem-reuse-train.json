@@ -1553,11 +1553,31 @@
         "spring-data/redis-examples/build.gradle.kts"
       ],
       "review_artifact": "docs/review/2026-09-03-issue-862-testcontainers-spring-bridge-implementation-review.md"
+    },
+    {
+      "scope_id": "issue-965-privacy-derivative-payload",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-965-privacy-derivative-payload",
+      "expected_base_ref": "feat/issue-964-graph-record-flow-reader",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [965],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        "docs/review/2026-09-06-issue-965-privacy-derivative-payload-implementation-review.md",
+        "image-processing/profile-image-moderation/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-09-06-issue-965-privacy-derivative-payload-implementation-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T0905Z-issue-953-develop-rebind-scope",
-    "checksum": "d4e0ee2ae075b6e71c74933be69e52cdb6303848cbfe1b35a17fd61e1635c0c9"
+    "receipt_id": "20260906T-issue-965-privacy-derivative-payload-scope",
+    "checksum": "6dd2fdbcce554bd31634965d8123d448150410d23901cb40209694c2f1e23288"
   },
   "planned_scope_replan_receipts": {
   },

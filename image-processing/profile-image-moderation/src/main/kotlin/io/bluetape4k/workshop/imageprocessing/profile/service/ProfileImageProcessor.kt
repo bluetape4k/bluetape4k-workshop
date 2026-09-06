@@ -10,6 +10,7 @@ import io.bluetape4k.images.privacy.PrivacyDerivativeFormat
 import io.bluetape4k.images.privacy.PrivacyDerivativeOptions
 import io.bluetape4k.images.privacy.PrivacyRedaction
 import io.bluetape4k.images.privacy.suspendPrivacyDerivative
+import io.bluetape4k.images.privacy.toPayload
 import io.bluetape4k.images.thumbnail.ThumbnailCrop
 import io.bluetape4k.images.thumbnail.ThumbnailSize
 import io.bluetape4k.workshop.imageprocessing.profile.config.ProfileImageModerationProperties
@@ -46,15 +47,19 @@ class ProfileImageProcessor(
     }
 
     /**
-     * 원본 metadata와 output을 모두 strict하게 확인한 public-safe derivative를 만듭니다.
+     * 원본 metadata와 output을 strict하게 확인한 privacy-safe 산출물 및 영속화 payload를 생성합니다.
      *
-     * 원본 bytes는 이 함수에서 변경하거나 결과 report에 복사하지 않습니다. pipeline의
-     * 제한된 [PrivacyDerivativeReport]만 [ProcessedProfileImage]에 보존하며, verification
-     * 실패 시 어떤 public derivative도 성공으로 반환하지 않습니다.
+     * 원본 bytes는 이 함수에서 변경하거나 결과 report에 복사하지 않습니다. 제한된
+     * [PrivacyDerivativeReport]만 runtime 진단용으로 보존하며, verification 실패 시 어떤
+     * public derivative도 성공으로 반환하지 않습니다.
+     *
+     * [sourceId]는 bounded report snapshot에 opaque 식별자로 기록합니다. 직접 호출 호환성을 위해
+     * 생략할 수 있지만, 업로드 흐름에서는 재시작·메시지 경계에서 산출물을 추적할 수 있도록 upload id를 전달합니다.
      */
     suspend fun processPrivacySafe(
         bytes: ByteArray,
         redactions: List<PrivacyRedaction> = emptyList(),
+        sourceId: String? = null,
     ): ProcessedProfileImage {
         val sourceMetadata = readSourceMetadata(bytes)
         val image = decodeWithImageIo(bytes)
@@ -81,6 +86,8 @@ class ProfileImageProcessor(
             approvedBytes = approved.bytes,
             pendingPrivacyReport = pending.report,
             approvedPrivacyReport = approved.report,
+            pendingPrivacyPayload = pending.toPayload(sourceId),
+            approvedPrivacyPayload = approved.toPayload(sourceId),
         )
     }
 
