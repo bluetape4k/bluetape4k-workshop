@@ -64,7 +64,7 @@ class NightlyMockImagesTest(unittest.TestCase):
             workflow.index("- name: Run tests"),
         )
 
-    def test_registered_nightly_scope_rejects_wrong_branch_and_extra_paths(self):
+    def test_historical_nightly_scope_is_ignored_and_active_scope_rejects_drift(self):
         root = Path(__file__).parents[2]
         spec = importlib.util.spec_from_file_location(
             "ecosystem_checker", Path(__file__).with_name("check-ecosystem-reuse.py")
@@ -72,17 +72,32 @@ class NightlyMockImagesTest(unittest.TestCase):
         checker = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(checker)
         manifest = json.loads((root / "docs/ecosystem-reuse-train.json").read_text())
-        scope = next(
+        historical_scope = next(
             s
             for s in manifest["follow_up_scopes"]
             if s["scope_id"] == "issue-948-949-nightly-recovery"
         )
+        self.assertEqual(historical_scope["lifecycle"], "MERGED")
         options = {
             "base_ref_name": "develop",
-            "head_ref_name": scope["expected_head_ref"],
+            "head_ref_name": historical_scope["expected_head_ref"],
             "base_oid": "a" * 40,
             "head_oid": "b" * 40,
         }
+        self.assertTrue(
+            checker.validate_train_scope(
+                manifest,
+                historical_scope["allowed_paths"],
+                **options,
+            )
+        )
+
+        scope = {
+            **historical_scope,
+            "scope_id": "active-nightly-recovery-test",
+            "lifecycle": "ACTIVE",
+        }
+        manifest["follow_up_scopes"].append(scope)
         self.assertEqual(
             checker.validate_train_scope(manifest, scope["allowed_paths"], **options),
             [],
