@@ -85,7 +85,12 @@ class AppConfigDataSpringIntegrationTest {
                 BootstrapRegistryInitializer { registry ->
                     registry.register(
                         AwsSyncClientCustomizer::class.java,
-                        BootstrapRegistry.InstanceSupplier.of(testCustomizer()),
+                        BootstrapRegistry.InstanceSupplier.of(
+                            testCustomizer(
+                                apiCallTimeout = Duration.ofSeconds(10),
+                                apiCallAttemptTimeout = Duration.ofSeconds(5),
+                            ),
+                        ),
                     )
                 },
             )
@@ -211,6 +216,7 @@ class AppConfigDataSpringIntegrationTest {
         val optionalServer = FakeAppConfigDataServer(
             payloads = listOf("feature=never\n"),
             sessionStatus = 404,
+            delayMillis = 750,
         ).start()
         var optionalContext: ConfigurableApplicationContext? = null
         try {
@@ -545,7 +551,10 @@ class AppConfigDataSpringIntegrationTest {
                 .endpointOverride(server.endpoint)
                 .region(software.amazon.awssdk.regions.Region.US_EAST_1)
                 .credentialsProvider(TEST_CREDENTIALS)
-            testCustomizer().customize(AwsClientCustomizationContext("appconfigdata"), builder)
+            testCustomizer(
+                apiCallTimeout = Duration.ofMillis(500),
+                apiCallAttemptTimeout = Duration.ofMillis(500),
+            ).customize(AwsClientCustomizationContext("appconfigdata"), builder)
             client = builder.build()
             client.serviceClientConfiguration().overrideConfiguration().apiCallTimeout().get() shouldBeEqualTo Duration.ofMillis(500)
             client.serviceClientConfiguration().overrideConfiguration().apiCallAttemptTimeout().get() shouldBeEqualTo Duration.ofMillis(500)
@@ -607,14 +616,22 @@ class AppConfigDataSpringIntegrationTest {
             BootstrapRegistryInitializer { registry ->
                 registry.register(
                     AwsSyncClientCustomizer::class.java,
-                    BootstrapRegistry.InstanceSupplier.of(testCustomizer()),
+                    BootstrapRegistry.InstanceSupplier.of(
+                        testCustomizer(
+                            apiCallTimeout = Duration.ofSeconds(10),
+                            apiCallAttemptTimeout = Duration.ofSeconds(5),
+                        ),
+                    ),
                 )
             },
         )
         return application
     }
 
-    private fun testCustomizer(): AwsSyncClientCustomizer =
+    private fun testCustomizer(
+        apiCallTimeout: Duration,
+        apiCallAttemptTimeout: Duration,
+    ): AwsSyncClientCustomizer =
         AwsSyncClientCustomizer { customization: AwsClientCustomizationContext, builder ->
             if (customization.serviceName == "appconfigdata") {
                 val awsBuilder = builder as? AwsClientBuilder<*, *>
@@ -623,8 +640,8 @@ class AppConfigDataSpringIntegrationTest {
                 awsBuilder.overrideConfiguration(
                     awsBuilder.overrideConfiguration()
                         .toBuilder()
-                        .apiCallTimeout(Duration.ofMillis(500))
-                        .apiCallAttemptTimeout(Duration.ofMillis(500))
+                        .apiCallTimeout(apiCallTimeout)
+                        .apiCallAttemptTimeout(apiCallAttemptTimeout)
                         .build(),
                 )
             }
