@@ -1294,7 +1294,7 @@
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "feat/issue-894-javers-redis-head-fail-closed",
-      "expected_base_ref": "feat/issue-893-javers-kafka-projection",
+      "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -1427,8 +1427,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260906T-issue-894-javers-redis-head-fail-closed-scope",
-    "checksum": "955e19284dfe5744f89f58e830f7b76dd6de0c84142e35bac57c02c283c6d861"
+    "receipt_id": "20260906T0517Z-issue-894-develop-rebind-scope",
+    "checksum": "00682f67aa91976f1e08e118893bba3cc087f14ede1b5a3f8aa0fde53dab511a"
   },
   "planned_scope_replan_receipts": {
   },
