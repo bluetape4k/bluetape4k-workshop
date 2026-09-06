@@ -1616,8 +1616,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260907T-issue-967-develop-rebind-scope",
-    "checksum": "33e6509335522ac5914a2b16cd2307f544dd3931fa5469b8dd880a6849312153"
+    "receipt_id": "20260907T-workshop-2-1-0-snapshot-lifecycle-closeout",
+    "checksum": "6fdc36a819d44358a3af35756f3af5920ff0e0cfa2e9068e6cfe6e64d4508b22"
   },
   "planned_scope_replan_receipts": {
   },
