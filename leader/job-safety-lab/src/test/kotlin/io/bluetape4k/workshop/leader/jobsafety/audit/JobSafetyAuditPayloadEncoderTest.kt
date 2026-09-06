@@ -15,11 +15,15 @@ import io.bluetape4k.leader.audit.http.HttpLeaderAuditExporter
 import io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions
 import io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder
 import io.bluetape4k.leader.audit.http.LeaderAuditTrustedHttpsEndpoint
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.net.URI
 import java.time.Duration
 import java.util.concurrent.Executors
+import kotlin.time.Duration.Companion.seconds
 
 internal class JobSafetyAuditPayloadEncoderTest {
 
@@ -131,6 +135,12 @@ internal class JobSafetyAuditPayloadEncoderTest {
             httpsExporter.submit(event)
             memoryClient.awaitRequestCount(1, Duration.ofSeconds(2))
             httpsClient.awaitRequestCount(1, Duration.ofSeconds(2))
+            await
+                .atMost(5.seconds)
+                .untilAsserted {
+                    memoryExporter.snapshot().admitted shouldBeEqualTo 0
+                    httpsExporter.snapshot().admitted shouldBeEqualTo 0
+                }
 
             val memoryBody = memoryStore.snapshot().single().decodeToString()
             val httpsBody = httpsStore.snapshot().single().decodeToString()
