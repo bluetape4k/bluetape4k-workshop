@@ -34,7 +34,7 @@ aggregate version from PostgreSQL before returning a command candidate.
 | Repositories | `UUIDAuditableJdbcRepository`, `LongAuditableJdbcRepository`, `LongJdbcRepository` from `bluetape4k-exposed-jdbc` |
 | PostgreSQL tests | `PostgreSQLServer.Launcher.postgres` and released `bluetape4k-exposed-jdbc-tests` test support |
 | Virtual threads | `bluetape4k-virtualthread-api` plus runtime `bluetape4k-virtualthread-jdk25` |
-| Provider HTTP | `productionVirtualThreadHttpClientOf`; submit `POST` disables automatic retry |
+| Provider HTTP | `productionVirtualThreadHttpClientOf`; `HttpEntity.readBodyString(64 KiB)` applies a strict byte limit and submit `POST` disables automatic retry |
 | Concurrency tests | `MultithreadingTester` |
 
 The module declares JetBrains Exposed coordinates without versions. The
@@ -77,8 +77,10 @@ curl -s -X POST http://localhost:8080/api/planning/requests/<request-id>/command
 The processing endpoint is deliberately synchronous for workshop inspection.
 A production application should schedule the worker behind authenticated
 operator controls instead of exposing it as a public endpoint.
-Callback bodies are capped at 256 KiB before parsing, and provider responses
-are streamed only up to 64 KiB.
+Callback bodies are capped at 256 KiB before parsing. Provider responses use the shared strict
+`HttpEntity.readBodyString(64 KiB)` contract: known, unknown, and chunked bodies must
+finish within the byte limit, and the entity stream is closed on both success and failure.
+The 404 status path also uses bounded cleanup before returning `null`.
 
 ## Provider profiles
 

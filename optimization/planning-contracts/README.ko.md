@@ -25,7 +25,7 @@ version을 다시 읽습니다.
 | Repository | `bluetape4k-exposed-jdbc`의 `UUIDAuditableJdbcRepository`, `LongAuditableJdbcRepository`, `LongJdbcRepository` |
 | PostgreSQL 테스트 | `PostgreSQLServer.Launcher.postgres`, 공개된 `bluetape4k-exposed-jdbc-tests` 지원 기능 |
 | Virtual thread | `bluetape4k-virtualthread-api`와 runtime `bluetape4k-virtualthread-jdk25` |
-| Provider HTTP | `productionVirtualThreadHttpClientOf`; submit `POST` 자동 retry 비활성화 |
+| Provider HTTP | `productionVirtualThreadHttpClientOf`; `HttpEntity.readBodyString(64 KiB)` strict byte 상한과 submit `POST` 자동 retry 비활성화 |
 | 동시성 테스트 | `MultithreadingTester` |
 
 JetBrains Exposed 좌표는 버전 없이 선언합니다. 현재
@@ -68,8 +68,10 @@ curl -s -X POST http://localhost:8080/api/planning/requests/<request-id>/command
 `process` endpoint는 예제 흐름을 눈으로 확인하기 위해 동기 방식으로 두었습니다.
 운영 환경에서는 public endpoint로 노출하지 말고, 인증된 operator control 뒤에서
 worker를 scheduling해야 합니다.
-Callback body는 parsing 전에 256 KiB로 제한하고, provider response는 최대 64 KiB만
-streaming 방식으로 읽습니다.
+Callback body는 parsing 전에 256 KiB로 제한합니다. Provider response는 공통
+`HttpEntity.readBodyString(64 KiB)` strict 계약을 사용하므로 known, unknown, chunked
+body 모두 byte 상한 안에서 끝까지 읽어야 하며 성공·실패 모두 entity stream을 닫습니다.
+404 status 경로도 무제한 drain 대신 bounded cleanup 후 `null`을 반환합니다.
 
 ## Provider profile
 

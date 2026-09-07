@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.optimization.planning.adapter.http
 
 import io.bluetape4k.http.hc5.classic.productionVirtualThreadHttpClientOf
+import io.bluetape4k.http.hc5.entity.readBodyBytes
+import io.bluetape4k.http.hc5.entity.readBodyString
+import io.bluetape4k.io.ByteLimitExceededException
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningEngine
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningResult
@@ -14,10 +17,8 @@ import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.HttpEntity
-import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
 import tools.jackson.databind.ObjectMapper
-import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 internal class PlanningProviderException(message: String): RuntimeException(message)
@@ -57,7 +58,7 @@ internal abstract class HttpPlanningEngine(
             )
         }
         return client.execute(post) { response ->
-            val body = boundedBody(response.entity)
+            val body = readProviderBody(response.entity)
             if (response.code !in 200..299) {
                 throw PlanningProviderException("provider submit failed with status ${response.code}")
             }
@@ -75,10 +76,10 @@ internal abstract class HttpPlanningEngine(
         )
         return client.execute(get) { response ->
             if (response.code == 404) {
-                EntityUtils.consume(response.entity)
+                discardProviderBody(response.entity)
                 return@execute null
             }
-            val body = boundedBody(response.entity)
+            val body = readProviderBody(response.entity)
             if (response.code !in 200..299) {
                 throw PlanningProviderException("provider status failed with status ${response.code}")
             }
@@ -100,16 +101,18 @@ internal abstract class HttpPlanningEngine(
         client.close()
     }
 
-    private fun boundedBody(entity: HttpEntity?): String {
-        if (entity == null) return ""
-        if (entity.contentLength > MAX_RESPONSE_BYTES) {
-            throw PlanningProviderException("provider response exceeded the configured limit")
+    private fun readProviderBody(entity: HttpEntity?): String = try {
+        entity.readBodyString(MAX_RESPONSE_BYTES)
+    } catch (_: ByteLimitExceededException) {
+        throw PlanningProviderException(RESPONSE_LIMIT_MESSAGE)
+    }
+
+    private fun discardProviderBody(entity: HttpEntity?) {
+        try {
+            entity.readBodyBytes(MAX_RESPONSE_BYTES)
+        } catch (_: ByteLimitExceededException) {
+            throw PlanningProviderException(RESPONSE_LIMIT_MESSAGE)
         }
-        val bytes = entity.content.use { content -> content.readNBytes(MAX_RESPONSE_BYTES + 1) }
-        if (bytes.size > MAX_RESPONSE_BYTES) {
-            throw PlanningProviderException("provider response exceeded the configured limit")
-        }
-        return bytes.toString(StandardCharsets.UTF_8)
     }
 
     private data class HttpSubmissionResponse(
@@ -127,6 +130,7 @@ internal abstract class HttpPlanningEngine(
 
     companion object {
         private const val MAX_RESPONSE_BYTES = 64 * 1024
+        private const val RESPONSE_LIMIT_MESSAGE = "provider response exceeded the configured limit"
         private const val MAX_EXPLANATIONS = 20
         private const val MAX_EXPLANATION_LENGTH = 240
     }
