@@ -23,7 +23,7 @@ load-test example cannot create unbounded request-path sleeps.
 `TomcatConfig` installs `Executors.newVirtualThreadPerTaskExecutor()` as the
 Tomcat protocol handler executor. `AsyncConfig` also exposes Spring's
 `applicationTaskExecutor` as a virtual-thread executor and preserves MDC through
-`LoggingTaskDecorator`.
+the shared `MdcTaskDecorator`.
 
 ## Load-Test Flow
 
@@ -83,6 +83,7 @@ Reports are generated under `build/reports/gatling/`.
 | `bluetape4k-jackson3` | Spring Boot JSON serialization support |
 | `bluetape4k-coroutines` | Test support for suspend-style WebTestClient assertions |
 | `bluetape4k-core` | `requireInRange()` validation for bounded delay requests |
+| `bluetape4k-spring-boot-core` | Shared `MdcTaskDecorator` for caller snapshot and worker-context restoration |
 
 ## Source References
 

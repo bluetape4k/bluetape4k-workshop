@@ -47,6 +47,7 @@ dependencies {
     // api(libs.jakarta.annotation.api)
 
     implementation(libs.bluetape4k.core)
+    implementation(libs.bluetape4k.spring.boot4.core)
     // VirtualThread of JDK 25
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)

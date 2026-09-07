@@ -21,7 +21,7 @@ This module shows Spring Cache backed by Redis and Lettuce. It mirrors the Caffe
 | Class | Role |
 |---|---|
 | `LettuceRedisCacheConfiguration` | Configures `RedisCacheManager`, `RedisTemplate`, binary serialization, and Lettuce connection factory |
-| `AsyncConfig` | Owns the shared `VirtualThreads` executor, adapts it for Spring, and restores MDC after every task |
+| `AsyncConfig` | Owns the shared `VirtualThreads` executor, adapts it for Spring, and applies the shared `MdcTaskDecorator` |
 | `CountryRepository` | Applies bluetape4k validation plus `@Cacheable` and `@CacheEvict` to Redis-backed country lookup |
 
 ## bluetape4k Features Used
@@ -43,14 +43,15 @@ fun cacheRedisVirtualThreadExecutor(): ExecutorService = VirtualThreads.executor
 @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
 fun asyncTaskExecutor(executorService: ExecutorService): AsyncTaskExecutor =
     TaskExecutorAdapter(executorService).apply {
-        setTaskDecorator(LoggingTaskDecorator())
+        setTaskDecorator(MdcTaskDecorator())
     }
 ```
 
 Spring owns one delegate used by both `@Async` and Lettuce. Context shutdown rejects new work but does not
 interrupt already submitted tasks or wait indefinitely for them. The provider-defined thread name is intentional;
-use the `cacheRedisVirtualThreadExecutor` bean name and `VirtualThreads.runtimeName()` for observation. The MDC
-decorator restores the worker's previous context in `finally`, including error and empty-caller paths.
+use the `cacheRedisVirtualThreadExecutor` bean name and `VirtualThreads.runtimeName()` for observation. The shared
+`MdcTaskDecorator` captures an immutable caller snapshot, handles empty caller context, and restores the worker's
+previous context after success or failure.
 Both virtual-thread artifacts are versionless module declarations resolved by `bluetape4k-dependencies:2.1.0-SNAPSHOT`.
 
 ## Redis Configuration Example

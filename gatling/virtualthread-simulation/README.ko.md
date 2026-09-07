@@ -22,8 +22,8 @@ request-path sleep을 만들지 않도록 합니다.
 
 `TomcatConfig`는 `Executors.newVirtualThreadPerTaskExecutor()`를 Tomcat
 protocol handler executor로 설정합니다. `AsyncConfig`도 Spring
-`applicationTaskExecutor`를 virtual-thread executor로 노출하고,
-`LoggingTaskDecorator`로 MDC를 보존합니다.
+`applicationTaskExecutor`를 virtual-thread executor로 노출하고 공용
+`MdcTaskDecorator`로 MDC를 보존합니다.
 
 ## 부하 테스트 흐름
 
@@ -83,6 +83,7 @@ Spring Boot 애플리케이션을 먼저 실행합니다.
 | `bluetape4k-jackson3` | Spring Boot JSON serialization support |
 | `bluetape4k-coroutines` | Suspend-style WebTestClient assertion test support |
 | `bluetape4k-core` | Bounded delay request를 위한 `requireInRange()` validation |
+| `bluetape4k-spring-boot-core` | Caller snapshot과 worker context 복원을 제공하는 공용 `MdcTaskDecorator` |
 
 ## 소스 기준점
 
