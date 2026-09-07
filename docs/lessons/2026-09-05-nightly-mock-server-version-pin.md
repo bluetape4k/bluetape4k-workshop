@@ -9,10 +9,12 @@
 
 ## 발견한 문제
 
-Nightly가 `bluetape4k-projects`의 `develop`을 checkout했다. 현재 `develop`은 2.1.0
-이미지를 만들지만 워크숍의 Testcontainers 헬퍼는 `bluetape4k/mock-web-server:2.0.0`과
-`bluetape4k/mock-webflux-server:2.0.0`을 요청한다. 그 결과 이미지 빌드는 성공해도 테스트가
-2.0.0 이미지를 pull하다가 실패했다.
+당시 2.0.0 안정 소비자 기준에서 Nightly가 `bluetape4k-projects`의 `develop`을
+checkout했다. 그 시점의 `develop`은 2.1.0 이미지를 만들었지만 워크숍의 Testcontainers
+헬퍼는 `bluetape4k/mock-web-server:2.0.0`과 `bluetape4k/mock-webflux-server:2.0.0`을
+요청했다. 그 결과 이미지 빌드는 성공해도 테스트가 2.0.0 이미지를 pull하다가 실패했다.
+현재 2.1.0-SNAPSHOT 개발선은 아래의 명시적 source/tag 변환 경로를 사용하므로 이 장애와
+구분한다.
 
 ## 결정
 
