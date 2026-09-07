@@ -1,10 +1,11 @@
-# Nightly mock 서버 이미지는 소비자 BOM 릴리스에 고정한다
+# Nightly mock 서버 이미지는 소비자 BOM 릴리스 선에 고정한다
 
 ## 배경
 
-워크숍의 `gradle/libs.versions.toml`은 `io.github.bluetape4k:bluetape4k-dependencies:2.0.0`을
-기준으로 사용한다. Nightly는 Testcontainers용 mock 서버 이미지를 별도로 빌드하므로
-이미지 소스 ref도 같은 릴리스 선을 가리켜야 한다.
+워크숍의 `gradle/libs.versions.toml`은 현재
+`io.github.bluetape4k:bluetape4k-dependencies:2.1.0-SNAPSHOT` 개발선을 기준으로
+사용한다. Nightly는 Testcontainers용 mock 서버 이미지를 별도로 빌드하므로 이미지 태그와
+소스 ref도 소비자 BOM의 릴리스 선과 함께 결정해야 한다.
 
 ## 발견한 문제
 
@@ -15,17 +16,21 @@ Nightly가 `bluetape4k-projects`의 `develop`을 checkout했다. 현재 `develop
 
 ## 결정
 
-`.github/scripts/nightly-mock-images.py`가 소비자 BOM 버전을 읽어 mock 서버 소스 checkout에
-전달한다. 현재 공식 `2.0.0` tag를 선택하며, snapshot이나 branch 이름은 거부한다.
-이미지 빌드 직후 두 소비자 태그를 `docker image inspect`로 확인하여 테스트 전에 실패를 감지한다.
-소비자 BOM을 올릴 때는 헬퍼 artifact 버전과 두 mock 이미지 tag를 함께 확인하고, `develop`
-checkout을 사용하지 않는다.
+`.github/scripts/nightly-mock-images.py`가 소비자 BOM 버전을 읽어 이미지 태그와 mock 서버
+소스 checkout ref를 함께 결정한다. 안정 릴리스(`X.Y.Z`)는 같은 릴리스 tag를 사용하고,
+명시적인 `--allow-snapshot` 개발선에서는 `X.Y.Z-SNAPSHOT`을 이미지 태그 `X.Y.Z`와
+`bluetape4k-projects` `develop` ref로 변환한다. 이미지 빌드 직후 두 소비자 태그를
+`docker image inspect`로 확인하여 테스트 전에 source/tag 불일치를 감지한다.
+안정 릴리스와 개발선은 서로 다른 경로로 검증하며, 개발선 경로를 기본 안정
+계약으로 허용하지 않는다.
 
 ## 결과
 
 - 공식 `bluetape4k-projects` `2.0.0` tag의 `BluetapeHttpServer.TAG`와
   `BluetapeWebfluxServer.TAG`가 모두 `2.0.0`임을 확인했다.
-- Nightly workflow가 이제 두 이미지를 2.0.0 소스에서 빌드한다.
+- 현재 개발선 Nightly workflow는 `2.1.0-SNAPSHOT` 소비자와 호환되는 `2.1.0` 이미지 태그를
+  `develop` 소스에서 빌드한다.
+- 안정 BOM을 사용하는 workflow는 계속 같은 `2.0.0` source/tag 계약을 사용한다.
 - 저장소 전체 Gradle 선언에는 직접 bluetape4k 버전 좌표나 개별 bluetape4k BOM import가 없다.
 
 ## 검증
@@ -55,7 +60,7 @@ Nightly `33968155595`에서는 전체 테스트가 통과한 뒤 Kafka 산출물
 shell의 `\` 줄 연결과 함께 사용하지 않는다. 여러 줄 shell 명령은 `run: |`로 보존하고,
 회귀 검사에서 실제 Bash에 전달되는 인자와 실행 후 산출물 검증까지 확인한다.
 
-Nightly에서 외부 `bluetape4k-projects` 소스를 checkout할 때는 워크숍 소비자 BOM과 같은
-release tag를 사용한다. BOM 또는 mock 서버 release를 변경하면 catalog 해석,
-`Bluetape*Server.TAG`, 이미지 build log를 한 번에 확인하고, 독립적인 high-contention이나
-graph 실패와 이미지 버전 불일치를 분리해서 보고한다.
+Nightly에서 외부 `bluetape4k-projects` 소스를 checkout할 때는 안정 BOM이면 같은 release
+tag를, 개발 버전 BOM이면 `develop` ref를 명시적으로 사용한다. BOM 또는 mock 서버 release를
+변경하면 catalog 해석, `Bluetape*Server.TAG`, 이미지 build log를 한 번에 확인하고,
+독립적인 high-contention이나 graph 실패와 이미지 버전 불일치를 분리해서 보고한다.

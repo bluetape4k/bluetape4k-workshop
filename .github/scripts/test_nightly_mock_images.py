@@ -27,6 +27,27 @@ class NightlyMockImagesTest(unittest.TestCase):
             with self.subTest(version=version), self.assertRaises(ValueError):
                 CHECKER.image_names(version)
 
+    def test_snapshot_train_uses_develop_source_and_release_image_tag(self):
+        self.assertEqual(
+            CHECKER.resolve_consumer_version("2.1.0-SNAPSHOT", allow_snapshot=True),
+            ("2.1.0", "develop"),
+        )
+
+    def test_snapshot_train_remains_explicitly_opt_in(self):
+        with self.assertRaises(ValueError):
+            CHECKER.resolve_consumer_version("2.1.0-SNAPSHOT")
+
+    def test_snapshot_catalog_resolves_to_release_image_and_develop_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            catalog = Path(directory) / "libs.versions.toml"
+            catalog.write_text(
+                '[versions]\nbluetape4k-dependencies-version = "2.1.0-SNAPSHOT"\n'
+            )
+            self.assertEqual(CHECKER.read_version(catalog, allow_snapshot=True), "2.1.0")
+            self.assertEqual(
+                CHECKER.read_source_ref(catalog, allow_snapshot=True), "develop"
+            )
+
     def test_inspects_both_exact_consumer_images(self):
         with patch.object(CHECKER.subprocess, "run") as run:
             CHECKER.inspect_images("2.0.0")
@@ -56,11 +77,13 @@ class NightlyMockImagesTest(unittest.TestCase):
     def test_workflow_uses_catalog_version_and_checks_images_before_tests(self):
         workflow = (Path(__file__).parents[1] / "workflows/nightly.yml").read_text()
         self.assertIn(
-            'nightly-mock-images.py --github-output "$GITHUB_OUTPUT"', workflow
+            'nightly-mock-images.py --allow-snapshot --github-output "$GITHUB_OUTPUT"',
+            workflow,
         )
-        self.assertIn("ref: ${{ steps.mock-version.outputs.version }}", workflow)
+        self.assertIn("--allow-snapshot", workflow)
+        self.assertIn("ref: ${{ steps.mock-version.outputs.source_ref }}", workflow)
         self.assertLess(
-            workflow.index("nightly-mock-images.py --inspect"),
+            workflow.index("nightly-mock-images.py --allow-snapshot --inspect"),
             workflow.index("- name: Run tests"),
         )
 

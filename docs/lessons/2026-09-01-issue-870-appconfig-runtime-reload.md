@@ -95,7 +95,7 @@ timeout(각 30초)을 사용하고, 중단된 SDK 호출의 재시도는
 10초/5초 timeout과 direct SDK 500ms timeout은 유지한다. 이 격리는 종료 계약과
 SDK timeout/retry 계약이 서로의 결과를 바꾸지 않도록 하는 회귀 규칙이다.
 
-같은 consumer lane의 Container CI는 2.0.0 mock image tag와 2.1.0-SNAPSHOT
+같은 consumer lane의 Container CI는 2.1.0 mock image tag와 2.1.0-SNAPSHOT
 consumer가 요구하는 mock API 소스가 어긋나지 않도록 `bluetape4k-projects`
 `develop`의 live commit `23f60647ef53503a3dcbb9a7ac331abb83401db9`를 exact
 checkout ref로 고정했다. Nightly의 안정 release tag(`2.0.0`) 계약은 별도
