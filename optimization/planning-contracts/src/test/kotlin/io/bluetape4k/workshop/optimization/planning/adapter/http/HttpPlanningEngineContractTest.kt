@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.testcontainers.http.WireMockServer
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateId
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateVersion
@@ -144,7 +145,7 @@ internal class HttpPlanningEngineContractTest {
                 engine.submit(submission())
             }
             failure.message shouldBeEqualTo "provider response exceeded the configured limit"
-            failure.message.orEmpty().contains("가").shouldBeEqualTo(false)
+            failure.message.orEmpty().contains("가").shouldBeFalse()
         }
     }
 
