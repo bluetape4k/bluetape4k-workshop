@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.spring.task.MdcTaskDecorator
 import org.junit.jupiter.api.Test
 import org.slf4j.MDC
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor
@@ -108,7 +109,7 @@ class AsyncConfigTest {
     @Test
     fun `MDC decorator restores reused worker context after success error and null caller`() {
         MDC.clear()
-        val decorator = AsyncConfig.LoggingTaskDecorator()
+        val decorator = MdcTaskDecorator()
         val worker = Executors.newSingleThreadExecutor()
         try {
             MDC.put("requestId", "request-1")

@@ -2,12 +2,11 @@ package io.bluetape4k.workshop.gatling.config
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import org.slf4j.MDC
+import io.bluetape4k.spring.task.MdcTaskDecorator
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
-import org.springframework.core.task.TaskDecorator
 import org.springframework.core.task.support.TaskExecutorAdapter
 import org.springframework.scheduling.annotation.EnableAsync
 import java.util.concurrent.Executors
@@ -29,17 +28,7 @@ class AsyncConfig {
 
         val factory = Thread.ofVirtual().name("async-vt-exec-", 0).factory()
         return TaskExecutorAdapter(Executors.newThreadPerTaskExecutor(factory)).apply {
-            setTaskDecorator(LoggingTaskDecorator())
-        }
-    }
-
-    class LoggingTaskDecorator: TaskDecorator {
-        override fun decorate(task: Runnable): Runnable {
-            val callerThreadContext = MDC.getCopyOfContextMap()
-            return Runnable {
-                callerThreadContext?.let { MDC.setContextMap(it) }
-                task.run()
-            }
+            setTaskDecorator(MdcTaskDecorator())
         }
     }
 }

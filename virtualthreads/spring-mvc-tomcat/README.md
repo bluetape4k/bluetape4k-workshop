@@ -20,7 +20,7 @@ executors.
 | Area | Code | What it demonstrates |
 |---|---|---|
 | Tomcat request executor | `config/TomcatConfig` | Replaces Tomcat's protocol handler executor with `newVirtualThreadPerTaskExecutor()` |
-| Spring `@Async` | `config/AsyncConfig` | Runs async methods on a virtual-thread executor and keeps MDC context |
+| Spring `@Async` | `config/AsyncConfig` | Runs async methods on a virtual-thread executor and applies the shared `MdcTaskDecorator` |
 | Explicit executor bean | `config/VirtualThreadConfig` | Provides a named virtual-thread-per-task executor for helper APIs |
 | Parallel blocking work | `controller/VirtualThreadController` | Uses `structuredTaskScopeAll` and `virtualFutureAll` for many blocking tasks |
 | MVC + JPA endpoints | `controller/MemberController`, `controller/TeamController` | Runs repository calls from MVC endpoints and virtual-thread helpers |

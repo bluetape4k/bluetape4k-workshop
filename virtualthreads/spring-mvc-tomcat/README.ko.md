@@ -20,7 +20,7 @@ handling, `@Async` 작업, 일부 parallel blocking task를 virtual-thread execu
 | Area | Code | What it demonstrates |
 |---|---|---|
 | Tomcat request executor | `config/TomcatConfig` | Tomcat protocol handler executor를 `newVirtualThreadPerTaskExecutor()`로 교체합니다 |
-| Spring `@Async` | `config/AsyncConfig` | Async method를 virtual-thread executor에서 실행하고 MDC context를 유지합니다 |
+| Spring `@Async` | `config/AsyncConfig` | Async method를 virtual-thread executor에서 실행하고 공용 `MdcTaskDecorator`를 적용합니다 |
 | Explicit executor bean | `config/VirtualThreadConfig` | Helper API가 사용할 virtual-thread-per-task executor를 제공합니다 |
 | Parallel blocking work | `controller/VirtualThreadController` | `structuredTaskScopeAll`, `virtualFutureAll`로 여러 blocking task를 실행합니다 |
 | MVC + JPA endpoints | `controller/MemberController`, `controller/TeamController` | MVC endpoint와 virtual-thread helper에서 repository call을 실행합니다 |

@@ -1315,8 +1315,9 @@ case "${1:-help}" in
     if contains_pattern 'VirtualThreads\.executorService\(\)' "$cache_redis_async" && \
        contains_pattern 'destroyMethod = "shutdown"' "$cache_redis_async" && \
        contains_pattern 'CACHE_REDIS_EXECUTOR_BEAN_NAME' "$cache_redis_async" "$cache_redis_test" && \
-       contains_pattern 'finally' "$cache_redis_async" && \
-       contains_pattern 'MDC\.clear\(\)' "$cache_redis_async" && \
+       contains_pattern 'MdcTaskDecorator' "$cache_redis_async" "$cache_redis_test" && \
+       contains_pattern 'finally' "$cache_redis_test" && \
+       contains_pattern 'MDC\.clear\(\)' "$cache_redis_test" && \
        contains_pattern 'DestructionAwareBeanPostProcessor' "$cache_redis_test" && \
        contains_pattern 'RejectedExecutionException' "$cache_redis_test" && \
        contains_pattern 'libs\.bluetape4k\.virtualthread\.api' "$cache_redis_build" && \
