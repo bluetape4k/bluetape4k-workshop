@@ -84,6 +84,23 @@ endpoint guard는 IMDS·임의 외부 host·region 불일치 host와 공통 endp
 fallback 우회를 거부하는 negative 테스트로 고정했다. AppConfig 비활성화 시
 guard가 동작하지 않는 조건도 함께 확인한다.
 
+2.1.0-SNAPSHOT consumer CI에서 같은 종료 테스트가 간헐적으로
+`POST /configurationsessions` 1회와 `GET /configuration` 2회 뒤, 종료 경계에서
+동일한 `GET /configuration?configuration_token=synthetic-token-2`를 한 번 더
+받는 3→4 요청 수 race를 확인했다. upstream lifecycle 구현이나 일반 통합
+client 설정을 바꾸지 않고, 이 테스트의 목적을 lifecycle 종료 취소 경계로
+한정했다. 따라서 해당 fake 요청만 lifecycle의 5초 종료 대기보다 긴 API/attempt
+timeout(각 30초)을 사용하고, 중단된 SDK 호출의 재시도는
+`DefaultRetryStrategy.doNotRetry()`로 비활성화했다. 기존 일반 통합 client의
+10초/5초 timeout과 direct SDK 500ms timeout은 유지한다. 이 격리는 종료 계약과
+SDK timeout/retry 계약이 서로의 결과를 바꾸지 않도록 하는 회귀 규칙이다.
+
+같은 consumer lane의 Container CI는 2.1.0 mock image tag와 2.1.0-SNAPSHOT
+consumer가 요구하는 mock API 소스가 어긋나지 않도록 `bluetape4k-projects`
+`develop`의 live commit `23f60647ef53503a3dcbb9a7ac331abb83401db9`를 exact
+checkout ref로 고정했다. Nightly의 안정 release tag(`2.0.0`) 계약은 별도
+workflow와 lesson에서 유지한다.
+
 첫 hosted CI에서는 consumer test의 legacy JUnit assertion import가 assertion
 governance에 걸려 `shouldBeTrue`로 치환했다. 다음 실행에서는 변경 경로가 기존
 `epic-792-train-promotion` scope를 선택해 `expected_head_ref`가

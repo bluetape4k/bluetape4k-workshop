@@ -197,7 +197,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 |-------|--------|-----------------|-------|-----------------|
 | Basic | [`graph-io-pipeline`](graph/io-pipeline/) | `graph-core`, `graph-tinkerpop`, `graph-io-csv`, `graph-io-jackson3`, `graph-io-graphml` | In-memory | CSV fixture import, Jackson3 NDJSON export/import, GraphML export/import, and graph-io report checks |
 | Basic | [`graph-social-network`](graph/social-network/) | `graph-core`, `graph-tinkerpop` | In-memory | Social graph modeling, hop traversal, and weighted shortest paths |
-| Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop`, Neo4j/Memgraph adapters | In-memory + Testcontainers | Heterogeneous knowledge graph, traversal, and 2.0.0 schema drift planning |
+| Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop`, Neo4j/Memgraph adapters | In-memory + Testcontainers | Heterogeneous knowledge graph, traversal, and 2.1.0-SNAPSHOT schema drift planning |
 | Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse analysis with per-call PageRank provider fallback observation |
 | Advanced | [`graph-event-lineage`](graph/event-lineage/) | `graph-core`, `graph-tinkerpop`, `graph-neo4j`, `testcontainers` | TinkerGraph + Neo4j Testcontainer | Event lineage graph modeling, impact traversal, and audit trail assembly |
 | Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | Explainable recommendation graph traversal |
@@ -290,7 +290,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Kotlin | 2.3.21 |
 | JVM | 21 |
 | Spring Boot | 4.0.6 |
-| bluetape4k | 2.0.0 |
+| bluetape4k | 2.1.0-SNAPSHOT |
 | Gradle | 8.x (Kotlin DSL, multi-module) |
 
 ---

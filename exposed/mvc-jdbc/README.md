@@ -19,7 +19,7 @@ the Testcontainers-backed tests.
 | Area | Implementation | Reader contract |
 |---|---|---|
 | Author and Book CRUD | `AuthorRepository`, `BookRepository` | `LongAuditableJdbcRepository` and `LongJdbcRepository` provide inherited CRUD, paging, counting, existence checks, delete, and batch helpers. |
-| Book cursor pagination | `BookRepository.findCursorPage`, `GET /api/v1/books/cursor` | Exposed 2.0.0 primary-key keyset pagination fetches `pageSize + 1` rows, returns `nextCursor`/`hasNext`, and leaves token encoding, signing, and scope to the caller. The existing offset `findPage` ABI remains available. |
+| Book cursor pagination | `BookRepository.findCursorPage`, `GET /api/v1/books/cursor` | Exposed 2.1.0-SNAPSHOT primary-key keyset pagination fetches `pageSize + 1` rows, returns `nextCursor`/`hasNext`, and leaves token encoding, signing, and scope to the caller. The existing offset `findPage` ABI remains available. |
 | Author audit columns | `AuthorTable : AuditableLongIdTable` | `id`, primary key, and audit columns come from bluetape4k instead of being repeated in the example. |
 | Book lookup by author | `BookRepository.findByAuthorId` | Uses `findBy({ BookTable.authorId eq EntityID(...) })` instead of handwritten select boilerplate. |
 | Order placement | `OrderService.placeOrder` | Creates the order, sorts lines by `productId`, locks each product row, inserts order lines, and decrements stock in one transaction. |
@@ -53,7 +53,7 @@ line and decrements stock after the locked row proves enough inventory exists.
 | `author/schema/AuthorTable.kt` | bluetape4k audited table inheritance. |
 | `author/repository/AuthorRepository.kt` | Minimal repository implementation over inherited CRUD. |
 | `author/repository/BookRepository.kt` | `findBy` predicate usage for a typed author lookup. |
-| `author/repository/BookRepository.kt` | `findCursorPage` delegates to the Exposed 2.0.0 keyset extension. |
+| `author/repository/BookRepository.kt` | `findCursorPage` delegates to the Exposed 2.1.0-SNAPSHOT keyset extension. |
 | `author/controller/BookController.kt` | Cursor endpoint parameters (`pageSize`, `cursor`, and all `SortOrder` directions). |
 | `order/service/OrderService.kt` | `@Transactional`, lock ordering, stock check, rollback trigger, and cancel-row check. |
 | `order/repository/ProductRepository.kt` | `forUpdate()` and atomic stock decrement expression. |
@@ -86,7 +86,7 @@ sign, expire, and scope it to the same sort/filter/tenant contract.
 GET /api/v1/books/cursor?pageSize=2&cursor=3&sortOrder=ASC
 ```
 
-`BookRepository.findCursorPage` uses Exposed 2.0.0's primary-key keyset predicate and
+`BookRepository.findCursorPage` uses Exposed 2.1.0-SNAPSHOT's primary-key keyset predicate and
 `pageSize + 1` sentinel row. It performs one bounded select without a count query,
 so inserts or deletes before the cursor do not cause offset drift. `nextCursor` is
 `null` when `hasNext` is `false`; the caller must reuse the same sort and predicate

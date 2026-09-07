@@ -86,7 +86,7 @@ cleanup, region, 비용, retry 정책, queue/topic subscription wiring, SQS redr
 
 ## PublishBatch walkthrough
 
-`OrderNotificationMessagingService.publishBatch`는 bluetape4k 2.0.0의 새로운 SNS
+`OrderNotificationMessagingService.publishBatch`는 bluetape4k 2.1.0-SNAPSHOT의 새로운 SNS
 batch 계약을 소비하는 예제입니다. 비어 있지 않은 최대 10개 요청만 허용하고, trim한
 `idempotencyKey`를 AWS entry ID로 사용하며 `SnsPublishBatchResult`의 `successful`과
 `failed` 분리를 그대로 보존합니다. 중복 entry ID나 빈 payload는 SNS 호출 전에
@@ -114,7 +114,7 @@ response mapping, cancellation 전파, 자동 재시도하지 않는 transport �
 
 ## SQS Observation listener walkthrough
 
-`SqsObservationExampleConfiguration`은 bluetape4k 2.0.0 SQS listener observation
+`SqsObservationExampleConfiguration`은 bluetape4k 2.1.0-SNAPSHOT SQS listener observation
 lifecycle을 확인하는 opt-in consumer fixture입니다. 기본값은 disabled이므로 기존
 one-shot `consumeOnce` 경로와 retry/redelivery 동작은 바뀌지 않습니다. Listener
 lifecycle telemetry가 필요할 때만 다음 설정을 켜세요.

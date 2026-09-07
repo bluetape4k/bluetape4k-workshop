@@ -2,7 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-This module demonstrates the stable `bluetape4k-nats:2.0.0` cold Flow adapters
+This module demonstrates the `bluetape4k-nats:2.1.0-SNAPSHOT` cold Flow adapters
 against a real JetStream-enabled NATS Testcontainer.
 
 ## What this example fixes at the consumer boundary

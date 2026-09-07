@@ -103,8 +103,8 @@ unbounded, so operators must still control timeout, shutdown, and provider
 traffic.
 
 This module does not pin a bluetape4k module version. The root
-`bluetape4k-dependencies` BOM is the stable `2.0.0` authority; its published AWS
-BOM resolves the AWS Spring Boot coordinate to `1.0.0`. The AWS SDK `appconfigdata` alias is versionless under the AWS
+`bluetape4k-dependencies` `2.1.0-SNAPSHOT` BOM is the consumer authority; its AWS
+BOM resolves the AWS Spring Boot coordinate to `1.1.0-SNAPSHOT`. The AWS SDK `appconfigdata` alias is versionless under the AWS
 SDK BOM.
 
 ## Startup and refresh

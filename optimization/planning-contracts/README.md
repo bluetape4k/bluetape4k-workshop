@@ -30,7 +30,7 @@ aggregate version from PostgreSQL before returning a command candidate.
 
 | Responsibility | Capability |
 |---|---|
-| Version authority | `bluetape4k-dependencies:2.0.0` |
+| Version authority | `bluetape4k-dependencies:2.1.0-SNAPSHOT` |
 | Repositories | `UUIDAuditableJdbcRepository`, `LongAuditableJdbcRepository`, `LongJdbcRepository` from `bluetape4k-exposed-jdbc` |
 | PostgreSQL tests | `PostgreSQLServer.Launcher.postgres` and released `bluetape4k-exposed-jdbc-tests` test support |
 | Virtual threads | `bluetape4k-virtualthread-api` plus runtime `bluetape4k-virtualthread-jdk25` |
@@ -38,8 +38,8 @@ aggregate version from PostgreSQL before returning a command candidate.
 | Concurrency tests | `MultithreadingTester` |
 
 The module declares JetBrains Exposed coordinates without versions. The
-current `bluetape4k-dependencies:2.0.0` resolution selects JetBrains Exposed
-`1.4.0` and Bluetape Exposed `2.0.0`; child artifact versions are managed
+current `bluetape4k-dependencies:2.1.0-SNAPSHOT` resolution selects JetBrains Exposed
+`1.4.0` and Bluetape Exposed `2.1.0-SNAPSHOT`; child artifact versions are managed
 separately from the root BOM version.
 
 The module excludes the JDK 21 virtual-thread provider from every

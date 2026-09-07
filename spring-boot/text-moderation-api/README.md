@@ -182,6 +182,6 @@ The focused test suite verifies:
 
 ## Dependency Note
 
-The module uses the root `bluetape4k-dependencies` 2.0.0 BOM and repository catalog aliases,
+The module uses the root `bluetape4k-dependencies` 2.1.0-SNAPSHOT BOM and repository catalog aliases,
 including a direct versionless `bluetape4k-text-core` dependency for `VersionedDictionary`. Do not
 add a module-local version pin or a separate BOM for this example.

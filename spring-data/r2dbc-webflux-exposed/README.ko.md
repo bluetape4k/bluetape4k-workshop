@@ -15,7 +15,7 @@ annotation controller와 `/users` 아래의 functional router입니다.
 `R2dbcRepository<Int, UserRecord>`에서 공통 CRUD를 상속하고, user 전용 작업만
 구현합니다.
 `UserQueryByExampleRepository`는 coroutine-native Query by Example(QBE)과
-FluentQuery terminal을 제공하는 Spring Data Exposed 2.0.0 repository factory
+FluentQuery terminal을 제공하는 Spring Data Exposed 2.1.0-SNAPSHOT repository factory
 예제입니다. 명시적 CRUD repository는 그대로 유지합니다.
 
 ## 요청 흐름

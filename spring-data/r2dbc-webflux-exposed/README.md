@@ -13,7 +13,7 @@ controller under `/api/users` and a functional router under `/users`.
 `UserService` owns the transaction boundary with `suspendTransaction(db = ...)`.
 `UserExposedRepository` inherits common CRUD from bluetape4k
 `R2dbcRepository<Int, UserRecord>` and implements only user-specific operations.
-`UserQueryByExampleRepository` is a separate Spring Data Exposed 2.0.0 repository
+`UserQueryByExampleRepository` is a separate Spring Data Exposed 2.1.0-SNAPSHOT repository
 factory for coroutine-native Query by Example (QBE) and FluentQuery terminals.
 The explicit CRUD repository remains unchanged.
 

@@ -6,7 +6,7 @@ This module extends the small `exposed/javers-audit` boundary with durable
 JaVers repositories. The direct path keeps the Exposed current row and bounded
 Redisson history from Issue #892. The projection path added as a follow-up to
 the original module Issue #290 publishes snapshots to Kafka and rebuilds a
-queryable Lettuce Redis repository with the dependencies 2.0.0-managed JaVers
+queryable Lettuce Redis repository with the dependencies 2.1.0-SNAPSHOT-managed JaVers
 Kafka projection API.
 
 Use it when learners need to see what changes after moving from in-memory
@@ -87,7 +87,7 @@ worker lifecycle.
 
 `getHistory(orderId, limit)` accepts `1..100`; the one-argument JVM overload
 uses 100. The service passes the limit to `QueryBuilder.limit` and does not sort
-or truncate an already materialized result. Results follow the JaVers 2.0.0
+or truncate an already materialized result. Results follow the JaVers 2.1.0-SNAPSHOT
 consumer contract: newest-first. This intentionally changes the former
 oldest-first workshop behavior, so callers that used `first()` as the initial
 snapshot must migrate to `last()` or request an explicit presentation order.

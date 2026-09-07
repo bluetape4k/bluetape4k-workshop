@@ -31,6 +31,8 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder
+import software.amazon.awssdk.retries.DefaultRetryStrategy
+import software.amazon.awssdk.retries.api.RetryStrategy
 import software.amazon.awssdk.services.appconfigdata.AppConfigDataClient
 import software.amazon.awssdk.services.appconfigdata.model.StartConfigurationSessionRequest
 import java.net.InetSocketAddress
@@ -144,6 +146,10 @@ class AppConfigDataSpringIntegrationTest {
                 server = server,
                 importLocation = "aws-app-config:application#profile#environment?format=properties&prefix=appconfig",
                 properties = listOf("bluetape4k.aws.app-config.refresh-interval=15s"),
+                // lifecycle의 5초 종료 대기와 SDK timeout/retry가 경쟁하지 않도록 경계를 분리한다.
+                apiCallTimeout = Duration.ofSeconds(30),
+                apiCallAttemptTimeout = Duration.ofSeconds(30),
+                retryStrategy = DefaultRetryStrategy.doNotRetry(),
             ).run("--bluetape4k.aws.app-config.enabled=true")
 
             server.awaitDelayedLatest(20, TimeUnit.SECONDS).shouldBeTrue()
@@ -593,6 +599,9 @@ class AppConfigDataSpringIntegrationTest {
         server: FakeAppConfigDataServer,
         importLocation: String,
         properties: List<String> = emptyList(),
+        apiCallTimeout: Duration = Duration.ofSeconds(10),
+        apiCallAttemptTimeout: Duration = Duration.ofSeconds(5),
+        retryStrategy: RetryStrategy? = null,
     ): org.springframework.boot.SpringApplication {
         val application = SpringApplicationBuilder(
             SettingsBoundarySpringApplication::class.java,
@@ -618,8 +627,9 @@ class AppConfigDataSpringIntegrationTest {
                     AwsSyncClientCustomizer::class.java,
                     BootstrapRegistry.InstanceSupplier.of(
                         testCustomizer(
-                            apiCallTimeout = Duration.ofSeconds(10),
-                            apiCallAttemptTimeout = Duration.ofSeconds(5),
+                            apiCallTimeout = apiCallTimeout,
+                            apiCallAttemptTimeout = apiCallAttemptTimeout,
+                            retryStrategy = retryStrategy,
                         ),
                     ),
                 )
@@ -631,19 +641,19 @@ class AppConfigDataSpringIntegrationTest {
     private fun testCustomizer(
         apiCallTimeout: Duration,
         apiCallAttemptTimeout: Duration,
+        retryStrategy: RetryStrategy? = null,
     ): AwsSyncClientCustomizer =
         AwsSyncClientCustomizer { customization: AwsClientCustomizationContext, builder ->
             if (customization.serviceName == "appconfigdata") {
                 val awsBuilder = builder as? AwsClientBuilder<*, *>
                     ?: error("test AppConfigData builder must implement AwsClientBuilder")
                 awsBuilder.credentialsProvider(TEST_CREDENTIALS)
-                awsBuilder.overrideConfiguration(
-                    awsBuilder.overrideConfiguration()
-                        .toBuilder()
-                        .apiCallTimeout(apiCallTimeout)
-                        .apiCallAttemptTimeout(apiCallAttemptTimeout)
-                        .build(),
-                )
+                val overrideConfiguration = awsBuilder.overrideConfiguration()
+                    .toBuilder()
+                    .apiCallTimeout(apiCallTimeout)
+                    .apiCallAttemptTimeout(apiCallAttemptTimeout)
+                retryStrategy?.let(overrideConfiguration::retryStrategy)
+                awsBuilder.overrideConfiguration(overrideConfiguration.build())
             }
         }
 

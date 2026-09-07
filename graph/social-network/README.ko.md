@@ -8,7 +8,7 @@
 사용한 LinkedIn 스타일 그래프 도메인 예제입니다. 사람, 회사, 전문 네트워크 관계, 탐색
 쿼리를 TinkerGraph, Neo4j, Memgraph에서 같은 서비스 계약으로 다루는 방법을 보여줍니다.
 
-이 예제는 `bluetape4k-dependencies` `2.0.0` BOM을 기준으로 합니다.
+이 예제는 `bluetape4k-dependencies` `2.1.0-SNAPSHOT` BOM을 기준으로 합니다.
 
 작지만 완전한 소셜 그래프를 확인하고 싶을 때 이 모듈을 보면 됩니다. 멱등 vertex 생성,
 양방향 `KNOWS`, 단방향 `FOLLOWS`, 회사 연결 `WORKS_AT`, FOAF 추천, 동료 탐색,

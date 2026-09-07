@@ -653,7 +653,7 @@ case "${1:-help}" in
        contains_pattern 'visibilityChanges' "$modulith_local" "$modulith_tests" && \
        contains_pattern 'externalization' "$modulith_readme" "$modulith_readme_ko" && \
        contains_pattern 'modulith:' "$modulith_resources" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$modulith_build" "$modulith_config" "$modulith_tests" "$modulith_readme" "$modulith_readme_ko" "$modulith_resources" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$modulith_build" "$modulith_config" "$modulith_tests" "$modulith_readme" "$modulith_readme_ko" "$modulith_resources" && \
        [ -f "$modulith_lesson" ]; then
       echo "AWS Spring Modulith SNS/SQS externalization example and lesson are registered."
     else
@@ -679,7 +679,7 @@ case "${1:-help}" in
        contains_pattern 'awaitRedis' "$rlocal_map_fixture" "$rlocal_map_tests" "$rlocal_map_await_test" "$rlocal_map_readme" "$rlocal_map_readme_ko" && \
        contains_pattern 'CancellationException' "$rlocal_map_fixture" "$rlocal_map_await_test" && \
        contains_pattern ':redis-redisson-examples:test' README.md README.ko.md && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$rlocal_map_examples" "$rlocal_map_tests" "$rlocal_map_fixture" "$rlocal_map_readme" "$rlocal_map_readme_ko" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$rlocal_map_examples" "$rlocal_map_tests" "$rlocal_map_fixture" "$rlocal_map_readme" "$rlocal_map_readme_ko" && \
        [ -f "$rlocal_map_lesson" ]; then
       echo "Redisson RLocalCachedMap numeric update example and lesson are registered."
     else
@@ -706,7 +706,7 @@ case "${1:-help}" in
        contains_pattern 'tenant_fingerprint' "$tenant_context_metrics" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
        contains_pattern 'TenantContextCarrierExampleTest' "$tenant_context_tests" && \
        contains_pattern 'spring-boot-multi-tenant-data-isolation:test' README.md README.ko.md && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$tenant_context_build" "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$tenant_context_build" "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
        [ -f "$tenant_context_lesson" ]; then
       echo "TenantContext carrier example and lesson are registered."
     else
@@ -766,7 +766,7 @@ case "${1:-help}" in
        contains_pattern ':messaging-kafka-reply:test' README.md README.ko.md && \
        contains_pattern '#879' docs/coverage-matrix.md docs/lessons/README.md && \
        contains_pattern '"issue_numbers": \[879\]' docs/ecosystem-reuse-train.json && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$kafka_flow_source" "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$kafka_flow_source" "$kafka_flow_tests" "$kafka_flow_readme" "$kafka_flow_readme_ko" && \
        [ -f "$kafka_flow_lesson" ]; then
       echo "Kafka producer callbackFlow example and lesson are registered."
     else
@@ -798,13 +798,13 @@ case "${1:-help}" in
        contains_pattern 'exposedJdbcTransaction' "$ktor_selective_routes" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
        contains_pattern 'TIMEOUT' "$ktor_selective_tests" "$ktor_selective_readme" "$ktor_selective_readme_ko" && \
        contains_pattern 'jdbc:postgresql://db\.internal' "$ktor_selective_tests" && \
-       contains_pattern '2\.0\.0' "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" "$ktor_selective_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" "$ktor_selective_review" && \
        contains_pattern 'R2DBC' "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" && \
        contains_pattern 'cache' "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" && \
        contains_pattern ':ktor-exposed-rest:test' README.md README.ko.md && \
        contains_pattern '#880' docs/coverage-matrix.md docs/lessons/README.md && \
        contains_pattern '"issue_numbers": \[880\]' docs/ecosystem-reuse-train.json && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$ktor_selective_build" "$ktor_selective_app" "$ktor_selective_routes" "$ktor_selective_tests" "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" "$ktor_selective_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$ktor_selective_build" "$ktor_selective_app" "$ktor_selective_routes" "$ktor_selective_tests" "$ktor_selective_readme" "$ktor_selective_readme_ko" "$ktor_selective_lesson" "$ktor_selective_review" && \
        [ -f "$ktor_selective_lesson" ] && [ -f "$ktor_selective_review" ]; then
       echo "Ktor Exposed backend-selective health/readiness example and lesson are registered."
     else
@@ -835,7 +835,7 @@ case "${1:-help}" in
        contains_pattern 'nextCursor' "$cursor_jdbc_api_test" "$cursor_r2dbc_api_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
        contains_pattern 'sparse ID' "$cursor_jdbc_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
        contains_pattern '(cancellation|취소)' "$cursor_r2dbc_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" && \
-       contains_pattern '2\.0\.0' "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" "$cursor_lesson" "$cursor_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" "$cursor_lesson" "$cursor_review" && \
        contains_pattern ':exposed-mvc-jdbc:test' README.md README.ko.md && \
        contains_pattern ':exposed-webflux-r2dbc:test' README.md README.ko.md && \
        contains_pattern '#881' docs/coverage-matrix.md docs/lessons/README.md && \
@@ -843,7 +843,7 @@ case "${1:-help}" in
        contains_pattern 'exposed/mvc-jdbc' .github/workflows/Examples.yml && \
        contains_pattern 'exposed/webflux-r2dbc' .github/workflows/Examples.yml && \
        contains_pattern '"issue_numbers": \[881\]' docs/ecosystem-reuse-train.json && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$cursor_jdbc_repo" "$cursor_jdbc_controller" "$cursor_jdbc_test" "$cursor_jdbc_api_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_repo" "$cursor_r2dbc_controller" "$cursor_r2dbc_test" "$cursor_r2dbc_api_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" "$cursor_lesson" "$cursor_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$cursor_jdbc_repo" "$cursor_jdbc_controller" "$cursor_jdbc_test" "$cursor_jdbc_api_test" "$cursor_jdbc_readme" "$cursor_jdbc_readme_ko" "$cursor_r2dbc_repo" "$cursor_r2dbc_controller" "$cursor_r2dbc_test" "$cursor_r2dbc_api_test" "$cursor_r2dbc_readme" "$cursor_r2dbc_readme_ko" "$cursor_lesson" "$cursor_review" && \
        [ -f "$cursor_lesson" ] && [ -f "$cursor_review" ]; then
       echo "Exposed JDBC/R2DBC cursor pagination examples and lesson are registered."
     else
@@ -887,12 +887,12 @@ case "${1:-help}" in
        contains_pattern 'TransactionManager\.defaultDatabase' "$qbe_test_base" && \
        contains_pattern '/api/users/qbe' "$qbe_api_test" "$qbe_readme" "$qbe_readme_ko" && \
        contains_pattern '/users/qbe' "$qbe_app" "$qbe_route_test" "$qbe_readme" "$qbe_readme_ko" && \
-       contains_pattern '2\.0\.0' "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" "$qbe_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" "$qbe_review" && \
        contains_pattern ':spring-data-r2dbc-webflux-exposed:test' README.md README.ko.md && \
        contains_pattern '#882' docs/coverage-matrix.md docs/lessons/README.md && \
        contains_pattern 'spring-data/r2dbc-webflux-exposed' .github/workflows/Examples.yml && \
        contains_pattern '"issue_numbers": \[882\]' docs/ecosystem-reuse-train.json && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$qbe_build" "$qbe_app" "$qbe_config" "$qbe_repo" "$qbe_models" "$qbe_service" "$qbe_controller" "$qbe_handler" "$qbe_test" "$qbe_api_test" "$qbe_route_test" "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" "$qbe_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$qbe_build" "$qbe_app" "$qbe_config" "$qbe_repo" "$qbe_models" "$qbe_service" "$qbe_controller" "$qbe_handler" "$qbe_test" "$qbe_api_test" "$qbe_route_test" "$qbe_readme" "$qbe_readme_ko" "$qbe_lesson" "$qbe_review" && \
        [ -f "$qbe_lesson" ] && [ -f "$qbe_review" ]; then
       echo "Spring Data Exposed QBE/FluentQuery example and lesson are registered."
     else
@@ -931,8 +931,8 @@ case "${1:-help}" in
        contains_pattern '#885' docs/coverage-matrix.md docs/lessons/README.md "$privacy_lesson" && \
        contains_pattern '"issue_numbers": \[883, 884, 885\]' docs/ecosystem-reuse-train.json && \
        contains_pattern 'image-processing/profile-image-moderation' .github/workflows/Examples.yml && \
-       contains_pattern '2\.0\.0' "$privacy_readme" "$privacy_readme_ko" "$privacy_lesson" "$privacy_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$privacy_build" "$privacy_config" "$privacy_processor" "$privacy_service" "$privacy_model" "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" "$privacy_yaml" "$privacy_lesson" "$privacy_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$privacy_readme" "$privacy_readme_ko" "$privacy_lesson" "$privacy_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$privacy_build" "$privacy_config" "$privacy_processor" "$privacy_service" "$privacy_model" "$privacy_tests" "$privacy_readme" "$privacy_readme_ko" "$privacy_yaml" "$privacy_lesson" "$privacy_review" && \
        [ -f "$privacy_lesson" ] && [ -f "$privacy_review" ]; then
       echo "Profile image privacy-safe derivative example and lesson are registered."
     else
@@ -960,8 +960,8 @@ case "${1:-help}" in
        contains_pattern '#886' docs/coverage-matrix.md docs/lessons/README.md "$graph_social_lesson" && \
        contains_pattern 'graph/social-network' .github/workflows/Examples.yml && \
        contains_pattern '"issue_numbers": \[883, 884, 885, 886\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' "$graph_social_readme" "$graph_social_readme_ko" "$graph_social_lesson" "$graph_social_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$graph_social_service" "$graph_social_suspend_service" "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" "$graph_social_lesson" "$graph_social_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$graph_social_readme" "$graph_social_readme_ko" "$graph_social_lesson" "$graph_social_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$graph_social_service" "$graph_social_suspend_service" "$graph_social_tests" "$graph_social_readme" "$graph_social_readme_ko" "$graph_social_lesson" "$graph_social_review" && \
        [ -f "$graph_social_lesson" ] && [ -f "$graph_social_review" ]; then
       echo "Graph social weighted shortest-path example and lesson are registered."
     else
@@ -989,9 +989,9 @@ case "${1:-help}" in
        contains_pattern ':graph-knowledge-graph:test' README.md README.ko.md && \
        contains_pattern '#887' docs/coverage-matrix.md docs/lessons/README.md "$graph_knowledge_lesson" && \
        contains_pattern 'graph/knowledge-graph' .github/workflows/Examples.yml && \
-       contains_pattern '2\.0\.0' "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_lesson" "$graph_knowledge_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_lesson" "$graph_knowledge_review" && \
        contains_pattern '"issue_numbers": \[883, 884, 885, 886, 887\]' docs/ecosystem-reuse-train.json && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$graph_knowledge_schema" "$graph_knowledge_service" "$graph_knowledge_suspend_service" "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_lesson" "$graph_knowledge_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$graph_knowledge_schema" "$graph_knowledge_service" "$graph_knowledge_suspend_service" "$graph_knowledge_tests" "$graph_knowledge_readme" "$graph_knowledge_readme_ko" "$graph_knowledge_lesson" "$graph_knowledge_review" && \
        [ -f "$graph_knowledge_lesson" ] && [ -f "$graph_knowledge_review" ]; then
       echo "Graph knowledge schema-drift planner example and lesson are registered."
     else
@@ -1021,8 +1021,8 @@ case "${1:-help}" in
        contains_pattern '#888' docs/coverage-matrix.md docs/lessons/README.md "$graph_abuser_lesson" && \
        contains_pattern 'graph/abuser-detection' .github/workflows/Examples.yml && \
        contains_pattern '"issue_numbers": \[888\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' "$graph_abuser_build" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$graph_abuser_build" "$graph_abuser_model" "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$graph_abuser_build" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$graph_abuser_build" "$graph_abuser_model" "$graph_abuser_service" "$graph_abuser_suspend_service" "$graph_abuser_tests" "$graph_abuser_readme" "$graph_abuser_readme_ko" "$graph_abuser_lesson" "$graph_abuser_review" && \
        [ -f "$graph_abuser_lesson" ] && [ -f "$graph_abuser_review" ]; then
       echo "Graph abuser algorithm execution observation example and lesson are registered."
     else
@@ -1047,8 +1047,8 @@ case "${1:-help}" in
        contains_pattern ':kotlin-text-processing:test' .github/workflows/Examples.yml scripts/smoke-validate.sh && \
        contains_pattern '#889' docs/coverage-matrix.md docs/lessons/README.md "$tokenizer_lesson" && \
        contains_pattern '"issue_numbers": \[889\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$tokenizer_readiness" "$tokenizer_tests" "$tokenizer_readme" "$tokenizer_readme_ko" "$tokenizer_lesson" "$tokenizer_review" && \
        [ -f "$tokenizer_lesson" ] && [ -f "$tokenizer_review" ]; then
       echo "Tokenizer dictionary preload readiness example and lesson are registered."
     else
@@ -1091,8 +1091,8 @@ case "${1:-help}" in
        contains_pattern 'spring-boot/text-moderation-api' .github/workflows/Examples.yml && \
        contains_pattern '#890' docs/coverage-matrix.md docs/lessons/README.md "$versioned_lesson" && \
        contains_pattern '"issue_numbers": \[890\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$versioned_search" "$versioned_search_tests" "$versioned_detection" "$versioned_detection_tests" "$versioned_moderation" "$versioned_service" "$versioned_moderation_tests" "$versioned_service_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$versioned_search" "$versioned_search_tests" "$versioned_detection" "$versioned_detection_tests" "$versioned_moderation" "$versioned_service" "$versioned_moderation_tests" "$versioned_service_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$versioned_lesson" "$versioned_review" && \
        [ -f "$versioned_lesson" ] && [ -f "$versioned_review" ]; then
       echo "Versioned text dictionary runtime examples and lesson are registered."
     else
@@ -1126,8 +1126,8 @@ case "${1:-help}" in
        contains_pattern 'kotlin/text-processing' .github/workflows/Examples.yml && \
        contains_pattern 'spring-boot/text-moderation-api' .github/workflows/Examples.yml && \
        contains_pattern '"issue_numbers": \[891\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$nfkc_filter" "$nfkc_filter_tests" "$nfkc_redaction" "$nfkc_redaction_tests" "$nfkc_properties" "$nfkc_config" "$nfkc_context_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$nfkc_filter" "$nfkc_filter_tests" "$nfkc_redaction" "$nfkc_redaction_tests" "$nfkc_properties" "$nfkc_config" "$nfkc_context_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md spring-boot/text-moderation-api/README.md spring-boot/text-moderation-api/README.ko.md "$nfkc_lesson" "$nfkc_review" && \
        [ -f "$nfkc_lesson" ] && [ -f "$nfkc_review" ]; then
       echo "NFKC source-offset normalization examples and lesson are registered."
     else
@@ -1143,8 +1143,8 @@ case "${1:-help}" in
        contains_pattern 'flow\.matchesAsFlow|matchesAsFlow' "$flow_filter" && \
        contains_pattern 'take\(1\)' "$flow_filter" "$flow_filter_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
        contains_pattern 'NormalizationForm\.NFKC' "$flow_filter_tests" && \
-       contains_pattern '2\.0\.0' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$flow_filter" "$flow_filter_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md; then
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' kotlin/text-processing/README.md kotlin/text-processing/README.ko.md && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$flow_filter" "$flow_filter_tests" kotlin/text-processing/README.md kotlin/text-processing/README.ko.md; then
       echo "Aho-Corasick Flow match example is registered."
     else
       echo "ERROR: Aho-Corasick Flow match contract is missing or stale."
@@ -1162,8 +1162,8 @@ case "${1:-help}" in
        contains_pattern 'allocateDirect' "$protobuf_buffer_test" && \
        contains_pattern 'BufferOverflowException' "$protobuf_buffer_test" && \
        contains_pattern 'ReadOnlyBufferException' "$protobuf_buffer_test" && \
-       contains_pattern 'bluetape4k-dependencies:2\.0\.0' spring-boot/protobuf-mvc/README.md spring-boot/protobuf-mvc/README.ko.md && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$protobuf_buffer_source" "$protobuf_buffer_test" "$protobuf_buffer_build" spring-boot/protobuf-mvc/README.md spring-boot/protobuf-mvc/README.ko.md; then
+       contains_pattern 'bluetape4k-dependencies:2\.1\.0-SNAPSHOT' spring-boot/protobuf-mvc/README.md spring-boot/protobuf-mvc/README.ko.md && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$protobuf_buffer_source" "$protobuf_buffer_test" "$protobuf_buffer_build" spring-boot/protobuf-mvc/README.md spring-boot/protobuf-mvc/README.ko.md; then
       echo "Protobuf caller-owned ByteBuffer example is registered."
     else
       echo "ERROR: Protobuf caller-owned ByteBuffer contract is missing or stale."
@@ -1199,8 +1199,8 @@ case "${1:-help}" in
        contains_pattern ':exposed-javers-persistence-audit:test' .github/workflows/Examples.yml && \
        contains_pattern '#892' docs/coverage-matrix.md docs/lessons/README.md "$javers_history_lesson" && \
        contains_pattern '"issue_numbers": \[892\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_order_service" "$javers_order_repository" "$javers_order_tests" "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_service" "$javers_approval_tests" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_order_service" "$javers_order_repository" "$javers_order_tests" "$javers_order_readme" "$javers_order_readme_ko" "$javers_approval_service" "$javers_approval_tests" "$javers_approval_readme" "$javers_approval_readme_ko" "$javers_history_lesson" "$javers_history_review" && \
        [ -f "$javers_history_lesson" ] && [ -f "$javers_history_review" ]; then
       echo "JaVers bounded history query examples and lesson are registered."
     else
@@ -1233,8 +1233,8 @@ case "${1:-help}" in
        contains_pattern '#893' docs/coverage-matrix.md docs/lessons/README.md "$javers_kafka_lesson" && \
        contains_pattern '"issue_numbers": \[893\]' docs/ecosystem-reuse-train.json && \
        contains_pattern ':exposed-javers-persistence-audit:test' .github/workflows/Examples.yml && \
-       contains_pattern '2\.0\.0' "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" "$javers_kafka_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_kafka_pipeline" "$javers_kafka_test" "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" "$javers_kafka_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" "$javers_kafka_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_kafka_pipeline" "$javers_kafka_test" "$javers_order_readme" "$javers_order_readme_ko" "$javers_kafka_lesson" "$javers_kafka_review" && \
        [ -f "$javers_kafka_lesson" ] && [ -f "$javers_kafka_review" ]; then
       echo "JaVers Kafka snapshot projection example and lesson are registered."
     else
@@ -1260,8 +1260,8 @@ case "${1:-help}" in
        contains_pattern '#894' docs/coverage-matrix.md docs/lessons/README.md "$javers_head_lesson" && \
        contains_pattern '"issue_numbers": \[894\]' docs/ecosystem-reuse-train.json && \
        contains_pattern ':exposed-javers-persistence-audit:test' .github/workflows/Examples.yml && \
-       contains_pattern '2\.0\.0' "$javers_order_readme" "$javers_order_readme_ko" "$javers_head_lesson" "$javers_head_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_order_factory" "$javers_kafka_pipeline" "$javers_head_validator" "$javers_head_redisson_test" "$javers_head_lettuce_test" "$javers_order_readme" "$javers_order_readme_ko" "$javers_head_lesson" "$javers_head_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$javers_order_readme" "$javers_order_readme_ko" "$javers_head_lesson" "$javers_head_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$javers_order_build" "$javers_order_factory" "$javers_kafka_pipeline" "$javers_head_validator" "$javers_head_redisson_test" "$javers_head_lettuce_test" "$javers_order_readme" "$javers_order_readme_ko" "$javers_head_lesson" "$javers_head_review" && \
        [ -f "$javers_head_lesson" ] && [ -f "$javers_head_review" ]; then
       echo "JaVers Redis head metadata fail-closed example and lesson are registered."
     else
@@ -1294,8 +1294,8 @@ case "${1:-help}" in
        contains_pattern '"issue_numbers": \[923\]' docs/ecosystem-reuse-train.json && \
        contains_pattern 'messaging/nats-jetstream-flow/\*\*' .github/workflows/Examples.yml && \
        contains_pattern ':messaging-nats-jetstream-flow:test' .github/workflows/Examples.yml "$0" && \
-       contains_pattern '2\.0\.0' "$nats_flow_readme" "$nats_flow_readme_ko" "$nats_flow_lesson" "$nats_flow_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$nats_flow_build" "$nats_flow_source" "$nats_flow_unit_test" "$nats_flow_integration_test" "$nats_flow_readme" "$nats_flow_readme_ko" "$nats_flow_lesson" "$nats_flow_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$nats_flow_readme" "$nats_flow_readme_ko" "$nats_flow_lesson" "$nats_flow_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$nats_flow_build" "$nats_flow_source" "$nats_flow_unit_test" "$nats_flow_integration_test" "$nats_flow_readme" "$nats_flow_readme_ko" "$nats_flow_lesson" "$nats_flow_review" && \
        [ -f "$nats_flow_lesson" ] && [ -f "$nats_flow_review" ]; then
       echo "NATS JetStream Consumer Flow example and lesson are registered."
     else
@@ -1323,8 +1323,8 @@ case "${1:-help}" in
        contains_pattern 'libs\.bluetape4k\.virtualthread\.jdk25' "$cache_redis_build" && \
        contains_pattern '#940' docs/coverage-matrix.md docs/lessons/README.md "$cache_redis_lesson" && \
        contains_pattern '"issue_numbers": \[940\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' "$cache_redis_readme" "$cache_redis_readme_ko" "$cache_redis_lesson" "$cache_redis_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$cache_redis_async" "$cache_redis_test" "$cache_redis_build" "$cache_redis_readme" "$cache_redis_readme_ko" "$cache_redis_lesson" "$cache_redis_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$cache_redis_readme" "$cache_redis_readme_ko" "$cache_redis_lesson" "$cache_redis_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$cache_redis_async" "$cache_redis_test" "$cache_redis_build" "$cache_redis_readme" "$cache_redis_readme_ko" "$cache_redis_lesson" "$cache_redis_review" && \
        [ -f "$cache_redis_lesson" ] && [ -f "$cache_redis_review" ]; then
       echo "cache-redis VirtualThreads executor lifecycle and lesson are registered."
     else
@@ -1361,8 +1361,8 @@ case "${1:-help}" in
        contains_pattern 'io/okio-examples/build/test-results/test/\*\.xml' .github/workflows/Examples.yml && \
        contains_pattern '#953' docs/coverage-matrix.md docs/lessons/README.md "$okio_lesson" && \
        contains_pattern '"issue_numbers": \[953\]' docs/ecosystem-reuse-train.json && \
-       contains_pattern '2\.0\.0' "$okio_readme" "$okio_readme_ko" "$okio_lesson" "$okio_review" && \
-       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$okio_buffered_test" "$okio_interop_test" "$okio_readme" "$okio_readme_ko" "$okio_lesson" "$okio_review" && \
+       contains_pattern '(2\.0\.0|2\.1\.0-SNAPSHOT)' "$okio_readme" "$okio_readme_ko" "$okio_lesson" "$okio_review" && \
+       ! contains_pattern '2\.2\.0(-SNAPSHOT)?' "$okio_buffered_test" "$okio_interop_test" "$okio_readme" "$okio_readme_ko" "$okio_lesson" "$okio_review" && \
        [ -f "$okio_lesson" ] && [ -f "$okio_review" ]; then
       echo "Okio BufferedSuspendedSink public API and lesson are registered."
     else

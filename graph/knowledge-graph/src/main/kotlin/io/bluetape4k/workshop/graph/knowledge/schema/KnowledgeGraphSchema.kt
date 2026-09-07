@@ -131,7 +131,7 @@ object KnowledgeGraphSchema {
 
 /**
  * suspend schema manager에서 live metadata를 읽어 blocking planner와 같은 계획 모델을
- * 반환합니다. upstream 2.0.0 planner가 blocking manager API로 제공되므로, coroutine
+ * 반환합니다. upstream 2.1.0-SNAPSHOT planner가 blocking manager API로 제공되므로, coroutine
  * backend에서는 동일한 semantic 비교를 non-blocking metadata 호출로 수행합니다.
  */
 suspend fun GraphSuspendSchemaManager.plan(

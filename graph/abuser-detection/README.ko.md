@@ -181,7 +181,7 @@ val ranking = service.rankSuspiciousUsersWithExecution(
 
 ## 알고리즘 실행 정책
 
-이 consumer 예제는 `2.0.0`의 `bluetape4k-dependencies` BOM과 출시된 graph provider 선택
+이 consumer 예제는 `2.1.0-SNAPSHOT`의 `bluetape4k-dependencies` BOM과 graph provider 선택
 API를 사용합니다. Native GDS/MAGE SDK나 executor는 의도적으로 포함하지 않으므로 현재
 정책 행렬은 다음과 같습니다.
 

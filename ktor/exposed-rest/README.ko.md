@@ -25,7 +25,7 @@ Testcontainer를 띄우고, Ktor route handler가 Exposed JDBC 트랜잭션에 �
 ## 의존성 구성
 
 이 모듈은 루트 `bluetape4k-dependencies` BOM만 사용합니다. 핵심 consumer alias는
-버전을 직접 갖지 않으며 `2.0.0` BOM에서 해석됩니다.
+버전을 직접 갖지 않으며 `2.1.0-SNAPSHOT` BOM에서 해석됩니다.
 
 ```kotlin
 implementation(libs.bluetape4k.ktor.core)

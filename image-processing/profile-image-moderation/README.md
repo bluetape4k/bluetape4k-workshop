@@ -100,8 +100,8 @@ Invalid uploads return RFC 9457 ProblemDetail JSON:
 ## Privacy-safe Derivatives
 
 Both the pending blurred JPEG and the approved public JPEG are re-encoded through the
-bluetape4k-images `1.0.0` `PrivacyDerivativePipeline`, resolved by the workshop's
-`bluetape4k-dependencies:2.0.0` BOM. The default policy strips EXIF, GPS, XMP, IPTC, and ICC
+bluetape4k-images `1.1.0-SNAPSHOT` `PrivacyDerivativePipeline`, resolved by the workshop's
+`bluetape4k-dependencies:2.1.0-SNAPSHOT` BOM. The default policy strips EXIF, GPS, XMP, IPTC, and ICC
 metadata, normalizes EXIF orientation, and strictly re-reads the output before storage.
 The consumer adapter is `ProfileImageProcessor.processPrivacySafe`.
 The bounded `PrivacyDerivativeReport` records requested/remaining categories and applied

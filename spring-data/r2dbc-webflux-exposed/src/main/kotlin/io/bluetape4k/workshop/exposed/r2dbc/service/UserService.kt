@@ -53,7 +53,7 @@ class UserService(
     }
 
     /**
-     * Spring Data Exposed 2.0.0 coroutine-native QBE와 projection을 조합합니다.
+     * Spring Data Exposed 2.1.0-SNAPSHOT coroutine-native QBE와 projection을 조합합니다.
      * QBE factory가 각 terminal의 transaction을 소유하므로 이 메서드는 별도 outer
      * transaction을 열지 않습니다. 반환 DTO에는 선택한 projection 필드만 포함합니다.
      */

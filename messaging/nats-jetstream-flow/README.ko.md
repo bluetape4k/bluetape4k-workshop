@@ -2,7 +2,7 @@
 
 [English](README.md) | 한국어
 
-이 모듈은 stable `bluetape4k-nats:2.0.0`의 cold Flow adapter를 JetStream이 활성화된 실제
+이 모듈은 `bluetape4k-nats:2.1.0-SNAPSHOT`의 cold Flow adapter를 JetStream이 활성화된 실제
 NATS Testcontainer에서 검증합니다.
 
 ## 소비자 경계에서 확인하는 계약

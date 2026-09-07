@@ -110,12 +110,12 @@ jobs:
           cache-read-only: true
       - name: Resolve mock image version from consumer BOM
         id: mock-version
-        run: python3 .github/scripts/nightly-mock-images.py --github-output "$GITHUB_OUTPUT"
+        run: python3 .github/scripts/nightly-mock-images.py --allow-snapshot --github-output "$GITHUB_OUTPUT"
       - name: Checkout bluetape4k projects
         uses: actions/checkout@v7.0.1
         with:
           repository: bluetape4k/bluetape4k-projects
-          ref: ${{ steps.mock-version.outputs.version }}
+          ref: ${{ steps.mock-version.outputs.source_ref }}
           path: .bluetape4k-projects
       - name: Build bluetape4k mock server images
         working-directory: .bluetape4k-projects
@@ -123,7 +123,7 @@ jobs:
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
       - name: Verify consumer mock images exist locally
-        run: python3 .github/scripts/nightly-mock-images.py --inspect
+        run: python3 .github/scripts/nightly-mock-images.py --allow-snapshot --inspect
       - name: Run tests
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"

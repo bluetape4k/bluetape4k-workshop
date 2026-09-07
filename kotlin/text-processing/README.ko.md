@@ -297,7 +297,7 @@ commit하지 않습니다.
 ## 의존성
 
 이 모듈은 repository version catalog alias를 사용하며 bluetape4k module version은 단일
-`bluetape4k-dependencies:2.0.0` BOM으로 해석합니다.
+`bluetape4k-dependencies:2.1.0-SNAPSHOT` BOM으로 해석합니다.
 
 ```kotlin
 dependencies {

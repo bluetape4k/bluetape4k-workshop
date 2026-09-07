@@ -16,7 +16,7 @@
 | R2DBC runtime | `ExposedR2dbcConfig`가 `ConnectionFactoryOptions`, `ConnectionPool`, `R2dbcDatabase`를 만듭니다. | Exposed R2DBC 작업은 pool-backed database와 `Dispatchers.IO`에서 실행됩니다. |
 | Service transaction boundary | `AuthorService`, `BookService`, `OrderService`가 `suspendTransaction(db = db)`를 호출합니다. | 같은 connection에서 write하기 전에 Flow read를 transaction 안에서 collect합니다. |
 | Repository primitives | Repository는 select에 `Flow<DTO>`, insert/update/delete에 suspend method를 제공합니다. | Repository는 얇게 유지되고 transaction lifetime을 결정하지 않습니다. |
-| Book cursor pagination | `BookRepository.findCursorPage`, `GET /api/books/cursor` | Exposed 2.0.0 `LongR2dbcRepository` keyset pagination이 bounded `pageSize + 1` query로 `nextCursor`/`hasNext`를 반환하며 cursor token 인코딩·서명·만료·범위는 호출자 책임입니다. |
+| Book cursor pagination | `BookRepository.findCursorPage`, `GET /api/books/cursor` | Exposed 2.1.0-SNAPSHOT `LongR2dbcRepository` keyset pagination이 bounded `pageSize + 1` query로 `nextCursor`/`hasNext`를 반환하며 cursor token 인코딩·서명·만료·범위는 호출자 책임입니다. |
 | Schema initialization | `DatabaseInitializer`가 R2DBC URL을 JDBC URL로 바꾸고 startup 시 Hikari를 한 번 사용합니다. | Blocking JDBC는 schema creation에만 쓰이고 request processing에는 쓰이지 않습니다. |
 
 ## 주문 처리 시퀀스
@@ -77,7 +77,7 @@
 GET /api/books/cursor?pageSize=2&cursor=3&sortOrder=ASC
 ```
 
-`BookRepository.findCursorPage`는 Exposed 2.0.0 `LongR2dbcRepository` extension을
+`BookRepository.findCursorPage`는 Exposed 2.1.0-SNAPSHOT `LongR2dbcRepository` extension을
 사용합니다. Primary-key predicate와 `pageSize + 1` sentinel로 count query 없이
 bounded query를 실행하고, `suspendTransaction`이 connection을 소유하므로 cooperative
 cancellation 때 반환됩니다. `hasNext`가 `false`이면 `nextCursor`는 `null`입니다.
