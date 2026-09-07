@@ -32,7 +32,7 @@ sensitive text redaction pipeline을 다룹니다.
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index 기준 상태, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | suspend preload attempt 하나를 공유하고 두 dictionary 준비 전에는 요청 작업을 거절 |
 | `VersionedMultilingualSearchIndex` | Korean `DictionarySnapshot`, exact-noun Aho-Corasick matcher, `VersionedDictionary` | 완성된 noun-dictionary/index generation만 공개하고 각 검색이 사용한 정확한 revision을 반환 |
-| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 선택형 keyword normalization policy로 원문 span을 복원하고 overlap merge, same-length masking, safe metadata 반환 |
+| `SensitiveTextRedactionPipeline` | `text-search`의 `TextRedactor`, `LanguageDetectionService`, `TextNormalizer` | keyword/regex matching, 원문 span, overlap merge, tie-break, same-length masking은 공용 provider API에 위임하고 workshop 언어 metadata를 추가 |
 
 ## 사용 예
 
@@ -118,14 +118,20 @@ result.spans.map { it.category }
 // ["contact", "contact", "secret"]
 ```
 
-기본 policy는 의도적으로 작고 fixture 중심입니다. 이 예제에서 중요한 부분은
-애플리케이션 로그나 support ticket에서 자주 필요한 처리 경계입니다.
+기본 policy는 의도적으로 작고 fixture 중심입니다. 실제 redaction engine은 공용
+`io.github.bluetape4k.text.search.TextRedactor`이며, 이 workshop은 Lingua와
+`TextNormalizer`를 조합하는 소비자 facade만 유지합니다. 애플리케이션 로그나 support
+ticket에서 자주 필요한 처리 경계를 확인할 수 있습니다.
 
 - rule id와 category는 safe metadata slug만 허용합니다.
-- regex rule은 backreference, 중첩 unbounded quantifier, unbounded `.*` pattern을 거부합니다.
-- keyword rule은 NFC-aware Aho-Corasick matching을 사용하므로 원문 offset을 보존합니다.
+- 이 workshop fixture policy는 backreference, 중첩 unbounded quantifier, unbounded `.*` pattern을 거부합니다.
+- provider `TextRedactor`가 keyword/regex rule, NFC-aware 원문 offset mapping, overlap merge와 deterministic priority tie-break를 수행합니다.
 - overlap span은 priority 기준으로 merge하지만, 서로 붙어만 있는 adjacent span은 분리합니다.
 - `toString()`, debug log, exception, span metadata는 원문 민감값을 담지 않습니다.
+
+provider API는 trusted regex를 대상으로 하며 일반적인 ReDoS 방지를 보장하지 않습니다. 이
+workshop의 제한된 fixture guard는 예제 policy일 뿐, 애플리케이션별 검증이나 컴플라이언스
+DLP classifier를 대체하지 않습니다.
 
 지역별 식별자, 자유 형식 주소/이름, OCR 결과, fixture rule을 넘어서는 다국어 PII,
 컴플라이언스 목적의 DLP 요구가 있다면 더 강한 detector를 사용해야 합니다. 이 pipeline은

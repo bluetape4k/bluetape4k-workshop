@@ -32,7 +32,7 @@ audit-safe span metadata.
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
 | `TokenizerDictionaryReadiness` | `KoreanProcessor.preload`, `JapaneseProcessor.preload`, `Mutex` | Shares one suspend preload attempt and rejects request work until both dictionaries are ready |
 | `VersionedMultilingualSearchIndex` | Korean `DictionarySnapshot`, exact-noun Aho-Corasick matcher, `VersionedDictionary` | Publishes one completed noun-dictionary/index generation and returns the exact revision used by each search |
-| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Applies a selectable keyword normalization policy, restores source spans, merges overlaps, masks same-length output, and returns safe metadata |
+| `SensitiveTextRedactionPipeline` | `TextRedactor` from `text-search`, `LanguageDetectionService`, `TextNormalizer` | Delegates keyword/regex matching, source spans, overlap merge, tie-break, and same-length masking to the public provider API, then adds workshop language metadata |
 
 ## Usage
 
@@ -119,14 +119,20 @@ result.spans.map { it.category }
 // ["contact", "contact", "secret"]
 ```
 
-The default policy is deliberately small and fixture-oriented. It demonstrates the mechanics that
-matter in application logs and support-ticket examples:
+The default policy is deliberately small and fixture-oriented. The redaction engine itself is the
+public `io.github.bluetape4k.text.search.TextRedactor`; this workshop keeps only the consumer
+composition with Lingua and `TextNormalizer`. It demonstrates the mechanics that matter in
+application logs and support-ticket examples:
 
 - rule ids and categories are validated as safe metadata slugs;
-- regex rules reject backreferences, nested unbounded quantifiers, and unbounded `.*` patterns;
-- keyword rules use NFC-aware Aho-Corasick matching, so original offsets are preserved;
+- this workshop's fixture policy rejects backreferences, nested unbounded quantifiers, and unbounded `.*` patterns;
+- the provider `TextRedactor` applies keyword/regex rules, NFC-aware source offset mapping, overlap merge, and deterministic priority tie-breaks;
 - overlapping spans merge by priority, but adjacent spans remain separate;
 - `toString()`, debug logs, exceptions, and span metadata avoid raw sensitive values.
+
+The provider API accepts trusted regex rules and does not promise a general ReDoS guarantee. The
+workshop's bounded fixture guard is an example policy, not a replacement for application-specific
+validation or a compliance DLP classifier.
 
 Use a stronger detector when the input contains jurisdiction-specific identifiers, free-form
 addresses, names, OCR output, multilingual PII beyond the fixture rules, or compliance-driven DLP
