@@ -25,6 +25,11 @@ projection을 변경하는 경로는 manager approval과 swap acceptance뿐입�
 - Actuator health와 Prometheus metrics는 bounded `result` label만 노출하며
   worker·tenant·credential·callback body는 metric label로 사용하지 않습니다.
 
+Callback canonicalization은 공용 `bluetape4k-jackson3`의 `CanonicalJson` API를
+사용해 strict duplicate key/trailing token 검사와 bounded UTF-8 byte 생성을
+수행합니다. 닫힌 `event` envelope와 허용 field 검증은 이 adapter가 계속 소유하므로
+provider 정규화가 callback 계약을 넓히지 않습니다.
+
 ## 실행과 검증
 
 ```bash

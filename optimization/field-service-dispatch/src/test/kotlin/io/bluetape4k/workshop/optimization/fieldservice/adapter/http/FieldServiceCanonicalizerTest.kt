@@ -46,6 +46,23 @@ class FieldServiceCanonicalizerTest {
     }
 
     @Test
+    fun `canonical bytes preserve the provider golden representation and digest`() {
+        val body = "{\"b\":1.00,\"a\":[true,null,\"e\\u0301\"],\"z\":-0.0}".toByteArray()
+
+        canonicalizer.canonicalBytes(body).decodeToString() shouldBeEqualTo
+            "{\"a\":[true, null, \"é\"], \"b\":1, \"z\":0}"
+        canonicalizer.digest(body).value shouldBeEqualTo
+            "a79fd84206152d61159dbea8876798156529edf969397498e874b3d57756f5b2"
+    }
+
+    @Test
+    fun `canonicalizer rejects trailing JSON tokens`() {
+        assertFailsWith<InvalidFieldServiceInput> {
+            canonicalizer.canonicalBytes("{} {}".toByteArray())
+        }
+    }
+
+    @Test
     fun `value class identifiers preserve validated normalization`() {
         WorkerId(" worker-1 ").value shouldBeEqualTo "worker-1"
         VisitId(" visit-1 ").value shouldBeEqualTo "visit-1"

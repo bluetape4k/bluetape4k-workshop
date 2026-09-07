@@ -32,6 +32,11 @@ The repository architecture test keeps the application-owned persistence adapter
 on the Bluetape Exposed repository contract while the PostgreSQL tests exercise
 the reservation authority and compare-and-set boundaries.
 
+`WarehouseAllocationCodec` delegates canonical bytes to the shared
+`bluetape4k-jackson3` `CanonicalJson` API. It keeps the example's bounded
+payload/key limits and NFC value normalization, so event digests remain stable
+while duplicate keys and trailing tokens are rejected consistently.
+
 ## Run locally
 
 The default application binds HTTP and management endpoints to loopback and

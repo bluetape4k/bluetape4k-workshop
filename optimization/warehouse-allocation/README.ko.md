@@ -32,6 +32,11 @@ Repository architecture test는 애플리케이션 영속성 adapter가 Bluetape
 repository 계약을 계속 따르는지 확인하며, PostgreSQL 테스트는 reservation 권위와
 compare-and-set 경계를 검증합니다.
 
+`WarehouseAllocationCodec`은 공용 `bluetape4k-jackson3`의 `CanonicalJson` API에
+canonical byte 생성을 위임합니다. 예제가 가진 bounded payload/key 제한과 값의 NFC
+정규화는 유지하므로 event digest는 안정적으로 유지하면서 duplicate key와 trailing
+token을 일관되게 거부합니다.
+
 ## 로컬 실행
 
 기본 애플리케이션은 HTTP와 management endpoint를 loopback에 바인딩하고 `test`
