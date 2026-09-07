@@ -26,4 +26,11 @@ class ShiftCoverageCallbackCanonicalizerTest {
             canonicalizer.parse("{\"event\":\"availability.changed\",\"event\":\"shift.started\"}".toByteArray())
         }
     }
+
+    @Test
+    fun `trailing JSON tokens are rejected before state write`() {
+        assertFailsWith<InvalidShiftCoverageInput> {
+            canonicalizer.canonicalBytes("{\"event\":\"availability.changed\"} {}".toByteArray())
+        }
+    }
 }

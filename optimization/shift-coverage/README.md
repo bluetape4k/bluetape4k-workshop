@@ -26,6 +26,11 @@ approval and swap acceptance can change the assignment projection.
 - Actuator health and Prometheus metrics expose only bounded `result` labels;
   worker, tenant, credential, and callback body values are never labels.
 
+Callback canonicalization uses the shared `bluetape4k-jackson3` `CanonicalJson`
+API for strict duplicate-key/trailing-token checks and bounded UTF-8 bytes. The
+closed `event` envelope and allowed-field validation remain owned by this
+adapter, so provider normalization cannot widen the callback contract.
+
 ## Run and verify
 
 ```bash

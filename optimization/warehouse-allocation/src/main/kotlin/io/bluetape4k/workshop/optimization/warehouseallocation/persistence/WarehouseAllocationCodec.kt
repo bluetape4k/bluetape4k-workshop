@@ -1,17 +1,18 @@
 package io.bluetape4k.workshop.optimization.warehouseallocation.persistence
 
+import io.bluetape4k.jackson3.CanonicalJson
+import io.bluetape4k.jackson3.CanonicalJsonLimits
+import io.bluetape4k.jackson3.CanonicalJsonStringNormalization
+import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationLimits
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PlanProposal
 import tools.jackson.core.StreamReadConstraints
 import tools.jackson.core.StreamReadFeature
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
-import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
-import java.math.BigDecimal
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.text.Normalizer
 
 internal class WarehouseAllocationCodec {
     private val mapper: JsonMapper = JsonMapper.builder(
@@ -31,40 +32,33 @@ internal class WarehouseAllocationCodec {
         .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
         .build()
 
-    fun encode(value: Any): String = canonicalNode(mapper.valueToTree(value), 0)
+    private val canonicalJson = CanonicalJson(
+        limits = CanonicalJsonLimits(
+            maxBodyBytes = WarehouseAllocationLimits.MAX_BODY_BYTES,
+            maxDepth = 12,
+            maxStringLength = WarehouseAllocationLimits.MAX_BODY_BYTES,
+            maxNameLength = WarehouseAllocationLimits.MAX_EVENT_KEY,
+            maxObjectEntries = WarehouseAllocationLimits.MAX_BODY_BYTES,
+            maxArrayElements = WarehouseAllocationLimits.MAX_BODY_BYTES,
+            maxOutputBytes = WarehouseAllocationLimits.MAX_BODY_BYTES,
+        ),
+        stringNormalization = CanonicalJsonStringNormalization.NFC,
+    )
+
+    fun encode(value: Any): String = canonicalJson.canonicalBytes(mapper.valueToTree(value)).toString(UTF_8)
 
     fun <T> decode(value: String, type: Class<T>): T = mapper.readValue(value, type)
 
     fun decodePlan(value: String): PlanProposal = mapper.readValue(value, PlanProposal::class.java)
 
     fun canonicalBytes(body: ByteArray): ByteArray {
-        require(body.isNotEmpty() && body.size <= 256 * 1024) { "body exceeds 256KiB" }
-        val node = mapper.readTree(body) ?: error("empty JSON")
-        return canonicalNode(node, 0).toByteArray(UTF_8)
+        require(body.isNotEmpty() && body.size <= WarehouseAllocationLimits.MAX_BODY_BYTES) { "body exceeds 256KiB" }
+        return canonicalJson.canonicalBytes(body)
     }
 
     fun digest(value: Any): String = sha256(encode(value).toByteArray(UTF_8))
 
     fun digestBytes(body: ByteArray): String = sha256(canonicalBytes(body))
-
-    private fun canonicalNode(node: JsonNode, depth: Int): String {
-        require(depth <= 12) { "JSON depth exceeds 12" }
-        return when {
-            node.isObject -> node.properties().asSequence().sortedBy { it.key }
-                .joinToString(prefix = "{", postfix = "}") { "${quote(it.key)}:${canonicalNode(it.value, depth + 1)}" }
-            node.isArray -> node.iterator().asSequence().joinToString(prefix = "[", postfix = "]") { canonicalNode(it, depth + 1) }
-            node.isTextual -> quote(Normalizer.normalize(node.textValue(), Normalizer.Form.NFC))
-            node.isNumber -> {
-                val decimal = node.decimalValue()
-                val normalized = decimal.stripTrailingZeros()
-                if (normalized.compareTo(BigDecimal.ZERO) == 0) "0" else normalized.toPlainString()
-            }
-            node.isBoolean || node.isNull -> node.toString()
-            else -> error("unsupported JSON value")
-        }
-    }
-
-    private fun quote(value: String): String = mapper.writeValueAsString(value)
 
     private fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256")
         .digest(bytes).joinToString("") { "%02x".format(it.toInt() and 0xff) }

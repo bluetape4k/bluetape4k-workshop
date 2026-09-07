@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.optimization.fieldservice
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -32,11 +31,10 @@ internal class FieldServiceEcosystemReuseContractTest {
                 .sorted()
                 .toList()
         }
-        rawMapperFiles.shouldNotBeEmpty()
-        rawMapperFiles shouldBeEqualTo listOf("adapter/http/FieldServiceCanonicalizer.kt")
+        rawMapperFiles shouldBeEqualTo emptyList()
         Files.readString(sourcePath("adapter/http/FieldServiceCanonicalizer.kt"))
             .replace(Regex("\\s+"), " ")
-            .shouldContain("strict canonical input guard")
+            .shouldContain("CanonicalJson")
     }
 
     @Test

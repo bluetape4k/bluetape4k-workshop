@@ -21,6 +21,14 @@ other external service.
 - The example does not model patient records, diagnosis, insurance, clinical
   advice, production credentials, or a production map provider.
 
+## Canonical JSON boundary
+
+`FieldServiceCanonicalizer` uses the shared `bluetape4k-jackson3` `CanonicalJson`
+API for duplicate-key/trailing-token rejection, bounded traversal, UTF-8 output,
+and deterministic key/number normalization. The strict byte and depth limits
+remain owned by this example, while the shared provider keeps the digest bytes
+compatible with the existing contract.
+
 ## API walkthrough
 
 Start the application with the default `demo` profile. It binds to loopback

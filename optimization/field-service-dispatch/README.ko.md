@@ -20,6 +20,13 @@ PostgreSQL에 저장하고 deterministic fixture에서 planning 결과를 만듭
 - patient record, diagnosis, insurance, clinical advice, production credential,
   production map provider는 다루지 않습니다.
 
+## Canonical JSON 경계
+
+`FieldServiceCanonicalizer`는 공용 `bluetape4k-jackson3`의 `CanonicalJson` API를
+사용해 duplicate key/trailing token 거부, bounded traversal, UTF-8 출력, 결정론적
+key/number 정규화를 수행합니다. 엄격한 byte/depth 제한은 이 예제가 소유하고,
+공용 provider는 기존 digest byte 계약과의 호환성을 유지합니다.
+
 ## API 실행 순서
 
 기본 `demo` profile로 애플리케이션을 시작합니다. 서버는 loopback에 바인딩하고
