@@ -1481,7 +1481,7 @@
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "refactor/issue-990-kafka-failover-tink",
-      "expected_base_ref": "refactor/issue-989-usage-billing-tink",
+      "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -1670,8 +1670,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260908T-issue-990-follow-up-scope",
-    "checksum": "db127b9f2a3e5da6fa764ae50d634cc8a7636d4532f4a867d26c54090d8a5e29"
+    "receipt_id": "20260908T-issue-990-rebased-follow-up-scope",
+    "checksum": "c551c5c949d1a9e73d18101b8845d1de059f4f638c747b8cbd322c9f97129d98"
   },
   "planned_scope_replan_receipts": {
   },
