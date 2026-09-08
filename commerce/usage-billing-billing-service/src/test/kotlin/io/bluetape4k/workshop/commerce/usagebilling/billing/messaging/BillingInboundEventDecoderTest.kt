@@ -40,6 +40,17 @@ class BillingInboundEventDecoderTest {
     }
 
     @Test
+    fun `rejects non-canonical or malformed payload digests`() {
+        val digest = digestOf(USAGE_PAYLOAD)
+
+        listOf(digest.uppercase(), "not-hex", digest.dropLast(2)).forEach { invalidDigest ->
+            assertFailsWith<InvalidBillingInboundEnvelope> {
+                decoder.decode(envelope("UsageAccepted", USAGE_PAYLOAD, payloadDigest = invalidDigest))
+            }
+        }
+    }
+
+    @Test
     fun `rejects an unsupported upstream schema before Billing persistence`() {
         assertFailsWith<UnsupportedBillingInboundEnvelope> {
             decoder.decode(envelope("PriceActivated", PRICE_PAYLOAD, schemaVersion = 99))

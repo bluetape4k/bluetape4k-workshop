@@ -51,6 +51,15 @@
 - offset commit은 durable inbox/quarantine 결정 뒤에만 수행하며 best-effort
   log line 뒤에는 수행하지 않습니다.
 
+## Payload digest contract
+
+다섯 service는 SHA-256 digest 생성에 `TinkDigesters.SHA256.digestHex`를,
+수신 값 검증에 `matchesHex`를 사용합니다. Wire 값은 UTF-8 payload의
+lowercase 64자 hex encoding을 그대로 유지하므로 schema나 database migration이
+필요하지 않습니다. 이 digest는 우발 손상과 contract drift를 위한 비인증
+checksum이며 MAC 또는 signature가 아닙니다. Composition fixture는 production
+구현을 그대로 반복하지 않도록 독립적인 JDK SHA-256 oracle을 유지합니다.
+
 ## 검증 실행
 
 ```bash

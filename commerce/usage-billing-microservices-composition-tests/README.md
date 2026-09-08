@@ -50,6 +50,16 @@ Local decoders use Bluetape validation helpers for required envelope fields, and
 
 [Poison recovery SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-poison-recovery-01.svg)
 
+## Payload digest contract
+
+All five services generate SHA-256 digests with
+`TinkDigesters.SHA256.digestHex` and verify received values with `matchesHex`.
+The wire value remains the lowercase 64-character hex encoding of the UTF-8
+payload; no schema or database migration is required. The digest is a
+non-authenticating checksum for accidental corruption and contract drift, not a
+MAC or signature. Composition fixtures deliberately keep an independent JDK
+SHA-256 oracle so the tests do not merely repeat the production implementation.
+
 ## Run the evidence
 
 JDK 25 and a Docker-compatible container runtime are required for PostgreSQL/Kafka integration paths.

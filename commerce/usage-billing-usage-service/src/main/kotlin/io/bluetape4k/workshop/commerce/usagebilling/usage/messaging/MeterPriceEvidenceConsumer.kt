@@ -5,16 +5,14 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.tink.digest.TinkDigesters
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.PriceEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
-import java.security.MessageDigest
 import java.time.Instant
-import java.util.HexFormat
 import java.util.UUID
 import tools.jackson.databind.JsonNode
 
@@ -34,7 +32,7 @@ class MeterPriceEvidenceDecoder {
         aggregateVersion.requirePositiveNumber("aggregateVersion")
         val payload = envelope.requiredText("payload")
         val payloadDigest = envelope.requiredText("payloadDigest")
-        if (payloadDigest != digestOf(payload)) {
+        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) {
             throw InvalidMeterPriceEvidenceEnvelope(eventId)
         }
         val price = Jackson.defaultJsonMapper.readTree(payload)
@@ -51,9 +49,6 @@ class MeterPriceEvidenceDecoder {
             ),
         )
     }
-
-    private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private fun JsonNode.requiredText(name: String): String =
         requiredNode(name).asString().requireNotBlank("meterEnvelope.$name")

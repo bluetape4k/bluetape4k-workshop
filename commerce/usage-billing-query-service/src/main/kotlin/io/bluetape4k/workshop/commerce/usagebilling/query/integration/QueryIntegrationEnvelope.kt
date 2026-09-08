@@ -5,11 +5,9 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.integration
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import java.nio.charset.StandardCharsets.UTF_8
+import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
-import java.security.MessageDigest
 import java.time.Instant
-import java.util.HexFormat
 import java.util.UUID
 
 /**
@@ -33,7 +31,7 @@ class QueryIntegrationEnvelope private constructor(
     }
 
     fun partitionKey(): String = "$tenantId|$aggregateType|$aggregateId"
-    fun hasValidPayloadDigest(): Boolean = payloadDigest == digestOf(payload)
+    fun hasValidPayloadDigest(): Boolean = TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
 
     fun wirePayload(): String = Jackson.defaultJsonMapper.writeValueAsString(
         linkedMapOf(
@@ -64,10 +62,7 @@ class QueryIntegrationEnvelope private constructor(
                 payload, digestOf(payload), occurredAt, recordedAt,
             )
 
-        private fun digestOf(payload: String): String =
-            HexFormat.of().formatHex(
-                MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)),
-            )
+        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
     }
 }
 

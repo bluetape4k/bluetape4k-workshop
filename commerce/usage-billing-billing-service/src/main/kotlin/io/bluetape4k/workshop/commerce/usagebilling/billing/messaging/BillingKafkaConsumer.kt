@@ -4,6 +4,7 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.tink.digest.TinkDigesters
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingPricingEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
@@ -13,10 +14,7 @@ import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.io.Serializable
-import java.nio.charset.StandardCharsets.UTF_8
-import java.security.MessageDigest
 import java.time.Instant
-import java.util.HexFormat
 import java.util.UUID
 import tools.jackson.databind.JsonNode
 
@@ -87,11 +85,8 @@ class BillingInboundEventDecoder {
     }
 
     private fun verifyPayloadDigest(eventId: UUID, payload: String, payloadDigest: String) {
-        if (payloadDigest != digestOf(payload)) throw InvalidBillingInboundEnvelope(eventId)
+        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) throw InvalidBillingInboundEnvelope(eventId)
     }
-
-    private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private fun JsonNode.requiredText(name: String): String =
         requiredNode(name).asString().requireNotBlank("billingEnvelope.$name")

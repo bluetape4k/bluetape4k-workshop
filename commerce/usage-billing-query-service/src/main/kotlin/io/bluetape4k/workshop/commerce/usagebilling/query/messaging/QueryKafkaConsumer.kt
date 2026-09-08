@@ -3,16 +3,14 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.messaging
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.tink.digest.TinkDigesters
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
-import java.nio.charset.StandardCharsets.UTF_8
-import java.security.MessageDigest
 import java.time.Instant
-import java.util.HexFormat
 import java.util.UUID
 import tools.jackson.databind.JsonNode
 
@@ -32,7 +30,7 @@ class QueryInboundEventDecoder {
         }
         val payload = envelope.requiredText("payload", eventId, tenantId, eventType)
         val payloadDigest = envelope.requiredText("payloadDigest", eventId, tenantId, eventType)
-        if (payloadDigest != digestOf(payload)) {
+        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) {
             fail(eventId, tenantId, eventType, "invalid_payload_digest")
         }
         return QueryInboxEvent(
@@ -69,9 +67,6 @@ class QueryInboundEventDecoder {
 
     private fun fail(eventId: UUID, tenantId: String, eventType: String, reason: String): Nothing =
         throw PermanentQueryInboundException(QueryQuarantineEvent(eventId, tenantId, eventType, reason, Instant.now()))
-
-    private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private companion object {
         val SUPPORTED_SCHEMA_VERSIONS = setOf(1, 2)
