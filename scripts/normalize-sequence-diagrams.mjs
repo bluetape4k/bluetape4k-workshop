@@ -4,6 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 
+import { decodeXmlEntitiesOnce, stripXmlTags } from "./lib/svg-text.mjs";
+
 const root = process.cwd();
 const sequenceDir = path.join(root, "docs/images/readme-diagrams");
 
@@ -15,17 +17,8 @@ function esc(value) {
     .replaceAll('"', "&quot;");
 }
 
-function unesc(value) {
-  return String(value)
-    .replaceAll("&amp;", "&")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'");
-}
-
 function stripTags(value) {
-  return unesc(String(value).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim());
+  return decodeXmlEntitiesOnce(stripXmlTags(value).replace(/\s+/g, " ").trim());
 }
 
 function textLines(text, maxChars = 34) {

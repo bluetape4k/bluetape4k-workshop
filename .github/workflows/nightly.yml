@@ -53,8 +53,8 @@ jobs:
             native-build-tools
       - name: Repair GraalVM reachability metadata cache
         run: ./scripts/repair-graalvm-metadata-cache.sh
-      - name: Validate GraalVM metadata cache repair
-        run: node --test scripts/graalvm-metadata-cache.test.mjs
+      - name: Validate maintenance script regressions
+        run: node --test scripts/graalvm-metadata-cache.test.mjs scripts/svg-text.test.mjs
       - name: Build (compile only)
         # Keep the compile-only lane honest: native metadata tasks are part of the build graph.
         run: >-

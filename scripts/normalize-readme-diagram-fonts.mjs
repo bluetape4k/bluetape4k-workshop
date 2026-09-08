@@ -4,6 +4,8 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { stripXmlComments } from "./lib/svg-text.mjs";
+
 const root = process.cwd();
 const ignoredDirs = new Set([
   ".git",
@@ -77,7 +79,7 @@ function normalizeSvg(svg) {
 }
 
 function fontStatus(svgFile) {
-  const svg = fs.readFileSync(svgFile, "utf8").replace(/<!--[^]*?-->/g, "");
+  const svg = stripXmlComments(fs.readFileSync(svgFile, "utf8"));
   const declarations = [];
   for (const match of svg.matchAll(/font-family\s*:\s*([^;}]+)/g)) {
     declarations.push(match[1]);
