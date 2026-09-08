@@ -207,6 +207,15 @@ is kept safe by the library idempotency store, while private payload fields and
 raw correlation values never enter the external envelope. Cancellation is
 re-thrown so it cannot be mistaken for publication success or an acknowledgement.
 
+The correlation reference is the first 16 lowercase hex characters of
+`TinkDigesters.SHA256.digestHex(correlationId)`. It is a 64-bit, truncated,
+non-authenticating observability reference. Under the birthday bound, collision
+risk reaches roughly 2.7e-8 at one million distinct values and 2.7e-6 at ten
+million. Keep the raw source out of headers and logs, and never use this value as
+an authentication token, access-control decision, signature, or sole
+deduplication key. Changing its length requires an explicit header compatibility
+review.
+
 The executable fixture tests cover disabled startup, redaction and dispatch,
 ack-after-success, visibility retry on handler failure, and FIFO routing:
 

@@ -5,6 +5,7 @@ import io.bluetape4k.aws.spring.modulith.AwsModulithEventTypeRegistry
 import io.bluetape4k.aws.spring.modulith.AwsModulithEventsProperties
 import io.bluetape4k.aws.spring.modulith.AwsModulithSqsEventConsumer
 import io.bluetape4k.aws.spring.sqs.SqsOperations
+import io.bluetape4k.tink.digest.TinkDigesters
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.future.await
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -17,7 +18,6 @@ import org.springframework.modulith.events.core.EventSerializer
 import org.springframework.modulith.events.support.EventExternalizationTransport
 import org.springframework.modulith.events.support.EventExternalizerModuleListener
 import tools.jackson.databind.ObjectMapper
-import java.security.MessageDigest
 
 /**
  * 기존 SQS/SNS 예제에서 Spring Modulith 외부화를 선택적으로 켜는 설정입니다.
@@ -192,11 +192,12 @@ private fun ModulithOrderPlacedEvent.toIntegrationEvent(): ModulithOrderPlacedIn
         correlationRef = correlationRef(correlationId),
     )
 
-private fun correlationRef(value: String): String =
-    MessageDigest.getInstance("SHA-256")
-        .digest(value.toByteArray(Charsets.UTF_8))
-        .joinToString(separator = "") { byte -> "%02x".format(byte) }
-        .take(CORRELATION_REF_LENGTH)
+/**
+ * 원문 PII 대신 관찰·연결용 64-bit reference를 반환합니다.
+ *
+ * Collision 가능성이 있으므로 인증, 접근 제어, 유일 deduplication key로 사용하지 않습니다.
+ */
+private fun correlationRef(value: String): String = TinkDigesters.SHA256.digestHex(value).take(CORRELATION_REF_LENGTH)
 
 private const val TARGET_ALIAS = "order-notifications"
 private const val MODULITH_EVENT_TYPE = "order.placed"

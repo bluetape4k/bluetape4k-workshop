@@ -69,6 +69,8 @@ class ModulithExternalizationExampleTest {
                     ).single()
                     message.body.contains("never-send-this-secret").shouldBeFalse()
                     message.body.contains("customer@example.test").shouldBeFalse()
+                    message.messageAttributes.getValue("correlationRef").stringValue() shouldBeEqualTo
+                        "06c3645baad7d2fd"
                     message.messageAttributes.entries
                         .single { it.key == "bt4k-event-type" }.value.stringValue() shouldBeEqualTo "order.placed"
 
@@ -76,6 +78,31 @@ class ModulithExternalizationExampleTest {
                     consume.state shouldBeEqualTo ModulithConsumeState.ACKED
                     handler.events.single().orderId shouldBeEqualTo "order-100"
                     operations.receive(queueUrl, maxMessages = 1, waitTimeSeconds = 0).size shouldBeEqualTo 0
+                }
+            }
+    }
+
+    @Test
+    fun `unicode correlation source는 lowercase 16자 reference만 외부화한다`() {
+        val operations = LocalSqsOperations()
+        runner(operations)
+            .withPropertyValues(
+                "bluetape4k.aws.modulith.events.targets.order-notifications.destination=order-notifications",
+            )
+            .run { context ->
+                val service = context.getBean(ModulithExternalizationService::class.java)
+
+                runBlocking {
+                    service.publish(sampleEvent().copy(correlationId = "고객@example.test"))
+                    val message = operations.receive(
+                        operations.getQueueUrl("order-notifications"),
+                        maxMessages = 1,
+                        waitTimeSeconds = 0,
+                    ).single()
+
+                    message.body.contains("고객@example.test").shouldBeFalse()
+                    message.messageAttributes.getValue("correlationRef").stringValue() shouldBeEqualTo
+                        "0c40ec5d051f9c7d"
                 }
             }
     }

@@ -199,6 +199,13 @@ Handler, unknown type/version, malformed envelope, partial failure 경로는 vis
 들어가지 않습니다. Cancellation은 다시 던져 publication 성공이나 acknowledgement로
 잘못 기록되지 않게 합니다.
 
+Correlation reference는 `TinkDigesters.SHA256.digestHex(correlationId)`의 앞
+16개 lowercase hex 문자입니다. 이는 64-bit로 truncate한 비인증 관찰용
+reference입니다. Birthday bound 기준 collision 위험은 distinct value 100만 개에서
+약 2.7e-8, 1,000만 개에서 약 2.7e-6입니다. 원문을 header나 log에 넣지 말고 이
+값을 인증 token, access-control 판단, signature 또는 유일 deduplication key로
+사용하지 않습니다. 길이를 바꾸려면 header compatibility를 별도로 검토해야 합니다.
+
 실행 가능한 fixture 테스트는 disabled startup, redaction과 dispatch, 성공 후 ack,
 handler 실패 시 visibility retry, FIFO routing을 검증합니다.
 
