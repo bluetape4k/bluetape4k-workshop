@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.tink)
 
     implementation(libs.aws2.sns.lib)
     implementation(libs.aws2.sqs.lib)

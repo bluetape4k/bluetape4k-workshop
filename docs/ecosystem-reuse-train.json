@@ -1477,7 +1477,7 @@
     },
     {
       "scope_id": "issue-990-kafka-failover-tink",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "refactor/issue-990-kafka-failover-tink",
@@ -1495,6 +1495,27 @@
         "messaging/kafka-multi-broker-failover/**"
       ],
       "review_artifact": "docs/review/2026-09-08-issue-990-kafka-failover-tink-7tier.md"
+    },
+    {
+      "scope_id": "issue-991-aws-modulith-tink",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "refactor/issue-991-aws-modulith-tink",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [991],
+      "allowed_paths": [
+        "aws/sqs-sns-coroutines/**",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-08-issue-991-aws-modulith-tink.md",
+        "docs/review/2026-09-08-issue-991-aws-modulith-tink-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-09-08-issue-991-aws-modulith-tink-7tier.md"
     },
     {
       "scope_id": "issue-915-dependencies-2.0.0",
@@ -1670,8 +1691,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260908T-issue-990-rebased-follow-up-scope",
-    "checksum": "c551c5c949d1a9e73d18101b8845d1de059f4f638c747b8cbd322c9f97129d98"
+    "receipt_id": "20260908T-issue-991-rebased-follow-up-scope",
+    "checksum": "35ef8ad64349897c525cba7bbbda79b74ec7f31b4a17b5ced180d981566e0567"
   },
   "planned_scope_replan_receipts": {
   },
