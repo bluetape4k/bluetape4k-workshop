@@ -14,6 +14,7 @@ internal class IdempotencyFingerprintTest {
         digest shouldNotBeEqualTo IdempotencyFingerprint.key("tenant-b", "create-hold", "customer-visible-secret")
         digest shouldNotBeEqualTo IdempotencyFingerprint.key("tenant-a", "confirm-hold", "customer-visible-secret")
         digest shouldNotBeEqualTo "customer-visible-secret"
+        digest shouldBeEqualTo "c8c08a6aaf042cca74e5079aff177fbb55b4b93b5c7f00fff0a274f57c46fd00"
     }
 
     @Test
@@ -24,5 +25,14 @@ internal class IdempotencyFingerprintTest {
             IdempotencyFingerprint.request("create-hold", "{\"resourceId\":\"room-a\"}")
         create shouldNotBeEqualTo
             IdempotencyFingerprint.request("confirm-hold", "{\"resourceId\":\"room-a\"}")
+        create shouldBeEqualTo "742ef157b884b48ed4570007635cafb4f48a001e60c95714cab7b6a5fbd94ed5"
+    }
+
+    @Test
+    fun `unicode와 빈 field는 domain NUL framing을 유지한다`() {
+        IdempotencyFingerprint.key("테넌트-a", "create-hold", "") shouldBeEqualTo
+            "d4a37e2e79bf58dcc917efd8a200d290f0e6e9f85d0187f1090f32ccf79f2b1e"
+        IdempotencyFingerprint.request("create-hold", "소유자=고객🙂") shouldBeEqualTo
+            "e12be6d71fd10a584c8235b7b0a33e2aa5f3d1c8455821af836c186b340092fe"
     }
 }

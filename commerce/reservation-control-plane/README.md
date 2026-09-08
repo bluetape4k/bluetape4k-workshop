@@ -88,6 +88,24 @@ All user command endpoints require `X-Reservation-Owner` and `Idempotency-Key`. 
 
 The same idempotency key and fingerprint replay the original status and body with `Idempotency-Replayed: true`. A different fingerprint returns `409 Conflict`. In-progress commands return a retryable response rather than running twice.
 
+### Idempotency digest threat model
+
+Production never persists the caller's raw idempotency key. The production
+`keyDigest` is a keyed HMAC produced by `ReservationCredentialService`; that
+credential boundary is unchanged. `IdempotencyFingerprint.request` is an
+unkeyed SHA-256 checksum over a domain-separated, NUL-delimited operation and
+canonical payload that already contains an owner digest. Its purpose is replay
+conflict detection, not secrecy or authentication. The `key` helper is used by
+tests and fixtures only. Both helpers now reuse `TinkDigesters.SHA256.digestHex`
+without changing field order, separators, UTF-8 encoding, or lowercase 64-char
+storage.
+
+An attacker with repository rows could enumerate low-entropy unkeyed inputs, so
+raw credentials and guessable secrets must never enter the request fingerprint.
+If future requirements place such values there, introduce a separately reviewed
+keyed migration with key lifecycle, rotation, storage compatibility, and
+backfill; do not silently replace the persisted digest format.
+
 ## Concurrency and timeout budget
 
 Virtual threads remove the platform-thread-per-request cost, but they do not create database connections. Tomcat accepts up to 8,000 connections and keeps an 8,000-thread platform fallback, while Hikari remains intentionally bounded to eight connections with a 60-second acquisition timeout. Transactions also time out after 60 seconds. The local database bulkhead sheds excess work before requests monopolize Hikari.

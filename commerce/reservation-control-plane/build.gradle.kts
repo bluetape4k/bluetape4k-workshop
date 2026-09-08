@@ -36,6 +36,7 @@ dependencies {
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.micrometer)
+    implementation(libs.bluetape4k.tink)
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
