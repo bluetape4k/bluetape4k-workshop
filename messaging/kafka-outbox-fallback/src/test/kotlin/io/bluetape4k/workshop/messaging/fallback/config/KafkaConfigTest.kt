@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.fallback.config
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
@@ -11,7 +12,6 @@ import tools.jackson.core.JacksonException
 import tools.jackson.core.json.JsonReadFeature
 import tools.jackson.databind.DeserializationFeature
 import java.time.LocalDateTime
-import kotlin.test.assertFailsWith
 
 class KafkaConfigTest {
 
