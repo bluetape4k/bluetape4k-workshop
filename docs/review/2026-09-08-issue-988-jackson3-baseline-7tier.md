@@ -13,3 +13,9 @@
 ## 결론
 
 기존 wire/input 계약을 바꾸지 않으면서 `bluetape4k-jackson3` 재사용을 높인 좁은 변경이다. 알려진 미해결 P0/P1 결함은 없다.
+
+## 독립 리뷰 반영
+
+- 실제 Spring HTTP converter에서 unknown property 허용과 trailing token/comma 거부를 검증했다.
+- 두 outbox의 DB 저장 payload와 Kafka 전송 payload가 exact JSON 문자열로 동일함을 검증했다.
+- predecessor scope의 `MERGED`는 GitHub PR merge 상태가 아니라 이 manifest의 단일 `ACTIVE` stacked-head 전이 상태다. 선행 PR이 열려 있어도 새 child head가 선행 scope를 포함하며, exact PR-scope checker가 이 전이를 검증한다.
