@@ -32,6 +32,7 @@
 | Job isolation | 각 job은 자체 `try/catch`로 감싸며, 하나의 실패가 다음 job 실행을 막지 않습니다. |
 | Duration binding | Spring은 `java.time.Duration`으로 바인딩하고, `LeaderElectionOptions`에는 명시적으로 `toKotlinDuration()` 값을 전달합니다. |
 | Event observation | `LeaderEventListenerService`는 callback listener와 Flow collection 패턴을 모두 보여줍니다. |
+| Scope ownership | 각 `LeaderEventListenerService`가 `DefaultCoroutineScope`를 소유하며, 종료 시 listener를 먼저 제거한 뒤 scope를 멱등하게 닫습니다. |
 | Coroutine path | `SuspendLeaderService`는 별도 Redis connection으로 suspend leader work를 시연합니다. |
 
 ## 주요 타입
@@ -93,6 +94,7 @@ leader:
 ```kotlin
 implementation(libs.bluetape4k.leader.core)
 implementation(libs.bluetape4k.leader.redis.lettuce)
+implementation(libs.bluetape4k.coroutines)
 implementation(libs.lettuce.core)
 implementation(libs.bluetape4k.logging)
 implementation(libs.spring.boot.autoconfigure.lib)

@@ -32,6 +32,7 @@ Use this example when a multi-pod service has work that must not run concurrentl
 | Job isolation | Each job is wrapped in its own `try/catch`; one failed job does not block the next one. |
 | Duration binding | Spring binds `java.time.Duration`; `LeaderElectionOptions` receives explicit `toKotlinDuration()` values. |
 | Event observation | `LeaderEventListenerService` shows both callback listener and Flow collection patterns. |
+| Scope ownership | Each `LeaderEventListenerService` owns a `DefaultCoroutineScope`; shutdown removes the listener before idempotently closing the scope. |
 | Coroutine path | `SuspendLeaderService` demonstrates suspend leader work with a separate Redis connection. |
 
 ## Main Types
@@ -93,6 +94,7 @@ leader:
 ```kotlin
 implementation(libs.bluetape4k.leader.core)
 implementation(libs.bluetape4k.leader.redis.lettuce)
+implementation(libs.bluetape4k.coroutines)
 implementation(libs.lettuce.core)
 implementation(libs.bluetape4k.logging)
 implementation(libs.spring.boot.autoconfigure.lib)

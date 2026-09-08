@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.leader
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.leader.LeaderElectionEvent
 import io.bluetape4k.leader.LeaderElectionListener
 import io.bluetape4k.leader.ListeningLeaderElector
@@ -103,7 +104,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
     }
 
     @Test
-    fun `LeaderEventListenerService counts events from ListeningLeaderElector`() {
+    fun `LeaderEventListenerService closes its application scope and listener idempotently`() {
         val listeningElector = newListeningElector()
         val service = LeaderEventListenerService(listeningElector)
         service.init()
@@ -119,5 +120,12 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
         }
 
         service.close()
+        service.close()
+
+        service.eventScopeClosed.shouldBeTrue()
+        service.eventScopeCancelled.shouldBeTrue()
+
+        listeningElector.runIfLeader(lockName) { "work-after-close" }
+        service.electedCount.get() shouldBeEqualTo 3
     }
 }
