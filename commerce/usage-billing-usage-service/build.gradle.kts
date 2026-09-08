@@ -30,6 +30,7 @@ dependencies {
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.tink)
     implementation(libs.bluetape4k.micrometer)
     implementation(libs.bluetape4k.kafka4)
     implementation(libs.bluetape4k.virtualthread.api)

@@ -4,14 +4,12 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.tink.digest.TinkDigesters
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.application.InvoiceInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
-import java.security.MessageDigest
-import java.util.HexFormat
 import java.util.UUID
 import tools.jackson.databind.JsonNode
 
@@ -28,7 +26,7 @@ class BillingChargeDecoder {
         val payload = envelope.requiredText("payload")
         val digest = envelope.requiredText("payloadDigest")
         val eventId = UUID.fromString(envelope.requiredText("eventId"))
-        if (digest != digestOf(payload)) throw InvalidBillingChargeEnvelope(eventId)
+        if (!TinkDigesters.SHA256.matchesHex(payload, digest)) throw InvalidBillingChargeEnvelope(eventId)
         val body = Jackson.defaultJsonMapper.readTree(payload)
         return InvoiceInboxEvent(
             eventId = eventId,
@@ -39,9 +37,6 @@ class BillingChargeDecoder {
             payloadDigest = digest,
         )
     }
-
-    private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private fun JsonNode.requiredText(name: String): String =
         requiredNode(name).asString().requireNotBlank("billingChargeEnvelope.$name")

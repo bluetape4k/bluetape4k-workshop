@@ -5,17 +5,16 @@ package io.bluetape4k.workshop.commerce.usagebilling.meter.integration
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import java.nio.charset.StandardCharsets.UTF_8
+import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
-import java.security.MessageDigest
 import java.time.Instant
-import java.util.HexFormat
 import java.util.UUID
 
 /**
  * Kafka publication 전에 local outbox에 저장되는 Versioned Meter event contract입니다.
  *
- * envelope가 digest를 소유하므로 consumer는 transport metadata를 신뢰하지 않고 tampered payload를 거부할 수 있습니다.
+ * envelope가 digest를 소유하므로 consumer는 transport metadata를 신뢰하지 않고 우발 손상이나 계약 불일치를 거부할 수 있습니다.
+ * 이 digest는 인증 수단이 아니며 적대적 변조 방지에는 MAC 또는 signature가 필요합니다.
  */
 class MeterIntegrationEnvelope private constructor(
     val eventId: UUID,
@@ -43,7 +42,7 @@ class MeterIntegrationEnvelope private constructor(
 
     fun partitionKey(): String = "$tenantId|$aggregateType|$aggregateId"
 
-    fun hasValidPayloadDigest(): Boolean = payloadDigest == digestOf(payload)
+    fun hasValidPayloadDigest(): Boolean = TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
 
     fun wirePayload(): String = Jackson.defaultJsonMapper.writeValueAsString(
         linkedMapOf(
@@ -92,10 +91,7 @@ class MeterIntegrationEnvelope private constructor(
                 recordedAt = recordedAt,
             )
 
-        private fun digestOf(payload: String): String =
-            HexFormat.of().formatHex(
-                MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)),
-            )
+        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
     }
 }
 

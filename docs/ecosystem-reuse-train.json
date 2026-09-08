@@ -1443,6 +1443,39 @@
       "review_artifact": "docs/superpowers/specs/2026-09-06-issue-953-okio-buffered-suspended-sink-implementation-review.md"
     },
     {
+      "scope_id": "issue-989-usage-billing-tink",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "refactor/issue-989-usage-billing-tink",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [989],
+      "allowed_paths": [
+        "commerce/usage-billing-billing-service/**",
+        "commerce/usage-billing-invoice-service/**",
+        "commerce/usage-billing-meter-service/**",
+        "commerce/usage-billing-query-service/**",
+        "commerce/usage-billing-usage-service/**",
+        "commerce/usage-billing-microservices-composition-tests/README.md",
+        "commerce/usage-billing-microservices-composition-tests/README.ko.md",
+        "docs/ecosystem-reuse-inventory.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-08-issue-989-usage-billing-tink.md",
+        "docs/review/2026-09-08-issue-989-usage-billing-tink-7tier.md",
+        "docs/review/2026-09-08-issues-988-993-plan-review.md",
+        "docs/review/2026-09-08-issues-988-993-spec-review.md",
+        "docs/superpowers/plans/2026-09-08-issues-988-993-ecosystem-reuse-plan.md",
+        "docs/superpowers/specs/2026-09-08-issues-988-993-ecosystem-reuse-design.md",
+        "gradle/libs.versions.toml"
+      ],
+      "review_artifact": "docs/review/2026-09-08-issue-989-usage-billing-tink-7tier.md"
+    },
+    {
       "scope_id": "issue-915-dependencies-2.0.0",
       "lifecycle": "MERGED",
       "scope_kind": "child",
@@ -1616,8 +1649,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260907T-workshop-2-1-0-snapshot-lifecycle-closeout",
-    "checksum": "6fdc36a819d44358a3af35756f3af5920ff0e0cfa2e9068e6cfe6e64d4508b22"
+    "receipt_id": "20260908T-issues-988-993-follow-up-scopes",
+    "checksum": "1a53bc8a8be34babdd802b7550355abc92ab7c399898a827bd819589079049d5"
   },
   "planned_scope_replan_receipts": {
   },
@@ -1634,7 +1667,7 @@
       "merge_base_oid": null,
       "reviewed_implementation_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "state": "MERGED",
-      "issue_numbers": [792],
+      "issue_numbers": [792, 989],
       "allowed_paths": [
         "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
         "docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md",
@@ -1664,7 +1697,13 @@
       ],
       "timeout_seconds": 600,
       "docker_required": false,
-      "dependency_insight_commands": [],
+      "dependency_insight_commands": [
+        "./gradlew :commerce-usage-billing-billing-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
+        "./gradlew :commerce-usage-billing-invoice-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
+        "./gradlew :commerce-usage-billing-meter-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
+        "./gradlew :commerce-usage-billing-query-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
+        "./gradlew :commerce-usage-billing-usage-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath"
+      ],
       "review_artifact": "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md",
       "receipt_id": "20260827T013500Z-p0-squash-closeout",
       "receipt_status": "PASS",

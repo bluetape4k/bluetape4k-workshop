@@ -53,6 +53,16 @@ Relevant source: [`BillingInboxService`](src/main/kotlin/io/bluetape4k/workshop/
 [`BillingInboundEventDecoder`](src/main/kotlin/io/bluetape4k/workshop/commerce/usagebilling/billing/messaging/BillingKafkaConsumer.kt),
 and [`BillingOutboxPersistence`](src/main/kotlin/io/bluetape4k/workshop/commerce/usagebilling/billing/persistence/BillingOutboxPersistence.kt).
 
+## Payload digest contract
+
+Production code generates SHA-256 digests with
+`TinkDigesters.SHA256.digestHex` and verifies them with `matchesHex`. The
+wire value remains the lowercase 64-character hex encoding of the UTF-8 payload;
+this change requires no schema or database migration. This digest detects
+accidental corruption and contract drift, but is not authentication. Use a MAC
+or signature when hostile tampering is in scope. Tests deliberately retain an
+independent JDK SHA-256 oracle instead of reproducing the production call.
+
 ## Run the evidence
 
 ```bash

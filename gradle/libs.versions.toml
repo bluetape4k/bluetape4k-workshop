@@ -182,6 +182,7 @@ bluetape4k-graph-io-micrometer = { module = "io.github.bluetape4k.graph:bluetape
 bluetape4k-dependencies = { module = "io.github.bluetape4k:bluetape4k-dependencies", version.ref = "bluetape4k-dependencies-version" }
 bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" }
 bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" }
+bluetape4k-tink = { module = "io.github.bluetape4k:bluetape4k-tink" }
 bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" }
 bluetape4k-tenant = { module = "io.github.bluetape4k:bluetape4k-tenant" }
 bluetape4k-tenant-reactor = { module = "io.github.bluetape4k:bluetape4k-tenant-reactor" }
