@@ -49,6 +49,15 @@ def read_source_ref(catalog: Path, *, allow_snapshot: bool = False) -> str:
     return source_ref
 
 
+def validate_source_ref(source_ref: str, trusted_source_ref: str) -> str:
+    if source_ref != trusted_source_ref:
+        raise ValueError(
+            f"Resolved source ref {source_ref!r} does not match "
+            f"trusted workflow ref {trusted_source_ref!r}"
+        )
+    return source_ref
+
+
 def inspect_images(version: str) -> None:
     subprocess.run(["docker", "image", "inspect", *image_names(version)], check=True)
 
@@ -59,6 +68,7 @@ def main() -> None:
         "--catalog", type=Path, default=Path("gradle/libs.versions.toml")
     )
     parser.add_argument("--github-output", type=Path)
+    parser.add_argument("--expected-source-ref")
     parser.add_argument("--inspect", action="store_true")
     parser.add_argument(
         "--allow-snapshot",
@@ -68,10 +78,11 @@ def main() -> None:
     args = parser.parse_args()
     version = read_version(args.catalog, allow_snapshot=args.allow_snapshot)
     source_ref = read_source_ref(args.catalog, allow_snapshot=args.allow_snapshot)
+    if args.expected_source_ref:
+        validate_source_ref(source_ref, args.expected_source_ref)
     if args.github_output:
         with args.github_output.open("a", encoding="utf-8") as output:
             output.write(f"version={version}\n")
-            output.write(f"source_ref={source_ref}\n")
     if args.inspect:
         inspect_images(version)
     print(f"Nightly mock images: {', '.join(image_names(version))}")

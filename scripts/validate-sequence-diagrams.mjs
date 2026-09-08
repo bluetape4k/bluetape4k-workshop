@@ -3,6 +3,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { stripXmlTags } from "./lib/svg-text.mjs";
+
 const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
 const legacySequenceSlugs = new Set([
@@ -122,7 +124,7 @@ function readMessageTexts(svg) {
     const attrs = match[1];
     const className = (attrs.match(/\bclass="([^"]+)"/) || [])[1] || "";
     if (!/\bmessage\b/.test(className)) continue;
-    const text = match[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+    const text = stripXmlTags(match[2]).replace(/\s+/g, " ").trim();
     if (text) messages.push(text);
   }
   return messages;
