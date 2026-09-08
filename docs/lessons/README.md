@@ -20,6 +20,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #989 usage-billing payload digest를 Tink로 통일](2026-09-08-issue-989-usage-billing-tink.md)
 - [Issue #990 Kafka failover fingerprint를 Tink로 통일](2026-09-08-issue-990-kafka-failover-tink.md)
 - [Issue #991 AWS Modulith correlationRef를 Tink로 통일](2026-09-08-issue-991-aws-modulith-tink.md)
+- [Issue #992 Reservation fingerprint threat model과 Tink 재사용](2026-09-08-issue-992-reservation-tink-threat-model.md)
 
 Use this structure for each lesson:
 

@@ -1498,7 +1498,7 @@
     },
     {
       "scope_id": "issue-991-aws-modulith-tink",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "refactor/issue-991-aws-modulith-tink",
@@ -1516,6 +1516,27 @@
         "docs/review/2026-09-08-issue-991-aws-modulith-tink-7tier.md"
       ],
       "review_artifact": "docs/review/2026-09-08-issue-991-aws-modulith-tink-7tier.md"
+    },
+    {
+      "scope_id": "issue-992-reservation-tink-threat-model",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "refactor/issue-992-reservation-tink-threat-model",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [992],
+      "allowed_paths": [
+        "commerce/reservation-control-plane/**",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-08-issue-992-reservation-tink-threat-model.md",
+        "docs/review/2026-09-08-issue-992-reservation-tink-threat-model-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-09-08-issue-992-reservation-tink-threat-model-7tier.md"
     },
     {
       "scope_id": "issue-915-dependencies-2.0.0",
@@ -1691,8 +1712,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260908T-issue-991-rebased-follow-up-scope",
-    "checksum": "35ef8ad64349897c525cba7bbbda79b74ec7f31b4a17b5ced180d981566e0567"
+    "receipt_id": "20260908T-issue-992-rebased-follow-up-scope",
+    "checksum": "f1183340b5d85e25e6598a1c4e3b3c4a6a86506ac20104ea4764ee19005785f9"
   },
   "planned_scope_replan_receipts": {
   },

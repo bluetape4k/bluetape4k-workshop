@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.idempotency
 
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
+import io.bluetape4k.tink.digest.TinkDigesters
 
 /** caller idempotency key나 payload를 보존하지 않고 domain-separated SHA-256 fingerprint를 생성합니다. */
 internal object IdempotencyFingerprint {
@@ -19,12 +18,9 @@ internal object IdempotencyFingerprint {
     private fun digest(
         domain: String,
         vararg fields: String,
-    ): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(
-                (sequenceOf(domain) + fields.asSequence()).joinToString("\u0000").toByteArray(StandardCharsets.UTF_8)
-            ).joinToString("") { byte -> "%02x".format(byte) }
+    ): String = TinkDigesters.SHA256.digestHex(
+        (sequenceOf(domain) + fields.asSequence()).joinToString("\u0000")
+    )
 
     private const val KEY_DOMAIN = "reservation-http-idempotency-key-v1"
     private const val REQUEST_DOMAIN = "reservation-http-idempotency-request-v1"
