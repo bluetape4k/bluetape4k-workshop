@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.tink)
     implementation(libs.kafka.clients)
     implementation(libs.spring.kafka.lib)
     implementation(libs.spring.boot.autoconfigure.lib)

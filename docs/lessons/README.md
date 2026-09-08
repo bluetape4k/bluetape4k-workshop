@@ -18,6 +18,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #940 cache-redis VirtualThreads executor 소유권](2026-09-06-issue-940-cache-redis-virtualthreads.md)
 - [Issue #953 Okio BufferedSuspendedSink 공개 API 이전](2026-09-06-issue-953-okio-buffered-suspended-sink.md)
 - [Issue #989 usage-billing payload digest를 Tink로 통일](2026-09-08-issue-989-usage-billing-tink.md)
+- [Issue #990 Kafka failover fingerprint를 Tink로 통일](2026-09-08-issue-990-kafka-failover-tink.md)
 
 Use this structure for each lesson:
 

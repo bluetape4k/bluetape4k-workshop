@@ -1444,7 +1444,7 @@
     },
     {
       "scope_id": "issue-989-usage-billing-tink",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "refactor/issue-989-usage-billing-tink",
@@ -1474,6 +1474,27 @@
         "gradle/libs.versions.toml"
       ],
       "review_artifact": "docs/review/2026-09-08-issue-989-usage-billing-tink-7tier.md"
+    },
+    {
+      "scope_id": "issue-990-kafka-failover-tink",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "refactor/issue-990-kafka-failover-tink",
+      "expected_base_ref": "refactor/issue-989-usage-billing-tink",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [990],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-08-issue-990-kafka-failover-tink.md",
+        "docs/review/2026-09-08-issue-990-kafka-failover-tink-7tier.md",
+        "messaging/kafka-multi-broker-failover/**"
+      ],
+      "review_artifact": "docs/review/2026-09-08-issue-990-kafka-failover-tink-7tier.md"
     },
     {
       "scope_id": "issue-915-dependencies-2.0.0",
@@ -1649,8 +1670,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260908T-issues-988-993-follow-up-scopes",
-    "checksum": "1a53bc8a8be34babdd802b7550355abc92ab7c399898a827bd819589079049d5"
+    "receipt_id": "20260908T-issue-990-follow-up-scope",
+    "checksum": "db127b9f2a3e5da6fa764ae50d634cc8a7636d4532f4a867d26c54090d8a5e29"
   },
   "planned_scope_replan_receipts": {
   },
