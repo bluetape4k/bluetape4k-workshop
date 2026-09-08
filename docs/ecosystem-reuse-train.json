@@ -1667,7 +1667,7 @@
       "merge_base_oid": null,
       "reviewed_implementation_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "state": "MERGED",
-      "issue_numbers": [792, 989],
+      "issue_numbers": [792],
       "allowed_paths": [
         "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
         "docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md",
@@ -1697,13 +1697,7 @@
       ],
       "timeout_seconds": 600,
       "docker_required": false,
-      "dependency_insight_commands": [
-        "./gradlew :commerce-usage-billing-billing-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
-        "./gradlew :commerce-usage-billing-invoice-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
-        "./gradlew :commerce-usage-billing-meter-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
-        "./gradlew :commerce-usage-billing-query-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath",
-        "./gradlew :commerce-usage-billing-usage-service:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-tink --configuration testRuntimeClasspath"
-      ],
+      "dependency_insight_commands": [],
       "review_artifact": "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md",
       "receipt_id": "20260827T013500Z-p0-squash-closeout",
       "receipt_status": "PASS",
