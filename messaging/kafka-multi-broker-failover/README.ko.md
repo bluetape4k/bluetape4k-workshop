@@ -91,6 +91,12 @@ generation/assignment callback, suffix fetch, replacement ISR을 확인합니다
 wildcard trusted package, default typing, scalar coercion 없이 strict JSON을
 출력하며 `fingerprint`로 동일 logical ID의 payload 충돌을 감지합니다.
 
+Codec은 caller가 소유한 canonical JSON을 `TinkDigesters.SHA256.digestHex`로
+hash합니다. Fingerprint는 UTF-8 JSON의 lowercase 64자 SHA-256 hex를 그대로
+유지합니다. 이는 우발 손상 또는 payload 충돌을 탐지하는 비인증 checksum이며
+인증, MAC, signature, access-control token이 아닙니다. Strict field order,
+allowlist, duplicate/trailing-token, scalar, size 검사는 계속 이 codec이 소유합니다.
+
 `KafkaFailoverKafkaConfiguration`은 root의
 `bluetape4k-dependencies` BOM과 catalog alias를 사용합니다. producer에는
 `acks=all`, idempotence, client retry 3회, 제한된 request/delivery/block

@@ -4,6 +4,9 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
+import java.nio.charset.StandardCharsets.UTF_8
+import java.security.MessageDigest
+import java.util.HexFormat
 
 /**
  * Kafka value로 사용되는 strict JSON 문자열 계약을 검증합니다.
@@ -35,6 +38,8 @@ class KafkaFailoverCodecTest {
         codec.fingerprint(event) shouldBeEqualTo codec.fingerprint(sameEvent)
         (codec.fingerprint(event) != codec.fingerprint(conflictingEvent)).shouldBeTrue()
         codec.fingerprint(event).length shouldBeEqualTo 64
+        codec.fingerprint(event) shouldBeEqualTo "3e723b543374486eaf7bcfc5921456b252ac5a3c187601e35f514b88a8f3c983"
+        codec.fingerprint(event) shouldBeEqualTo jdkDigestHex(codec.encode(event))
     }
 
     @Test
@@ -79,4 +84,7 @@ class KafkaFailoverCodecTest {
     private fun assertInvalid(json: String) {
         assertFailsWith<IllegalArgumentException> { codec.decode(json) }
     }
+
+    private fun jdkDigestHex(value: String): String =
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 }

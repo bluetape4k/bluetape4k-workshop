@@ -95,6 +95,13 @@ Spring type headers, wildcard trusted packages, default typing, or scalar
 coercion; `fingerprint` is used to detect a conflicting payload for the same
 logical ID.
 
+The codec hashes that caller-owned canonical JSON with
+`TinkDigesters.SHA256.digestHex`. The fingerprint remains the lowercase
+64-character SHA-256 hex of the UTF-8 JSON. It detects accidental corruption or
+conflicting payloads; it is not authentication, a MAC, a signature, or an
+access-control token. Strict field order, allowlist, duplicate/trailing-token,
+scalar, and size checks remain owned by this codec.
+
 `KafkaFailoverKafkaConfiguration` uses the root
 `bluetape4k-dependencies` BOM and catalog aliases. The producer fixes
 `acks=all`, idempotence, three client retries, bounded request/delivery/block

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
+import io.bluetape4k.tink.digest.TinkDigesters
 import tools.jackson.core.JacksonException
 import tools.jackson.core.StreamReadConstraints
 import tools.jackson.core.StreamReadFeature
@@ -8,7 +9,6 @@ import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
 
 /**
  * Kafka value를 위한 제한된 JSON 문자열 codec입니다.
@@ -81,19 +81,10 @@ class KafkaFailoverCodec {
 
     /**
      * canonical UTF-8 JSON의 SHA-256 fingerprint를 반환합니다.
+     *
+     * 이 fingerprint는 payload 충돌 탐지용 비인증 checksum이며 MAC 또는 signature가 아닙니다.
      */
-    fun fingerprint(event: KafkaFailoverEvent): String {
-        val bytes = MessageDigest.getInstance("SHA-256")
-            .digest(encode(event).toByteArray(StandardCharsets.UTF_8))
-
-        return buildString(bytes.size * 2) {
-            bytes.forEach { byte ->
-                val value = byte.toInt() and 0xff
-                append(HEX[value ushr 4])
-                append(HEX[value and 0x0f])
-            }
-        }
-    }
+    fun fingerprint(event: KafkaFailoverEvent): String = TinkDigesters.SHA256.digestHex(encode(event))
 
     private fun JsonNode.requiredText(fieldName: String): String {
         val value = get(fieldName)
@@ -121,8 +112,6 @@ class KafkaFailoverCodec {
         const val PARTITION_KEY_FIELD = "partitionKey"
         const val MAX_DOCUMENT_BYTES = 16 * 1024
         val EXPECTED_FIELDS = setOf(EVENT_ID_FIELD, SEQUENCE_FIELD, PAYLOAD_FIELD, PARTITION_KEY_FIELD)
-        val HEX = "0123456789abcdef".toCharArray()
-
         val mapper: JsonMapper = JsonMapper.builder(
             JsonFactory.builder()
                 .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
