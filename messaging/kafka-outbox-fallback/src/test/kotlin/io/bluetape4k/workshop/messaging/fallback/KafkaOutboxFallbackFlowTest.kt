@@ -118,6 +118,27 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
     }
 
     @Test
+    fun `POST api-orders preserves unknown and trailing input compatibility`() {
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1,"unknown":true}""")
+            .exchange()
+            .expectStatus().isCreated
+
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1},{}""")
+            .exchange()
+            .expectStatus().isBadRequest
+
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1,}""")
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
+    @Test
     fun `placeOrder stores only order row and returns PUBLISHED_DIRECT when direct Kafka publish succeeds`() {
         val request = OrderRequest(
             customerId = "customer-${faker.number().digits(8)}",
@@ -259,6 +280,44 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         row[EventPublicationTable.claimedBy] shouldBeEqualTo null
         verify(exactly = 1) {
             kafkaTemplate.send(any<String>(), eventId, match { it.contains("\"orderId\"") })
+        }
+    }
+
+    @Test
+    fun `fallback stores and relay sends the exact same wire payload`() {
+        every {
+            kafkaTemplate.send(any<String>(), any<String>(), any<String>())
+        } throws RuntimeException("Kafka unavailable")
+
+        lateinit var response: OrderResponse
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{"customerId":"고객🙂","product":"상품","quantity":2}""")
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody(OrderResponse::class.java)
+            .value { response = it.requireNotNull("response") }
+
+        val eventId = "order-placed:${response.id}:v1"
+        val createdAt = response.createdAt.toString().let { value ->
+            if ('.' in value) value.trimEnd('0') else value
+        }
+        val expectedPayload =
+            """{"orderId":${response.id},"customerId":"고객🙂","product":"상품","quantity":2,"status":"PENDING","createdAt":"$createdAt","eventId":"$eventId"}"""
+        val storedPayload = transactionTemplate.execute {
+            EventPublicationTable.selectAll()
+                .where { EventPublicationTable.eventId eq eventId }
+                .single()[EventPublicationTable.payload]
+        }
+        storedPayload shouldBeEqualTo expectedPayload
+
+        clearMocks(kafkaTemplate)
+        every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns
+            CompletableFuture.completedFuture<SendResult<String, String>>(mockk())
+
+        eventPublicationRelay.relayOnce().published shouldBeEqualTo 1
+        verify(exactly = 1) {
+            kafkaTemplate.send(any<String>(), eventId, match { it == expectedPayload })
         }
     }
 

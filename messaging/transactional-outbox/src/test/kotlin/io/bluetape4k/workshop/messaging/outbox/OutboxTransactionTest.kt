@@ -18,6 +18,7 @@ import io.bluetape4k.workshop.messaging.outbox.outbox.OutboxPublisher
 import io.bluetape4k.workshop.messaging.outbox.outbox.OutboxStatus
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
@@ -109,6 +110,27 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             .value { it.shouldNotBeNull().id.shouldBeGreaterThan(0L) }
     }
 
+    @Test
+    fun `POST api-orders preserves unknown and trailing input compatibility`() {
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1,"unknown":true}""")
+            .exchange()
+            .expectStatus().isCreated
+
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1},{}""")
+            .exchange()
+            .expectStatus().isBadRequest
+
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1,}""")
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
     // ── 3. HTTP PUT ───────────────────────────────────────────────────────────
 
     @Test
@@ -155,6 +177,28 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .first()
         }.shouldNotBeNull()
         status shouldBeEqualTo OutboxStatus.PUBLISHED
+    }
+
+    @Test
+    fun `outbox stores and publisher sends the exact same wire payload`() {
+        val order = orderService.placeOrder(
+            customerId = "고객🙂",
+            product = "상품",
+            quantity = 2,
+        )
+        val expectedPayload =
+            """{"orderId":${order.id},"customerId":"고객🙂","product":"상품","quantity":2,"status":"PENDING"}"""
+        val event = transactionTemplate.execute {
+            OutboxEventTable.selectAll()
+                .where { OutboxEventTable.aggregateId eq order.id.toString() }
+                .single()
+        }.shouldNotBeNull()
+        event[OutboxEventTable.payload] shouldBeEqualTo expectedPayload
+
+        outboxPublisher.publishEvent(event[OutboxEventTable.id].value).shouldBeTrue()
+        verify(exactly = 1) {
+            kafkaTemplate.send(any<String>(), order.id.toString(), match { it == expectedPayload })
+        }
     }
 
     // ── 5. failed publish → FAILED + retryCount++ ─────────────────────────
