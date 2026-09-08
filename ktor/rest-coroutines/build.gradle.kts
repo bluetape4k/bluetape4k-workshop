@@ -27,7 +27,6 @@ dependencies {
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.jackson3)
-    implementation(libs.jackson3.module.kotlin)
 
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)

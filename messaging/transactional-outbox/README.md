@@ -14,6 +14,10 @@ The module avoids the dual-write failure mode by never writing the domain row an
 operations. `OrderService` writes `orders` and `outbox_events` together. `OutboxPublisher` polls `PENDING` and retryable
 `FAILED` rows, sends the payload to `order-events`, and updates the row status in a separate status transaction.
 
+## Jackson3 Baseline
+
+The Spring `ObjectMapper` bean starts from `Jackson.createDefaultJsonMapper()` so the module reuses Bluetape's module and Kotlin configuration without mutating the shared singleton. It preserves the previous HTTP input contract: unknown properties are accepted, while trailing tokens and trailing commas are rejected. This mapper is not the strict or canonical JSON boundary.
+
 ## Publish Lifecycle
 
 ![Transactional outbox publish lifecycle](../../docs/images/readme-diagrams/messaging-transactional-outbox-readme-publish-lifecycle-01.png)

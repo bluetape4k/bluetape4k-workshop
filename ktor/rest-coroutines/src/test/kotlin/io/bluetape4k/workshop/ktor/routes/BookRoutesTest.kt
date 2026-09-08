@@ -140,10 +140,16 @@ class BookRoutesTest : AbstractKtorTest() {
     }
 
     @Test
-    fun `GET books export returns NDJSON with one line per book`() = testApplication {
+    fun `GET books export preserves the canonical NDJSON payload`() = testApplication {
         val repository = InMemoryBookRepository()
-        val books = createBooks(3)
-        books.forEach { repository.save(it) }
+        repository.save(
+            Book(
+                id = "책-1",
+                title = "코틀린🙂",
+                author = "저자",
+                year = 2026,
+            )
+        )
         application { module(repository = repository) }
 
         val response = client.get("/books/export")
@@ -151,11 +157,8 @@ class BookRoutesTest : AbstractKtorTest() {
         response.status shouldBeEqualTo HttpStatusCode.OK
         response.contentType().toString() shouldContain "x-ndjson"
 
-        val lines = response.bodyAsText().trim().lines().filter { it.isNotBlank() }
-        lines.size shouldBeEqualTo books.size
-        books.forEach { book ->
-            lines.any { it.contains(book.id) } shouldBeEqualTo true
-        }
+        response.bodyAsText() shouldBeEqualTo
+            """{"id":"책-1","title":"코틀린🙂","author":"저자","year":2026}""" + "\n"
     }
 
     @Test

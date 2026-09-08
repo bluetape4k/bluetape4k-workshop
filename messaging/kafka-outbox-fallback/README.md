@@ -24,6 +24,10 @@ idempotent. A direct Kafka timeout has an unknown outcome: Kafka may have
 accepted the record even if the caller timed out. The deterministic event id
 (`order-placed:{orderId}:v1`) is therefore part of the contract.
 
+## Jackson3 Baseline
+
+The Spring `ObjectMapper` bean starts from `Jackson.createDefaultJsonMapper()` so the module reuses Bluetape's module and Kotlin configuration without mutating the shared singleton. It then preserves the previous HTTP input contract: unknown properties are accepted, while trailing tokens and trailing commas are rejected. This is a general serialization mapper, not a strict or canonical JSON boundary.
+
 ## Flow
 
 ![Sequence](../../docs/images/readme-diagrams/kafka-outbox-fallback-readme-sequence-01.png)

@@ -49,7 +49,6 @@ dependencies {
     testImplementation(libs.testcontainers.kafka)
 
     implementation(libs.bluetape4k.jackson3)
-    implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
     implementation(libs.spring.boot.autoconfigure.lib)

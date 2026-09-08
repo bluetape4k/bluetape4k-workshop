@@ -14,6 +14,10 @@ outbox row를 Kafka로 보낸 뒤 delivery 상태를 저장한다.
 `outbox_events`를 같이 쓰고, `OutboxPublisher`가 `PENDING` 및 재시도 가능한 `FAILED` row를 poll한다. Kafka topic
 `order-events`로 payload를 보낸 뒤, 별도 상태 transaction에서 row 상태를 갱신한다.
 
+## Jackson3 기준
+
+Spring `ObjectMapper` bean은 `Jackson.createDefaultJsonMapper()`에서 시작해 공유 singleton을 변경하지 않으면서 Bluetape의 module·Kotlin 설정을 재사용한다. 기존 HTTP 입력 계약도 유지해 unknown property는 허용하고 trailing token과 trailing comma는 거부한다. 이 mapper는 strict 또는 canonical JSON 경계가 아니다.
+
 ## Publish Lifecycle
 
 ![Transactional outbox publish lifecycle](../../docs/images/readme-diagrams/messaging-transactional-outbox-readme-publish-lifecycle-01.png)
