@@ -1578,8 +1578,16 @@
         "docs/lessons/README.md",
         "docs/lessons/2026-09-08-issue-993-leader-coroutine-scope.md",
         "docs/review/2026-09-08-issue-993-leader-coroutine-scope-7tier.md",
-        "leader/job-safety-lab/**",
-        "leader/leader-election/**"
+        "leader/job-safety-lab/README.ko.md",
+        "leader/job-safety-lab/README.md",
+        "leader/job-safety-lab/build.gradle.kts",
+        "leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/config/JobSafetyAuditScope.kt",
+        "leader/job-safety-lab/src/test/kotlin/io/bluetape4k/workshop/leader/jobsafety/config/JobSafetyAuditScopeTest.kt",
+        "leader/leader-election/README.ko.md",
+        "leader/leader-election/README.md",
+        "leader/leader-election/build.gradle.kts",
+        "leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/service/LeaderEventListenerService.kt",
+        "leader/leader-election/src/test/kotlin/io/bluetape4k/workshop/leader/LeaderEventListenerTest.kt"
       ],
       "review_artifact": "docs/review/2026-09-08-issue-993-leader-coroutine-scope-7tier.md"
     },
@@ -1758,7 +1766,7 @@
   ],
   "coordinator_scope_receipt": {
     "receipt_id": "20260908T-issue-993-rebased-follow-up-scope",
-    "checksum": "3ebd001241c04bafb3d3f462436770073c42fdbd9fa035795694e249225f0408"
+    "checksum": "952717c95aa253b7d1c37b17b5713dcc80c8b9e5d7863e728a437074d24af10e"
   },
   "planned_scope_replan_receipts": {
   },

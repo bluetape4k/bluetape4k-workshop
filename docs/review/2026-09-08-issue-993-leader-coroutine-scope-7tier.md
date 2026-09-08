@@ -13,3 +13,8 @@
 ## 결론
 
 중복 coroutine scope 구현을 생태계 공통 수명주기 타입으로 교체하면서 기존 종료 순서와 Spring bean 계약을 유지한 제한된 변경이다. 알려진 미해결 P0/P1 결함은 없다.
+
+## 독립 리뷰
+
+- exact commit `1c5a103a5ccccc5e851e5fe52b01ce277e7b8b74` 기준 P0/P1/P2 모두 0으로 승인됐다.
+- hosted checker unit test가 광역 module allowlist와 retired path fixture의 충돌을 발견해, ACTIVE scope를 실제 변경 파일만 허용하도록 좁혔다.
