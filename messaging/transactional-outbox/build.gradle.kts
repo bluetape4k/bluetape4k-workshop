@@ -55,7 +55,6 @@ dependencies {
 
     // serialization 의존성입니다.
     implementation(libs.bluetape4k.jackson3)
-    implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
     // Spring Boot 의존성입니다.

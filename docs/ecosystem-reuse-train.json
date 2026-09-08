@@ -1519,7 +1519,7 @@
     },
     {
       "scope_id": "issue-992-reservation-tink-threat-model",
-      "lifecycle": "ACTIVE",
+      "lifecycle": "MERGED",
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "refactor/issue-992-reservation-tink-threat-model",
@@ -1537,6 +1537,29 @@
         "docs/review/2026-09-08-issue-992-reservation-tink-threat-model-7tier.md"
       ],
       "review_artifact": "docs/review/2026-09-08-issue-992-reservation-tink-threat-model-7tier.md"
+    },
+    {
+      "scope_id": "issue-988-jackson3-baseline",
+      "lifecycle": "ACTIVE",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "refactor/issue-988-jackson3-baseline",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [988],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-09-08-issue-988-jackson3-baseline.md",
+        "docs/review/2026-09-08-issue-988-jackson3-baseline-7tier.md",
+        "ktor/rest-coroutines/**",
+        "messaging/kafka-outbox-fallback/**",
+        "messaging/transactional-outbox/**"
+      ],
+      "review_artifact": "docs/review/2026-09-08-issue-988-jackson3-baseline-7tier.md"
     },
     {
       "scope_id": "issue-915-dependencies-2.0.0",
@@ -1712,8 +1735,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260908T-issue-992-rebased-follow-up-scope",
-    "checksum": "f1183340b5d85e25e6598a1c4e3b3c4a6a86506ac20104ea4764ee19005785f9"
+    "receipt_id": "20260908T-issue-988-rebased-follow-up-scope",
+    "checksum": "87364d404d07e2c38ca48efdbc808f017a509893a4be48bb3e3f73f2c8ead485"
   },
   "planned_scope_replan_receipts": {
   },

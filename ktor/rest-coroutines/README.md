@@ -34,8 +34,10 @@ The endpoints are small enough to test independently:
 | JSON REST bodies | Ktor `ContentNegotiation` uses the shared `AppJson` `kotlinx.serialization.json.Json` instance. |
 | SSE path | `sse("/books/stream")` is registered at the top-level routing scope so the path is not accidentally doubled. |
 | SSE backpressure | `MutableSharedFlow` has `extraBufferCapacity = 64`; repository emits wait up to 5 seconds before dropping the event. |
-| NDJSON export | `Jackson3Support` uses `tools.jackson.*` only; it does not use Jackson 2 `com.fasterxml.jackson.*` imports. |
+| NDJSON export | `Jackson3Support` reuses the read-only `Jackson.defaultJsonMapper`; it does not mutate the singleton or use Jackson 2 `com.fasterxml.jackson.*` imports. |
 | Error mapping | `StatusPages` maps `NotFound`, `Conflict`, bad requests, and unexpected failures to typed JSON error bodies. |
+
+The shared mapper is the general serialization baseline, not a strict or canonical JSON boundary. The NDJSON contract is one JSON object per line with a final `\n`; tests pin representative Unicode, null, and collection output.
 
 ### Error Response
 

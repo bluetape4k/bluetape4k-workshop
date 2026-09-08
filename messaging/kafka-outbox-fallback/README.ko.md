@@ -25,6 +25,10 @@
 있습니다. 그래서 이 예제는 `order-placed:{orderId}:v1` 형태의 결정적인
 event id를 계약으로 둡니다.
 
+## Jackson3 기준
+
+Spring `ObjectMapper` bean은 `Jackson.createDefaultJsonMapper()`에서 시작해 공유 singleton을 변경하지 않으면서 Bluetape의 module·Kotlin 설정을 재사용합니다. 기존 HTTP 입력 계약도 유지해 unknown property는 허용하고 trailing token과 trailing comma는 거부합니다. 이 mapper는 일반 직렬화 기준이며 strict 또는 canonical JSON 경계가 아닙니다.
+
 ## 흐름
 
 ![Sequence](../../docs/images/readme-diagrams/kafka-outbox-fallback-readme-sequence-01.png)

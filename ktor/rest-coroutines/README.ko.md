@@ -34,8 +34,10 @@
 | JSON REST body | Ktor `ContentNegotiation`이 공유 `AppJson` `kotlinx.serialization.json.Json` 인스턴스를 사용합니다. |
 | SSE 경로 | `sse("/books/stream")`을 최상위 routing scope에 등록해 경로가 중복되지 않게 합니다. |
 | SSE backpressure | `MutableSharedFlow`는 `extraBufferCapacity = 64`를 사용하고, repository emit은 최대 5초까지만 대기합니다. |
-| NDJSON export | `Jackson3Support`는 `tools.jackson.*`만 사용하며 Jackson 2 `com.fasterxml.jackson.*` import를 사용하지 않습니다. |
+| NDJSON export | `Jackson3Support`는 읽기 전용 `Jackson.defaultJsonMapper`를 재사용하며 singleton을 변경하거나 Jackson 2 `com.fasterxml.jackson.*` import를 사용하지 않습니다. |
 | 에러 매핑 | `StatusPages`가 `NotFound`, `Conflict`, bad request, 예기치 못한 실패를 typed JSON error body로 매핑합니다. |
+
+공유 mapper는 일반 직렬화 기준이며 strict 또는 canonical JSON 경계가 아닙니다. NDJSON 계약은 한 줄에 JSON 객체 하나와 마지막 `\n`이며, 테스트가 대표 Unicode, null, collection 출력을 고정합니다.
 
 ### 에러 응답
 
