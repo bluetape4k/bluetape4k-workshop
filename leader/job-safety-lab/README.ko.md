@@ -342,6 +342,11 @@ executor, coroutine scope를 순서대로 종료합니다. shutdown 실패가 �
 cleanup은 계속하지만 resource step, outcome, exception type만 구조화 경고로
 남깁니다.
 
+`JobSafetyAuditScope`는 Bluetape의 `DefaultCoroutineScope`를 특화합니다. 각
+application context는 독립 `SupervisorJob`을 받고, 공통
+`CloseableCoroutineScope` 계약으로 반복 close를 안전하게 처리하며 lifecycle
+검증을 위한 closed/cancelled 상태를 제공합니다.
+
 ## 테스트
 
 ```bash
@@ -357,7 +362,7 @@ cleanup은 계속하지만 resource step, outcome, exception type만 구조화 �
 | Leader 0.5.0 lifecycle observation과 sanitized identifier | `JobRunCoordinatorTest` |
 | Java 25 virtual thread와 안전 기본값 | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
 | Leader 1.1.0-SNAPSHOT audit export, redaction, bounds, trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
-| single-owner bounded shutdown과 cancellation | `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
+| single-owner bounded shutdown과 cancellation | `JobSafetyAuditScopeTest`, `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
 | PostgreSQL authority를 유지하는 실제 Redis lifecycle export | `JobSafetyEndToEndIntegrationTest` |
 | opaque leader token 분리 | `RedisLeaderElectionAdapterTest` |
 | Lua token 단조 증가, renew/release owner binding, script flush | `RedisJobFencingLeaseIntegrationTest` |

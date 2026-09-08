@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.service
 
+import io.bluetape4k.coroutines.DefaultCoroutineScope
 import io.bluetape4k.leader.LeaderElectionEvent
 import io.bluetape4k.leader.LeaderElectionListener
 import io.bluetape4k.leader.ListeningLeaderElector
@@ -9,10 +10,6 @@ import io.bluetape4k.logging.warn
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
@@ -28,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * ## 동작 / 계약
  * - [LeaderElectionListener]는 [init]에서 등록하고 [close]에서 제거합니다.
- * - Flow collection coroutine은 [init]에서 시작하고 [close]에서 cancel합니다.
+ * - Flow collection coroutine은 [init]에서 시작하고 [close]에서 application scope와 함께 cancel합니다.
  * - [electedCount], [revokedCount], [skippedCount]는 테스트를 위해 노출합니다.
  * - Flow collector의 error는 log로 남기고 elector로 전파하지 않습니다.
  */
@@ -40,8 +37,16 @@ class LeaderEventListenerService(
     val revokedCount = AtomicInteger(0)
     val skippedCount = AtomicInteger(0)
 
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val scope = DefaultCoroutineScope()
     private var listenerHandle: AutoCloseable? = null
+
+    /** application-owned event scope가 닫혔는지 반환합니다. */
+    internal val eventScopeClosed: Boolean
+        get() = scope.scopeClosed
+
+    /** application-owned event scope의 작업 취소가 완료됐는지 반환합니다. */
+    internal val eventScopeCancelled: Boolean
+        get() = scope.scopeCancelled
 
     companion object : KLogging()
 
@@ -96,8 +101,12 @@ class LeaderEventListenerService(
      */
     @PreDestroy
     fun close() {
-        closeQuietly("leader election listener") { listenerHandle?.close() }
-        closeQuietly("leader event flow scope") { scope.cancel() }
+        try {
+            closeQuietly("leader election listener") { listenerHandle?.close() }
+        } finally {
+            // listener close가 cancellation을 전파해도 application-owned scope는 반드시 닫습니다.
+            closeQuietly("leader event flow scope") { scope.close() }
+        }
     }
 
     private inline fun closeQuietly(resourceName: String, action: () -> Unit) {

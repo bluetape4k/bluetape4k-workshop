@@ -22,6 +22,7 @@ Store durable bluetape4k-workshop lessons in this directory.
 - [Issue #991 AWS Modulith correlationRef를 Tink로 통일](2026-09-08-issue-991-aws-modulith-tink.md)
 - [Issue #992 Reservation fingerprint threat model과 Tink 재사용](2026-09-08-issue-992-reservation-tink-threat-model.md)
 - [Issue #988 Jackson3 공통 기준과 입력 호환성](2026-09-08-issue-988-jackson3-baseline.md)
+- [Issue #993 leader application coroutine scope 수명주기](2026-09-08-issue-993-leader-coroutine-scope.md)
 
 Use this structure for each lesson:
 

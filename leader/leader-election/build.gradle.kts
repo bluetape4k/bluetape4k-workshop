@@ -24,6 +24,7 @@ dependencies {
     // bluetape4k-leader - distributed leader election(독립 groupId: io.github.bluetape4k.leader)
     implementation(libs.bluetape4k.leader.core)
     implementation(libs.bluetape4k.leader.redis.lettuce)
+    implementation(libs.bluetape4k.coroutines)
 
     // Redis / Lettuce
     implementation(libs.lettuce.core)
@@ -38,7 +39,6 @@ dependencies {
 
     // 테스트
     testImplementation(project(":shared"))
-    testImplementation(libs.bluetape4k.coroutines)
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test.lib)
     testImplementation(libs.bluetape4k.testcontainers)

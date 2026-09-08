@@ -335,6 +335,11 @@ executor, and coroutine scope on context close. Shutdown failures continue
 cleanup but emit a structured warning containing only the resource step,
 outcome, and exception type.
 
+`JobSafetyAuditScope` specializes Bluetape's `DefaultCoroutineScope`. Each
+application context receives an independent `SupervisorJob`, while the shared
+`CloseableCoroutineScope` contract makes repeated close safe and exposes
+closed/cancelled state for lifecycle verification.
+
 ## Tests
 
 ```bash
@@ -350,7 +355,7 @@ outcome, and exception type.
 | Leader 0.5.0 lifecycle observations and sanitized identifiers | `JobRunCoordinatorTest` |
 | Java 25 virtual threads and safe defaults | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
 | Leader 1.1.0-SNAPSHOT audit export, redaction, bounds, and trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
-| Single-owner bounded shutdown and cancellation | `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
+| Single-owner bounded shutdown and cancellation | `JobSafetyAuditScopeTest`, `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
 | Real Redis lifecycle export while PostgreSQL remains authoritative | `JobSafetyEndToEndIntegrationTest` |
 | Opaque leader token separation | `RedisLeaderElectionAdapterTest` |
 | Monotonic Lua tokens, owner-bound renew/release, script flush | `RedisJobFencingLeaseIntegrationTest` |
