@@ -48,6 +48,11 @@ class NightlyMockImagesTest(unittest.TestCase):
                 CHECKER.read_source_ref(catalog, allow_snapshot=True), "develop"
             )
 
+    def test_trusted_source_ref_must_match_catalog_resolution(self):
+        self.assertEqual(CHECKER.validate_source_ref("develop", "develop"), "develop")
+        with self.assertRaisesRegex(ValueError, "trusted workflow ref"):
+            CHECKER.validate_source_ref("develop", "2.1.0")
+
     def test_inspects_both_exact_consumer_images(self):
         with patch.object(CHECKER.subprocess, "run") as run:
             CHECKER.inspect_images("2.0.0")
@@ -77,11 +82,16 @@ class NightlyMockImagesTest(unittest.TestCase):
     def test_workflow_uses_catalog_version_and_checks_images_before_tests(self):
         workflow = (Path(__file__).parents[1] / "workflows/nightly.yml").read_text()
         self.assertIn(
-            'nightly-mock-images.py --allow-snapshot --github-output "$GITHUB_OUTPUT"',
+            "BLUETAPE4K_PROJECTS_REF: 'develop'",
             workflow,
         )
-        self.assertIn("--allow-snapshot", workflow)
-        self.assertIn("ref: ${{ steps.mock-version.outputs.source_ref }}", workflow)
+        self.assertIn(
+            "nightly-mock-images.py --allow-snapshot "
+            '--expected-source-ref "$BLUETAPE4K_PROJECTS_REF"',
+            workflow,
+        )
+        self.assertIn("ref: ${{ env.BLUETAPE4K_PROJECTS_REF }}", workflow)
+        self.assertNotIn("steps.mock-version.outputs.source_ref", workflow)
         self.assertLess(
             workflow.index("nightly-mock-images.py --allow-snapshot --inspect"),
             workflow.index("- name: Run tests"),
