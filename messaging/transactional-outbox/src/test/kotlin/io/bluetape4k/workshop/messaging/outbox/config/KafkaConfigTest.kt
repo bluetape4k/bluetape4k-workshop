@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.outbox.config
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.Test
 import tools.jackson.core.JacksonException
 import tools.jackson.core.json.JsonReadFeature
 import tools.jackson.databind.DeserializationFeature
-import kotlin.test.assertFailsWith
 
 class KafkaConfigTest {
 
