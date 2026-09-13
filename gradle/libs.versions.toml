@@ -6,7 +6,7 @@ bluetape4k-dependencies-version = "2.1.0-SNAPSHOT"  # workshop 소비자 개발�
 # bluetape4k modules are managed by the bluetape4k-dependencies BOM; module aliases remain versionless
 
 kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
-sudachi = "0.8.0"  # https://mvnrepository.com/artifact/com.worksap.nlp/sudachi
+sudachi = "0.8.1"  # https://mvnrepository.com/artifact/com.worksap.nlp/sudachi
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
 kotlinx-serialization = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-bom
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
