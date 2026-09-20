@@ -97,7 +97,7 @@ elasticsearch = "9.5.3"  # https://mvnrepository.com/artifact/org.elasticsearch.
 kafka = "4.2.0"  # https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
 spring-kafka4 = "4.1.0"  # https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
-bucket4j = "8.19.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
+bucket4j = "8.20.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
 ktor = "3.5.0"  # https://mvnrepository.com/artifact/io.ktor/ktor-server-core
 vertx = "5.1.3"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 
