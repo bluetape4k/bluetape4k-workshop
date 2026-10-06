@@ -77,7 +77,7 @@ class AbuseWordFilter @JvmOverloads constructor(
     /**
      * [text] 에서 찾은 모든 [AhoCorasickMatch] object 를 반환합니다.
      *
-     * 결과는 automaton emission 순서이며 overlapping match 도 모두 포함합니다.
+     * 결과는 동기 검색 경로의 순서를 따르며 overlapping match 도 모두 포함합니다.
      *
      * @param text 검색할 입력 text 입니다.
      */
@@ -88,11 +88,12 @@ class AbuseWordFilter @JvmOverloads constructor(
     }
 
     /**
-     * [text]에서 찾은 match를 automaton emission 순서의 cold [Flow]로 반환합니다.
+     * [text]에서 찾은 match를 automaton 의 raw trie traversal 순서로 방출하는 cold [Flow]를 반환합니다.
      *
      * collection마다 automaton scan을 새로 수행합니다. `take(1)` 같은 downstream 연산자는
      * 첫 emission 뒤 collection을 취소하며, normalization, overlap, 원문 offset 계약은
-     * [findMatches]와 같습니다. 내부 buffering과 scan 시점은 upstream 구현 계약을 따릅니다.
+     * [findMatches]와 같습니다. Flow 결과 순서는 [findMatches]의 list 순서와 다를 수 있습니다.
+     * 내부 buffering과 scan 시점은 upstream 구현 계약을 따릅니다.
      *
      * @param text 검색할 입력 text입니다.
      */

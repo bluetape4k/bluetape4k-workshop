@@ -24,7 +24,7 @@ audit-safe span metadata.
 
 | class | backing API | contract |
 |---|---|---|
-| `AbuseWordFilter` | `AhoCorasickAutomaton` and `matchesAsFlow` from `text-search` | Case-insensitive NFC/NFKC matching with overlaps; exposes sync lists and cold Flow results with source offsets |
+| `AbuseWordFilter` | `AhoCorasickAutomaton` and `matchesAsFlow` from `text-search` | Case-insensitive NFC/NFKC matching with overlaps; exposes an eager list and a cold Flow with source offsets; Flow preserves raw trie traversal order, which may differ from the eager list |
 | `LanguageDetectionService` | Lingua detector from `bluetape4k-text-lingua` | Reuses one detector and returns `null` for blank or unknown text |
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | Serializes detector access for concurrent coroutine callers |
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
@@ -50,10 +50,11 @@ filter.findMatchesAsFlow("spam and abuse")        // cold Flow<AhoCorasickMatch<
 The automaton is built once from the keyword collection. After construction, matching is a single
 pass over the input text plus the number of matches.
 
-The Flow API preserves the same automaton emission order, overlaps, normalization, and source
-offsets as `findMatches`. It is cold, so every collection starts a new scan. Downstream operators
-can cancel collection after the first emitted result without first collecting a result list;
-internal buffering and scan timing remain upstream implementation details:
+The Flow API preserves overlaps, normalization, and source offsets from `findMatches`, but emits
+results in raw trie traversal order, which may differ from the eager list order. It is cold, so every
+collection starts a new scan. Downstream operators can cancel collection after the first emitted
+result without first collecting a result list; internal buffering and scan timing remain upstream
+implementation details:
 
 ```kotlin
 val firstMatch = filter.findMatchesAsFlow("spam abuse badword")
