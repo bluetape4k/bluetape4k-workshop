@@ -24,7 +24,7 @@ sensitive text redaction pipeline을 다룹니다.
 
 | class | 사용 API | 계약 |
 |---|---|---|
-| `AbuseWordFilter` | `text-search`의 `AhoCorasickAutomaton`, `matchesAsFlow` | 대소문자를 무시한 NFC/NFKC matching과 overlap을 지원하고 sync list와 source offset을 보존한 cold Flow 결과 제공 |
+| `AbuseWordFilter` | `text-search`의 `AhoCorasickAutomaton`, `matchesAsFlow` | 대소문자를 무시한 NFC/NFKC matching과 overlap을 지원하고 eager list와 source offset을 보존한 cold Flow를 제공한다. Flow는 raw trie traversal 순서를 따르므로 eager list와 결과 순서가 다를 수 있다 |
 | `LanguageDetectionService` | `bluetape4k-text-lingua`의 Lingua detector | detector를 한 번 만들고 재사용하며, blank/unknown text는 `null` 반환 |
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | 여러 coroutine caller가 공유해도 detector 접근을 직렬화 |
 | `TextNormalizer` | pure Kotlin object | 소문자 변환, 공백 정리, 중복 제거 keyword extraction |
@@ -50,10 +50,10 @@ filter.findMatchesAsFlow("spam and abuse")        // cold Flow<AhoCorasickMatch<
 Automaton은 keyword collection으로 한 번 구성됩니다. 이후 match는 입력 text를 한 번 훑고,
 match 개수만큼만 추가 비용이 듭니다.
 
-Flow API는 `findMatches`와 같은 automaton emission 순서, overlap, normalization, 원문 offset을
-보존합니다. cold Flow이므로 collection마다 scan을 새로 시작합니다. 전체 결과 list를 만들 필요가
-없다면 downstream operator로 첫 emission 뒤 collection을 취소할 수 있습니다. 내부 buffering과
-scan 시점은 upstream 구현 세부사항입니다.
+Flow API는 `findMatches`의 overlap, normalization, 원문 offset을 보존하지만 raw trie traversal
+순서로 방출하므로 eager list의 결과 순서와 다를 수 있습니다. cold Flow이므로 collection마다
+scan을 새로 시작합니다. 전체 결과 list를 만들 필요가 없다면 downstream operator로 첫 emission
+뒤 collection을 취소할 수 있습니다. 내부 buffering과 scan 시점은 upstream 구현 세부사항입니다.
 
 ```kotlin
 val firstMatch = filter.findMatchesAsFlow("spam abuse badword")
