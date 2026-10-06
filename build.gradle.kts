@@ -225,9 +225,11 @@ subprojects {
             mavenBom(rootLibs.feign.bom.get().toString())
             mavenBom(rootLibs.micrometer.bom.get().toString())
             mavenBom(rootLibs.micrometer.tracing.bom.get().toString())
+            // Instrumentation BOM에는 자체 core BOM이 포함되므로 core BOM보다 먼저 import합니다.
+            // Spring Boot 모듈은 Boot BOM 관리 버전을 별도로 확인해야 합니다.
+            mavenBom(rootLibs.opentelemetry.instrumentation.bom.alpha.get().toString())
             mavenBom(rootLibs.opentelemetry.bom.get().toString())
             mavenBom(rootLibs.opentelemetry.alpha.bom.get().toString())
-            mavenBom(rootLibs.opentelemetry.instrumentation.bom.alpha.get().toString())
             mavenBom(rootLibs.log4j.logging.bom.get().toString())
             mavenBom(rootLibs.testcontainers.bom.get().toString())
             mavenBom(rootLibs.junit.bom.get().toString())
