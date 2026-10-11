@@ -366,7 +366,7 @@ jobs:
 
       - name: Upload smoke example test results
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: smoke-example-test-results
           path: |
@@ -740,7 +740,7 @@ jobs:
 
       - name: Upload container example test results
         if: ${{ always() && steps.kafka_failover_sanitize.outcome == 'success' }}
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: container-example-test-results
           if-no-files-found: error
@@ -897,7 +897,7 @@ jobs:
             ${{ github.run_id }}-${{ github.run_attempt }}
       - name: Upload bounded high-contention evidence
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: high-contention-ci-correctness-examples-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/high-contention-upload-stage/examples-${{ github.run_id }}-${{ github.run_attempt }}
