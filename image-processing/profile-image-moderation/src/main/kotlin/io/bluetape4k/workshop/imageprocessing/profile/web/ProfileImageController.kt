@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.profile.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProfileImageView
 import io.bluetape4k.workshop.imageprocessing.profile.service.ProfileImageService
 import org.springframework.http.HttpStatus
@@ -21,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile
 class ProfileImageController(
     private val service: ProfileImageService,
 ) {
+
+    private companion object: KLogging()
 
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @ResponseStatus(HttpStatus.ACCEPTED)
