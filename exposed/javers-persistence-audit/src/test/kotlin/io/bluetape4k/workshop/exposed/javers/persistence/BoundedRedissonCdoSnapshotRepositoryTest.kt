@@ -9,10 +9,10 @@ import io.bluetape4k.javers.codecs.JaversCodecs
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.javers.core.JaversBuilder
 import org.javers.core.metamodel.`object`.SnapshotType
-import org.javers.repository.jql.JqlQuery
 import org.javers.repository.jql.QueryBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.redisson.api.options.KeysScanOptions
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -24,7 +24,8 @@ class BoundedRedissonCdoSnapshotRepositoryTest {
 
     @AfterEach
     fun tearDown() {
-        redis.keys.getKeysByPattern("javers:$REPOSITORY_PREFIX:*")
+        val options = KeysScanOptions.defaults().pattern("javers:$REPOSITORY_PREFIX:*")
+        redis.keys.getKeys(options)
             .forEach { redis.keys.delete(it) }
     }
 
@@ -41,7 +42,7 @@ class BoundedRedissonCdoSnapshotRepositoryTest {
         val update = javers.commit("bob", initial.copy(status = OrderStatus.PAID))
         javers.commit("carol", initial.copy(totalAmount = BigDecimal("29.99")))
 
-        val fallbackQueries = listOf<Pair<String, () -> JqlQuery>>(
+        val fallbackQueries = listOf(
             "skip" to { instanceQuery().skip(1).limit(1).build() },
             "aggregate" to { instanceQuery().withChildValueObjects().limit(1).build() },
             "author" to { instanceQuery().byAuthor("alice").limit(1).build() },

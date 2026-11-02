@@ -9,7 +9,6 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
@@ -19,12 +18,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.modulith.events.EventPublication
 import java.time.Instant
-import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PublicationSnapshotRepositoryTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
@@ -86,13 +81,13 @@ internal class PublicationSnapshotRepositoryTest {
     fun `unknown publication status fails instead of hiding corrupt evidence`() {
         transaction {
             table.insert { row ->
-                row[id] = Uuid.parse(UUID.randomUUID().toString())
+                // row[id] = Uuid.generateV4() // Uuid.parse(UUID.randomUUID().toString())
                 row[listenerId] = "test-listener"
                 row[eventType] = "test.Event"
                 row[serializedEvent] = "{}"
                 row[publicationDate] = Instant.parse("2026-07-18T00:00:00Z")
                 row[completionDate] = null
-                row[status] = "UNKNOWN"
+                row[status] = null
                 row[completionAttempts] = 0
                 row[lastResubmissionDate] = Instant.parse("2026-07-18T00:00:00Z")
             }
@@ -107,20 +102,20 @@ internal class PublicationSnapshotRepositoryTest {
         completionDate: Instant? = null,
     ) {
         table.insert { row ->
-            row[table.id] = Uuid.parse(UUID.randomUUID().toString())
+            // row[table.id] = Uuid.generateV4()
             row[table.listenerId] = "test-listener"
             row[table.eventType] = "test.Event"
             row[table.serializedEvent] = "{}"
             row[table.publicationDate] = publicationDate
             row[table.completionDate] = completionDate
-            row[table.status] = status?.name
+            row[table.status] = status
             row[table.completionAttempts] = 0
             row[table.lastResubmissionDate] = publicationDate
         }
     }
 
     private fun selectCountingLogger(counter: AtomicInteger) =
-        object : SqlLogger {
+        object: SqlLogger {
             override fun log(
                 context: StatementContext,
                 transaction: Transaction,

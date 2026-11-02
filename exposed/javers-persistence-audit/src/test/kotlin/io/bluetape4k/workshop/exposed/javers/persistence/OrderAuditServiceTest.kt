@@ -3,9 +3,9 @@ package io.bluetape4k.workshop.exposed.javers.persistence
 import com.google.gson.JsonObject
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javers.codecs.JaversCodec
 import io.bluetape4k.javers.codecs.JaversCodecs
 import io.bluetape4k.javers.persistence.redis.repository.RedissonCdoSnapshotRepository
@@ -18,6 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.redisson.api.options.KeysScanOptions
 import org.redisson.client.codec.LongCodec
 import org.redisson.client.codec.StringCodec
 import org.redisson.codec.CompositeCodec
@@ -223,7 +224,8 @@ class OrderAuditServiceTest {
         "$REPOSITORY_PREFIX:$scope:${System.nanoTime()}"
 
     private fun deleteOrderAuditKeys() {
-        redis.keys.getKeysByPattern("javers:$REPOSITORY_PREFIX:*")
+        val options = KeysScanOptions.defaults().pattern("javers:$REPOSITORY_PREFIX:*")
+        redis.keys.getKeys(options)
             .forEach { redis.keys.delete(it) }
     }
 

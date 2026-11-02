@@ -1,23 +1,19 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.service
 
+import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.images.ocr.OcrBoundingBox as SourceOcrBoundingBox
 import io.bluetape4k.images.ocr.OcrConfigurationException
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
-import io.bluetape4k.images.ocr.OcrPage as SourceOcrPage
-import io.bluetape4k.logging.KLogging
 import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.images.ocr.OcrStructuredResult
-import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
-import io.bluetape4k.images.ocr.OcrTextLine as SourceOcrTextLine
-import io.bluetape4k.images.ocr.OcrWord as SourceOcrWord
 import io.bluetape4k.images.ocr.StructuredOcrEngine
 import io.bluetape4k.images.ocr.TiffMultiPageOcr
 import io.bluetape4k.images.ocr.TiffMultiPageOcrException
 import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
 import io.bluetape4k.images.ocr.TiffMultiPageOcrLimits
 import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
@@ -30,8 +26,6 @@ import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrTextBlock
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrTextLine
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrWord
-import com.sksamuel.scrimage.ImmutableImage
-import java.util.concurrent.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runInterruptible
@@ -39,6 +33,13 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeout
 import org.springframework.stereotype.Service
+import java.util.concurrent.CancellationException
+import kotlin.time.toKotlinDuration
+import io.bluetape4k.images.ocr.OcrBoundingBox as SourceOcrBoundingBox
+import io.bluetape4k.images.ocr.OcrPage as SourceOcrPage
+import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
+import io.bluetape4k.images.ocr.OcrTextLine as SourceOcrTextLine
+import io.bluetape4k.images.ocr.OcrWord as SourceOcrWord
 
 /**
  * 워크숍 API용 기본 OCR 서비스 구현입니다.
@@ -48,7 +49,7 @@ class ImageOcrServiceImpl(
     private val properties: ImageOcrProperties,
     private val ocrEngineProvider: OcrEngineProvider,
     private val requestIdGenerator: RequestIdGenerator,
-) : ImageOcrService {
+): ImageOcrService {
 
     private val nativeSemaphore = Semaphore(permits = 1)
 
@@ -86,8 +87,9 @@ class ImageOcrServiceImpl(
 
         return try {
             nativeSemaphore.withPermit {
-                withTimeout(properties.timeout.toMillis()) {
-                    val engine = ocrEngineProvider.get() ?: throw OcrConfigurationException("Native OCR engine is not configured")
+                withTimeout(properties.timeout.toKotlinDuration()) {
+                    val engine = ocrEngineProvider.get()
+                        ?: throw OcrConfigurationException("Native OCR engine is not configured")
                     val options = OcrOptions(
                         languages = languages,
                         tessdataPath = properties.tessdataPath,
@@ -115,7 +117,7 @@ class ImageOcrServiceImpl(
                                     completed(requestId, languages, engine.recognize(image, options).text.trim())
                                 engine is StructuredOcrEngine ->
                                     completed(requestId, languages, engine.recognizeStructured(image, options))
-                                else ->
+                                else                          ->
                                     plainFallback(
                                         requestId = requestId,
                                         languages = languages,
@@ -148,7 +150,11 @@ class ImageOcrServiceImpl(
             throw e
         } catch (e: OcrConfigurationException) {
             recordOutcome(
-                response = unavailable(requestId, languages, "Native OCR is unavailable. Check Tesseract, tessdata, and language packs."),
+                response = unavailable(
+                    requestId,
+                    languages,
+                    "Native OCR is unavailable. Check Tesseract, tessdata, and language packs."
+                ),
                 nativeEnabled = true,
                 failureCategory = "configuration",
                 startedAtNanos = startedAtNanos,
@@ -172,8 +178,8 @@ class ImageOcrServiceImpl(
         val elapsedMillis = (System.nanoTime() - startedAtNanos) / 1_000_000
         log.info(
             "OCR request completed requestId=${response.requestId} status=${response.status} " +
-                "engine=${response.engine} languages=${response.languages.joinToString(",")} " +
-                "nativeEnabled=$nativeEnabled elapsedMillis=$elapsedMillis failureCategory=$failureCategory",
+                    "engine=${response.engine} languages=${response.languages.joinToString(",")} " +
+                    "nativeEnabled=$nativeEnabled elapsedMillis=$elapsedMillis failureCategory=$failureCategory",
         )
         return response
     }
@@ -313,8 +319,8 @@ class ImageOcrServiceImpl(
         val detectedContentType = detectContentType(bytes)
         require(
             detectedContentType == declaredContentType ||
-                declaredContentType == "image/jpg" && detectedContentType == "image/jpeg" ||
-                declaredContentType in TIFF_CONTENT_TYPES && detectedContentType == "image/tiff",
+                    declaredContentType == "image/jpg" && detectedContentType == "image/jpeg" ||
+                    declaredContentType in TIFF_CONTENT_TYPES && detectedContentType == "image/tiff",
         ) {
             "Uploaded bytes do not match the declared image content type"
         }
@@ -399,9 +405,9 @@ class ImageOcrServiceImpl(
         require(bytes.size >= 24) { "Undecodable image upload" }
         require(
             bytes[12] == 'I'.code.toByte() &&
-                bytes[13] == 'H'.code.toByte() &&
-                bytes[14] == 'D'.code.toByte() &&
-                bytes[15] == 'R'.code.toByte(),
+                    bytes[13] == 'H'.code.toByte() &&
+                    bytes[14] == 'D'.code.toByte() &&
+                    bytes[15] == 'R'.code.toByte(),
         ) {
             "Undecodable image upload"
         }
@@ -467,8 +473,8 @@ class ImageOcrServiceImpl(
                 require(bytes.size >= 30) { "Undecodable image upload" }
                 require(
                     bytes[23] == 0x9D.toByte() &&
-                        bytes[24] == 0x01.toByte() &&
-                        bytes[25] == 0x2A.toByte(),
+                            bytes[24] == 0x01.toByte() &&
+                            bytes[25] == 0x2A.toByte(),
                 ) {
                     "Undecodable image upload"
                 }
@@ -477,7 +483,7 @@ class ImageOcrServiceImpl(
                     height = bytes.readUInt16LE(offset = 28) and 0x3FFF,
                 )
             }
-            else -> throw IllegalArgumentException("Undecodable image upload")
+            else                                        -> throw IllegalArgumentException("Undecodable image upload")
         }
     }
 
@@ -504,7 +510,7 @@ class ImageOcrServiceImpl(
         return effective
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val DISABLED_ENGINE = "disabled"
         private const val NATIVE_ENGINE = "tesseract"
 
@@ -544,35 +550,35 @@ private class ImageDimensions(
 
 private fun ByteArray.readUInt16BE(offset: Int): Long =
     ((this[offset].toInt() and 0xFF) shl 8 or
-        (this[offset + 1].toInt() and 0xFF)).toLong()
+            (this[offset + 1].toInt() and 0xFF)).toLong()
 
 private fun ByteArray.readUInt16LE(offset: Int): Long =
     ((this[offset].toInt() and 0xFF) or
-        ((this[offset + 1].toInt() and 0xFF) shl 8)).toLong()
+            ((this[offset + 1].toInt() and 0xFF) shl 8)).toLong()
 
 private fun ByteArray.readUInt24LE(offset: Int): Long =
     ((this[offset].toInt() and 0xFF) or
-        ((this[offset + 1].toInt() and 0xFF) shl 8) or
-        ((this[offset + 2].toInt() and 0xFF) shl 16)).toLong()
+            ((this[offset + 1].toInt() and 0xFF) shl 8) or
+            ((this[offset + 2].toInt() and 0xFF) shl 16)).toLong()
 
 private fun ByteArray.readUInt32BE(offset: Int): Long =
     ((this[offset].toLong() and 0xFF) shl 24) or
-        ((this[offset + 1].toLong() and 0xFF) shl 16) or
-        ((this[offset + 2].toLong() and 0xFF) shl 8) or
-        (this[offset + 3].toLong() and 0xFF)
+            ((this[offset + 1].toLong() and 0xFF) shl 16) or
+            ((this[offset + 2].toLong() and 0xFF) shl 8) or
+            (this[offset + 3].toLong() and 0xFF)
 
 private fun ByteArray.readUInt32LE(offset: Int): Long =
     (this[offset].toLong() and 0xFF) or
-        ((this[offset + 1].toLong() and 0xFF) shl 8) or
-        ((this[offset + 2].toLong() and 0xFF) shl 16) or
-        ((this[offset + 3].toLong() and 0xFF) shl 24)
+            ((this[offset + 1].toLong() and 0xFF) shl 8) or
+            ((this[offset + 2].toLong() and 0xFF) shl 16) or
+            ((this[offset + 3].toLong() and 0xFF) shl 24)
 
 private fun ByteArray.hasAscii(offset: Int, value: String): Boolean =
     size >= offset + value.length && value.indices.all { index -> this[offset + index] == value[index].code.toByte() }
 
 private fun ByteArray.isTiffHeader(): Boolean =
     size >= 4 &&
-        ((this[0] == 'I'.code.toByte() && this[1] == 'I'.code.toByte() &&
-            (this[2] == 0x2A.toByte() || this[2] == 0x2B.toByte()) && this[3] == 0.toByte()) ||
-            (this[0] == 'M'.code.toByte() && this[1] == 'M'.code.toByte() &&
-                this[2] == 0.toByte() && (this[3] == 0x2A.toByte() || this[3] == 0x2B.toByte())))
+            ((this[0] == 'I'.code.toByte() && this[1] == 'I'.code.toByte() &&
+                    (this[2] == 0x2A.toByte() || this[2] == 0x2B.toByte()) && this[3] == 0.toByte()) ||
+                    (this[0] == 'M'.code.toByte() && this[1] == 'M'.code.toByte() &&
+                            this[2] == 0.toByte() && (this[3] == 0x2A.toByte() || this[3] == 0x2B.toByte())))

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.persistence
 
-import io.bluetape4k.spring.data.exposed.jdbc.annotation.ExposedEntity
+import io.bluetape4k.spring.data.exposed.common.annotation.ExposedEntity
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.LongEntityClass

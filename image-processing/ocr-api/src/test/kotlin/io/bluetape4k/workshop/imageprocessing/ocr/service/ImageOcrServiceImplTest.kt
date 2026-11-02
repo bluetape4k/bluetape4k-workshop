@@ -1,12 +1,16 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.service
 
+import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.images.ocr.OcrConfigurationException
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.images.coroutines.SuspendTiffMultiPageWriter
 import io.bluetape4k.images.ocr.OcrBoundingBox
+import io.bluetape4k.images.ocr.OcrConfigurationException
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
@@ -14,37 +18,38 @@ import io.bluetape4k.images.ocr.OcrPage
 import io.bluetape4k.images.ocr.OcrResult
 import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.images.ocr.OcrStructuredResult
-import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
 import io.bluetape4k.images.ocr.OcrTextLine
 import io.bluetape4k.images.ocr.OcrWord
 import io.bluetape4k.images.ocr.StructuredOcrEngine
 import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
 import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
-import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.images.coroutines.SuspendTiffMultiPageWriter
+import io.bluetape4k.images.useGraphics
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.config.TiffMultiPageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import java.time.Duration
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.CancellationException
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
-import javax.imageio.ImageIO
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.awt.Color
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import java.time.Duration
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.imageio.ImageIO
+import kotlin.time.Duration.Companion.seconds
+import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
 
 private class FakeStructuredOcrEngine(
     private val structuredResult: OcrStructuredResult,
-) : StructuredOcrEngine {
+): StructuredOcrEngine {
     var recognizeCalls: Int = 0
     var structuredCalls: Int = 0
     lateinit var lastOptions: OcrOptions
@@ -68,6 +73,8 @@ private class FakeStructuredOcrEngine(
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ImageOcrServiceImplTest {
 
+    private companion object: KLogging()
+
     private var previousOcrEnabled: String? = null
 
     @BeforeEach
@@ -86,7 +93,7 @@ class ImageOcrServiceImplTest {
         val invoked = AtomicBoolean(false)
         val service = service(
             properties = properties(nativeEnabled = false),
-            engine = OcrEngine { _, options ->
+            engine = { _, options ->
                 invoked.set(true)
                 OcrResult("should not run", options)
             },
@@ -100,6 +107,7 @@ class ImageOcrServiceImplTest {
             ),
         )
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.UNAVAILABLE
         response.engine shouldBeEqualTo "disabled"
         response.languages shouldBeEqualTo listOf("eng", "kor")
@@ -126,7 +134,7 @@ class ImageOcrServiceImplTest {
     fun `fake native engine returns normalized completed response`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true),
-            engine = OcrEngine { _, options ->
+            engine = { _, options ->
                 OcrResult("Bluetape OCR\n\nSecond line\n", options)
             },
         )
@@ -139,10 +147,11 @@ class ImageOcrServiceImplTest {
             ),
         )
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.COMPLETED
         response.engine shouldBeEqualTo "tesseract"
         response.languages shouldBeEqualTo listOf("eng", "kor")
-        response.confidence shouldBeEqualTo null
+        response.confidence.shouldBeNull()
         response.text shouldBeEqualTo "Bluetape OCR\n\nSecond line"
         response.blocks.map { it.text } shouldBeEqualTo listOf("Bluetape OCR", "Second line")
         response.warnings.any { it.contains("confidence", ignoreCase = true) }.shouldBeTrue()
@@ -154,13 +163,14 @@ class ImageOcrServiceImplTest {
         val response = service(properties(nativeEnabled = true), engine = engine)
             .recognize(request(structuredDetail = OcrStructuredDetail.LINE))
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.COMPLETED
         response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.LINE
         response.pages.single().pageIndex shouldBeEqualTo 0
         response.blocks.single().boundingBox?.width shouldBeEqualTo 30
-        response.lines.single().confidence shouldBeEqualTo null
+        response.lines.single().confidence.shouldBeNull()
         response.words.size shouldBeEqualTo 0
-        response.confidence shouldBeEqualTo null
+        response.confidence.shouldBeNull()
         engine.lastOptions.structuredDetail shouldBeEqualTo OcrStructuredDetail.LINE
         engine.recognizeCalls shouldBeEqualTo 0
         engine.structuredCalls shouldBeEqualTo 1
@@ -172,6 +182,7 @@ class ImageOcrServiceImplTest {
         val response = service(properties(nativeEnabled = true), engine = engine)
             .recognize(request(structuredDetail = OcrStructuredDetail.WORD))
 
+        log.debug { "response=$response" }
         response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.WORD
         response.pages.size shouldBeEqualTo 1
         response.blocks.size shouldBeEqualTo 1
@@ -193,6 +204,7 @@ class ImageOcrServiceImplTest {
                 ),
             )
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.COMPLETED
         response.text shouldBeEqualTo "Bluetape OCR\n\nBluetape OCR\n\nBluetape OCR"
         response.pages.map { it.pageIndex } shouldBeEqualTo listOf(0, 1, 2)
@@ -216,8 +228,9 @@ class ImageOcrServiceImplTest {
             ).recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
         }
 
+        log.debug { "error=$error" }
         error.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.PAGE_LIMIT_EXCEEDED
-        error.pageIndex shouldBeEqualTo null
+        error.pageIndex.shouldBeNull()
         engine.structuredCalls shouldBeEqualTo 0
     }
 
@@ -234,6 +247,7 @@ class ImageOcrServiceImplTest {
             ).recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
         }
 
+        log.debug { "error=$error" }
         error.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED
         error.pageIndex shouldBeEqualTo 1
         engine.structuredCalls shouldBeEqualTo 2
@@ -244,7 +258,7 @@ class ImageOcrServiceImplTest {
         val invoked = AtomicBoolean(false)
         val service = service(
             properties = properties(nativeEnabled = false),
-            engine = OcrEngine { _, options ->
+            engine = { _, options ->
                 invoked.set(true)
                 OcrResult("should not run", options)
             },
@@ -252,6 +266,7 @@ class ImageOcrServiceImplTest {
 
         val response = service.recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.UNAVAILABLE
         response.pages.size shouldBeEqualTo 0
         invoked.get().shouldBeFalse()
@@ -261,7 +276,7 @@ class ImageOcrServiceImplTest {
     fun `multi-page TIFF cancellation is rethrown`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true),
-            engine = object : StructuredOcrEngine {
+            engine = object: StructuredOcrEngine {
                 override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
                     OcrResult("plain", options)
 
@@ -279,9 +294,10 @@ class ImageOcrServiceImplTest {
     fun `plain engine returns legacy line fallback for structured request`() = runSuspendIO {
         val response = service(
             properties = properties(nativeEnabled = true),
-            engine = OcrEngine { _, options -> OcrResult("first\nsecond", options) },
+            engine = { _, options -> OcrResult("first\nsecond", options) },
         ).recognize(request(structuredDetail = OcrStructuredDetail.WORD))
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.COMPLETED
         response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
         response.text shouldBeEqualTo "first\nsecond"
@@ -296,13 +312,14 @@ class ImageOcrServiceImplTest {
     fun `configuration exception maps to unavailable without leaking native details`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true, tessdataPath = "/secret/tessdata"),
-            engine = OcrEngine { _, _ ->
+            engine = { _, _ ->
                 throw OcrConfigurationException("native path /secret/tessdata failed")
             },
         )
 
         val response = service.recognize(request())
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.UNAVAILABLE
         response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
         response.pages.size shouldBeEqualTo 0
@@ -316,13 +333,14 @@ class ImageOcrServiceImplTest {
     fun `generic OCR exception maps to failed without stack trace`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true),
-            engine = OcrEngine { _, _ ->
+            engine = { _, _ ->
                 throw OcrException("boom at /tmp/native")
             },
         )
 
         val response = service.recognize(request())
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.FAILED
         response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
         response.pages.size shouldBeEqualTo 0
@@ -346,7 +364,7 @@ class ImageOcrServiceImplTest {
         val invoked = AtomicBoolean(false)
         val service = service(
             properties = properties(nativeEnabled = true),
-            engine = OcrEngine { _, options ->
+            engine = { _, options ->
                 invoked.set(true)
                 OcrResult("should not run", options)
             },
@@ -362,7 +380,7 @@ class ImageOcrServiceImplTest {
     fun `oversized bytes are rejected before OCR`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true, maxUploadBytes = 2),
-            engine = OcrEngine { _, options -> OcrResult("should not run", options) },
+            engine = { _, options -> OcrResult("should not run", options) },
         )
 
         assertFailsWith<IllegalArgumentException> {
@@ -374,7 +392,7 @@ class ImageOcrServiceImplTest {
     fun `corrupt image bytes with image content type are rejected before OCR`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true),
-            engine = OcrEngine { _, options -> OcrResult("should not run", options) },
+            engine = { _, options -> OcrResult("should not run", options) },
         )
 
         assertFailsWith<IllegalArgumentException> {
@@ -386,7 +404,7 @@ class ImageOcrServiceImplTest {
     fun `spoofed declared content type is rejected before OCR`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = false),
-            engine = OcrEngine { _, options -> OcrResult("should not run", options) },
+            engine = { _, options -> OcrResult("should not run", options) },
         )
 
         assertFailsWith<IllegalArgumentException> {
@@ -398,7 +416,7 @@ class ImageOcrServiceImplTest {
     fun `decoded images above pixel limit are rejected before OCR`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true, maxImagePixels = 1),
-            engine = OcrEngine { _, options -> OcrResult("should not run", options) },
+            engine = { _, options -> OcrResult("should not run", options) },
         )
 
         assertFailsWith<IllegalArgumentException> {
@@ -411,7 +429,7 @@ class ImageOcrServiceImplTest {
         val invoked = AtomicBoolean(false)
         val service = service(
             properties = properties(nativeEnabled = true, maxImagePixels = 12_000_000),
-            engine = OcrEngine { _, options ->
+            engine = { _, options ->
                 invoked.set(true)
                 OcrResult("should not run", options)
             },
@@ -430,9 +448,9 @@ class ImageOcrServiceImplTest {
         val neverReleased = CountDownLatch(1)
         val service = service(
             properties = properties(nativeEnabled = true, timeout = Duration.ofMillis(500)),
-            engine = OcrEngine { _, options ->
+            engine = { _, options ->
                 if (firstEntered.compareAndSet(false, true)) {
-                    neverReleased.await(2, TimeUnit.SECONDS)
+                    neverReleased.await(2.seconds)
                 } else {
                     secondEntered.set(true)
                 }
@@ -443,11 +461,14 @@ class ImageOcrServiceImplTest {
         val timedOut = service.recognize(request())
         val completed = service.recognize(request())
 
+        log.debug { "timedOut=$timedOut" }
         timedOut.status shouldBeEqualTo OcrStatus.FAILED
         timedOut.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
         timedOut.pages.size shouldBeEqualTo 0
         timedOut.lines.size shouldBeEqualTo 0
         timedOut.words.size shouldBeEqualTo 0
+
+        log.debug { "completed=$completed" }
         completed.status shouldBeEqualTo OcrStatus.COMPLETED
         secondEntered.get().shouldBeTrue()
     }
@@ -457,13 +478,13 @@ class ImageOcrServiceImplTest {
         val entered = CountDownLatch(1)
         val service = service(
             properties = properties(nativeEnabled = true, timeout = Duration.ofMillis(500)),
-            engine = object : StructuredOcrEngine {
+            engine = object: StructuredOcrEngine {
                 override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
                     OcrResult("plain fallback", options)
 
                 override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult {
                     entered.countDown()
-                    CountDownLatch(1).await(2, TimeUnit.SECONDS)
+                    CountDownLatch(1).await(2.seconds)
                     return structuredResult().copy(options = options)
                 }
             },
@@ -471,7 +492,8 @@ class ImageOcrServiceImplTest {
 
         val response = service.recognize(request(structuredDetail = OcrStructuredDetail.WORD))
 
-        entered.await(1, TimeUnit.SECONDS).shouldBeTrue()
+        entered.await(1.seconds).shouldBeTrue()
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo OcrStatus.FAILED
         response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
         response.pages.size shouldBeEqualTo 0
@@ -483,7 +505,7 @@ class ImageOcrServiceImplTest {
     fun `cancellation is rethrown`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true),
-            engine = OcrEngine { _, _ -> throw CancellationException("cancelled") },
+            engine = { _, _ -> throw CancellationException("cancelled") },
         )
 
         assertFailsWith<CancellationException> {
@@ -495,7 +517,7 @@ class ImageOcrServiceImplTest {
     fun `structured OCR cancellation is rethrown`() = runSuspendIO {
         val service = service(
             properties = properties(nativeEnabled = true),
-            engine = object : StructuredOcrEngine {
+            engine = object: StructuredOcrEngine {
                 override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
                     OcrResult("plain", options)
 
@@ -515,8 +537,8 @@ class ImageOcrServiceImplTest {
     ): ImageOcrService =
         ImageOcrServiceImpl(
             properties = properties,
-            ocrEngineProvider = OcrEngineProvider { engine },
-            requestIdGenerator = RequestIdGenerator { "ocr-test-request" },
+            ocrEngineProvider = { engine },
+            requestIdGenerator = { "ocr-test-request" },
         )
 
     private fun properties(
@@ -583,10 +605,10 @@ class ImageOcrServiceImplTest {
 
     private fun tinyPng(): ByteArray {
         val image = BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB)
-        val graphics = image.createGraphics()
-        graphics.color = Color.WHITE
-        graphics.fillRect(0, 0, 8, 8)
-        graphics.dispose()
+        image.useGraphics { graphics ->
+            graphics.color = Color.WHITE
+            graphics.fillRect(0, 0, 8, 8)
+        }
         return ByteArrayOutputStream().use { output ->
             ImageIO.write(image, "png", output)
             output.toByteArray()
@@ -596,12 +618,12 @@ class ImageOcrServiceImplTest {
     private fun threePageTiff(): ByteArray = runBlocking {
         val pages = listOf("PAGE ONE", "PAGE TWO", "PAGE THREE").map { label ->
             val image = BufferedImage(64, 32, BufferedImage.TYPE_INT_RGB)
-            val graphics = image.createGraphics()
-            graphics.color = Color.WHITE
-            graphics.fillRect(0, 0, image.width, image.height)
-            graphics.color = Color.BLACK
-            graphics.drawString(label, 4, 18)
-            graphics.dispose()
+            image.useGraphics { graphics ->
+                graphics.color = Color.WHITE
+                graphics.fillRect(0, 0, image.width, image.height)
+                graphics.color = Color.BLACK
+                graphics.drawString(label, 4, 18)
+            }
             ImmutableImage.fromAwt(image)
         }
         ByteArrayOutputStream().use { output ->

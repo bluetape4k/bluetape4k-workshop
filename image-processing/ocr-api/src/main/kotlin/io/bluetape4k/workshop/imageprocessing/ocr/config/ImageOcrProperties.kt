@@ -1,12 +1,13 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.config
 
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.support.equalsIgnoreCase
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
+import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 import java.time.Duration
-import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
  * OCR API 워크숍 모듈의 설정 속성입니다.
@@ -20,14 +21,14 @@ data class ImageOcrProperties(
     val languages: List<String> = listOf("eng"),
     val tessdataPath: String? = null,
     val tiff: TiffMultiPageOcrProperties = TiffMultiPageOcrProperties(maxEncodedBytes = maxUploadBytes),
-) : Serializable {
+): Serializable {
     val effectiveNativeEnabled: Boolean
-        get() = nativeEnabled || System.getProperty("ocr.enabled")?.equals("true", ignoreCase = true) == true
+        get() = nativeEnabled || System.getProperty("ocr.enabled")?.equalsIgnoreCase("true") == true
 
     init {
         maxUploadBytes.requirePositiveNumber("maxUploadBytes")
         maxImagePixels.requirePositiveNumber("maxImagePixels")
-        timeout.requireGt(Duration.ZERO, "timeout")
+        timeout.requirePositiveDuration("timeout")
         languages.requireNotEmpty("languages")
         tessdataPath?.requireNotBlank("tessdataPath")
     }
@@ -52,7 +53,7 @@ data class TiffMultiPageOcrProperties(
     val maxMetadataBytes: Long = 2L * 1024L * 1024L,
     val maxResultTextChars: Int = 1_000_000,
     val maxResultEntries: Int = 100_000,
-) : Serializable {
+): Serializable {
 
     init {
         maxEncodedBytes.requirePositiveNumber("tiff.maxEncodedBytes")

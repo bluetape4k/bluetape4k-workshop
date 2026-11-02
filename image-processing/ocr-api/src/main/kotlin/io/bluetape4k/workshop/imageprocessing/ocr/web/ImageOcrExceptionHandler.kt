@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.imageprocessing.ocr.web
 import io.bluetape4k.images.ocr.TiffMultiPageOcrException
 import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
 import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
+import io.bluetape4k.logging.KLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ProblemDetail
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
  */
 @RestControllerAdvice
 class ImageOcrExceptionHandler {
+
+    private companion object: KLogging()
 
     /**
      * TIFF metadata/resource budget 거부를 원본 payload나 native 경로 없이 문제 상세로
@@ -45,7 +48,10 @@ class ImageOcrExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleValidation(exception: IllegalArgumentException): ProblemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.message ?: "Invalid image OCR request")
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST,
+            exception.message ?: "Invalid image OCR request"
+        )
 
     private fun tiffProblem(
         status: HttpStatusCode,
@@ -60,8 +66,9 @@ class ImageOcrExceptionHandler {
         }
 
     private fun TiffMultiPageOcrFailureReason.phase(): String = when (this) {
-        TiffMultiPageOcrFailureReason.INPUT_TOO_LARGE -> "input"
+        TiffMultiPageOcrFailureReason.INPUT_TOO_LARGE    -> "input"
         TiffMultiPageOcrFailureReason.READER_UNAVAILABLE -> "reader"
+
         TiffMultiPageOcrFailureReason.UNSUPPORTED_FORMAT,
         TiffMultiPageOcrFailureReason.PAGE_COUNT_UNKNOWN,
         TiffMultiPageOcrFailureReason.PAGE_LIMIT_EXCEEDED,
@@ -69,10 +76,12 @@ class ImageOcrExceptionHandler {
         TiffMultiPageOcrFailureReason.SIDE_LIMIT_EXCEEDED,
         TiffMultiPageOcrFailureReason.PIXELS_PER_PAGE_LIMIT_EXCEEDED,
         TiffMultiPageOcrFailureReason.TOTAL_PIXELS_LIMIT_EXCEEDED,
-        TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED -> "metadata"
-        TiffMultiPageOcrFailureReason.DECODE_FAILED -> "decode"
-        TiffMultiPageOcrFailureReason.ENGINE_FAILED -> "engine"
+        TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED,
+                                                         -> "metadata"
+
+        TiffMultiPageOcrFailureReason.DECODE_FAILED      -> "decode"
+        TiffMultiPageOcrFailureReason.ENGINE_FAILED      -> "engine"
         TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED -> "result"
-        TiffMultiPageOcrFailureReason.UNKNOWN -> "unknown"
+        TiffMultiPageOcrFailureReason.UNKNOWN            -> "unknown"
     }
 }
