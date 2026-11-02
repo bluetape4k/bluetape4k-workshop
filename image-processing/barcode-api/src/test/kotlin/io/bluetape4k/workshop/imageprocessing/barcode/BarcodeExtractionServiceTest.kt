@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.imageprocessing.barcode
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.ImageDimensions
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
 import io.bluetape4k.images.analysis.readImageMetadataReport
@@ -12,17 +13,24 @@ import io.bluetape4k.images.barcode.BarcodeFormat
 import io.bluetape4k.images.barcode.BarcodeReader
 import io.bluetape4k.images.barcode.zxing.ZxingBarcodeReader
 import io.bluetape4k.images.probeImageDimensions
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.util.Base64
-import javax.imageio.ImageIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.utils.Resourcex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.mock.web.MockMultipartFile
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+import javax.imageio.ImageIO
 
 class BarcodeExtractionServiceTest {
+
+    private companion object: KLogging()
 
     private val fixtures = BarcodeExampleFixtures()
 
@@ -33,6 +41,7 @@ class BarcodeExtractionServiceTest {
             properties = BarcodeExampleProperties(),
         ).extract(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
 
+        log.debug { "result=$result" }
         result.count shouldBeEqualTo 1
         result.results.single().text shouldBeEqualTo "bluetape4k-barcode-quickstart"
         result.results.single().format shouldBeEqualTo BarcodeFormat.QR_CODE
@@ -46,6 +55,7 @@ class BarcodeExtractionServiceTest {
             properties = BarcodeExampleProperties(),
         ).extract(fixtures.bytes(BarcodeExampleFixture.NO_RESULT))
 
+        log.debug { "result=$result" }
         result shouldBeEqualTo BarcodeExtractionResponse(count = 0, results = emptyList())
     }
 
@@ -61,6 +71,7 @@ class BarcodeExtractionServiceTest {
         uploads.forEach { (contentType, bytes) ->
             val response = service().extract(multipart(contentType, bytes))
 
+            log.debug { "response=$response" }
             response.count shouldBeEqualTo if (contentType == "image/jpeg") 1 else 0
             if (contentType == "image/jpeg") {
                 response.results.single().format shouldBeEqualTo BarcodeFormat.QR_CODE
@@ -72,8 +83,10 @@ class BarcodeExtractionServiceTest {
     fun `uses bounded metadata dimensions when primary WebP probe is unavailable`() = runTest {
         val webp = webpBytes()
 
-        val response = service(dimensionProbe = { null }).extract(multipart("image/webp", webp))
+        val response = service(dimensionProbe = { null })
+            .extract(multipart("image/webp", webp))
 
+        log.debug { "response=$response" }
         response.count shouldBeEqualTo 0
     }
 
@@ -82,6 +95,7 @@ class BarcodeExtractionServiceTest {
         val empty = assertFailsWith<BarcodeRequestException> {
             service().extract(multipart("image/png", ByteArray(0)))
         }
+        log.debug { "empty=$empty" }
         empty.status shouldBeEqualTo HttpStatus.BAD_REQUEST
         empty.error shouldBeEqualTo "empty_input"
 
@@ -89,6 +103,7 @@ class BarcodeExtractionServiceTest {
             val error = assertFailsWith<BarcodeRequestException> {
                 service().extract(multipart(contentType, byteArrayOf(1)))
             }
+            log.debug { "error=$error" }
             error.status shouldBeEqualTo HttpStatus.UNSUPPORTED_MEDIA_TYPE
             error.error shouldBeEqualTo "unsupported_media_type"
         }
@@ -96,7 +111,7 @@ class BarcodeExtractionServiceTest {
 
     @Test
     fun `rejects reported and actual encoded byte overflow before decode`() = runTest {
-        val readerCalls = java.util.concurrent.atomic.AtomicInteger()
+        val readerCalls = AtomicInteger()
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
@@ -107,18 +122,20 @@ class BarcodeExtractionServiceTest {
         val multipartError = assertFailsWith<BarcodeRequestException> {
             service(reader, properties).extract(multipart("image/png", bytes))
         }
+        log.debug { "multipartError=$multipartError" }
         multipartError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
         val byteArrayError = assertFailsWith<BarcodeRequestException> {
             service(reader, properties).extract(bytes)
         }
+        log.debug { "byteArrayError=$byteArrayError" }
         byteArrayError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
         readerCalls.get() shouldBeEqualTo 0
     }
 
     @Test
     fun `rejects decoded side and pixel overflow before provider invocation`() = runTest {
-        val readerCalls = java.util.concurrent.atomic.AtomicInteger()
+        val readerCalls = AtomicInteger()
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
@@ -131,6 +148,7 @@ class BarcodeExtractionServiceTest {
                 properties = BarcodeExampleProperties(maxInputSide = 100),
             ).extract(bytes)
         }
+        log.debug { "sideError=$sideError" }
         sideError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
         val pixelError = assertFailsWith<BarcodeRequestException> {
@@ -139,13 +157,14 @@ class BarcodeExtractionServiceTest {
                 properties = BarcodeExampleProperties(maxInputPixels = 40_000),
             ).extract(bytes)
         }
+        log.debug { "pixelError=$pixelError" }
         pixelError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
         readerCalls.get() shouldBeEqualTo 0
     }
 
     @Test
     fun `strict loader rechecks dimensions after injected probes`() = runTest {
-        val readerCalls = java.util.concurrent.atomic.AtomicInteger()
+        val readerCalls = AtomicInteger()
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
@@ -161,13 +180,14 @@ class BarcodeExtractionServiceTest {
             ).extract(webp)
         }
 
+        log.debug { "error=$error" }
         error.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
         readerCalls.get() shouldBeEqualTo 0
     }
 
     @Test
     fun `normalizes malformed bytes and unknown dimensions`() = runTest {
-        val readerCalls = java.util.concurrent.atomic.AtomicInteger()
+        val readerCalls = AtomicInteger()
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
@@ -184,6 +204,8 @@ class BarcodeExtractionServiceTest {
                 metadataDimensionProbe = { _, _ -> ImageDimensions(1, 1) },
             ).extract(byteArrayOf(1, 2, 3))
         }
+
+        log.debug { "unknownDimensions=$unknownDimensions" }
         unknownDimensions.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
         readerCalls.get() shouldBeEqualTo 0
     }
@@ -213,7 +235,7 @@ class BarcodeExtractionServiceTest {
         val actual = assertFailsWith<CancellationException> {
             service(reader).extract(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
         }
-
+        log.debug { "actual=$actual" }
         actual.message shouldBeEqualTo expected.message
     }
 
@@ -226,8 +248,9 @@ class BarcodeExtractionServiceTest {
             ).extract(fixtures.bytes(BarcodeExampleFixture.MALFORMED))
         }
 
+        log.debug { "exception=$exception" }
         exception.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
-        exception.message.orEmpty().contains("malformed.bin") shouldBeEqualTo false
+        exception.message shouldNotContain "malformed.bin"
     }
 
     @Test
@@ -246,6 +269,7 @@ class BarcodeExtractionServiceTest {
             )
         }
 
+        log.debug { "exception=$exception" }
         exception.status shouldBeEqualTo HttpStatus.UNSUPPORTED_MEDIA_TYPE
     }
 
@@ -277,9 +301,11 @@ class BarcodeExtractionServiceTest {
         }
     }
 
-    private fun webpBytes(): ByteArray = Base64.getDecoder().decode(
-        requireNotNull(javaClass.classLoader.getResourceAsStream("barcodes/sample.webp.b64")) {
-            "Required barcode WebP fixture is missing."
-        }.use { it.readBytes().toString(Charsets.US_ASCII).trim() },
-    )
+    private fun webpBytes(): ByteArray =
+        Base64.getDecoder()
+            .decode(
+                Resourcex.getBytes("barcodes/sample.webp.b64")
+                    .requireNotNull { "Required barcode WebP fixture is missing." }
+                    .toString(Charsets.US_ASCII).trim()
+            )
 }

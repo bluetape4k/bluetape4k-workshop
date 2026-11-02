@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.barcode
 
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,6 +24,8 @@ class BarcodeApiApplicationTest(
     @param:Autowired private val mockMvc: MockMvc,
 ) {
 
+    private companion object: KLogging()
+
     @Test
     fun `sample endpoint returns provider neutral result`() {
         val result = mockMvc.perform(get("/api/barcodes/sample"))
@@ -33,7 +37,8 @@ class BarcodeApiApplicationTest(
             .andExpect(jsonPath("$.results[0].provider").value("ZXing"))
             .andReturn()
 
-        result.response.contentAsString.shouldNotContain("rawBytes")
+        log.debug { "result content=${result.response.contentAsString}" }
+        result.response.contentAsString shouldNotContain "rawBytes"
     }
 
     @Test

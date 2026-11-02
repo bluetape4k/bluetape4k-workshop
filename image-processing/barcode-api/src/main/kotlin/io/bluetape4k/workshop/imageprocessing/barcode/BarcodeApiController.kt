@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.barcode
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -17,6 +18,8 @@ internal class BarcodeApiController(
     private val extractionService: BarcodeExtractionService,
     private val fixtures: BarcodeExampleFixtures,
 ) {
+
+    private companion object: KLogging()
 
     @PostMapping("/extract", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     suspend fun extract(@RequestParam("file") file: MultipartFile): BarcodeExtractionResponse =
