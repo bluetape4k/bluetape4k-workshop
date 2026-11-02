@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence.repository
 
 import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageProcessingEventDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.mapper.toImageProcessingEventDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageProcessingEventStatus
@@ -22,7 +24,9 @@ import org.springframework.stereotype.Repository
  * - [appendEvent]의 예외는 호출자에게 전파되며 이 메서드 안에서는 억제하지 않습니다.
  */
 @Repository
-class ImageProcessingEventRepository : LongJdbcRepository<ImageProcessingEventDTO> {
+class ImageProcessingEventRepository: LongJdbcRepository<ImageProcessingEventDTO> {
+
+    private companion object: KLogging()
 
     override val table = ImageProcessingEventTable
 
@@ -49,6 +53,7 @@ class ImageProcessingEventRepository : LongJdbcRepository<ImageProcessingEventDT
         message: String,
         payload: Map<String, Any?> = emptyMap(),
     ) {
+        log.debug { "append event. jobId=$jobId, step=$step, message=$message, payload=$payload" }
         ImageProcessingEventTable.insert {
             it[ImageProcessingEventTable.jobId] = jobId
             it[ImageProcessingEventTable.step] = step
@@ -66,4 +71,6 @@ class ImageProcessingEventRepository : LongJdbcRepository<ImageProcessingEventDT
             .where { ImageProcessingEventTable.jobId eq jobId }
             .orderBy(ImageProcessingEventTable.createdAt, SortOrder.ASC)
             .map { it.toImageProcessingEventDTO() }
+            .onEach { log.debug { "jobId=$jobId, found event=$it" } }
+
 }

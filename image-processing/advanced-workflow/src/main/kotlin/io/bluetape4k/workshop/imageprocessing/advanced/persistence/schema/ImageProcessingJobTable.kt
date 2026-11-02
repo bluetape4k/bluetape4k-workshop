@@ -15,14 +15,14 @@ import org.jetbrains.exposed.v1.javatime.timestamp
  * 일반 [LongIdTable]을 사용합니다. 여기에는 감사 컬럼이 필요 없고 시간은
  * [startedAt]과 [finishedAt]으로 추적합니다.
  */
-object ImageProcessingJobTable : LongIdTable("image_processing_jobs") {
+object ImageProcessingJobTable: LongIdTable("image_processing_jobs") {
 
     /** 부모 [ImageAssetTable]에 대한 FK이며 삭제를 cascade합니다. */
     val imageAssetId = reference("image_asset_id", ImageAssetTable, onDelete = ReferenceOption.CASCADE)
         .index()
 
     /** 이 job의 현재 실행 상태입니다. */
-    val status = enumerationByName("status", 20, ImageJobStatus::class)
+    val status = enumerationByName<ImageJobStatus>("status", 20)
         .default(ImageJobStatus.RUNNING)
 
     /** 이 job에서 요청한 변형 이름의 JSON 배열입니다(예: `["thumbnail", "webp-2x"]`). */
