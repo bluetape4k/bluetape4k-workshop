@@ -12,6 +12,8 @@
 
     <logger name="io.bluetape4k.workshop" level="DEBUG"/>
     <logger name="io.bluetape4k" level="DEBUG"/>
+    <logger name="Exposed" level="DEBUG"/>
+
     <logger name="org.javers" level="INFO"/>
 
     <root level="INFO">

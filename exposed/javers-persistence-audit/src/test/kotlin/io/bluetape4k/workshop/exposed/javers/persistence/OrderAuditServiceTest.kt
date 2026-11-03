@@ -2,13 +2,19 @@ package io.bluetape4k.workshop.exposed.javers.persistence
 
 import com.google.gson.JsonObject
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.javers.codecs.JaversCodec
 import io.bluetape4k.javers.codecs.JaversCodecs
 import io.bluetape4k.javers.persistence.redis.repository.RedissonCdoSnapshotRepository
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.javers.core.JaversBuilder
 import org.javers.core.metamodel.`object`.SnapshotType
@@ -22,10 +28,17 @@ import org.redisson.api.options.KeysScanOptions
 import org.redisson.client.codec.LongCodec
 import org.redisson.client.codec.StringCodec
 import org.redisson.codec.CompositeCodec
+import org.testcontainers.utility.Base58
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicInteger
 
 class OrderAuditServiceTest {
+
+    private companion object: KLogging() {
+        private const val REPOSITORY_PREFIX = "workshop:order-audit"
+
+        val redissonClient by lazy { RedisServer.Launcher.RedissonLib.getRedisson() }
+    }
 
     private lateinit var database: Database
 
@@ -33,7 +46,7 @@ class OrderAuditServiceTest {
     fun setUp() {
         deleteOrderAuditKeys()
         database = Database.connect(
-            url = "jdbc:h2:mem:order-audit-${System.nanoTime()};DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+            url = "jdbc:h2:mem:order-audit-${Base58.randomString(8)};DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
             driver = "org.h2.Driver",
         )
         transaction(database) {
@@ -59,12 +72,14 @@ class OrderAuditServiceTest {
 
         val rebuilt = redisService(repositoryName)
 
-        val history = rebuilt.getHistory(order.id)
+        val history = rebuilt.getHistory(order.id).onEach { log.debug { "history=$it" } }
+
         history shouldHaveSize 2
         history.first().type shouldBeEqualTo SnapshotType.UPDATE
         history.first().version shouldBeEqualTo 2L
         history.last().type shouldBeEqualTo SnapshotType.INITIAL
         history.last().version shouldBeEqualTo 1L
+
         rebuilt.getLatestSnapshot(order.id)
             .shouldNotBeNull()
             .getPropertyValue("status") shouldBeEqualTo OrderStatus.PAID
@@ -78,8 +93,9 @@ class OrderAuditServiceTest {
 
         val diff = service.diff(original, updated)
 
+        log.debug { "diff=$diff" }
         diff.hasChanges().shouldBeTrue()
-        service.getHistory(original.id) shouldHaveSize 0
+        service.getHistory(original.id).shouldBeEmpty()
     }
 
     @Test
@@ -90,24 +106,24 @@ class OrderAuditServiceTest {
 
         service.delete("carol", order.id)
 
-        val history = service.getHistory(order.id)
+        val history = service.getHistory(order.id).onEach { log.debug { "history=$it" } }
         history shouldHaveSize 2
         history.first().type shouldBeEqualTo SnapshotType.TERMINAL
         history.first().version shouldBeEqualTo 2L
-        service.findCurrent(order.id) shouldBeEqualTo null
+        service.findCurrent(order.id).shouldBeNull()
     }
 
     @Test
     fun `bounded history decodes only the requested newest Redis snapshots`() {
         val codec = CountingCodec()
-        val service = RedisOrderAuditFactory.create(repositoryName("bounded"), redis, codec)
+        val service = RedisOrderAuditFactory.create(repositoryName("bounded"), redissonClient, codec)
         val order = sampleOrder("order-350")
         service.place("alice", order)
         service.markPaid("bob", order.id)
         service.delete("carol", order.id)
 
         codec.resetDecodeCount()
-        val latest = service.getHistory(order.id, 1)
+        val latest = service.getHistory(order.id, 1).onEach { log.debug { "history=$it" } }
 
         latest shouldHaveSize 1
         latest.single().type shouldBeEqualTo SnapshotType.TERMINAL
@@ -125,7 +141,7 @@ class OrderAuditServiceTest {
     @Test
     fun `history validates bounds preserves empty semantics and JVM overloads`() {
         val codec = CountingCodec()
-        val service = RedisOrderAuditFactory.create(repositoryName("contract"), redis, codec)
+        val service = RedisOrderAuditFactory.create(repositoryName("contract"), redissonClient, codec)
         val order = sampleOrder("order-360")
         service.place("alice", order)
 
@@ -154,7 +170,7 @@ class OrderAuditServiceTest {
 
     @Test
     fun `audit sink failure propagates instead of accepting unaudited write`() {
-        val repository = RedissonCdoSnapshotRepository(repositoryName("failure"), redis, FailingCodec)
+        val repository = RedissonCdoSnapshotRepository(repositoryName("failure"), redissonClient, FailingCodec)
         val javers = JaversBuilder.javers()
             .registerJaversRepository(repository)
             .build()
@@ -164,15 +180,15 @@ class OrderAuditServiceTest {
         assertFailsWith<RuntimeException> {
             service.place("dave", order)
         }
-        service.findCurrent(order.id) shouldBeEqualTo null
+        service.findCurrent(order.id).shouldBeNull()
     }
 
     @Test
     fun `missing head metadata remains an empty initial audit state`() {
         val service = redisService(repositoryName("missing-head"))
 
-        service.getHistory("unknown-order") shouldHaveSize 0
-        service.getLatestSnapshot("unknown-order") shouldBeEqualTo null
+        service.getHistory("unknown-order").shouldBeEmpty()
+        service.getLatestSnapshot("unknown-order").shouldBeNull()
     }
 
     @Test
@@ -183,59 +199,64 @@ class OrderAuditServiceTest {
         service.place("alice", order)
         val rawCommitId = "customer-secret-order-894"
         val sequenceKey = "javers:$repositoryName:sequence"
-        redis.getMap<String, Long>(
-            sequenceKey,
-            CompositeCodec(StringCodec.INSTANCE, LongCodec.INSTANCE),
-        ).fastPut(rawCommitId, Long.MAX_VALUE)
+
+        redissonClient
+            .getMap<String, Long>(
+                sequenceKey,
+                CompositeCodec(StringCodec.INSTANCE, LongCodec.INSTANCE),
+            )
+            .fastPut(rawCommitId, Long.MAX_VALUE)
 
         val failure = assertFailsWith<IllegalStateException> {
-            RedisOrderAuditFactory.create(repositoryName, redis)
+            RedisOrderAuditFactory.create(repositoryName, redissonClient)
         }
+
         val message = failure.message.orEmpty()
-        message.contains("type=commitId").shouldBeTrue()
+
+        message shouldContain "type=commitId"
         message.contains(Regex("fingerprint=[0-9a-f]{16}")).shouldBeTrue()
-        message.contains("length=${rawCommitId.length}").shouldBeTrue()
-        message.contains(rawCommitId) shouldBeEqualTo false
-        message.contains(repositoryName) shouldBeEqualTo false
-        message.contains(sequenceKey) shouldBeEqualTo false
-        message.contains(order.id) shouldBeEqualTo false
+        message shouldContain "length=${rawCommitId.length}"
+        message shouldNotContain rawCommitId
+        message shouldNotContain repositoryName
+        message shouldNotContain sequenceKey
+        message shouldNotContain order.id
     }
 
     @Test
     fun `snapshots without Redisson head metadata are not treated as an initial state`() {
         val repositoryName = repositoryName("missing-head-with-snapshot")
         redisService(repositoryName).place("alice", sampleOrder("order-existing-894"))
-        redis.keys.delete("javers:$repositoryName:sequence")
+        redissonClient.keys.delete("javers:$repositoryName:sequence")
 
         val failure = assertFailsWith<IllegalStateException> {
-            RedisOrderAuditFactory.create(repositoryName, redis)
+            RedisOrderAuditFactory.create(repositoryName, redissonClient)
         }
 
+        log.debug { "failure=$failure" }
         failure.message shouldBeEqualTo
-            "Corrupted Redis audit metadata. persisted Order snapshots exist without head metadata."
+                "Corrupted Redis audit metadata. persisted Order snapshots exist without head metadata."
         failure.message.orEmpty().contains(repositoryName) shouldBeEqualTo false
         failure.message.orEmpty().contains("order-existing-894") shouldBeEqualTo false
     }
 
     private fun redisService(repositoryName: String): OrderAuditService =
-        RedisOrderAuditFactory.create(repositoryName, redis)
+        RedisOrderAuditFactory.create(repositoryName, redissonClient)
 
     private fun repositoryName(scope: String): String =
-        "$REPOSITORY_PREFIX:$scope:${System.nanoTime()}"
+        "$REPOSITORY_PREFIX:$scope:${Base58.randomString(8)}"
 
     private fun deleteOrderAuditKeys() {
         val options = KeysScanOptions.defaults().pattern("javers:$REPOSITORY_PREFIX:*")
-        redis.keys.getKeys(options)
-            .forEach { redis.keys.delete(it) }
+        redissonClient.keys.getKeys(options)
+            .forEach { redissonClient.keys.delete(it) }
     }
 
-    private fun sampleOrder(id: String): Order =
-        Order(
-            id = id,
-            customerId = "customer-$id",
-            status = OrderStatus.PLACED,
-            totalAmount = BigDecimal("19.99"),
-        )
+    private fun sampleOrder(id: String): Order = Order(
+        id = id,
+        customerId = "customer-$id",
+        status = OrderStatus.PLACED,
+        totalAmount = BigDecimal("19.99"),
+    )
 
     private object FailingCodec: JaversCodec<ByteArray> {
         override fun encode(jsonElement: JsonObject): ByteArray =
@@ -260,11 +281,5 @@ class OrderAuditServiceTest {
         fun resetDecodeCount() {
             decodeCount.set(0)
         }
-    }
-
-    private companion object {
-        private const val REPOSITORY_PREFIX = "workshop:order-audit"
-
-        val redis = RedisServer.Launcher.RedissonLib.getRedisson()
     }
 }

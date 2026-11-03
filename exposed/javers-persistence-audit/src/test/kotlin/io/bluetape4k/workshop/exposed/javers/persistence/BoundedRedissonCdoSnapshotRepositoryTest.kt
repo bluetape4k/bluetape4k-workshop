@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.javers.codecs.JaversCodec
 import io.bluetape4k.javers.codecs.JaversCodecs
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.javers.core.JaversBuilder
 import org.javers.core.metamodel.`object`.SnapshotType
@@ -22,18 +23,25 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class BoundedRedissonCdoSnapshotRepositoryTest {
 
+    private companion object: KLogging() {
+        private const val REPOSITORY_PREFIX = "workshop:bounded-history"
+        private const val ORDER_ID = "order-fallback"
+
+        val redisClient by lazy { RedisServer.Launcher.RedissonLib.getRedisson() }
+    }
+
     @AfterEach
     fun tearDown() {
         val options = KeysScanOptions.defaults().pattern("javers:$REPOSITORY_PREFIX:*")
-        redis.keys.getKeys(options)
-            .forEach { redis.keys.delete(it) }
+        redisClient.keys.getKeys(options)
+            .forEach { redisClient.keys.delete(it) }
     }
 
     @Test
     fun `unsupported query parameters delegate without changing JaVers semantics`() {
         val codec = CountingCodec()
         val repositoryName = "$REPOSITORY_PREFIX:${System.nanoTime()}"
-        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redis, codec)
+        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redisClient, codec)
         val javers = JaversBuilder.javers()
             .registerJaversRepository(repository)
             .build()
@@ -78,7 +86,7 @@ class BoundedRedissonCdoSnapshotRepositoryTest {
     fun `bounded range remains newest first while snapshots are appended`() {
         val codec = CountingCodec()
         val repositoryName = "$REPOSITORY_PREFIX:concurrent:${System.nanoTime()}"
-        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redis, codec)
+        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redisClient, codec)
         val javers = JaversBuilder.javers()
             .registerJaversRepository(repository)
             .build()
@@ -138,12 +146,5 @@ class BoundedRedissonCdoSnapshotRepositoryTest {
         fun resetDecodeCount() {
             decodeCount.set(0)
         }
-    }
-
-    private companion object {
-        private const val REPOSITORY_PREFIX = "workshop:bounded-history"
-        private const val ORDER_ID = "order-fallback"
-
-        val redis = RedisServer.Launcher.RedissonLib.getRedisson()
     }
 }

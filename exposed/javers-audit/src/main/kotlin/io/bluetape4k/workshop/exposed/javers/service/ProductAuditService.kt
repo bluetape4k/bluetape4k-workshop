@@ -4,6 +4,7 @@ import io.bluetape4k.javers.latestSnapshotOrNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.exposed.javers.model.Product
 import io.bluetape4k.workshop.exposed.javers.model.ProductTable
@@ -68,10 +69,9 @@ class ProductAuditService(
      */
     fun getHistory(productId: Long): List<CdoSnapshot> {
         val validProductId = productId.requirePositiveNumber("productId")
-        val query = QueryBuilder.byInstanceId(validProductId, Product::class.java)
-            .build()
-        return javers.findSnapshots(query)
-            .sortedBy { it.commitMetadata.commitDate }
+        val query = QueryBuilder.byInstanceId(validProductId, Product::class.java).build()
+
+        return javers.findSnapshots(query).sortedBy { it.commitMetadata.commitDate }
     }
 
     /**
@@ -99,7 +99,7 @@ class ProductAuditService(
      */
     fun delete(author: String, product: Product) {
         author.requireNotBlank("author")
-        val current = requireNotNull(findCurrentProduct(product.id)) {
+        val current = findCurrentProduct(product.id).requireNotNull {
             "Product ${product.id} does not exist"
         }
         javers.commitShallowDelete(author, current)
@@ -117,13 +117,12 @@ class ProductAuditService(
         return product
     }
 
-    private fun findCurrentProduct(productId: Long): Product? =
-        transaction {
-            ProductTable.selectAll()
-                .where { ProductTable.id eq productId.requirePositiveNumber("productId") }
-                .singleOrNull()
-                ?.toProduct()
-        }
+    private fun findCurrentProduct(productId: Long): Product? = transaction {
+        ProductTable.selectAll()
+            .where { ProductTable.id eq productId.requirePositiveNumber("productId") }
+            .singleOrNull()
+            ?.toProduct()
+    }
 
     private fun ResultRow.toProduct(): Product =
         Product(

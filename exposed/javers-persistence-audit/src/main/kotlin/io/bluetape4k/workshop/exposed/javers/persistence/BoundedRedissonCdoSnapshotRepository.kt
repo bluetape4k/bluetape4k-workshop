@@ -4,6 +4,7 @@ import io.bluetape4k.javers.codecs.JaversCodec
 import io.bluetape4k.javers.persistence.redis.repository.RedissonCdoSnapshotRepository
 import io.bluetape4k.javers.repository.CdoSnapshotRepository
 import io.bluetape4k.redis.redisson.codec.RedissonCodecs
+import io.bluetape4k.support.requireNotNull
 import org.javers.core.json.JsonConverter
 import org.javers.core.metamodel.`object`.CdoSnapshot
 import org.javers.core.metamodel.`object`.GlobalId
@@ -16,18 +17,22 @@ import org.redisson.api.RedissonClient
  *
  * filter, aggregate, skip이 있는 query는 의미를 보존하기 위해 [delegate]로 위임한다.
  */
+@Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
 internal class BoundedRedissonCdoSnapshotRepository(
     repositoryName: String,
     redisson: RedissonClient,
     private val snapshotCodec: JaversCodec<ByteArray>,
-    private val delegate: RedissonCdoSnapshotRepository =
-        RedissonCdoSnapshotRepository(repositoryName, redisson, snapshotCodec),
+    private val delegate: RedissonCdoSnapshotRepository = RedissonCdoSnapshotRepository(
+        repositoryName,
+        redisson,
+        snapshotCodec
+    ),
 ): CdoSnapshotRepository by delegate {
 
     private val snapshots: RListMultimap<String, ByteArray> =
         redisson.getListMultimap(
             "javers:$repositoryName:snapshot",
-            RedissonCodecs.LZ4ForyComposite,
+            RedissonCodecs.LZ4FastForyComposite,
         )
 
     @Volatile
@@ -46,7 +51,7 @@ internal class BoundedRedissonCdoSnapshotRepository(
             return delegate.getStateHistory(globalId, queryParams)
         }
 
-        val converter = requireNotNull(jsonConverter) {
+        val converter = jsonConverter.requireNotNull {
             "JsonConverter is not set. Ensure Javers initialized the repository before querying."
         }
         return snapshots[globalId.value()]
@@ -67,21 +72,21 @@ internal class BoundedRedissonCdoSnapshotRepository(
 
 private fun QueryParams.supportsBoundedExactInstanceHistory(): Boolean =
     limit() > 0 &&
-        skip() == 0 &&
-        !isAggregate &&
-        !hasSnapshotQueryLimit() &&
-        commitIds().isEmpty() &&
-        toCommitId().isEmpty &&
-        version().isEmpty &&
-        fromVersion().isEmpty &&
-        toVersion().isEmpty &&
-        author().isEmpty &&
-        authorLikeIgnoreCase().isEmpty &&
-        from().isEmpty &&
-        fromInstant().isEmpty &&
-        to().isEmpty &&
-        toInstant().isEmpty &&
-        changedProperties().isEmpty() &&
-        snapshotType().isEmpty &&
-        commitProperties().isEmpty() &&
-        commitPropertiesLike().isEmpty()
+            skip() == 0 &&
+            !isAggregate &&
+            !hasSnapshotQueryLimit() &&
+            commitIds().isEmpty() &&
+            toCommitId().isEmpty &&
+            version().isEmpty &&
+            fromVersion().isEmpty &&
+            toVersion().isEmpty &&
+            author().isEmpty &&
+            authorLikeIgnoreCase().isEmpty &&
+            from().isEmpty &&
+            fromInstant().isEmpty &&
+            to().isEmpty &&
+            toInstant().isEmpty &&
+            changedProperties().isEmpty() &&
+            snapshotType().isEmpty &&
+            commitProperties().isEmpty() &&
+            commitPropertiesLike().isEmpty()
