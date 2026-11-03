@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.order.controller
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.ProductDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.service.OrderService
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/products")
 class ProductController(private val orderService: OrderService) {
+
+    companion object: KLogging()
 
     @GetMapping
     fun findAll(): List<ProductDTO> = orderService.findAllProducts()

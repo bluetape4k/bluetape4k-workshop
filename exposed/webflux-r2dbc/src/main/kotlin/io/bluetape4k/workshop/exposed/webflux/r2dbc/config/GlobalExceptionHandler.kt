@@ -12,7 +12,7 @@ import org.springframework.web.bind.support.WebExchangeBindException
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @ExceptionHandler(WebExchangeBindException::class)
     fun handleValidation(ex: WebExchangeBindException): ProblemDetail {

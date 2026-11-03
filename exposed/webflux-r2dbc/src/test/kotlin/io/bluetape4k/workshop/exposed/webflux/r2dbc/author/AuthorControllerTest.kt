@@ -6,18 +6,24 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.AuthorDTO
-import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookCursorPageResponse
-import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateBookRequest
+import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateAuthorRequest
+import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateBookRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.test.web.reactive.server.expectBodyList
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
+class AuthorControllerTest: AbstractWebfluxR2dbcTest() {
+
+    companion object: KLoggingChannel()
 
     // findCursorPage endpoint 계약을 HTTP 응답으로 고정합니다.
 
@@ -35,9 +41,10 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(AuthorDTO::class.java)
+            .expectBody<AuthorDTO>()
             .returnResult().responseBody.shouldNotBeNull()
 
+        log.debug { "created=$created" }
         created.id shouldBeGreaterThan 0L
         created.firstName shouldBeEqualTo req.firstName
         created.email shouldBeEqualTo req.email
@@ -46,7 +53,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .uri("/api/authors/${created.id}")
             .exchange()
             .expectStatus().isOk
-            .expectBody(AuthorDTO::class.java)
+            .expectBody<AuthorDTO>()
             .isEqualTo(created)
     }
 
@@ -67,9 +74,11 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
         val authors = webTestClient.get().uri("/api/authors")
             .exchange()
             .expectStatus().isOk
-            .expectBodyList(AuthorDTO::class.java)
+            .expectBodyList<AuthorDTO>()
             .returnResult().responseBody.shouldNotBeNull()
+
         authors.shouldNotBeEmpty()
+            .onEach { log.debug { "author=$it" } }
     }
 
     @Test
@@ -87,6 +96,8 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .expectStatus().isCreated
             .expectBody(AuthorDTO::class.java)
             .returnResult().responseBody.shouldNotBeNull()
+        log.debug { "author=$author" }
+
         repeat(5) { index ->
             webTestClient.post()
                 .uri("/api/books")
@@ -106,9 +117,10 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .uri("/api/books/cursor?pageSize=2")
             .exchange()
             .expectStatus().isOk
-            .expectBody(BookCursorPageResponse::class.java)
+            .expectBody<BookCursorPageResponse>()
             .returnResult().responseBody.shouldNotBeNull()
 
+        log.debug { "first=$first" }
         first.content shouldHaveSize 2
         first.hasNext.shouldBeTrue()
         val cursor = first.nextCursor.shouldNotBeNull()
@@ -117,9 +129,10 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .uri("/api/books/cursor?pageSize=2&cursor=$cursor")
             .exchange()
             .expectStatus().isOk
-            .expectBody(BookCursorPageResponse::class.java)
+            .expectBody<BookCursorPageResponse>()
             .returnResult().responseBody.shouldNotBeNull()
 
+        log.debug { "second=$second" }
         second.content shouldHaveSize 2
         second.content.map(BookDTO::id).intersect(first.content.map(BookDTO::id).toSet()) shouldBeEqualTo emptySet()
     }
@@ -179,8 +192,10 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(AuthorDTO::class.java)
+            .expectBody<AuthorDTO>()
             .returnResult().responseBody.shouldNotBeNull()
+        log.debug { "created=$created" }
+
 
         val updateReq = req.copy(firstName = "UpdatedName")
         val updated = webTestClient.put().uri("/api/authors/${created.id}")
@@ -188,8 +203,10 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .bodyValue(updateReq)
             .exchange()
             .expectStatus().isOk
-            .expectBody(AuthorDTO::class.java)
+            .expectBody<AuthorDTO>()
             .returnResult().responseBody.shouldNotBeNull()
+
+        log.debug { "updated=$updated" }
         updated.firstName shouldBeEqualTo "UpdatedName"
     }
 
@@ -205,7 +222,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(AuthorDTO::class.java)
+            .expectBody<AuthorDTO>()
             .returnResult().responseBody.shouldNotBeNull()
 
         webTestClient.delete().uri("/api/authors/${created.id}")

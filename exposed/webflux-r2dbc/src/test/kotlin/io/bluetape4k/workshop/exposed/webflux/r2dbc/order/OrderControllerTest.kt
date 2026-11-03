@@ -19,7 +19,7 @@ import org.springframework.test.annotation.DirtiesContext
 import java.math.BigDecimal
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class OrderControllerTest : AbstractWebfluxR2dbcTest() {
+class OrderControllerTest: AbstractWebfluxR2dbcTest() {
 
     private fun createProduct(stock: Int = 100): ProductDTO {
         val req = CreateProductRequest(

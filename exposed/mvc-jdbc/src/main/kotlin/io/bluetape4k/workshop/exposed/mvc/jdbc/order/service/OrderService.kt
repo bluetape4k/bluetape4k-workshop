@@ -19,32 +19,29 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 @Service
+@Transactional(readOnly = true)
 class OrderService(
     private val orderRepo: OrderRepository,
     private val orderLineRepo: OrderLineRepository,
     private val productRepo: ProductRepository,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
-    @Transactional(readOnly = true)
     fun findAll(): List<OrderDTO> = orderRepo.findAll()
 
-    @Transactional(readOnly = true)
     fun findById(id: Long): OrderDTO =
         orderRepo.findById(id) ?: throw NoSuchElementException("Order $id not found")
 
-    @Transactional(readOnly = true)
     fun findWithLines(id: Long): OrderWithLinesDTO {
         val order = findById(id)
         val lines = orderLineRepo.findByOrderId(id)
         return OrderWithLinesDTO(order, lines)
     }
 
-    @Transactional(readOnly = true)
     fun calculateTotal(id: Long): BigDecimal {
         val lines = orderLineRepo.findByOrderId(id)
         return lines.fold(BigDecimal.ZERO) { acc, line ->
-            acc + (line.unitPrice * BigDecimal(line.quantity))
+            acc + (line.unitPrice * line.quantity.toBigDecimal())
         }
     }
 
@@ -77,10 +74,8 @@ class OrderService(
     @Transactional
     fun createProduct(req: CreateProductRequest): ProductDTO = productRepo.insert(req)
 
-    @Transactional(readOnly = true)
     fun findAllProducts(): List<ProductDTO> = productRepo.findAll()
 
-    @Transactional(readOnly = true)
     fun findProductById(id: Long): ProductDTO =
         productRepo.findById(id) ?: throw NoSuchElementException("Product $id not found")
 }

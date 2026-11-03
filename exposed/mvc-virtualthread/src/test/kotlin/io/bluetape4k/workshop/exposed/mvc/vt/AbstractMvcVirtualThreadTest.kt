@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.exposed.mvc.vt
 
-import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.exposed.jdbc.virtualThreadJdbcTransactionAsync
+import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.AuthorTable
 import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.BookTable
 import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.OrderLineTable
@@ -12,7 +14,6 @@ import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.ProductTable
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,13 +23,14 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
+import java.util.concurrent.ExecutorService
 
 @ActiveProfiles("postgres")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractMvcVirtualThreadTest {
 
-    companion object : KLogging() {
-        private val testDB = TestDB.POSTGRESQL
+    companion object: KLogging() {
+        private val testDB by lazy { TestDB.POSTGRESQL }
 
         @JvmStatic
         @DynamicPropertySource
@@ -50,11 +52,20 @@ abstract class AbstractMvcVirtualThreadTest {
     }
 
     @Autowired
-    private lateinit var db: Database
+    protected val db: Database = uninitialized()
+
+    @Autowired
+    protected val executor: ExecutorService = uninitialized()
+
+    protected fun <T> withTx(block: () -> T): T =
+        virtualThreadJdbcTransactionAsync(executor, db) {
+            block()
+        }.await()
+
 
     @BeforeEach
     fun truncateAndReseed() {
-        transaction(db) {
+        withTx {
             // child row를 먼저 삭제한다.
             OrderLineTable.deleteAll()
             OrderTable.deleteAll()
@@ -62,7 +73,8 @@ abstract class AbstractMvcVirtualThreadTest {
             ProductTable.deleteAll()
             AuthorTable.deleteAll()
         }
-        transaction(db) {
+
+        withTx {
             seedProducts()
             seedAuthors()
         }

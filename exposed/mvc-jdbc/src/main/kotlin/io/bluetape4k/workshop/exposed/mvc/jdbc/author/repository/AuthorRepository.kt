@@ -31,7 +31,7 @@ import org.springframework.stereotype.Repository
  * `batchInsert()`, `auditedUpdateById()`까지 모두 상속되므로 boilerplate가 필요하지 않다.
  */
 @Repository
-class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
+class AuthorRepository: LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
 
     override val table = AuthorTable
 
@@ -52,6 +52,12 @@ class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
             it[lastName] = req.lastName
             it[email] = req.email
         }.value
-        return findById(id)
+
+        return AuthorDTO(
+            id = id,
+            firstName = req.firstName,
+            lastName = req.lastName,
+            email = req.email,
+        )
     }
 }

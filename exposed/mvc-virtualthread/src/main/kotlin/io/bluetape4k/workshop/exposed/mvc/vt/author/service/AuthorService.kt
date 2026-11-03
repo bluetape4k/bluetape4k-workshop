@@ -15,7 +15,7 @@ class AuthorService(
     private val authorRepo: AuthorRepository,
     private val bookRepo: BookRepository,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     fun findAll(): List<AuthorDTO> = authorRepo.findAll().get()
 
@@ -40,5 +40,7 @@ class AuthorService(
         return bookRepo.insert(req).get()
     }
 
-    fun deleteAuthor(id: Long) = authorRepo.deleteById(id).get()
+    fun deleteAuthor(id: Long) {
+        authorRepo.deleteById(id).get()
+    }
 }

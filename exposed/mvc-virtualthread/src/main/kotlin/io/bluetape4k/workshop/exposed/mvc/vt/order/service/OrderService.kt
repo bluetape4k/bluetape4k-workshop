@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.vt.order.service
 
-import io.bluetape4k.concurrent.virtualthread.virtualFuture
+import io.bluetape4k.exposed.jdbc.virtualThreadJdbcTransactionAsync
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.OrderDTO
@@ -21,7 +21,6 @@ import org.jetbrains.exposed.v1.core.minus
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -35,7 +34,7 @@ class OrderService(
     private val orderLineRepo: OrderLineRepository,
     private val productRepo: ProductRepository,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     fun findAll(): List<OrderDTO> = orderRepo.findAll().get()
 
@@ -55,8 +54,8 @@ class OrderService(
         }
     }
 
-    fun placeOrder(req: PlaceOrderRequest): OrderDTO = virtualFuture(executor) {
-        transaction(db) {
+    fun placeOrder(req: PlaceOrderRequest): OrderDTO =
+        virtualThreadJdbcTransactionAsync(executor, db) {
             val orderId = OrderTable.insert {
                 it[customerId] = req.customerId
             }[OrderTable.id]
@@ -90,11 +89,11 @@ class OrderService(
                 .where { OrderTable.id eq orderId }
                 .single()
                 .toOrderDTO()
-        }
-    }.get()
 
-    fun cancelOrder(orderId: Long): OrderDTO = virtualFuture(executor) {
-        transaction(db) {
+        }.await()
+
+    fun cancelOrder(orderId: Long): OrderDTO =
+        virtualThreadJdbcTransactionAsync(executor, db) {
             val rows = OrderTable.update({ OrderTable.id eq orderId }) {
                 it[status] = OrderStatus.CANCELLED
             }
@@ -103,8 +102,7 @@ class OrderService(
                 .where { OrderTable.id eq orderId }
                 .single()
                 .toOrderDTO()
-        }
-    }.get()
+        }.await()
 
     fun createProduct(req: CreateProductRequest): ProductDTO = productRepo.insert(req).get()
 

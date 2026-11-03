@@ -1,7 +1,10 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.order
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.exposed.mvc.jdbc.AbstractMvcJdbcTest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.OrderLineRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.PlaceOrderRequest
@@ -12,25 +15,26 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
-class ConcurrentPlaceOrderTest : AbstractMvcJdbcTest() {
+class ConcurrentPlaceOrderTest: AbstractMvcJdbcTest() {
+
+    companion object: KLogging()
 
     @Autowired
     private lateinit var txManager: PlatformTransactionManager
 
-    private fun <T: Any> inTx(block: () -> T): T =
-        requireNotNull(TransactionTemplate(txManager).execute { block() }) {
-            "Transaction callback returned null"
-        }
+    private inline fun <T: Any> withTx(crossinline block: () -> T): T =
+        TransactionTemplate(txManager).execute { block() }.shouldNotBeNull()
 
     @Test
     fun `only one of N concurrent orders succeeds with stock=1`() {
-        val testProductId = inTx {
+        val testProductId = withTx {
             ProductTable.insert {
                 it[name] = "Limited Edition ${faker.number().digits(8)}"
                 it[price] = BigDecimal("99.99")
@@ -38,7 +42,7 @@ class ConcurrentPlaceOrderTest : AbstractMvcJdbcTest() {
             }[ProductTable.id]
         }
 
-        val N = 10
+        val N = Runtimex.availableProcessors
         val successCount = AtomicInteger(0)
         val conflictCount = AtomicInteger(0)
         val customerSeq = AtomicLong(1L)
@@ -56,7 +60,7 @@ class ConcurrentPlaceOrderTest : AbstractMvcJdbcTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(req)
                     .exchange()
-                    .returnResult(String::class.java)
+                    .returnResult<String>()
                     .status
                 when {
                     status.is2xxSuccessful -> successCount.incrementAndGet()
@@ -68,7 +72,7 @@ class ConcurrentPlaceOrderTest : AbstractMvcJdbcTest() {
         successCount.get() shouldBeEqualTo 1
         conflictCount.get() shouldBeEqualTo N - 1
 
-        val finalStock = inTx {
+        val finalStock = withTx {
             ProductTable.selectAll()
                 .where { ProductTable.id eq testProductId }
                 .single()[ProductTable.stock]

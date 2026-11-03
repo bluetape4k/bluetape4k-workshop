@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
 @Configuration(proxyBeanMethods = false)
 class TomcatConfig {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /** 모든 repo/service에 주입되는 공유 virtual thread executor이다. */
     @Bean(destroyMethod = "shutdown")

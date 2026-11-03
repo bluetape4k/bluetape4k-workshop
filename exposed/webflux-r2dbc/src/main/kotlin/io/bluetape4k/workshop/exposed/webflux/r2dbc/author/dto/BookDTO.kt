@@ -9,7 +9,7 @@ data class BookDTO(
     val title: String = "",
     val publishDate: String = "",
     val authorId: Long = 0L,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -19,7 +19,7 @@ data class CreateBookRequest(
     @field:NotBlank val title: String = "",
     @field:NotBlank val publishDate: String = "",
     @field:Positive val authorId: Long = 0L,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

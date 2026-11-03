@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.author.repository
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.AuthorDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateAuthorRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.schema.AuthorTable
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class AuthorRepository {
+
+    companion object: KLogging()
 
     fun findAll(): Flow<AuthorDTO> =
         AuthorTable.selectAll().map { it.toAuthorDTO() }
