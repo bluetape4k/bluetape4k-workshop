@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 configurations {
@@ -42,7 +43,7 @@ dependencies {
     compileOnly(libs.bluetape4k.graph.memgraph)
 
     // Bluetape4k 공통 기능
-    implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
 
     // 코루틴

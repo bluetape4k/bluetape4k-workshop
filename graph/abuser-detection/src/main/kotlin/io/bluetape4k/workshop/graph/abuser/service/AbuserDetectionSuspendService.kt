@@ -21,8 +21,8 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.graph.abuser.model.AbuseCluster
-import io.bluetape4k.workshop.graph.abuser.model.AbuserAlgorithmExecution
 import io.bluetape4k.workshop.graph.abuser.model.AbusePath
+import io.bluetape4k.workshop.graph.abuser.model.AbuserAlgorithmExecution
 import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserRanking
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
@@ -83,7 +83,7 @@ class AbuserDetectionSuspendService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         /**
          * 역방향 순회를 위해 식별자 정점 레이블을 [IdentifierEdgeLabel]로 매핑합니다.
          *
@@ -91,9 +91,9 @@ class AbuserDetectionSuspendService(
          * 찾는 데 사용합니다.
          */
         private val VERTEX_LABEL_TO_EDGE_LABEL: Map<String, IdentifierEdgeLabel> = mapOf(
-            DeviceLabel.label        to IdentifierEdgeLabel.USES_DEVICE,
-            IpAddressLabel.label     to IdentifierEdgeLabel.USES_IP,
-            PhoneNumberLabel.label   to IdentifierEdgeLabel.HAS_PHONE,
+            DeviceLabel.label to IdentifierEdgeLabel.USES_DEVICE,
+            IpAddressLabel.label to IdentifierEdgeLabel.USES_IP,
+            PhoneNumberLabel.label to IdentifierEdgeLabel.HAS_PHONE,
             PaymentMethodLabel.label to IdentifierEdgeLabel.USES_PAYMENT,
         )
     }
@@ -125,11 +125,13 @@ class AbuserDetectionSuspendService(
     suspend fun addUser(userId: String, country: String): GraphVertex {
         userId.requireNotBlank("userId")
         country.requireNotBlank("country")
-        return ops.findVerticesByLabel(UserLabel.label, mapOf(UserLabel.userId.name to userId))
+
+        return ops.findVerticesByLabel(UserLabel.label, UserLabel.userId.name to userId)
             .firstOrNull()
             ?: ops.createVertex(
                 UserLabel.label,
-                mapOf(UserLabel.userId.name to userId, UserLabel.country.name to country)
+                UserLabel.userId.name to userId,
+                UserLabel.country.name to country
             )
     }
 
@@ -142,11 +144,13 @@ class AbuserDetectionSuspendService(
     suspend fun addDevice(deviceId: String, platform: String): GraphVertex {
         deviceId.requireNotBlank("deviceId")
         platform.requireNotBlank("platform")
-        return ops.findVerticesByLabel(DeviceLabel.label, mapOf(DeviceLabel.deviceId.name to deviceId))
+
+        return ops.findVerticesByLabel(DeviceLabel.label, DeviceLabel.deviceId.name to deviceId)
             .firstOrNull()
             ?: ops.createVertex(
                 DeviceLabel.label,
-                mapOf(DeviceLabel.deviceId.name to deviceId, DeviceLabel.platform.name to platform)
+                DeviceLabel.deviceId.name to deviceId,
+                DeviceLabel.platform.name to platform
             )
     }
 
@@ -157,9 +161,9 @@ class AbuserDetectionSuspendService(
      */
     suspend fun addIpAddress(ip: String): GraphVertex {
         ip.requireNotBlank("ip")
-        return ops.findVerticesByLabel(IpAddressLabel.label, mapOf(IpAddressLabel.ip.name to ip))
+        return ops.findVerticesByLabel(IpAddressLabel.label, IpAddressLabel.ip.name to ip)
             .firstOrNull()
-            ?: ops.createVertex(IpAddressLabel.label, mapOf(IpAddressLabel.ip.name to ip))
+            ?: ops.createVertex(IpAddressLabel.label, IpAddressLabel.ip.name to ip)
     }
 
     /**
@@ -172,9 +176,9 @@ class AbuserDetectionSuspendService(
      */
     suspend fun addPhoneNumber(hashedPhone: String): GraphVertex {
         hashedPhone.requireNotBlank("hashedPhone")
-        return ops.findVerticesByLabel(PhoneNumberLabel.label, mapOf(PhoneNumberLabel.phone.name to hashedPhone))
+        return ops.findVerticesByLabel(PhoneNumberLabel.label, PhoneNumberLabel.phone.name to hashedPhone)
             .firstOrNull()
-            ?: ops.createVertex(PhoneNumberLabel.label, mapOf(PhoneNumberLabel.phone.name to hashedPhone))
+            ?: ops.createVertex(PhoneNumberLabel.label, PhoneNumberLabel.phone.name to hashedPhone)
     }
 
     /**
@@ -187,14 +191,15 @@ class AbuserDetectionSuspendService(
      */
     suspend fun addPaymentMethod(paymentToken: String): GraphVertex {
         paymentToken.requireNotBlank("paymentToken")
-        return ops.findVerticesByLabel(
-            PaymentMethodLabel.label,
-            mapOf(PaymentMethodLabel.paymentToken.name to paymentToken)
-        )
+        return ops
+            .findVerticesByLabel(
+                PaymentMethodLabel.label,
+                PaymentMethodLabel.paymentToken.name to paymentToken
+            )
             .firstOrNull()
             ?: ops.createVertex(
                 PaymentMethodLabel.label,
-                mapOf(PaymentMethodLabel.paymentToken.name to paymentToken)
+                PaymentMethodLabel.paymentToken.name to paymentToken
             )
     }
 
@@ -217,11 +222,12 @@ class AbuserDetectionSuspendService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(deviceVertexId, DeviceLabel.label, "deviceVertexId")
+
         return ops.createEdge(
             userVertexId,
             deviceVertexId,
             UsesDeviceLabel.label,
-            mapOf(UsesDeviceLabel.occurredAt.name to occurredAt),
+            UsesDeviceLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -240,11 +246,12 @@ class AbuserDetectionSuspendService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(ipVertexId, IpAddressLabel.label, "ipVertexId")
+
         return ops.createEdge(
             userVertexId,
             ipVertexId,
             UsesIpLabel.label,
-            mapOf(UsesIpLabel.occurredAt.name to occurredAt),
+            UsesIpLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -263,11 +270,12 @@ class AbuserDetectionSuspendService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(phoneVertexId, PhoneNumberLabel.label, "phoneVertexId")
+
         return ops.createEdge(
             userVertexId,
             phoneVertexId,
             HasPhoneLabel.label,
-            mapOf(HasPhoneLabel.occurredAt.name to occurredAt),
+            HasPhoneLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -286,11 +294,12 @@ class AbuserDetectionSuspendService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(paymentVertexId, PaymentMethodLabel.label, "paymentVertexId")
+
         return ops.createEdge(
             userVertexId,
             paymentVertexId,
             UsesPaymentLabel.label,
-            mapOf(UsesPaymentLabel.occurredAt.name to occurredAt),
+            UsesPaymentLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -309,11 +318,12 @@ class AbuserDetectionSuspendService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(referrerVertexId, UserLabel.label, "referrerVertexId")
         ops.requireEndpoint(referredVertexId, UserLabel.label, "referredVertexId")
+
         return ops.createEdge(
             referrerVertexId,
             referredVertexId,
             ReferredByLabel.label,
-            mapOf(ReferredByLabel.occurredAt.name to occurredAt),
+            ReferredByLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -337,16 +347,19 @@ class AbuserDetectionSuspendService(
         val emptyCluster = AbuseCluster(seedUserId, emptyList(), emptyList())
 
         if (ops.findVertexById(seedUserId) == null) {
-            log.warn { "findAbuseCluster: seed user vertex not found [seedUserId=$seedUserId, graphName=$graphName] — returning empty cluster" }
+            log.warn {
+                "findAbuseCluster: seed user vertex not found [seedUserId=$seedUserId, graphName=$graphName] — returning empty cluster"
+            }
             return emptyCluster
         }
 
         // 1단계: OUTGOING 식별자 간선을 순회해 공유 식별자를 모읍니다.
         val seedIdentifiers = buildList {
-            for (edgeLabel in IdentifierEdgeLabel.all) {
+            IdentifierEdgeLabel.all.forEach { edgeLabel ->
                 currentCoroutineContext().ensureActive()
                 addAll(
-                    ops.neighbors(seedUserId, NeighborOptions(edgeLabel.value, Direction.OUTGOING, 1))
+                    ops
+                        .neighbors(seedUserId, NeighborOptions(edgeLabel.value, Direction.OUTGOING, 1))
                         .toList()
                 )
             }
@@ -362,13 +375,18 @@ class AbuserDetectionSuspendService(
             currentCoroutineContext().ensureActive()
             val reverseLabel = VERTEX_LABEL_TO_EDGE_LABEL[identifierVertex.label]
             if (reverseLabel == null) {
-                log.warn { "findAbuseCluster: unknown identifier vertex label '${identifierVertex.label}' — skipping reverse traversal" }
+                log.warn {
+                    "findAbuseCluster: unknown identifier vertex label '${identifierVertex.label}' — skipping reverse traversal"
+                }
                 continue
             }
-            ops.neighbors(
-                identifierVertex.id,
-                NeighborOptions(reverseLabel.value, Direction.INCOMING, 1)
-            ).toList().filterTo(clusterUsers) { it.id != seedUserId }
+            ops
+                .neighbors(
+                    identifierVertex.id,
+                    NeighborOptions(reverseLabel.value, Direction.INCOMING, 1)
+                )
+                .toList()
+                .filterTo(clusterUsers) { it.id != seedUserId }
         }
 
         return AbuseCluster(
@@ -387,11 +405,13 @@ class AbuserDetectionSuspendService(
      * @return outgoing [AbusePath] 항목의 cold [Flow]입니다. 사용자에게 식별자 간선이 없으면 비어 있습니다.
      */
     fun explainSuspicion(userId: GraphElementId): Flow<AbusePath> = flow {
-        for (edgeLabel in IdentifierEdgeLabel.all) {
+        IdentifierEdgeLabel.all.forEach { edgeLabel ->
             currentCoroutineContext().ensureActive()
-            ops.findEdgesByStartId(userId, edgeLabel.value).collect { edge ->
-                emit(AbusePath(identifierVertexId = edge.endId, edgeLabel = edgeLabel))
-            }
+            ops
+                .findEdgesByStartId(userId, edgeLabel.value)
+                .collect { edge ->
+                    emit(AbusePath(identifierVertexId = edge.endId, edgeLabel = edgeLabel))
+                }
         }
     }
 
@@ -405,12 +425,13 @@ class AbuserDetectionSuspendService(
     fun detectReferralLoops(maxDepth: Int = 6, maxCycles: Int = 100): Flow<GraphCycle> {
         maxDepth.requirePositiveNumber("maxDepth")
         maxCycles.requirePositiveNumber("maxCycles")
+
         return ops.detectCycles(
             CycleOptions(
                 vertexLabel = UserLabel.label,
-                edgeLabel   = ReferredByLabel.label,
-                maxDepth    = maxDepth,
-                maxCycles   = maxCycles,
+                edgeLabel = ReferredByLabel.label,
+                maxDepth = maxDepth,
+                maxCycles = maxCycles,
             )
         )
     }
@@ -427,14 +448,16 @@ class AbuserDetectionSuspendService(
      */
     fun rankSuspiciousUsers(limit: Int = 20): Flow<SuspiciousUserScore> {
         limit.requirePositiveNumber("limit")
+
         // vertexLabel = UserLabel.label은 topK = limit이 사용자 수에 직접 적용되게 합니다.
-        return ops.pageRank(PageRankOptions(vertexLabel = UserLabel.label, topK = limit))
+        return ops
+            .pageRank(PageRankOptions(vertexLabel = UserLabel.label, topK = limit))
             .withIndex()
             .map { (index, pageRankScore) ->
                 SuspiciousUserScore(
-                    user  = pageRankScore.vertex,
+                    user = pageRankScore.vertex,
                     score = pageRankScore.score,
-                    rank  = index + 1,
+                    rank = index + 1,
                 )
             }
     }
@@ -454,6 +477,7 @@ class AbuserDetectionSuspendService(
         policy: GraphAlgorithmProviderPolicy = GraphAlgorithmProviderPolicy.AUTO,
     ): SuspiciousUserRanking {
         limit.requirePositiveNumber("limit")
+
         val execution = GraphAlgorithmProviderSelector.select(
             algorithm = GraphAlgorithmId.PAGE_RANK,
             policy = policy,
@@ -475,5 +499,4 @@ class AbuserDetectionSuspendService(
             log.warn { "Graph algorithm execution observer failed" }
         }
     }
-
 }

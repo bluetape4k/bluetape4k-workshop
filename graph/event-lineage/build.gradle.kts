@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 configurations {
@@ -29,7 +30,7 @@ dependencies {
     implementation(libs.bluetape4k.graph.core)
     implementation(libs.bluetape4k.graph.tinkerpop)
     compileOnly(libs.bluetape4k.graph.neo4j)
-    implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.core)
 
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)

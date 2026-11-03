@@ -28,7 +28,7 @@ data class SuspiciousUserScore(
     val score: Double,
     /** 의심 순위에서 1부터 시작하는 순위 위치입니다. */
     val rank: Int,
-) : Serializable {
+): Serializable {
     init {
         score.requirePositiveNumber("score")
         rank.requirePositiveNumber("rank")

@@ -12,7 +12,7 @@ data class LineageNode private constructor(
     val nodeId: String,
     val label: String,
     val properties: Map<String, Any?> = emptyMap(),
-) : Serializable {
+): Serializable {
     init {
         if (nodeId.isBlank() || label.isBlank()) {
             nodeId.length.requireInRange(0, 0, "nodeId.length")
@@ -51,7 +51,7 @@ data class LineageNode private constructor(
 data class LineagePath(
     val nodes: List<LineageNode>,
     val edgeLabels: List<String>,
-) : Serializable {
+): Serializable {
     init {
         val expectedEdgeCount = if (nodes.isEmpty()) 0 else nodes.size - 1
         edgeLabels.size.requireInRange(expectedEdgeCount, expectedEdgeCount, "edgeLabels.size")
@@ -72,7 +72,7 @@ data class ApprovalEvidence(
     val event: LineageNode,
     val decision: LineageNode,
     val actor: LineageNode,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -86,7 +86,7 @@ data class AggregateAuditTrail(
     val events: List<LineageNode>,
     val approvals: List<ApprovalEvidence>,
     val rootCauses: List<LineageNode>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 

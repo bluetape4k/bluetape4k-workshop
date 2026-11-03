@@ -2,18 +2,22 @@ package io.bluetape4k.workshop.graph.knowledge
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.graph.schema.schemaManager
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.graph.knowledge.schema.KnowledgeGraphSchema
 import io.bluetape4k.workshop.graph.knowledge.seed.KnowledgeGraphSeed
 import io.bluetape4k.workshop.graph.knowledge.seed.seedKnowledgeGraph
-import io.bluetape4k.workshop.graph.knowledge.schema.KnowledgeGraphSchema
 import io.bluetape4k.workshop.graph.knowledge.service.KnowledgeGraphSuspendService
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -27,7 +31,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractKnowledgeGraphSuspendTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     protected abstract val graphName: String
     protected abstract val ops: GraphSuspendOperations
@@ -35,6 +39,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     protected val service: KnowledgeGraphSuspendService by lazy {
         KnowledgeGraphSuspendService(ops, graphName)
     }
+
     protected lateinit var seed: KnowledgeGraphSeed
 
     @BeforeEach
@@ -52,7 +57,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
 
     @Test
     fun `findMentionedEntities returns entities mentioned by a document`() = runSuspendIO {
-        val entityIds = service.findMentionedEntities(seed.docKotlinGuide.id).toList()
+        val entityIds = service.findMentionedEntities(seed.docKotlinGuide.id)
+            .log("Mentioned")
+            .toList()
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-kotlin"
@@ -61,7 +68,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
 
     @Test
     fun `findMentionedEntities for spring guide returns spring and kotlin`() = runSuspendIO {
-        val entityIds = service.findMentionedEntities(seed.docSpringGuide.id).toList()
+        val entityIds = service.findMentionedEntities(seed.docSpringGuide.id)
+            .log("Mentioned")
+            .toList()
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-spring"
@@ -74,7 +83,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
 
     @Test
     fun `findRelatedEntities returns direct neighbours at depth 1`() = runSuspendIO {
-        val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 1).toList()
+        val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 1)
+            .log("Related")
+            .toList()
             .map { it.properties["entityId"] }
 
         entityIds.shouldNotBeEmpty()
@@ -84,7 +95,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
 
     @Test
     fun `findRelatedEntities at depth 2 includes transitively reachable entities`() = runSuspendIO {
-        val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 2).toList()
+        val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 2)
+            .log("Related")
+            .toList()
             .map { it.properties["entityId"] }
 
         entityIds.shouldNotBeEmpty()
@@ -99,7 +112,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
 
     @Test
     fun `findConceptsForEntity returns concept for kotlin entity`() = runSuspendIO {
-        val conceptIds = service.findConceptsForEntity(seed.entityKotlin.id).toList()
+        val conceptIds = service.findConceptsForEntity(seed.entityKotlin.id)
+            .log("Concept")
+            .toList()
             .map { it.properties["conceptId"] }
 
         conceptIds.shouldNotBeEmpty()
@@ -108,7 +123,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
 
     @Test
     fun `findConceptsForEntity returns framework concept for spring entity`() = runSuspendIO {
-        val conceptIds = service.findConceptsForEntity(seed.entitySpring.id).toList()
+        val conceptIds = service.findConceptsForEntity(seed.entitySpring.id)
+            .log("Concept")
+            .toList()
             .map { it.properties["conceptId"] }
 
         conceptIds.shouldNotBeEmpty()
@@ -121,27 +138,33 @@ abstract class AbstractKnowledgeGraphSuspendTest {
 
     @Test
     fun `inferRelationshipPaths finds path from kotlin to spring`() = runSuspendIO {
-        val paths = service.inferRelationshipPaths(
-            seed.entityKotlin.id,
-            seed.entitySpring.id,
-            maxDepth = 3,
-            maxPaths = 5,
-        ).toList()
+        val paths = service
+            .inferRelationshipPaths(
+                seed.entityKotlin.id,
+                seed.entitySpring.id,
+                maxDepth = 3,
+                maxPaths = 5,
+            )
+            .log("Path")
+            .toList()
 
         paths.shouldNotBeEmpty()
-        val vertexIds = paths.first().vertices.map { it.properties["entityId"] }
+        val vertexIds = paths.first().vertices.map { it.properties["entityId"] }.onEach { log.debug { "Vertex=$it" } }
         vertexIds shouldContain "entity-kotlin"
         vertexIds shouldContain "entity-spring"
     }
 
     @Test
     fun `inferRelationshipPaths respects maxPaths bound`() = runSuspendIO {
-        val paths = service.inferRelationshipPaths(
-            seed.entityKotlin.id,
-            seed.entityJvm.id,
-            maxDepth = 4,
-            maxPaths = 1,
-        ).toList()
+        val paths = service
+            .inferRelationshipPaths(
+                seed.entityKotlin.id,
+                seed.entityJvm.id,
+                maxDepth = 4,
+                maxPaths = 1,
+            )
+            .log("Path")
+            .toList()
 
         paths.size shouldBeEqualTo 1
     }
@@ -168,7 +191,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
         val gradle = service.addEntity("entity-gradle", "Gradle", "BuildTool")
         service.mention(doc.id, gradle.id, confidence = 90)
 
-        val entityIds = service.findMentionedEntities(doc.id).toList()
+        val entityIds = service.findMentionedEntities(doc.id)
+            .log("Mentioned")
+            .toList()
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-gradle"
@@ -183,7 +208,9 @@ abstract class AbstractKnowledgeGraphSuspendTest {
         val gradle = service.addEntity("entity-gradle", "Gradle", "BuildTool")
         service.relateEntities(seed.entityKotlin.id, gradle.id, relationType = "uses")
 
-        val entityIds = service.findRelatedEntities(seed.entityKotlin.id).toList()
+        val entityIds = service.findRelatedEntities(seed.entityKotlin.id)
+            .log("Related")
+            .toList()
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-gradle"
@@ -266,7 +293,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     @Test
     fun `findRelatedEntities with zero depth throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
-            service.findRelatedEntities(seed.entityKotlin.id, depth = 0)
+            service.findRelatedEntities(seed.entityKotlin.id, depth = 0).collect()
         }
     }
 
@@ -274,6 +301,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     fun `inferRelationshipPaths with zero maxDepth throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.inferRelationshipPaths(seed.entityKotlin.id, seed.entitySpring.id, maxDepth = 0)
+                .collect()
         }
     }
 
@@ -281,6 +309,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     fun `inferRelationshipPaths with zero maxPaths throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.inferRelationshipPaths(seed.entityKotlin.id, seed.entitySpring.id, maxPaths = 0)
+                .collect()
         }
     }
 
@@ -294,7 +323,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
         val second = service.planSchema()
 
         first shouldBeEqualTo second
-        first.options.dryRun shouldBeEqualTo true
+        first.options.dryRun.shouldBeTrue()
         KnowledgeGraphSchema.desiredSchema().indexes.size shouldBeEqualTo 3
         KnowledgeGraphSchema.desiredSchema().constraints.size shouldBeEqualTo 3
         manager.listIndexes() shouldBeEqualTo indexesBefore

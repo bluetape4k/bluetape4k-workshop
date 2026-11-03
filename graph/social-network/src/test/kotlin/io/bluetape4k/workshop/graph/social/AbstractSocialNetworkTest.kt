@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.graph.social
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNear
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
@@ -14,6 +14,7 @@ import io.bluetape4k.graph.model.MissingWeightException
 import io.bluetape4k.graph.model.MissingWeightPolicy
 import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.graph.social.model.ConnectionRecommendation
 import io.bluetape4k.workshop.graph.social.schema.CompanyLabel
 import io.bluetape4k.workshop.graph.social.schema.KnowsLabel
@@ -45,6 +46,8 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractSocialNetworkTest {
+
+    companion object: KLogging()
 
     protected abstract val graphName: String
     protected abstract val ops: GraphOperations
@@ -251,7 +254,8 @@ abstract class AbstractSocialNetworkTest {
     fun `addWorkExperience creates WORKS_AT edge with correct properties`() {
         val alice = service.addPerson("alice", "Alice Smith")
         val acme = service.addCompany("acme", "Acme Corp")
-        val edge = service.addWorkExperience(alice.id, acme.id, role = "Engineer", startDate = "2022-03-01", isCurrent = true)
+        val edge =
+            service.addWorkExperience(alice.id, acme.id, role = "Engineer", startDate = "2022-03-01", isCurrent = true)
 
         edge.properties[WorksAtLabel.role.name] shouldBeEqualTo "Engineer"
         edge.properties[WorksAtLabel.startDate.name] shouldBeEqualTo "2022-03-01"
@@ -486,7 +490,7 @@ abstract class AbstractSocialNetworkTest {
 
         path.totalWeight.shouldBeNear(6.0, 0.0001)
         path.vertices.map { it.properties[PersonLabel.personId.name] } shouldBeEqualTo
-            listOf("alice", "carol", "eve", "dave")
+                listOf("alice", "carol", "eve", "dave")
     }
 
     @Test
