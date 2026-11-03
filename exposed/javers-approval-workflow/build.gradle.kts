@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.exposed)
+    kotlin("kapt")
 }
 
 exposed {
