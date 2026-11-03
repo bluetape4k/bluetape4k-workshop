@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.gradle.api.tasks.testing.Test
 
 plugins {
     id("io.bluetape4k.workshop.high-contention-profile")
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    kotlin("kapt")
 }
 
 java {
