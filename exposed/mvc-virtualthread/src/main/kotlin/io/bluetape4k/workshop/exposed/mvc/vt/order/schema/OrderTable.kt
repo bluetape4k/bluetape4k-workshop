@@ -8,6 +8,6 @@ object OrderTable: Table("orders") {
     val customerId = long("customer_id")
     val orderDate = long("order_date").clientDefault { Instant.now().toEpochMilli() }
     val status = enumerationByName<OrderStatus>("status", 20).default(OrderStatus.PENDING)
-    
+
     override val primaryKey = PrimaryKey(id)
 }

@@ -5,23 +5,26 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.gatling.AbstractGatlingTest
 import io.bluetape4k.workshop.gatling.validation.MAX_DELAY_SECONDS
-import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 
 class SyncTaskControllerTest: AbstractGatlingTest() {
 
-    companion object: KLogging()
+    companion object: KLogging() {
+        private const val REPEAT_SIZE = 5
+    }
 
     @Test
     fun `context loading`() {
         client.shouldNotBeNull()
     }
 
-    @Test
+    @RepeatedTest(REPEAT_SIZE)
     fun `delay synchronously`() = runSuspendIO {
         val seconds = 1
 

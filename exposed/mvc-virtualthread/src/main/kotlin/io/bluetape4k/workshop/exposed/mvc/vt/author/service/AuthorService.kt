@@ -17,30 +17,30 @@ class AuthorService(
 ) {
     companion object: KLogging()
 
-    fun findAll(): List<AuthorDTO> = authorRepo.findAll().get()
+    fun findAll(): List<AuthorDTO> = authorRepo.findAll().await()
 
     fun findById(id: Long): AuthorDTO =
         authorRepo.findById(id).get() ?: throw NoSuchElementException("Author $id not found")
 
-    fun findAllBooks(): List<BookDTO> = bookRepo.findAll().get()
+    fun findAllBooks(): List<BookDTO> = bookRepo.findAll().await()
 
-    fun findBooksBy(authorId: Long): List<BookDTO> = bookRepo.findByAuthorId(authorId).get()
+    fun findBooksBy(authorId: Long): List<BookDTO> = bookRepo.findByAuthorId(authorId).await()
 
     fun findWithBooks(authorId: Long): AuthorWithBooksDTO {
         val author = findById(authorId)
-        val books = bookRepo.findByAuthorId(authorId).get()
+        val books = bookRepo.findByAuthorId(authorId).await()
         return AuthorWithBooksDTO(author, books)
     }
 
-    fun createAuthor(req: CreateAuthorRequest): AuthorDTO = authorRepo.insert(req).get()
+    fun createAuthor(req: CreateAuthorRequest): AuthorDTO = authorRepo.insert(req).await()
 
     fun createBook(req: CreateBookRequest): BookDTO {
         authorRepo.findById(req.authorId).get()
             ?: throw NoSuchElementException("Author ${req.authorId} not found")
-        return bookRepo.insert(req).get()
+        return bookRepo.insert(req).await()
     }
 
     fun deleteAuthor(id: Long) {
-        authorRepo.deleteById(id).get()
+        authorRepo.deleteById(id).await()
     }
 }

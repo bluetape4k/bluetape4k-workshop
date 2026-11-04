@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.mvc.vt
 
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.exposed.jdbc.virtualThreadJdbcTransactionAsync
+import io.bluetape4k.exposed.jdbc.newVirtualThreadJdbcTransaction
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
@@ -58,9 +58,9 @@ abstract class AbstractMvcVirtualThreadTest {
     protected val executor: ExecutorService = uninitialized()
 
     protected fun <T> withTx(block: () -> T): T =
-        virtualThreadJdbcTransactionAsync(executor, db) {
+        newVirtualThreadJdbcTransaction(executor, db) {
             block()
-        }.await()
+        }
 
 
     @BeforeEach

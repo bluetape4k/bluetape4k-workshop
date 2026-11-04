@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.vt.order.service
 
-import io.bluetape4k.exposed.jdbc.virtualThreadJdbcTransactionAsync
+import io.bluetape4k.exposed.jdbc.newVirtualThreadJdbcTransaction
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.OrderDTO
@@ -36,14 +36,14 @@ class OrderService(
 ) {
     companion object: KLogging()
 
-    fun findAll(): List<OrderDTO> = orderRepo.findAll().get()
+    fun findAll(): List<OrderDTO> = orderRepo.findAll().await()
 
     fun findById(id: Long): OrderDTO =
-        orderRepo.findById(id).get() ?: throw NoSuchElementException("Order $id not found")
+        orderRepo.findById(id).await() ?: throw NoSuchElementException("Order $id not found")
 
     fun findWithLines(id: Long): OrderWithLinesDTO {
         val order = findById(id)
-        val lines = orderLineRepo.findByOrderId(id).get()
+        val lines = orderLineRepo.findByOrderId(id).await()
         return OrderWithLinesDTO(order, lines)
     }
 
@@ -55,7 +55,7 @@ class OrderService(
     }
 
     fun placeOrder(req: PlaceOrderRequest): OrderDTO =
-        virtualThreadJdbcTransactionAsync(executor, db) {
+        newVirtualThreadJdbcTransaction(executor, db) {
             val orderId = OrderTable.insert {
                 it[customerId] = req.customerId
             }[OrderTable.id]
@@ -90,10 +90,10 @@ class OrderService(
                 .single()
                 .toOrderDTO()
 
-        }.await()
+        }
 
     fun cancelOrder(orderId: Long): OrderDTO =
-        virtualThreadJdbcTransactionAsync(executor, db) {
+        newVirtualThreadJdbcTransaction(executor, db) {
             val rows = OrderTable.update({ OrderTable.id eq orderId }) {
                 it[status] = OrderStatus.CANCELLED
             }
@@ -102,12 +102,12 @@ class OrderService(
                 .where { OrderTable.id eq orderId }
                 .single()
                 .toOrderDTO()
-        }.await()
+        }
 
-    fun createProduct(req: CreateProductRequest): ProductDTO = productRepo.insert(req).get()
+    fun createProduct(req: CreateProductRequest): ProductDTO = productRepo.insert(req).await()
 
-    fun findAllProducts(): List<ProductDTO> = productRepo.findAll().get()
+    fun findAllProducts(): List<ProductDTO> = productRepo.findAll().await()
 
     fun findProductById(id: Long): ProductDTO =
-        productRepo.findById(id).get() ?: throw NoSuchElementException("Product $id not found")
+        productRepo.findById(id).await() ?: throw NoSuchElementException("Product $id not found")
 }

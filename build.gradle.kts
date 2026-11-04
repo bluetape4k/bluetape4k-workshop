@@ -16,7 +16,7 @@ plugins {
     alias(libs.plugins.kotlin.jpa) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlinx.atomicfu)
-    alias(libs.plugins.kotlin.kapt) apply false
+    kotlin("kapt") apply false
 
     alias(libs.plugins.detekt)
 
