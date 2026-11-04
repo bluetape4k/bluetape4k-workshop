@@ -38,7 +38,7 @@ import kotlin.time.toKotlinDuration
 @EnableConfigurationProperties(LeaderElectionProperties::class)
 class LeaderElectionConfig {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * [LeaderElectionProperties]의 URL을 사용해 [RedisClient]를 만듭니다.

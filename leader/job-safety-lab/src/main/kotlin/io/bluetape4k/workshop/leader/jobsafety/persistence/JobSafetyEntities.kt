@@ -6,8 +6,8 @@ import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.LongEntityClass
 
 @ExposedEntity
-class JobAssignmentEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<JobAssignmentEntity>(JobAssignments)
+class JobAssignmentEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<JobAssignmentEntity>(JobAssignments)
 
     var tenantId by JobAssignments.tenantId
     var membershipRevision by JobAssignments.membershipRevision
@@ -17,8 +17,8 @@ class JobAssignmentEntity(id: EntityID<Long>) : LongEntity(id) {
 }
 
 @ExposedEntity
-class JobRolloutMarkerEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<JobRolloutMarkerEntity>(JobRolloutMarkers)
+class JobRolloutMarkerEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<JobRolloutMarkerEntity>(JobRolloutMarkers)
 
     var markerName by JobRolloutMarkers.markerName
     var namespaceEpoch by JobRolloutMarkers.namespaceEpoch
@@ -27,8 +27,8 @@ class JobRolloutMarkerEntity(id: EntityID<Long>) : LongEntity(id) {
 }
 
 @ExposedEntity
-class JobResourceEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<JobResourceEntity>(JobResources)
+class JobResourceEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<JobResourceEntity>(JobResources)
 
     var conflictKey by JobResources.conflictKey
     var namespaceEpoch by JobResources.namespaceEpoch
@@ -39,8 +39,8 @@ class JobResourceEntity(id: EntityID<Long>) : LongEntity(id) {
 }
 
 @ExposedEntity
-class JobExecutionEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<JobExecutionEntity>(JobExecutions)
+class JobExecutionEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<JobExecutionEntity>(JobExecutions)
 
     var operationId by JobExecutions.operationId
     var jobName by JobExecutions.jobName
@@ -57,8 +57,8 @@ class JobExecutionEntity(id: EntityID<Long>) : LongEntity(id) {
 }
 
 @ExposedEntity
-class JobCheckpointEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<JobCheckpointEntity>(JobCheckpoints)
+class JobCheckpointEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<JobCheckpointEntity>(JobCheckpoints)
 
     var conflictKey by JobCheckpoints.conflictKey
     var fencingTokenEpoch by JobCheckpoints.fencingTokenEpoch
@@ -69,8 +69,8 @@ class JobCheckpointEntity(id: EntityID<Long>) : LongEntity(id) {
 }
 
 @ExposedEntity
-class JobOutboxEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<JobOutboxEntity>(JobOutboxEntries)
+class JobOutboxEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<JobOutboxEntity>(JobOutboxEntries)
 
     var operationId by JobOutboxEntries.operationId
     var effectType by JobOutboxEntries.effectType
@@ -82,8 +82,8 @@ class JobOutboxEntity(id: EntityID<Long>) : LongEntity(id) {
 }
 
 @ExposedEntity
-class JobEffectReceiptEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<JobEffectReceiptEntity>(JobEffectReceipts)
+class JobEffectReceiptEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<JobEffectReceiptEntity>(JobEffectReceipts)
 
     var provider by JobEffectReceipts.provider
     var operationId by JobEffectReceipts.operationId

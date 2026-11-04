@@ -3,14 +3,19 @@ package io.bluetape4k.workshop.leader.k8slease.job
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.leader.micrometer.LeaderObservationOptions
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderAopMetricsRecorder
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderElectionListener
 import io.bluetape4k.leader.micrometer.OBSERVATION_LEADER_AOP_ACQUIRE
 import io.bluetape4k.leader.micrometer.OBSERVATION_LEADER_AOP_EXECUTION
 import io.bluetape4k.leader.micrometer.OBSERVATION_TAG_OUTCOME
-import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.k8slease.config.K8sLeaseMicrometerProperties
 import io.bluetape4k.workshop.leader.k8slease.leader.LeaderCoordinator
 import io.bluetape4k.workshop.leader.k8slease.metrics.K8sLeaseMetrics
@@ -21,8 +26,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.time.Duration.Companion.milliseconds
 
 class K8sLeaseGuardedTaskObservationTest {
+
+    companion object: KLogging()
 
     @Test
     fun `elected path emits acquire and execute success with sanitized identifiers`() = runSuspendIO {
@@ -34,6 +42,7 @@ class K8sLeaseGuardedTaskObservationTest {
 
         val report = task.runOnce()
 
+        log.debug { "report=$report" }
         report.executed.shouldBeTrue()
         handler.stopped.map { it.name } shouldBeEqualTo listOf(
             "leader.election.event",
@@ -41,7 +50,9 @@ class K8sLeaseGuardedTaskObservationTest {
             OBSERVATION_LEADER_AOP_EXECUTION,
             "leader.election.event",
         )
+
         val execution = handler.stopped.first { it.name == OBSERVATION_LEADER_AOP_EXECUTION }
+        log.debug { "execution=$execution" }
         execution.high["lock.name"] shouldBeEqualTo "redacted-lock"
         execution.high["leader.id"] shouldBeEqualTo "redacted-leader"
         execution.low[OBSERVATION_TAG_OUTCOME] shouldBeEqualTo "success"
@@ -57,6 +68,7 @@ class K8sLeaseGuardedTaskObservationTest {
 
         val report = task.runOnce()
 
+        log.debug { "report=$report" }
         report.executed.shouldBeFalse()
         handler.stopped.first { it.name == OBSERVATION_LEADER_AOP_EXECUTION }
             .low[OBSERVATION_TAG_OUTCOME] shouldBeEqualTo "error"
@@ -68,20 +80,23 @@ class K8sLeaseGuardedTaskObservationTest {
         val task = task(
             registry = registry,
             coordinator = FakeLeaderCoordinator(elected = true),
-            simulatedWorkTime = java.time.Duration.ofSeconds(5),
+            simulatedWorkTime = 5.seconds(),
         )
 
-        assertFailsWith<CancellationException> { withTimeout(25) { task.runOnce() } }
+        assertFailsWith<CancellationException> {
+            withTimeout(25.milliseconds) { task.runOnce() }
+        }
 
         handler.stopped.first { it.name == OBSERVATION_LEADER_AOP_EXECUTION }
             .low[OBSERVATION_TAG_OUTCOME] shouldBeEqualTo "cancelled"
-        handler.stopped.first { it.name == OBSERVATION_LEADER_AOP_EXECUTION }.error shouldBeEqualTo null
+
+        handler.stopped.first { it.name == OBSERVATION_LEADER_AOP_EXECUTION }.error.shouldBeNull()
     }
 
     private fun task(
         registry: ObservationRegistry,
         coordinator: LeaderCoordinator,
-        simulatedWorkTime: java.time.Duration = java.time.Duration.ofMillis(1),
+        simulatedWorkTime: java.time.Duration = 1.millis(),
     ): K8sLeaseGuardedTask = K8sLeaseGuardedTask(
         coordinator = coordinator,
         properties = K8sLeaseMicrometerProperties(simulatedWorkTime = simulatedWorkTime),
@@ -101,12 +116,12 @@ class K8sLeaseGuardedTaskObservationTest {
 
     private class FakeLeaderCoordinator(
         private val elected: Boolean,
-    ) : LeaderCoordinator {
+    ): LeaderCoordinator {
         override suspend fun <T> runIfLeader(lockName: String, action: suspend () -> T): T? =
             if (!elected) null else action()
     }
 
-    private class CollectingObservationHandler : ObservationHandler<Observation.Context> {
+    private class CollectingObservationHandler: ObservationHandler<Observation.Context> {
         val stopped = CopyOnWriteArrayList<Snapshot>()
 
         override fun supportsContext(context: Observation.Context): Boolean = true

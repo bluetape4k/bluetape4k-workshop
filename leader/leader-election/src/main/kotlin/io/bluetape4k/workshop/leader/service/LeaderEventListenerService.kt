@@ -33,6 +33,9 @@ import java.util.concurrent.atomic.AtomicInteger
 class LeaderEventListenerService(
     private val listeningLeaderElector: ListeningLeaderElector,
 ) {
+
+    companion object: KLogging()
+
     val electedCount = AtomicInteger(0)
     val revokedCount = AtomicInteger(0)
     val skippedCount = AtomicInteger(0)
@@ -48,15 +51,13 @@ class LeaderEventListenerService(
     internal val eventScopeCancelled: Boolean
         get() = scope.scopeCancelled
 
-    companion object : KLogging()
-
     /**
      * bean 생성 뒤 callback listener를 등록하고 Flow collector를 시작합니다.
      */
     @PostConstruct
     fun init() {
         // Pattern 1: LeaderElectionListener callback - 동기적이고 가볍습니다.
-        listenerHandle = listeningLeaderElector.addListener(object : LeaderElectionListener {
+        listenerHandle = listeningLeaderElector.addListener(object: LeaderElectionListener {
             override fun onElected(lockName: String) {
                 electedCount.incrementAndGet()
                 log.info { "[EventListener] ELECTED for '$lockName' — total elected=${electedCount.get()}" }

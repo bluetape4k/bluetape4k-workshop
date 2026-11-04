@@ -41,7 +41,7 @@ data class JobRunRequest(
     val contractVersion: ExecutionContractVersion,
     val operationId: OperationId,
     val nextValue: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -52,7 +52,7 @@ data class JobTimelineEvent(
     val occurredAt: Instant,
     val rejection: JobRejectionReason? = null,
     val detailCode: String? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -64,7 +64,7 @@ data class JobExecutionSnapshot(
     val fencingToken: FencingToken? = null,
     val rejection: JobRejectionReason? = null,
     val timeline: List<JobTimelineEvent> = emptyList(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -74,7 +74,7 @@ data class JobRunResult(
     val state: JobExecutionState,
     val fencingToken: FencingToken? = null,
     val rejection: JobRejectionReason? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

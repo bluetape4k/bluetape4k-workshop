@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
-object JobAssignments : LongIdTable("job_safety_tenant_assignments") {
+object JobAssignments: LongIdTable("job_safety_tenant_assignments") {
     val tenantId = varchar("tenant_id", 80).uniqueIndex()
     val membershipRevision = long("membership_revision")
     val regionId = varchar("region_id", 48)
@@ -12,14 +12,14 @@ object JobAssignments : LongIdTable("job_safety_tenant_assignments") {
     val active = bool("active")
 }
 
-object JobRolloutMarkers : LongIdTable("job_safety_rollout_markers") {
+object JobRolloutMarkers: LongIdTable("job_safety_rollout_markers") {
     val markerName = varchar("marker_name", 48).uniqueIndex()
     val namespaceEpoch = long("namespace_epoch")
     val minimumWriterVersion = integer("minimum_writer_version")
     val checkpointSchemaVersion = integer("checkpoint_schema_version")
 }
 
-object JobResources : LongIdTable("job_safety_resources") {
+object JobResources: LongIdTable("job_safety_resources") {
     val conflictKey = varchar("conflict_key", 200).uniqueIndex()
     val namespaceEpoch = long("namespace_epoch")
     val lastAcceptedFenceEpoch = long("last_accepted_fence_epoch").default(1L)
@@ -28,7 +28,7 @@ object JobResources : LongIdTable("job_safety_resources") {
     val updatedAt = timestamp("updated_at")
 }
 
-object JobExecutions : LongIdTable("job_safety_executions") {
+object JobExecutions: LongIdTable("job_safety_executions") {
     val operationId = varchar("operation_id", 120).uniqueIndex()
     val jobName = varchar("job_name", 100)
     val tenantId = varchar("tenant_id", 80)
@@ -43,7 +43,7 @@ object JobExecutions : LongIdTable("job_safety_executions") {
     val updatedAt = timestamp("updated_at")
 }
 
-object JobCheckpoints : LongIdTable("job_safety_checkpoints") {
+object JobCheckpoints: LongIdTable("job_safety_checkpoints") {
     val conflictKey = varchar("conflict_key", 200).uniqueIndex()
     val fencingTokenEpoch = long("fencing_token_epoch").default(1L)
     val fencingToken = long("fencing_token")
@@ -52,7 +52,7 @@ object JobCheckpoints : LongIdTable("job_safety_checkpoints") {
     val updatedAt = timestamp("updated_at")
 }
 
-object JobOutboxEntries : LongIdTable("job_safety_outbox") {
+object JobOutboxEntries: LongIdTable("job_safety_outbox") {
     val operationId = varchar("operation_id", 120).uniqueIndex()
     val effectType = varchar("effect_type", 48)
     val status = varchar("status", 32)
@@ -66,7 +66,7 @@ object JobOutboxEntries : LongIdTable("job_safety_outbox") {
     }
 }
 
-object JobEffectReceipts : LongIdTable("job_safety_effect_receipts") {
+object JobEffectReceipts: LongIdTable("job_safety_effect_receipts") {
     val provider = varchar("provider", 48)
     val operationId = varchar("operation_id", 120)
     val status = varchar("status", 32)

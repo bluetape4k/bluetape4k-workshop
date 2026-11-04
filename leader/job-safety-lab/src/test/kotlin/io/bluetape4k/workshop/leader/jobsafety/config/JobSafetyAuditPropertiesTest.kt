@@ -3,14 +3,24 @@ package io.bluetape4k.workshop.leader.jobsafety.config
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Configuration
 import java.time.Duration
 
 internal class JobSafetyAuditPropertiesTest {
+
+    companion object: KLogging()
+
     private val runner =
         ApplicationContextRunner()
             .withUserConfiguration(PropertiesConfiguration::class.java)
@@ -19,6 +29,7 @@ internal class JobSafetyAuditPropertiesTest {
     fun `memory defaults are bounded and endpoint free`() {
         val properties = JobSafetyAuditProperties()
 
+        log.debug { "properties=$properties" }
         properties.transport shouldBeEqualTo AuditTransport.MEMORY
         properties.queueCapacity shouldBeEqualTo 32
         properties.maxInFlight shouldBeEqualTo 4
@@ -36,7 +47,7 @@ internal class JobSafetyAuditPropertiesTest {
                 "workshop.job-safety.audit.queue-capacity=16",
                 "workshop.job-safety.audit.max-in-flight=4",
             ).run { context ->
-                context.getBean(JobSafetyAuditProperties::class.java).apply {
+                context.getBean<JobSafetyAuditProperties>().apply {
                     transport shouldBeEqualTo AuditTransport.MEMORY
                     queueCapacity shouldBeEqualTo 16
                     maxInFlight shouldBeEqualTo 4
@@ -55,7 +66,7 @@ internal class JobSafetyAuditPropertiesTest {
                 "workshop.job-safety.audit.allowed-hosts=audit.example.test",
                 "workshop.job-safety.audit.headers.authorization=$secret",
             ).run { context ->
-                val properties = context.getBean(JobSafetyAuditProperties::class.java)
+                val properties = context.getBean<JobSafetyAuditProperties>()
                 properties.headers.asMap()["Authorization"] shouldBeEqualTo secret
                 properties.toString().contains(secret).shouldBeFalse()
             }
@@ -177,17 +188,17 @@ internal class JobSafetyAuditPropertiesTest {
         }
         assertFailsWith<IllegalArgumentException> { JobSafetyAuditProperties(maxAttempts = 17) }
         assertFailsWith<IllegalArgumentException> {
-            JobSafetyAuditProperties(attemptTimeout = Duration.ofMinutes(5).plusNanos(1))
+            JobSafetyAuditProperties(attemptTimeout = 5.minutes() + 1.nanos())
         }
         assertFailsWith<IllegalArgumentException> {
-            JobSafetyAuditProperties(initialBackoff = Duration.ofSeconds(2), maxBackoff = Duration.ofSeconds(1))
+            JobSafetyAuditProperties(initialBackoff = 2.seconds(), maxBackoff = 1.seconds())
         }
         assertFailsWith<IllegalArgumentException> { JobSafetyAuditProperties(maxPayloadBytes = 0) }
         assertFailsWith<IllegalArgumentException> { JobSafetyAuditProperties(recentHistoryLimit = 0) }
         assertFailsWith<IllegalArgumentException> { JobSafetyAuditProperties(recentHistoryByteBudget = 0) }
         assertFailsWith<IllegalArgumentException> { JobSafetyAuditProperties(shutdownTimeout = Duration.ZERO) }
         assertFailsWith<IllegalArgumentException> {
-            JobSafetyAuditProperties(shutdownTimeout = Duration.ofSeconds(30).plusNanos(1))
+            JobSafetyAuditProperties(shutdownTimeout = 30.seconds() + 1.nanos())
         }
     }
 
@@ -196,17 +207,20 @@ internal class JobSafetyAuditPropertiesTest {
         val secret = "Bearer " + "x".repeat(32)
         val headers = AuditHeaders(authorization = secret)
 
-        headers.toString().contains(secret).shouldBeFalse()
+        headers.toString() shouldNotContain secret
         headers shouldBeEqualTo AuditHeaders(authorization = "Bearer another-secret")
         headers.hashCode() shouldBeEqualTo AuditHeaders(authorization = "Bearer another-secret").hashCode()
         headers.asMap()["Authorization"] shouldBeEqualTo secret
-        assertFailsWith<IllegalArgumentException> { AuditHeaders(authorization = "x".repeat(8193)) }
+
+        assertFailsWith<IllegalArgumentException> {
+            AuditHeaders(authorization = "x".repeat(8193))
+        }
     }
 
     @Test
     fun `authorization header presence is distinct from absence`() {
-        (AuditHeaders() == AuditHeaders(authorization = "Bearer secret")).shouldBeFalse()
-        (AuditHeaders(authorization = "Bearer one") == AuditHeaders(authorization = "Bearer two")).shouldBeTrue()
+        AuditHeaders() shouldNotBeEqualTo AuditHeaders(authorization = "Bearer secret")
+        AuditHeaders(authorization = "Bearer one") shouldBeEqualTo AuditHeaders(authorization = "Bearer two")
     }
 
     @Test
@@ -221,8 +235,11 @@ internal class JobSafetyAuditPropertiesTest {
                 headers = AuditHeaders(authorization = secret),
             )
 
-        properties.toString().contains(endpoint).shouldBeFalse()
-        properties.toString().contains(secret).shouldBeFalse()
+        log.debug { "properties=$properties" }
+        properties.toString().let {
+            it shouldNotContain endpoint
+            it shouldNotContain secret
+        }
     }
 
     @Configuration(proxyBeanMethods = false)

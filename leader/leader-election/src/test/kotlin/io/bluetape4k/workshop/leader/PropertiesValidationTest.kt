@@ -1,10 +1,11 @@
 package io.bluetape4k.workshop.leader
 
-import io.bluetape4k.workshop.leader.config.LeaderElectionProperties
-import io.bluetape4k.assertions.shouldBeEqualTo
-import org.junit.jupiter.api.Test
-import java.time.Duration
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.leader.config.LeaderElectionProperties
+import org.junit.jupiter.api.Test
 
 /**
  * P3-13: [LeaderElectionProperties] `init {}` validation test입니다.
@@ -14,12 +15,14 @@ import io.bluetape4k.assertions.assertFailsWith
  */
 class PropertiesValidationTest {
 
+    companion object: KLogging()
+
     @Test
     fun `leaseTime less than waitTime throws IllegalArgumentException`() {
         assertFailsWith<IllegalArgumentException> {
             LeaderElectionProperties(
-                waitTime = Duration.ofSeconds(30),
-                leaseTime = Duration.ofSeconds(10),  // leaseTime < waitTime — invalid
+                waitTime = 30.seconds(),
+                leaseTime = 10.seconds(),  // leaseTime < waitTime — invalid
             )
         }
     }
@@ -27,8 +30,8 @@ class PropertiesValidationTest {
     @Test
     fun `valid properties construction succeeds`() {
         val props = LeaderElectionProperties(
-            waitTime = Duration.ofSeconds(2),
-            leaseTime = Duration.ofSeconds(30),
+            waitTime = 2.seconds(),
+            leaseTime = 30.seconds(),
         )
         props.waitTime.toSeconds() shouldBeEqualTo 2L
         props.leaseTime.toSeconds() shouldBeEqualTo 30L
@@ -37,8 +40,8 @@ class PropertiesValidationTest {
     @Test
     fun `equal waitTime and leaseTime is valid`() {
         val props = LeaderElectionProperties(
-            waitTime = Duration.ofSeconds(10),
-            leaseTime = Duration.ofSeconds(10),
+            waitTime = 10.seconds(),
+            leaseTime = 10.seconds(),
         )
         props.waitTime shouldBeEqualTo props.leaseTime
     }

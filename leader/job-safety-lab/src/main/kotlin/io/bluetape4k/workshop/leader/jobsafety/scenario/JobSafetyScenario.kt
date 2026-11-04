@@ -19,7 +19,10 @@ enum class JobSafetyScenario {
 }
 
 /** production containment 또는 명시적으로 격리한 broken baseline을 선택합니다. */
-enum class ScenarioMode { SAFE, UNSAFE }
+enum class ScenarioMode {
+    SAFE,
+    UNSAFE
+}
 
 /** scenario 설명 안의 제한된 low-cardinality transition 하나입니다. */
 data class ScenarioTimelineEvent(
@@ -27,7 +30,7 @@ data class ScenarioTimelineEvent(
     val code: String,
     val state: JobExecutionState,
     val detail: String,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -41,7 +44,7 @@ data class ScenarioExecution(
     val fencingToken: FencingToken?,
     val state: JobExecutionState,
     val rejection: JobRejectionReason? = null,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -53,7 +56,7 @@ data class ScenarioResource(
     val conflictKey: ConflictKey,
     val summaryValue: Long,
     val lastAcceptedFence: FencingToken?,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -70,7 +73,7 @@ data class JobSafetyScenarioSnapshot(
     val executions: List<ScenarioExecution>,
     val timeline: List<ScenarioTimelineEvent>,
     val droppedTimelineEvents: Int,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L

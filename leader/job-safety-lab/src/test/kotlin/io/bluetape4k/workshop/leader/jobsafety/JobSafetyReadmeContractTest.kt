@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.leader.jobsafety
 
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 
 internal class JobSafetyReadmeContractTest {
+
     private val moduleRoot = locateModuleRoot()
 
     @Test
@@ -33,7 +35,7 @@ internal class JobSafetyReadmeContractTest {
         return current.resolve("leader/job-safety-lab")
     }
 
-    companion object {
+    companion object: KLogging() {
         private val SCENARIOS =
             listOf(
                 "CROSS_JOB_COLLISION",

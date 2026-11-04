@@ -3,9 +3,12 @@ package io.bluetape4k.workshop.leader.jobsafety.audit
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 internal class BoundedAuditPayloadStoreTest {
+
+    companion object: KLogging()
 
     @Test
     fun `store retains only serialized bytes and evicts by exact byte budget`() {

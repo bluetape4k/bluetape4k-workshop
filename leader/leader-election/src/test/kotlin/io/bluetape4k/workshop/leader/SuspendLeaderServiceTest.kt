@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.leader
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.leader.LeaderElectionOptions
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.leader.service.SuspendLeaderService
 import kotlinx.coroutines.delay
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
-import io.bluetape4k.codec.Base58
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -22,7 +22,9 @@ import kotlin.time.Duration.Companion.seconds
  * - 첫 번째 elector가 lock을 보유 중이면 두 번째 elector는 `null`을 받습니다.
  * - [SuspendedJobTester] concurrency에서 lock round마다 정확히 worker 하나만 승리합니다.
  */
-class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
+class SuspendLeaderServiceTest: AbstractLeaderElectionTest() {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `single coroutine acquires leadership and executes action`() = runSuspendIO {
@@ -31,7 +33,7 @@ class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
 
         val result = service.runLeaderWork()
 
-        result.shouldNotBeNull() shouldBeEqualTo "done"
+        result shouldBeEqualTo "done"
         service.executionCount.get() shouldBeEqualTo 1
     }
 
@@ -49,7 +51,7 @@ class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
             "leader"
         }
 
-        result1.shouldNotBeNull() shouldBeEqualTo "leader"
+        result1 shouldBeEqualTo "leader"
         result2.shouldBeNull()
     }
 
@@ -63,13 +65,12 @@ class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
         val opts = LeaderElectionOptions(waitTime = 50.milliseconds, leaseTime = 5.seconds)
 
         SuspendedJobTester()
-            .workers(4)
-            .rounds(1)
+            .rounds(4)
             .add {
                 val elector = newSuspendElector(opts)
                 elector.runIfLeader(lockName) {
                     winCount.incrementAndGet()
-                    delay(300) // hold longer than waitTime so others time out
+                    delay(300.milliseconds) // hold longer than waitTime so others time out
                 }
             }
             .run()

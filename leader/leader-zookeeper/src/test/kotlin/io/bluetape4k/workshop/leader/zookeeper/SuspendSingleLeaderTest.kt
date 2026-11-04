@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.leader.zookeeper
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * T3: [io.bluetape4k.leader.zookeeper.ZooKeeperSuspendLeaderElector]의
@@ -23,15 +23,16 @@ import kotlin.math.max
  * 참고: 동시성 테스트는 `runTest`가 아니라 `runSuspendIO`를 사용한다. 실제 ZooKeeper 네트워크 I/O는
  * `runTest`가 사용하는 테스트 가상 시간 scheduler와 협력하지 않기 때문이다.
  */
-class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
+class SuspendSingleLeaderTest: AbstractLeaderZookeeperTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `runIfLeader returns done for a single suspending caller`() = runSuspendIO {
         val elector = newSuspendElector()
 
         val result = elector.runIfLeader(randomLockName("t3-single")) { "done" }
-
-        result.shouldNotBeNull() shouldBeEqualTo "done"
+        result shouldBeEqualTo "done"
     }
 
     @Test
@@ -54,7 +55,7 @@ class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
                     try {
                         executed.incrementAndGet()
                         // worker들이 경합하면서도 여러 개가 순차 진입할 수 있도록 잠깐 유지한다.
-                        delay(30)
+                        delay(30.milliseconds)
                     } finally {
                         current.decrementAndGet()
                     }
@@ -62,7 +63,7 @@ class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
             }
             .run()
 
-        peakConcurrent.get() shouldBeLessOrEqualTo 1
+        peakConcurrent.get() shouldBeEqualTo 1
         executed.get() shouldBeGreaterThan 3
     }
 }

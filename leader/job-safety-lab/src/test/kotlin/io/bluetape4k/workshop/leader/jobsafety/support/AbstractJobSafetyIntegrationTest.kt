@@ -7,7 +7,6 @@ import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyJdbcExecutor
 import io.lettuce.core.api.StatefulRedisConnection
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +15,6 @@ import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 
-@Tag("integration")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Execution(ExecutionMode.SAME_THREAD)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -39,8 +37,8 @@ internal abstract class AbstractJobSafetyIntegrationTest {
     }
 
     companion object {
-        private val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
-        private val redis: RedisServer = RedisServer.Launcher.redis
+        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+        private val redis: RedisServer by lazy { RedisServer.Launcher.redis }
 
         @JvmStatic
         @DynamicPropertySource

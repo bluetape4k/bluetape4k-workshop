@@ -4,34 +4,44 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.javatimes.inNanos
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LockIdentity
 import io.bluetape4k.leader.audit.LeaderAuditExportEvent
 import io.bluetape4k.leader.audit.LeaderAuditExportOptions
 import io.bluetape4k.leader.audit.LeaderAuditSubmitResult
 import io.bluetape4k.leader.audit.LeaderAuditValueSanitizer
 import io.bluetape4k.leader.audit.http.HttpLeaderAuditExporter
+import io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions
 import io.bluetape4k.leader.audit.http.LeaderAuditHttpPayload
 import io.bluetape4k.leader.audit.http.LeaderAuditTrustedHttpsEndpoint
 import io.bluetape4k.leader.history.LeaderHistoryStatus
 import io.bluetape4k.leader.history.LeaderLockHistoryRecord
+import io.bluetape4k.logging.KLogging
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.time.Duration
 import java.time.Instant
+import java.util.*
+import java.util.Optional.empty
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLSession
 import kotlin.time.Duration.Companion.seconds
 
 internal class JobSafetyAuditExporterTest {
+
+    companion object: KLogging()
 
     private val schedulers = mutableListOf<ScheduledExecutorService>()
 
@@ -53,6 +63,7 @@ internal class JobSafetyAuditExporterTest {
 
         firstDelivery.complete(completedResponse(429))
         fake.awaitRequestCount(2, timeout = 5.seconds)
+
         await
             .atMost(5.seconds)
             .untilAsserted {
@@ -78,7 +89,7 @@ internal class JobSafetyAuditExporterTest {
         fake.shutdownNow()
 
         response.isCancelled.shouldBeTrue()
-        fake.awaitTermination(Duration.ofSeconds(1)).shouldBeTrue()
+        fake.awaitTermination(1.seconds()).shouldBeTrue()
         fake.isTerminated.shouldBeTrue()
         fake.close()
         fake.close()
@@ -89,6 +100,7 @@ internal class JobSafetyAuditExporterTest {
             .header("Authorization", "Bearer secret")
             .POST(HttpRequest.BodyPublishers.noBody())
             .build()
+
         assertFailsWith<IllegalArgumentException> {
             rejected.sendAsync(authorizedRequest, HttpResponse.BodyHandlers.discarding())
         }
@@ -122,20 +134,20 @@ internal class JobSafetyAuditExporterTest {
             client = fake,
             endpoint = LeaderAuditTrustedHttpsEndpoint.trusted(URI("https://audit.example.test/hook")),
             headers = emptyMap(),
-            encoder = io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder {
+            encoder = {
                 LeaderAuditHttpPayload.of("application/json", "{}".toByteArray())
             },
             exportOptions = LeaderAuditExportOptions(
                 queueCapacity = 64,
                 maxInFlight = 4,
                 maxAttempts = 1,
-                attemptTimeout = Duration.ofSeconds(1),
-                initialBackoff = Duration.ofMillis(1),
-                maxBackoff = Duration.ofSeconds(1),
+                attemptTimeout = 1.seconds(),
+                initialBackoff = 1.millis(),
+                maxBackoff = 1.seconds(),
                 executor = exportExecutor,
                 scheduler = exportScheduler,
             ),
-            httpOptions = io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions.defaults(),
+            httpOptions = LeaderAuditHttpOptions.defaults(),
         )
         val callers = Executors.newFixedThreadPool(32)
         val start = CountDownLatch(1)
@@ -154,7 +166,7 @@ internal class JobSafetyAuditExporterTest {
                 }
             }
             start.countDown()
-            done.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            done.await(5.seconds).shouldBeTrue()
             results.filterNotNull().forEach {
                 check(it == LeaderAuditSubmitResult.ACCEPTED || it == LeaderAuditSubmitResult.DROPPED_QUEUE_FULL) {
                     "unexpected concurrent admission result: $it"
@@ -162,7 +174,7 @@ internal class JobSafetyAuditExporterTest {
             }
             results.filterNotNull().count { it == LeaderAuditSubmitResult.ACCEPTED }
                 .let { check(it > 0) { "at least one concurrent submission must be admitted" } }
-            durations.maxOrNull()!! shouldBeLessThan Duration.ofMillis(500).toNanos()
+            durations.max() shouldBeLessThan 500.millis().inNanos()
         } finally {
             exporter.close()
             fake.close()
@@ -183,10 +195,10 @@ internal class JobSafetyAuditExporterTest {
             queueCapacity = queueCapacity,
             maxInFlight = 1,
             maxAttempts = maxAttempts,
-            attemptTimeout = Duration.ofSeconds(1),
-            initialBackoff = Duration.ofMillis(10),
-            maxBackoff = Duration.ofSeconds(1),
-            executor = java.util.concurrent.Executor { task -> task.run() },
+            attemptTimeout = 1.seconds(),
+            initialBackoff = 10.millis(),
+            maxBackoff = 1.seconds(),
+            executor = { task -> task.run() },
             scheduler = scheduler,
         )
         return Fixture(
@@ -196,11 +208,11 @@ internal class JobSafetyAuditExporterTest {
                     URI("https://audit.example.test/hook"),
                 ),
                 headers = emptyMap(),
-                encoder = io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder {
+                encoder = {
                     LeaderAuditHttpPayload.of("application/json", "{}".toByteArray())
                 },
                 exportOptions = options,
-                httpOptions = io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions.defaults(),
+                httpOptions = LeaderAuditHttpOptions.defaults(),
             ),
         )
     }
@@ -217,24 +229,24 @@ internal class JobSafetyAuditExporterTest {
         sanitizer = LeaderAuditValueSanitizer.Default,
     )
 
-    private fun completedResponse(status: Int): HttpResponse<ByteArray> = object : HttpResponse<ByteArray> {
+    private fun completedResponse(status: Int): HttpResponse<ByteArray> = object: HttpResponse<ByteArray> {
         override fun statusCode(): Int = status
 
         override fun request(): HttpRequest = HttpRequest
             .newBuilder(URI("https://audit.invalid/in-memory"))
             .build()
 
-        override fun previousResponse(): java.util.Optional<HttpResponse<ByteArray>> = java.util.Optional.empty()
+        override fun previousResponse(): Optional<HttpResponse<ByteArray>> = empty()
 
-        override fun headers(): java.net.http.HttpHeaders = java.net.http.HttpHeaders.of(emptyMap()) { _, _ -> true }
+        override fun headers(): HttpHeaders = HttpHeaders.of(emptyMap()) { _, _ -> true }
 
         override fun body(): ByteArray = ByteArray(0)
 
-        override fun sslSession(): java.util.Optional<javax.net.ssl.SSLSession> = java.util.Optional.empty()
+        override fun sslSession(): Optional<SSLSession> = empty()
 
         override fun uri(): URI = URI("https://audit.invalid/in-memory")
 
-        override fun version(): java.net.http.HttpClient.Version = java.net.http.HttpClient.Version.HTTP_1_1
+        override fun version(): HttpClient.Version = HttpClient.Version.HTTP_1_1
     }
 
     private data class Fixture(val exporter: HttpLeaderAuditExporter)

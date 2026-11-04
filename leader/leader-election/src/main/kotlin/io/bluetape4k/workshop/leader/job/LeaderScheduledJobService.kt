@@ -1,7 +1,11 @@
 package io.bluetape4k.workshop.leader.job
 
 import io.bluetape4k.leader.LeaderElector
-import io.bluetape4k.logging.*
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.error
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -30,12 +34,14 @@ class LeaderScheduledJobService(
     private val leaderElector: LeaderElector,
     private val jobs: List<LeaderGuardedJob>,
 ) {
+    companion object: KLogging()
+    
     init {
         val lockNames = jobs.map { it.lockName }
         val duplicates = lockNames.groupBy { it }.filter { it.value.size > 1 }.keys
         check(duplicates.isEmpty()) {
             "Duplicate lockNames detected in LeaderGuardedJob beans: $duplicates. " +
-                "Each job must have a unique lockName."
+                    "Each job must have a unique lockName."
         }
         if (jobs.isEmpty()) {
             log.warn { "No LeaderGuardedJob beans registered. The scheduler will run but skip all jobs." }
@@ -65,6 +71,4 @@ class LeaderScheduledJobService(
             }
         }
     }
-
-    companion object : KLogging()
 }

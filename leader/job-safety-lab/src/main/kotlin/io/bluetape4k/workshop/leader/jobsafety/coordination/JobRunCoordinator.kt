@@ -24,6 +24,9 @@ class JobRunCoordinator(
     private val observationListener: LeaderElectionListener = NoOpLeaderElectionListener,
     private val leaderOptions: LeaderElectionOptions = LeaderElectionOptions.Default,
 ) {
+
+    private companion object: KLogging()
+
     fun run(request: JobRunRequest, execute: (FencingLease) -> JobMutation): JobRunResult =
         runWithLease(request) { _, fencingLease -> execute(fencingLease) }
 
@@ -61,29 +64,29 @@ class JobRunCoordinator(
                             ttl = fencingTtl,
                         )
                 ) {
-                is FenceAcquireResult.Acquired -> {
-                    observe { observationRecorder.onTaskStarted(lockName, context) }
-                    taskStarted = true
-                    executeWithFence(leader, acquired.lease, execute)
-                }
-                is FenceAcquireResult.AlreadyOwned -> {
-                    observe { observationRecorder.onTaskStarted(lockName, context) }
-                    taskStarted = true
-                    executeWithFence(leader, acquired.lease, execute)
-                }
-                FenceAcquireResult.Contended -> skipped(JobRejectionReason.FENCE_CONTENDED)
-                is FenceAcquireResult.BackendFailure -> {
-                    observe {
-                        observationRecorder.onTaskFailed(
-                            lockName,
-                            taskStartedAt.elapsedNow(),
-                            acquired.cause,
-                            context,
-                        )
+                    is FenceAcquireResult.Acquired       -> {
+                        observe { observationRecorder.onTaskStarted(lockName, context) }
+                        taskStarted = true
+                        executeWithFence(leader, acquired.lease, execute)
                     }
-                    log.warn(acquired.cause) { "job_fence_acquire_failed reason=FENCE_BACKEND_FAILURE" }
-                    failed(JobRejectionReason.FENCE_BACKEND_FAILURE)
-                }
+                    is FenceAcquireResult.AlreadyOwned   -> {
+                        observe { observationRecorder.onTaskStarted(lockName, context) }
+                        taskStarted = true
+                        executeWithFence(leader, acquired.lease, execute)
+                    }
+                    FenceAcquireResult.Contended         -> skipped(JobRejectionReason.FENCE_CONTENDED)
+                    is FenceAcquireResult.BackendFailure -> {
+                        observe {
+                            observationRecorder.onTaskFailed(
+                                lockName,
+                                taskStartedAt.elapsedNow(),
+                                acquired.cause,
+                                context,
+                            )
+                        }
+                        log.warn(acquired.cause) { "job_fence_acquire_failed reason=FENCE_BACKEND_FAILURE" }
+                        failed(JobRejectionReason.FENCE_BACKEND_FAILURE)
+                    }
                 }
                 is FenceBootstrapResult.BackendFailure -> {
                     observe {
@@ -133,7 +136,7 @@ class JobRunCoordinator(
         try {
             try {
                 when (val mutation = execute(leader, lease)) {
-                    JobMutation.Committed ->
+                    JobMutation.Committed   ->
                         JobRunResult(JobExecutionState.COMMITTED, fencingToken = lease.token)
 
                     JobMutation.EffectPending ->
@@ -194,23 +197,22 @@ class JobRunCoordinator(
     }
 
     private inline fun observe(block: () -> Unit) {
-        runCatching(block).onFailure { error ->
-            log.warn(error) { "Leader observation callback failed" }
-        }
+        runCatching(block)
+            .onFailure { error ->
+                log.warn(error) { "Leader observation callback failed" }
+            }
     }
-
-    private companion object : KLogging()
 }
 
-private object NoOpLeaderElectionListener : LeaderElectionListener
+private object NoOpLeaderElectionListener: LeaderElectionListener
 
-private class JobExecutionObservationFailure(rejection: String?) :
+private class JobExecutionObservationFailure(rejection: String?):
     IllegalStateException("job execution failed${rejection?.let { ": $it" } ?: ""}")
 
 sealed interface JobMutation {
-    data object Committed : JobMutation
+    data object Committed: JobMutation
 
-    data object EffectPending : JobMutation
+    data object EffectPending: JobMutation
 
-    data class Rejected(val reason: JobRejectionReason) : JobMutation
+    data class Rejected(val reason: JobRejectionReason): JobMutation
 }

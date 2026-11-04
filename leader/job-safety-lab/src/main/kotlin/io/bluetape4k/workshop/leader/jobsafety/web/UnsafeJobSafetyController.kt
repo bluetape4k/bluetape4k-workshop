@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenario
 import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenarioService
 import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenarioSnapshot
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController
 class UnsafeJobSafetyController(
     private val scenarios: JobSafetyScenarioService,
 ) {
+    companion object: KLogging()
+
     @PostMapping("/scenarios/{scenario}/run")
     fun run(@PathVariable scenario: JobSafetyScenario): JobSafetyScenarioSnapshot =
         scenarios.run(scenario, ScenarioMode.UNSAFE)

@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.leader
 
-import io.bluetape4k.leader.LeaderElectionOptions
-import io.bluetape4k.logging.*
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.leader.LeaderElectionOptions
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -17,8 +17,9 @@ import kotlin.time.Duration.Companion.milliseconds
  * `junit.jupiter.execution.exclude.tags=smoke`로 기본 `test` task에서 제외됩니다.
  * nightly 또는 다음 명령으로 명시 실행합니다. `./gradlew test -Djunit.jupiter.execution.exclude.tags=`
  */
-@Tag("smoke")
-class LeaseExpiryTest : AbstractLeaderElectionTest() {
+class LeaseExpiryTest: AbstractLeaderElectionTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `leader holding lock beyond leaseTime allows second elector to attempt acquisition`() {
@@ -43,6 +44,4 @@ class LeaseExpiryTest : AbstractLeaderElectionTest() {
         log.info { "[T5] elector2 result (null=skipped, non-null=acquired): $result2" }
         // strict assertion은 없습니다. 이 테스트는 library의 lease-expiry 동작을 문서화합니다.
     }
-
-    companion object : KLogging()
 }

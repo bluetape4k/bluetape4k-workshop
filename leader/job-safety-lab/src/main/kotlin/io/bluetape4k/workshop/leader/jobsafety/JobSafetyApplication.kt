@@ -10,7 +10,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 @ConfigurationPropertiesScan
 class JobSafetyApplication {
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 /** leader job-safety lab을 시작합니다. */

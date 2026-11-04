@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.leader
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.leader.LockAssert
-import io.bluetape4k.workshop.leader.job.LockAssertJob
-import io.bluetape4k.assertions.assertFailsWith
-import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.leader.LockAssert
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.leader.job.LockAssertJob
+import org.junit.jupiter.api.Test
 
 /**
  * [LockAssertJob]과 [LockAssert] API의 테스트입니다.
@@ -18,7 +19,9 @@ import io.bluetape4k.codec.Base58
  * - [LockAssert.isLocked]는 scope 안에서 `true`, 밖에서 `false`를 반환합니다.
  * - [LockAssertJob.execute]는 leader로 실행될 때 error 없이 완료됩니다.
  */
-class LockAssertTest : AbstractLeaderElectionTest() {
+class LockAssertTest: AbstractLeaderElectionTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `assertLocked passes silently inside runIfLeader`() {
