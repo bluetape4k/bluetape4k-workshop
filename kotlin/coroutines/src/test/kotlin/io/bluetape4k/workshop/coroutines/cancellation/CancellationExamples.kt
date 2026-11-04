@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.coroutines.cancellation
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.coroutines.support.suspendLogging
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -15,14 +18,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.milliseconds
 
 class CancellationExamples {
 
@@ -36,13 +37,13 @@ class CancellationExamples {
 
         val job = launch {
             repeat(1000) { i ->
-                delay(200)
+                delay(200.milliseconds)
                 counter.incrementAndGet()
                 log.debug { "[#1] Printing $i" }
             }
         }.log("#1")
 
-        delay(1100)
+        delay(1100.milliseconds)
         job.cancelAndJoin()
         counter.get() shouldBeEqualTo 5L
         log.debug { "Cancelled successfully." }
@@ -56,7 +57,7 @@ class CancellationExamples {
         scope.launch {
             try {
                 repeat(1000) {
-                    delay(200)
+                    delay(200.milliseconds)
                     log.debug { "Printing $it" }
                 }
             } catch (e: CancellationException) {
@@ -65,7 +66,7 @@ class CancellationExamples {
             }
         }.log("job")
 
-        delay(1100)
+        delay(1100.milliseconds)
         job.cancelAndJoin()
         log.debug { "Cancelled successfully" }
     }
@@ -78,7 +79,7 @@ class CancellationExamples {
         val scope = CoroutineScope(coroutineContext + job)
         scope.launch {
             try {
-                delay(200)
+                delay(200.milliseconds)
                 // 이 작업은 수행되지 않습니다.
                 counter.incrementAndGet()
                 log.debug { "Coroutine finished" }
@@ -86,14 +87,14 @@ class CancellationExamples {
                 log.debug { "Finally" }
                 // 취소 시에도 무조건 작업을 수행하도록 합니다.
                 withContext(NonCancellable) {
-                    delay(1000)
+                    delay(1000.milliseconds)
                     cleanup = true
                     log.debug { "Cleanup done with NonCancellation." }
                 }
             }
         }.log("job")
 
-        delay(100)
+        delay(100.milliseconds)
         job.cancelAndJoin()
         log.info { "Done" }
 
@@ -104,7 +105,9 @@ class CancellationExamples {
     @Test
     fun `invokeOnCompletion event listener 로 취소 시 작업 수행`() = runTest {
         val canceled = AtomicBoolean(false)
-        val job = launch { delay(1000) }.log("delayed")
+        val job = launch {
+            delay(1000.milliseconds)
+        }.log("delayed")
 
         // invoeOnCompletion Handler를 사용하여, Cancel 에 대한 처리를 수행할 수 있습니다.
         job.invokeOnCompletion(onCancelling = true) { cause: Throwable? ->
@@ -116,7 +119,7 @@ class CancellationExamples {
             }
         }
 
-        delay(100)
+        delay(100.milliseconds)
         job.cancelAndJoin()     // Cancelled
 
         canceled.get().shouldBeTrue()
@@ -129,13 +132,13 @@ class CancellationExamples {
         val scope = CoroutineScope(coroutineContext + job)
         scope.launch {
             while (isActive) {
-                delay(100)         // delay 나 yield 로 suspend point 를 줘야 `isActive` 를 조회할 수 있다
+                delay(100.milliseconds)         // delay 나 yield 로 suspend point 를 줘야 `isActive` 를 조회할 수 있다
                 counter.incrementAndGet()
                 suspendLogging { "[#1] Printing. count=${counter.get()}" }
             }
         }.log("#1")
 
-        delay(550)
+        delay(550.milliseconds)
         job.cancelAndJoin()
 
         counter.get() shouldBeGreaterOrEqualTo 5

@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory.elf.ElfArmy
 import io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory.elf.ElfCastle
 import io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory.elf.ElfKing
 import io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory.orc.OrcArmy
 import io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory.orc.OrcCastle
 import io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory.orc.OrcKing
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 class AbstractFactoryTest {

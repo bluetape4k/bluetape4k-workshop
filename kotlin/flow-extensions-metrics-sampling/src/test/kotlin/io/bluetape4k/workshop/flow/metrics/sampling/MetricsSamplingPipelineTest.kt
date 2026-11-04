@@ -4,9 +4,9 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.junit5.coroutines.runSuspendTest
-import java.time.Instant
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Test
+import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 
 class MetricsSamplingPipelineTest {
 
@@ -23,14 +25,20 @@ class MetricsSamplingPipelineTest {
 
     @Test
     fun `leading preview emits first sample from each throttle window`() = runSuspendTest {
-        val previews = pipeline.leadingPreview(highFrequencyCpuSamples(), 501.milliseconds).toList()
+        val previews = pipeline
+            .leadingPreview(highFrequencyCpuSamples(), 501.milliseconds)
+            .log("metrics-leading-preview")
+            .toList()
 
         previews.map { it.value } shouldBeEqualTo listOf(10.0, 40.0, 70.0, 100.0)
     }
 
     @Test
     fun `trailing dashboard emits last sample from each throttle window`() = runSuspendTest {
-        val dashboard = pipeline.dashboardSamples(highFrequencyCpuSamples(), 501.milliseconds).toList()
+        val dashboard = pipeline
+            .dashboardSamples(highFrequencyCpuSamples(), 501.milliseconds)
+            .log("metrics-dashboard")
+            .toList()
 
         dashboard.map { it.value } shouldBeEqualTo listOf(30.0, 60.0, 90.0, 100.0)
     }
@@ -43,7 +51,7 @@ class MetricsSamplingPipelineTest {
                 sample("queue.depth", 5.0, 2, "items"),
                 sample("queue.depth", 4.0, 3, "items"),
             ),
-        ).toList()
+        ).log("Deltas").toList()
 
         deltas.map { it.delta } shouldBeEqualTo listOf(2.0, -1.0)
         deltas.map { it.previous.value to it.current.value } shouldBeEqualTo listOf(3.0 to 5.0, 5.0 to 4.0)
@@ -60,7 +68,7 @@ class MetricsSamplingPipelineTest {
                 sample("latency.p95", 110.0, 4, "ms"),
             ),
             absoluteThreshold = 10.0,
-        ).toList()
+        ).log("metrics-significant-changes").toList()
 
         trends.map { it.direction } shouldBeEqualTo listOf(MetricDirection.UP, MetricDirection.DOWN)
         trends.map { it.delta.delta } shouldBeEqualTo listOf(18.0, -11.0)
@@ -76,7 +84,7 @@ class MetricsSamplingPipelineTest {
                 ),
             ),
             absoluteThreshold = 10.0,
-        ).toList()
+        ).log("ChangeResults").toList()
 
         resultTrends.map { it.getOrThrow().direction } shouldBeEqualTo listOf(MetricDirection.UP)
     }
@@ -96,8 +104,8 @@ class MetricsSamplingPipelineTest {
                     emit(sample("cpu.usage", 30.0, 3))
                 },
                 stop,
-            ).toList()
-        }
+            ).log("metrics-lifecycle").toList()
+        }.log("Collection")
 
         secondSampleEmitted.await()
         stop.emit(Unit)

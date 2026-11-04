@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.flow.search.pipeline
 
-import java.io.Serializable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import java.io.Serializable
 
 /**
  * workshop README 와 test 에서 사용하는 deterministic in-memory adapter 입니다.
@@ -21,7 +21,7 @@ class FakeSearchAdapter(
 
         try {
             if (latencyMillis > 0) {
-                delay(latencyMillis)
+                delay(timeMillis = latencyMillis)
             }
 
             val hits = catalog.asSequence()

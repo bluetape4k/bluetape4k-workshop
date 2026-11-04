@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.coroutines.flow
 
 import app.cash.turbine.test
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.cancelChildren
@@ -14,10 +16,10 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEmpty
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * 복수의 collector 에게 동시에 데이터를 전달하는 SharedFlow 를 사용하는 예제
@@ -69,7 +71,7 @@ class SharedFlowExamples {
                     cancelAndConsumeRemainingEvents()
                 }
             }
-            delay(100)
+            delay(100.milliseconds)
 
             // 복수의 collector 들도 모두 같은 데이터를 수신한다.
             collected1.get() shouldBeEqualTo 2
@@ -120,7 +122,7 @@ class SharedFlowExamples {
                 }
             }
 
-            delay(100)
+            delay(100.milliseconds)
             collectCounter1.get() shouldBeEqualTo 2
             collectCounter2.get() shouldBeEqualTo 2
 
@@ -151,7 +153,7 @@ class SharedFlowExamples {
     @Test
     fun `shareIn - change flow to shared flow`() = runTest {
         val flow = flowOf("A", "B", "C")
-            .onEach { delay(1000) }
+            .onEach { delay(1.seconds) }
             .log("source")
 
         val sharedFlow = flow.shareIn(this, started = SharingStarted.Eagerly, replay = 0)
@@ -160,25 +162,25 @@ class SharedFlowExamples {
         val counter2 = AtomicInteger(0)
         val counter3 = AtomicInteger(0)
 
-        delay(500)
+        delay(500.milliseconds)
         launch {
             sharedFlow.log("#1")
                 .collect { counter1.incrementAndGet() }
         }
 
-        delay(1000)
+        delay(1.seconds)
         launch {
             sharedFlow.log("#2")
                 .collect { counter2.incrementAndGet() }
         }
 
-        delay(1000)
+        delay(1.seconds)
         launch {
             sharedFlow.log("#3")
                 .collect { counter3.incrementAndGet() }
         }
 
-        delay(5000)
+        delay(5.seconds)
 
         counter1.get() shouldBeEqualTo 3
         counter2.get() shouldBeEqualTo 2

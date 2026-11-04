@@ -3,8 +3,7 @@ package io.bluetape4k.workshop.flow.search.pipeline
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
-import java.util.Collections
-import java.util.Locale
+import java.util.*
 
 /**
  * in-memory autocomplete catalog 에서 사용하는 search matching mode 입니다.
@@ -61,12 +60,12 @@ class SearchSettings private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is SearchSettings &&
-            tenantId == other.tenantId &&
-            locale == other.locale &&
-            mode == other.mode &&
-            featureFlags == other.featureFlags &&
-            resultLimit == other.resultLimit
+                other is SearchSettings &&
+                tenantId == other.tenantId &&
+                locale == other.locale &&
+                mode == other.mode &&
+                featureFlags == other.featureFlags &&
+                resultLimit == other.resultLimit
 
     override fun hashCode(): Int =
         listOf(tenantId, locale, mode, featureFlags, resultLimit).hashCode()

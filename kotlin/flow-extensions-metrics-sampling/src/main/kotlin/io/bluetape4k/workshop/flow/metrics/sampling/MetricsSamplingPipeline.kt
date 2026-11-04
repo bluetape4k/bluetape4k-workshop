@@ -6,10 +6,10 @@ import io.bluetape4k.coroutines.flow.extensions.pairwise
 import io.bluetape4k.coroutines.flow.extensions.takeUntil
 import io.bluetape4k.coroutines.flow.extensions.throttleLeading
 import io.bluetape4k.coroutines.flow.extensions.throttleTrailing
-import kotlin.time.Duration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlin.time.Duration
 
 /**
  * noisy metric 과 sensor stream 을 다루는 학습용 Flow pipeline 입니다.
@@ -33,7 +33,6 @@ class MetricsSamplingPipeline {
     fun leadingPreview(samples: Flow<MetricSample>, window: Duration): Flow<MetricSample> =
         samples
             .throttleLeading(window)
-            .log("metrics-leading-preview")
 
     /**
      * 각 throttle window 에서 관측된 마지막 sample 을 방출합니다.
@@ -41,7 +40,7 @@ class MetricsSamplingPipeline {
     fun dashboardSamples(samples: Flow<MetricSample>, window: Duration): Flow<MetricSample> =
         samples
             .throttleTrailing(window)
-            .log("metrics-dashboard")
+
 
     /**
      * 하나의 metric stream 에서 인접한 sample 을 delta 로 변환합니다.
@@ -61,7 +60,7 @@ class MetricsSamplingPipeline {
         return deltas(samples)
             .map { MetricTrend.from(it, absoluteThreshold) }
             .filter { it.significant }
-            .log("metrics-significant-changes")
+
     }
 
     /**
@@ -88,5 +87,4 @@ class MetricsSamplingPipeline {
     ): Flow<MetricSample> =
         samples
             .takeUntil(stopSignal)
-            .log("metrics-lifecycle")
 }

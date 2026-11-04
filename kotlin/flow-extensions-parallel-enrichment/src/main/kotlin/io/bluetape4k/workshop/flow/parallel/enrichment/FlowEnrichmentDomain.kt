@@ -7,8 +7,8 @@ import java.io.Serializable
  */
 data class OrderItem(
     val sku: String,
-    val quantity: Int
-) : Serializable {
+    val quantity: Int,
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -20,8 +20,8 @@ data class OrderItem(
 data class OrderCommand(
     val orderId: String,
     val customerId: String,
-    val items: List<OrderItem>
-) : Serializable {
+    val items: List<OrderItem>,
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 2L
     }
@@ -29,8 +29,8 @@ data class OrderCommand(
 
 data class CustomerProfile(
     val customerId: String,
-    val loyaltyGrade: LoyaltyGrade
-) : Serializable {
+    val loyaltyGrade: LoyaltyGrade,
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 3L
     }
@@ -45,8 +45,8 @@ enum class LoyaltyGrade {
 data class ProductInventorySnapshot(
     val sku: String,
     val requestQuantity: Int,
-    val availableQuantity: Int
-) : Serializable {
+    val availableQuantity: Int,
+): Serializable {
     val availableForOrder: Boolean get() = availableQuantity >= requestQuantity
 
     companion object {
@@ -55,8 +55,8 @@ data class ProductInventorySnapshot(
 }
 
 data class InventorySnapshot(
-    val perItem: List<ProductInventorySnapshot>
-) : Serializable {
+    val perItem: List<ProductInventorySnapshot>,
+): Serializable {
     val fulfillable: Boolean get() = perItem.all { it.availableForOrder }
     val unavailableSkus: List<String> get() = perItem.filter { !it.availableForOrder }.map { it.sku }
 
@@ -72,15 +72,15 @@ data class EnrichedOrder(
     val totalItems: Int,
     val discountPercent: Int,
     val fulfillable: Boolean,
-    val unavailableSkus: List<String>
-) : Serializable {
+    val unavailableSkus: List<String>,
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 6L
     }
 }
 
-class UnknownCustomerException(customerId: String) :
+class UnknownCustomerException(customerId: String):
     IllegalArgumentException("Customer not found: $customerId")
 
-class UnknownProductException(sku: String) :
+class UnknownProductException(sku: String):
     IllegalArgumentException("Product not found: $sku")

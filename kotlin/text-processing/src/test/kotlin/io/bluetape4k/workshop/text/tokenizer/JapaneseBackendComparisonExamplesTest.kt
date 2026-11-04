@@ -1,16 +1,22 @@
 package io.bluetape4k.workshop.text.tokenizer
 
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeEmpty
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotContain
-import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class JapaneseBackendComparisonExamplesTest {
+
+    private companion object: KLogging() {
+        const val SUDACHI_DICTIONARY_PROPERTY = "bluetape4k.sudachi.system-dictionary"
+    }
 
     private var previousDictionaryPath: String? = null
 
@@ -33,6 +39,7 @@ class JapaneseBackendComparisonExamplesTest {
     fun `default comparison keeps Kuromoji live and Sudachi unavailable`() {
         val report = runJapaneseBackendComparison()
 
+        log.debug { "report=$report" }
         report.current.backend shouldBeEqualTo "Kuromoji IPADic"
         report.current.execution shouldBeEqualTo BackendExecution.LIVE
         report.current.tokens.shouldNotBeEmpty()
@@ -40,7 +47,7 @@ class JapaneseBackendComparisonExamplesTest {
         report.candidate.execution shouldBeEqualTo BackendExecution.UNAVAILABLE
         report.candidate.tokens.shouldBeEmpty()
         report.candidate.splitModes.shouldBeEmpty()
-        report.candidate.statusMessage.orEmpty() shouldContain "prepareSudachiDictionary"
+        report.candidate.statusMessage shouldContain "prepareSudachiDictionary"
     }
 
     @Test
@@ -66,6 +73,7 @@ class JapaneseBackendComparisonExamplesTest {
 
         val report = runJapaneseBackendComparison()
 
+        log.debug { "report=$report" }
         report.candidate.execution shouldBeEqualTo BackendExecution.UNAVAILABLE
         report.candidate.statusMessage.orEmpty() shouldContain "prepareSudachiDictionary"
         report.candidate.statusMessage.orEmpty() shouldNotContain rawProperty
@@ -75,6 +83,8 @@ class JapaneseBackendComparisonExamplesTest {
     fun `renderer includes migration metadata and unavailable guidance`() {
         val rendered = renderJapaneseBackendComparison(runJapaneseBackendComparison())
 
+        log.debug { "renderer=$rendered" }
+
         rendered shouldContain "current-backend=Kuromoji IPADic"
         rendered shouldContain "candidate-backend=Sudachi JVM"
         rendered shouldContain "candidate-license=Apache-2.0"
@@ -83,9 +93,5 @@ class JapaneseBackendComparisonExamplesTest {
         rendered shouldContain "candidate-dictionary-sha256="
         rendered shouldContain "migration-note=compare same corpus"
         rendered shouldContain "candidate-status-message=Sudachi dictionary is unavailable"
-    }
-
-    private companion object {
-        const val SUDACHI_DICTIONARY_PROPERTY = "bluetape4k.sudachi.system-dictionary"
     }
 }

@@ -29,7 +29,7 @@ data class CatalogItem(
     val name: String,
     val priceCents: Long,
     val attributes: Map<String, String> = emptyMap(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -43,7 +43,7 @@ data class SourceResult(
     val item: CatalogItem,
     val latencyMs: Long,
     val quality: SourceQuality,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 2L
     }

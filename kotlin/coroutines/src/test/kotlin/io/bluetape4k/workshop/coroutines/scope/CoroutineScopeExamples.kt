@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.coroutines.scope
 
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -8,12 +10,12 @@ import io.bluetape4k.logging.warn
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldContainSame
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 class CoroutineScopeExamples {
 
@@ -25,13 +27,13 @@ class CoroutineScopeExamples {
     private fun getFollowersNumber(): Int = throw RuntimeException("Service exception")
 
     private suspend fun getUserName(): String {
-        delay(500)
+        delay(500.milliseconds)
         log.debug { "get user name ..." }
         return "debop"
     }
 
     private suspend fun getTweets(): List<Tweet> {
-        delay(10)
+        delay(10.milliseconds)
         log.debug { "Get tweets ..." }
         return listOf(Tweet("Hello, world"))
     }
@@ -73,14 +75,14 @@ class CoroutineScopeExamples {
      */
     private suspend fun longTask(taskStatus: MutableMap<String, Boolean>) = coroutineScope {
         launch {
-            delay(100)
-            val name = coroutineContext[CoroutineName]?.name
+            delay(100.milliseconds)
+            val name = currentCoroutineContext()[CoroutineName]?.name
             log.info { "[$name] finish task 1" }
             taskStatus["Task 1"] = true
         }
         launch {
-            delay(200)
-            val name = coroutineContext[CoroutineName]?.name
+            delay(200.milliseconds)
+            val name = currentCoroutineContext()[CoroutineName]?.name
             log.info { "[$name] finish task 2" }
             taskStatus["Task 2"] = true
         }
@@ -95,7 +97,7 @@ class CoroutineScopeExamples {
         }.log("Parent")
 
         // Task 1만 실행되고, Task 2는 Cancel 됩니다.
-        delay(150)
+        delay(150.milliseconds)
         job.cancel()
         taskStatus shouldContainSame mapOf("Task 1" to true, "Task 2" to false)
     }

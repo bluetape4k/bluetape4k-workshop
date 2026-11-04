@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.kotlin.designPatterns.singleton
 
 
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -8,7 +9,6 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Runtimex
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.condition.EnabledOnJre

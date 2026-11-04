@@ -7,8 +7,6 @@ import io.bluetape4k.coroutines.flow.extensions.timeoutOrFallback
 import io.bluetape4k.coroutines.flow.extensions.withLatestFrom
 import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireLt
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -26,6 +24,8 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 /**
  * realtime search/autocomplete Flow pipeline 입니다.
@@ -41,7 +41,6 @@ class SearchPipeline(
      *
      * 새 query 는 `flatMapLatest` 를 통해 오래된 in-flight search 를 취소합니다. session close 는 하나의 shared signal 로 정규화되어 모든 adapter call 과 경쟁하므로, downstream output 만 억제하는 대신 중단된 search 작업 자체를 취소합니다.
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun search(
         queries: Flow<String>,
         settings: Flow<SearchSettings>,
@@ -65,7 +64,6 @@ class SearchPipeline(
      * 수집합니다. adapter 의 일반 예외와 caller의 `CancellationException`은
      * fallback 으로 바꾸지 않고 원래 의미를 유지합니다.
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun searchWithIdleFallback(
         queries: Flow<String>,
         settings: Flow<SearchSettings>,
@@ -149,7 +147,7 @@ class SearchPipeline(
             }
 
             try {
-                val result = select<SearchResult?> {
+                val result = select {
                     search.onAwait { it }
                     stop.onAwait { null }
                 }

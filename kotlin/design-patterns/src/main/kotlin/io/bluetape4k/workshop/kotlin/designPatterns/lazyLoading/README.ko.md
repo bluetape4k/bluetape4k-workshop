@@ -2,8 +2,7 @@
 
 [English](README.md) | 한국어
 
-Lazy Loading은 값이 실제로 필요해질 때까지 비용이 큰 초기화를 미룹니다. 이 package는 생성 비용이
-큰 객체로 `Heavy`를 사용하고, native, lock-guarded, Kotlin `lazy`, coroutine `DeferredValue`
+Lazy Loading은 값이 실제로 필요해질 때까지 비용이 큰 초기화를 미룹니다. 이 package는 생성 비용이 큰 객체로 `Heavy`를 사용하고, native, lock-guarded, Kotlin `lazy`, coroutine `DeferredValue`
 holder를 비교합니다.
 
 ## 아키텍처
@@ -12,13 +11,13 @@ holder를 비교합니다.
 
 ## Source map
 
-| source | 역할 |
-|---|---|
-| `Heavy` | 생성 중 짧게 park해 `Thread.sleep` 없이 비용이 큰 객체 생성을 눈에 보이게 함 |
-| `HolderNative` | 첫 `getHeavy()` 호출 때 `lateinit` property 초기화 |
-| `HolderThreadSafe` | 첫 초기화를 `ReentrantLock`으로 보호 |
-| `HolderKotlinLazy` | Kotlin `lazy(LazyThreadSafetyMode.SYNCHRONIZED)` 사용 |
-| `coroutines/HeavyDeferredValue` | `DeferredValue`로 suspend initialization 지연 |
+| source                          | 역할                                                                         |
+|---------------------------------|------------------------------------------------------------------------------|
+| `Heavy`                         | 생성 중 짧게 park해 `Thread.sleep` 없이 비용이 큰 객체 생성을 눈에 보이게 함 |
+| `HolderNative`                  | 첫 `getHeavy()` 호출 때 `lateinit` property 초기화                           |
+| `HolderThreadSafe`              | 첫 초기화를 `ReentrantLock`으로 보호                                         |
+| `HolderKotlinLazy`              | Kotlin `lazy(LazyThreadSafetyMode.SYNCHRONIZED)` 사용                        |
+| `coroutines/HeavyDeferredValue` | `DeferredValue`로 suspend initialization 지연                                |
 
 ## 사용 형태
 
