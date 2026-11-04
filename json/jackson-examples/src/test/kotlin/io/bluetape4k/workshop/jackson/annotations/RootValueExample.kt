@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.jackson.annotations
 
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.jackson3.writeAsString
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.SerializationFeature

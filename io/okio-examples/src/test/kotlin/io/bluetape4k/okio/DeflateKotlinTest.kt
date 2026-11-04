@@ -1,6 +1,7 @@
 package io.bluetape4k.okio
 
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.logging.KLogging
 import okio.Buffer
 import okio.ByteString.Companion.decodeHex
@@ -9,7 +10,6 @@ import okio.Inflater
 import okio.buffer
 import okio.deflate
 import okio.inflate
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class DeflateKotlinTest: AbstractOkioTest() {

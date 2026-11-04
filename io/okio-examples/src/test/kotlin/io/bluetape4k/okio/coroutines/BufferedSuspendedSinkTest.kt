@@ -6,7 +6,6 @@ import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
-import io.bluetape4k.okio.SEGMENT_SIZE
 import io.bluetape4k.okio.bufferOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
@@ -17,6 +16,7 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.Timeout
 import org.junit.jupiter.api.Test
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
 
 class BufferedSuspendedSinkTest: AbstractOkioTest() {
 
@@ -100,7 +100,7 @@ class BufferedSuspendedSinkTest: AbstractOkioTest() {
         val source = NoProgressSuspendedSource()
 
         val error = assertFailsWith<IOException> {
-            withTimeout(250) {
+            withTimeout(250.milliseconds) {
                 FakeSuspendedSink().buffered().write(source, 1L)
             }
         }
@@ -114,7 +114,7 @@ class BufferedSuspendedSinkTest: AbstractOkioTest() {
         val source = NoProgressSuspendedSource()
 
         val error = assertFailsWith<IOException> {
-            withTimeout(250) {
+            withTimeout(250.milliseconds) {
                 FakeSuspendedSink().buffered().writeAll(source)
             }
         }
@@ -216,7 +216,7 @@ class BufferedSuspendedSinkTest: AbstractOkioTest() {
 
         override suspend fun read(sink: Buffer, byteCount: Long): Long {
             readCount++
-            delay(10)
+            delay(10.milliseconds)
             return 0L
         }
 
