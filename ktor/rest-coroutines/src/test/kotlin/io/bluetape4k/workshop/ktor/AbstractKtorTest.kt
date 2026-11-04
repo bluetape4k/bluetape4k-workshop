@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.ktor
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.ktor.domain.Book
 import org.junit.jupiter.api.TestInstance
 
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractKtorTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     protected fun createBook(
         id: String = "book-1",
@@ -24,7 +25,7 @@ abstract class AbstractKtorTest {
     ): Book = Book(id = id, title = title, author = author, year = year)
 
     protected fun createBooks(count: Int): List<Book> =
-        (1..count).map { i ->
+        List(count.requirePositiveNumber("count")) { i ->
             Book(id = "book-$i", title = "Title $i", author = "Author $i", year = 2000 + i)
         }
 }

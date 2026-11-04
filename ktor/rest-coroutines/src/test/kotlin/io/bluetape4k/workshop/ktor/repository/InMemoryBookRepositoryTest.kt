@@ -1,21 +1,25 @@
 package io.bluetape4k.workshop.ktor.repository
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.ktor.AbstractKtorTest
 import io.bluetape4k.workshop.ktor.domain.Book
 import io.bluetape4k.workshop.ktor.domain.DomainError
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeoutOrNull
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import io.bluetape4k.assertions.assertFailsWith
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
-class InMemoryBookRepositoryTest : AbstractKtorTest() {
+class InMemoryBookRepositoryTest: AbstractKtorTest() {
+
+    companion object: KLogging()
 
     private fun repo() = InMemoryBookRepository()
 
@@ -103,11 +107,11 @@ class InMemoryBookRepositoryTest : AbstractKtorTest() {
 
         // runTest 가 TestScope 를 제공하므로 launch {} 를 사용할 수 있습니다.
         val job = launch { repo.stream().collect { received.send(it) } }
-        delay(50) // let subscriber register on hot SharedFlow
+        delay(50.milliseconds) // let subscriber register on hot SharedFlow
 
         repo.save(book1)
 
-        val result = withTimeoutOrNull(2_000) { received.receive() }
+        val result = withTimeoutOrNull(2.seconds) { received.receive() }
         result.shouldNotBeNull()
         result shouldBeEqualTo book1
 
@@ -122,13 +126,13 @@ class InMemoryBookRepositoryTest : AbstractKtorTest() {
 
         val received = Channel<Book>(Channel.BUFFERED)
         val job = launch { repo.stream().collect { received.send(it) } }
-        delay(50)
+        delay(50.milliseconds)
 
         val updated = repo.update(book1.id, book1.copy(year = 2025))
 
-        val result = withTimeoutOrNull(2_000) { received.receive() }
+        val result = withTimeoutOrNull(2.seconds) { received.receive() }
         result.shouldNotBeNull()
-        result?.year shouldBeEqualTo 2025
+        result.year shouldBeEqualTo 2025
         result shouldBeEqualTo updated
 
         job.cancel()

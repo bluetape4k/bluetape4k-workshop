@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <immediateFlush>true</immediateFlush>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <!-- @formatter:off -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5p) %magenta(${PID:- }) --- [%25.25t] %cyan(%-40.40logger{39}):%4.4line : %m%n</pattern>
+            <!-- @formatter:on -->
+            <charset>UTF-8</charset>
         </encoder>
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="CONSOLE"/>
     </root>
 
-    <logger name="io.bluetape4k.workshop" level="DEBUG" />
-    <logger name="io.ktor" level="INFO" />
+    <logger name="io.bluetape4k.workshop" level="DEBUG"/>
+    <logger name="io.ktor" level="INFO"/>
 </configuration>

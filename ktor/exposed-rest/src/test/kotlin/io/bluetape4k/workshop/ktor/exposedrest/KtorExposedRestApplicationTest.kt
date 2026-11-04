@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.ktor.exposedrest
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
@@ -10,6 +11,8 @@ import io.bluetape4k.ktor.testing.bluetape4kJsonClient
 import io.bluetape4k.ktor.testing.decodeJsonBody
 import io.bluetape4k.ktor.testing.shouldHaveApiError
 import io.bluetape4k.ktor.testing.shouldHaveStatus
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.ktor.client.request.delete
@@ -28,7 +31,9 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KtorExposedRestApplicationTest {
 
-    private val postgres = PostgreSQLServer.Launcher.postgres
+    companion object: KLoggingChannel() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
 
     @Test
     fun `postgres backed routes create list update and delete books`() = testApplication {
@@ -45,6 +50,7 @@ class KtorExposedRestApplicationTest {
         }.shouldHaveStatus(HttpStatusCode.Created)
             .decodeJsonBody<BookResponse>()
 
+        log.debug { "created=$created" }
         created.title shouldBeEqualTo "Ktor with Exposed"
         created.author shouldBeEqualTo "Blue Tape"
 
@@ -56,6 +62,8 @@ class KtorExposedRestApplicationTest {
         val read = http.get("/api/books/${created.id}")
             .shouldHaveStatus(HttpStatusCode.OK)
             .decodeJsonBody<BookResponse>()
+
+        log.debug { "read=$read" }
         read shouldBeEqualTo created
 
         val updated = http.put("/api/books/${created.id}") {
@@ -63,6 +71,8 @@ class KtorExposedRestApplicationTest {
             setBody(BookRequest(title = "Ktor Transactions", author = "Blue Tape", isbn = "978-0-002"))
         }.shouldHaveStatus(HttpStatusCode.OK)
             .decodeJsonBody<BookResponse>()
+
+        log.debug { "updated=$updated" }
         updated.title shouldBeEqualTo "Ktor Transactions"
         updated.isbn shouldBeEqualTo "978-0-002"
 
@@ -72,7 +82,8 @@ class KtorExposedRestApplicationTest {
         val empty = http.get("/api/books")
             .shouldHaveStatus(HttpStatusCode.OK)
             .decodeJsonBody<List<BookResponse>>()
-        empty.size shouldBeEqualTo 0
+
+        empty.shouldBeEmpty()
     }
 
     @Test
@@ -96,6 +107,7 @@ class KtorExposedRestApplicationTest {
                 message = "Exposed transaction failed",
             )
         )
+        log.debug { "response=$response" }
         response.bodyAsText() shouldNotContain "Rollback Candidate"
         response.bodyAsText() shouldNotContain postgres.jdbcUrl
         response.bodyAsText() shouldNotContain postgres.password.requireNotNull("postgres.password")
@@ -103,7 +115,7 @@ class KtorExposedRestApplicationTest {
         val books = http.get("/api/books")
             .shouldHaveStatus(HttpStatusCode.OK)
             .decodeJsonBody<List<BookResponse>>()
-        books.size shouldBeEqualTo 0
+        books.shouldBeEmpty()
     }
 
     @Test
@@ -125,6 +137,7 @@ class KtorExposedRestApplicationTest {
         )
 
         val body = response.bodyAsText()
+        log.debug { "body=$body" }
         body shouldNotContain postgres.jdbcUrl
         body shouldNotContain postgres.username.requireNotNull("postgres.username")
         body shouldNotContain postgres.password.requireNotNull("postgres.password")
@@ -164,6 +177,7 @@ class KtorExposedRestApplicationTest {
 
         response.shouldHaveStatus(HttpStatusCode.InternalServerError)
         val body = response.bodyAsText()
+        log.debug { "body=$body" }
         body shouldNotContain "EXPOSED_TRANSACTION_FAILED"
         body shouldNotContain "EXPOSED_DATABASE_UNAVAILABLE"
         body shouldNotContain postgres.jdbcUrl
@@ -185,6 +199,7 @@ class KtorExposedRestApplicationTest {
 
         response.shouldHaveStatus(HttpStatusCode.BadRequest)
         val error = response.decodeJsonBody<ApiErrorResponse>()
+        log.debug() { "error=$error" }
         error.error shouldBeEqualTo "bad_request"
         error.message shouldContain "title"
     }

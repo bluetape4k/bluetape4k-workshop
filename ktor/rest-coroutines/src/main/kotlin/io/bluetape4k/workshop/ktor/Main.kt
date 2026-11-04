@@ -5,7 +5,7 @@ import io.bluetape4k.logging.info
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
-private object MainLog : KLogging()
+private object MainLog: KLogging()
 
 /**
  * `ktor-rest-coroutines` workshop application 의 entry point 입니다.
