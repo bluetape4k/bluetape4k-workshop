@@ -2,12 +2,12 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.graalvm.native)
+    kotlin("kapt")
 }
 
 springBoot {
     mainClass.set("io.bluetape4k.workshop.observation.ObservationAppKt")
 }
-
 
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())

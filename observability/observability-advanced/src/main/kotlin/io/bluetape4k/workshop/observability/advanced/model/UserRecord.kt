@@ -10,11 +10,11 @@ import java.io.Serializable
  * ## Behavior / Contract
  * - Redis cache serialization 을 위해 [Serializable] 을 구현합니다.
  */
-data class User(
+data class UserRecord(
     val id: Long,
     val name: String,
     val email: String,
-) : Serializable {
+): Serializable {
     init {
         id.requirePositiveNumber("id")
         name.requireNotBlank("name")

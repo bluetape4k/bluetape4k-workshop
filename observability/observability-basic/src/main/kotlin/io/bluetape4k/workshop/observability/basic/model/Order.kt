@@ -14,7 +14,7 @@ data class Order(
     val itemId: Long,
     val quantity: Int,
     val inventoryAvailable: Int,
-) : Serializable {
+): Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L

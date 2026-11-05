@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/sync")
 class SyncController(private val syncService: SyncService) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val SIMULATED_BLOCKING_WORK_MILLIS = 100L
     }
 
@@ -36,9 +36,11 @@ class SyncController(private val syncService: SyncService) {
         val todoId = id.requirePositiveNumber("id")
         log.debug { "Get todo[$todoId] in sync" }
         simulateBlockingWork()
-        return syncService.getTodo(todoId).apply {
-            simulateBlockingWork()
-        }
+
+        return syncService.getTodo(todoId)
+            .apply {
+                simulateBlockingWork()
+            }
     }
 
     private fun simulateBlockingWork() {

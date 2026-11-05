@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.observability.advanced.repository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.micrometer.observation.coroutines.withObservationContextSuspending
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.workshop.observability.advanced.model.User
+import io.bluetape4k.workshop.observability.advanced.model.UserRecord
 import io.micrometer.observation.ObservationRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository
 import java.util.concurrent.TimeUnit
 
 /**
- * Redisson `RMapCache` 를 사용하는 [User] object 용 Redis cache repository 입니다.
+ * Redisson `RMapCache` 를 사용하는 [UserRecord] object 용 Redis cache repository 입니다.
  *
  * ## Behavior / Contract
  * - cache read/write 는 released `withObservationContextSuspending` helper 를 통한 Observation span 으로 instrumentation 됩니다.
@@ -25,18 +25,18 @@ class UserCacheRepository(
     private val redisson: RedissonClient,
     private val observationRegistry: ObservationRegistry,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
-    private val cache: RMapCache<Long, User> by lazy {
+    private val cache: RMapCache<Long, UserRecord> by lazy {
         redisson.getMapCache("workshop:observability:users")
     }
 
     /**
-     * [id] 로 cache 에서 [User] 를 조회합니다.
+     * [id] 로 cache 에서 [UserRecord] 를 조회합니다.
      *
      * cache miss 이면 `null` 을 반환합니다.
      */
-    suspend fun get(id: Long): User? =
+    suspend fun get(id: Long): UserRecord? =
         withObservationContextSuspending("user.cache.get", observationRegistry) {
             val validId = id.requirePositiveNumber("id")
             withContext(Dispatchers.IO) {
@@ -45,10 +45,10 @@ class UserCacheRepository(
         }
 
     /**
-     * 주어진 [ttlSeconds] TTL 로 [User] 를 cache 에 저장합니다.
+     * 주어진 [ttlSeconds] TTL 로 [UserRecord] 를 cache 에 저장합니다.
      */
-    suspend fun put(user: User, ttlSeconds: Long = 60L) {
-        withObservationContextSuspending<Unit>("user.cache.put", observationRegistry) {
+    suspend fun put(user: UserRecord, ttlSeconds: Long = 60L) {
+        withObservationContextSuspending("user.cache.put", observationRegistry) {
             val ttl = ttlSeconds.requirePositiveNumber("ttlSeconds")
             withContext(Dispatchers.IO) {
                 // RMapCache.put() 은 previous value(V?) 를 반환하므로 버립니다.
@@ -59,7 +59,7 @@ class UserCacheRepository(
     }
 
     /**
-     * [id] 로 cache 에서 [User] 를 제거합니다. test isolation 용도이므로 instrumentation 하지 않습니다.
+     * [id] 로 cache 에서 [UserRecord] 를 제거합니다. test isolation 용도이므로 instrumentation 하지 않습니다.
      */
     suspend fun delete(id: Long) = withContext(Dispatchers.IO) {
         cache.remove(id.requirePositiveNumber("id"))

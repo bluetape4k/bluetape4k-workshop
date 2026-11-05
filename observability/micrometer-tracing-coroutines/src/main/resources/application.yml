@@ -1,44 +1,44 @@
 spring:
-    application.name: micrometer-tracing-coroutines-demo
-    codec:
-        max-in-memory-size: 10MB
-    jackson:
-        serialization:
-            indent_output: true
+  application.name: micrometer-tracing-coroutines-demo
+  codec:
+    max-in-memory-size: 10MB
+  jackson:
+    serialization:
+      indent_output: true
 
-    output:
-        ansi:
-            enabled: always
-    aot:
-        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
+  output:
+    ansi:
+      enabled: always
+  aot:
+    enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
 info:
-    name: ${spring.application.name}
-    description: micrometer-tracing-coroutines-demo
-    environment: ${spring.profiles.active}
-    version: 0.0.1
+  name: ${spring.application.name}
+  description: micrometer-tracing-coroutines-demo
+  environment: ${spring.profiles.active}
+  version: 0.0.1
 
 
 management:
-    endpoints:
-        web:
-            exposure:
-                include: '*'
-    endpoint:
-        health:
-            show-details: always
-
-    metrics:
-        tags:
-            application: ${spring.application.name}
-        distribution:
-            percentiles-histogram:
-                http.server.requests: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
     health:
-        diskspace.enabled: false
+      show-details: always
 
-    tracing:
-        enabled: true
-        sampling:
-            probability: 1.0
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  health:
+    diskspace.enabled: false
 
-    zipkin.tracing.endpoint: ${testcontainers.zipkin.url}/api/v2/spans
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+
+  zipkin.tracing.endpoint: ${testcontainers.zipkin.url}/api/v2/spans
