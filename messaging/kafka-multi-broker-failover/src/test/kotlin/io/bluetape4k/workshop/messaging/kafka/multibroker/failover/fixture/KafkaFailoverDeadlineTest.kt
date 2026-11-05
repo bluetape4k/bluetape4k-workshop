@@ -2,7 +2,13 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.javatimes.inMillis
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicLong
@@ -11,6 +17,8 @@ import kotlin.time.Duration.Companion.seconds
 
 class KafkaFailoverDeadlineTest {
 
+    companion object: KLogging()
+
     @Test
     fun `remaining time is the minimum of module scenario and phase deadlines`() {
         val now = AtomicLong(1_000L)
@@ -18,13 +26,12 @@ class KafkaFailoverDeadlineTest {
         val scenario = module.child(180.seconds)
         val phase = scenario.child(45.seconds)
 
-        phase.remainingNanos() shouldBeEqualTo 45_000_000_000L
+        phase.remainingNanos().nanos().inMillis() shouldBeEqualTo 45_000
 
         now.set(10_000L)
         val afterProgress = phase.remainingNanos()
-        (afterProgress > 0L).shouldBeTrue()
-        (afterProgress < 45_000_000_000L).shouldBeTrue()
-        (afterProgress >= 0L).shouldBeTrue()
+        afterProgress shouldBeGreaterThan 0L
+        afterProgress shouldBeLessThan 45_000_000_000L
     }
 
     @Test
@@ -37,7 +44,8 @@ class KafkaFailoverDeadlineTest {
             deadline.awaitBlocking("startup") { "unreachable" }
         }
 
-        error.message?.contains("phase=startup").shouldBeTrue()
+        log.debug { "error=$error" }
+        error.message shouldContain "phase=startup"
     }
 
     @Test

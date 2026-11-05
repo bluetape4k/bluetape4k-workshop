@@ -1,14 +1,16 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.seconds
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.NewTopic
-import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.TopicPartitionInfo
+import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.errors.TopicExistsException
-import java.time.Duration
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.nanoseconds
 
 data class KafkaFailoverPartitionState(
     val partition: Int,
@@ -36,7 +38,7 @@ data class KafkaFailoverGroupState(
 class KafkaFailoverAdmin(
     private val admin: Admin,
     private val retry: KafkaFailoverRetry = KafkaFailoverRetry(),
-) : AutoCloseable {
+): AutoCloseable {
     /** 이 facade가 기다린 KafkaFuture 연산 횟수입니다. */
     val adminRoundTripCount: Int
         get() = roundTripCount
@@ -81,7 +83,10 @@ class KafkaFailoverAdmin(
             )
         }.value
 
-    fun topicState(topic: String = KafkaFailoverTopology.TOPIC, deadline: KafkaFailoverDeadline): List<KafkaFailoverPartitionState> =
+    fun topicState(
+        topic: String = KafkaFailoverTopology.TOPIC,
+        deadline: KafkaFailoverDeadline,
+    ): List<KafkaFailoverPartitionState> =
         retry.execute(deadline, "metadata") {
             val descriptions = admin.describeTopics(listOf(topic)).topicNameValues()
             val description = await(descriptions[topic] ?: error("topic description unavailable"), deadline, "metadata")
@@ -97,7 +102,8 @@ class KafkaFailoverAdmin(
     fun groupState(groupId: String, deadline: KafkaFailoverDeadline): KafkaFailoverGroupState =
         retry.execute(deadline, "assignment") {
             val descriptions = admin.describeConsumerGroups(listOf(groupId)).describedGroups()
-            val description = await(descriptions[groupId] ?: error("consumer group description unavailable"), deadline, "assignment")
+            val description =
+                await(descriptions[groupId] ?: error("consumer group description unavailable"), deadline, "assignment")
             val assigned = description.members().flatMap { member ->
                 member.assignment().topicPartitions().toList()
             }.toSet()
@@ -110,7 +116,10 @@ class KafkaFailoverAdmin(
             )
         }.value
 
-    fun topicConfig(topic: String = KafkaFailoverTopology.TOPIC, deadline: KafkaFailoverDeadline): Map<String, String?> =
+    fun topicConfig(
+        topic: String = KafkaFailoverTopology.TOPIC,
+        deadline: KafkaFailoverDeadline,
+    ): Map<String, String?> =
         retry.execute(deadline, "config") {
             val resource = ConfigResource(ConfigResource.Type.TOPIC, topic)
             val config = await(
@@ -143,7 +152,7 @@ class KafkaFailoverAdmin(
             }
             Thread.sleep(minOf(200L, (deadline.remainingNanos() / NANOS_PER_MILLI).coerceAtLeast(1L)))
         }
-        throw java.util.concurrent.TimeoutException("partition wait deadline exhausted; last=$last")
+        throw TimeoutException("partition wait deadline exhausted; last=$last")
     }
 
     fun awaitInternalTopic(
@@ -152,7 +161,7 @@ class KafkaFailoverAdmin(
     ): List<KafkaFailoverPartitionState> = topicState(topic, deadline)
 
     override fun close() {
-        admin.close(Duration.ofSeconds(5))
+        admin.close(5.seconds())
     }
 
     companion object {
@@ -181,15 +190,16 @@ class KafkaFailoverAdmin(
     ): T = deadline.awaitBlocking(phase) {
         roundTripCount += 1
         val remaining = deadline.remainingNanos()
-        if (remaining <= 0L) throw java.util.concurrent.TimeoutException("phase=$phase deadline exhausted")
+        if (remaining <= 0L) throw TimeoutException("phase=$phase deadline exhausted")
+
         try {
-            future.get(remaining, TimeUnit.NANOSECONDS)
+            future.get(remaining.nanoseconds)
         } catch (error: ExecutionException) {
             throw (error.cause ?: error)
         }
     }
 
-    private inline fun <reified T : Throwable> Throwable.hasCause(): Boolean {
+    private inline fun <reified T: Throwable> Throwable.hasCause(): Boolean {
         var current: Throwable? = this
         while (current != null) {
             if (current is T) return true
@@ -200,7 +210,7 @@ class KafkaFailoverAdmin(
 
     private fun Throwable.isTransientKafkaFailure(): Boolean =
         this is org.apache.kafka.common.errors.RetriableException ||
-            this is org.apache.kafka.common.errors.DisconnectException ||
-            this is org.apache.kafka.common.errors.TimeoutException ||
-            cause?.isTransientKafkaFailure() == true
+                this is org.apache.kafka.common.errors.DisconnectException ||
+                this is org.apache.kafka.common.errors.TimeoutException ||
+                cause?.isTransientKafkaFailure() == true
 }

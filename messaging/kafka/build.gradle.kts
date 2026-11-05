@@ -15,7 +15,7 @@ configurations {
 
 dependencies {
     implementation(platform(libs.spring.boot4.dependencies))
-    
+
     // Kafka 의존성입니다.
     implementation(libs.bluetape4k.kafka4)
     implementation(libs.kafka.clients)

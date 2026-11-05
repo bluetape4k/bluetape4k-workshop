@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.zookeeper.config
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
@@ -30,7 +31,7 @@ import java.time.Duration
 data class LeaderZookeeperProperties(
     val zookeeper: ZooKeeperConfig = ZooKeeperConfig(),
     val basePath: String = "/workshop/leader-zookeeper",
-    val waitTime: Duration = delay(100.milliseconds) Seconds (2),
+    val waitTime: Duration = 2.seconds(),
     val groupMaxLeaders: Int = 2,
     val jobFixedDelay: String = "PT10S",
     val suspendJobFixedDelay: String = "PT12S",

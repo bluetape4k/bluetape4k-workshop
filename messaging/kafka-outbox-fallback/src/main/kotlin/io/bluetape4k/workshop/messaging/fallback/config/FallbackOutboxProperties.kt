@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.messaging.fallback.config
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
@@ -19,15 +21,15 @@ data class FallbackOutboxProperties(
     @field:Min(3)
     @field:Max(3)
     val directPublishAttempts: Int = 3,
-    val directPublishTimeout: Duration = Duration.ofMillis(500),
-    val directPublishTotalTimeout: Duration = Duration.ofMillis(1600),
+    val directPublishTimeout: Duration = 500.millis(),
+    val directPublishTotalTimeout: Duration = 1600.millis(),
     @field:Positive
     val relayMaxRetries: Int = 3,
     @field:Positive
     val relayBatchSize: Int = 25,
-    val relayFixedDelay: Duration = Duration.ofSeconds(2),
-    val relayClaimTtl: Duration = Duration.ofSeconds(30),
-    val reconcilerGrace: Duration = Duration.ofSeconds(30),
+    val relayFixedDelay: Duration = 2.seconds(),
+    val relayClaimTtl: Duration = 30.seconds(),
+    val reconcilerGrace: Duration = 30.seconds(),
     @field:Min(1024)
     @field:Max(65_536)
     val maxPayloadBytes: Int = 8192,
@@ -35,7 +37,7 @@ data class FallbackOutboxProperties(
     val relayEnabled: Boolean = true,
     val reconcilerEnabled: Boolean = true,
     val demoAdminEndpointsEnabled: Boolean = false,
-) : Serializable {
+): Serializable {
     @AssertTrue(message = "topic must be order-events")
     fun isTopicAllowed(): Boolean = topic == "order-events"
 

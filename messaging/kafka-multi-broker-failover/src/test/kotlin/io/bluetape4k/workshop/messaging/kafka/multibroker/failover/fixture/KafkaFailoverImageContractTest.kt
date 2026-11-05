@@ -3,15 +3,18 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class KafkaFailoverImageContractTest {
+
+    companion object: KLogging()
 
     @Test
     fun `approved image reference is immutable and digest qualified`() {
         KafkaFailoverClusterFixture.APPROVED_IMAGE_DIGEST.matches(Regex("[0-9a-f]{64}")).shouldBeTrue()
         KafkaFailoverClusterFixture.IMAGE_REFERENCE shouldBeEqualTo
-            "apache/kafka@sha256:${KafkaFailoverClusterFixture.APPROVED_IMAGE_DIGEST}"
+                "apache/kafka@sha256:${KafkaFailoverClusterFixture.APPROVED_IMAGE_DIGEST}"
 
         KafkaFailoverClusterFixture.validateRepoDigests(
             listOf(KafkaFailoverClusterFixture.IMAGE_REFERENCE),

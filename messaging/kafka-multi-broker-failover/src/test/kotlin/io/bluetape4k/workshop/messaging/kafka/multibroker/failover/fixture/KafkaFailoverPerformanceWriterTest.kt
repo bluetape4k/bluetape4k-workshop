@@ -3,13 +3,17 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import tools.jackson.databind.json.JsonMapper
 import java.nio.file.Files
 import java.nio.file.Path
-import tools.jackson.databind.json.JsonMapper
 
 class KafkaFailoverPerformanceWriterTest {
+
+    companion object: KLogging()
 
     @Test
     fun `performance writer emits ordered bounded counters and replaces current run`(@TempDir tempDir: Path) {
@@ -20,21 +24,21 @@ class KafkaFailoverPerformanceWriterTest {
         val artifact = tempDir.resolve("run-a/performance.jsonl")
         val rows = Files.readAllLines(artifact)
         rows.size shouldBeEqualTo 2
-        JsonMapper.builder().build().readTree(rows.last()).propertyNames().asSequence().toList() shouldBeEqualTo
-            listOf(
-                "runId",
-                "scenario",
-                "phase",
-                "elapsedMs",
-                "deadlineRemainingMs",
-                "adminRoundTripCount",
-                "ackCount",
-                "pollCount",
-                "retryCount",
-                "cleanupMs",
-                "maxBufferedRecords",
-                "maxBufferedBytes",
-            )
+        JsonMapper.builder().build().readTree(rows.last())
+            .propertyNames().toList() shouldBeEqualTo listOf(
+            "runId",
+            "scenario",
+            "phase",
+            "elapsedMs",
+            "deadlineRemainingMs",
+            "adminRoundTripCount",
+            "ackCount",
+            "pollCount",
+            "retryCount",
+            "cleanupMs",
+            "maxBufferedRecords",
+            "maxBufferedBytes",
+        )
         Files.exists(tempDir.resolve("run-a/performance.jsonl.tmp")).shouldBeFalse()
     }
 
@@ -43,6 +47,7 @@ class KafkaFailoverPerformanceWriterTest {
         KafkaFailoverPerformanceWriter("run-a", tempDir).use { writer ->
             writer.append(sample("terminal"))
         }
+
         KafkaFailoverPerformanceWriter("run-a", tempDir).use { writer ->
             writer.append(sample("terminal").copy(scenario = "group-coordinator-failover"))
         }
@@ -68,15 +73,18 @@ class KafkaFailoverPerformanceWriterTest {
         )
 
         val summary = Files.readString(tempDir.resolve("run-a/broker-1.log"))
+        log.debug { "summary=$summary" }
         summary shouldBeEqualTo
-            "runId=run-a nodeId=1 alias=kafka-1 image=apache/kafka " +
-            "imageDigest=sha256:${KafkaFailoverClusterFixture.APPROVED_IMAGE_DIGEST} running=true\n"
+                "runId=run-a nodeId=1 alias=kafka-1 image=apache/kafka " +
+                "imageDigest=sha256:${KafkaFailoverClusterFixture.APPROVED_IMAGE_DIGEST} running=true\n"
         summary.contains("127.0.0.1").shouldBeFalse()
     }
 
     @Test
     fun `writers reject unsafe run ids`(@TempDir tempDir: Path) {
-        assertFailsWith<IllegalArgumentException> { KafkaFailoverPerformanceWriter("../escape", tempDir) }
+        assertFailsWith<IllegalArgumentException> {
+            KafkaFailoverPerformanceWriter("../escape", tempDir)
+        }
         assertFailsWith<IllegalArgumentException> {
             KafkaFailoverBrokerSummaryWriter.write("../escape", emptyList(), tempDir)
         }

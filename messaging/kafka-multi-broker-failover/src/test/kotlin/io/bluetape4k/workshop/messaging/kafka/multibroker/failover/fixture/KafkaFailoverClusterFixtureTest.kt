@@ -4,13 +4,18 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.join
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
+import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 class KafkaFailoverClusterFixtureTest {
+
+    companion object: KLogging()
 
     @Test
     fun `fixture owns a single lifecycle and closes idempotently`() {
@@ -51,14 +56,14 @@ class KafkaFailoverClusterFixtureTest {
         val owner = thread(start = true) {
             fixture.start()
         }
-        entered.await(1, TimeUnit.SECONDS).shouldBeTrue()
+        entered.await(1.seconds).shouldBeTrue()
 
         assertFailsWith<IllegalStateException> {
             fixture.start()
         }
 
         release.countDown()
-        owner.join(1_000)
+        owner.join(1.seconds)
         fixture.state shouldBeEqualTo KafkaFailoverLifecycleState.RUNNING
         fixture.close()
     }
@@ -86,7 +91,9 @@ class KafkaFailoverClusterFixtureTest {
             postStartValidator = { error("post-validation failed") },
         )
 
-        assertFailsWith<IllegalStateException> { validationFixture.start() }
+        assertFailsWith<IllegalStateException> {
+            validationFixture.start()
+        }
         validationFixture.state shouldBeEqualTo KafkaFailoverLifecycleState.CLOSED
         validationBrokers.values.values.forEach { it.stopCount shouldBeEqualTo 1 }
     }
@@ -100,6 +107,7 @@ class KafkaFailoverClusterFixtureTest {
             brokerFactory = brokers,
             startCoordinator = FakeStartCoordinator(),
         ).start()
+
         val original = brokers.values.getValue(2)
 
         fixture.stopBroker(2).isRunning.shouldBeFalse()
@@ -107,6 +115,7 @@ class KafkaFailoverClusterFixtureTest {
 
         fixture.restartBroker(2).isRunning.shouldBeTrue()
         fixture.brokers.getValue(2) shouldBeEqualTo brokers.lastCreated
+
         original.stopCount shouldBeEqualTo 1
         brokers.values.getValue(2).startCount shouldBeEqualTo 1
 
@@ -124,14 +133,16 @@ class KafkaFailoverClusterFixtureTest {
             startCoordinator = coordinator,
         )
 
-        coordinator.failure = java.util.concurrent.CancellationException("cancelled")
-        assertFailsWith<java.util.concurrent.CancellationException> { fixture.start() }
+        coordinator.failure = CancellationException("cancelled")
+        assertFailsWith<CancellationException> {
+            fixture.start()
+        }
         coordinator.cancelCount shouldBeEqualTo 1
         coordinator.quiesced.shouldBeTrue()
         fixture.state shouldBeEqualTo KafkaFailoverLifecycleState.CLOSED
     }
 
-    private class FakeNetwork : KafkaFailoverNetwork {
+    private class FakeNetwork: KafkaFailoverNetwork {
         var closeCount: Int = 0
             private set
 
@@ -146,7 +157,7 @@ class KafkaFailoverClusterFixtureTest {
         override val nodeId: Int,
         override val alias: String,
         private val failOnStart: Boolean,
-    ) : KafkaFailoverBroker {
+    ): KafkaFailoverBroker {
         var startCount: Int = 0
         var stopCount: Int = 0
         override var isRunning: Boolean = false
@@ -168,7 +179,7 @@ class KafkaFailoverClusterFixtureTest {
 
     private class FakeBrokerFactory(
         private val failNode: Int? = null,
-    ) : (Int, String, KafkaFailoverNetwork, String) -> KafkaFailoverBroker {
+    ): (Int, String, KafkaFailoverNetwork, String) -> KafkaFailoverBroker {
         val values = linkedMapOf<Int, FakeBroker>()
         var lastCreated: KafkaFailoverBroker? = null
 
@@ -183,11 +194,11 @@ class KafkaFailoverClusterFixtureTest {
         }
     }
 
-    private class FakeStartCoordinator : KafkaFailoverStartCoordinator {
+    private class FakeStartCoordinator: KafkaFailoverStartCoordinator {
         override fun start(
             brokers: Collection<KafkaFailoverBroker>,
             deadline: KafkaFailoverDeadline,
-        ): KafkaFailoverStartHandle = object : KafkaFailoverStartHandle {
+        ): KafkaFailoverStartHandle = object: KafkaFailoverStartHandle {
             override fun await() {
                 brokers.forEach { it.start() }
             }
@@ -201,14 +212,14 @@ class KafkaFailoverClusterFixtureTest {
     private class BlockingStartCoordinator(
         private val entered: CountDownLatch,
         private val release: CountDownLatch,
-    ) : KafkaFailoverStartCoordinator {
+    ): KafkaFailoverStartCoordinator {
         override fun start(
             brokers: Collection<KafkaFailoverBroker>,
             deadline: KafkaFailoverDeadline,
-        ): KafkaFailoverStartHandle = object : KafkaFailoverStartHandle {
+        ): KafkaFailoverStartHandle = object: KafkaFailoverStartHandle {
             override fun await() {
                 entered.countDown()
-                release.await(1, TimeUnit.SECONDS)
+                release.await(1.seconds)
                 brokers.forEach { it.start() }
             }
 
@@ -218,7 +229,7 @@ class KafkaFailoverClusterFixtureTest {
         }
     }
 
-    private class CancellableStartCoordinator : KafkaFailoverStartCoordinator {
+    private class CancellableStartCoordinator: KafkaFailoverStartCoordinator {
         var failure: Throwable? = null
         var cancelCount: Int = 0
         var quiesced: Boolean = false
@@ -226,7 +237,7 @@ class KafkaFailoverClusterFixtureTest {
         override fun start(
             brokers: Collection<KafkaFailoverBroker>,
             deadline: KafkaFailoverDeadline,
-        ): KafkaFailoverStartHandle = object : KafkaFailoverStartHandle {
+        ): KafkaFailoverStartHandle = object: KafkaFailoverStartHandle {
             override fun await() {
                 failure?.let { throw it }
                 brokers.forEach { it.start() }

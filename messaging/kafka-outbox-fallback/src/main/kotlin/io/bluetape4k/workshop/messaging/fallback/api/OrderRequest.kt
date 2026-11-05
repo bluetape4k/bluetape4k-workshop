@@ -21,7 +21,7 @@ data class OrderRequest(
     @field:Min(1)
     @field:Max(1000)
     val quantity: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

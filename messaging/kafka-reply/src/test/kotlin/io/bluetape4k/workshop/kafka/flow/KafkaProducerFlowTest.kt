@@ -1,8 +1,15 @@
 package io.bluetape4k.workshop.kafka.flow
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.completableFutureOf
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.coroutines.support.awaitUntil
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.mq.KafkaServer
 import io.mockk.every
 import io.mockk.mockk
@@ -12,6 +19,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -29,17 +37,24 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class KafkaProducerFlowTest {
+
+    private companion object: KLoggingChannel() {
+        private const val MAX_CAUSE_DEPTH = 8
+    }
 
     @Test
     fun `producer callback metadata is exposed as a flow`() = runSuspendIO {
         val producer = mockk<Producer<String, String>>(relaxed = true)
         val metadata = mockk<RecordMetadata>(relaxed = true)
-        every { producer.send(any<ProducerRecord<String, String>>(), any<Callback>()) } answers {
+        every {
+            producer.send(any<ProducerRecord<String, String>>(), any<Callback>())
+        } answers {
             secondArg<Callback>().onCompletion(metadata, null)
-            CompletableFuture.completedFuture(metadata)
+            completableFutureOf(metadata)
         }
 
         val records = flowOf(ProducerRecord("pingpong", "key", "value"))
@@ -47,7 +62,10 @@ class KafkaProducerFlowTest {
             producerFactory = { producer },
             channelCapacity = 1,
             maxInFlight = 1,
-        ).send(records).toList()
+        )
+            .send(records)
+            .log("Send")
+            .toList()
 
         result shouldBeEqualTo listOf(metadata)
     }
@@ -59,7 +77,10 @@ class KafkaProducerFlowTest {
             producerFactory = { tracking.producer },
             channelCapacity = 2,
             maxInFlight = 1,
-        ).send(flowOf(record("one"), record("two"))).toList()
+        )
+            .send(flowOf(record("one"), record("two")))
+            .log("Send")
+            .toList()
 
         result.size shouldBeEqualTo 2
         tracking.callbackCount.get() shouldBeEqualTo 2
@@ -72,9 +93,10 @@ class KafkaProducerFlowTest {
         val failure = IllegalStateException("callback failure")
         val tracking = TrackingProducer(callbackError = failure)
 
-        val observed = io.bluetape4k.assertions.assertFailsWith<IllegalStateException> {
+        val observed = assertFailsWith<IllegalStateException> {
             KafkaProducerFlow(producerFactory = { tracking.producer })
                 .send(flowOf(record("failure")))
+                .log("Send")
                 .toList()
         }
 
@@ -88,9 +110,10 @@ class KafkaProducerFlowTest {
     fun `malformed callback without metadata or failure is terminal`() = runSuspendIO {
         val tracking = TrackingProducer(callbackWithoutMetadata = true)
 
-        val observed = io.bluetape4k.assertions.assertFailsWith<IllegalStateException> {
+        val observed = assertFailsWith<IllegalStateException> {
             KafkaProducerFlow(producerFactory = { tracking.producer })
                 .send(flowOf(record("malformed")))
+                .log("Send")
                 .toList()
         }
 
@@ -109,7 +132,9 @@ class KafkaProducerFlowTest {
                     producerFactory = { tracking.producer },
                     channelCapacity = 1,
                     maxInFlight = 2,
-                ).send(flowOf(record("one"), record("two"), record("three")))
+                )
+                    .send(flowOf(record("one"), record("two"), record("three")))
+                    .log("Send")
                     .collectIndexed { index, _ ->
                         if (index == 0) {
                             firstItemReceived.complete(Unit)
@@ -118,15 +143,17 @@ class KafkaProducerFlowTest {
                     }
             }
 
-            withTimeout(5.seconds) { tracking.twoSendsStarted.await() }
+            tracking.twoSendsStarted.awaitUntil(5.seconds)
             tracking.fireCallback()
-            withTimeout(5.seconds) { firstItemReceived.await() }
-            withTimeout(5.seconds) { tracking.allSendsStarted.await() }
+            firstItemReceived.awaitUntil(5.seconds)
+            tracking.allSendsStarted.awaitUntil(5.seconds)
             tracking.fireCallback()
             tracking.fireCallback()
             collectorGate.complete(Unit)
 
-            val observed = io.bluetape4k.assertions.assertFailsWith<IllegalStateException> { collection.await() }
+            val observed = assertFailsWith<IllegalStateException> {
+                collection.await()
+            }
             observed.message shouldBeEqualTo "Kafka callback buffer is full"
             tracking.callbackCount.get() shouldBeEqualTo 3
             tracking.closeCount.get() shouldBeEqualTo 1
@@ -140,12 +167,16 @@ class KafkaProducerFlowTest {
         val collection = async(start = CoroutineStart.UNDISPATCHED) {
             KafkaProducerFlow(producerFactory = { tracking.producer })
                 .send(flowOf(record("cancel")))
+                .log("Send")
                 .toList()
         }
 
-        withTimeout(5.seconds) { tracking.sendStarted.await() }
+        tracking.sendStarted.awaitUntil(5.seconds)
         collection.cancel(cancellation)
-        io.bluetape4k.assertions.assertFailsWith<CancellationException> { collection.await() }
+
+        assertFailsWith<CancellationException> {
+            collection.await()
+        }
         waitUntil { tracking.closeCount.get() == 1 }
 
         tracking.pendingFuture.isCancelled.shouldBeTrue()
@@ -160,12 +191,13 @@ class KafkaProducerFlowTest {
         val closeFailure = IllegalStateException("close failure")
         val tracking = TrackingProducer(closeError = closeFailure)
 
-        val observed = io.bluetape4k.assertions.assertFailsWith<IllegalArgumentException> {
+        val observed = assertFailsWith<IllegalArgumentException> {
             KafkaProducerFlow(producerFactory = { tracking.producer })
                 .send(flow {
                     emit(record("before-failure"))
                     throw upstreamFailure
                 })
+                .log("Send")
                 .toList()
         }
 
@@ -182,9 +214,10 @@ class KafkaProducerFlowTest {
         val flushFailure = IllegalStateException("flush failure")
         val tracking = TrackingProducer(flushError = flushFailure)
 
-        val observed = io.bluetape4k.assertions.assertFailsWith<IllegalStateException> {
+        val observed = assertFailsWith<IllegalStateException> {
             KafkaProducerFlow(producerFactory = { tracking.producer })
                 .send(flowOf(record("flush-failure")))
+                .log("Send")
                 .toList()
         }
 
@@ -197,18 +230,20 @@ class KafkaProducerFlowTest {
     @Test
     fun `invalid channel and in-flight bounds are rejected`() = runTest {
         val records = flowOf(record("invalid"))
-        io.bluetape4k.assertions.assertFailsWith<IllegalArgumentException> {
-            KafkaProducerFlow({ mockk(relaxed = true) }, channelCapacity = 0).send(records)
+        assertFailsWith<IllegalArgumentException> {
+            KafkaProducerFlow({ mockk(relaxed = true) }, channelCapacity = 0)
+                .send(records).log("Send").collect()
         }
-        io.bluetape4k.assertions.assertFailsWith<IllegalArgumentException> {
-            KafkaProducerFlow({ mockk(relaxed = true) }, maxInFlight = 65).send(records)
+        assertFailsWith<IllegalArgumentException> {
+            KafkaProducerFlow({ mockk(relaxed = true) }, maxInFlight = 65)
+                .send(records).log("Send").collect()
         }
     }
 
     @Test
-    fun `real Kafka callbacks become metadata flow`() = runSuspendIO(timeout = 120.seconds) {
+    fun `real Kafka callbacks become metadata flow`() = runSuspendIO {
         val topic = "callback-flow-${java.util.UUID.randomUUID()}"
-        val records = (0 until 4).map { index ->
+        val records = List(4) { index ->
             ProducerRecord(topic, "key-$index", "value-$index")
         }
         val consumer = KafkaServer.Launcher.createStringConsumer()
@@ -216,23 +251,29 @@ class KafkaProducerFlowTest {
             consumer.subscribe(listOf(topic))
             val metadata = KafkaProducerFlow(
                 producerFactory = { KafkaServer.Launcher.createStringProducer() },
-            ).send(records.asFlow()).toList()
+            )
+                .send(records.asFlow())
+                .log("Send")
+                .toList()
 
             metadata.size shouldBeEqualTo records.size
             withTimeout(10.seconds) {
                 var received = 0
                 while (received < records.size) {
-                    received += consumer.poll(Duration.ofMillis(250)).count()
+                    val records = consumer.poll(250.millis())
+                    records.onEach { log.debug { "received: $it" } }
+                    received += records.count()
                 }
+                log.debug { "received=$received" }
             }
         } finally {
             consumer.close()
         }
     }
 
-    private suspend fun waitUntil(predicate: () -> Boolean) {
+    private suspend inline fun waitUntil(crossinline predicate: () -> Boolean) {
         withTimeout(5.seconds) {
-            while (!predicate()) delay(10)
+            while (!predicate()) delay(10.milliseconds)
         }
     }
 
@@ -247,9 +288,9 @@ class KafkaProducerFlowTest {
         var current: Throwable? = this
         repeat(MAX_CAUSE_DEPTH) {
             current?.let { candidate ->
-                if (candidate === expected ||
-                    (candidate::class == expected::class && candidate.message == expected.message)
-                ) return
+                if (candidate === expected || (candidate::class == expected::class && candidate.message == expected.message)) {
+                    return
+                }
             }
             current = current?.cause
         }
@@ -264,6 +305,8 @@ class KafkaProducerFlowTest {
         private val callbackWithoutMetadata: Boolean = false,
         private val holdCallbacks: Boolean = false,
     ) {
+        companion object: KLoggingChannel()
+        
         val producer: Producer<String, String> = mockk(relaxed = true)
         val callbackCount = AtomicInteger()
         val closeCount = AtomicInteger()
@@ -282,7 +325,9 @@ class KafkaProducerFlowTest {
         private val pendingCallbacks = ConcurrentLinkedQueue<Callback>()
 
         init {
-            every { producer.send(any<ProducerRecord<String, String>>(), any()) } answers {
+            every {
+                producer.send(any<ProducerRecord<String, String>>(), any())
+            } answers {
                 sendError?.let { throw it }
                 val callback = secondArg<Callback>()
                 val index = sendCount.incrementAndGet()
@@ -299,7 +344,7 @@ class KafkaProducerFlowTest {
                 } else {
                     callbackCount.incrementAndGet()
                     callback.onCompletion(if (callbackWithoutMetadata) null else metadata, callbackError)
-                    CompletableFuture.completedFuture(metadata)
+                    completableFutureOf(metadata)
                 }
             }
             every { producer.flush() } answers {
@@ -319,6 +364,8 @@ class KafkaProducerFlowTest {
             callbackCount.incrementAndGet()
             callback.onCompletion(metadata, null)
             future.complete(metadata)
+
+            log.debug { "fireCallback: $metadata" }
         }
 
         fun fireLateCallback() {
@@ -327,10 +374,8 @@ class KafkaProducerFlowTest {
             if (callbackClosed.get()) lateCallbackCount.incrementAndGet()
             callback.onCompletion(metadata, null)
             future.complete(metadata)
-        }
-    }
 
-    private companion object {
-        private const val MAX_CAUSE_DEPTH = 8
+            log.debug { "fireLateCallback: $metadata" }
+        }
     }
 }

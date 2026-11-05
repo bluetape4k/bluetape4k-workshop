@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.nio.charset.StandardCharsets
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -13,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 class KafkaFailoverEvidenceWriter(
     private val runId: String,
     root: Path = Path.of("build/reports/kafka-failover"),
-) : AutoCloseable {
+): AutoCloseable {
     private val runDirectory: Path
     private val target: Path
     private var lastPhaseOrdinal: Int = -1
@@ -43,7 +45,7 @@ class KafkaFailoverEvidenceWriter(
 
         val line = evidence.toJsonLine() + "\n"
         val previous = if (Files.exists(target)) Files.readAllBytes(target) else ByteArray(0)
-        val next = previous + line.toByteArray(StandardCharsets.UTF_8)
+        val next = previous + line.toUtf8Bytes()
         val temporary = tempPath()
         try {
             FileChannel.open(
@@ -52,7 +54,7 @@ class KafkaFailoverEvidenceWriter(
                 StandardOpenOption.TRUNCATE_EXISTING,
                 StandardOpenOption.WRITE,
             ).use { channel ->
-                channel.write(java.nio.ByteBuffer.wrap(next))
+                channel.write(ByteBuffer.wrap(next))
                 channel.force(true)
             }
             try {
@@ -77,8 +79,9 @@ class KafkaFailoverEvidenceWriter(
 
     private fun tempPath(): Path = runDirectory.resolve("evidence.jsonl.tmp")
 
-    companion object {
+    companion object: KLogging() {
         private val RUN_ID_PATTERN = Regex("[A-Za-z0-9._-]{1,128}")
+
         /** test JVM마다 한 번 run을 비운 뒤 독립적인 scenario stream을 추가합니다. */
         private val INITIALIZED_TARGETS = ConcurrentHashMap.newKeySet<Path>()
     }

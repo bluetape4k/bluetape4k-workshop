@@ -1,8 +1,7 @@
-import org.gradle.api.tasks.testing.Test
-
 plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    kotlin("kapt")
 }
 
 springBoot {

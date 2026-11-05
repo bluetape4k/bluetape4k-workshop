@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.logging.KLogging
 import org.apache.kafka.common.errors.DisconnectException
 import org.apache.kafka.common.errors.RetriableException
 import java.util.concurrent.CancellationException
@@ -56,11 +57,11 @@ class KafkaFailoverRetry(
 
     private fun isRetryable(error: Throwable): Boolean =
         error is RetriableException ||
-            error is DisconnectException ||
-            error is TimeoutException ||
-            error.cause?.let(::isRetryable) == true
+                error is DisconnectException ||
+                error is TimeoutException ||
+                error.cause?.let(::isRetryable) == true
 
-    companion object {
+    companion object: KLogging() {
         const val MAX_RETRY_ATTEMPTS: Int = 5
         private const val INITIAL_BACKOFF_MILLIS: Long = 200L
         private const val MAX_BACKOFF_MILLIS: Long = 2_000L

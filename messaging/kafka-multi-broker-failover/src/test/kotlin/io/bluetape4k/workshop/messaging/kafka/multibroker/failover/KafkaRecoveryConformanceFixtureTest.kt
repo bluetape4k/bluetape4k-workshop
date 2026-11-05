@@ -2,14 +2,19 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 class KafkaRecoveryConformanceFixtureTest {
-    private val fixture = KafkaRecoveryConformanceFixture(Duration.ofSeconds(15))
+
+    companion object: KLogging()
+
+    private val fixture = KafkaRecoveryConformanceFixture(15.seconds())
 
     @Test
     fun `black box fixture keeps replay delivery separate from unique applied effect`() {
@@ -30,7 +35,7 @@ class KafkaRecoveryConformanceFixtureTest {
                     deliveredEventIds = listOf("event-1"),
                     appliedEventIds = setOf("event-1"),
                     conflictCount = 0,
-                    recoveryElapsed = Duration.ofSeconds(1),
+                    recoveryElapsed = 1.seconds(),
                     recovered = true,
                     transportInterrupted = true,
                     leaderChanged = false,
@@ -40,6 +45,7 @@ class KafkaRecoveryConformanceFixtureTest {
                 ),
             )
         }
+        log.debug { "error=$error" }
         error.message shouldBeEqualTo "broker failover observation has the wrong path"
     }
 }

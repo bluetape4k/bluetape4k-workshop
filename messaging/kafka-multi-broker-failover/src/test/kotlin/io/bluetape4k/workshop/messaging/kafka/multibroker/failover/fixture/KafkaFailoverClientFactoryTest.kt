@@ -4,16 +4,21 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.concurrent.completableFutureOf
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverCodec
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverEvent
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverKafkaConfiguration
 import org.apache.kafka.clients.producer.RecordMetadata
 import org.apache.kafka.common.TopicPartition
 import org.junit.jupiter.api.Test
-import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 
 class KafkaFailoverClientFactoryTest {
+
+    companion object: KLogging()
 
     @Test
     fun `factory creates explicit string clients and partition zero records`() {
@@ -34,13 +39,28 @@ class KafkaFailoverClientFactoryTest {
     @Test
     fun `record metadata must confirm target partition`() {
         val factory = KafkaFailoverClientFactory(configuration())
+
         assertFailsWith<IllegalStateException> {
             factory.requirePartition(
-                RecordMetadata(TopicPartition(KafkaFailoverEvent.TOPIC, 1), 0L, 0, 0L, 0, 0),
+                RecordMetadata(
+                    TopicPartition(KafkaFailoverEvent.TOPIC, 1),
+                    0L,
+                    0,
+                    0L,
+                    0,
+                    0
+                ),
             )
         }
         factory.requirePartition(
-            RecordMetadata(TopicPartition(KafkaFailoverEvent.TOPIC, 0), 0L, 0, 0L, 0, 0),
+            RecordMetadata(
+                TopicPartition(KafkaFailoverEvent.TOPIC, 0),
+                0L,
+                0,
+                0L,
+                0,
+                0
+            ),
         )
     }
 
@@ -48,10 +68,17 @@ class KafkaFailoverClientFactoryTest {
     fun `batch sends await all futures under one shared deadline`() {
         val awaited = mutableListOf<Long>()
         val factory = KafkaFailoverClientFactory(configuration())
-        val deadline = KafkaFailoverDeadline.fromNow(5_000_000_000L.nanoseconds)
-        val futures = (0 until 4).map {
-            java.util.concurrent.CompletableFuture.completedFuture(
-                RecordMetadata(TopicPartition(KafkaFailoverEvent.TOPIC, 0), it.toLong(), 0, 0L, 0, 0),
+        val deadline = KafkaFailoverDeadline.fromNow(5.seconds)
+        val futures = List(4) {
+            completableFutureOf(
+                RecordMetadata(
+                    TopicPartition(KafkaFailoverEvent.TOPIC, 0),
+                    it.toLong(),
+                    0,
+                    0L,
+                    0,
+                    0
+                ),
             )
         }
 
@@ -74,7 +101,9 @@ class KafkaFailoverClientFactoryTest {
             partitions = setOf(TopicPartition(KafkaFailoverEvent.TOPIC, 0)),
             generation = 7,
         )
-        val snapshot = barrier.await(KafkaFailoverDeadline.fromNow(1_000_000_000L.nanoseconds))
+
+        val snapshot = barrier.await(KafkaFailoverDeadline.fromNow(1.seconds))
+        log.debug { "snapshot=$snapshot" }
         snapshot.callbackCount shouldBeEqualTo 1
         snapshot.generation shouldBeEqualTo 7
         snapshot.partitions.size shouldBeEqualTo 1
@@ -99,10 +128,11 @@ class KafkaFailoverClientFactoryTest {
         val duplicate = KafkaFailoverEvent("same-id", 0L, "payload-1")
         val conflict = KafkaFailoverEvent("same-id", 0L, "payload-2")
 
-        collector.accept(first, KafkaFailoverAcknowledgment { })
-        collector.accept(duplicate, KafkaFailoverAcknowledgment { })
+        collector.accept(first) { }
+        collector.accept(duplicate) { }
+
         assertFailsWith<KafkaFailoverConflictException> {
-            collector.accept(conflict, KafkaFailoverAcknowledgment { })
+            collector.accept(conflict) { }
         }
 
         val stats = collector.stats()
@@ -117,16 +147,21 @@ class KafkaFailoverClientFactoryTest {
         val scope = KafkaFailoverResourceScope()
         val closed = mutableListOf<String>()
         val first = IllegalStateException("collector-close")
+
         scope.registerCollector("collector") { closed += "collector"; throw first }
         scope.registerAdmin("admin") { closed += "admin"; throw IllegalArgumentException("admin-close") }
         scope.registerProducer("producer") { closed += "producer" }
         scope.registerConsumer("consumer") { closed += "consumer" }
 
-        val error = assertFailsWith<IllegalStateException> { scope.close() }
+        val error = assertFailsWith<IllegalStateException> {
+            scope.close()
+        }
+        log.debug { "error=$error" }
         closed shouldBeEqualTo listOf("collector", "admin", "producer", "consumer")
-        error.suppressed.size shouldBeEqualTo 1
+        error.suppressed shouldHaveSize 1
         scope.close()
     }
 
-    private fun configuration() = KafkaFailoverKafkaConfiguration("127.0.0.1:19092")
+    private fun configuration() =
+        KafkaFailoverKafkaConfiguration("127.0.0.1:19092")
 }
