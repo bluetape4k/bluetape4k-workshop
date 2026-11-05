@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.idempotency
 
 import java.nio.charset.StandardCharsets.UTF_8
-import java.util.Locale
+import java.util.*
 
 /** Validates and canonicalizes the bounded HTTP response snapshot before persistence. */
 internal class JobSubmissionSnapshotPolicy private constructor(
@@ -10,8 +10,8 @@ internal class JobSubmissionSnapshotPolicy private constructor(
     private val acceptedContentTypes: Set<String>,
     private val replayHeaderAllowlist: Set<String> = emptySet(),
 ) {
-    internal constructor(policy: JobSubmissionIdempotencyPolicy) :
-        this(policy, setOf(202), setOf(APPLICATION_JSON))
+    internal constructor(policy: JobSubmissionIdempotencyPolicy):
+            this(policy, setOf(202), setOf(APPLICATION_JSON))
 
     fun validate(prepared: PreparedJobSubmission): PreparedJobSubmission {
         require(prepared.responseStatus in acceptedStatuses) {

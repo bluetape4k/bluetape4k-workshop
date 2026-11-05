@@ -18,11 +18,13 @@ class JobOutboxPoller(
         val claim = repository.claim(batchSize, claimDuration)
         var published = 0
         claim.events.forEach { event ->
-            runCatching { fanout.publish(event) }
-                .onSuccess {
-                    if (repository.markPublished(claim.token, event.eventId)) published++
-                }
-                .onFailure { repository.release(claim.token, event.eventId) }
+            runCatching {
+                fanout.publish(event)
+            }.onSuccess {
+                if (repository.markPublished(claim.token, event.eventId)) published++
+            }.onFailure {
+                repository.release(claim.token, event.eventId)
+            }
         }
         return OutboxPollResult(claim.events.size, published)
     }

@@ -1,7 +1,10 @@
 package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -10,12 +13,18 @@ import java.nio.file.StandardOpenOption.APPEND
 
 class HighContentionJournalTest {
 
+    companion object: KLogging()
+
     @TempDir
     lateinit var tempDir: Path
+
+    private fun open(relativePath: String): HighContentionJournal =
+        HighContentionJournal.open(tempDir, Path.of(relativePath))
 
     @Test
     fun `journal persists a monotonic fsynced hash chain`() {
         val path = tempDir.resolve("run-journal.jsonl")
+        log.debug { "path=$path" }
 
         open("run-journal.jsonl").use { journal ->
             journal.append(
@@ -29,6 +38,7 @@ class HighContentionJournalTest {
         }
 
         val records = HighContentionJournal.read(path)
+        records.forEach { log.debug { "record=$it" } }
         records.map(HighContentionJournalRecord::sequence) shouldBeEqualTo listOf(0L, 1L)
         records[0].previousRecordSha256 shouldBeEqualTo HighContentionJournal.GENESIS_SHA256
         records[1].previousRecordSha256 shouldBeEqualTo records[0].recordSha256
@@ -54,6 +64,7 @@ class HighContentionJournalTest {
         HighContentionJournal.read(path).size shouldBeEqualTo 2
 
         val corrupted = Files.readString(path).replaceFirst("\"setup\"", "\"tampered\"")
+
         Files.writeString(path, corrupted)
         assertFailsWith<HighContentionJournalException> {
             HighContentionJournal.read(path)
@@ -68,10 +79,11 @@ class HighContentionJournalTest {
         }
         Files.writeString(
             duplicatePath,
-            Files.readString(duplicatePath).replaceFirst(
-                "\"sequence\":0",
-                "\"sequence\":0,\"sequence\":0",
-            ),
+            Files.readString(duplicatePath)
+                .replaceFirst(
+                    "\"sequence\":0",
+                    "\"sequence\":0,\"sequence\":0",
+                ),
         )
         assertFailsWith<HighContentionJournalException> {
             HighContentionJournal.read(duplicatePath)
@@ -115,9 +127,6 @@ class HighContentionJournalTest {
             }
         }
 
-        HighContentionJournal.read(path) shouldBeEqualTo emptyList()
+        HighContentionJournal.read(path).shouldBeEmpty()
     }
-
-    private fun open(relativePath: String): HighContentionJournal =
-        HighContentionJournal.open(tempDir, Path.of(relativePath))
 }

@@ -1,15 +1,14 @@
 package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.application.call
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
@@ -17,6 +16,9 @@ import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Test
 
 class JobConsoleKtorSubmissionHttpTest {
+
+    companion object: KLogging()
+
     @Test
     fun `strict bounded submission parser is used before coordinator`() = testApplication {
         application {

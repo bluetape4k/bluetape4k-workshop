@@ -2,6 +2,15 @@ package io.bluetape4k.workshop.operations.jobconsole.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
@@ -11,8 +20,7 @@ import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.time.Duration
 import java.time.Instant
-import java.util.ArrayDeque
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
@@ -20,6 +28,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 class JobSubmissionIdempotencyCoordinatorTest {
 
@@ -28,7 +37,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         val repository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
         val clock = VirtualClock()
         val action = RecordingAction(
-            prepare = { repository.transactionActive shouldBeEqualTo false },
+            prepare = { repository.transactionActive.shouldBeFalse() },
             commitCheck = { repository.transactionActive shouldBeEqualTo true },
         )
         val coordinator = coordinator(repository, clock)
@@ -49,17 +58,29 @@ class JobSubmissionIdempotencyCoordinatorTest {
         val action = RecordingAction()
 
         val replayRepository = FakeRepository().apply { reservation = Reservation.Replay(snapshot) }
-        coordinator(replayRepository, VirtualClock()).execute(command, action) shouldBeEqualTo JobSubmissionOutcome.Replayed(snapshot)
+        coordinator(replayRepository, VirtualClock()).execute(
+            command,
+            action
+        ) shouldBeEqualTo JobSubmissionOutcome.Replayed(snapshot)
         replayRepository.finalizeCalls shouldBeEqualTo 0
 
         val conflictRepository = FakeRepository().apply { reservation = Reservation.Conflict }
-        coordinator(conflictRepository, VirtualClock()).execute(command, action) shouldBeEqualTo JobSubmissionOutcome.Conflict
+        coordinator(conflictRepository, VirtualClock()).execute(
+            command,
+            action
+        ) shouldBeEqualTo JobSubmissionOutcome.Conflict
 
         val overflowRepository = FakeRepository().apply { reservation = Reservation.Overflow }
-        coordinator(overflowRepository, VirtualClock()).execute(command, action) shouldBeEqualTo JobSubmissionOutcome.WaiterOverflow
+        coordinator(overflowRepository, VirtualClock()).execute(
+            command,
+            action
+        ) shouldBeEqualTo JobSubmissionOutcome.WaiterOverflow
 
         val abandonedRepository = FakeRepository().apply { reservation = Reservation.Abandoned }
-        coordinator(abandonedRepository, VirtualClock()).execute(command, action) shouldBeEqualTo JobSubmissionOutcome.Abandoned
+        coordinator(abandonedRepository, VirtualClock()).execute(
+            command,
+            action
+        ) shouldBeEqualTo JobSubmissionOutcome.Abandoned
 
         action.prepareCalls shouldBeEqualTo 0
     }
@@ -71,8 +92,8 @@ class JobSubmissionIdempotencyCoordinatorTest {
             registration = WaiterRegistration.DeadlineExceeded
         }
 
-        coordinator(repository, VirtualClock()).execute(command(), RecordingAction()) shouldBeEqualTo
-            JobSubmissionOutcome.InFlightTimeout
+        coordinator(repository, VirtualClock())
+            .execute(command(), RecordingAction()) shouldBeEqualTo JobSubmissionOutcome.InFlightTimeout
         repository.registerCalls shouldBeEqualTo 1
         repository.pollCalls shouldBeEqualTo 0
     }
@@ -90,8 +111,9 @@ class JobSubmissionIdempotencyCoordinatorTest {
         }
         val outcome = coordinator(repository, clock, waiter).execute(command(), RecordingAction())
 
+        log.debug { "outcome=$outcome" }
         outcome shouldBeEqualTo JobSubmissionOutcome.Replayed(snapshot)
-        waiter.intervals shouldBeEqualTo listOf(Duration.ofMillis(25), Duration.ofMillis(50))
+        waiter.intervals shouldBeEqualTo listOf(25.millis(), 50.millis())
         repository.registerCalls shouldBeEqualTo 1
         repository.pollCalls shouldBeEqualTo 3
         repository.removeCalls shouldBeEqualTo 1
@@ -109,8 +131,9 @@ class JobSubmissionIdempotencyCoordinatorTest {
 
         val outcome = coordinator(repository, clock, waiter).execute(command(), RecordingAction())
 
+        log.debug { "outcome=$outcome" }
         outcome shouldBeEqualTo JobSubmissionOutcome.InFlightTimeout
-        clock.elapsed shouldBeEqualTo Duration.ofSeconds(2)
+        clock.elapsed shouldBeEqualTo 2.seconds()
         repository.removeCalls shouldBeEqualTo 1
     }
 
@@ -119,7 +142,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
         val databasePermits = ScriptedDatabaseSemaphore().apply {
-            beforeRegistrationAcquire = { clock.advance(Duration.ofMillis(1_600)) }
+            beforeRegistrationAcquire = { clock.advance(1_600.millis()) }
             failPollPermit = false
         }
         val repository = FakeRepository().apply {
@@ -128,12 +151,13 @@ class JobSubmissionIdempotencyCoordinatorTest {
             pollResults.add(PollResult.Terminal(snapshot))
         }
 
-        coordinator(repository, clock, waiter, databasePermits = databasePermits).execute(command(), RecordingAction()) shouldBeEqualTo
-            JobSubmissionOutcome.Replayed(snapshot)
-        repository.registerTtls.single() shouldBeEqualTo Duration.ofMillis(400)
-        repository.registerDeadlines.single() shouldBeEqualTo NOW.plusSeconds(2)
+        coordinator(repository, clock, waiter, databasePermits = databasePermits)
+            .execute(command(), RecordingAction()) shouldBeEqualTo JobSubmissionOutcome.Replayed(snapshot)
+
+        repository.registerTtls.single() shouldBeEqualTo 400.millis()
+        repository.registerDeadlines.single() shouldBeEqualTo NOW + 2.seconds()
         repository.pollCalls shouldBeEqualTo 1
-        clock.elapsed shouldBeEqualTo Duration.ofMillis(1_600)
+        clock.elapsed shouldBeEqualTo 1_600.millis()
     }
 
     @Test
@@ -147,26 +171,28 @@ class JobSubmissionIdempotencyCoordinatorTest {
             pollResults.add(PollResult.Terminal(snapshot))
         }
 
-        coordinator(repository, clock, waiter).execute(command(), RecordingAction()) shouldBeEqualTo
-            JobSubmissionOutcome.Replayed(snapshot)
-        repository.registerDeadlines.single() shouldBeEqualTo databaseNow.plusSeconds(2)
+        coordinator(repository, clock, waiter)
+            .execute(command(), RecordingAction()) shouldBeEqualTo JobSubmissionOutcome.Replayed(snapshot)
+
+        repository.registerDeadlines.single() shouldBeEqualTo databaseNow + 2.seconds()
     }
 
     @Test
     fun `waiter deadline includes time spent in the reserve transaction`() {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
-        val databaseNow = NOW.plusMillis(400)
+        val databaseNow = NOW + 400.millis()
         val repository = FakeRepository().apply {
             reservation = Reservation.Wait(ownership, databaseNow)
-            onReserve = { clock.advanceMonotonicOnly(Duration.ofMillis(400)) }
+            onReserve = { clock.advanceMonotonicOnly(400.millis()) }
             registration = WaiterRegistration.Registered(WAITER_TOKEN, ownership.generation)
             pollResults.add(PollResult.Terminal(snapshot))
         }
 
-        coordinator(repository, clock, waiter).execute(command(), RecordingAction()) shouldBeEqualTo
-            JobSubmissionOutcome.Replayed(snapshot)
-        repository.registerDeadlines.single() shouldBeEqualTo databaseNow.plusSeconds(2)
+        coordinator(repository, clock, waiter)
+            .execute(command(), RecordingAction()) shouldBeEqualTo JobSubmissionOutcome.Replayed(snapshot)
+
+        repository.registerDeadlines.single() shouldBeEqualTo databaseNow + 2.seconds()
     }
 
     @Test
@@ -174,7 +200,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
         val databasePermits = ScriptedDatabaseSemaphore().apply {
-            beforeSuccessfulPollAcquire = { clock.advance(Duration.ofMillis(1_700)) }
+            beforeSuccessfulPollAcquire = { clock.advance(1_700.millis()) }
         }
         val repository = FakeRepository().apply {
             reservation = Reservation.Wait(ownership, NOW)
@@ -182,22 +208,24 @@ class JobSubmissionIdempotencyCoordinatorTest {
             pollResults.add(PollResult.Terminal(snapshot))
         }
 
-        coordinator(repository, clock, waiter, databasePermits = databasePermits).execute(command(), RecordingAction()) shouldBeEqualTo
-            JobSubmissionOutcome.Replayed(snapshot)
+        coordinator(repository, clock, waiter, databasePermits = databasePermits)
+            .execute(command(), RecordingAction()) shouldBeEqualTo JobSubmissionOutcome.Replayed(snapshot)
+
         databasePermits.attempts shouldBeEqualTo 5
-        waiter.intervals shouldBeEqualTo listOf(Duration.ofMillis(25))
+        waiter.intervals shouldBeEqualTo listOf(25.millis())
         repository.pollCalls shouldBeEqualTo 1
-        repository.pollStatementTimeouts.single() shouldBeEqualTo Duration.ofMillis(275)
+        repository.pollStatementTimeouts.single() shouldBeEqualTo 275.millis()
     }
 
     @Test
     fun `prepare deadline abandons once and does not finalize`() {
         val clock = VirtualClock()
         val repository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
-        val action = RecordingAction(prepare = { clock.advance(Duration.ofSeconds(10)) })
+        val action = RecordingAction(prepare = { clock.advance(10.seconds()) })
 
         val outcome = coordinator(repository, clock).execute(command(), action)
 
+        log.debug { "outcome=$outcome" }
         outcome shouldBeEqualTo JobSubmissionOutcome.Abandoned
         repository.abandonCalls shouldBeEqualTo 1
         repository.abandonReasons shouldBeEqualTo listOf(AbandonReason.PREPARE_DEADLINE)
@@ -212,12 +240,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
         val release = CountDownLatch(1)
         val interrupted = CountDownLatch(1)
         val prepareExecutor = Executors.newSingleThreadExecutor()
-        val policy = JobSubmissionIdempotencyPolicy(prepareDeadline = Duration.ofMillis(50))
+        val policy = JobSubmissionIdempotencyPolicy(prepareDeadline = 50.millis())
         val action = RecordingAction(
             prepare = {
                 started.countDown()
                 try {
-                    release.await(5, TimeUnit.SECONDS)
+                    release.await(5.seconds)
                 } catch (error: InterruptedException) {
                     interrupted.countDown()
                     throw error
@@ -226,16 +254,19 @@ class JobSubmissionIdempotencyCoordinatorTest {
         )
 
         try {
-            val outcome = coordinator(repository, clock, policy = policy, prepareExecutor = prepareExecutor).execute(command(policy), action)
+            val outcome = coordinator(repository, clock, policy = policy, prepareExecutor = prepareExecutor).execute(
+                command(policy), action
+            )
 
-            check(started.await(1, TimeUnit.SECONDS))
+            log.debug { "outcome=$outcome" }
+            started.await(1.seconds).shouldBeTrue()
             outcome shouldBeEqualTo JobSubmissionOutcome.Abandoned
             repository.abandonReasons shouldBeEqualTo listOf(AbandonReason.PREPARE_DEADLINE)
-            check(interrupted.await(1, TimeUnit.SECONDS))
+            interrupted.await(1.seconds).shouldBeTrue()
         } finally {
             release.countDown()
             prepareExecutor.shutdownNow()
-            prepareExecutor.awaitTermination(1, TimeUnit.SECONDS)
+            prepareExecutor.awaitTermination(1.seconds)
         }
     }
 
@@ -244,12 +275,16 @@ class JobSubmissionIdempotencyCoordinatorTest {
         val failedClock = VirtualClock()
         val failedRepository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
         val failedAction = RecordingAction(prepare = { error("dependency failed") })
-        coordinator(failedRepository, failedClock).execute(command(), failedAction) shouldBeEqualTo JobSubmissionOutcome.Abandoned
+        coordinator(failedRepository, failedClock).execute(
+            command(),
+            failedAction
+        ) shouldBeEqualTo JobSubmissionOutcome.Abandoned
         failedRepository.abandonCalls shouldBeEqualTo 1
 
         val cancelledClock = VirtualClock()
         val cancelledRepository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
         val cancelledAction = RecordingAction(prepare = { throw CancellationException("client cancelled") })
+
         assertFailsWith<CancellationException> {
             coordinator(cancelledRepository, cancelledClock).execute(command(), cancelledAction)
         }
@@ -263,7 +298,10 @@ class JobSubmissionIdempotencyCoordinatorTest {
         val repository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
-        val policy = JobSubmissionIdempotencyPolicy(ownerPrepareConcurrency = 1, connectionAcquireTimeout = Duration.ofMillis(25))
+        val policy = JobSubmissionIdempotencyPolicy(
+            ownerPrepareConcurrency = 1,
+            connectionAcquireTimeout = 25.millis()
+        )
         val coordinator = coordinator(repository, clock, policy = policy)
         val executor = Executors.newSingleThreadExecutor()
         try {
@@ -272,21 +310,21 @@ class JobSubmissionIdempotencyCoordinatorTest {
                     command(policy),
                     RecordingAction {
                         entered.countDown()
-                        check(release.await(2, TimeUnit.SECONDS))
+                        release.await(2.seconds).shouldBeTrue()
                     },
                 )
             }
-            check(entered.await(2, TimeUnit.SECONDS))
+            entered.await(2.seconds).shouldBeTrue()
 
             coordinator.execute(command(policy), RecordingAction()) shouldBeEqualTo JobSubmissionOutcome.WaiterOverflow
             repository.reserveCalls shouldBeEqualTo 1
 
             release.countDown()
-            first.get(2, TimeUnit.SECONDS) shouldBeEqualTo JobSubmissionOutcome.OwnerCompleted(snapshot)
+            first.get(2.seconds) shouldBeEqualTo JobSubmissionOutcome.OwnerCompleted(snapshot)
         } finally {
             release.countDown()
             executor.shutdownNow()
-            executor.awaitTermination(2, TimeUnit.SECONDS)
+            executor.awaitTermination(2.seconds)
         }
     }
 
@@ -297,7 +335,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
             reservation = Reservation.Wait(ownership, NOW)
             registration = WaiterRegistration.Registered(WAITER_TOKEN, ownership.generation)
         }
-        val waiter = object : InterruptibleWaitStrategy {
+        val waiter = object: InterruptibleWaitStrategy {
             override fun await(interval: Duration): Unit = throw CancellationException("waiter cancelled")
         }
 
@@ -320,21 +358,23 @@ class JobSubmissionIdempotencyCoordinatorTest {
         }
         repository.abandonCalls shouldBeEqualTo 1
         repository.abandonReasons shouldBeEqualTo listOf(AbandonReason.CANCELLED)
-        repository.transactionCommitted shouldBeEqualTo false
+        repository.transactionCommitted.shouldBeFalse()
     }
 
     @Test
     fun `wait jitter is deterministic and stays within the twenty percent envelope`() {
         val token = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
-        val interval = Duration.ofMillis(100)
+        val interval = 100.millis()
         val jittered = deterministicWaitJitter(token, interval)
-        val envelope = (0L until 100L).map { value ->
-            deterministicWaitJitter(UUID(0L, value), interval).toMillis()
+        val envelope = List(100) { value ->
+            deterministicWaitJitter(UUID(0L, value.toLong()), interval).toMillis()
         }
 
         jittered shouldBeEqualTo deterministicWaitJitter(token, interval)
-        check(envelope.min() == 80L)
-        check(envelope.max() == 120L)
+
+        log.debug { "envelope=$envelope" }
+        envelope.min() shouldBeEqualTo 80L
+        envelope.max() shouldBeEqualTo 120L
     }
 
     private fun coordinator(
@@ -358,7 +398,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
     private class RecordingAction(
         private val prepare: () -> Unit = {},
         private val commitCheck: () -> Unit = {},
-    ) : JobSubmissionOwnerAction {
+    ): JobSubmissionOwnerAction {
         var prepareCalls = 0
         var commitCalls = 0
 
@@ -381,7 +421,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
 
     private class RecordingWaiter(
         private val clock: VirtualClock,
-    ) : InterruptibleWaitStrategy {
+    ): InterruptibleWaitStrategy {
         val intervals = mutableListOf<Duration>()
 
         override fun await(interval: Duration) {
@@ -392,7 +432,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
 
     private class VirtualClock(
         private var instant: Instant = NOW,
-    ) : JobSubmissionClock {
+    ): JobSubmissionClock {
         var elapsed: Duration = Duration.ZERO
             private set
 
@@ -410,7 +450,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         }
     }
 
-    private class FakeRepository : JobSubmissionIdempotencyRepository {
+    private class FakeRepository: JobSubmissionIdempotencyRepository {
         var reservation: Reservation = Reservation.Owner(ownership)
         var registration: WaiterRegistration = WaiterRegistration.Registered(WAITER_TOKEN, ownership.generation)
         val pollResults = ArrayDeque<PollResult>()
@@ -438,7 +478,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         }
 
         override fun registerWaiter(ownership: InFlightOwnership, now: Instant): WaiterRegistration {
-            return registerWaiter(ownership, now, Duration.ofSeconds(2))
+            return registerWaiter(ownership, now, 2.seconds())
         }
 
         override fun registerWaiter(
@@ -464,7 +504,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
             return registration
         }
 
-        override fun removeWaiter(scope: DemoCallerScope, keyHash: String, generation: Long, waiterToken: UUID): Boolean {
+        override fun removeWaiter(
+            scope: DemoCallerScope,
+            keyHash: String,
+            generation: Long,
+            waiterToken: UUID,
+        ): Boolean {
             removeCalls += 1
             return true
         }
@@ -527,7 +572,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         override fun cleanupExpired(now: Instant, batchSize: Int): CleanupReport = CleanupReport(0, 0)
     }
 
-    private class ScriptedDatabaseSemaphore : Semaphore(1, true) {
+    private class ScriptedDatabaseSemaphore: Semaphore(1, true) {
         var attempts = 0
         var failPollPermit = true
         var beforeRegistrationAcquire: (() -> Unit)? = null
@@ -542,7 +587,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         }
     }
 
-    private companion object {
+    private companion object: KLogging() {
         val NOW: Instant = Instant.parse("2026-07-21T00:00:00Z")
         val OWNER_TOKEN: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890aa")
         val WAITER_TOKEN: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
@@ -554,7 +599,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
                 generation = 1,
                 jobId = JOB_ID,
                 ownerToken = OWNER_TOKEN,
-                leaseExpiresAt = NOW.plusSeconds(30),
+                leaseExpiresAt = NOW + 30.seconds(),
             )
         val snapshot =
             ReplayableJobSubmission(
@@ -579,7 +624,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
                     Float::class.javaPrimitiveType -> 0.0f
                     Double::class.javaPrimitiveType -> 0.0
                     Char::class.javaPrimitiveType -> '\u0000'
-                    else -> null
+                    else                         -> null
                 }
             } as Connection
 

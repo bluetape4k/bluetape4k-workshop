@@ -4,7 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 class JobSubmissionIdempotencyMigrationTest {
@@ -24,7 +24,10 @@ class JobSubmissionIdempotencyMigrationTest {
                 """.trimIndent(),
             )
 
-            runner.migrate() shouldBeEqualTo listOf(JobMigrationResult.ALREADY_APPLIED, JobMigrationResult.ALREADY_APPLIED)
+            runner.migrate() shouldBeEqualTo listOf(
+                JobMigrationResult.ALREADY_APPLIED,
+                JobMigrationResult.ALREADY_APPLIED
+            )
             fixture.count("job_requests") shouldBeEqualTo 1L
             fixture.count("job_request_waiters") shouldBeEqualTo 0L
             fixture.queryLines(

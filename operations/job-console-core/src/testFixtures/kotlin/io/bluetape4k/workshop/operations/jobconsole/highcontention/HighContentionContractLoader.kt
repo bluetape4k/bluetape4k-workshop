@@ -6,10 +6,9 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.support.requireZeroOrPositiveNumber
+import tools.jackson.core.ObjectReadContext
 import tools.jackson.core.StreamReadConstraints
 import tools.jackson.core.StreamReadFeature
-import tools.jackson.core.ObjectReadContext
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
 import java.nio.ByteBuffer
@@ -25,7 +24,7 @@ import java.security.MessageDigest
 class HighContentionContractException(
     message: String,
     cause: Throwable? = null,
-) : IllegalArgumentException(message, cause)
+): IllegalArgumentException(message, cause)
 
 fun interface HighContentionFileReadObserver {
     fun afterRead(path: Path)
@@ -210,11 +209,11 @@ class HighContentionContractLoader(
 
     private fun sameFileIdentity(before: BasicFileAttributes, after: BasicFileAttributes): Boolean =
         before.isRegularFile &&
-            after.isRegularFile &&
-            before.fileKey() != null &&
-            before.fileKey() == after.fileKey() &&
-            before.size() == after.size() &&
-            before.lastModifiedTime() == after.lastModifiedTime()
+                after.isRegularFile &&
+                before.fileKey() != null &&
+                before.fileKey() == after.fileKey() &&
+                before.size() == after.size() &&
+                before.lastModifiedTime() == after.lastModifiedTime()
 
     private fun validateDocumentVersions(
         profileContract: HighContentionProfileContract,
@@ -248,7 +247,10 @@ class HighContentionContractLoader(
         scheduleVectors.schemaVersion.requireEquals(1, "schedule vector schema version")
         scheduleVectors.algorithm.requireEquals(SCHEDULE_ALGORITHM, "schedule vector algorithm")
         manifest.suiteSchemaVersion.requireEquals(1, "suite schema version")
-        manifest.profileSchemaVersion.requireEquals(profileContract.profileSchemaVersion, "manifest profile schema version")
+        manifest.profileSchemaVersion.requireEquals(
+            profileContract.profileSchemaVersion,
+            "manifest profile schema version"
+        )
         manifest.reportSchemaVersion.requireEquals(reportContract.reportSchemaVersion, "manifest report schema version")
         manifest.childDescriptorSchemaVersion.requireEquals(
             descriptorContract.childDescriptorSchemaVersion,
@@ -401,7 +403,8 @@ class HighContentionContractLoader(
         profile.observationFields.requireNotEmpty("observationFields")
         profile.knownLimitations.requireNotEmpty("knownLimitations")
 
-        val requiredCleanupReserve = Math.addExact(profile.cleanupActionBudgetsMs.total(), profile.reportFinalizeReserveMs)
+        val requiredCleanupReserve =
+            Math.addExact(profile.cleanupActionBudgetsMs.total(), profile.reportFinalizeReserveMs)
         if (profile.cleanupReserveMs < requiredCleanupReserve) {
             throw HighContentionContractException("cleanupReserveMs does not cover cleanup actions and report finalization")
         }
@@ -445,8 +448,8 @@ class HighContentionContractLoader(
             append(
                 vector.expectedTokens.joinToString(separator = ",", prefix = "[", postfix = "]") {
                     "{\"attemptOrdinal\":${it.attemptOrdinal},\"authorityOrdinal\":${it.authorityOrdinal}," +
-                        "\"identityOrdinal\":${it.identityOrdinal},\"offsetNanos\":${it.offsetNanos}," +
-                        "\"stableOrdinal\":${it.stableOrdinal}}"
+                            "\"identityOrdinal\":${it.identityOrdinal},\"offsetNanos\":${it.offsetNanos}," +
+                            "\"stableOrdinal\":${it.stableOrdinal}}"
                 },
             )
             append(",\"name\":")

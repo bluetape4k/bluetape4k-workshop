@@ -1,27 +1,29 @@
 package io.bluetape4k.workshop.operations.jobconsole.ktor
 
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.http.idempotency.BoundedWaitHttpIdempotencyAdapter
 import io.bluetape4k.junit5.http.idempotency.BoundedWaitHttpIdempotencyConformanceConfig
+import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyQuiescence
 import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyRequest
 import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyResponse
-import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyQuiescence
 import io.bluetape4k.junit5.http.idempotency.assertBoundedWaitHttpIdempotencyConformance
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.operations.jobconsole.fixture.BoundedWaitHttpIdempotencyFixture
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import io.ktor.utils.io.InternalAPI
-import io.ktor.utils.io.readRemaining
-import kotlinx.io.readByteArray
+import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.io.readByteArray
 import org.junit.jupiter.api.Test
 import java.net.ServerSocket
 import java.net.URI
@@ -35,30 +37,39 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-@OptIn(InternalAPI::class)
 class KtorBoundedWaitHttpIdempotencyConformanceTest {
     @Test
     fun `Ktor HTTP host passes the shared bounded wait conformance`() = runBlocking {
         val fixture = BoundedWaitHttpIdempotencyFixture(boundedWaitConformanceConfig())
         val port = ServerSocket(0).use { it.localPort }
+
         val server = embeddedServer(Netty, port = port) {
             routing {
                 post("/__test/v1/jobs") {
                     val keys = call.request.headers.getAll("Idempotency-Key").orEmpty()
-                    val body = call.receiveChannel().readRemaining().readByteArray().toString(UTF_8)
-                    val request =
-                        HttpIdempotencyRequest(
-                            authenticationProfile = call.request.headers["X-Test-Authentication-Profile"] ?: "unauthenticated",
-                            operation = call.request.headers["X-Test-Operation"] ?: "create-widget",
-                            resourceIdentity = call.request.headers["X-Test-Resource"] ?: "widget-1",
-                            idempotencyKeys = keys.ifEmpty { listOf("") },
-                            requestBody = body,
-                        )
+                    val body = call.receiveChannel().readBuffer().readByteArray().toUtf8String()
+                    val request = HttpIdempotencyRequest(
+                        authenticationProfile = call.request.headers["X-Test-Authentication-Profile"]
+                            ?: "unauthenticated",
+                        operation = call.request.headers["X-Test-Operation"] ?: "create-widget",
+                        resourceIdentity = call.request.headers["X-Test-Resource"] ?: "widget-1",
+                        idempotencyKeys = keys.ifEmpty { listOf("") },
+                        requestBody = body,
+                    )
                     val response = fixture.exchange(request)
-                    response.headers.forEach { (name, values) -> values.forEach { value -> call.response.headers.append(name, value) } }
+                    response.headers.forEach { (name, values) ->
+                        values.forEach { value ->
+                            call.response.headers.append(
+                                name,
+                                value
+                            )
+                        }
+                    }
                     call.respondBytes(
-                        bytes = response.body.toByteArray(UTF_8),
-                        contentType = ContentType.parse(response.headers["content-type"]?.singleOrNull() ?: "application/json"),
+                        bytes = response.body.toUtf8Bytes(),
+                        contentType = ContentType.parse(
+                            response.headers["content-type"]?.singleOrNull() ?: "application/json"
+                        ),
                         status = HttpStatusCode.fromValue(response.statusCode),
                     )
                 }
@@ -83,7 +94,7 @@ class KtorBoundedWaitHttpIdempotencyConformanceTest {
 private class KtorBoundedWaitHttpIdempotencyAdapter(
     private val fixture: BoundedWaitHttpIdempotencyFixture,
     private val endpoint: URI,
-) : BoundedWaitHttpIdempotencyAdapter {
+): BoundedWaitHttpIdempotencyAdapter {
     private val clientExecutor: ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
     private val client = HttpClient.newBuilder()
         .version(HttpClient.Version.HTTP_1_1)
@@ -175,12 +186,12 @@ private fun String.hasUnpairedSurrogate(): Boolean {
 
 private fun boundedWaitConformanceConfig() =
     BoundedWaitHttpIdempotencyConformanceConfig(
-        waitTimeout = Duration.ofSeconds(2),
-        scenarioTimeout = Duration.ofSeconds(15),
+        waitTimeout = 2.seconds(),
+        scenarioTimeout = 15.seconds(),
         maxWaitersPerKey = 2,
-        retention = Duration.ofHours(1),
-        inFlightRetryAfter = Duration.ofSeconds(1),
-        overflowRetryAfter = Duration.ofSeconds(2),
+        retention = 1.hours(),
+        inFlightRetryAfter = 1.seconds(),
+        overflowRetryAfter = 2.seconds(),
         maxIdempotencyKeyBytes = 255,
         maxRequestBodyBytes = 64 * 1024,
         maxReplayBodyBytes = 64 * 1024,

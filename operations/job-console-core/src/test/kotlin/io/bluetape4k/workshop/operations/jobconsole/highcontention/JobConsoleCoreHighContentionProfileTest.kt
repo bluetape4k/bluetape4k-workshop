@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 @Tag("high-contention")
 class JobConsoleCoreHighContentionProfileTest {
+
+    companion object: KLogging()
 
     @Test
     fun `selected Job core profile preserves PostgreSQL authority and writes a validated report`() {

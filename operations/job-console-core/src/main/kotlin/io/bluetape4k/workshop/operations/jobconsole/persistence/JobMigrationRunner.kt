@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8String
 import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.SQLException
@@ -14,14 +16,14 @@ data class JobMigration(
     val bytes: ByteArray,
 ) {
     init {
-        require(version.isNotBlank()) { "migration version must not be blank" }
+        version.requireNotBlank("version")
     }
 
     val checksum: String
         get() = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString()
 
     val sql: String
-        get() = bytes.toString(Charsets.UTF_8)
+        get() = bytes.toUtf8String()
 
     companion object {
         fun classpath(version: String, resource: String): JobMigration {
@@ -57,6 +59,8 @@ class JobMigrationRunner(
     private val statementTimeout: Duration = Duration.ofSeconds(30),
     private val logRowCounts: Boolean = true,
 ) {
+    companion object: KLogging()
+
     init {
         require(migrations.map(JobMigration::version).distinct().size == migrations.size) {
             "migration versions must be unique"
@@ -176,6 +180,4 @@ class JobMigrationRunner(
     private fun Connection.rollbackQuietly() {
         runCatching { rollback() }
     }
-
-    companion object : KLogging()
 }

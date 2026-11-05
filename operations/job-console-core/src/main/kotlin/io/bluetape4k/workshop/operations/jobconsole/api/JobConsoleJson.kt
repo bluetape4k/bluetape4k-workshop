@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.api
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.support.requirePositiveNumber
 import tools.jackson.core.StreamReadConstraints
 import tools.jackson.core.StreamReadFeature
 import tools.jackson.core.json.JsonFactory
@@ -20,9 +21,9 @@ object JobConsoleJson {
      * 이 함수에서만 추가해 Ktor와 Spring adapter가 같은 계약을 사용하도록 한다.
      */
     fun strictRequestMapper(maxRequestBytes: Int): JsonMapper {
-        require(maxRequestBytes > 0) { "maxRequestBytes must be positive" }
+        maxRequestBytes.requirePositiveNumber("maxRequestBytes")
 
-        val baseline = Jackson.defaultJsonMapper
+        val baseline = defaultMapper
         val factory = (baseline.tokenStreamFactory() as JsonFactory).rebuild()
             .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
             .streamReadConstraints(

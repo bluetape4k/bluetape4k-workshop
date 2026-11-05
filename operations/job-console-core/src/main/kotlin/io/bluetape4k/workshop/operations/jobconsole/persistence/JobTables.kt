@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestamp
 
-object JobRequestTable : Table("job_requests") {
+object JobRequestTable: Table("job_requests") {
     val tenantId = varchar("tenant_id", 64)
     val submitterHash = char("submitter_hash", 64)
     val keyHash = char("key_hash", 64)
@@ -30,7 +30,7 @@ object JobRequestTable : Table("job_requests") {
     override val primaryKey = PrimaryKey(tenantId, submitterHash, keyHash)
 }
 
-object JobRequestWaiterTable : Table("job_request_waiters") {
+object JobRequestWaiterTable: Table("job_request_waiters") {
     val tenantId = varchar("tenant_id", 64)
     val submitterHash = char("submitter_hash", 64)
     val keyHash = char("key_hash", 64)
@@ -42,7 +42,7 @@ object JobRequestWaiterTable : Table("job_request_waiters") {
     override val primaryKey = PrimaryKey(tenantId, submitterHash, keyHash, generation, waiterToken)
 }
 
-object JobTable : Table("jobs") {
+object JobTable: Table("jobs") {
     val jobId = javaUUID("job_id")
     val tenantId = varchar("tenant_id", 64)
     val submitterHash = char("submitter_hash", 64)

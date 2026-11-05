@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import org.junit.jupiter.api.Tag
@@ -12,6 +14,8 @@ import java.util.concurrent.Executors
 @Tag("integration")
 class JobIdempotencyConcurrencyTest {
 
+    companion object: KLogging()
+
     @Test
     fun `concurrent identical submit creates one owner and one job`() {
         JobConsoleDatabaseFixture().use { fixture ->
@@ -20,24 +24,24 @@ class JobIdempotencyConcurrencyTest {
             val ready = CountDownLatch(2)
             val start = CountDownLatch(1)
 
-            val results =
-                Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-                    List(2) {
-                        executor.submit<SubmitJobResult> {
-                            ready.countDown()
-                            start.await()
-                            repository.submit(
-                                DemoCallerScope("tenant-a", "submitter-a"),
-                                "same-key",
-                                SubmitJobRequest(JobType.DOCUMENT_EXPORT, 10),
-                                Instant.parse("2026-07-21T00:00:00Z"),
-                            )
-                        }
-                    }.also {
-                        ready.await()
-                        start.countDown()
-                    }.map { it.get() }
-                }
+            val results = Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                List(2) {
+                    executor.submit<SubmitJobResult> {
+                        ready.countDown()
+                        start.await()
+                        repository.submit(
+                            DemoCallerScope("tenant-a", "submitter-a"),
+                            "same-key",
+                            SubmitJobRequest(JobType.DOCUMENT_EXPORT, 10),
+                            Instant.parse("2026-07-21T00:00:00Z"),
+                        )
+                    }
+                }.also {
+                    ready.await()
+                    start.countDown()
+                }.map { it.get() }
+            }.onEach { log.debug { "JobResult=$it" } }
+
 
             results.map(SubmitJobResult::jobId).distinct().size shouldBeEqualTo 1
             results.count(SubmitJobResult::replayed) shouldBeEqualTo 1

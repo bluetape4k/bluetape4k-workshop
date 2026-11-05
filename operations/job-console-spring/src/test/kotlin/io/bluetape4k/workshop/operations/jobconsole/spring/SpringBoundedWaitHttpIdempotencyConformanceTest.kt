@@ -1,12 +1,19 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.http.idempotency.BoundedWaitHttpIdempotencyAdapter
 import io.bluetape4k.junit5.http.idempotency.BoundedWaitHttpIdempotencyConformanceConfig
+import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyQuiescence
 import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyRequest
 import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyResponse
-import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyQuiescence
 import io.bluetape4k.junit5.http.idempotency.assertBoundedWaitHttpIdempotencyConformance
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.operations.jobconsole.fixture.BoundedWaitHttpIdempotencyFixture
+import jakarta.servlet.http.HttpServletRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -15,33 +22,36 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.WebApplicationType
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
 import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
-import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.context.TestComponent
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
-import org.springframework.web.context.request.async.DeferredResult
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
-import jakarta.servlet.http.HttpServletRequest
-import org.junit.jupiter.api.Test
+import org.springframework.web.context.request.async.DeferredResult
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Duration
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.text.Charsets.UTF_8
 
 class SpringBoundedWaitHttpIdempotencyConformanceTest {
+
+    companion object: KLoggingChannel()
+
     @Test
     fun `Spring HTTP host passes the shared bounded wait conformance`() = runBlocking {
         val context =
@@ -49,14 +59,14 @@ class SpringBoundedWaitHttpIdempotencyConformanceTest {
                 .web(WebApplicationType.SERVLET)
                 .properties("server.port=0")
                 .run()
+
         try {
-            val port = requireNotNull((context as ServletWebServerApplicationContext).webServer).port
-            val fixture = context.getBean(BoundedWaitHttpIdempotencyFixture::class.java)
-            val adapter =
-                SpringBoundedWaitHttpIdempotencyAdapter(
-                    fixture = fixture,
-                    endpoint = URI("http://127.0.0.1:$port/__test/v1/jobs"),
-                )
+            val port = (context as ServletWebServerApplicationContext).webServer.shouldNotBeNull().port
+            val fixture = context.getBean<BoundedWaitHttpIdempotencyFixture>()
+            val adapter = SpringBoundedWaitHttpIdempotencyAdapter(
+                fixture = fixture,
+                endpoint = URI("http://127.0.0.1:$port/__test/v1/jobs"),
+            )
             assertBoundedWaitHttpIdempotencyConformance(adapter, boundedWaitConformanceConfig())
             adapter.close()
         } finally {
@@ -92,21 +102,21 @@ internal class BoundedWaitSpringController(
         val keys = request.getHeaders("Idempotency-Key").toList()
         val profile = request.getHeader("X-Test-Authentication-Profile") ?: "unauthenticated"
         if (profile == "unauthenticated" || profile == "tenant-a-read-only") {
-            val response =
-                runBlocking {
-                    fixture.exchange(
-                        HttpIdempotencyRequest(
-                            authenticationProfile = profile,
-                            operation = request.getHeader("X-Test-Operation") ?: "create-widget",
-                            resourceIdentity = request.getHeader("X-Test-Resource") ?: "widget-1",
-                            idempotencyKeys = keys.ifEmpty { listOf("") },
-                            requestBody = "",
-                        ),
-                    )
-                }
-            return DeferredResult<ResponseEntity<ByteArray>>().also { it.setResult(response.toResponseEntity()) }
+            val response = runBlocking {
+                fixture.exchange(
+                    HttpIdempotencyRequest(
+                        authenticationProfile = profile,
+                        operation = request.getHeader("X-Test-Operation") ?: "create-widget",
+                        resourceIdentity = request.getHeader("X-Test-Resource") ?: "widget-1",
+                        idempotencyKeys = keys.ifEmpty { listOf("") },
+                        requestBody = "",
+                    ),
+                )
+            }
+            return DeferredResult<ResponseEntity<ByteArray>>()
+                .also { it.setResult(response.toResponseEntity()) }
         }
-        val body = request.inputStream.readBytes().toString(UTF_8)
+        val body = request.inputStream.readBytes().toUtf8String()
         val requestValue = HttpIdempotencyRequest(
             authenticationProfile = profile,
             operation = request.getHeader("X-Test-Operation") ?: "create-widget",
@@ -124,6 +134,7 @@ internal class BoundedWaitSpringController(
         deferred.onCompletion(::cancelExchange)
         deferred.onTimeout(::cancelExchange)
         deferred.onError { cancelExchange() }
+
         exchangeJob = scope.launch {
             try {
                 val response = fixture.exchange(requestValue)
@@ -138,21 +149,25 @@ internal class BoundedWaitSpringController(
                     deferred.setErrorResult(failure)
                 }
             }
-        }
+        }.log("ExchangeJob")
         return deferred
     }
 }
 
 private fun HttpIdempotencyResponse.toResponseEntity(): ResponseEntity<ByteArray> {
     val headers = HttpHeaders()
-    this.headers.forEach { (name, values) -> values.forEach { value -> headers.add(name, value) } }
-    return ResponseEntity.status(statusCode).headers(headers).body(body.toByteArray(UTF_8))
+    this.headers.forEach { (name, values) ->
+        values.forEach { value ->
+            headers.add(name, value)
+        }
+    }
+    return ResponseEntity.status(statusCode).headers(headers).body(body.toByteArray(Charsets.UTF_8))
 }
 
 private class SpringBoundedWaitHttpIdempotencyAdapter(
     private val fixture: BoundedWaitHttpIdempotencyFixture,
     private val endpoint: URI,
-) : BoundedWaitHttpIdempotencyAdapter {
+): BoundedWaitHttpIdempotencyAdapter {
     fun close() = Unit
 
     override suspend fun exchange(request: HttpIdempotencyRequest): HttpIdempotencyResponse {
@@ -162,12 +177,15 @@ private class SpringBoundedWaitHttpIdempotencyAdapter(
                 header("X-Test-Authentication-Profile", request.authenticationProfile)
                 header("X-Test-Operation", request.operation)
                 header("X-Test-Resource", request.resourceIdentity)
-                request.idempotencyKeys.forEach { key -> header("Idempotency-Key", key) }
+                request.idempotencyKeys.forEach { key ->
+                    header("Idempotency-Key", key)
+                }
                 header("Connection", "close")
                 header("Content-Type", "application/json")
                 POST(HttpRequest.BodyPublishers.ofString(request.requestBody, UTF_8))
             }.build()
         }.getOrElse { return fixture.exchange(request) }
+
         val clientExecutor = Executors.newVirtualThreadPerTaskExecutor()
         return try {
             HttpClient.newBuilder()
@@ -222,7 +240,8 @@ private suspend fun HttpClient.sendCancellable(request: HttpRequest): HttpRespon
 
 private fun HttpResponse<String>.toIdempotencyResponse(): HttpIdempotencyResponse {
     val body = body()
-    val headers = headers().map().filterKeys { it in setOf("content-type", "etag", "idempotency-replayed", "retry-after") }
+    val headers =
+        headers().map().filterKeys { it in setOf("content-type", "etag", "idempotency-replayed", "retry-after") }
     val problemCode = Regex("\\\"code\\\"\\s*:\\s*\\\"([a-z0-9_]+)\\\"").find(body)?.groupValues?.get(1)
     return HttpIdempotencyResponse(statusCode(), body, headers, problemCode)
 }
@@ -242,12 +261,12 @@ private fun String.hasUnpairedSurrogate(): Boolean {
 
 private fun boundedWaitConformanceConfig() =
     BoundedWaitHttpIdempotencyConformanceConfig(
-        waitTimeout = Duration.ofSeconds(2),
-        scenarioTimeout = Duration.ofSeconds(15),
+        waitTimeout = 2.seconds(),
+        scenarioTimeout = 15.seconds(),
         maxWaitersPerKey = 2,
-        retention = Duration.ofHours(1),
-        inFlightRetryAfter = Duration.ofSeconds(1),
-        overflowRetryAfter = Duration.ofSeconds(2),
+        retention = 1.hours(),
+        inFlightRetryAfter = 1.seconds(),
+        overflowRetryAfter = 2.seconds(),
         maxIdempotencyKeyBytes = 255,
         maxRequestBodyBytes = 64 * 1024,
         maxReplayBodyBytes = 64 * 1024,
