@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
 import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
@@ -66,7 +67,7 @@ class ShiftCoverageDemoService(
     assignmentStore: ShiftCoverageAssignmentStore? = null,
     idempotencyStore: ShiftCoverageIdempotencyPort? = null,
     private val plannerLifecycle: ShiftCoverageExecutorLifecycle? = null,
-    private val plannerTimeout: Duration = Duration.ofMillis(ShiftCoverageLimits.MAX_PLANNER_MILLIS),
+    private val plannerTimeout: Duration = ShiftCoverageLimits.MAX_PLANNER_MILLIS.millis(),
 ) {
 
     companion object: KLogging() {

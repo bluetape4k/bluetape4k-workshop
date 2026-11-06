@@ -24,7 +24,6 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.TimeInterval
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerPreference
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.time.Instant
 
 class DeterministicShiftCoveragePlannerTest {
@@ -221,7 +220,7 @@ class DeterministicShiftCoveragePlannerTest {
         id: String,
         requiredSkills: Set<Skill> = setOf(skill),
         startAt: Instant = day,
-        endAt: Instant = day.plus(Duration.ofHours(1)),
+        endAt: Instant = day + 1.hours(),
         demand: Int = 1,
         preference: WorkerPreference? = null,
         startedAt: Instant? = null,

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
 import io.bluetape4k.concurrent.awaitTermination
 import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
@@ -20,7 +21,7 @@ import kotlin.time.toKotlinDuration
 class ShiftCoverageExecutorLifecycle(
     plannerWorkers: Int = 4,
     plannerQueue: Int = 8,
-    private val drain: Duration = Duration.ofSeconds(30),
+    private val drain: Duration = 30.seconds(),
 ): AutoCloseable {
 
     companion object: KLogging()

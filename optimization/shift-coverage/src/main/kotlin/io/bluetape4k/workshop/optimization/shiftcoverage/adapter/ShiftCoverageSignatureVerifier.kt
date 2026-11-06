@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.adapter
 
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.AggregateId
@@ -11,7 +12,6 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ProviderName
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.SiteId
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
@@ -46,7 +46,7 @@ data class ShiftCoverageSignatureContext(
 class ShiftCoverageSignatureVerifier(
     secret: String,
     private val expectedKeyVersion: String = "fixture-v1",
-    private val maxAge: Duration = Duration.ofMinutes(5),
+    private val maxAge: Duration = 5.minutes(),
 ) {
     companion object: KLogging() {
         private const val HMAC_SHA_256 = "HmacSHA256"

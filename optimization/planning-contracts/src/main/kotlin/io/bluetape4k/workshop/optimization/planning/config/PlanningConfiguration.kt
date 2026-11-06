@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.optimization.planning.config
 
 import io.bluetape4k.concurrent.awaitTermination
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.optimization.planning.adapter.fake.DeterministicPlanningEngine
 import io.bluetape4k.workshop.optimization.planning.adapter.http.CallbackSignatureVerifier
 import io.bluetape4k.workshop.optimization.planning.adapter.http.FakeCallbackSignatureVerifier
@@ -40,7 +41,7 @@ internal class PlanningConfiguration {
 
 internal class PlanningExecutorShutdown(
     private val executor: ExecutorService,
-    private val timeout: Duration = Duration.ofSeconds(30),
+    private val timeout: Duration = 30.seconds(),
 ): AutoCloseable {
 
     override fun close() {

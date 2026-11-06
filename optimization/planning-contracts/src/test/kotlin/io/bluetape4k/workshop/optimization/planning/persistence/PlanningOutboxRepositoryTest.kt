@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.CyclicBarrier
@@ -120,7 +119,7 @@ class PlanningOutboxRepositoryTest {
                 planningRequestId = REQUEST_ID,
                 workerId = "worker-a",
                 now = now,
-                retryDelay = Duration.ofSeconds(5),
+                retryDelay = 5.seconds(),
                 maxRetries = 1,
                 errorCode = "PROVIDER_UNAVAILABLE",
                 errorSummary = "provider token=must-not-leak",
