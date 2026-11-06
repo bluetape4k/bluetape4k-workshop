@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.optimization.planning.adapter.http
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets
@@ -8,6 +9,10 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 internal class CallbackSignatureVerifierTest {
+
+    companion object: KLogging() {
+        private const val SECRET = "workshop-secret"
+    }
 
     @Test
     fun `HMAC verifier uses constant contract compatible signatures`() {
@@ -25,7 +30,5 @@ internal class CallbackSignatureVerifierTest {
         return "sha256=" + mac.doFinal(body).joinToString("") { byte -> "%02x".format(byte) }
     }
 
-    companion object {
-        private const val SECRET = "workshop-secret"
-    }
+
 }

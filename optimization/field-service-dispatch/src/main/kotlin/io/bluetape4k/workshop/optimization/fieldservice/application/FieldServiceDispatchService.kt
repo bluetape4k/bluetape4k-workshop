@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerId
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceRepository
@@ -10,9 +11,16 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 class FieldServiceDispatchService(
     private val repository: FieldServiceRepository,
 ) {
-    fun confirmWorkerRoute(workerId: WorkerId, planId: PlanId, revision: Long): DispatchResult = transaction {
+
+    companion object: KLogging()
+
+    fun confirmWorkerRoute(
+        workerId: WorkerId,
+        planId: PlanId,
+        revision: Long,
+    ): DispatchResult = transaction {
         when (repository.commitWorkerRoute(workerId, planId, revision)) {
-            RouteCommitResult.COMMITTED -> DispatchResult.COMMITTED
+            RouteCommitResult.COMMITTED        -> DispatchResult.COMMITTED
             RouteCommitResult.VERSION_CONFLICT -> DispatchResult.VERSION_CONFLICT
             RouteCommitResult.SCHEDULE_CONFLICT -> DispatchResult.SCHEDULE_CONFLICT
         }

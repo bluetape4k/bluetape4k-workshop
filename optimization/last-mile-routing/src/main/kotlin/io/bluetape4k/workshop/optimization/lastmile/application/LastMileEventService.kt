@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.optimization.lastmile.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.lastmile.domain.EventId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileEvent
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileEventCanonicalizer
@@ -34,6 +35,9 @@ internal class LastMileEventService(
     private val repository: LastMileRepository,
     private val clock: Clock,
 ) {
+
+    companion object: KLogging()
+    
     private val generations = ConcurrentHashMap<String, CoalescingState>()
 
     @Transactional
@@ -56,12 +60,19 @@ internal class LastMileEventService(
         val coalescingKey = "${command.aggregateId}|${coalescingGroup(command.type)}"
         val state = generations.compute(coalescingKey) { _, current ->
             when {
-                appendResult == LastMileEventAppendResult.DIGEST_CONFLICT -> current ?: CoalescingState(0L, event.digest)
-                current == null -> CoalescingState(1L, event.digest)
-                appendResult == LastMileEventAppendResult.DUPLICATE -> current
-                else -> current.copy(generation = current.generation + 1L, latestDigest = event.digest)
+                appendResult == LastMileEventAppendResult.DIGEST_CONFLICT -> current ?: CoalescingState(
+                    0L,
+                    event.digest
+                )
+                current == null                                           -> CoalescingState(1L, event.digest)
+                appendResult == LastMileEventAppendResult.DUPLICATE       -> current
+                else                                                      -> current.copy(
+                    generation = current.generation + 1L,
+                    latestDigest = event.digest
+                )
             }
         } ?: CoalescingState(0L, event.digest)
+
         return LastMileEventReceipt(
             event = event,
             appendResult = appendResult,
@@ -76,7 +87,7 @@ internal class LastMileEventService(
     private fun coalescingGroup(type: LastMileEventType): String = when (type) {
         LastMileEventType.TRAFFIC_DURATION_UPDATED,
         LastMileEventType.PICKUP_WINDOW_CHANGED,
-        -> "REPLAN_BURST"
+            -> "REPLAN_BURST"
 
         else -> type.name
     }

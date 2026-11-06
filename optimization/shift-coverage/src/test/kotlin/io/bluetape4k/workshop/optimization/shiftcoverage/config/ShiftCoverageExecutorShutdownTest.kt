@@ -4,24 +4,30 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ShiftCoverageExecutorShutdownTest {
 
+    companion object: KLogging()
+
     @Test
     fun `close closes admission and is idempotent`() {
         val executor = VirtualThreads.executorService()
-        val shutdown = ShiftCoverageExecutorShutdown(executor, Duration.ofSeconds(1))
+        val shutdown = ShiftCoverageExecutorShutdown(executor, 1.seconds())
 
         shutdown.accepting.shouldBeTrue()
         shutdown.close()
         shutdown.close()
 
         shutdown.accepting.shouldBeFalse()
-        assertFailsWith<RejectedExecutionException> { executor.submit {} }
+
+        assertFailsWith<RejectedExecutionException> {
+            executor.submit {}
+        }
         executor.isTerminated.shouldBeTrue()
     }
 
@@ -32,7 +38,7 @@ class ShiftCoverageExecutorShutdownTest {
             val executor = VirtualThreads.executorService()
             Thread.currentThread().interrupt()
 
-            ShiftCoverageExecutorShutdown(executor, Duration.ofSeconds(1)).close()
+            ShiftCoverageExecutorShutdown(executor, 1.seconds()).close()
 
             interrupted.set(Thread.currentThread().isInterrupted)
         }

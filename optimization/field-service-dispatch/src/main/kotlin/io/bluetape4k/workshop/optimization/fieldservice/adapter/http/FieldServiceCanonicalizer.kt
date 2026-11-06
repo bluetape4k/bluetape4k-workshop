@@ -2,12 +2,12 @@ package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
 import io.bluetape4k.jackson3.CanonicalJson
 import io.bluetape4k.jackson3.CanonicalJsonLimits
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigestMatch
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEvents
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import io.bluetape4k.workshop.optimization.fieldservice.domain.InvalidFieldServiceInput
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
 /**
@@ -17,6 +17,9 @@ import java.security.MessageDigest
  * [CanonicalJson]에 위임하고, event digest 타입과 오류 변환은 이 경계가 소유합니다.
  */
 class FieldServiceCanonicalizer {
+
+    companion object: KLogging()
+
     private val canonicalJson = CanonicalJson(
         limits = CanonicalJsonLimits(
             maxBodyBytes = FieldServiceLimits.MAX_BODY_BYTES,

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.config
 
+import io.bluetape4k.concurrent.awaitTermination
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.workshop.optimization.planning.adapter.fake.DeterministicPlanningEngine
 import io.bluetape4k.workshop.optimization.planning.adapter.http.CallbackSignatureVerifier
@@ -12,7 +13,7 @@ import org.springframework.context.annotation.Profile
 import java.time.Clock
 import java.time.Duration
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
+import kotlin.time.toKotlinDuration
 
 @Configuration(proxyBeanMethods = false)
 internal class PlanningConfiguration {
@@ -45,7 +46,7 @@ internal class PlanningExecutorShutdown(
     override fun close() {
         executor.shutdown()
         try {
-            if (!executor.awaitTermination(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
+            if (!executor.awaitTermination(timeout.toKotlinDuration())) {
                 executor.shutdownNow()
             }
         } catch (interrupted: InterruptedException) {

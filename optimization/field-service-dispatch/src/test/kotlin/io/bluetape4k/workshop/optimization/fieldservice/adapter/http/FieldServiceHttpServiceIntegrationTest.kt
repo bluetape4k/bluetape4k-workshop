@@ -1,7 +1,14 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.workshop.optimization.fieldservice.application.CommandResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceApprovalService
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceCommandService
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceDispatchService
@@ -24,19 +31,28 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Duration
 import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FieldServiceHttpServiceIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private val repository = FieldServiceRepository()
     private lateinit var service: FieldServiceHttpService
     private val start = Instant.parse("2026-08-20T09:00:00Z")
 
     @BeforeAll
     fun connect() {
-        Database.connect(postgres.jdbcUrl, "org.postgresql.Driver", requireNotNull(postgres.username), requireNotNull(postgres.password))
+        Database.connect(
+            url = postgres.jdbcUrl,
+            driver = "org.postgresql.Driver",
+            user = postgres.username.requireNotNull("username"),
+            password = postgres.password.requireNotNull("password")
+        )
+
         service = FieldServiceHttpService(
             repository = repository,
             commandService = FieldServiceCommandService(repository),
@@ -58,8 +74,16 @@ class FieldServiceHttpServiceIntegrationTest {
     fun `create visit retry with the same key returns durable duplicate`() {
         val request = createRequest()
 
-        service.createVisit(request, "create-key") shouldBeEqualTo io.bluetape4k.workshop.optimization.fieldservice.application.CommandResult.APPLIED
-        service.createVisit(request, "create-key") shouldBeEqualTo io.bluetape4k.workshop.optimization.fieldservice.application.CommandResult.DUPLICATE
+        service.createVisit(
+            request,
+            "create-key"
+        ) shouldBeEqualTo CommandResult.APPLIED
+
+        service.createVisit(
+            request,
+            "create-key"
+        ) shouldBeEqualTo CommandResult.DUPLICATE
+
         transaction {
             repository.findVisit(VisitId("visit-1"))?.visitId shouldBeEqualTo VisitId("visit-1")
             repository.countEvents() shouldBeEqualTo 1L
@@ -74,7 +98,10 @@ class FieldServiceHttpServiceIntegrationTest {
         val duplicate = service.replan(request, "replan-key")
 
         duplicate shouldBeEqualTo first
-        transaction { repository.listPlans(PlanId("plan-1")).size shouldBeEqualTo 1 }
+
+        transaction {
+            repository.listPlans(PlanId("plan-1")).onEach { log.debug { "plan=$it" } } shouldHaveSize 1
+        }
     }
 
     @Test
@@ -85,7 +112,7 @@ class FieldServiceHttpServiceIntegrationTest {
                     workerId = WorkerId("worker-1"),
                     name = "Synthetic worker",
                     skills = setOf(Skill("electrical")),
-                    availability = listOf(AvailabilityWindow(start, start.plus(Duration.ofHours(9)))),
+                    availability = listOf(AvailabilityWindow(start, start + 9.hours())),
                     homeCoordinateId = CoordinateId("depot"),
                 ),
             )
@@ -95,15 +122,18 @@ class FieldServiceHttpServiceIntegrationTest {
                     coordinateId = CoordinateId("visit"),
                     requiredSkill = Skill("electrical"),
                     windowStart = start,
-                    windowEnd = start.plus(Duration.ofHours(1)),
-                    serviceDuration = Duration.ofMinutes(15),
+                    windowEnd = start + 1.hours(),
+                    serviceDuration = 15.minutes(),
                 ),
             )
         }
         service.recordTravelTime(TravelTimeUpdateRequest("depot", "visit", 60), "travel-key-1")
         val assigned = service.replan(ReplanRequest("plan-1", "dataset-1"), "replan-key-1")
+        log.debug { "assined=$assigned" }
+
         service.recordTravelTime(TravelTimeUpdateRequest("depot", "visit", 7_200), "travel-key-2")
         val unassigned = service.replan(ReplanRequest("plan-1", "dataset-1"), "replan-key-2")
+        log.debug { "unassigned=$unassigned" }
 
         assigned.score.assignedCount shouldBeEqualTo 1
         unassigned.score.assignedCount shouldBeEqualTo 0
@@ -115,7 +145,7 @@ class FieldServiceHttpServiceIntegrationTest {
         coordinateId = "coordinate-1",
         requiredSkill = "electrical",
         windowStart = start,
-        windowEnd = start.plus(Duration.ofHours(1)),
+        windowEnd = start.plus(1.hours()),
         serviceDurationSeconds = 60,
     )
 }

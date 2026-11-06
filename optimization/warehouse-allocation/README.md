@@ -1,47 +1,33 @@
 # Warehouse Allocation
 
-`optimization-warehouse-allocation` is a Java 25/Spring Boot reference
-application for deterministic warehouse allocation and pick-wave proposals.
-It uses synthetic orders and stock snapshots. PostgreSQL is the final
-authority for approval-time reservations; the planner only returns a proposal.
+`optimization-warehouse-allocation` is a Java 25/Spring Boot reference application for deterministic warehouse allocation and pick-wave proposals. It uses synthetic orders and stock snapshots. PostgreSQL is the final authority for approval-time reservations; the planner only returns a proposal.
 
 ## Scope
 
-- Models order lines, warehouse/SKU stock, pick waves, carrier cutoffs, shipping
-  rules, picker capacity, and committed allocation pins.
-- Applies stock, capability, cutoff, capacity, incident, and pin constraints in
-  a deterministic planner with bounded input/output.
-- Persists plan, reservation, inbox, idempotency, audit, replan, outbox, and
-  local-effect records with revisions and compare-and-set updates.
+- Models order lines, warehouse/SKU stock, pick waves, carrier cutoffs, shipping rules, picker capacity, and committed allocation pins.
+- Applies stock, capability, cutoff, capacity, incident, and pin constraints in a deterministic planner with bounded input/output.
+- Persists plan, reservation, inbox, idempotency, audit, replan, outbox, and local-effect records with revisions and compare-and-set updates.
 - Provides a redacted query model and a local `FAKE` planning/callback seam.
 
-Production WMS, robotics, carrier APIs, automatic stock commits, Kafka brokers,
-and Timefold credentials are outside this example. Recorded outbox events are
-fixture evidence, not proof of production fulfillment.
+Production WMS, robotics, carrier APIs, automatic stock commits, Kafka brokers, and Timefold credentials are outside this example. Recorded outbox events are fixture evidence, not proof of production fulfillment.
 
 ## Bluetape stack
 
-| Responsibility | Capability |
-|---|---|
-| Version authority | Root `bluetape4k-dependencies` BOM |
-| Persistence | `LongJdbcRepository` from `bluetape4k-exposed-jdbc` with Exposed `LongIdTable` |
-| Assertions | `bluetape4k-assertions` matchers such as `shouldBeEqualTo`, `shouldBeInstanceOf`, and `shouldNotBeNull` |
-| PostgreSQL tests | `PostgreSQLServer.Launcher.postgres` with `bluetape4k-testcontainers` and `bluetape4k-exposed-jdbc-tests` |
+| Responsibility    | Capability                                                                                                |
+|-------------------|-----------------------------------------------------------------------------------------------------------|
+| Version authority | Root `bluetape4k-dependencies` BOM                                                                        |
+| Persistence       | `LongJdbcRepository` from `bluetape4k-exposed-jdbc` with Exposed `LongIdTable`                            |
+| Assertions        | `bluetape4k-assertions` matchers such as `shouldBeEqualTo`, `shouldBeInstanceOf`, and `shouldNotBeNull`   |
+| PostgreSQL tests  | `PostgreSQLServer.Launcher.postgres` with `bluetape4k-testcontainers` and `bluetape4k-exposed-jdbc-tests` |
 
-The repository architecture test keeps the application-owned persistence adapter
-on the Bluetape Exposed repository contract while the PostgreSQL tests exercise
-the reservation authority and compare-and-set boundaries.
+The repository architecture test keeps the application-owned persistence adapter on the Bluetape Exposed repository contract while the PostgreSQL tests exercise the reservation authority and compare-and-set boundaries.
 
 `WarehouseAllocationCodec` delegates canonical bytes to the shared
-`bluetape4k-jackson3` `CanonicalJson` API. It keeps the example's bounded
-payload/key limits and NFC value normalization, so event digests remain stable
-while duplicate keys and trailing tokens are rejected consistently.
+`bluetape4k-jackson3` `CanonicalJson` API. It keeps the example's bounded payload/key limits and NFC value normalization, so event digests remain stable while duplicate keys and trailing tokens are rejected consistently.
 
 ## Run locally
 
-The default application binds HTTP and management endpoints to loopback and
-uses the `test` profile. Mutation routes are additionally protected by the
-local-only `demo` profile and `X-Demo-Operator: true` header.
+The default application binds HTTP and management endpoints to loopback and uses the `test` profile. Mutation routes are additionally protected by the local-only `demo` profile and `X-Demo-Operator: true` header.
 
 ```bash
 ./gradlew :optimization-warehouse-allocation:bootRun \
@@ -52,9 +38,7 @@ curl -s http://127.0.0.1:8080/actuator/health
 curl -s http://127.0.0.1:8080/api/warehouse-allocation/stock
 ```
 
-Use a fresh bounded `Idempotency-Key` and `X-Request-Id` for every demo
-mutation. The demo header is a local guard, not authentication, authorization,
-CSRF protection, or an acceptable production credential.
+Use a fresh bounded `Idempotency-Key` and `X-Request-Id` for every demo mutation. The demo header is a local guard, not authentication, authorization, CSRF protection, or an acceptable production credential.
 
 ```bash
 curl -s -X POST http://127.0.0.1:8080/api/warehouse-allocation/events \
@@ -76,13 +60,11 @@ curl -s 'http://127.0.0.1:8080/api/warehouse-allocation/outbox/<operation-key>'
 
 The fixture ABI is available only from the `testFixtures` source set:
 `WarehouseAllocationFixturePort.reset(seed)`, `ingest(canonicalEvent)`, and
-`snapshot(datasetId)`. It is intended for deterministic tests, not for
-production data loading.
+`snapshot(datasetId)`. It is intended for deterministic tests, not for production data loading.
 
 ## Verification
 
-The module uses PostgreSQL Testcontainers for persistence tests. A healthy
-Docker/Colima context is required; an unavailable container runtime is a
+The module uses PostgreSQL Testcontainers for persistence tests. A healthy Docker/Colima context is required; an unavailable container runtime is a
 `PENDING` verification result, not a passing test.
 
 ```bash
@@ -96,6 +78,5 @@ Diagnostics and performance artifacts, when produced, belong under
 `build/reports/warehouse-allocation-diagnostics/` and
 `build/reports/performance/*.jfr`. Logs and payloads must remain redacted.
 
-The module uses only the root `bluetape4k-dependencies` BOM for Bluetape
-versions and does not depend on the internal implementation of
+The module uses only the root `bluetape4k-dependencies` BOM for Bluetape versions and does not depend on the internal implementation of
 `planning-contracts`.

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.lastmile.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.lastmile.domain.CarrierVersion
 import io.bluetape4k.workshop.optimization.lastmile.domain.JobId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanId
@@ -40,9 +41,12 @@ internal class LastMileApprovalService(
     private val clock: Clock,
 ) {
 
+    companion object: KLogging()
+
     @Transactional
     fun approve(command: LastMileApprovalCommand): LastMileApprovalResult {
         val proposal = repository.loadProposal(command.planId, command.planRevision)
+
         if (proposal == null || !isCurrent(proposal, command)) {
             audit(command, LastMileApprovalResult.STALE_ROUTE_APPROVAL, "version_or_pin_conflict")
             return LastMileApprovalResult.STALE_ROUTE_APPROVAL
@@ -105,7 +109,7 @@ internal class LastMileApprovalService(
                 val started = startedByVehicle[route.vehicleId]?.startedStop
                 route.stops.filter { it.pinned }.any { pinned ->
                     started == null || started.jobId != pinned.jobId || started.kind != pinned.kind ||
-                        started.coordinateId != pinned.coordinateId || started.sequence != pinned.sequence
+                            started.coordinateId != pinned.coordinateId || started.sequence != pinned.sequence
                 }
             }
         ) return false

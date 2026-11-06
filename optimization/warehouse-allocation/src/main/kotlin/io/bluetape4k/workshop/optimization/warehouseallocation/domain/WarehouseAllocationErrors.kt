@@ -20,7 +20,14 @@ internal enum class WarehouseAllocationErrorCode {
     RESPONSE_TOO_LARGE,
 }
 
-internal enum class WarehouseAllocationNextAction { POLL, REPLAN, SHRINK_DATASET, RETRY_AFTER, RECONCILE, NO_RETRY }
+internal enum class WarehouseAllocationNextAction {
+    POLL,
+    REPLAN,
+    SHRINK_DATASET,
+    RETRY_AFTER,
+    RECONCILE,
+    NO_RETRY
+}
 
 internal class WarehouseAllocationException(
     val code: WarehouseAllocationErrorCode,
@@ -29,7 +36,7 @@ internal class WarehouseAllocationException(
     val nextAction: WarehouseAllocationNextAction = WarehouseAllocationNextAction.NO_RETRY,
     val retryAfterSeconds: Int? = null,
     cause: Throwable? = null,
-) : IllegalArgumentException(message, cause)
+): IllegalArgumentException(message, cause)
 
 internal fun WarehouseAllocationException.toErrorDto(requestId: String): WarehouseAllocationErrorDto =
     WarehouseAllocationErrorDto(code.name, requestId, retryable, retryAfterSeconds, nextAction.name)

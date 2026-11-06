@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ConstraintExplanation
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ConstraintReasonCode
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
@@ -31,7 +33,7 @@ data class FieldServiceCallbackEnvelope(
     val constraintExplanations: List<ConstraintExplanation> = emptyList(),
 ) {
     init {
-        require(planningRequestId.isNotBlank()) { "planningRequestId must not be blank" }
+        planningRequestId.requireNotBlank("planningRequestId")
         require(planningRequestId.length <= FieldServiceLimits.MAX_STRING_LENGTH) {
             "planningRequestId exceeds ${FieldServiceLimits.MAX_STRING_LENGTH} characters"
         }
@@ -218,8 +220,8 @@ data class FieldServiceCallbackBinding(
     val versionVector: VersionVector,
 ) {
     init {
-        require(planningRequestId.isNotBlank()) { "planningRequestId must not be blank" }
-        require(requestGeneration >= 0L) { "requestGeneration must be non-negative" }
+        planningRequestId.requireNotBlank("planningRequestId")
+        requestGeneration.requireZeroOrPositiveNumber("requestGeneration")
     }
 }
 
@@ -241,7 +243,7 @@ interface FieldServiceCallbackState {
 }
 
 /** synthetic fixture 경로와 unit test에서 사용하는 deterministic in-memory callback state입니다. */
-class InMemoryFieldServiceCallbackState : FieldServiceCallbackState {
+class InMemoryFieldServiceCallbackState: FieldServiceCallbackState {
     private val bindings = ConcurrentHashMap<PlanId, FieldServiceCallbackBinding>()
     private val events = ConcurrentHashMap<EventKey, EventDigest>()
     private val revisions = ConcurrentHashMap<Pair<FieldServiceProvider, ProviderRequestId>, Long>()

@@ -7,7 +7,7 @@ import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.PositiveOrZero
 import jakarta.validation.constraints.Size
-import java.util.UUID
+import java.util.*
 
 internal data class CreatePlanningRequestDto(
     @field:NotBlank

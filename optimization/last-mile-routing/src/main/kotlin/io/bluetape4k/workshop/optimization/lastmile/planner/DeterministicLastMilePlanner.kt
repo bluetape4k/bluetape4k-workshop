@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.lastmile.planner
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.lastmile.domain.DeliveryJob
 import io.bluetape4k.workshop.optimization.lastmile.domain.JobStatus
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanProposal
@@ -11,7 +13,6 @@ import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileUnassignedJob
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileUnassignedReason
 import io.bluetape4k.workshop.optimization.lastmile.domain.StopKind
 import io.bluetape4k.workshop.optimization.lastmile.domain.Vehicle
-import java.time.Duration
 import java.time.Instant
 
 /**
@@ -19,6 +20,15 @@ import java.time.Instant
  * provider 호출이나 실제 교통 품질을 보장하지 않습니다.
  */
 class DeterministicLastMilePlanner {
+
+    private companion object: KLogging() {
+        fun travel(
+            matrix: TravelTimeMatrix,
+            from: CoordinateId,
+            to: CoordinateId,
+        ): Long? =
+            if (from == to) 0L else matrix.lookup(from, to)
+    }
 
     fun plan(input: LastMilePlannerInput): LastMilePlanProposal {
         val sortedVehicles = input.vehicles.sortedBy { it.vehicleId.value }
@@ -32,11 +42,12 @@ class DeterministicLastMilePlanner {
                 .thenBy { it.pickupWindow.start }
                 .thenBy { it.jobId.value },
         ).forEach { job ->
+
             val terminal = when (job.status) {
                 JobStatus.CANCELLED -> LastMileUnassignedReason.CANCELLED
                 JobStatus.NO_SHOW -> LastMileUnassignedReason.NO_SHOW
                 JobStatus.COMPLETED -> LastMileUnassignedReason.COMPLETED
-                JobStatus.OPEN -> null
+                JobStatus.OPEN    -> null
             }
             if (terminal != null) {
                 unassigned += LastMileUnassignedJob(job.jobId, terminal)
@@ -47,7 +58,9 @@ class DeterministicLastMilePlanner {
                 val builder = routeBuilders.getValue(vehicle)
                 builder.candidate(job)
             }
-            val winner = candidates.minWithOrNull(compareBy<Candidate> { it.finishAt }.thenBy { it.vehicle.vehicleId.value })
+            val winner = candidates.minWithOrNull(
+                compareBy<Candidate> { it.finishAt }.thenBy { it.vehicle.vehicleId.value }
+            )
             if (winner == null) {
                 unassigned += LastMileUnassignedJob(job.jobId, reasonFor(job, sortedVehicles, input.matrix))
             } else {
@@ -55,8 +68,13 @@ class DeterministicLastMilePlanner {
             }
         }
 
-        val routes = sortedVehicles.map { vehicle -> routeBuilders.getValue(vehicle).build() }
-        val assignedJobs = input.jobs.count { it.status == JobStatus.OPEN && it.jobId !in unassigned.map { item -> item.jobId } }
+        val routes = sortedVehicles.map { vehicle ->
+            routeBuilders.getValue(vehicle).build()
+        }
+        val assignedJobs = input.jobs.count {
+            it.status == JobStatus.OPEN && it.jobId !in unassigned.map { item -> item.jobId }
+        }
+        
         return LastMilePlanProposal(
             planId = input.planId,
             planRevision = input.planRevision,
@@ -75,13 +93,19 @@ class DeterministicLastMilePlanner {
         )
     }
 
-    private fun reasonFor(job: DeliveryJob, vehicles: List<Vehicle>, matrix: TravelTimeMatrix): LastMileUnassignedReason {
+    private fun reasonFor(
+        job: DeliveryJob,
+        vehicles: List<Vehicle>,
+        matrix: TravelTimeMatrix,
+    ): LastMileUnassignedReason {
         if (vehicles.none { job.requiredSkill == null || job.requiredSkill in it.skills }) return LastMileUnassignedReason.MISSING_SKILL
         if (vehicles.none { it.capacity >= job.demand }) return LastMileUnassignedReason.CAPACITY
+
         val hasMatrix = vehicles.any { vehicle ->
             travel(matrix, vehicle.depotCoordinateId, job.pickupCoordinateId) != null &&
-                travel(matrix, job.pickupCoordinateId, job.deliveryCoordinateId) != null
+                    travel(matrix, job.pickupCoordinateId, job.deliveryCoordinateId) != null
         }
+
         if (!hasMatrix) return LastMileUnassignedReason.MATRIX_MISS
         return LastMileUnassignedReason.TIME_WINDOW
     }
@@ -116,7 +140,11 @@ class DeterministicLastMilePlanner {
             if (job.requiredSkill != null && job.requiredSkill !in vehicle.skills) return null
             if (job.demand > vehicle.capacity) return null
             val started = vehicle.startedStop
-            if (started != null && started.jobId == job.jobId && started.kind == StopKind.DELIVERY) return Candidate(vehicle, emptyList(), availableAt)
+            if (started != null && started.jobId == job.jobId && started.kind == StopKind.DELIVERY) return Candidate(
+                vehicle,
+                emptyList(),
+                availableAt
+            )
             if (started != null && started.jobId == job.jobId && started.kind == StopKind.PICKUP) {
                 val travelToDelivery = travel(matrix, currentCoordinate, job.deliveryCoordinateId) ?: return null
                 val deliveryEta = availableAt.plusSeconds(travelToDelivery)
@@ -124,7 +152,15 @@ class DeterministicLastMilePlanner {
                 return Candidate(
                     vehicle = vehicle,
                     stops = listOf(
-                        LastMileRouteStop(job.jobId, StopKind.DELIVERY, job.deliveryCoordinateId, nextSequence(), deliveryEta, 0, false),
+                        LastMileRouteStop(
+                            job.jobId,
+                            StopKind.DELIVERY,
+                            job.deliveryCoordinateId,
+                            nextSequence(),
+                            deliveryEta,
+                            0,
+                            false
+                        ),
                     ),
                     finishAt = deliveryEta,
                 )
@@ -132,17 +168,38 @@ class DeterministicLastMilePlanner {
             val toPickup = travel(matrix, currentCoordinate, job.pickupCoordinateId) ?: return null
             val pickupArrival = availableAt.plusSeconds(toPickup)
             val pickupEta = maxOf(pickupArrival, job.pickupWindow.start)
+
             if (!job.pickupWindow.contains(pickupEta)) return null
+
             val toDelivery = travel(matrix, job.pickupCoordinateId, job.deliveryCoordinateId) ?: return null
             val deliveryEta = pickupEta.plusSeconds(toDelivery)
+
             if (!job.deliveryWindow.contains(deliveryEta)) return null
             val loadAfterPickup = currentLoad + job.demand
+
             if (loadAfterPickup > vehicle.capacity) return null
+
             return Candidate(
                 vehicle = vehicle,
                 stops = listOf(
-                    LastMileRouteStop(job.jobId, StopKind.PICKUP, job.pickupCoordinateId, nextSequence(), pickupEta, loadAfterPickup, false),
-                    LastMileRouteStop(job.jobId, StopKind.DELIVERY, job.deliveryCoordinateId, nextSequence() + 1, deliveryEta, currentLoad, false),
+                    LastMileRouteStop(
+                        job.jobId,
+                        StopKind.PICKUP,
+                        job.pickupCoordinateId,
+                        nextSequence(),
+                        pickupEta,
+                        loadAfterPickup,
+                        false
+                    ),
+                    LastMileRouteStop(
+                        job.jobId,
+                        StopKind.DELIVERY,
+                        job.deliveryCoordinateId,
+                        nextSequence() + 1,
+                        deliveryEta,
+                        currentLoad,
+                        false
+                    ),
                 ),
                 finishAt = deliveryEta,
             )
@@ -166,9 +223,4 @@ class DeterministicLastMilePlanner {
         val stops: List<LastMileRouteStop>,
         val finishAt: Instant,
     )
-
-    private companion object {
-        fun travel(matrix: TravelTimeMatrix, from: io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId, to: io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId): Long? =
-            if (from == to) 0L else matrix.lookup(from, to)
-    }
 }

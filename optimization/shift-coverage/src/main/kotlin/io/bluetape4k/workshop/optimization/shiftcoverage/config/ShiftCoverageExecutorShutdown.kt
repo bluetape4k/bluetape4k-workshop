@@ -1,16 +1,21 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.config
 
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
 import java.time.Duration
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.toKotlinDuration
 
 /** Owns the virtual-thread executor lifecycle for the demo module. */
 class ShiftCoverageExecutorShutdown(
     private val executor: ExecutorService,
     private val drainTimeout: Duration,
-) : AutoCloseable {
+): AutoCloseable {
+
+    private companion object: KLogging()
 
     private val closed = AtomicBoolean(false)
 
@@ -19,9 +24,7 @@ class ShiftCoverageExecutorShutdown(
         private set
 
     init {
-        require(!drainTimeout.isZero && !drainTimeout.isNegative) {
-            "drainTimeout must be positive"
-        }
+        drainTimeout.requirePositiveDuration("drainTimeout")
     }
 
     override fun close() {
@@ -30,15 +33,13 @@ class ShiftCoverageExecutorShutdown(
         accepting = false
         executor.shutdown()
         try {
-            if (!executor.awaitTermination(drainTimeout.toMillis(), TimeUnit.MILLISECONDS)) {
+            if (!executor.awaitTermination(drainTimeout.toKotlinDuration())) {
                 executor.shutdownNow()
             }
         } catch (interrupted: InterruptedException) {
             executor.shutdownNow()
             Thread.currentThread().interrupt()
-            log.warn("Shift coverage executor shutdown was interrupted", interrupted)
+            log.warn(interrupted) { "Shift coverage executor shutdown was interrupted" }
         }
     }
-
-    private companion object : KLogging()
 }

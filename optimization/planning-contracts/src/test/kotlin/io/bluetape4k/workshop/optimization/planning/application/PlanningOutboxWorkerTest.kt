@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.optimization.planning.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.planning.PlanningContractsApplication
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningEngine
@@ -30,7 +32,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 @SpringBootTest(
@@ -45,6 +47,18 @@ internal class PlanningOutboxWorkerTest @Autowired constructor(
     private val requestRepository: PlanningRequestRepository,
     private val outboxRepository: PlanningOutboxRepository,
 ) {
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { postgres.password.shouldNotBeNull() }
+        }
+    }
 
     @BeforeEach
     fun resetSchema() {
@@ -83,22 +97,10 @@ internal class PlanningOutboxWorkerTest @Autowired constructor(
         worker.processDue().single().get()
 
         engine.executedOnVirtualThread.get().shouldBeTrue()
+
         transaction {
             requestRepository.findById(REQUEST_ID).status shouldBeEqualTo PlanningStatus.SUBMITTED
             outboxRepository.findByRequestId(REQUEST_ID)!!.status shouldBeEqualTo PlanningOutboxStatus.COMPLETED
-        }
-    }
-
-    companion object {
-        private val postgres = PostgreSQLServer.Launcher.postgres
-        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
-            registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
         }
     }
 }
@@ -125,5 +127,6 @@ internal class RecordingPlanningEngine: PlanningEngine {
 internal class PlanningOutboxWorkerTestConfiguration {
     @Bean
     @Primary
-    fun recordingPlanningEngine(): RecordingPlanningEngine = RecordingPlanningEngine()
+    fun recordingPlanningEngine(): RecordingPlanningEngine =
+        RecordingPlanningEngine()
 }

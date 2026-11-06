@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.optimization.lastmile.persistence
 
 import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
+import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -9,18 +10,22 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 
 @Repository
-internal class LastMilePlanCarrierRepository : LongJdbcRepository<LastMilePlanCarrierRecord> {
+internal class LastMilePlanCarrierRepository: LongJdbcRepository<LastMilePlanCarrierRecord> {
+
+    companion object: KLogging()
+
     override val table = LastMilePlanCarriersTable
 
     override fun extractId(entity: LastMilePlanCarrierRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): LastMilePlanCarrierRecord = LastMilePlanCarrierRecord(
-        id = this[LastMilePlanCarriersTable.id].value,
-        planId = this[LastMilePlanCarriersTable.planId],
-        planRevision = this[LastMilePlanCarriersTable.planRevision],
-        jobId = this[LastMilePlanCarriersTable.jobId],
-        carrierVersion = this[LastMilePlanCarriersTable.carrierVersion],
-    )
+    override fun ResultRow.toEntity(): LastMilePlanCarrierRecord =
+        LastMilePlanCarrierRecord(
+            id = this[LastMilePlanCarriersTable.id].value,
+            planId = this[LastMilePlanCarriersTable.planId],
+            planRevision = this[LastMilePlanCarriersTable.planRevision],
+            jobId = this[LastMilePlanCarriersTable.jobId],
+            carrierVersion = this[LastMilePlanCarriersTable.carrierVersion],
+        )
 
     fun save(record: LastMilePlanCarrierRecord): LastMilePlanCarrierRecord {
         val id = LastMilePlanCarriersTable.insertAndGetId {
@@ -36,30 +41,31 @@ internal class LastMilePlanCarrierRepository : LongJdbcRepository<LastMilePlanCa
         LastMilePlanCarriersTable.selectAll()
             .where {
                 (LastMilePlanCarriersTable.planId eq planId) and
-                    (LastMilePlanCarriersTable.planRevision eq planRevision)
+                        (LastMilePlanCarriersTable.planRevision eq planRevision)
             }
-            .map { row -> with(this) { row.toEntity() } }
+            .map { it.toEntity() }
 }
 
 @Repository
-internal class LastMilePlanStopRepository : LongJdbcRepository<LastMilePlanStopRecord> {
+internal class LastMilePlanStopRepository: LongJdbcRepository<LastMilePlanStopRecord> {
     override val table = LastMilePlanStopsTable
 
     override fun extractId(entity: LastMilePlanStopRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): LastMilePlanStopRecord = LastMilePlanStopRecord(
-        id = this[LastMilePlanStopsTable.id].value,
-        planId = this[LastMilePlanStopsTable.planId],
-        planRevision = this[LastMilePlanStopsTable.planRevision],
-        vehicleId = this[LastMilePlanStopsTable.vehicleId],
-        jobId = this[LastMilePlanStopsTable.jobId],
-        kind = this[LastMilePlanStopsTable.kind],
-        coordinateId = this[LastMilePlanStopsTable.coordinateId],
-        sequence = this[LastMilePlanStopsTable.sequence],
-        eta = this[LastMilePlanStopsTable.eta],
-        loadAfter = this[LastMilePlanStopsTable.loadAfter],
-        pinned = this[LastMilePlanStopsTable.pinned],
-    )
+    override fun ResultRow.toEntity(): LastMilePlanStopRecord =
+        LastMilePlanStopRecord(
+            id = this[LastMilePlanStopsTable.id].value,
+            planId = this[LastMilePlanStopsTable.planId],
+            planRevision = this[LastMilePlanStopsTable.planRevision],
+            vehicleId = this[LastMilePlanStopsTable.vehicleId],
+            jobId = this[LastMilePlanStopsTable.jobId],
+            kind = this[LastMilePlanStopsTable.kind],
+            coordinateId = this[LastMilePlanStopsTable.coordinateId],
+            sequence = this[LastMilePlanStopsTable.sequence],
+            eta = this[LastMilePlanStopsTable.eta],
+            loadAfter = this[LastMilePlanStopsTable.loadAfter],
+            pinned = this[LastMilePlanStopsTable.pinned],
+        )
 
     fun save(record: LastMilePlanStopRecord): LastMilePlanStopRecord {
         val id = LastMilePlanStopsTable.insertAndGetId {
@@ -71,8 +77,8 @@ internal class LastMilePlanStopRepository : LongJdbcRepository<LastMilePlanStopR
             it[coordinateId] = record.coordinateId
             it[sequence] = record.sequence
             it[eta] = record.eta
-        it[loadAfter] = record.loadAfter
-        it[pinned] = record.pinned
+            it[loadAfter] = record.loadAfter
+            it[pinned] = record.pinned
             it[pinned] = record.pinned
         }
         return findById(id.value)
@@ -82,30 +88,36 @@ internal class LastMilePlanStopRepository : LongJdbcRepository<LastMilePlanStopR
         LastMilePlanStopsTable.selectAll()
             .where {
                 (LastMilePlanStopsTable.planId eq planId) and
-                    (LastMilePlanStopsTable.planRevision eq planRevision)
+                        (LastMilePlanStopsTable.planRevision eq planRevision)
             }
-            .map { row -> with(this) { row.toEntity() } }
+            .map { it.toEntity() }
 
     fun findPlanRevisionsByVehicle(vehicleId: String): List<Pair<String, Long>> =
         LastMilePlanStopsTable.selectAll()
             .where { LastMilePlanStopsTable.vehicleId eq vehicleId }
-            .map { row -> row[LastMilePlanStopsTable.planId] to row[LastMilePlanStopsTable.planRevision] }
+            .map { row ->
+                row[LastMilePlanStopsTable.planId] to row[LastMilePlanStopsTable.planRevision]
+            }
             .distinct()
 }
 
 @Repository
-internal class LastMileUnassignedRepository : LongJdbcRepository<LastMileUnassignedRecord> {
+internal class LastMileUnassignedRepository: LongJdbcRepository<LastMileUnassignedRecord> {
+
+    companion object: KLogging()
+
     override val table = LastMileUnassignedTable
 
     override fun extractId(entity: LastMileUnassignedRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): LastMileUnassignedRecord = LastMileUnassignedRecord(
-        id = this[LastMileUnassignedTable.id].value,
-        planId = this[LastMileUnassignedTable.planId],
-        planRevision = this[LastMileUnassignedTable.planRevision],
-        jobId = this[LastMileUnassignedTable.jobId],
-        reason = this[LastMileUnassignedTable.reason],
-    )
+    override fun ResultRow.toEntity(): LastMileUnassignedRecord =
+        LastMileUnassignedRecord(
+            id = this[LastMileUnassignedTable.id].value,
+            planId = this[LastMileUnassignedTable.planId],
+            planRevision = this[LastMileUnassignedTable.planRevision],
+            jobId = this[LastMileUnassignedTable.jobId],
+            reason = this[LastMileUnassignedTable.reason],
+        )
 
     fun save(record: LastMileUnassignedRecord): LastMileUnassignedRecord {
         val id = LastMileUnassignedTable.insertAndGetId {
@@ -121,7 +133,7 @@ internal class LastMileUnassignedRepository : LongJdbcRepository<LastMileUnassig
         LastMileUnassignedTable.selectAll()
             .where {
                 (LastMileUnassignedTable.planId eq planId) and
-                    (LastMileUnassignedTable.planRevision eq planRevision)
+                        (LastMileUnassignedTable.planRevision eq planRevision)
             }
-            .map { row -> with(this) { row.toEntity() } }
+            .map { it.toEntity() }
 }

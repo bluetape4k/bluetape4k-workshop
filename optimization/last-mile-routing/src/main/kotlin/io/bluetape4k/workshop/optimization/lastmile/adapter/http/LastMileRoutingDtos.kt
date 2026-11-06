@@ -1,5 +1,11 @@
 package io.bluetape4k.workshop.optimization.lastmile.adapter.http
 
+import io.bluetape4k.workshop.optimization.lastmile.application.LastMilePlanProjection
+import io.bluetape4k.workshop.optimization.lastmile.application.LastMileReconnectProjection
+import io.bluetape4k.workshop.optimization.lastmile.application.LastMileReplanCommand
+import io.bluetape4k.workshop.optimization.lastmile.application.LastMileRouteProjection
+import io.bluetape4k.workshop.optimization.lastmile.application.LastMileStopProjection
+import io.bluetape4k.workshop.optimization.lastmile.application.LastMileUnassignedProjection
 import io.bluetape4k.workshop.optimization.lastmile.domain.CarrierVersion
 import io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.lastmile.domain.DeliveryJob
@@ -8,6 +14,7 @@ import io.bluetape4k.workshop.optimization.lastmile.domain.EventId
 import io.bluetape4k.workshop.optimization.lastmile.domain.JobId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanProposal
+import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlannerInput
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileRoute
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileRouteStop
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileScore
@@ -16,17 +23,13 @@ import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileUnassignedRea
 import io.bluetape4k.workshop.optimization.lastmile.domain.PlanState
 import io.bluetape4k.workshop.optimization.lastmile.domain.Priority
 import io.bluetape4k.workshop.optimization.lastmile.domain.ProviderRevision
+import io.bluetape4k.workshop.optimization.lastmile.domain.StartedStop
 import io.bluetape4k.workshop.optimization.lastmile.domain.StopKind
 import io.bluetape4k.workshop.optimization.lastmile.domain.TimeWindow
 import io.bluetape4k.workshop.optimization.lastmile.domain.Vehicle
 import io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId
 import io.bluetape4k.workshop.optimization.lastmile.planner.CoordinatePair
 import io.bluetape4k.workshop.optimization.lastmile.planner.TravelTimeMatrix
-import io.bluetape4k.workshop.optimization.lastmile.application.LastMilePlanProjection
-import io.bluetape4k.workshop.optimization.lastmile.application.LastMileReconnectProjection
-import io.bluetape4k.workshop.optimization.lastmile.application.LastMileRouteProjection
-import io.bluetape4k.workshop.optimization.lastmile.application.LastMileStopProjection
-import io.bluetape4k.workshop.optimization.lastmile.application.LastMileUnassignedProjection
 import io.bluetape4k.workshop.optimization.lastmile.provider.RoutingCallback
 import io.bluetape4k.workshop.optimization.lastmile.provider.RoutingResult
 import jakarta.validation.Valid
@@ -198,18 +201,19 @@ internal data class LastMileCallbackHttpResponse(val decision: String)
 internal data class LastMileReplanHttpResponse(val provider: String, val requestId: String, val requestGeneration: Long)
 internal data class LastMileApprovalHttpResponse(val result: String)
 
-internal fun LastMileReplanHttpRequest.toCommand() = io.bluetape4k.workshop.optimization.lastmile.application.LastMileReplanCommand(
-    requestId = requestId,
-    input = io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlannerInput(
-        planId = LastMilePlanId(planId),
-        planRevision = planRevision,
-        parentRevision = parentRevision,
-        requestGeneration = requestGeneration,
-        jobs = jobs.map(LastMileJobHttpRequest::toDomain),
-        vehicles = vehicles.map(LastMileVehicleHttpRequest::toDomain),
-        matrix = matrix.toDomain(),
-    ),
-)
+internal fun LastMileReplanHttpRequest.toCommand() =
+    LastMileReplanCommand(
+        requestId = requestId,
+        input = LastMilePlannerInput(
+            planId = LastMilePlanId(planId),
+            planRevision = planRevision,
+            parentRevision = parentRevision,
+            requestGeneration = requestGeneration,
+            jobs = jobs.map(LastMileJobHttpRequest::toDomain),
+            vehicles = vehicles.map(LastMileVehicleHttpRequest::toDomain),
+            matrix = matrix.toDomain(),
+        ),
+    )
 
 private fun LastMileJobHttpRequest.toDomain() = DeliveryJob(
     jobId = JobId(jobId),
@@ -231,7 +235,7 @@ private fun LastMileVehicleHttpRequest.toDomain() = Vehicle(
     skills = skills,
     availableAt = availableAt,
     startedStop = startedStop?.let {
-        io.bluetape4k.workshop.optimization.lastmile.domain.StartedStop(
+        StartedStop(
             jobId = JobId(it.jobId),
             kind = StopKind.valueOf(it.kind),
             coordinateId = CoordinateId(it.coordinateId),

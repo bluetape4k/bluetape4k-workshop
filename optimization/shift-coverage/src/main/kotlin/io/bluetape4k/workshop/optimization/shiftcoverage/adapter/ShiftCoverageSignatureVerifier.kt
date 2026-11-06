@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.adapter
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.AggregateId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.EventId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.GenerationId
@@ -36,7 +38,8 @@ data class ShiftCoverageSignatureContext(
         }
     }
 
-    fun withAggregateId(value: AggregateId): ShiftCoverageSignatureContext = copy(aggregateId = PlanId(value.value))
+    fun withAggregateId(value: AggregateId): ShiftCoverageSignatureContext =
+        copy(aggregateId = PlanId(value.value))
 }
 
 /** canonical bytes와 length-prefixed context를 constant-time으로 검증합니다. */
@@ -45,14 +48,22 @@ class ShiftCoverageSignatureVerifier(
     private val expectedKeyVersion: String = "fixture-v1",
     private val maxAge: Duration = Duration.ofMinutes(5),
 ) {
-    private val secretKey = SecretKeySpec(secret.toByteArray(UTF_8), HMAC_SHA_256)
+    companion object: KLogging() {
+        private const val HMAC_SHA_256 = "HmacSHA256"
+    }
+
+    private val secretKey = SecretKeySpec(secret.toUtf8Bytes(), HMAC_SHA_256)
 
     init {
         if (secret.isBlank()) throw InvalidShiftCoverageInput("signature secret must not be blank")
         if (expectedKeyVersion.isBlank() || maxAge.isNegative) throw InvalidShiftCoverageInput("invalid signature verifier configuration")
     }
 
-    fun sign(canonicalBody: ByteArray, context: ShiftCoverageSignatureContext, keyVersion: String = expectedKeyVersion): String =
+    fun sign(
+        canonicalBody: ByteArray,
+        context: ShiftCoverageSignatureContext,
+        keyVersion: String = expectedKeyVersion,
+    ): String =
         "hmac-sha256=" + mac(canonicalBody, context, keyVersion).toHex()
 
     fun verify(
@@ -66,10 +77,12 @@ class ShiftCoverageSignatureVerifier(
         val age = Duration.between(context.issuedAt, now).abs()
         if (age > maxAge) return false
         val supplied = signature.removePrefix("hmac-sha256=").takeIf { it.length == 64 }?.hexOrNull() ?: return false
+
         return MessageDigest.isEqual(mac(canonicalBody, context, keyVersion), supplied)
     }
 
     private fun mac(body: ByteArray, context: ShiftCoverageSignatureContext, keyVersion: String): ByteArray {
+
         val encoded = ByteArrayOutputStream().use { output ->
             DataOutputStream(output).use { data ->
                 val parts = listOf(
@@ -78,7 +91,7 @@ class ShiftCoverageSignatureVerifier(
                     context.siteId.value, context.eventId.value, context.issuedAt.toString(), keyVersion,
                 )
                 parts.forEach { value ->
-                    val bytes = value.toByteArray(UTF_8)
+                    val bytes = value.toUtf8Bytes()
                     data.writeInt(bytes.size)
                     data.write(bytes)
                 }
@@ -99,7 +112,7 @@ class ShiftCoverageSignatureVerifier(
         null
     }
 
-    private fun ByteArray.toHex(): String = joinToString(separator = "") { byte -> "%02x".format(byte.toInt() and 0xff) }
+    private fun ByteArray.toHex(): String =
+        joinToString(separator = "") { byte -> "%02x".format(byte.toInt() and 0xff) }
 
-    companion object { private const val HMAC_SHA_256 = "HmacSHA256" }
 }

@@ -1,7 +1,12 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.planner
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.AssignmentId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.GenerationId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlanId
@@ -16,13 +21,16 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftWorker
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.SiteId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.Skill
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.TimeInterval
-import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerPreference
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerPreference
+import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.Instant
-import org.junit.jupiter.api.Test
 
 class DeterministicShiftCoveragePlannerTest {
+
+    companion object: KLogging()
+
     private val day = Instant.parse("2026-08-24T09:00:00Z")
     private val end = Instant.parse("2026-08-24T17:00:00Z")
     private val skill = Skill("electrical")
@@ -38,17 +46,19 @@ class DeterministicShiftCoveragePlannerTest {
         val first = planner.plan(snapshot)
         val second = planner.plan(snapshot)
 
+        log.debug { "first=$first" }
         first shouldBeEqualTo second
     }
 
     @Test
     fun `demand materializes unique deterministic slot assignments`() {
-        val result = planner.plan(
-            snapshot(
-                workers = listOf(worker("worker-b"), worker("worker-a")),
-                shifts = listOf(shift("shift-demand", demand = 2)),
-            ),
-        )
+        val result = planner
+            .plan(
+                snapshot(
+                    workers = listOf(worker("worker-b"), worker("worker-a")),
+                    shifts = listOf(shift("shift-demand", demand = 2)),
+                ),
+            )
 
         result.assignments.map { it.shiftId.value to it.workerId.value to it.assignmentId.value } shouldBeEqualTo listOf(
             "shift-demand" to "worker-a" to "proposal-shift-demand-slot-1",
@@ -88,7 +98,7 @@ class DeterministicShiftCoveragePlannerTest {
             "shift-a-flexible" to "worker-a",
             "shift-b-scarce" to "worker-b",
         )
-        result.unassigned shouldBeEqualTo emptyList()
+        result.unassigned.shouldBeEmpty()
     }
 
     @Test
@@ -97,13 +107,26 @@ class DeterministicShiftCoveragePlannerTest {
         val noSkill = worker("worker-b", skills = setOf(Skill("plumbing")))
         val startedShift = shift("shift-started", startedAt = day.plusSeconds(1))
         val pinned = shift("shift-pinned", pinnedWorkerId = WorkerId("worker-a"))
+
         val result = planner.plan(
             snapshot(
                 workers = listOf(unavailable, noSkill),
                 shifts = listOf(shift("shift-no-skill", requiredSkills = setOf(skill)), startedShift, pinned),
                 assignments = listOf(
-                    ShiftAssignment(AssignmentId("assignment-started"), SiteId("site-a"), startedShift.shiftId, WorkerId("worker-a"), started = true),
-                    ShiftAssignment(AssignmentId("assignment-pinned"), SiteId("site-a"), pinned.shiftId, WorkerId("worker-a"), pinned = true),
+                    ShiftAssignment(
+                        AssignmentId("assignment-started"),
+                        SiteId("site-a"),
+                        startedShift.shiftId,
+                        WorkerId("worker-a"),
+                        started = true
+                    ),
+                    ShiftAssignment(
+                        AssignmentId("assignment-pinned"),
+                        SiteId("site-a"),
+                        pinned.shiftId,
+                        WorkerId("worker-a"),
+                        pinned = true
+                    ),
                 ),
             ),
         )
@@ -116,12 +139,20 @@ class DeterministicShiftCoveragePlannerTest {
 
     @Test
     fun `overlap and minimum rest become no candidate`() {
-        val first = shift("shift-a", startAt = day, endAt = day.plus(Duration.ofHours(2)))
-        val second = shift("shift-b", startAt = day.plus(Duration.ofHours(2)), endAt = day.plus(Duration.ofHours(3)))
+        val first = shift("shift-a", startAt = day, endAt = day + 2.hours())
+        val second = shift("shift-b", startAt = day + 2.hours(), endAt = day + 3.hours())
+
         val result = planner.plan(
             snapshot(
                 shifts = listOf(first, second),
-                assignments = listOf(ShiftAssignment(AssignmentId("assignment-a"), SiteId("site-a"), first.shiftId, WorkerId("worker-a"))),
+                assignments = listOf(
+                    ShiftAssignment(
+                        AssignmentId("assignment-a"),
+                        SiteId("site-a"),
+                        first.shiftId,
+                        WorkerId("worker-a")
+                    )
+                ),
             ),
         )
 
@@ -130,34 +161,61 @@ class DeterministicShiftCoveragePlannerTest {
 
     @Test
     fun `candidate limit and exact budget are hard failures before materialization`() {
-        val tooManyWorkers = (0 until ShiftCoverageLimits.MAX_WORKERS).map { worker("worker-${it.toString().padStart(3, '0')}") }
-        val tooManyShifts = (0 until ShiftCoverageLimits.MAX_SHIFTS).map { shift("shift-${it.toString().padStart(3, '0')}", demand = 2) }
-        assertFailsWith<ShiftCoveragePlannerFailure> { planner.plan(snapshot(workers = tooManyWorkers, shifts = tooManyShifts)) }
+        val tooManyWorkers = List(ShiftCoverageLimits.MAX_WORKERS) {
+            worker("worker-${it.toString().padStart(3, '0')}")
+        }
+
+        val tooManyShifts = List(ShiftCoverageLimits.MAX_SHIFTS) {
+            shift("shift-${it.toString().padStart(3, '0')}", demand = 2)
+        }
+        assertFailsWith<ShiftCoveragePlannerFailure> {
+            planner.plan(
+                snapshot(
+                    workers = tooManyWorkers,
+                    shifts = tooManyShifts
+                )
+            )
+        }
 
         val clock = FakePlannerClock()
-        val budget = StepBudget(clock, Duration.ofSeconds(5))
+        val budget = StepBudget(clock, 5.seconds())
         clock.now = 5_000_000_000L
-        assertFailsWith<ShiftCoveragePlannerFailure> { budget.check() }
+
+        assertFailsWith<ShiftCoveragePlannerFailure> {
+            budget.check()
+        }
     }
 
     private fun snapshot(
         workers: List<ShiftWorker> = listOf(worker("worker-a")),
         shifts: List<Shift> = listOf(shift("shift-a")),
         assignments: List<ShiftAssignment> = emptyList(),
-    ) = ShiftCoverageSnapshot(
-        siteId = SiteId("site-a"), workers = workers, shifts = shifts, assignments = assignments,
-        planId = PlanId("plan-a"), generationId = GenerationId("generation-a"), aggregateRevision = 1,
-    )
+    ): ShiftCoverageSnapshot =
+        ShiftCoverageSnapshot(
+            siteId = SiteId("site-a"),
+            workers = workers,
+            shifts = shifts,
+            assignments = assignments,
+            planId = PlanId("plan-a"),
+            generationId = GenerationId("generation-a"),
+            aggregateRevision = 1,
+        )
 
     private fun worker(
         id: String,
         skills: Set<Skill> = setOf(skill),
         sickCalled: Boolean = false,
         preferences: List<WorkerPreference> = emptyList(),
-    ) = ShiftWorker(
-        workerId = WorkerId(id), siteId = SiteId("site-a"), displayName = id, skills = skills,
-        availability = listOf(TimeInterval(day, end)), sickCalled = sickCalled, preferences = preferences,
-    )
+    ): ShiftWorker =
+        ShiftWorker(
+            workerId = WorkerId(id),
+            siteId = SiteId("site-a"),
+            displayName = id,
+            skills = skills,
+            availability = listOf(TimeInterval(day, end)),
+            sickCalled = sickCalled,
+            preferences = preferences,
+        )
 
     private fun shift(
         id: String,
@@ -168,9 +226,20 @@ class DeterministicShiftCoveragePlannerTest {
         preference: WorkerPreference? = null,
         startedAt: Instant? = null,
         pinnedWorkerId: WorkerId? = null,
-    ) = Shift(ShiftId(id), SiteId("site-a"), startAt, endAt, requiredSkills, demand = demand, preference = preference, startedAt = startedAt, pinnedWorkerId = pinnedWorkerId)
+    ): Shift =
+        Shift(
+            ShiftId(id),
+            SiteId("site-a"),
+            startAt,
+            endAt,
+            requiredSkills,
+            demand = demand,
+            preference = preference,
+            startedAt = startedAt,
+            pinnedWorkerId = pinnedWorkerId
+        )
 }
 
-private class FakePlannerClock(var now: Long = 0L) : PlannerClock {
+private class FakePlannerClock(var now: Long = 0L): PlannerClock {
     override fun nanoTime(): Long = now
 }
