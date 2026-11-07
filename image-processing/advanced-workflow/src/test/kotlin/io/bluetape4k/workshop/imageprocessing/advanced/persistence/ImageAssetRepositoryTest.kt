@@ -1,16 +1,19 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.imageprocessing.advanced.model.JobIdentity
 import io.bluetape4k.workshop.imageprocessing.advanced.model.JobStartResult
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageAssetStatus
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import io.bluetape4k.codec.Base58
 
 /**
  * [ImageAssetRepository] 저수준 작업의 통합 테스트입니다.
@@ -19,10 +22,12 @@ import io.bluetape4k.codec.Base58
  * 저장소를 직접 호출하지 않고 [UserContext]와 감사를 반영한 방식으로 행을 만듭니다.
  * 저장소 직접 호출에 필요한 열린 트랜잭션과 수동 [UserContext] 설정을 피합니다.
  */
-class ImageAssetRepositoryTest : AbstractImagePersistenceTest() {
+class ImageAssetRepositoryTest: AbstractImagePersistenceTest() {
+
+    private companion object: KLogging()
 
     @Autowired
-    private lateinit var service: ImagePersistenceService
+    private val service: ImagePersistenceService = uninitialized()
 
     @Test
     fun `findByExternalId - returns null when asset does not exist`() {
@@ -36,12 +41,12 @@ class ImageAssetRepositoryTest : AbstractImagePersistenceTest() {
         val metadata = buildMetadata(checksum = checksum)
 
         val startResult = service.recordJobStart(metadata)
-        (startResult is JobStartResult.NewAsset).shouldBeTrue()
+        log.debug { "start result=$startResult" }
+        startResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
 
-        val detail = service.findAssetByExternalId(startResult.externalId)
+        val detail = service.findAssetByExternalId(startResult.externalId).shouldNotBeNull()
         log.info { "Asset detail after recordJobStart: $detail" }
-        val nonNullDetail = detail.shouldNotBeNull()
-        nonNullDetail.imageId shouldBeEqualTo startResult.externalId
+        detail.imageId shouldBeEqualTo startResult.externalId
     }
 
     @Test
@@ -50,7 +55,8 @@ class ImageAssetRepositoryTest : AbstractImagePersistenceTest() {
         val metadata = buildMetadata(checksum = checksum)
 
         val startResult = service.recordJobStart(metadata)
-        (startResult is JobStartResult.NewAsset).shouldBeTrue()
+        log.debug { "start result=$startResult" }
+        startResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
 
         val identity = JobIdentity(
             jobId = startResult.jobId,
@@ -58,8 +64,8 @@ class ImageAssetRepositoryTest : AbstractImagePersistenceTest() {
         )
         service.recordJobSuccess(identity, buildObjects(startResult.assetId))
 
-        val detail = service.findAssetByExternalId(startResult.externalId)
-        val nonNullDetail = detail.shouldNotBeNull()
-        nonNullDetail.status shouldBeEqualTo ImageAssetStatus.READY
+        val detail = service.findAssetByExternalId(startResult.externalId).shouldNotBeNull()
+        log.info { "Asset detail after recordJobSuccess: $detail" }
+        detail.status shouldBeEqualTo ImageAssetStatus.READY
     }
 }

@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.coroutines.dispatchers
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.coroutines.support.suspendLogging
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -10,19 +12,18 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(DelicateCoroutinesApi::class)
 class DispatcherExamples {
@@ -79,7 +80,7 @@ class DispatcherExamples {
         val jobs = List(REPEAT_SIZE) {
             // Dispatchers.IO.limitedParallelism(128)
             launch(Dispatchers.IO) {
-                delay(Random.nextLong(100, 200))
+                delay(timeMillis = Random.nextLong(100, 200))
 
                 val threadName = Thread.currentThread().name
                 suspendLogging { "Running on thread $threadName" }
@@ -95,7 +96,7 @@ class DispatcherExamples {
             val parallel = dispatcher.limitedParallelism(8)
             List(REPEAT_SIZE) {
                 launch(parallel) {
-                    delay(Random.nextLong(100, 200))
+                    delay(timeMillis = Random.nextLong(100, 200))
                     val threadName = Thread.currentThread().name
                     suspendLogging { "Running on thread $threadName" }
                 }
@@ -132,7 +133,7 @@ class DispatcherExamples {
             var continuation: Continuation<Unit>? = null
 
             val job2 = launch(newSingleThreadContext("Name2")) {
-                delay(Random.nextLong(100, 200))
+                delay(timeMillis = Random.nextLong(100, 200))
                 continuation?.resume(Unit)
             }.log("job2")
 
@@ -143,7 +144,7 @@ class DispatcherExamples {
                 suspendLogging { "thread=" + Thread.currentThread().name }   // Name 1
                 Thread.currentThread().name shouldContain "Name1"
 
-                suspendCoroutine { cont ->
+                suspendCancellableCoroutine { cont ->
                     continuation = cont
                 }
 
@@ -151,7 +152,7 @@ class DispatcherExamples {
                 Thread.currentThread().name shouldContain "Name2"
 
                 // Name2 job 종료
-                delay(100)
+                delay(100.milliseconds)
                 job2.join()
 
                 suspendLogging { "thread=" + Thread.currentThread().name }   // DefaultExecutor

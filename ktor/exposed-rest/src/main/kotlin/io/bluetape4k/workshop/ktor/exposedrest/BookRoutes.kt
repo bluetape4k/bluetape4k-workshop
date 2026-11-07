@@ -4,7 +4,6 @@ import io.bluetape4k.exposed.ktor.jdbc.exposedJdbcTransaction
 import io.bluetape4k.ktor.core.respondApiError
 import io.bluetape4k.support.requireNotNull
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -91,7 +90,7 @@ internal fun Route.bookRoutes(resources: KtorExposedRestResources) {
         get("/sql") {
             throw SQLException(
                 "jdbc:postgresql://db.internal:5432/secret; user=workshop password=top-secret; " +
-                    "select * from secret_books"
+                        "select * from secret_books"
             )
         }
 

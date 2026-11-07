@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.operations.jobconsole.idempotency
 
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Duration
-import java.util.Locale
+import java.util.*
 
 /**
  * Immutable, bounded policy shared by every idempotency coordinator instance.
@@ -14,20 +17,20 @@ import java.util.Locale
  * replay limits.
  */
 internal data class JobSubmissionIdempotencyPolicy(
-    val ownerLease: Duration = Duration.ofSeconds(30),
-    val prepareDeadline: Duration = Duration.ofSeconds(10),
-    val waiterTimeout: Duration = Duration.ofSeconds(2),
+    val ownerLease: Duration = 30.seconds(),
+    val prepareDeadline: Duration = 10.seconds(),
+    val waiterTimeout: Duration = 2.seconds(),
     val maxWaitersPerKey: Int = 2,
     val maxWaitersPerInstance: Int = 32,
     val datasourcePoolSize: Int = 8,
     val idempotencyDbConcurrency: Int = 4,
     val ownerPrepareConcurrency: Int = 8,
-    val connectionAcquireTimeout: Duration = Duration.ofMillis(250),
-    val statementTimeout: Duration = Duration.ofMillis(500),
-    val pollInitialInterval: Duration = Duration.ofMillis(25),
-    val pollMaxInterval: Duration = Duration.ofMillis(100),
+    val connectionAcquireTimeout: Duration = 250.millis(),
+    val statementTimeout: Duration = 500.millis(),
+    val pollInitialInterval: Duration = 25.millis(),
+    val pollMaxInterval: Duration = 100.millis(),
     val janitorBatchSize: Int = 100,
-    val retention: Duration = Duration.ofHours(1),
+    val retention: Duration = 1.hours(),
     val maxKeyBytes: Int = 255,
     val maxBodyBytes: Int = 64 * 1024,
     val maxReplayBytes: Int = 64 * 1024,

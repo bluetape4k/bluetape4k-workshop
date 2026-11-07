@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.author.controller
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.AuthorDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateAuthorRequest
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/authors")
 class AuthorController(private val authorService: AuthorService) {
+
+    companion object: KLogging()
 
     @GetMapping
     fun findAll(): List<AuthorDTO> = authorService.findAll()

@@ -5,6 +5,8 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -23,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * [AbstractRedissonTest.awaitRedis]의 timeout·취소 계약을 합성 future로 검증합니다.
  */
-class AwaitRedisTest : AbstractRedissonTest() {
+class AwaitRedisTest: AbstractRedissonTest() {
 
     private val subject = TestSubject()
 
@@ -46,6 +48,7 @@ class AwaitRedisTest : AbstractRedissonTest() {
             subject.await(future)
         }
 
+        log.debug { "observed=$observed" }
         observed.message shouldBeEqualTo failure.message
         future.cancelCalls shouldBeEqualTo 0
     }
@@ -58,6 +61,7 @@ class AwaitRedisTest : AbstractRedissonTest() {
             subject.await(future, 1.milliseconds)
         }
 
+        log.debug { "future=$future" }
         future.cancelCalls shouldBeEqualTo 1
         future.lastMayInterruptIfRunning.shouldBeFalse()
         future.isCancelled.shouldBeTrue()
@@ -76,24 +80,26 @@ class AwaitRedisTest : AbstractRedissonTest() {
                 observed.complete(cause)
                 throw cause
             }
-        }
+        }.log("Pending")
 
         pending.cancel(cancellation)
         pending.join()
 
         val observedCancellation = observed.await().shouldBeInstanceOf<CancellationException>()
         observedCancellation.message shouldBeEqualTo cancellation.message
+
+        log.debug { "future=$future" }
         future.cancelCalls shouldBeEqualTo 1
         future.lastMayInterruptIfRunning.shouldBeFalse()
         future.isCancelled.shouldBeTrue()
     }
 
-    private class TestSubject : AbstractRedissonTest() {
+    private class TestSubject: AbstractRedissonTest() {
         suspend fun <T> await(future: RFuture<T>, timeout: Duration = 5.seconds): T =
             awaitRedis(future, timeout)
     }
 
-    private class RecordingRFuture<T> : CompletableFutureWrapper<T>(CompletableFuture<T>()) {
+    private class RecordingRFuture<T>: CompletableFutureWrapper<T>(CompletableFuture<T>()) {
         var cancelCalls: Int = 0
             private set
 
@@ -105,5 +111,8 @@ class AwaitRedisTest : AbstractRedissonTest() {
             lastMayInterruptIfRunning = mayInterruptIfRunning
             return super.cancel(mayInterruptIfRunning)
         }
+
+        override fun toString(): String =
+            "RecordingRFuture(cancelCalls=$cancelCalls, lastMayInterruptIfRunning=$lastMayInterruptIfRunning)"
     }
 }

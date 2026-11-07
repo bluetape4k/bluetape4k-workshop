@@ -1,33 +1,40 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.scheduled
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import java.time.Duration
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.assertTimeout
+import org.springframework.beans.factory.getBeansOfType
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.config.ScheduledTaskHolder
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 class TenantScheduledPolicyLifecycleTest {
+
+    companion object: KLogging()
 
     @Test
     fun `pending scheduled task is registered once and removed on context close`() {
         val context = AnnotationConfigApplicationContext(PendingSchedulingConfiguration::class.java)
-        val holder = context.getBeansOfType(ScheduledTaskHolder::class.java).values.single()
+        val holder = context.getBeansOfType<ScheduledTaskHolder>().values.single()
         try {
-            holder.scheduledTasks.size shouldBeEqualTo 1
+            holder.scheduledTasks shouldHaveSize 1
         } finally {
             context.close()
         }
-        holder.scheduledTasks.size shouldBeEqualTo 0
+        holder.scheduledTasks.shouldBeEmpty()
     }
 
     @Test
@@ -38,14 +45,14 @@ class TenantScheduledPolicyLifecycleTest {
             refresh()
         }
         try {
-            assertTimeout(Duration.ofSeconds(5)) {
-                fixture.started.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            assertTimeout(5.seconds()) {
+                fixture.started.await(5.seconds).shouldBeTrue()
             }
-            val holder = context.getBeansOfType(ScheduledTaskHolder::class.java).values.single()
-            holder.scheduledTasks.size shouldBeEqualTo 1
+            val holder = context.getBeansOfType<ScheduledTaskHolder>().values.single()
+            holder.scheduledTasks shouldHaveSize 1
             fixture.invocations.get() shouldBeEqualTo 1
             context.close()
-            holder.scheduledTasks.size shouldBeEqualTo 0
+            holder.scheduledTasks.shouldBeEmpty()
         } finally {
             if (context.isActive) context.close()
         }
@@ -60,14 +67,14 @@ class TenantScheduledPolicyLifecycleTest {
             refresh()
         }
         try {
-            fixture.entered.await(5, TimeUnit.SECONDS).shouldBeTrue()
-            val holder = context.getBeansOfType(ScheduledTaskHolder::class.java).values.single()
+            fixture.entered.await(5.seconds).shouldBeTrue()
+            val holder = context.getBeansOfType<ScheduledTaskHolder>().values.single()
             holder.scheduledTasks.size shouldBeEqualTo 1
-            assertTimeout(Duration.ofSeconds(5)) {
+            assertTimeout(5.seconds()) {
                 context.close()
             }
-            fixture.finished.await(5, TimeUnit.SECONDS).shouldBeTrue()
-            holder.scheduledTasks.size shouldBeEqualTo 0
+            fixture.finished.await(5.seconds).shouldBeTrue()
+            holder.scheduledTasks.shouldBeEmpty()
         } finally {
             fixture.release.countDown()
             if (context.isActive) context.close()
@@ -124,7 +131,7 @@ class TenantScheduledPolicyLifecycleTest {
         fun reconcile() {
             entered.countDown()
             try {
-                release.await(2, TimeUnit.SECONDS)
+                release.await(2.seconds)
             } finally {
                 finished.countDown()
             }

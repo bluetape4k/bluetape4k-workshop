@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.support.toUtf8String
 import tools.jackson.databind.json.JsonMapper
-import java.nio.charset.StandardCharsets
+import java.net.URLDecoder
+import java.nio.file.Files
 import java.security.MessageDigest
 
 /** line-by-line artifact를 감사할 수 있도록 evidence phase 순서를 의도적으로 고정합니다. */
@@ -54,6 +56,7 @@ data class KafkaFailoverEvidence(
         require(imageDigest.matches(IMAGE_DIGEST_PATTERN)) { "imageDigest must be sha256 qualified" }
         require(topic == KafkaFailoverTopology.TOPIC) { "topic must be the reference topic" }
         require(status.isNotBlank()) { "status must not be blank" }
+
         listOf(assignmentCount, rawDeliveryCount, appliedCount, conflictCount, retryCount)
             .filterNotNull()
             .forEach { require(it >= 0) { "evidence counters must not be negative" } }
@@ -161,14 +164,14 @@ object KafkaFailoverArtifactScanner {
     )
 
     fun scan(root: java.nio.file.Path): KafkaFailoverArtifactScanResult {
-        require(java.nio.file.Files.exists(root)) { "artifact root does not exist" }
+        require(Files.exists(root)) { "artifact root does not exist" }
         val violations = mutableListOf<String>()
         var scanned = 0
-        java.nio.file.Files.walk(root).use { paths ->
-            paths.filter(java.nio.file.Files::isRegularFile).forEach { path ->
+        Files.walk(root).use { paths ->
+            paths.filter(Files::isRegularFile).forEach { path ->
                 scanned += 1
-                val bytes = runCatching { java.nio.file.Files.readAllBytes(path) }.getOrElse { return@forEach }
-                val content = bytes.toString(StandardCharsets.UTF_8)
+                val bytes = runCatching { Files.readAllBytes(path) }.getOrElse { return@forEach }
+                val content = bytes.toUtf8String()
                 val normalized = decode(content).lowercase()
                 val matched = canaries.count { normalized.contains(it) }
                 if (matched > 0) {
@@ -184,7 +187,7 @@ object KafkaFailoverArtifactScanner {
     }
 
     private fun decode(value: String): String =
-        runCatching { java.net.URLDecoder.decode(value, StandardCharsets.UTF_8) }.getOrDefault(value)
+        runCatching { URLDecoder.decode(value, Charsets.UTF_8) }.getOrDefault(value)
 
     private fun sha256(value: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(value).joinToString("") { "%02x".format(it) }

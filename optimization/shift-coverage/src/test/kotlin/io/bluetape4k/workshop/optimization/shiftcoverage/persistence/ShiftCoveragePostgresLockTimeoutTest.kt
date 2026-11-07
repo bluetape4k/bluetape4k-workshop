@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -15,7 +17,11 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ShiftCoveragePostgresLockTimeoutTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres = PostgreSQLServer.Launcher.postgres
+    }
+
     private val repository = ShiftCoverageAggregateRepository()
 
     @BeforeAll
@@ -23,8 +29,8 @@ class ShiftCoveragePostgresLockTimeoutTest {
         Database.connect(
             url = postgres.jdbcUrl,
             driver = "org.postgresql.Driver",
-            user = requireNotNull(postgres.username),
-            password = requireNotNull(postgres.password),
+            user = postgres.username.shouldNotBeNull(),
+            password = postgres.password.shouldNotBeNull(),
         )
     }
 
@@ -38,7 +44,9 @@ class ShiftCoveragePostgresLockTimeoutTest {
 
     @AfterEach
     fun dropSchema() {
-        transaction { SchemaUtils.drop(*ShiftCoverageTables.all.reversedArray()) }
+        transaction {
+            SchemaUtils.drop(*ShiftCoverageTables.all.reversedArray())
+        }
     }
 
     @Test
@@ -53,8 +61,12 @@ class ShiftCoveragePostgresLockTimeoutTest {
 
         transaction {
             val saved = repository.save(record)
+
+            log.debug { "saved=$saved" }
             saved.id shouldBeEqualTo record.id
-            repository.findByPlanRevision("site-a", "plan-a", 7L)?.payload shouldBeEqualTo "fixture"
+
+            repository.findByPlanRevision("site-a", "plan-a", 7L)
+                ?.payload shouldBeEqualTo "fixture"
         }
     }
 
@@ -73,7 +85,7 @@ class ShiftCoveragePostgresLockTimeoutTest {
             lockTimeout to statementTimeout
         }
 
+        log.debug { "settings=$settings" }
         settings shouldBeEqualTo ("2s" to "5s")
-        settings.first.orEmpty().isNotBlank().shouldBeTrue()
     }
 }

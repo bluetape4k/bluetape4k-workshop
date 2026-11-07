@@ -63,8 +63,8 @@ value class ConflictKey private constructor(val value: String) {
 data class FencingToken(
     val epoch: Long,
     val sequence: Long,
-) : Comparable<FencingToken> {
-    constructor(sequence: Long) : this(DEFAULT_EPOCH, sequence)
+): Comparable<FencingToken> {
+    constructor(sequence: Long): this(DEFAULT_EPOCH, sequence)
 
     init {
         epoch.requireGt(0L, "fencingEpoch")

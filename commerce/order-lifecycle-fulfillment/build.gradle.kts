@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    kotlin("kapt")
 }
 
 java {
@@ -87,4 +88,8 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.awaitility.kotlin)
     testImplementation(libs.mockk)
+    testImplementation(kotlin("test"))
+}
+repositories {
+    mavenCentral()
 }

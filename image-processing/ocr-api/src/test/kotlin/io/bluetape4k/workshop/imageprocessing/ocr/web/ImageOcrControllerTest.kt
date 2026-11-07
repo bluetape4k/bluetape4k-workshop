@@ -5,6 +5,7 @@ import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.images.ocr.TiffMultiPageOcrException
 import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
 import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
@@ -31,6 +32,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(controllers = [ImageOcrController::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ImageOcrControllerTest {
+
+    private companion object: KLogging()
 
     @Autowired
     private lateinit var mockMvc: MockMvc

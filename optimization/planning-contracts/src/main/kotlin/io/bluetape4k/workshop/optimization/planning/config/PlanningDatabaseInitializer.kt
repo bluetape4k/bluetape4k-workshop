@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.planning.config
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAggregateTable
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAuditTable
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningCallbackInboxTable
@@ -14,8 +16,12 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 internal class PlanningDatabaseInitializer: ApplicationRunner {
 
+    companion object: KLogging()
+
     @Transactional
     override fun run(args: ApplicationArguments) {
+        log.info { "Create Database tables..." }
+        
         SchemaUtils.create(
             PlanningAggregateTable,
             PlanningRequestTable,

@@ -11,6 +11,7 @@ import io.bluetape4k.workshop.lock.domain.DeductionResult.Rejected
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Success
 import io.bluetape4k.workshop.lock.domain.InventoryStore
 import io.bluetape4k.workshop.lock.fenced.FencedResources
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
@@ -38,7 +39,7 @@ class SuspendingFencedInventoryService(
     private val beforeWork: suspend () -> Unit = {},
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     suspend fun deduct(
         id: Long,
@@ -62,6 +63,7 @@ class SuspendingFencedInventoryService(
             beforeWork()  // 테스트용 삽입 지점: 기본 no-op이며 취소 테스트에서는 delay를 주입합니다.
             val current = store.currentStock(id)
             if (current < qty) return InsufficientStock(qty, current)
+
             return fencedResources.forResource(id).apply(token) {
                 val remaining = store.applyChange(id, -qty)
                 Success(remaining, token)
@@ -72,6 +74,8 @@ class SuspendingFencedInventoryService(
             withContext(NonCancellable) {
                 try {
                     fLock.unlockAsync(lockId).await()
+                } catch (e: CancellationException) {
+                    log.warn(e) { "Fenced unlock failed" }
                 } catch (e: Exception) {
                     log.warn(e) { "Suspending fenced unlock failed: $lockName (lockId=$lockId)" }
                 }

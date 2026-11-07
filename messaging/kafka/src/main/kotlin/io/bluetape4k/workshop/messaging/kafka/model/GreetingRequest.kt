@@ -8,7 +8,7 @@ import java.io.Serializable
  */
 data class GreetingRequest(
     val name: String,
-) : Serializable {
+): Serializable {
 
     init {
         name.requireNotBlank("name")

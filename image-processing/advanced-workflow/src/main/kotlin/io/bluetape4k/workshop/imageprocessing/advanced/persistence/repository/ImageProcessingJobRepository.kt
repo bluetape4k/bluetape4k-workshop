@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence.repository
 
 import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageProcessingJobDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.mapper.toImageProcessingJobDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageJobStatus
@@ -23,7 +25,9 @@ import org.springframework.stereotype.Repository
  *   및 [ImageProcessingJobTable.finishedAt]으로 추적합니다.
  */
 @Repository
-class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
+class ImageProcessingJobRepository: LongJdbcRepository<ImageProcessingJobDTO> {
+
+    private companion object: KLogging()
 
     override val table = ImageProcessingJobTable
 
@@ -40,12 +44,14 @@ class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
      * @param requestedVariants 이 job이 요청한 변형 이름 목록입니다. 비어 있을 수 있습니다.
      * @return 생성된 job 기본 키입니다.
      */
-    fun insertJob(assetId: Long, requestedVariants: List<String>): Long =
-        ImageProcessingJobTable.insertAndGetId {
+    fun insertJob(assetId: Long, requestedVariants: List<String>): Long {
+        log.debug { "Insert Job. assetId=$assetId, requestedVariants=$requestedVariants" }
+        return ImageProcessingJobTable.insertAndGetId {
             it[ImageProcessingJobTable.imageAssetId] = assetId
             it[ImageProcessingJobTable.status] = ImageJobStatus.RUNNING
             it[ImageProcessingJobTable.requestedVariants] = requestedVariants
         }.value
+    }
 
     /**
      * [jobId]로 식별한 job을 SUCCEEDED로 표시합니다.
@@ -85,4 +91,5 @@ class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
             .where { ImageProcessingJobTable.imageAssetId eq assetId }
             .orderBy(ImageProcessingJobTable.startedAt, SortOrder.DESC)
             .map { it.toImageProcessingJobDTO() }
+            .onEach { log.debug { "assetId=$assetId, processing job=$it" } }
 }

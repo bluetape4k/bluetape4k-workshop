@@ -1,20 +1,25 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.author
 
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.AbstractMvcJdbcTest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.AuthorDTO
-import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookCursorPageResponse
+import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateAuthorRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateBookRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.test.web.reactive.server.expectBodyList
 
-class AuthorControllerTest : AbstractMvcJdbcTest() {
+class AuthorControllerTest: AbstractMvcJdbcTest() {
+
+    companion object: KLogging()
 
     // findCursorPage endpoint 계약을 HTTP 응답으로 고정합니다.
 
@@ -24,7 +29,7 @@ class AuthorControllerTest : AbstractMvcJdbcTest() {
             .uri("/api/v1/authors")
             .exchange()
             .expectStatus().isOk
-            .expectBodyList(AuthorDTO::class.java)
+            .expectBodyList<AuthorDTO>()
             .returnResult()
         result.responseBody.shouldNotBeNull()
     }
@@ -42,7 +47,7 @@ class AuthorControllerTest : AbstractMvcJdbcTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(AuthorDTO::class.java)
+            .expectBody<AuthorDTO>()
             .returnResult()
         result.responseBody.shouldNotBeNull().id shouldBeGreaterOrEqualTo 1L
     }
@@ -69,7 +74,7 @@ class AuthorControllerTest : AbstractMvcJdbcTest() {
             .uri("/api/v1/authors/1/books")
             .exchange()
             .expectStatus().isOk
-            .expectBodyList(BookDTO::class.java)
+            .expectBodyList<BookDTO>()
             .returnResult()
         result.responseBody.shouldNotBeNull()
     }
@@ -80,7 +85,7 @@ class AuthorControllerTest : AbstractMvcJdbcTest() {
             .uri("/api/v1/books/cursor?pageSize=2")
             .exchange()
             .expectStatus().isOk
-            .expectBody(BookCursorPageResponse::class.java)
+            .expectBody<BookCursorPageResponse>()
             .returnResult().responseBody.shouldNotBeNull()
 
         first.content shouldHaveSize 2
@@ -91,11 +96,12 @@ class AuthorControllerTest : AbstractMvcJdbcTest() {
             .uri("/api/v1/books/cursor?pageSize=2&cursor=$cursor")
             .exchange()
             .expectStatus().isOk
-            .expectBody(BookCursorPageResponse::class.java)
+            .expectBody<BookCursorPageResponse>()
             .returnResult().responseBody.shouldNotBeNull()
 
         second.content shouldHaveSize 2
-        second.content.map(BookDTO::id).intersect(first.content.map(BookDTO::id).toSet()) shouldBeEqualTo emptySet()
+        second.content.map(BookDTO::id)
+            .intersect(first.content.map(BookDTO::id).toSet()) shouldBeEqualTo emptySet()
     }
 
     @Test

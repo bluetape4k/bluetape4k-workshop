@@ -41,7 +41,7 @@ import kotlin.time.toKotlinDuration
 @EnableConfigurationProperties(LeaderZookeeperProperties::class)
 class LeaderZookeeperConfig {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * 설정된 ZooKeeper ensemble에 연결되는 [CuratorFramework]를 만들고 시작한다.
@@ -64,11 +64,11 @@ class LeaderZookeeperConfig {
             when (newState) {
                 ConnectionState.SUSPENDED ->
                     log.warn { "ZooKeeper connection SUSPENDED — leadership uncertain" }
-                ConnectionState.LOST ->
+                ConnectionState.LOST      ->
                     log.error { "ZooKeeper session LOST — ephemeral nodes removed; re-election will occur" }
                 ConnectionState.RECONNECTED ->
                     log.info { "ZooKeeper session RECONNECTED" }
-                else ->
+                else                      ->
                     log.debug { "ZooKeeper connection state: $newState" }
             }
         }
@@ -79,7 +79,7 @@ class LeaderZookeeperConfig {
             client.close() // 백그라운드 스레드 누수를 막기 위해 명시적으로 닫는다.
             error(
                 "ZooKeeper connection timeout after ${cfg.blockUntilConnectedSeconds}s " +
-                    "(connectString=${cfg.connectString}). Check that ZooKeeper is running and accessible."
+                        "(connectString=${cfg.connectString}). Check that ZooKeeper is running and accessible."
             )
         }
 

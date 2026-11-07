@@ -14,7 +14,7 @@ import io.bluetape4k.exposed.core.auditable.AuditableLongIdTable
  *
  * 별도의 `id`나 `primaryKey` 정의가 필요하지 않다.
  */
-object AuthorTable : AuditableLongIdTable("authors") {
+object AuthorTable: AuditableLongIdTable("authors") {
     val firstName = varchar("first_name", 100)
     val lastName = varchar("last_name", 100)
     val email = varchar("email", 255).uniqueIndex()

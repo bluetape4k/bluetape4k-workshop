@@ -16,12 +16,11 @@ import org.springframework.context.annotation.Configuration
 @Configuration(proxyBeanMethods = false)
 class LettuceConfiguration {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Bean
     fun redisClient(): RedisClient {
-        val url = System.getProperty("testcontainers.redis.url")
-            .requireNotBlank("testcontainers.redis.url")
+        val url = System.getProperty("testcontainers.redis.url").requireNotBlank("testcontainers.redis.url")
         log.debug { "Create RedisClient. url=$url" }
         return RedisClient.create(url)
     }

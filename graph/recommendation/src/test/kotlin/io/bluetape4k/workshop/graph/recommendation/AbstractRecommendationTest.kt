@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.graph.recommendation
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldContainAll
 import io.bluetape4k.assertions.shouldHaveSize
@@ -10,6 +10,8 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.graph.recommendation.model.FollowRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.ProductRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_FOLLOWED
@@ -62,6 +64,8 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRecommendationTest {
 
+    companion object: KLogging()
+
     protected abstract val graphName: String
     protected abstract val ops: GraphOperations
     protected abstract val service: RecommendationService
@@ -82,6 +86,7 @@ abstract class AbstractRecommendationTest {
     fun `addUser creates User vertex with correct properties`() {
         val alice = service.addUser(USER_ALICE, "Alice")
 
+        log.debug { "alice=$alice" }
         alice.label shouldBeEqualTo "User"
         alice.properties[UserLabel.userId.name] shouldBeEqualTo USER_ALICE
         alice.properties[UserLabel.name.name] shouldBeEqualTo "Alice"
@@ -93,12 +98,14 @@ abstract class AbstractRecommendationTest {
         val second = service.addUser(USER_ALICE, "Alice")
 
         first.id shouldBeEqualTo second.id
+        first shouldBeEqualTo second
     }
 
     @Test
     fun `addProduct creates Product vertex with correct properties`() {
         val laptop = service.addProduct("laptop", "Laptop", category = "Electronics")
 
+        log.debug { "laptop=$laptop" }
         laptop.label shouldBeEqualTo "Product"
         laptop.properties["productId"] shouldBeEqualTo "laptop"
         laptop.properties["name"] shouldBeEqualTo "Laptop"
@@ -111,6 +118,7 @@ abstract class AbstractRecommendationTest {
         val second = service.addProduct("laptop", "Laptop")
 
         first.id shouldBeEqualTo second.id
+        first shouldBeEqualTo second
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -267,6 +275,7 @@ abstract class AbstractRecommendationTest {
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id)
 
+        log.debug { "edge=$edge" }
         edge.label shouldBeEqualTo PurchasedLabel.label
         edge.startId shouldBeEqualTo alice.id
         edge.endId shouldBeEqualTo laptop.id
@@ -278,6 +287,7 @@ abstract class AbstractRecommendationTest {
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id, rating = 5)
 
+        log.debug { "edge=$edge" }
         edge.properties[PurchasedLabel.rating.name] shouldBeEqualTo "5"
     }
 
@@ -287,6 +297,7 @@ abstract class AbstractRecommendationTest {
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id, purchasedAt = "2024-01-15")
 
+        log.debug { "edge=$edge" }
         edge.properties[PurchasedLabel.purchasedAt.name] shouldBeEqualTo "2024-01-15"
     }
 
@@ -296,6 +307,7 @@ abstract class AbstractRecommendationTest {
         val bob = service.addUser(USER_BOB, "Bob")
         val edge = service.follow(alice.id, bob.id)
 
+        log.debug { "edge=$edge" }
         edge.startId shouldBeEqualTo alice.id
         edge.endId shouldBeEqualTo bob.id
     }
@@ -309,8 +321,10 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results.shouldNotBeEmpty()
+
         val headphones = results.first { it.product.properties["productId"] == PROD_HEADPHONES }
         headphones.score shouldBeEqualTo 3
     }
@@ -320,6 +334,7 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results.first().product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
     }
@@ -329,7 +344,9 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val productIds = results.map { it.product.properties["productId"]?.toString() }
+            .onEach { log.debug { "ProductId=$it" } }
 
         // headphones(3) > keyboard(1) = mouse(1); tie-break는 사전순으로 keyboard < mouse입니다.
         productIds shouldBeEqualTo listOf(PROD_HEADPHONES, PROD_KEYBOARD, PROD_MOUSE)
@@ -340,7 +357,10 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
+
         val productIds = results.map { it.product.id }
+            .onEach { log.debug { "productId=$it" } }
 
         productIds shouldNotContain seed.laptop.id
         productIds shouldNotContain seed.phone.id
@@ -361,9 +381,10 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id, limit = 1)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results shouldHaveSize 1
-        results.first().product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
+        results.single().product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
     }
 
     @Test
@@ -371,11 +392,14 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.explainProductRecommendations(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results.map { it.recommendation.product.properties["productId"]?.toString() } shouldBeEqualTo
                 listOf(PROD_HEADPHONES, PROD_KEYBOARD, PROD_MOUSE)
 
         val headphones = results.first { it.recommendation.product.id == seed.headphones.id }
+
+        log.debug { "headphones=$headphones" }
         headphones.recommendation.score shouldBeEqualTo 3
         headphones.evidencePaths shouldHaveSize 3
         headphones.evidencePaths.map { it.sharedProduct.id }.toSet() shouldBeEqualTo
@@ -386,6 +410,8 @@ abstract class AbstractRecommendationTest {
                 setOf(seed.headphones.id)
 
         val exclusions = headphones.excludedCandidates.associate { it.candidateId to it.reason }
+
+        log.debug { "exclusions=$exclusions" }
         exclusions.keys shouldContainAll listOf(seed.laptop.id, seed.phone.id, seed.tablet.id)
         exclusions[seed.laptop.id] shouldBeEqualTo ALREADY_PURCHASED
         exclusions[seed.phone.id] shouldBeEqualTo ALREADY_PURCHASED
@@ -397,10 +423,11 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.explainProductRecommendations(seed.alice.id, limit = 1)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results shouldHaveSize 1
-        results.first().recommendation.product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
-        results.first().evidencePaths shouldHaveSize 3
+        results.single().recommendation.product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
+        results.single().evidencePaths shouldHaveSize 3
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -412,7 +439,9 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val userIds = results.map { it.person.properties[UserLabel.userId.name] as? String }
+            .onEach { log.debug { "userId=$it" } }
 
         userIds shouldContain USER_DAVE
         userIds shouldContain USER_EVE
@@ -423,7 +452,9 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val userIds = results.map { it.person.properties[UserLabel.userId.name] as? String }
+            .onEach { log.debug { "userId=$it" } }
 
         // dave(1) = eve(1); tie-break는 사전순으로 dave < eve입니다.
         userIds shouldBeEqualTo listOf(USER_DAVE, USER_EVE)
@@ -433,9 +464,10 @@ abstract class AbstractRecommendationTest {
     fun `recommendFollows alice herself not in results`() {
         val seed = seedRecommendation(service)
 
-        val results = service.recommendFollows(seed.alice.id)
-        val personIds = results.map { it.person.id }
+        val results = service.recommendFollows(seed.alice.id).onEach { log.debug { "recommandation=$it" } }
+        val personIds = results.map { it.person.id }.onEach { log.debug { "personId=$it" } }
 
+        personIds shouldHaveSize 2
         personIds shouldNotContain seed.alice.id
     }
 
@@ -444,9 +476,12 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val personIds = results.map { it.person.id }
+            .onEach { log.debug { "personId=$it" } }
 
         // alice는 bob과 carol을 follow하므로 추천에 나타나면 안 됩니다.
+        personIds shouldHaveSize 2
         personIds shouldNotContain seed.bob.id
         personIds shouldNotContain seed.carol.id
     }
@@ -456,6 +491,7 @@ abstract class AbstractRecommendationTest {
         val isolated = service.addUser("isolated", "Isolated User")
 
         val results = service.recommendFollows(isolated.id)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results.shouldBeEmpty()
     }
@@ -465,9 +501,10 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id, limit = 1)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results shouldHaveSize 1
-        results.first().person.properties[UserLabel.userId.name] shouldBeEqualTo USER_DAVE
+        results.single().person.properties[UserLabel.userId.name] shouldBeEqualTo USER_DAVE
     }
 
     @Test
@@ -475,6 +512,7 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
 
         results shouldHaveSize 2
         results.forEach { rec ->
@@ -487,8 +525,10 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val daveRec = results.first { it.person.properties[UserLabel.userId.name] == USER_DAVE }
 
+        log.debug { "daveRec=$daveRec" }
         daveRec.mutualFollows.map { it.id } shouldContain seed.bob.id
     }
 
@@ -497,8 +537,10 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val eveRec = results.first { it.person.properties[UserLabel.userId.name] == USER_EVE }
 
+        log.debug { "eveRec=$eveRec" }
         eveRec.mutualFollows.map { it.id } shouldContain seed.carol.id
     }
 
@@ -507,21 +549,26 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.explainFollowRecommendations(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val userIds = results.map { it.recommendation.person.properties[UserLabel.userId.name] as? String }
+            .onEach { log.debug { "userId=$it" } }
 
         userIds shouldBeEqualTo listOf(USER_DAVE, USER_EVE)
 
         val dave = results.first { it.recommendation.person.id == seed.dave.id }
+        log.debug { "dave=$dave" }
         dave.recommendation.mutualFollowCount shouldBeEqualTo 1
         dave.evidencePaths.map { it.intermediary.id } shouldContain seed.bob.id
         dave.evidencePaths.map { it.candidate.id }.toSet() shouldBeEqualTo setOf(seed.dave.id)
 
         val eve = results.first { it.recommendation.person.id == seed.eve.id }
+        log.debug { "eve=$eve" }
         eve.recommendation.mutualFollowCount shouldBeEqualTo 1
         eve.evidencePaths.map { it.intermediary.id } shouldContain seed.carol.id
         eve.evidencePaths.map { it.candidate.id }.toSet() shouldBeEqualTo setOf(seed.eve.id)
 
         val exclusions = dave.excludedCandidates.associate { it.candidateId to it.reason }
+        log.debug { "exclusions=$exclusions" }
         exclusions.keys shouldContainAll listOf(seed.bob.id, seed.carol.id)
         exclusions[seed.bob.id] shouldBeEqualTo ALREADY_FOLLOWED
         exclusions[seed.carol.id] shouldBeEqualTo ALREADY_FOLLOWED
@@ -533,12 +580,18 @@ abstract class AbstractRecommendationTest {
         service.follow(seed.bob.id, seed.alice.id)
 
         val results = service.explainFollowRecommendations(seed.alice.id)
+            .onEach { log.debug { "recommandation=$it" } }
         val resultIds = results.map { it.recommendation.person.id }
+            .onEach { log.debug { "resultId=$it" } }
 
+        resultIds shouldHaveSize 2
         resultIds shouldNotContain seed.alice.id
+
         val selfExclusions = results.flatMap { it.excludedCandidates }
             .filter { it.candidateId == seed.alice.id }
-        selfExclusions.shouldNotBeEmpty()
+            .onEach { log.debug { "selfExclusions=$it" } }
+
+        selfExclusions shouldHaveSize 2
         selfExclusions.map { it.reason }.toSet() shouldBeEqualTo setOf(SELF)
         selfExclusions.map { it.via?.id }.toSet() shouldBeEqualTo setOf(seed.bob.id)
     }

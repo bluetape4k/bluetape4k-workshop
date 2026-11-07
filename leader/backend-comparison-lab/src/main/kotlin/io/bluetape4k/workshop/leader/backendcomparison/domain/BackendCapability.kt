@@ -9,7 +9,7 @@ import java.io.Serializable
 data class BackendCapability(
     val label: String,
     val detail: String,
-) : Serializable {
+): Serializable {
 
     init {
         label.requireNotBlank("label")

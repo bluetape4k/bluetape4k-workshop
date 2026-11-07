@@ -4,9 +4,9 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.AbstractRateLimitTest
 import org.junit.jupiter.api.Test
 
-class ReactiveRateLimitTest : AbstractRateLimitTest() {
+class ReactiveRateLimitTest: AbstractRateLimitTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val HELLO_PATH = "/reactive/hello"
         private const val WORLD_PATH = "/reactive/world"
     }

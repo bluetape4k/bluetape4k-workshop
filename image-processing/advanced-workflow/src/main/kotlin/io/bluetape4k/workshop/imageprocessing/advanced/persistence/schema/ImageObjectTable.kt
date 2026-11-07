@@ -16,14 +16,14 @@ import org.jetbrains.exposed.v1.core.ReferenceOption
  * ## 상속된 감사 컬럼([AuditableLongIdTable]에서 제공)
  * - `created_by`, `created_at`, `updated_by`, `updated_at`
  */
-object ImageObjectTable : AuditableLongIdTable("image_objects") {
+object ImageObjectTable: AuditableLongIdTable("image_objects") {
 
     /** 부모 [ImageAssetTable]에 대한 FK이며 삭제를 cascade합니다. */
     val imageAssetId = reference("image_asset_id", ImageAssetTable, onDelete = ReferenceOption.CASCADE)
         .index()
 
     /** 이 객체가 [ImageObjectKind.ORIGINAL]인지 [ImageObjectKind.VARIANT]인지 나타냅니다. */
-    val kind = enumerationByName("kind", 20, ImageObjectKind::class)
+    val kind = enumerationByName<ImageObjectKind>("kind", 20)
 
     /** 변형 이름입니다(예: `"thumbnail"`, `"webp-2x"`). 원본이면 null입니다. */
     val variantName = varchar("variant_name", 100).nullable()

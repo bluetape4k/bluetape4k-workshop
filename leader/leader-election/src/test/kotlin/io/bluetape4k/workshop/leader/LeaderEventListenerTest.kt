@@ -2,28 +2,30 @@ package io.bluetape4k.workshop.leader
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.leader.LeaderElectionEvent
 import io.bluetape4k.leader.LeaderElectionListener
 import io.bluetape4k.leader.ListeningLeaderElector
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.service.LeaderEventListenerService
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import org.junit.jupiter.api.Test
-import io.bluetape4k.codec.Base58
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import java.time.Duration
+import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [LeaderEventListenerService]와 [ListeningLeaderElector] event API의 테스트입니다.
@@ -34,14 +36,16 @@ import java.util.concurrent.atomic.AtomicInteger
  * - [ListeningLeaderElector.events] Flow는 획득 시 [LeaderElectionEvent.Elected]를 emit합니다.
  * - [LeaderEventListenerService]가 listener와 Flow collector를 모두 올바르게 연결합니다.
  */
-class LeaderEventListenerTest : AbstractLeaderElectionTest() {
+class LeaderEventListenerTest: AbstractLeaderElectionTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `onElected callback is called when lock is acquired`() {
         val listeningElector = newListeningElector()
         val electedCount = AtomicInteger(0)
 
-        val handle = listeningElector.addListener(object : LeaderElectionListener {
+        val handle = listeningElector.addListener(object: LeaderElectionListener {
             override fun onElected(lockName: String) {
                 electedCount.incrementAndGet()
             }
@@ -63,7 +67,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
         val followerElector = newListeningElector()
         val skippedCount = AtomicInteger(0)
 
-        followerElector.addListener(object : LeaderElectionListener {
+        followerElector.addListener(object: LeaderElectionListener {
             override fun onSkipped(lockName: String) {
                 skippedCount.incrementAndGet()
             }
@@ -94,10 +98,10 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
         listeningElector.runIfLeader(lockName) { "work" }
 
         // shared flow emission이 collector로 전파될 시간을 줍니다.
-        val received = withTimeoutOrNull(2_000) { receivedEvents.receive() }
+        val received = withTimeoutOrNull(2.seconds) { receivedEvents.receive() }
 
         received.shouldNotBeNull()
-        (received is LeaderElectionEvent.Elected) shouldBeEqualTo true
+        received.shouldBeInstanceOf<LeaderElectionEvent.Elected>()
 
         scope.cancel()
         receivedEvents.close()
@@ -114,7 +118,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
             listeningElector.runIfLeader(lockName) { "work" }
         }
 
-        await atMost Duration.ofSeconds(2) untilAsserted {
+        await atMost 2.seconds untilAsserted {
             service.electedCount.get() shouldBeEqualTo 3
             service.skippedCount.get() shouldBeEqualTo 0
         }

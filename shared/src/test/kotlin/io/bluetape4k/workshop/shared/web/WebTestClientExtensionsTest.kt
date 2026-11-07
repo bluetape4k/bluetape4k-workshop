@@ -23,9 +23,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 
-class WebTestClientExtensionsTest : AbstractSpringTest() {
+class WebTestClientExtensionsTest: AbstractSpringTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val client: WebTestClient = WebTestClient
         .bindToServer()

@@ -1,15 +1,16 @@
 package io.bluetape4k.workshop.ktor.routes
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.ktor.AbstractKtorTest
 import io.bluetape4k.workshop.ktor.domain.Book
-import io.bluetape4k.workshop.ktor.domain.DomainError
 import io.bluetape4k.workshop.ktor.module
 import io.bluetape4k.workshop.ktor.repository.BookRepository
 import io.bluetape4k.workshop.ktor.repository.InMemoryBookRepository
-import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -18,12 +19,11 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 
-class BookRoutesTest : AbstractKtorTest() {
+class BookRoutesTest: AbstractKtorTest() {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `GET books returns empty list when repository is empty`() = testApplication {
@@ -158,7 +158,7 @@ class BookRoutesTest : AbstractKtorTest() {
         response.contentType().toString() shouldContain "x-ndjson"
 
         response.bodyAsText() shouldBeEqualTo
-            """{"id":"책-1","title":"코틀린🙂","author":"저자","year":2026}""" + "\n"
+                """{"id":"책-1","title":"코틀린🙂","author":"저자","year":2026}""" + "\n"
     }
 
     @Test
@@ -173,7 +173,7 @@ class BookRoutesTest : AbstractKtorTest() {
 
     @Test
     fun `unhandled exception returns 500 with type Internal and no stack trace`() = testApplication {
-        val fakeRepository = object : BookRepository {
+        val fakeRepository = object: BookRepository {
             override suspend fun findAll(): List<Book> = throw RuntimeException("boom")
             override suspend fun findById(id: String): Book? = null
             override suspend fun save(book: Book): Book = throw UnsupportedOperationException()

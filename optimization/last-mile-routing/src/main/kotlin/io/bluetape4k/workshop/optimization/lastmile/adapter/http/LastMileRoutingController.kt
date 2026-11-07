@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.lastmile.adapter.http
 
+import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.lastmile.application.LastMileApprovalCommand
 import io.bluetape4k.workshop.optimization.lastmile.application.LastMileApprovalResult
 import io.bluetape4k.workshop.optimization.lastmile.application.LastMileApprovalService
@@ -25,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.kotlinModule
 import java.security.MessageDigest
 
 @RestController
@@ -37,6 +38,12 @@ internal class LastMileRoutingController(
     private val callbackService: LastMileCallbackService,
     private val eventService: LastMileEventService,
 ) {
+
+    private companion object: KLogging() {
+        val JSON: JsonMapper = Jackson.defaultJsonMapper
+        val REQUEST_KEY_PATTERN = Regex("[A-Za-z0-9._:-]{1,96}")
+    }
+
     @GetMapping("/plans/{planId}")
     fun plan(
         @PathVariable planId: String,
@@ -129,7 +136,7 @@ internal class LastMileRoutingController(
         require(actual == expected || actual.matches(REQUEST_KEY_PATTERN)) { "Idempotency-Key is invalid" }
     }
 
-    private fun <T : Any> etagged(body: T, ifNoneMatch: String?): ResponseEntity<Any> {
+    private fun <T: Any> etagged(body: T, ifNoneMatch: String?): ResponseEntity<Any> {
         val digest = MessageDigest.getInstance("SHA-256")
             .digest(JSON.writeValueAsBytes(body))
             .joinToString(separator = "") { byte -> "%02x".format(byte) }
@@ -139,10 +146,5 @@ internal class LastMileRoutingController(
         } else {
             ResponseEntity.ok().eTag(tag).body(body)
         }
-    }
-
-    private companion object {
-        val JSON: JsonMapper = JsonMapper.builder().addModule(kotlinModule()).build()
-        val REQUEST_KEY_PATTERN = Regex("[A-Za-z0-9._:-]{1,96}")
     }
 }

@@ -2,34 +2,47 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
 class DeterministicScheduleTest {
 
+    companion object: KLogging() {
+        private fun contractRoot(): Path =
+            Path.of(System.getProperty("highContentionContractRoot").shouldNotBeNull())
+    }
+
     @Test
     fun `every versioned golden vector produces the exact canonical tokens`() {
-        val vectors = HighContentionContractLoader().load(
-            contractRoot = contractRoot(),
-            mode = HighContentionMode.CI_CORRECTNESS,
-        ).scheduleVectors
+        val vectors = HighContentionContractLoader()
+            .load(
+                contractRoot = contractRoot(),
+                mode = HighContentionMode.CI_CORRECTNESS,
+            )
+            .scheduleVectors
 
         vectors.vectors.forEach { vector ->
+            log.debug { "vector=$vector" }
             DeterministicSchedule.generate(vector) shouldBeEqualTo vector.expectedTokens
         }
     }
 
     @Test
     fun `the same vector always produces the same canonical digest`() {
-        val vector = HighContentionContractLoader().load(
-            contractRoot = contractRoot(),
-            mode = HighContentionMode.CI_CORRECTNESS,
-        ).scheduleVectors.vectors.last()
+        val vector = HighContentionContractLoader()
+            .load(
+                contractRoot = contractRoot(),
+                mode = HighContentionMode.CI_CORRECTNESS,
+            )
+            .scheduleVectors.vectors.last()
 
         val first = DeterministicSchedule.generate(vector)
         val second = DeterministicSchedule.generate(vector)
 
+        first.onEach { log.debug { "token=$it" } }
         second shouldBeEqualTo first
         DeterministicSchedule.digest(second) shouldBeEqualTo DeterministicSchedule.digest(first)
     }
@@ -77,7 +90,4 @@ class DeterministicScheduleTest {
             DeterministicSchedule.generate(vector)
         }
     }
-
-    private fun contractRoot(): Path =
-        Path.of(System.getProperty("highContentionContractRoot").requireNotNull("highContentionContractRoot"))
 }

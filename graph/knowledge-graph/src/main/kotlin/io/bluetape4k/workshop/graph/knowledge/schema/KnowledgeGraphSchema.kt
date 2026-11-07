@@ -4,6 +4,7 @@ import io.bluetape4k.graph.model.GraphConstraint
 import io.bluetape4k.graph.model.GraphConstraintType
 import io.bluetape4k.graph.model.GraphIndex
 import io.bluetape4k.graph.model.GraphSchemaEntityType
+import io.bluetape4k.graph.schema.EdgeLabel
 import io.bluetape4k.graph.schema.GraphSchemaDefinition
 import io.bluetape4k.graph.schema.GraphSchemaNames
 import io.bluetape4k.graph.schema.GraphSchemaPlan
@@ -11,7 +12,6 @@ import io.bluetape4k.graph.schema.GraphSchemaPlanAction
 import io.bluetape4k.graph.schema.GraphSchemaPlanItem
 import io.bluetape4k.graph.schema.GraphSchemaPlanOptions
 import io.bluetape4k.graph.schema.GraphSuspendSchemaManager
-import io.bluetape4k.graph.schema.EdgeLabel
 import io.bluetape4k.graph.schema.VertexLabel
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -26,7 +26,8 @@ import io.bluetape4k.graph.schema.VertexLabel
  * - `name` - 사람이 읽을 수 있는 표시 이름입니다.
  * - `entityType` - `"Language"`, `"Framework"`, `"Person"` 같은 자유 형식 분류입니다.
  */
-object EntityLabel : VertexLabel("Entity") {
+object EntityLabel: VertexLabel("Entity") {
+    private fun readResolve(): Any = EntityLabel
     val entityId = string("entityId")
     val name = string("name")
     val entityType = string("entityType")
@@ -40,7 +41,8 @@ object EntityLabel : VertexLabel("Entity") {
  * - `name` - Concept의 표시 이름입니다.
  * - `domain` - `"software"`, `"science"` 같은 주제 영역입니다.
  */
-object ConceptLabel : VertexLabel("Concept") {
+object ConceptLabel: VertexLabel("Concept") {
+    private fun readResolve(): Any = ConceptLabel
     val conceptId = string("conceptId")
     val name = string("name")
     val domain = string("domain")
@@ -54,7 +56,8 @@ object ConceptLabel : VertexLabel("Concept") {
  * - `title` - 문서 제목입니다.
  * - `source` - 원천 시스템 또는 URL입니다. 선택 값입니다.
  */
-object DocumentLabel : VertexLabel("Document") {
+object DocumentLabel: VertexLabel("Document") {
+    private fun readResolve(): Any = DocumentLabel
     val documentId = string("documentId")
     val title = string("title")
     val source = string("source")
@@ -70,7 +73,8 @@ object DocumentLabel : VertexLabel("Document") {
  * ## 속성
  * - `confidence` - 추출 신뢰도 점수입니다. 범위는 0-100입니다.
  */
-object MentionsLabel : EdgeLabel("MENTIONS", DocumentLabel, EntityLabel) {
+object MentionsLabel: EdgeLabel("MENTIONS", DocumentLabel, EntityLabel) {
+    private fun readResolve(): Any = MentionsLabel
     val confidence = integer("confidence")
 }
 
@@ -80,7 +84,8 @@ object MentionsLabel : EdgeLabel("MENTIONS", DocumentLabel, EntityLabel) {
  * ## 속성
  * - `relationType` - `"has-feature"`, `"integrates-with"` 같은 관계 종류를 설명합니다.
  */
-object RelatedToLabel : EdgeLabel("RELATED_TO", EntityLabel, EntityLabel) {
+object RelatedToLabel: EdgeLabel("RELATED_TO", EntityLabel, EntityLabel) {
+    private fun readResolve(): Any = RelatedToLabel
     val relationType = string("relationType")
 }
 
@@ -89,7 +94,9 @@ object RelatedToLabel : EdgeLabel("RELATED_TO", EntityLabel, EntityLabel) {
  *
  * 방향: Entity -> Concept(`IS_A` 분류)입니다.
  */
-object IsALabel : EdgeLabel("IS_A", EntityLabel, ConceptLabel)
+object IsALabel: EdgeLabel("IS_A", EntityLabel, ConceptLabel) {
+    private fun readResolve(): Any = IsALabel
+}
 
 /**
  * knowledge graph가 기대하는 backend-neutral schema 선언입니다.
@@ -143,66 +150,71 @@ suspend fun GraphSuspendSchemaManager.plan(
     val desiredIndexes = desired.indexes
     val desiredConstraints = desired.constraints
     val items = buildList {
-        desiredIndexes.sortedWith(schemaObjectComparator()).filterNot { wanted ->
-            liveIndexes.any { it.sameSchema(wanted) }
-        }.forEach {
-            add(
-                GraphSchemaPlanItem(
-                    action = GraphSchemaPlanAction.CREATE_INDEX,
-                    index = it,
-                    reason = "desired index is missing",
-                ),
-            )
-        }
-        desiredConstraints.sortedWith(schemaObjectComparator()).filterNot { wanted ->
-            liveConstraints.any { it.sameSchema(wanted) }
-        }.forEach {
-            add(
-                GraphSchemaPlanItem(
-                    action = GraphSchemaPlanAction.CREATE_CONSTRAINT,
-                    constraint = it,
-                    reason = "desired unique constraint is missing",
-                ),
-            )
-        }
-        liveIndexes.sortedWith(schemaObjectComparator()).filterNot { existing ->
-            desiredIndexes.any { it.sameSchema(existing) }
-        }.forEach {
-            add(
-                GraphSchemaPlanItem(
-                    action = if (options.allowDestructiveDrops) {
-                        GraphSchemaPlanAction.DROP_INDEX
-                    } else {
-                        GraphSchemaPlanAction.SKIP
-                    },
-                    index = it,
-                    reason = if (options.allowDestructiveDrops) {
-                        "live index is extra"
-                    } else {
-                        "destructive drop is disabled"
-                    },
-                ),
-            )
-        }
-        liveConstraints.sortedWith(schemaObjectComparator()).filterNot { existing ->
-            desiredConstraints.any { it.sameSchema(existing) }
-        }.forEach {
-            add(
-                GraphSchemaPlanItem(
-                    action = if (options.allowDestructiveDrops) {
-                        GraphSchemaPlanAction.UNSUPPORTED
-                    } else {
-                        GraphSchemaPlanAction.SKIP
-                    },
-                    constraint = it,
-                    reason = if (options.allowDestructiveDrops) {
-                        "GraphSchemaManager does not expose constraint drop"
-                    } else {
-                        "destructive drop is disabled"
-                    },
-                ),
-            )
-        }
+
+        desiredIndexes
+            .sortedWith(schemaObjectComparator())
+            .filterNot { wanted -> liveIndexes.any { it.sameSchema(wanted) } }
+            .forEach {
+                add(
+                    GraphSchemaPlanItem(
+                        action = GraphSchemaPlanAction.CREATE_INDEX,
+                        index = it,
+                        reason = "desired index is missing",
+                    ),
+                )
+            }
+        desiredConstraints
+            .sortedWith(schemaObjectComparator())
+            .filterNot { wanted -> liveConstraints.any { it.sameSchema(wanted) } }
+            .forEach {
+                add(
+                    GraphSchemaPlanItem(
+                        action = GraphSchemaPlanAction.CREATE_CONSTRAINT,
+                        constraint = it,
+                        reason = "desired unique constraint is missing",
+                    ),
+                )
+            }
+        liveIndexes
+            .sortedWith(schemaObjectComparator())
+            .filterNot { existing -> desiredIndexes.any { it.sameSchema(existing) } }
+            .forEach {
+                add(
+                    GraphSchemaPlanItem(
+                        action = if (options.allowDestructiveDrops) {
+                            GraphSchemaPlanAction.DROP_INDEX
+                        } else {
+                            GraphSchemaPlanAction.SKIP
+                        },
+                        index = it,
+                        reason = if (options.allowDestructiveDrops) {
+                            "live index is extra"
+                        } else {
+                            "destructive drop is disabled"
+                        },
+                    ),
+                )
+            }
+        liveConstraints
+            .sortedWith(schemaObjectComparator())
+            .filterNot { existing -> desiredConstraints.any { it.sameSchema(existing) } }
+            .forEach {
+                add(
+                    GraphSchemaPlanItem(
+                        action = if (options.allowDestructiveDrops) {
+                            GraphSchemaPlanAction.UNSUPPORTED
+                        } else {
+                            GraphSchemaPlanAction.SKIP
+                        },
+                        constraint = it,
+                        reason = if (options.allowDestructiveDrops) {
+                            "GraphSchemaManager does not expose constraint drop"
+                        } else {
+                            "destructive drop is disabled"
+                        },
+                    ),
+                )
+            }
     }
     return GraphSchemaPlan(items, options)
 }

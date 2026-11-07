@@ -1,19 +1,24 @@
 package io.bluetape4k.workshop.graph.social
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNear
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.model.MissingWeightException
 import io.bluetape4k.graph.model.MissingWeightPolicy
 import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.graph.social.model.ConnectionRecommendation
 import io.bluetape4k.workshop.graph.social.schema.CompanyLabel
 import io.bluetape4k.workshop.graph.social.schema.KnowsLabel
@@ -23,7 +28,6 @@ import io.bluetape4k.workshop.graph.social.seed.SocialNetworkSeed
 import io.bluetape4k.workshop.graph.social.seed.seedSocialNetwork
 import io.bluetape4k.workshop.graph.social.service.SocialNetworkSuspendService
 import kotlinx.coroutines.flow.toList
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -48,6 +52,8 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractSocialNetworkSuspendTest {
 
+    companion object: KLoggingChannel()
+
     protected abstract val graphName: String
     protected abstract val ops: GraphSuspendOperations
     protected abstract val service: SocialNetworkSuspendService
@@ -68,6 +74,7 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `addPerson creates Person vertex with correct properties`() = runSuspendIO {
         val alice = service.addPerson("alice", "Alice Smith", title = "Engineer", location = "Seoul")
 
+        log.debug { "alice=$alice" }
         alice.label shouldBeEqualTo PersonLabel.label
         alice.properties[PersonLabel.personId.name] shouldBeEqualTo "alice"
         alice.properties[PersonLabel.name.name] shouldBeEqualTo "Alice Smith"
@@ -81,12 +88,14 @@ abstract class AbstractSocialNetworkSuspendTest {
         val second = service.addPerson("alice", "Alice Smith")
 
         first.id shouldBeEqualTo second.id
+        first shouldBeEqualTo second
     }
 
     @Test
     fun `addCompany creates Company vertex with correct properties`() = runSuspendIO {
         val acme = service.addCompany("acme", "Acme Corp", industry = "Technology", location = "Seoul")
 
+        log.debug { "acme=$acme" }
         acme.label shouldBeEqualTo CompanyLabel.label
         acme.properties[CompanyLabel.companyId.name] shouldBeEqualTo "acme"
         acme.properties[CompanyLabel.name.name] shouldBeEqualTo "Acme Corp"
@@ -99,6 +108,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val second = service.addCompany("acme", "Acme Corp")
 
         first.id shouldBeEqualTo second.id
+        first shouldBeEqualTo second
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -140,15 +150,20 @@ abstract class AbstractSocialNetworkSuspendTest {
     }
 
     @Test
-    fun `findAllConnectionPaths with maxDepth exceeding MAX_TRAVERSAL_DEPTH throws IllegalArgumentException`() = runSuspendIO {
-        val alice = service.addPerson("alice", "Alice Smith")
-        val bob = service.addPerson("bob", "Bob Jones")
+    fun `findAllConnectionPaths with maxDepth exceeding MAX_TRAVERSAL_DEPTH throws IllegalArgumentException`() =
+        runSuspendIO {
+            val alice = service.addPerson("alice", "Alice Smith")
+            val bob = service.addPerson("bob", "Bob Jones")
 
-        assertFailsWith<IllegalArgumentException> {
-            service.findAllConnectionPaths(alice.id, bob.id, maxDepth = SocialNetworkSuspendService.MAX_TRAVERSAL_DEPTH + 1)
-                .toList()
+            assertFailsWith<IllegalArgumentException> {
+                service.findAllConnectionPaths(
+                    alice.id,
+                    bob.id,
+                    maxDepth = SocialNetworkSuspendService.MAX_TRAVERSAL_DEPTH + 1
+                )
+                    .toList()
+            }
         }
-    }
 
     @Test
     fun `service rejects blank graphName`() {
@@ -213,10 +228,14 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `connect creates bidirectional KNOWS edges`() = runSuspendIO {
         val seed: SocialNetworkSeed = seedSocialNetwork(service)
 
-        val aliceNeighbors = service.getDirectConnections(seed.alice.id).toList()
+        val aliceNeighbors = service.getDirectConnections(seed.alice.id)
+            .log("AliceNeighbor")
+            .toList()
         aliceNeighbors.map { it.id } shouldContain seed.bob.id
 
-        val bobNeighbors = service.getDirectConnections(seed.bob.id).toList()
+        val bobNeighbors = service.getDirectConnections(seed.bob.id)
+            .log("BobNeighbors")
+            .toList()
         bobNeighbors.map { it.id } shouldContain seed.alice.id
     }
 
@@ -226,7 +245,9 @@ abstract class AbstractSocialNetworkSuspendTest {
         val bob = service.addPerson("bob", "Bob Jones")
         service.connect(alice.id, bob.id, since = "2024-01-01", strength = 8)
 
-        val edges = ops.findEdgesByStartId(alice.id, KnowsLabel.label).toList()
+        val edges = ops.findEdgesByStartId(alice.id, KnowsLabel.label)
+            .log("Alice-Edges")
+            .toList()
 
         edges.shouldNotBeEmpty()
         val edge = edges.first { it.endId == bob.id }
@@ -238,7 +259,10 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `follow creates unidirectional FOLLOWS edge`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val aliceNeighbors = service.getDirectConnections(seed.alice.id).toList()
+        val aliceNeighbors = service.getDirectConnections(seed.alice.id)
+            .log("AliceNeighbor")
+            .toList()
+
         aliceNeighbors.map { it.id } shouldNotContain seed.eve.id
     }
 
@@ -250,8 +274,15 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `addWorkExperience creates WORKS_AT edge with correct properties`() = runSuspendIO {
         val alice = service.addPerson("alice", "Alice Smith")
         val acme = service.addCompany("acme", "Acme Corp")
-        val edge = service.addWorkExperience(alice.id, acme.id, role = "Engineer", startDate = "2022-03-01", isCurrent = true)
+        val edge = service.addWorkExperience(
+            alice.id,
+            acme.id,
+            role = "Engineer",
+            startDate = "2022-03-01",
+            isCurrent = true
+        )
 
+        log.debug { "edge=$edge" }
         edge.properties[WorksAtLabel.role.name] shouldBeEqualTo "Engineer"
         edge.properties[WorksAtLabel.startDate.name] shouldBeEqualTo "2022-03-01"
         edge.properties[WorksAtLabel.isCurrent.name] shouldBeEqualTo "true"
@@ -263,6 +294,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val acme = service.addCompany("acme", "Acme Corp")
         val edge = service.addWorkExperience(alice.id, acme.id, role = "Intern", isCurrent = false)
 
+        log.debug { "edge=$edge" }
         edge.properties[WorksAtLabel.isCurrent.name] shouldBeEqualTo "false"
     }
 
@@ -274,7 +306,9 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `getDirectConnections returns 1st-degree KNOWS connections`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val connections = service.getDirectConnections(seed.alice.id).toList()
+        val connections = service.getDirectConnections(seed.alice.id)
+            .log("Connections")
+            .toList()
 
         connections.map { it.id } shouldContain seed.bob.id
         connections.map { it.id } shouldNotContain seed.carol.id
@@ -285,7 +319,9 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `getDirectConnections result does NOT contain seed vertex`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val connections = service.getDirectConnections(seed.alice.id).toList()
+        val connections = service.getDirectConnections(seed.alice.id)
+            .log("Connections")
+            .toList()
 
         connections.map { it.id } shouldNotContain seed.alice.id
     }
@@ -298,8 +334,11 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `getConnectionsWithinDegree maxDegree=2 returns up to 2nd-degree connections`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val connections = service.getConnectionsWithinDegree(seed.alice.id, maxDegree = 2).toList()
-        val ids = connections.map { it.id }
+        val connections = service.getConnectionsWithinDegree(seed.alice.id, maxDegree = 2)
+            .log("Connections")
+            .toList()
+
+        val ids = connections.map { it.id }.onEach { log.debug { "id=$it" } }
 
         ids shouldContain seed.bob.id
         ids shouldContain seed.carol.id
@@ -310,7 +349,9 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `getConnectionsWithinDegree excludes seed vertex`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val connections = service.getConnectionsWithinDegree(seed.alice.id, maxDegree = 2).toList()
+        val connections = service.getConnectionsWithinDegree(seed.alice.id, maxDegree = 2)
+            .log("Connections")
+            .toList()
 
         connections.map { it.id } shouldNotContain seed.alice.id
     }
@@ -324,6 +365,8 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val firstDegree = service.getNthDegreeConnections(seed.alice.id, degree = 1)
+            .onEach { log.debug { "vertex=$it" } }
+
         val ids = firstDegree.map { it.id }
 
         ids shouldContain seed.bob.id
@@ -336,6 +379,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val secondDegree = service.getNthDegreeConnections(seed.alice.id, degree = 2)
+            .onEach { log.debug { "vertex=$it" } }
         val ids = secondDegree.map { it.id }
 
         ids shouldNotContain seed.bob.id
@@ -348,6 +392,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val secondDegree = service.getNthDegreeConnections(seed.alice.id, degree = 2)
+            .onEach { log.debug { "vertex=$it" } }
 
         secondDegree.map { it.id } shouldNotContain seed.alice.id
     }
@@ -361,6 +406,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val recs = service.recommendConnections(seed.alice.id)
+            .onEach { log.debug { "Recommendation=$it" } }
 
         recs.shouldNotBeEmpty()
         recs.forEach { rec ->
@@ -374,6 +420,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val recs = service.recommendConnections(seed.alice.id)
+            .onEach { log.debug { "Recommendation=$it" } }
         val personIds = recs.map { it.person.properties[PersonLabel.personId.name] as? String }
 
         personIds shouldBeEqualTo listOf("carol", "dave")
@@ -384,6 +431,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val recs = service.recommendConnections(seed.alice.id)
+            .onEach { log.debug { "Recommendation=$it" } }
         val recPersonIds = recs.map { it.person.id }
 
         recPersonIds shouldNotContain seed.bob.id
@@ -394,6 +442,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val recs = service.recommendConnections(seed.eve.id)
+            .onEach { log.debug { "Recommendation=$it" } }
 
         recs.shouldBeEmpty()
     }
@@ -406,7 +455,9 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `findColleagues returns colleagues at the same company`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val colleagues = service.findColleagues(seed.alice.id).toList()
+        val colleagues = service.findColleagues(seed.alice.id)
+            .log("Colleagues")
+            .toList()
 
         colleagues.map { it.id } shouldContain seed.bob.id
         colleagues.map { it.id } shouldNotContain seed.carol.id
@@ -416,7 +467,9 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `findColleagues excludes the seed person`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val colleagues = service.findColleagues(seed.alice.id).toList()
+        val colleagues = service.findColleagues(seed.alice.id)
+            .log("Colleagues")
+            .toList()
 
         colleagues.map { it.id } shouldNotContain seed.alice.id
     }
@@ -431,6 +484,7 @@ abstract class AbstractSocialNetworkSuspendTest {
 
         val path = service.findConnectionPath(seed.alice.id, seed.bob.id)
 
+        log.debug { "path=$path" }
         // vertices.size는 vertex-only path와 vertex+edge path 모두에서 동작합니다(vertices.size = hops + 1).
         path.shouldNotBeNull().vertices.size shouldBeEqualTo 2
     }
@@ -441,6 +495,7 @@ abstract class AbstractSocialNetworkSuspendTest {
 
         val path = service.findConnectionPath(seed.alice.id, seed.dave.id)
 
+        log.debug { "path=$path" }
         path.shouldNotBeNull().vertices.size shouldBeEqualTo 3
     }
 
@@ -450,8 +505,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val isolated = service.addPerson("isolated", "Isolated Person")
 
         val path = service.findConnectionPath(alice.id, isolated.id)
-
-        path shouldBeEqualTo null
+        path.shouldBeNull()
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -474,9 +528,9 @@ abstract class AbstractSocialNetworkSuspendTest {
 
         val path = service.findWeightedConnectionPath(alice.id, dave.id).shouldNotBeNull()
 
-        path.totalWeight.shouldBeNear(6.0, 0.0001)
+        path.totalWeight.shouldBeNear(6.0, 1e-4)
         path.vertices.map { it.properties[PersonLabel.personId.name] } shouldBeEqualTo
-            listOf("alice", "carol", "eve", "dave")
+                listOf("alice", "carol", "eve", "dave")
     }
 
     @Test
@@ -489,9 +543,9 @@ abstract class AbstractSocialNetworkSuspendTest {
         addKnows(bob, carol, "1")
         addKnows(carol, dave, "1")
 
-        service.findWeightedConnectionPath(alice.id, dave.id, maxDepth = 2) shouldBeEqualTo null
+        service.findWeightedConnectionPath(alice.id, dave.id, maxDepth = 2).shouldBeNull()
         service.findWeightedConnectionPath(alice.id, dave.id, maxDepth = 3)
-            .shouldNotBeNull().totalWeight.shouldBeNear(3.0, 0.0001)
+            .shouldNotBeNull().totalWeight.shouldBeNear(3.0, 1e-4)
     }
 
     @Test
@@ -501,7 +555,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val path = service.findWeightedConnectionPath(alice.id, alice.id, maxDepth = 0).shouldNotBeNull()
 
         path.length shouldBeEqualTo 0
-        path.totalWeight.shouldBeNear(0.0, 0.0001)
+        path.totalWeight.shouldBeNear(0.0, 1e-4)
         path.vertices.map { it.properties[PersonLabel.personId.name] } shouldBeEqualTo listOf("alice")
     }
 
@@ -515,7 +569,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         addKnows(bob, carol, "1")
         addKnows(carol, dave, "1")
 
-        service.findWeightedConnectionPath(alice.id, dave.id, maxVisited = 1) shouldBeEqualTo null
+        service.findWeightedConnectionPath(alice.id, dave.id, maxVisited = 1).shouldBeNull()
     }
 
     @Test
@@ -529,16 +583,18 @@ abstract class AbstractSocialNetworkSuspendTest {
         assertFailsWith<MissingWeightException> {
             service.findWeightedConnectionPath(alice.id, carol.id)
         }
+
         service.findWeightedConnectionPath(
             alice.id,
             carol.id,
             missingWeightPolicy = MissingWeightPolicy.Skip,
-        ) shouldBeEqualTo null
+        ).shouldBeNull()
+
         service.findWeightedConnectionPath(
             alice.id,
             carol.id,
             missingWeightPolicy = MissingWeightPolicy.UseDefault(1.0),
-        ).shouldNotBeNull().totalWeight.shouldBeNear(2.0, 0.0001)
+        ).shouldNotBeNull().totalWeight.shouldBeNear(2.0, 1e-4)
     }
 
     @Test
@@ -561,8 +617,9 @@ abstract class AbstractSocialNetworkSuspendTest {
         addKnows(alice, bob, "1")
 
         service.findWeightedConnectionPath(alice.id, bob.id, direction = Direction.OUTGOING)
-            .shouldNotBeNull().totalWeight.shouldBeNear(1.0, 0.0001)
-        service.findWeightedConnectionPath(alice.id, bob.id, direction = Direction.INCOMING) shouldBeEqualTo null
+            .shouldNotBeNull().totalWeight.shouldBeNear(1.0, 1e-4)
+
+        service.findWeightedConnectionPath(alice.id, bob.id, direction = Direction.INCOMING).shouldBeNull()
     }
 
     @Test
@@ -580,7 +637,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val second = service.findWeightedConnectionPath(alice.id, dave.id).shouldNotBeNull()
 
         first.vertices.map { it.id } shouldBeEqualTo second.vertices.map { it.id }
-        first.totalWeight.shouldBeNear(second.totalWeight, 0.0001)
+        first.totalWeight.shouldBeNear(second.totalWeight, 1e-4)
     }
 
     @Test
@@ -597,7 +654,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val backendPath = ops.shortestPath(seed.alice.id, seed.dave.id, options)
 
         servicePath?.vertices?.map { it.id } shouldBeEqualTo backendPath?.vertices?.map { it.id }
-        servicePath?.totalWeight?.shouldBeNear(backendPath?.totalWeight ?: 0.0, 0.0001)
+        servicePath?.totalWeight?.shouldBeNear(backendPath?.totalWeight ?: 0.0, 1e-4)
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -608,7 +665,9 @@ abstract class AbstractSocialNetworkSuspendTest {
     fun `findAllConnectionPaths returns all paths within maxDepth`() = runSuspendIO {
         val seed = seedSocialNetwork(service)
 
-        val paths = service.findAllConnectionPaths(seed.alice.id, seed.dave.id, maxDepth = 3).toList()
+        val paths = service.findAllConnectionPaths(seed.alice.id, seed.dave.id, maxDepth = 3)
+            .log("Path")
+            .toList()
 
         paths.shouldNotBeEmpty()
     }
@@ -618,7 +677,9 @@ abstract class AbstractSocialNetworkSuspendTest {
         val alice = service.addPerson("alice", "Alice Smith")
         val isolated = service.addPerson("isolated", "Isolated Person")
 
-        val paths = service.findAllConnectionPaths(alice.id, isolated.id).toList()
+        val paths = service.findAllConnectionPaths(alice.id, isolated.id)
+            .log("Path")
+            .toList()
 
         paths.shouldBeEmpty()
     }
@@ -637,6 +698,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val mutual = service.findMutualConnections(seed.alice.id, seed.dave.id)
+            .onEach { log.debug { "mutual=$it" } }
 
         mutual.map { it.id } shouldContain seed.bob.id
     }
@@ -646,6 +708,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val seed = seedSocialNetwork(service)
 
         val mutual = service.findMutualConnections(seed.alice.id, seed.eve.id)
+            .onEach { log.debug { "mutual=$it" } }
 
         mutual.shouldBeEmpty()
     }

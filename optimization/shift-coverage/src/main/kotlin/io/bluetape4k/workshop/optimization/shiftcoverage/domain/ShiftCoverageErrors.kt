@@ -1,13 +1,22 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.domain
 
 /** 외부 입력과 immutable snapshot 경계가 위반되었을 때 사용하는 안정적인 오류입니다. */
-class InvalidShiftCoverageInput(message: String, cause: Throwable? = null) : IllegalArgumentException(message, cause)
+class InvalidShiftCoverageInput(
+    message: String,
+    cause: Throwable? = null,
+): IllegalArgumentException(message, cause)
 
 /** signed minor-unit arithmetic가 overflow 되었을 때 사용하는 안정적인 오류입니다. */
-class ShiftCoverageArithmeticError(message: String, cause: Throwable? = null) : ArithmeticException(message)
+class ShiftCoverageArithmeticError(
+    message: String,
+    cause: Throwable? = null,
+): ArithmeticException(message)
 
 /** mutation이 현재 revision 또는 scope와 충돌했을 때 사용하는 오류입니다. */
-class ShiftCoverageConflict(val code: ShiftCoverageConflictCode, message: String = code.name) : RuntimeException(message)
+class ShiftCoverageConflict(
+    val code: ShiftCoverageConflictCode,
+    message: String = code.name,
+): RuntimeException(message)
 
 enum class ShiftCoverageConflictCode {
     REVISION_CONFLICT,
@@ -25,4 +34,7 @@ enum class PlannerFailureCode {
     REPLAN_TIMEOUT,
 }
 
-class ShiftCoveragePlannerFailure(val code: PlannerFailureCode, message: String = code.name) : RuntimeException(message)
+class ShiftCoveragePlannerFailure(
+    val code: PlannerFailureCode,
+    message: String = code.name,
+): RuntimeException(message)

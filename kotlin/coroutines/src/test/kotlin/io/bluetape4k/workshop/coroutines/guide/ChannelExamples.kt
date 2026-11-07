@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.guide
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -12,7 +13,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
 
@@ -26,7 +26,7 @@ class ChannelExamples {
 
         launch {
             for (x in 1..5) {
-                delay(Random.nextLong(100))
+                delay(timeMillis = Random.nextLong(100))
                 log.debug { "Send value=${x * x}" }
                 channel.send(x * x)
             }
@@ -51,7 +51,7 @@ class ChannelExamples {
 
         launch {
             for (x in 1..5) {
-                delay(Random.nextLong(100))
+                delay(timeMillis = Random.nextLong(100))
                 log.debug { "Send value=${x * x}" }
                 channel.send(x * x)
             }

@@ -2,24 +2,29 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
+import io.bluetape4k.javatimes.inMillis
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverAdmin
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverAssignmentBarrier
+import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverBrokerSummaryWriter
+import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverClientFactory
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverClusterFixture
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverCollector
-import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverClientFactory
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverDeadline
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverEvidence
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverEvidenceWriter
-import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPhase
+import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverGroupState
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPartitionState
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPerformance
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPerformanceWriter
+import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPhase
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverResourceScope
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverTopology
-import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverBrokerSummaryWriter
+import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
+import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
+import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -31,6 +36,11 @@ import kotlin.time.Duration.Companion.seconds
 /** 실제 3-broker KRaft failover evidence이며 method는 의도적으로 직렬 실행합니다. */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class KafkaMultiBrokerFailoverIntegrationTest {
+
+    companion object: KLogging() {
+        @Volatile
+        private var MODULE_DEADLINE: KafkaFailoverDeadline? = null
+    }
 
     @Test
     @Order(1)
@@ -68,7 +78,9 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 val topicConfig = admin.topicConfig(deadline = scenarioDeadline.child(15.seconds))
                 topicConfig["min.insync.replicas"] shouldBeEqualTo KafkaFailoverTopology.MIN_INSYNC_REPLICAS.toString()
                 topicConfig["unclean.leader.election.enable"] shouldBeEqualTo "false"
+
                 val referenceTopicState = topicState.first { it.partition == KafkaFailoverTopology.PARTITION }
+                log.debug { "referenceTopicState=$referenceTopicState" }
                 writer.append(
                     evidence(
                         fixture,
@@ -88,6 +100,8 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 val assignment = barrier.await(scenarioDeadline.child(45.seconds))
                 assignment.partitions.isNotEmpty().shouldBeTrue()
                 val offsetsState = admin.awaitInternalTopic("__consumer_offsets", scenarioDeadline.child(15.seconds))
+                    .onEach { log.debug { "failover partition state=$it" } }
+
                 offsetsState.size shouldBeEqualTo KafkaFailoverTopology.PARTITION_COUNT
                 offsetsState.forEach { state ->
                     state.replicas.size shouldBeEqualTo KafkaFailoverTopology.REPLICATION_FACTOR.toInt()
@@ -145,7 +159,8 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 val recovered = awaitPartition(admin, scenarioDeadline.child(15.seconds)) {
                     it.leader != null && it.leader != stoppedLeader && it.leader in preFault.isr
                 }
-                val leaderRecoveryElapsed = Duration.ofNanos(System.nanoTime() - recoveryStartedAt)
+                log.debug { "recovered=$recovered" }
+                val leaderRecoveryElapsed = (System.nanoTime() - recoveryStartedAt).nanos()
                 check(recovered.leader in preFault.isr && recovered.leader != stoppedLeader) {
                     "recovered leader must be a surviving pre-fault ISR member"
                 }
@@ -158,7 +173,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     ),
                 )
 
-                val suffix = (0 until KafkaFailoverEvidence.DATA_SUFFIX_EVENTS).map { index ->
+                val suffix = List(KafkaFailoverEvidence.DATA_SUFFIX_EVENTS) { index ->
                     KafkaFailoverEvent("data-suffix-$index", (prefix.size + index).toLong(), "data-suffix")
                 }
                 val suffixFutures = suffix.map { producer.send(clients.newProducerRecord(it)) }
@@ -189,6 +204,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     KafkaFailoverTopology.PARTITION,
                     scenarioDeadline.child(30.seconds),
                 ) { it.replicas.contains(stoppedLeader) }
+                log.debug { "replacement=$replacement" }
                 writer.append(
                     evidence(
                         fixture,
@@ -202,6 +218,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     KafkaFailoverTopology.PARTITION,
                     scenarioDeadline.child(30.seconds),
                 ) { it.isr.size == KafkaFailoverTopology.REPLICATION_FACTOR.toInt() }
+                log.debug { "restored=$restored" }
                 restored.isr.size shouldBeEqualTo KafkaFailoverTopology.REPLICATION_FACTOR.toInt()
                 writer.append(
                     evidence(
@@ -245,10 +262,11 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 primaryFailure = error
                 throw error
             } finally {
-                runCatching { scope.close() }
-                    .onFailure { failure ->
-                        if (primaryFailure == null) throw failure else primaryFailure.addSuppressed(failure)
-                    }
+                runCatching {
+                    scope.close()
+                }.onFailure { failure ->
+                    if (primaryFailure == null) throw failure else primaryFailure.addSuppressed(failure)
+                }
             }
         } catch (error: Throwable) {
             primaryFailure = error
@@ -262,20 +280,22 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                             status = "FAIL",
                         ),
                     )
-                }
-                    .onFailure(error::addSuppressed)
+                }.onFailure(error::addSuppressed)
             }
             throw error
         } finally {
             var reportFailure: Throwable? = null
             runCatching {
                 KafkaFailoverBrokerSummaryWriter.write(fixture.runId, fixture.brokerSnapshots())
-            }.onFailure { reportFailure = it }
+            }.onFailure {
+                reportFailure = it
+            }
             val cleanupStartedAt = System.nanoTime()
-            runCatching { fixture.close() }
-                .onFailure { failure ->
-                    if (reportFailure == null) reportFailure = failure else reportFailure.addSuppressed(failure)
-                }
+            runCatching {
+                fixture.close()
+            }.onFailure { failure ->
+                if (reportFailure == null) reportFailure = failure else reportFailure.addSuppressed(failure)
+            }
             val collectorStats = observedCollector?.stats()
             runCatching {
                 performanceWriter.append(
@@ -283,7 +303,8 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                         runId = fixture.runId,
                         scenario = "data-leader-failover",
                         phase = KafkaFailoverPhase.TERMINAL.wireName,
-                        elapsedMs = Duration.ofNanos(System.nanoTime() - scenarioStartedAt).toMillis().coerceAtLeast(0L),
+                        elapsedMs = (System.nanoTime() - scenarioStartedAt).nanos().toMillis()
+                            .coerceAtLeast(0L),
                         deadlineRemainingMs = (scenarioDeadline.remainingNanos() / 1_000_000L).coerceAtLeast(0L),
                         adminRoundTripCount = observedAdmin?.adminRoundTripCount ?: 0,
                         ackCount = acknowledgmentCount,
@@ -358,13 +379,20 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 scope.registerCollector("collector") { collector.stop(scenarioDeadline.child(KafkaFailoverDeadline.CLEANUP_TIMEOUT)) }
                 collector.start(consumer, assignmentBarrier = barrier)
                 barrier.await(scenarioDeadline.child(45.seconds))
+
                 val offsetsState = admin.awaitInternalTopic("__consumer_offsets", scenarioDeadline.child(15.seconds))
+                log.debug { "offsetsState=$offsetsState" }
                 offsetsState.size shouldBeEqualTo KafkaFailoverTopology.PARTITION_COUNT
                 offsetsState.forEach { state ->
                     state.replicas.size shouldBeEqualTo KafkaFailoverTopology.REPLICATION_FACTOR.toInt()
                     state.isr.size shouldBeEqualTo KafkaFailoverTopology.REPLICATION_FACTOR.toInt()
                 }
-                val group = admin.groupState(KafkaFailoverKafkaConfiguration.GROUP_ID, scenarioDeadline.child(15.seconds))
+                val group = admin.groupState(
+                    KafkaFailoverKafkaConfiguration.GROUP_ID,
+                    scenarioDeadline.child(15.seconds)
+                )
+                log.debug { "group=$group" }
+
                 val coordinator = group.coordinator ?: error("group coordinator unavailable")
                 val selected = admin.topicState(deadline = scenarioDeadline.child(15.seconds))
                     .firstOrNull { it.leader != null && it.leader != coordinator }
@@ -383,17 +411,24 @@ class KafkaMultiBrokerFailoverIntegrationTest {
 
                 val producer = clients.producer()
                 scope.registerProducer(producer)
-                val prefix = (0 until KafkaFailoverEvidence.PREFIX_EVENTS).map { index ->
+                val prefix = List(KafkaFailoverEvidence.PREFIX_EVENTS) { index ->
                     KafkaFailoverEvent("coordinator-prefix-$index", index.toLong(), "coordinator-prefix")
                 }
-                val prefixFutures = prefix.map { producer.send(clients.newProducerRecord(it, selected.partition)) }
+                val prefixFutures = prefix.map {
+                    producer.send(clients.newProducerRecord(it, selected.partition))
+                }
                 acknowledgmentCount += clients.awaitBatch(
                     prefixFutures,
                     scenarioDeadline.child(45.seconds),
                     expectedPartition = selected.partition,
                 )
-                val prefixStats = collector.awaitApplied(prefix.size, scenarioDeadline.child(45.seconds))
+                val prefixStats = collector.awaitApplied(
+                    prefix.size,
+                    scenarioDeadline.child(45.seconds)
+                )
+                log.debug { "prefixStats=$prefixStats" }
                 prefixStats.appliedEventIds shouldBeEqualTo prefix.map(KafkaFailoverEvent::eventId).toSet()
+
                 writer.append(
                     evidence(
                         fixture,
@@ -426,18 +461,27 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 // fault 전 AdminClient가 중지된 coordinator를 metadata cache에
                 // 보관할 수 있으므로 살아남은 loopback endpoint에서 observation path를
                 // 다시 bootstrap합니다. producer와 consumer ownership은 유지합니다.
-                val recoveryClients =
-                    KafkaFailoverClientFactory(KafkaFailoverKafkaConfiguration(fixture.bootstrapServers))
+                val recoveryClients = KafkaFailoverClientFactory(
+                    KafkaFailoverKafkaConfiguration(fixture.bootstrapServers)
+                )
                 val recoveryAdminClient = recoveryClients.admin()
                 scope.registerAdmin(recoveryAdminClient, name = "recovery-admin")
+
                 val recoveryAdmin = KafkaFailoverAdmin(recoveryAdminClient)
                 observedRecoveryAdmin = recoveryAdmin
                 collector.requestRebalance()
-                val recoveredGroup = awaitGroup(recoveryAdmin, scenarioDeadline.child(15.seconds), coordinator) {
+
+                val recoveredGroup = awaitGroup(
+                    recoveryAdmin,
+                    scenarioDeadline.child(15.seconds),
+                    coordinator
+                ) {
                     it.coordinator != null && it.coordinator != coordinator && collector.callbackCount > beforeCallbacks
                 }
-                val coordinatorRecoveryElapsed = Duration.ofNanos(System.nanoTime() - recoveryStartedAt)
+                log.debug { "recoveredGroup=$recoveredGroup" }
+                val coordinatorRecoveryElapsed = (System.nanoTime() - recoveryStartedAt).nanos()
                 val recoveredPartition = recoveryAdmin.partitionState(deadline = scenarioDeadline.child(15.seconds))
+                log.debug { "recoveredPartition=$recoveredPartition" }
                 recoveredPartition.leader shouldBeEqualTo selected.leader
                 writer.append(
                     evidence(
@@ -452,7 +496,11 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 )
 
                 val suffix = (0 until KafkaFailoverEvidence.COORDINATOR_SUFFIX_EVENTS).map { index ->
-                    KafkaFailoverEvent("coordinator-suffix-$index", (prefix.size + index).toLong(), "coordinator-suffix")
+                    KafkaFailoverEvent(
+                        "coordinator-suffix-$index",
+                        (prefix.size + index).toLong(),
+                        "coordinator-suffix"
+                    )
                 }
                 val suffixFutures = suffix.map { producer.send(clients.newProducerRecord(it, selected.partition)) }
                 acknowledgmentCount += clients.awaitBatch(
@@ -461,6 +509,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     expectedPartition = selected.partition,
                 )
                 val stats = collector.awaitApplied(prefix.size + suffix.size, scenarioDeadline.child(45.seconds))
+                log.debug { "stats=$stats" }
                 val expectedIds = KafkaFailoverEvidence.exactLogicalIds(
                     prefix.map(KafkaFailoverEvent::eventId),
                     suffix.map(KafkaFailoverEvent::eventId),
@@ -486,6 +535,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     selected.partition,
                     scenarioDeadline.child(30.seconds),
                 ) { it.replicas.contains(coordinator) }
+                log.debug { "replacement=$replacement" }
                 writer.append(
                     evidence(
                         fixture,
@@ -505,6 +555,8 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     selected.partition,
                     scenarioDeadline.child(30.seconds),
                 ) { it.isr.size == KafkaFailoverTopology.REPLICATION_FACTOR.toInt() }
+                log.debug { "restored=$restored" }
+
                 writer.append(
                     evidence(
                         fixture,
@@ -581,12 +633,15 @@ class KafkaMultiBrokerFailoverIntegrationTest {
             var reportFailure: Throwable? = null
             runCatching {
                 KafkaFailoverBrokerSummaryWriter.write(fixture.runId, fixture.brokerSnapshots())
-            }.onFailure { reportFailure = it }
+            }.onFailure {
+                reportFailure = it
+            }
             val cleanupStartedAt = System.nanoTime()
-            runCatching { fixture.close() }
-                .onFailure { failure ->
-                    if (reportFailure == null) reportFailure = failure else reportFailure.addSuppressed(failure)
-                }
+            runCatching {
+                fixture.close()
+            }.onFailure { failure ->
+                if (reportFailure == null) reportFailure = failure else reportFailure.addSuppressed(failure)
+            }
             val collectorStats = observedCollector?.stats()
             runCatching {
                 performanceWriter.append(
@@ -594,10 +649,11 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                         runId = fixture.runId,
                         scenario = "group-coordinator-failover",
                         phase = KafkaFailoverPhase.TERMINAL.wireName,
-                        elapsedMs = Duration.ofNanos(System.nanoTime() - scenarioStartedAt).toMillis().coerceAtLeast(0L),
+                        elapsedMs = (System.nanoTime() - scenarioStartedAt).nanos().toMillis()
+                            .coerceAtLeast(0L),
                         deadlineRemainingMs = (scenarioDeadline.remainingNanos() / 1_000_000L).coerceAtLeast(0L),
                         adminRoundTripCount = (observedAdmin?.adminRoundTripCount ?: 0) +
-                            (observedRecoveryAdmin?.adminRoundTripCount ?: 0),
+                                (observedRecoveryAdmin?.adminRoundTripCount ?: 0),
                         ackCount = acknowledgmentCount,
                         pollCount = observedCollector?.pollCount ?: 0,
                         retryCount = (observedAdmin?.retryCount ?: 0) + (observedRecoveryAdmin?.retryCount ?: 0),
@@ -662,9 +718,9 @@ class KafkaMultiBrokerFailoverIntegrationTest {
         admin: KafkaFailoverAdmin,
         deadline: KafkaFailoverDeadline,
         previousCoordinator: Int,
-        predicate: (io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverGroupState) -> Boolean,
-    ): io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverGroupState {
-        var last: io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverGroupState? = null
+        predicate: (KafkaFailoverGroupState) -> Boolean,
+    ): KafkaFailoverGroupState {
+        var last: KafkaFailoverGroupState? = null
         while (deadline.remainingNanos() > 0L) {
             // 중지된 coordinator 때문에 AdminClient request 하나가 전체 deadline까지
             // blocking될 수 있습니다. 각 observation을 제한해 survivor endpoint를
@@ -681,23 +737,20 @@ class KafkaMultiBrokerFailoverIntegrationTest {
             }
             last = state
             if (state != null && predicate(state)) return state
-            Thread.sleep(minOf(200L, (deadline.remainingNanos() / 1_000_000L).coerceAtLeast(1L)))
+            Thread.sleep(minOf(200L, deadline.remainingNanos().nanos().inMillis().coerceAtLeast(1L)))
         }
         error("group coordinator did not recover from $previousCoordinator; last=$last")
     }
 
     private fun Throwable.isTransientRecoveryFailure(): Boolean =
         this is org.apache.kafka.common.errors.RetriableException ||
-            this is org.apache.kafka.common.errors.DisconnectException ||
-            this is org.apache.kafka.common.errors.TimeoutException ||
-            this is java.util.concurrent.TimeoutException ||
-            cause?.isTransientRecoveryFailure() == true
+                this is org.apache.kafka.common.errors.DisconnectException ||
+                this is org.apache.kafka.common.errors.TimeoutException ||
+                this is java.util.concurrent.TimeoutException ||
+                cause?.isTransientRecoveryFailure() == true
 
     private fun moduleDeadline(): KafkaFailoverDeadline =
-        MODULE_DEADLINE ?: KafkaFailoverDeadline.fromNow(KafkaFailoverDeadline.MODULE_TIMEOUT).also { MODULE_DEADLINE = it }
+        MODULE_DEADLINE ?: KafkaFailoverDeadline.fromNow(KafkaFailoverDeadline.MODULE_TIMEOUT)
+            .also { MODULE_DEADLINE = it }
 
-    companion object {
-        @Volatile
-        private var MODULE_DEADLINE: KafkaFailoverDeadline? = null
-    }
 }

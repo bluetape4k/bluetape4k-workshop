@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.observability
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.micrometer.observation.withObservation
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.observation.ObservationRegistry
@@ -11,6 +12,7 @@ class ShiftCoverageObservations(
     private val observationRegistry: ObservationRegistry,
     private val meterRegistry: MeterRegistry,
 ) {
+
     fun <T> observePlan(block: () -> T): T = withObservation(PLAN_OBSERVATION, observationRegistry) {
         try {
             block().also { recordPlan("success") }
@@ -37,7 +39,7 @@ class ShiftCoverageObservations(
         meterRegistry.counter(name, RESULT_TAG, bounded).increment()
     }
 
-    companion object {
+    companion object: KLogging() {
         const val PLAN_OBSERVATION = "workshop.shift_coverage.plan"
         const val PLAN_COUNTER = "workshop.shift_coverage.plan.attempts"
         const val REPLAN_COUNTER = "workshop.shift_coverage.replan.results"
@@ -47,7 +49,16 @@ class ShiftCoverageObservations(
         const val OUTBOX_COUNTER = "workshop.shift_coverage.outbox.results"
         private const val RESULT_TAG = "result"
         private val ALLOWED_RESULTS = setOf(
-            "success", "failure", "accepted", "rejected", "conflict", "duplicate", "stale", "retry", "dead_letter", "other",
+            "success",
+            "failure",
+            "accepted",
+            "rejected",
+            "conflict",
+            "duplicate",
+            "stale",
+            "retry",
+            "dead_letter",
+            "other",
         )
     }
 }

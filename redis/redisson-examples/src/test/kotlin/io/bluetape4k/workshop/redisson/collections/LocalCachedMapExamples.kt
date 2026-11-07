@@ -6,6 +6,8 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.cache.localCachedMap
@@ -16,7 +18,6 @@ import org.redisson.api.RLocalCachedMap
 import org.redisson.api.RMap
 import org.redisson.api.options.LocalCachedMapOptions
 import org.redisson.codec.CompositeCodec
-import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -42,12 +43,13 @@ private val doubleCodec = CompositeCodec(
  * Redisson의 `addAndGetAsync`는 Redis hash field에 `HINCRBYFLOAT`를 실행하므로,
  * Int와 Double map을 섞지 않고 각 타입에 맞는 value codec을 사용해야 합니다.
  */
-class LocalCachedMapExamples : AbstractRedissonTest() {
+class LocalCachedMapExamples: AbstractRedissonTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
-    fun `simple local cached map`() = runSuspendIO(timeout = 60.seconds) {
+    fun `simple local cached map`() = runSuspendIO {
+        
         // Local cache 설정
         val cachedMapName = "local:${Base58.randomString(8)}"
         val cachedMap: RLocalCachedMap<String, Int> = localCachedMap(cachedMapName, redisson) {
@@ -56,8 +58,8 @@ class LocalCachedMapExamples : AbstractRedissonTest() {
             maxIdle(10.seconds.toJavaDuration())
             timeToLive(60.seconds.toJavaDuration())
             retryAttempts(3)
-            retryDelay { attempt -> Duration.ofMillis(attempt * 10L + 10) }
-            timeout(Duration.ofSeconds(10))
+            retryDelay { attempt -> (attempt * 10L + 10).millis() }
+            timeout(10.seconds())
             codec(intCodec)
         }
 
@@ -103,7 +105,7 @@ class LocalCachedMapExamples : AbstractRedissonTest() {
     }
 
     @Test
-    fun `empty Int key is initialized by addAndGetAsync`() = runSuspendIO(timeout = 60.seconds) {
+    fun `empty Int key is initialized by addAndGetAsync`() = runSuspendIO {
         val name = randomName()
         val cachedMap: RLocalCachedMap<String, Int> = redisson.getLocalCachedMap(
             LocalCachedMapOptions.name<String, Int>(name).codec(intCodec)
@@ -119,7 +121,7 @@ class LocalCachedMapExamples : AbstractRedissonTest() {
     }
 
     @Test
-    fun `empty Double key is initialized by HINCRBYFLOAT`() = runSuspendIO(timeout = 60.seconds) {
+    fun `empty Double key is initialized by HINCRBYFLOAT`() = runSuspendIO {
         val name = randomName()
         val cachedMap: RLocalCachedMap<String, Double> = redisson.getLocalCachedMap(
             LocalCachedMapOptions.name<String, Double>(name).codec(doubleCodec)

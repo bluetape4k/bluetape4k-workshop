@@ -5,17 +5,21 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.junit5.coroutines.runSuspendTest
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Test
 
 class DeviceSubjectBridgeTest {
+
+    companion object: KLoggingChannel()
 
     private fun bridge(replayHistorySize: Int = 8): DeviceSubjectBridge = DeviceSubjectBridge(
         initialState = DeviceState("device-01", DeviceStatus.OFFLINE, "boot"),
@@ -24,7 +28,7 @@ class DeviceSubjectBridgeTest {
     )
 
     @Test
-    fun `bridge subject bounds must be positive`() = runSuspendTest {
+    fun `bridge subject bounds must be positive`() = runTest {
         assertFailsWith<IllegalArgumentException> {
             DeviceSubjectBridge(
                 initialState = DeviceState("device-01", DeviceStatus.OFFLINE, "boot"),
@@ -40,7 +44,7 @@ class DeviceSubjectBridgeTest {
     }
 
     @Test
-    fun `publish subject delivers only events emitted after subscription`() = runSuspendTest {
+    fun `publish subject delivers only events emitted after subscription`() = runTest {
         val bridge = bridge()
         val activeEvent = DeviceEvent("event-02", "device-01", DeviceEventType.TELEMETRY, "temperature=22")
         val received = mutableListOf<DeviceEvent>()
@@ -48,7 +52,7 @@ class DeviceSubjectBridgeTest {
         bridge.publishEvent(DeviceEvent("event-01", "device-01", DeviceEventType.CONNECTED, "early"))
 
         val job = launch {
-            bridge.events.take(1).toList(received)
+            bridge.events.log("Events").take(1).toList(received)
         }
         bridge.awaitEventSubscribers()
 
@@ -59,7 +63,7 @@ class DeviceSubjectBridgeTest {
     }
 
     @Test
-    fun `behavior subject sends latest state to late subscribers`() = runSuspendTest {
+    fun `behavior subject sends latest state to late subscribers`() = runTest {
         val bridge = bridge()
         val latest = DeviceState("device-01", DeviceStatus.ONLINE, "event-10")
 
@@ -67,11 +71,11 @@ class DeviceSubjectBridgeTest {
         bridge.updateState(latest)
 
         bridge.currentState shouldBeEqualTo latest
-        bridge.latestState.take(1).toList() shouldBeEqualTo listOf(latest)
+        bridge.latestState.log("LatestState").take(1).toList() shouldBeEqualTo listOf(latest)
     }
 
     @Test
-    fun `replay subject keeps bounded event history for late subscribers`() = runSuspendTest {
+    fun `replay subject keeps bounded event history for late subscribers`() = runTest {
         val bridge = bridge(replayHistorySize = 2)
         val first = DeviceEvent("event-01", "device-01", DeviceEventType.CONNECTED, "online")
         val second = DeviceEvent("event-02", "device-01", DeviceEventType.TELEMETRY, "battery=90")
@@ -81,11 +85,11 @@ class DeviceSubjectBridgeTest {
         bridge.publishEvent(second)
         bridge.publishEvent(third)
 
-        bridge.history.take(2).toList() shouldBeEqualTo listOf(second, third)
+        bridge.history.log("History").take(2).toList() shouldBeEqualTo listOf(second, third)
     }
 
     @Test
-    fun `multicast subject waits for two subscribers and delivers the same event`() = runSuspendTest {
+    fun `multicast subject waits for two subscribers and delivers the same event`() = runTest {
         val bridge = bridge()
         val event = DeviceEvent("event-20", "device-02", DeviceEventType.FAULT, "fan-stalled")
         val first = mutableListOf<DeviceEvent>()
@@ -104,7 +108,7 @@ class DeviceSubjectBridgeTest {
     }
 
     @Test
-    fun `unicast work subject lets one consumer drain queued work`() = runSuspendTest {
+    fun `unicast work subject lets one consumer drain queued work`() = runTest {
         val bridge = bridge()
         val work = listOf(
             WorkItem("work-01", "device-01", "refresh-shadow"),
@@ -115,23 +119,23 @@ class DeviceSubjectBridgeTest {
         work.forEach { bridge.enqueueWork(it) }
         bridge.completeWorkQueue()
 
-        val firstBatch = bridge.workItems.take(2).toList()
-        val secondBatch = bridge.workItems.toList()
+        val firstBatch = bridge.workItems.log("WorkItems").take(2).toList()
+        val secondBatch = bridge.workItems.log("WorkItems").toList()
 
         firstBatch shouldBeEqualTo work.take(2)
         secondBatch shouldBeEqualTo work.drop(2)
     }
 
     @Test
-    fun `unicast work subject rejects simultaneous collectors`() = runSuspendTest {
+    fun `unicast work subject rejects simultaneous collectors`() = runTest {
         val bridge = bridge()
         val first = async(start = CoroutineStart.UNDISPATCHED) {
-            bridge.workItems.toList()
+            bridge.workItems.log("WorkItems").toList()
         }
         bridge.awaitWorkSubscriber()
 
         val failure = assertFailsWith<IllegalStateException> {
-            bridge.workItems.take(1).toList()
+            bridge.workItems.log("WorkItems").take(1).toList()
         }
         failure.message.shouldNotBeNull()
         bridge.completeWorkQueue()
@@ -139,7 +143,7 @@ class DeviceSubjectBridgeTest {
     }
 
     @Test
-    fun `event stream propagates terminal errors to late collectors`() = runSuspendTest {
+    fun `event stream propagates terminal errors to late collectors`() = runTest {
         val bridge = bridge()
         val boom = IllegalStateException("callback failed")
 
@@ -152,22 +156,23 @@ class DeviceSubjectBridgeTest {
     }
 
     @Test
-    fun `work queue null error does not terminate the queue`() = runSuspendTest {
+    fun `work queue null error does not terminate the queue`() = runTest {
         val bridge = bridge()
         val work = WorkItem("work-null-01", "device-01", "continue-after-null-error")
 
         bridge.failWorkQueue(null)
         bridge.enqueueWork(work)
 
-        bridge.workItems.take(1).toList() shouldBeEqualTo listOf(work)
+        bridge.workItems.log("WorkItems").take(1).toList() shouldBeEqualTo listOf(work)
     }
 
     @Test
-    fun `work queue drains queued items before error termination`() = runSuspendTest {
+    fun `work queue drains queued items before error termination`() = runTest {
         val bridge = bridge()
         val work = WorkItem("work-99", "device-99", "quarantine")
         val collector = async {
             bridge.workItems
+                .log("WorkItems")
                 .catch { it shouldBeInstanceOf RuntimeException::class }
                 .toList()
         }
@@ -182,11 +187,11 @@ class DeviceSubjectBridgeTest {
     }
 
     @Test
-    fun `normal completion closes event subscribers`() = runSuspendTest {
+    fun `normal completion closes event subscribers`() = runTest {
         val bridge = bridge()
         val result = mutableListOf<DeviceEvent>()
         val job = launch {
-            bridge.events.toList(result)
+            bridge.events.log("Events").toList(result)
         }
         bridge.awaitEventSubscribers()
         yield()

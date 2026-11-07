@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.optimization.fieldservice.planner
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.javatimes.days
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AvailabilityWindow
 import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
@@ -12,14 +15,17 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.Visit
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VisitId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Worker
 import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerId
+import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.Instant
-import org.junit.jupiter.api.Test
 
 class PlannerComplexityContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `max envelope stays within candidate and matrix lookup bounds`() {
-        val coordinateIds = (0 until FieldServiceLimits.MAX_COORDINATES).map { CoordinateId("c-$it") }
+        val coordinateIds = List(FieldServiceLimits.MAX_COORDINATES) { CoordinateId("c-$it") }
         val matrix = TravelTimeMatrix(
             revision = 1,
             coordinateIds = coordinateIds.toSet(),
@@ -32,9 +38,9 @@ class PlannerComplexityContractTest {
             },
         )
         val start = Instant.parse("2026-08-20T00:00:00Z")
-        val end = start.plus(Duration.ofDays(1))
+        val end = start + 1.days()
         val skill = Skill("skill")
-        val workers = (0 until FieldServiceLimits.MAX_WORKERS).map { index ->
+        val workers = List(FieldServiceLimits.MAX_WORKERS) { index ->
             Worker(
                 workerId = WorkerId("worker-$index"),
                 name = "Synthetic worker-$index",
@@ -43,7 +49,7 @@ class PlannerComplexityContractTest {
                 homeCoordinateId = coordinateIds[index],
             )
         }
-        val visits = (0 until FieldServiceLimits.MAX_VISITS).map { index ->
+        val visits = List(FieldServiceLimits.MAX_VISITS) { index ->
             Visit(
                 visitId = VisitId("visit-$index"),
                 coordinateId = coordinateIds[index % coordinateIds.size],
@@ -54,10 +60,20 @@ class PlannerComplexityContractTest {
             )
         }
 
-        val result = DeterministicFieldServicePlanner().planWithMetrics(
-            PlannerInput(workers, visits, matrix, DatasetId("dataset"), PlanId("plan"), planRevision = 1, requestGeneration = 1),
-        )
+        val result = DeterministicFieldServicePlanner()
+            .planWithMetrics(
+                PlannerInput(
+                    workers,
+                    visits,
+                    matrix,
+                    DatasetId("dataset"),
+                    PlanId("plan"),
+                    planRevision = 1,
+                    requestGeneration = 1
+                ),
+            )
 
+        log.debug { "result=$result" }
         result.metrics.candidateEvaluations shouldBeLessOrEqualTo FieldServiceLimits.MAX_VISITS * FieldServiceLimits.MAX_WORKERS
         result.metrics.matrixLookups shouldBeLessOrEqualTo FieldServiceLimits.MAX_VISITS * FieldServiceLimits.MAX_WORKERS + FieldServiceLimits.MAX_SPARSE_EDGES
         result.metrics.externalCalls shouldBeEqualTo 0

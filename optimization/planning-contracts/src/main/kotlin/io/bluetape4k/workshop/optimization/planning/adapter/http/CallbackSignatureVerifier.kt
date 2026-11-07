@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.adapter.http
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -18,6 +19,12 @@ internal class FakeCallbackSignatureVerifier: CallbackSignatureVerifier {
 internal class HmacSha256CallbackSignatureVerifier(
     secret: String,
 ): CallbackSignatureVerifier {
+
+    companion object: KLogging() {
+        private const val HMAC_SHA_256 = "HmacSHA256"
+        private const val SHA_256_HEX_LENGTH = 64
+    }
+
     private val secretKey = SecretKeySpec(
         secret.toByteArray(StandardCharsets.UTF_8),
         HMAC_SHA_256,
@@ -33,6 +40,7 @@ internal class HmacSha256CallbackSignatureVerifier(
             ?.takeIf { it.length == SHA_256_HEX_LENGTH }
             ?.hexToByteArrayOrNull()
             ?: return false
+
         val mac = Mac.getInstance(HMAC_SHA_256)
         mac.init(secretKey)
         return MessageDigest.isEqual(mac.doFinal(rawBody), supplied)
@@ -42,8 +50,5 @@ internal class HmacSha256CallbackSignatureVerifier(
         ByteArray(length / 2) { index -> substring(index * 2, index * 2 + 2).toInt(16).toByte() }
     }.getOrNull()
 
-    companion object {
-        private const val HMAC_SHA_256 = "HmacSHA256"
-        private const val SHA_256_HEX_LENGTH = 64
-    }
+
 }

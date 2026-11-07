@@ -17,7 +17,7 @@ import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.cache.caffeine.AbstractCaffeineCacheApplicationTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.CacheManager
@@ -113,7 +113,7 @@ class CountryRepositoryTest(
         codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @Test
     fun `get random countries in virtual threads`() {
         val codeMap = ConcurrentHashMap<String, Country>()

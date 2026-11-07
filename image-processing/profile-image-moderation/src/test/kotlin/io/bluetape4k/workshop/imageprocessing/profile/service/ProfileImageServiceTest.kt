@@ -2,18 +2,28 @@ package io.bluetape4k.workshop.imageprocessing.profile.service
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.assertions.shouldEndWith
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
 import io.bluetape4k.images.analysis.ImageMetadataReadResult
 import io.bluetape4k.images.analysis.readImageMetadataReportStrict
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProfileImageStatus
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockMultipartFile
 import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 class ProfileImageServiceTest {
+
+    companion object: KLogging()
 
     @Test
     fun upload_returns_pending_before_moderation_completes() = runSuspendIO {
@@ -22,9 +32,10 @@ class ProfileImageServiceTest {
 
         val response = fixture.service.upload("user-1", file)
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo ProfileImageStatus.PENDING_MODERATION
         response.effectiveUrl shouldBeEqualTo response.pendingUrl
-        response.effectiveUrl.endsWith("/pending/blurred.jpg") shouldBeEqualTo true
+        response.effectiveUrl shouldEndWith "/pending/blurred.jpg"
         fixture.storage.uploads.map { it.key.fullKey } shouldBeEqualTo listOf(
             "profile-images/user-1/upload-a/private/original/safe.jpg",
             "profile-images/user-1/upload-a/pending/blurred.jpg",
@@ -37,35 +48,46 @@ class ProfileImageServiceTest {
         val fixture = ProfileImageServiceFixture()
         val original = fixture.sampleJpeg()
 
-        fixture.service.upload("user-1", MockMultipartFile("file", "safe.jpg", "image/jpeg", original))
+        fixture.service.upload(
+            "user-1",
+            MockMultipartFile("file", "safe.jpg", "image/jpeg", original)
+        )
 
-        fixture.storage.uploads.first().bytes.contentEquals(original) shouldBeEqualTo true
-        fixture.storage.uploads.drop(1).forEach { upload ->
-            val report = readImageMetadataReportStrict(
-                upload.bytes,
-                ImageMetadataReadOptions(stripSensitiveMetadata = false),
-            ) as ImageMetadataReadResult.Success
-            report.report.containsGps shouldBeEqualTo false
-            report.report.containsExif shouldBeEqualTo false
-            report.report.containsXmp shouldBeEqualTo false
-            report.report.containsIptc shouldBeEqualTo false
-            report.report.containsIccProfile shouldBeEqualTo false
-        }
+        fixture.storage.uploads.first().bytes shouldContentEqual original
+        fixture.storage.uploads.drop(1)
+            .forEach { upload ->
+                val report = readImageMetadataReportStrict(
+                    upload.bytes,
+                    ImageMetadataReadOptions(stripSensitiveMetadata = false),
+                )
+                report.shouldBeInstanceOf<ImageMetadataReadResult.Success>()
+                log.debug { "report=${report.report}" }
+                report.report.containsGps.shouldBeFalse()
+                report.report.containsExif.shouldBeFalse()
+                report.report.containsXmp.shouldBeFalse()
+                report.report.containsIptc.shouldBeFalse()
+                report.report.containsIccProfile.shouldBeFalse()
+            }
     }
 
     @Test
     fun approved_completion_switches_effective_url() = runSuspendIO {
         val fixture = ProfileImageServiceFixture()
-        fixture.service.upload("user-1", MockMultipartFile("file", "safe.jpg", "image/jpeg", fixture.sampleJpeg()))
+        fixture.service.upload(
+            "user-1",
+            MockMultipartFile("file", "safe.jpg", "image/jpeg", fixture.sampleJpeg())
+        )
         awaitModerationRequest(fixture)
 
         fixture.provider.complete(ModerationDecision.APPROVED, "ok")
         awaitStatus(fixture, ProfileImageStatus.APPROVED)
+
         val view = fixture.service.find("user-1")
 
+        log.debug { "view=$view" }
         view.status shouldBeEqualTo ProfileImageStatus.APPROVED
-        view.effectiveUrl.endsWith("/public/approved.jpg") shouldBeEqualTo true
-        view.pendingUrl shouldBeEqualTo null
+        view.effectiveUrl shouldEndWith "/public/approved.jpg"
+        view.pendingUrl.shouldBeNull()
     }
 
     @Test
@@ -78,6 +100,7 @@ class ProfileImageServiceTest {
         awaitStatus(fixture, ProfileImageStatus.REJECTED)
         val view = fixture.service.find("user-1")
 
+        log.debug { "view=$view" }
         view.status shouldBeEqualTo ProfileImageStatus.REJECTED
         view.effectiveUrl shouldBeEqualTo view.defaultImageUrl
         view.reason shouldBeEqualTo "unsafe"
@@ -92,7 +115,7 @@ class ProfileImageServiceTest {
         awaitModerationRequest(fixture, 2)
 
         fixture.provider.complete(ModerationDecision.APPROVED, "older ok")
-        delay(50)
+        delay(50.milliseconds)
         fixture.service.find("user-1").status shouldBeEqualTo ProfileImageStatus.PENDING_MODERATION
         fixture.service.find("user-1").uploadId shouldBeEqualTo "upload-b"
 
@@ -111,6 +134,7 @@ class ProfileImageServiceTest {
         awaitStatus(fixture, ProfileImageStatus.MODERATION_FAILED)
         val view = fixture.service.find("user-1")
 
+        log.debug { "view=$view" }
         view.effectiveUrl shouldBeEqualTo view.defaultImageUrl
         view.reason shouldBeEqualTo "provider down"
     }
@@ -136,6 +160,7 @@ class ProfileImageServiceTest {
             fixture.service.upload("user-1", file)
         }
 
+        log.debug { "storage=$storage" }
         storage.uploads.map { it.key.fullKey } shouldBeEqualTo listOf("profile-images/user-1/upload-a/private/original/safe.jpg")
         storage.deletes.map { it.fullKey } shouldBeEqualTo listOf("profile-images/user-1/upload-a/private/original/safe.jpg")
         fixture.service.find("user-1").status shouldBeEqualTo ProfileImageStatus.NO_IMAGE
@@ -147,15 +172,19 @@ class ProfileImageServiceTest {
 
         val view = fixture.service.find("missing")
 
+        log.debug { "view=$view" }
         view.status shouldBeEqualTo ProfileImageStatus.NO_IMAGE
         view.effectiveUrl shouldBeEqualTo view.defaultImageUrl
-        view.uploadId shouldBeEqualTo null
+        view.uploadId.shouldBeNull()
     }
 
     @Test
     fun private_original_keys_are_not_publicly_resolvable() {
         val fixture = ProfileImageServiceFixture()
-        val resolver = ProfileImageUrlResolver(fixture.properties, io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties())
+        val resolver = ProfileImageUrlResolver(
+            fixture.properties,
+            io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties()
+        )
         val keys = ProfileImageKeyFactory().keys("user-1", "upload-a", "safe.jpg")
 
         assertFailsWith<IllegalArgumentException> {
@@ -166,7 +195,10 @@ class ProfileImageServiceTest {
     @Test
     fun moderation_timeout_becomes_failed_state() = runSuspendIO {
         val fixture = ProfileImageServiceFixture(properties = testProperties(moderationTimeout = Duration.ofMillis(30)))
-        fixture.service.upload("user-1", MockMultipartFile("file", "safe.jpg", "image/jpeg", fixture.sampleJpeg()))
+        fixture.service.upload(
+            "user-1",
+            MockMultipartFile("file", "safe.jpg", "image/jpeg", fixture.sampleJpeg())
+        )
 
         awaitStatus(fixture, ProfileImageStatus.MODERATION_FAILED, attempts = 20)
 
@@ -176,7 +208,7 @@ class ProfileImageServiceTest {
     private suspend fun awaitModerationRequest(fixture: ProfileImageServiceFixture, count: Int = 1) {
         repeat(20) {
             if (fixture.provider.requests.size >= count) return
-            delay(25)
+            delay(25.milliseconds)
         }
         fixture.provider.requests.size shouldBeEqualTo count
     }
@@ -188,7 +220,7 @@ class ProfileImageServiceTest {
     ) {
         repeat(attempts) {
             if (fixture.service.find("user-1").status == status) return
-            delay(25)
+            delay(25.milliseconds)
         }
         fixture.service.find("user-1").status shouldBeEqualTo status
     }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.order.repository
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.ProductDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.mapper.toProductDTO
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProductRepository {
+
+    companion object: KLogging()
 
     fun findAll(): List<ProductDTO> =
         ProductTable.selectAll().map { it.toProductDTO() }
@@ -36,7 +39,14 @@ class ProductRepository {
             it[price] = req.price
             it[stock] = req.stock
         }[ProductTable.id]
-        return findById(id) ?: throw NoSuchElementException("Product $id not found after insert")
+
+        return ProductDTO(
+            id = id,
+            name = req.name,
+            price = req.price,
+            stock = req.stock,
+        )
+        // return findById(id) ?: throw NoSuchElementException("Product $id not found after insert")
     }
 
     fun decrementStock(id: Long, quantity: Int) {

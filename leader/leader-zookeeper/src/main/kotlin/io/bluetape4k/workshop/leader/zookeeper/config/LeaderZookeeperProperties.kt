@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.zookeeper.config
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
@@ -30,15 +31,15 @@ import java.time.Duration
 data class LeaderZookeeperProperties(
     val zookeeper: ZooKeeperConfig = ZooKeeperConfig(),
     val basePath: String = "/workshop/leader-zookeeper",
-    val waitTime: Duration = Duration.ofSeconds(2),
+    val waitTime: Duration = 2.seconds(),
     val groupMaxLeaders: Int = 2,
     val jobFixedDelay: String = "PT10S",
     val suspendJobFixedDelay: String = "PT12S",
     val groupJobFixedDelay: String = "PT15S",
     val suspendGroupJobFixedDelay: String = "PT18S",
     // 참고: R16에 따라 ZooKeeper에는 TTL이 없으므로 leaseTime / autoExtend를 의도적으로 두지 않는다.
-) : Serializable {
-    companion object : KLogging() {
+): Serializable {
+    companion object: KLogging() {
         private const val serialVersionUID = 1L
     }
 
@@ -61,7 +62,7 @@ data class LeaderZookeeperProperties(
         val sessionTimeoutMs: Int = 60_000,
         val connectionTimeoutMs: Int = 15_000,
         val blockUntilConnectedSeconds: Long = 10,
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }

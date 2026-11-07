@@ -8,16 +8,16 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.text.search.NormalizationForm
-import io.bluetape4k.text.search.RedactionPolicy as CoreRedactionPolicy
-import io.bluetape4k.text.search.RedactionRule as CoreRedactionRule
-import io.bluetape4k.text.search.RedactionSpan as CoreRedactionSpan
 import io.bluetape4k.text.search.TextRedactor
 import io.bluetape4k.workshop.text.detection.LanguageDetectionService
 import io.bluetape4k.workshop.text.normalize.TextNormalizer
 import java.io.Serializable
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import io.bluetape4k.text.search.RedactionPolicy as CoreRedactionPolicy
+import io.bluetape4k.text.search.RedactionRule as CoreRedactionRule
+import io.bluetape4k.text.search.RedactionSpan as CoreRedactionSpan
 
 /**
  * 민감 text span 을 가리키는 half-open source range 입니다.
@@ -160,7 +160,7 @@ class SensitiveRedactionPolicy private constructor(
 
     override fun toString(): String =
         "SensitiveRedactionPolicy(ruleCount=${rules.size}, maskChar=<redacted>, " +
-            "maxTextLength=$maxTextLength, keywordNormalization=$keywordNormalization)"
+                "maxTextLength=$maxTextLength, keywordNormalization=$keywordNormalization)"
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -277,7 +277,7 @@ data class SensitiveRedactionResult internal constructor(
 
     override fun toString(): String =
         "SensitiveRedactionResult(length=${redactedText.length}, matchCount=$matchCount, " +
-            "detectedLanguage=$detectedLanguage, normalizedLength=$normalizedLength)"
+                "detectedLanguage=$detectedLanguage, normalizedLength=$normalizedLength)"
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -311,7 +311,7 @@ class SensitiveTextRedactionPipeline private constructor(
 
         log.debug {
             "redact length=${text.length} normalizedLength=${normalized.length} " +
-                "matches=${spans.size} language=${languageMetadata.detectedLanguage}"
+                    "matches=${spans.size} language=${languageMetadata.detectedLanguage}"
         }
 
         return SensitiveRedactionResult(
@@ -357,7 +357,7 @@ internal enum class SensitiveRedactionRuleKind {
 private data class LanguageMetadata(
     val detectedLanguage: Language?,
     val bestConfidence: Double?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -377,5 +377,6 @@ private val NESTED_UNBOUNDED_QUANTIFIER_PATTERN = Regex("""\([^)]*[+*][^)]*\)[+*
 private val UNBOUNDED_DOT_STAR_PATTERN = Regex("""(?<!\\)\.\*""")
 private val EMAIL_LIKE_PATTERN = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
 private val PHONE_LIKE_PATTERN = Regex("""\d{3}[-.\s]?\d{3}[-.\s]?\d{4}""")
-private val TOKEN_LIKE_PATTERN = Regex("""(?:token=|api_key=|Bearer\s+|[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})""")
+private val TOKEN_LIKE_PATTERN =
+    Regex("""(?:token=|api_key=|Bearer\s+|[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})""")
 private val CUSTOMER_TICKET_PATTERN = Regex("""(?:customer|ticket)-?\d{4,}""")

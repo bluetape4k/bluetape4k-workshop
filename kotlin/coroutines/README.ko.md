@@ -62,7 +62,7 @@ launch(Dispatchers.IO) {
 
 ```kotlin
 val function: suspend () -> String = suspend {
-    delay(1000)
+    delay(1.seconds)
     "UserName"
 }
 
@@ -77,7 +77,7 @@ function.asFlow()
 class MyBean: SpringCoroutineScope by SpringCoroutineScope() {
     suspend fun run(input: Int) =
         withContext(coroutineContext) {
-            delay(1000)
+            delay(1.seconds)
             input
         }
 }

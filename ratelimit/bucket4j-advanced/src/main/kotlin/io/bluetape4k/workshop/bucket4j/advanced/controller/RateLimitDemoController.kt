@@ -21,7 +21,7 @@ import java.time.Instant
 @RestController
 class RateLimitDemoController {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * 익명 endpoint입니다. IP 기반 rate limiting만 적용합니다.

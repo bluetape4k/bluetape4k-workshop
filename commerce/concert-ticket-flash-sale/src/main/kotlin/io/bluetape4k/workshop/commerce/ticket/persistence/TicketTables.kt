@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
-import io.bluetape4k.spring.data.exposed.jdbc.annotation.ExposedEntity
+import io.bluetape4k.spring.data.exposed.common.annotation.ExposedEntity
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.dao.LongEntityClass
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
-import java.util.UUID
+import java.util.*
 
 object TicketSales : UUIDTable("ticket_sales", "sale_id") {
     val state = varchar("state", 24)

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.imageprocessing.profile.web
 
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.logging.KLogging
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -20,13 +21,20 @@ class PublicProfileImageController(
     private val storage: ImageStorage,
 ) {
 
+    private companion object: KLogging()
+
     @GetMapping("/{*path}")
     suspend fun get(@PathVariable path: String): ResponseEntity<ByteArray> {
         val normalized = path.trimStart('/')
         if (!isPublicProfileImagePath(normalized)) {
             return ResponseEntity.notFound().build()
         }
-        val bytes = storage.download(ImageObjectKey.of(normalized.substringBeforeLast('/'), normalized.substringAfterLast('/')))
+        val bytes = storage.download(
+            ImageObjectKey(
+                normalized.substringBeforeLast('/'),
+                normalized.substringAfterLast('/')
+            )
+        )
         val builder = ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG)
         if (normalized.contains("/pending/")) {
             builder.cacheControl(CacheControl.noStore())
@@ -37,5 +45,5 @@ class PublicProfileImageController(
 
     private fun isPublicProfileImagePath(path: String): Boolean =
         path.startsWith("profile-images/") && !path.contains("/private/") &&
-            (path.contains("/pending/") || path.contains("/public/") || path == "profile-images/default/default-profile.jpg")
+                (path.contains("/pending/") || path.contains("/public/") || path == "profile-images/default/default-profile.jpg")
 }

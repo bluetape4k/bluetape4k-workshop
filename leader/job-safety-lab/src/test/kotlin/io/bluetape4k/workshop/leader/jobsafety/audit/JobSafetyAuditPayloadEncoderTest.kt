@@ -2,30 +2,35 @@ package io.bluetape4k.workshop.leader.jobsafety.audit
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LeaderElectionEvent
 import io.bluetape4k.leader.LockIdentity
 import io.bluetape4k.leader.audit.LeaderAuditExportEvent
 import io.bluetape4k.leader.audit.LeaderAuditExportOptions
 import io.bluetape4k.leader.audit.LeaderAuditValueSanitizer
-import io.bluetape4k.leader.history.LeaderHistoryStatus
-import io.bluetape4k.leader.history.LeaderLockHistoryRecord
-import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.leader.audit.http.HttpLeaderAuditExporter
 import io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions
 import io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder
 import io.bluetape4k.leader.audit.http.LeaderAuditTrustedHttpsEndpoint
+import io.bluetape4k.leader.history.LeaderHistoryStatus
+import io.bluetape4k.leader.history.LeaderLockHistoryRecord
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
-import java.time.Instant
 import java.net.URI
-import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.Executors
 import kotlin.time.Duration.Companion.seconds
 
 internal class JobSafetyAuditPayloadEncoderTest {
+
+    companion object: KLogging()
 
     @Test
     fun `encoded history payload contains only bounded non-sensitive fields`() {
@@ -35,21 +40,25 @@ internal class JobSafetyAuditPayloadEncoderTest {
             .encode(event)
             .body()
         val tree = Jackson.defaultJsonMapper.readTree(body)
+        log.debug { "tree=$tree" }
 
-        tree.toString().contains("redis-token-secret").shouldBeFalse()
-        tree.toString().contains("customer-42").shouldBeFalse()
-        tree.toString().contains("tenant-42").shouldBeFalse()
-        tree.toString().contains("raw stack detail").shouldBeFalse()
-        tree.toString().contains("lockName").shouldBeFalse()
-        tree.toString().contains("nodeId").shouldBeFalse()
-        tree.toString().contains("slotId").shouldBeFalse()
-        tree.toString().contains("errorMessage").shouldBeFalse()
-        tree.path("occurredAt").asText() shouldBeEqualTo "2026-08-30T00:00:01Z"
-        tree.path("kind").asText() shouldBeEqualTo "SINGLE"
-        tree.path("status").asText() shouldBeEqualTo "FAILED"
+
+        tree.toString().let {
+            it shouldNotContain "redis-token-secret"
+            it shouldNotContain "customer-42"
+            it shouldNotContain "tenant-42"
+            it shouldNotContain "raw stack detail"
+            it shouldNotContain "lockName"
+            it shouldNotContain "nodeId"
+            it shouldNotContain "slotId"
+            it shouldNotContain "errorMessage"
+        }
+        tree.path("occurredAt").asString() shouldBeEqualTo "2026-08-30T00:00:01Z"
+        tree.path("kind").asString() shouldBeEqualTo "SINGLE"
+        tree.path("status").asString() shouldBeEqualTo "FAILED"
         tree.path("durationMs").asLong() shouldBeEqualTo 42L
-        tree.path("errorType").asText() shouldBeEqualTo "redacted"
-        tree.path("attributes").path("redacted").asText() shouldBeEqualTo "redacted"
+        tree.path("errorType").asString() shouldBeEqualTo "redacted"
+        tree.path("attributes").path("redacted").asString() shouldBeEqualTo "redacted"
     }
 
     @Test
@@ -66,21 +75,27 @@ internal class JobSafetyAuditPayloadEncoderTest {
 
         val body = JobSafetyAuditPayloadEncoder(64 * 1024).encode(event).body()
         val text = body.decodeToString()
-        val tree = Jackson.defaultJsonMapper.readTree(body)
 
-        text.contains("customer-42").shouldBeFalse()
-        text.contains("node-secret").shouldBeFalse()
-        text.contains("tenant-42").shouldBeFalse()
-        text.contains("lockName").shouldBeFalse()
-        text.contains("leaderId").shouldBeFalse()
-        tree.path("outcome").asText() shouldBeEqualTo "ELECTED"
-        tree.path("leaseExpiry").asText() shouldBeEqualTo "2026-08-30T00:01:00Z"
+        log.debug { "text=$text" }
+        text shouldNotContain "customer-42"
+        text shouldNotContain "node-secret"
+        text shouldNotContain "tenant-42"
+        text shouldNotContain "lockName"
+        text shouldNotContain "leaderId"
+
+        val tree = Jackson.defaultJsonMapper.readTree(body)
+        tree.path("outcome").asString() shouldBeEqualTo "ELECTED"
+        tree.path("leaseExpiry").asString() shouldBeEqualTo "2026-08-30T00:01:00Z"
     }
 
     @Test
     fun `encoder rejects invalid and oversized configured payload bounds`() {
-        assertFailsWith<IllegalArgumentException> { JobSafetyAuditPayloadEncoder(0) }
-        assertFailsWith<IllegalArgumentException> { JobSafetyAuditPayloadEncoder(1024 * 1024 + 1) }
+        assertFailsWith<IllegalArgumentException> {
+            JobSafetyAuditPayloadEncoder(0)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            JobSafetyAuditPayloadEncoder(1024 * 1024 + 1)
+        }
         assertFailsWith<IllegalArgumentException> {
             JobSafetyAuditPayloadEncoder(1).encode(historyEvent())
         }
@@ -97,8 +112,7 @@ internal class JobSafetyAuditPayloadEncoderTest {
         val returnedBody = returned.body()
         returnedBody[0] = '{'.code.toByte()
 
-        store.snapshot().single().decodeToString() shouldBeEqualTo
-            delegate.encode(event).body().decodeToString()
+        store.snapshot().single().decodeToString() shouldBeEqualTo delegate.encode(event).body().decodeToString()
         store.retainedBytes shouldBeEqualTo store.snapshot().single().size.toLong()
     }
 
@@ -113,6 +127,7 @@ internal class JobSafetyAuditPayloadEncoderTest {
         val memoryScheduler = Executors.newSingleThreadScheduledExecutor()
         val httpsScheduler = Executors.newSingleThreadScheduledExecutor()
         val event = historyEvent()
+
         val memoryExporter = HttpLeaderAuditExporter(
             client = memoryClient,
             endpoint = LeaderAuditTrustedHttpsEndpoint.trusted(URI("https://audit.example.test/memory")),
@@ -133,20 +148,21 @@ internal class JobSafetyAuditPayloadEncoderTest {
         try {
             memoryExporter.submit(event)
             httpsExporter.submit(event)
-            memoryClient.awaitRequestCount(1, Duration.ofSeconds(2))
-            httpsClient.awaitRequestCount(1, Duration.ofSeconds(2))
-            await
-                .atMost(5.seconds)
-                .untilAsserted {
-                    memoryExporter.snapshot().admitted shouldBeEqualTo 0
-                    httpsExporter.snapshot().admitted shouldBeEqualTo 0
-                }
+            memoryClient.awaitRequestCount(1, 2.seconds())
+            httpsClient.awaitRequestCount(1, 2.seconds())
+
+            await atMost 5.seconds untilAsserted {
+                memoryExporter.snapshot().admitted shouldBeEqualTo 0
+                httpsExporter.snapshot().admitted shouldBeEqualTo 0
+            }
 
             val memoryBody = memoryStore.snapshot().single().decodeToString()
             val httpsBody = httpsStore.snapshot().single().decodeToString()
+
+            log.debug { "memoryBody=$memoryBody" }
             memoryBody shouldBeEqualTo httpsBody
-            memoryBody.contains("redis-token-secret").shouldBeFalse()
-            memoryBody.contains("customer-42").shouldBeFalse()
+            memoryBody shouldNotContain "redis-token-secret"
+            memoryBody shouldNotContain "customer-42"
             memoryStore.retainedBytes shouldBeEqualTo httpsStore.retainedBytes
         } finally {
             memoryExporter.close()
@@ -170,9 +186,9 @@ internal class JobSafetyAuditPayloadEncoderTest {
         queueCapacity = 4,
         maxInFlight = 1,
         maxAttempts = 1,
-        attemptTimeout = Duration.ofSeconds(1),
-        initialBackoff = Duration.ofMillis(1),
-        maxBackoff = Duration.ofSeconds(1),
+        attemptTimeout = 1.seconds(),
+        initialBackoff = 1.millis(),
+        maxBackoff = 1.seconds(),
         executor = executor,
         scheduler = scheduler,
     )

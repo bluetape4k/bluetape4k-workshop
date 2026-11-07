@@ -2,16 +2,22 @@ package io.bluetape4k.workshop.leader.jobsafety.effect
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExternalEffectResult
+import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyDatabaseFixture
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.time.Instant
 
 internal class OutboxEffectWorkerTest {
+
+    companion object: KLogging() {
+        private const val PROVIDER = "deterministic-provider"
+    }
+
     @Test
     fun `unknown provider response is reconciled with the original operation id`() {
         JobSafetyDatabaseFixture().use { fixture ->
@@ -28,7 +34,9 @@ internal class OutboxEffectWorkerTest {
             worker.reconcileNext() shouldBeEqualTo EffectWorkResult.CONFIRMED
             provider.executeCount(operationId) shouldBeEqualTo 1
             provider.applicationCount(operationId) shouldBeEqualTo 1
-            repositories.effectReceipt.find(PROVIDER, operationId)?.result shouldBeEqualTo ExternalEffectResult.CONFIRMED
+
+            repositories.effectReceipt.find(PROVIDER, operationId)
+                ?.result shouldBeEqualTo ExternalEffectResult.CONFIRMED
         }
     }
 
@@ -38,12 +46,11 @@ internal class OutboxEffectWorkerTest {
             val operationId = OperationId("effect-outside-transaction")
             fixture.seedOutbox(operationId)
             val repositories = JobSafetyRepositories(fixture.executor)
-            val provider =
-                DeterministicExternalEffectAdapter(
-                    beforeExecute = {
-                        repositories.outbox.find(operationId)?.state shouldBeEqualTo EffectDeliveryState.CLAIMED
-                    },
-                )
+            val provider = DeterministicExternalEffectAdapter(
+                beforeExecute = {
+                    repositories.outbox.find(operationId)?.state shouldBeEqualTo EffectDeliveryState.CLAIMED
+                },
+            )
             val worker = OutboxEffectWorker(repositories.outbox, repositories.effectReceipt, provider)
 
             worker.deliverNext() shouldBeEqualTo EffectWorkResult.CONFIRMED
@@ -56,17 +63,17 @@ internal class OutboxEffectWorkerTest {
             val operationId = OperationId("effect-expired-claim")
             val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
             fixture.seedOutbox(operationId, claimedAt)
+
             val repositories = JobSafetyRepositories(fixture.executor)
             val provider = DeterministicExternalEffectAdapter()
             provider.script(operationId, DeterministicEffect.APPLIED_BUT_TIMEOUT)
 
-            repositories.outbox
-                .claimNext(
-                    state = EffectDeliveryState.PENDING,
-                    now = claimedAt,
-                    claimTimeout = Duration.ofSeconds(5),
-                ).shouldNotBeNull()
-                .operationId shouldBeEqualTo operationId
+            repositories.outbox.claimNext(
+                state = EffectDeliveryState.PENDING,
+                now = claimedAt,
+                claimTimeout = 5.seconds(),
+            ).shouldNotBeNull().operationId shouldBeEqualTo operationId
+
             provider.execute(operationId)
 
             val restartedWorker =
@@ -74,18 +81,15 @@ internal class OutboxEffectWorkerTest {
                     outbox = repositories.outbox,
                     receipts = repositories.effectReceipt,
                     provider = provider,
-                    claimTimeout = Duration.ofSeconds(5),
-                    clock = { claimedAt.plusSeconds(6) },
+                    claimTimeout = 5.seconds(),
+                    clock = { claimedAt + 6.seconds() },
                 )
 
             restartedWorker.reconcileNext() shouldBeEqualTo EffectWorkResult.CONFIRMED
+
             provider.executeCount(operationId) shouldBeEqualTo 1
             provider.applicationCount(operationId) shouldBeEqualTo 1
             repositories.effectReceipt.count(PROVIDER, operationId) shouldBeEqualTo 1L
         }
-    }
-
-    companion object {
-        private const val PROVIDER = "deterministic-provider"
     }
 }

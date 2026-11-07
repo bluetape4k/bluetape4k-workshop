@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.lastmile.domain
 
+import io.bluetape4k.support.toUtf8Bytes
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Instant
@@ -37,9 +38,15 @@ data class LastMileEvent(
 }
 
 object LastMileEventCanonicalizer {
-    fun canonicalize(type: LastMileEventType, aggregateId: String, eventKey: String, payload: Map<String, String>): String {
+    fun canonicalize(
+        type: LastMileEventType,
+        aggregateId: String,
+        eventKey: String,
+        payload: Map<String, String>,
+    ): String {
         require(aggregateId.isNotBlank()) { "aggregate id must not be blank" }
         require(eventKey.matches(Regex("[A-Za-z0-9._:-]{1,96}"))) { "event key must be bounded" }
+
         return buildString {
             append(type.name)
             append('|')
@@ -67,5 +74,5 @@ object LastMileEventCanonicalizer {
 }
 
 private fun sha256(value: String): String = MessageDigest.getInstance("SHA-256")
-    .digest(value.toByteArray(StandardCharsets.UTF_8))
+    .digest(value.toUtf8Bytes())
     .joinToString("") { "%02x".format(it) }

@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.imageprocessing.advanced.persistence.mapper
 
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectDTO
-import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectKind
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageProcessingEventDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageProcessingJobDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageAssetTable

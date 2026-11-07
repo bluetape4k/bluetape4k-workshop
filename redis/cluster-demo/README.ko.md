@@ -18,14 +18,14 @@
 
 ## 핵심 구성 요소
 
-| 클래스 / 파일 | 역할 |
-|---------------|------|
-| `RedisClusterApplication.kt` | Spring Boot 진입점입니다. `RedisClusterServer.Launcher.redisCluster` singleton을 시작합니다 |
-| `NumberService.kt` | `clusterConnection`을 통해 byte 직렬화된 숫자를 저장하고 조회합니다 |
-| `AbstractRedisClusterTest.kt` | `@SpringBootTest` + `KLoggingChannel` + `Fakers`를 포함하는 공통 기반입니다 |
-| `BasicUsageTest.kt` | 기본 key-value CRUD cluster 테스트입니다 |
-| `NumberServiceTest.kt` | `multiplyAndSave` / `get` 서비스 레이어 테스트입니다 |
-| `application.yml` | Cluster node list + Lettuce adaptive refresh 설정입니다 |
+| 클래스 / 파일                 | 역할                                                                                        |
+|-------------------------------|---------------------------------------------------------------------------------------------|
+| `RedisClusterApplication.kt`  | Spring Boot 진입점입니다. `RedisClusterServer.Launcher.redisCluster` singleton을 시작합니다 |
+| `NumberService.kt`            | `clusterConnection`을 통해 byte 직렬화된 숫자를 저장하고 조회합니다                         |
+| `AbstractRedisClusterTest.kt` | `@SpringBootTest` + `KLoggingChannel` + `Fakers`를 포함하는 공통 기반입니다                 |
+| `BasicUsageTest.kt`           | 기본 key-value CRUD cluster 테스트입니다                                                    |
+| `NumberServiceTest.kt`        | `multiplyAndSave` / `get` 서비스 레이어 테스트입니다                                        |
+| `application.yml`             | Cluster node list + Lettuce adaptive refresh 설정입니다                                     |
 
 ## application.yml 설정 예제
 
@@ -48,14 +48,14 @@ spring:
 
 ## 사용한 bluetape4k 기능
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
-|---|---|---|---|
-| `RedisClusterServer.Launcher.redisCluster` | `bluetape4k-testcontainers` | `RedisClusterApplication` companion | 6개 노드(3 masters + 3 replicas)를 자동으로 시작하고 중지하는 Testcontainers Redis Cluster singleton입니다 |
-| `Launcher.LettuceLib.clientResources(redisCluster)` | `bluetape4k-testcontainers` | `RedisClusterApplication.lettuceClientResource()` | 컨테이너 포트에 맞는 Lettuce `ClientResources`를 한 번에 생성합니다 |
-| `LettuceClients` / `LettuceIntCodec` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce` | `Bluetape4kLettuceUsageTest` | 32-bit/64-bit typed codec과 low-level Redis 경로의 coroutine-friendly async wait를 검증합니다 |
-| `KLoggingChannel` | `bluetape4k-logging` | `RedisClusterApplication` companion, `NumberService` companion, `AbstractRedisClusterTest` companion | coroutine MDC context를 포함한 구조화 로깅을 제공합니다 |
-| `Fakers.faker` / `Fakers.fixedString` | `bluetape4k-junit5` | `AbstractRedisClusterTest` | 재현 가능한 random key와 value를 생성합니다 |
-| `bluetape4k-core` — `toByteArray()` / `toInt()` | `bluetape4k-core` | `NumberService` | binary cluster command에서 사용하는 Int-to-ByteArray 변환 유틸리티입니다 |
+| 기능                                                                            | 아티팩트                    | 코드 위치                                                                                            | 이점                                                                                                       |
+|---------------------------------------------------------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `RedisClusterServer.Launcher.redisCluster`                                      | `bluetape4k-testcontainers` | `RedisClusterApplication` companion                                                                  | 6개 노드(3 masters + 3 replicas)를 자동으로 시작하고 중지하는 Testcontainers Redis Cluster singleton입니다 |
+| `Launcher.LettuceLib.clientResources(redisCluster)`                             | `bluetape4k-testcontainers` | `RedisClusterApplication.lettuceClientResource()`                                                    | 컨테이너 포트에 맞는 Lettuce `ClientResources`를 한 번에 생성합니다                                        |
+| `LettuceClients` / `LettuceIntCodec` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce`        | `Bluetape4kLettuceUsageTest`                                                                         | 32-bit/64-bit typed codec과 low-level Redis 경로의 coroutine-friendly async wait를 검증합니다              |
+| `KLoggingChannel`                                                               | `bluetape4k-logging`        | `RedisClusterApplication` companion, `NumberService` companion, `AbstractRedisClusterTest` companion | coroutine MDC context를 포함한 구조화 로깅을 제공합니다                                                    |
+| `Fakers.faker` / `Fakers.fixedString`                                           | `bluetape4k-junit5`         | `AbstractRedisClusterTest`                                                                           | 재현 가능한 random key와 value를 생성합니다                                                                |
+| `bluetape4k-core` — `toByteArray()` / `toInt()`                                 | `bluetape4k-core`           | `NumberService`                                                                                      | binary cluster command에서 사용하는 Int-to-ByteArray 변환 유틸리티입니다                                   |
 
 ## bluetape4k Before / After
 
@@ -115,8 +115,7 @@ companion object: KLoggingChannel() {
 
 ## NumberService 동작 방식
 
-`NumberService`는 `StringRedisTemplate`에서 `clusterConnection`을 직접 열어 숫자를 binary serialization으로 저장합니다.
-hash slot은 key(숫자의 byte array)에 따라 자동으로 결정되며, 값은 cluster의 master node 중 하나로 분산됩니다.
+`NumberService`는 `StringRedisTemplate`에서 `clusterConnection`을 직접 열어 숫자를 binary serialization으로 저장합니다. hash slot은 key(숫자의 byte array)에 따라 자동으로 결정되며, 값은 cluster의 master node 중 하나로 분산됩니다.
 
 ```kotlin
 fun multiplyAndSave(number: Int) {
@@ -133,17 +132,15 @@ Spring Data Redis `clusterConnection`은 Redis Cluster 동작을 입증하는 �
 
 ## Cluster Slot 분산
 
-| Master Node | Slot Range | Replica |
-|-------------|-----------|---------|
-| Master 1 | 0-5460 | Replica 1 |
-| Master 2 | 5461-10922 | Replica 2 |
-| Master 3 | 10923-16383 | Replica 3 |
+| Master Node | Slot Range  | Replica   |
+|-------------|-------------|-----------|
+| Master 1    | 0-5460      | Replica 1 |
+| Master 2    | 5461-10922  | Replica 2 |
+| Master 3    | 10923-16383 | Replica 3 |
 
 ## 운영 참고 사항
 
-- **Mac AirPlay 포트 충돌**: Redis Cluster는 기본적으로 7000-7005 포트를 사용합니다.
-  macOS에서 AirPlay Receiver 모드가 켜져 있으면 7000 포트가 충돌할 수 있습니다.
-  시스템 설정에서 AirPlay Receiver를 끈 뒤 다시 시도하세요.
+- **Mac AirPlay 포트 충돌**: Redis Cluster는 기본적으로 7000-7005 포트를 사용합니다. macOS에서 AirPlay Receiver 모드가 켜져 있으면 7000 포트가 충돌할 수 있습니다. 시스템 설정에서 AirPlay Receiver를 끈 뒤 다시 시도하세요.
 - **Lettuce adaptive refresh**: `adaptive: true`가 없으면 노드 장애 시 cluster topology가 자동 갱신되지 않으므로 연결이 끊길 수 있습니다.
 - **Testcontainers 사전 요구 사항**: Docker가 실행 중이어야 합니다. `RedisClusterServer.Launcher.redisCluster`는 처음 접근할 때 컨테이너를 시작하고 JVM 종료 시 자동으로 정리합니다.
 

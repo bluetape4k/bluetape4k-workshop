@@ -17,7 +17,7 @@ data class ErrorResponse(
     val status: Int,
     val code: String,
     val message: String,
-) : Serializable {
+): Serializable {
     companion object {
         const val serialVersionUID = 1L
     }
@@ -26,7 +26,7 @@ data class ErrorResponse(
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @ExceptionHandler(NoSuchElementException::class)
     fun handleNotFound(e: NoSuchElementException): ResponseEntity<ErrorResponse> {
@@ -69,10 +69,10 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ExecutionException::class, CompletionException::class)
     fun handleWrapped(e: Exception): ResponseEntity<ErrorResponse> {
         return when (val cause = e.cause ?: e) {
-            is NoSuchElementException -> handleNotFound(cause)
+            is NoSuchElementException   -> handleNotFound(cause)
             is InsufficientStockException -> handleInsufficientStock(cause)
             is IllegalArgumentException -> handleBadRequest(cause)
-            else -> handleGeneral(cause as Exception)
+            else                        -> handleGeneral(cause as Exception)
         }
     }
 

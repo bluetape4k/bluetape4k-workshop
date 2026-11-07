@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.graph.recommendation
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldContainAll
 import io.bluetape4k.assertions.shouldHaveSize
@@ -10,6 +10,9 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphSuspendOperations
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.graph.recommendation.model.FollowRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.ProductRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_FOLLOWED
@@ -26,7 +29,6 @@ import io.bluetape4k.workshop.graph.recommendation.seed.USER_DAVE
 import io.bluetape4k.workshop.graph.recommendation.seed.USER_EVE
 import io.bluetape4k.workshop.graph.recommendation.seed.seedRecommendation
 import io.bluetape4k.workshop.graph.recommendation.service.RecommendationSuspendService
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -63,6 +65,8 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRecommendationSuspendTest {
 
+    companion object: KLoggingChannel()
+
     protected abstract val graphName: String
     protected abstract val ops: GraphSuspendOperations
     protected abstract val service: RecommendationSuspendService
@@ -83,6 +87,7 @@ abstract class AbstractRecommendationSuspendTest {
     fun `addUser creates User vertex with correct properties`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
 
+        log.debug { "alice=$alice" }
         alice.label shouldBeEqualTo "User"
         alice.properties[UserLabel.userId.name] shouldBeEqualTo USER_ALICE
         alice.properties[UserLabel.name.name] shouldBeEqualTo "Alice"
@@ -94,12 +99,14 @@ abstract class AbstractRecommendationSuspendTest {
         val second = service.addUser(USER_ALICE, "Alice")
 
         first.id shouldBeEqualTo second.id
+        first shouldBeEqualTo second
     }
 
     @Test
     fun `addProduct creates Product vertex with correct properties`() = runSuspendIO {
         val laptop = service.addProduct("laptop", "Laptop", category = "Electronics")
 
+        log.debug { "laptop=$laptop" }
         laptop.label shouldBeEqualTo "Product"
         laptop.properties["productId"] shouldBeEqualTo "laptop"
         laptop.properties["name"] shouldBeEqualTo "Laptop"
@@ -112,6 +119,7 @@ abstract class AbstractRecommendationSuspendTest {
         val second = service.addProduct("laptop", "Laptop")
 
         first.id shouldBeEqualTo second.id
+        first shouldBeEqualTo second
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -268,6 +276,7 @@ abstract class AbstractRecommendationSuspendTest {
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id)
 
+        log.debug { "edge=$edge" }
         edge.label shouldBeEqualTo PurchasedLabel.label
         edge.startId shouldBeEqualTo alice.id
         edge.endId shouldBeEqualTo laptop.id
@@ -279,6 +288,7 @@ abstract class AbstractRecommendationSuspendTest {
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id, rating = 5)
 
+        log.debug { "edge=$edge" }
         edge.properties[PurchasedLabel.rating.name] shouldBeEqualTo "5"
     }
 
@@ -288,6 +298,7 @@ abstract class AbstractRecommendationSuspendTest {
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id, purchasedAt = "2024-01-15")
 
+        log.debug { "edge=$edge" }
         edge.properties[PurchasedLabel.purchasedAt.name] shouldBeEqualTo "2024-01-15"
     }
 
@@ -297,6 +308,7 @@ abstract class AbstractRecommendationSuspendTest {
         val bob = service.addUser(USER_BOB, "Bob")
         val edge = service.follow(alice.id, bob.id)
 
+        log.debug { "edge=$edge" }
         edge.startId shouldBeEqualTo alice.id
         edge.endId shouldBeEqualTo bob.id
     }
@@ -310,9 +322,11 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
-
+            .onEach { log.debug { "recommendation=$it" } }
         results.shouldNotBeEmpty()
+
         val headphones = results.first { it.product.properties["productId"] == PROD_HEADPHONES }
+        log.debug { "headphones=$headphones" }
         headphones.score shouldBeEqualTo 3
     }
 
@@ -321,6 +335,7 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results.first().product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
     }
@@ -330,7 +345,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
+
         val productIds = results.map { it.product.properties["productId"]?.toString() }
+            .onEach { log.debug { "productId=$it" } }
 
         // headphones(3) > keyboard(1) = mouse(1); tie-break는 사전순으로 keyboard < mouse입니다.
         productIds shouldBeEqualTo listOf(PROD_HEADPHONES, PROD_KEYBOARD, PROD_MOUSE)
@@ -341,7 +359,8 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
-        val productIds = results.map { it.product.id }
+            .onEach { log.debug { "recommendation=$it" } }
+        val productIds = results.map { it.product.id }.onEach { log.debug { "productId=$it" } }
 
         productIds shouldNotContain seed.laptop.id
         productIds shouldNotContain seed.phone.id
@@ -353,6 +372,7 @@ abstract class AbstractRecommendationSuspendTest {
         val isolated = service.addUser("isolated", "Isolated User")
 
         val results = service.recommendProducts(isolated.id)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results.shouldBeEmpty()
     }
@@ -362,6 +382,7 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id, limit = 1)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results shouldHaveSize 1
         results.first().product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
@@ -372,11 +393,13 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.explainProductRecommendations(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results.map { it.recommendation.product.properties["productId"]?.toString() } shouldBeEqualTo
                 listOf(PROD_HEADPHONES, PROD_KEYBOARD, PROD_MOUSE)
 
         val headphones = results.first { it.recommendation.product.id == seed.headphones.id }
+        log.debug { "headphones=$headphones" }
         headphones.recommendation.score shouldBeEqualTo 3
         headphones.evidencePaths shouldHaveSize 3
         headphones.evidencePaths.map { it.sharedProduct.id }.toSet() shouldBeEqualTo
@@ -398,6 +421,7 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.explainProductRecommendations(seed.alice.id, limit = 1)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results shouldHaveSize 1
         results.first().recommendation.product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
@@ -413,7 +437,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
+
         val userIds = results.map { it.person.properties[UserLabel.userId.name] as? String }
+            .onEach { log.debug { "userId=$it" } }
 
         userIds shouldContain USER_DAVE
         userIds shouldContain USER_EVE
@@ -424,7 +451,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
+
         val userIds = results.map { it.person.properties[UserLabel.userId.name] as? String }
+            .onEach { log.debug { "userId=$it" } }
 
         // dave(1) = eve(1); tie-break는 사전순으로 dave < eve입니다.
         userIds shouldBeEqualTo listOf(USER_DAVE, USER_EVE)
@@ -435,7 +465,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
+
         val personIds = results.map { it.person.id }
+            .onEach { log.debug { "personId=$it" } }
 
         personIds shouldNotContain seed.alice.id
     }
@@ -445,7 +478,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
+
         val personIds = results.map { it.person.id }
+            .onEach { log.debug { "personId=$it" } }
 
         // alice는 bob과 carol을 follow하므로 추천에 나타나면 안 됩니다.
         personIds shouldNotContain seed.bob.id
@@ -457,6 +493,7 @@ abstract class AbstractRecommendationSuspendTest {
         val isolated = service.addUser("isolated", "Isolated User")
 
         val results = service.recommendFollows(isolated.id)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results.shouldBeEmpty()
     }
@@ -466,9 +503,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id, limit = 1)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results shouldHaveSize 1
-        results.first().person.properties[UserLabel.userId.name] shouldBeEqualTo USER_DAVE
+        results.single().person.properties[UserLabel.userId.name] shouldBeEqualTo USER_DAVE
     }
 
     @Test
@@ -476,6 +514,7 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
 
         results shouldHaveSize 2
         results.forEach { rec ->
@@ -488,8 +527,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
-        val daveRec = results.first { it.person.properties[UserLabel.userId.name] == USER_DAVE }
+            .onEach { log.debug { "recommendation=$it" } }
 
+        val daveRec = results.first { it.person.properties[UserLabel.userId.name] == USER_DAVE }
+        log.debug { "daveRec=$daveRec" }
         daveRec.mutualFollows.map { it.id } shouldContain seed.bob.id
     }
 
@@ -498,8 +539,10 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
-        val eveRec = results.first { it.person.properties[UserLabel.userId.name] == USER_EVE }
+            .onEach { log.debug { "recommendation=$it" } }
 
+        val eveRec = results.first { it.person.properties[UserLabel.userId.name] == USER_EVE }
+        log.debug { "eveRec=$eveRec" }
         eveRec.mutualFollows.map { it.id } shouldContain seed.carol.id
     }
 
@@ -508,39 +551,53 @@ abstract class AbstractRecommendationSuspendTest {
         val seed = seedRecommendation(service)
 
         val results = service.explainFollowRecommendations(seed.alice.id)
+            .onEach { log.debug { "recommendation=$it" } }
         val userIds = results.map { it.recommendation.person.properties[UserLabel.userId.name] as? String }
+            .onEach { log.debug { "userId=$it" } }
 
         userIds shouldBeEqualTo listOf(USER_DAVE, USER_EVE)
 
         val dave = results.first { it.recommendation.person.id == seed.dave.id }
+        log.debug { "dave=$dave" }
         dave.recommendation.mutualFollowCount shouldBeEqualTo 1
         dave.evidencePaths.map { it.intermediary.id } shouldContain seed.bob.id
         dave.evidencePaths.map { it.candidate.id }.toSet() shouldBeEqualTo setOf(seed.dave.id)
 
         val eve = results.first { it.recommendation.person.id == seed.eve.id }
+        log.debug { "eve=$eve" }
         eve.recommendation.mutualFollowCount shouldBeEqualTo 1
         eve.evidencePaths.map { it.intermediary.id } shouldContain seed.carol.id
         eve.evidencePaths.map { it.candidate.id }.toSet() shouldBeEqualTo setOf(seed.eve.id)
 
         val exclusions = dave.excludedCandidates.associate { it.candidateId to it.reason }
+            .onEach { log.debug { "exclusions=$it" } }
+
         exclusions.keys shouldContainAll listOf(seed.bob.id, seed.carol.id)
         exclusions[seed.bob.id] shouldBeEqualTo ALREADY_FOLLOWED
         exclusions[seed.carol.id] shouldBeEqualTo ALREADY_FOLLOWED
     }
 
     @Test
-    fun `explainFollowRecommendations records self exclusion when depth two traversal returns seed user`() = runSuspendIO {
-        val seed = seedRecommendation(service)
-        service.follow(seed.bob.id, seed.alice.id)
+    fun `explainFollowRecommendations records self exclusion when depth two traversal returns seed user`() =
+        runSuspendIO {
+            val seed = seedRecommendation(service)
+            service.follow(seed.bob.id, seed.alice.id)
 
-        val results = service.explainFollowRecommendations(seed.alice.id)
-        val resultIds = results.map { it.recommendation.person.id }
+            val results = service.explainFollowRecommendations(seed.alice.id)
+                .onEach { log.debug { "recommendation=$it" } }
 
-        resultIds shouldNotContain seed.alice.id
-        val selfExclusions = results.flatMap { it.excludedCandidates }
-            .filter { it.candidateId == seed.alice.id }
-        selfExclusions.shouldNotBeEmpty()
-        selfExclusions.map { it.reason }.toSet() shouldBeEqualTo setOf(SELF)
-        selfExclusions.map { it.via?.id }.toSet() shouldBeEqualTo setOf(seed.bob.id)
-    }
+            val resultIds = results.map { it.recommendation.person.id }
+                .onEach { log.debug { "resultId=$it" } }
+
+            resultIds shouldNotContain seed.alice.id
+
+            val selfExclusions = results
+                .flatMap { it.excludedCandidates }
+                .filter { it.candidateId == seed.alice.id }
+                .onEach { log.debug { "selfExclusions=$it" } }
+
+            selfExclusions.shouldNotBeEmpty()
+            selfExclusions.map { it.reason }.toSet() shouldBeEqualTo setOf(SELF)
+            selfExclusions.map { it.via?.id }.toSet() shouldBeEqualTo setOf(seed.bob.id)
+        }
 }

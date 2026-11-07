@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.operations.jobconsole.idempotency
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
@@ -10,6 +11,8 @@ import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import org.junit.jupiter.api.Test
 
 class JobSubmissionCanonicalizerTest {
+
+    companion object: KLogging()
 
     private val canonicalizer = JobSubmissionCanonicalizer()
     private val scope = DemoCallerScope(tenantId = "tenant-a", submitterHash = "submitter-a")

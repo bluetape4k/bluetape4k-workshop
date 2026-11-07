@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.optimization.clinicappointment.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.clinicappointment.domain.ClinicAppointmentProposal
+import io.bluetape4k.workshop.optimization.clinicappointment.domain.ClinicAppointmentSnapshot
 import io.bluetape4k.workshop.optimization.clinicappointment.fixture.ClinicAppointmentFixtures
 import io.bluetape4k.workshop.optimization.clinicappointment.solver.ClinicAppointmentSolverPort
 import org.junit.jupiter.api.Test
@@ -14,9 +17,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 class ClinicAppointmentDemoControllerTest {
+
+    companion object: KLogging()
+
     private val controller = ClinicAppointmentDemoController(
-        object : ClinicAppointmentSolverPort {
-            override fun solve(input: io.bluetape4k.workshop.optimization.clinicappointment.domain.ClinicAppointmentSnapshot): ClinicAppointmentProposal =
+        object: ClinicAppointmentSolverPort {
+            override fun solve(input: ClinicAppointmentSnapshot): ClinicAppointmentProposal =
                 ClinicAppointmentProposal(
                     assignments = emptyList(),
                     hardScore = 0,
@@ -35,7 +41,10 @@ class ClinicAppointmentDemoControllerTest {
             .andExpect(content().json("""{"feasible":true,"hardScore":0,"softScore":0,"assignments":[],"unassignedReasons":{}}"""))
             .andReturn()
 
-        result.response.contentAsString.contains("patient").shouldBeFalse()
+        val responseBody = result.response.contentAsString
+        log.debug { "response=$responseBody" }
+        responseBody shouldNotContain "patient"
+
     }
 
     @Test

@@ -20,7 +20,7 @@ data class LeaderScenario(
     val backendId: String,
     val kind: LeaderScenarioKind,
     val jobName: String = "report-sync",
-) : Serializable {
+): Serializable {
 
     init {
         backendId.requireNotBlank("backendId")

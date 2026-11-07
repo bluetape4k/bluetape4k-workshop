@@ -1,20 +1,22 @@
 package io.bluetape4k.workshop.optimization.warehouseallocation.application
 
-import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PlanProposal
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.DatasetId
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PlanId
+import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PlanProposal
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationErrorCode
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationException
-import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationNextAction
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationLimits
+import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationNextAction
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationPlannerInput
 import io.bluetape4k.workshop.optimization.warehouseallocation.persistence.WarehouseAllocationRepository
 import io.bluetape4k.workshop.optimization.warehouseallocation.planner.WarehouseAllocationPlanner
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Service
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.*
 import java.util.concurrent.Semaphore
+import java.util.concurrent.atomic.AtomicInteger
 
 internal data class WarehouseAllocationPlanCommandResult(
     val operationKey: String,
@@ -24,13 +26,16 @@ internal data class WarehouseAllocationPlanCommandResult(
 )
 
 internal class WarehouseAllocationPlannerAdmission(
-    private val runningLimit: Int = io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationLimits.MAX_PLANNER_RUNNING,
-    private val waitingLimit: Int = io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationLimits.MAX_PLANNER_WAITING,
+    private val runningLimit: Int = WarehouseAllocationLimits.MAX_PLANNER_RUNNING,
+    private val waitingLimit: Int = WarehouseAllocationLimits.MAX_PLANNER_WAITING,
 ) {
+
+    companion object: KLogging()
+
     private val permits = Semaphore(runningLimit, true)
     private val waiting = AtomicInteger()
 
-    fun <T> execute(block: () -> T): T {
+    inline fun <T> execute(block: () -> T): T {
         if (!permits.tryAcquire()) {
             val queued = waiting.incrementAndGet()
             if (queued > waitingLimit) {
@@ -49,7 +54,11 @@ internal class WarehouseAllocationPlannerAdmission(
                 waiting.decrementAndGet()
             }
         }
-        return try { block() } finally { permits.release() }
+        return try {
+            block()
+        } finally {
+            permits.release()
+        }
     }
 }
 
@@ -58,13 +67,26 @@ internal class WarehouseAllocationCommandService(
     private val repository: WarehouseAllocationRepository,
     private val planner: WarehouseAllocationPlanner,
 ) {
+
+    companion object: KLogging()
+
     private val admission = WarehouseAllocationPlannerAdmission()
 
-    fun createPlan(input: WarehouseAllocationPlannerInput, requestId: String, operationKey: String = "op-${UUID.randomUUID()}"): WarehouseAllocationPlanCommandResult {
+    fun createPlan(
+        input: WarehouseAllocationPlannerInput,
+        requestId: String,
+        operationKey: String = "op-${UUID.randomUUID()}",
+    ): WarehouseAllocationPlanCommandResult {
         val output = admission.execute { planner.plan(input) }
-        org.jetbrains.exposed.v1.jdbc.transactions.transaction {
+        transaction {
             repository.savePlan(output.proposal)
-            repository.enqueueOutbox(operationKey, "plan-created", "warehouse-allocation:${input.datasetId}", output.proposal.planRevision, "{\"planId\":\"${output.proposal.planId}\"}")
+            repository.enqueueOutbox(
+                operationKey,
+                "plan-created",
+                "warehouse-allocation:${input.datasetId}",
+                output.proposal.planRevision,
+                "{\"planId\":\"${output.proposal.planId}\"}"
+            )
         }
         return WarehouseAllocationPlanCommandResult(operationKey, requestId, output.proposal)
     }
@@ -88,6 +110,7 @@ internal class WarehouseAllocationCommandService(
                 waves.maxOfOrNull { it.revision } ?: 0,
                 pins.maxOfOrNull { it.pinRevision } ?: 0,
             ).maxOrNull() ?: 0
+
             WarehouseAllocationPlannerInput(
                 datasetId = DatasetId(datasetId),
                 datasetVersion = datasetVersion,
@@ -101,6 +124,8 @@ internal class WarehouseAllocationCommandService(
                 seed = seed,
             )
         }
+
+        log.debug { "snapshot=$snapshot" }
         return createPlan(snapshot, requestId, operationKey)
     }
 }

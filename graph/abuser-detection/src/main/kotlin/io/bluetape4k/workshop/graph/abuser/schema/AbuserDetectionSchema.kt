@@ -14,7 +14,8 @@ import io.bluetape4k.graph.schema.VertexLabel
  * - `userId` — 안정적인 사용자 식별자입니다(불투명 문자열, 예: UUID).
  * - `country` — ISO-3166-1 alpha-2 국가 코드입니다.
  */
-object UserLabel : VertexLabel("User") {
+object UserLabel: VertexLabel("User") {
+    private fun readResolve(): Any = UserLabel
     val userId = string("userId")
     val country = string("country")
 }
@@ -26,7 +27,8 @@ object UserLabel : VertexLabel("User") {
  * - `deviceId` — 고유 디바이스 fingerprint입니다(불투명 문자열).
  * - `platform` — OS/platform 문자열입니다. 예: `"android"`, `"ios"`, `"web"`.
  */
-object DeviceLabel : VertexLabel("Device") {
+object DeviceLabel: VertexLabel("Device") {
+    private fun readResolve(): Any = DeviceLabel
     val deviceId = string("deviceId")
     val platform = string("platform")
 }
@@ -37,7 +39,8 @@ object DeviceLabel : VertexLabel("Device") {
  * ## 속성
  * - `ip` — IPv4 또는 IPv6 주소 문자열입니다.
  */
-object IpAddressLabel : VertexLabel("IpAddress") {
+object IpAddressLabel: VertexLabel("IpAddress") {
+    private fun readResolve(): Any = IpAddressLabel
     val ip = string("ip")
 }
 
@@ -51,7 +54,8 @@ object IpAddressLabel : VertexLabel("IpAddress") {
  * ## 속성
  * - `phone` — 해시 처리된 전화번호입니다(E.164 SHA-256 hex).
  */
-object PhoneNumberLabel : VertexLabel("PhoneNumber") {
+object PhoneNumberLabel: VertexLabel("PhoneNumber") {
+    private fun readResolve(): Any = PhoneNumberLabel
     val phone = string("phone")
 }
 
@@ -65,7 +69,8 @@ object PhoneNumberLabel : VertexLabel("PhoneNumber") {
  * ## 속성
  * - `paymentToken` — processor가 발급한 결제 토큰입니다(원시 PAN 또는 CVV 아님).
  */
-object PaymentMethodLabel : VertexLabel("PaymentMethod") {
+object PaymentMethodLabel: VertexLabel("PaymentMethod") {
+    private fun readResolve(): Any = PaymentMethodLabel
     val paymentToken = string("paymentToken")
 }
 
@@ -79,7 +84,8 @@ object PaymentMethodLabel : VertexLabel("PaymentMethod") {
  * ## 속성
  * - `occurredAt` — 이 디바이스에서 처음 로그인한 ISO-8601 타임스탬프입니다.
  */
-object UsesDeviceLabel : EdgeLabel("USES_DEVICE", UserLabel, DeviceLabel) {
+object UsesDeviceLabel: EdgeLabel("USES_DEVICE", UserLabel, DeviceLabel) {
+    private fun readResolve(): Any = UsesDeviceLabel
     val occurredAt = string("occurredAt")
 }
 
@@ -89,7 +95,8 @@ object UsesDeviceLabel : EdgeLabel("USES_DEVICE", UserLabel, DeviceLabel) {
  * ## 속성
  * - `occurredAt` — 이 IP에서 처음 관측된 접속의 ISO-8601 타임스탬프입니다.
  */
-object UsesIpLabel : EdgeLabel("USES_IP", UserLabel, IpAddressLabel) {
+object UsesIpLabel: EdgeLabel("USES_IP", UserLabel, IpAddressLabel) {
+    private fun readResolve(): Any = UsesIpLabel
     val occurredAt = string("occurredAt")
 }
 
@@ -99,7 +106,8 @@ object UsesIpLabel : EdgeLabel("USES_IP", UserLabel, IpAddressLabel) {
  * ## 속성
  * - `occurredAt` — 최초 연결 시점의 ISO-8601 타임스탬프입니다.
  */
-object HasPhoneLabel : EdgeLabel("HAS_PHONE", UserLabel, PhoneNumberLabel) {
+object HasPhoneLabel: EdgeLabel("HAS_PHONE", UserLabel, PhoneNumberLabel) {
+    private fun readResolve(): Any = HasPhoneLabel
     val occurredAt = string("occurredAt")
 }
 
@@ -109,7 +117,8 @@ object HasPhoneLabel : EdgeLabel("HAS_PHONE", UserLabel, PhoneNumberLabel) {
  * ## 속성
  * - `occurredAt` — 최초 결제 시도 시점의 ISO-8601 타임스탬프입니다.
  */
-object UsesPaymentLabel : EdgeLabel("USES_PAYMENT", UserLabel, PaymentMethodLabel) {
+object UsesPaymentLabel: EdgeLabel("USES_PAYMENT", UserLabel, PaymentMethodLabel) {
+    private fun readResolve(): Any = UsesPaymentLabel
     val occurredAt = string("occurredAt")
 }
 
@@ -123,6 +132,7 @@ object UsesPaymentLabel : EdgeLabel("USES_PAYMENT", UserLabel, PaymentMethodLabe
  * ## 속성
  * - `occurredAt` — 추천 이벤트의 ISO-8601 타임스탬프입니다.
  */
-object ReferredByLabel : EdgeLabel("REFERRED_BY", UserLabel, UserLabel) {
+object ReferredByLabel: EdgeLabel("REFERRED_BY", UserLabel, UserLabel) {
+    private fun readResolve(): Any = ReferredByLabel
     val occurredAt = string("occurredAt")
 }

@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 
 @Component
-class UserKeyResolver : KeyResolver<String> {
+class UserKeyResolver: KeyResolver<String> {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * [HeaderUtils.X_BLUETAPE4K_UID]에서 rate-limit key를 해석하고,

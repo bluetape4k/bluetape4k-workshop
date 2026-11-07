@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.guide
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.logging.KLogging
@@ -21,11 +22,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class ChannelAsFlowExamples {
 
@@ -74,7 +76,7 @@ class ChannelAsFlowExamples {
         jobs += List(jobSize) {
             launch(producerDispatcher) {
                 while (isActive) {
-                    delay(1)
+                    delay(1.milliseconds)
                     totalProduced.incrementAndGet()
                     eventBus.postEvent(Event.Created)
 
@@ -84,7 +86,7 @@ class ChannelAsFlowExamples {
         jobs += List(jobSize) {
             launch(producerDispatcher) {
                 while (isActive) {
-                    delay(1)
+                    delay(1.milliseconds)
                     totalProduced.incrementAndGet()
                     eventBus.postEvent(Event.Deleted)
 
@@ -100,10 +102,10 @@ class ChannelAsFlowExamples {
                     .collect()
             }.log("consumer-$it")
         }
-        delay(1000)
+        delay(1.seconds)
         jobs.forEach { it.cancelAndJoin() }
 
-        delay(2000)
+        delay(2.seconds)
         consumedJobs.forEach { it.cancelAndJoin() }
 
         log.debug { "Produced: ${totalProduced.get()}, Consumed: ${totalConsumed.get()}" }

@@ -1,15 +1,16 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.completableFutureOf
 import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.LeaderGroupElectionOptions
 import io.bluetape4k.leader.zookeeper.runAsyncIfLeader
 import io.bluetape4k.leader.zookeeper.runIfLeader
 import io.bluetape4k.leader.zookeeper.runIfLeaderGroup
 import io.bluetape4k.leader.zookeeper.suspendRunIfLeader
-import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.milliseconds
@@ -28,7 +29,9 @@ import kotlin.time.Duration.Companion.milliseconds
  * 각 확장 함수 호출은 이 테스트 묶음의 다른 테스트와 ZooKeeper 경로가 충돌하지 않도록
  * 고유한 `basePath`를 사용한다.
  */
-class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
+class ExtensionFunctionTest: AbstractLeaderZookeeperTest() {
+
+    companion object: KLogging()
 
     private val singleOptions = LeaderElectionOptions(waitTime = 500.milliseconds)
 
@@ -42,7 +45,7 @@ class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
             "done"
         }
 
-        result.shouldNotBeNull() shouldBeEqualTo "done"
+        result shouldBeEqualTo "done"
     }
 
     @Test
@@ -53,10 +56,10 @@ class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
             basePath = "/test/ext-async",
             options = singleOptions,
         ) {
-            CompletableFuture.completedFuture("async-done")
+            completableFutureOf("async-done")
         }
 
-        future.join().shouldNotBeNull() shouldBeEqualTo "async-done"
+        future.join() shouldBeEqualTo "async-done"
     }
 
     @Test
@@ -69,7 +72,7 @@ class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
             "suspend-done"
         }
 
-        result.shouldNotBeNull() shouldBeEqualTo "suspend-done"
+        result shouldBeEqualTo "suspend-done"
     }
 
     @Test
@@ -82,6 +85,6 @@ class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
             "done"
         }
 
-        result.shouldNotBeNull() shouldBeEqualTo "done"
+        result shouldBeEqualTo "done"
     }
 }

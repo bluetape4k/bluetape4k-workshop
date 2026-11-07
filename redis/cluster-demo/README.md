@@ -18,14 +18,14 @@ The example keeps two boundaries separate. Spring Data Redis proves cluster rout
 
 ## Key Components
 
-| Class / File | Role |
-|---------------|------|
-| `RedisClusterApplication.kt` | Spring Boot entry point — starts the `RedisClusterServer.Launcher.redisCluster` singleton |
-| `NumberService.kt` | Stores and retrieves byte-serialized numbers through `clusterConnection` |
-| `AbstractRedisClusterTest.kt` | Common base with `@SpringBootTest` + `KLoggingChannel` + `Fakers` |
-| `BasicUsageTest.kt` | Basic key-value CRUD cluster test |
-| `NumberServiceTest.kt` | Service-layer tests for `multiplyAndSave` / `get` |
-| `application.yml` | Cluster node list + Lettuce adaptive refresh configuration |
+| Class / File                  | Role                                                                                      |
+|-------------------------------|-------------------------------------------------------------------------------------------|
+| `RedisClusterApplication.kt`  | Spring Boot entry point — starts the `RedisClusterServer.Launcher.redisCluster` singleton |
+| `NumberService.kt`            | Stores and retrieves byte-serialized numbers through `clusterConnection`                  |
+| `AbstractRedisClusterTest.kt` | Common base with `@SpringBootTest` + `KLoggingChannel` + `Fakers`                         |
+| `BasicUsageTest.kt`           | Basic key-value CRUD cluster test                                                         |
+| `NumberServiceTest.kt`        | Service-layer tests for `multiplyAndSave` / `get`                                         |
+| `application.yml`             | Cluster node list + Lettuce adaptive refresh configuration                                |
 
 ## application.yml Configuration Example
 
@@ -48,14 +48,14 @@ spring:
 
 ## Used bluetape4k Features
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `RedisClusterServer.Launcher.redisCluster` | `bluetape4k-testcontainers` | `RedisClusterApplication` companion | Testcontainers Redis Cluster singleton that automatically starts and stops 6 nodes (3 masters + 3 replicas) |
-| `Launcher.LettuceLib.clientResources(redisCluster)` | `bluetape4k-testcontainers` | `RedisClusterApplication.lettuceClientResource()` | One-step creation of Lettuce `ClientResources` matched to container ports |
-| `LettuceClients` / `LettuceIntCodec` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce` | `Bluetape4kLettuceUsageTest` | Verifies 32-bit/64-bit typed codecs and coroutine-friendly async waiting on low-level Redis paths |
-| `KLoggingChannel` | `bluetape4k-logging` | `RedisClusterApplication` companion, `NumberService` companion, `AbstractRedisClusterTest` companion | Structured logging with coroutine MDC context |
-| `Fakers.faker` / `Fakers.fixedString` | `bluetape4k-junit5` | `AbstractRedisClusterTest` | Generates reproducible random keys and values |
-| `bluetape4k-core` — `toByteArray()` / `toInt()` | `bluetape4k-core` | `NumberService` | Int-to-ByteArray conversion utilities used in binary cluster commands |
+| Feature                                                                         | Artifact                    | Code Location                                                                                        | Benefit                                                                                                     |
+|---------------------------------------------------------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `RedisClusterServer.Launcher.redisCluster`                                      | `bluetape4k-testcontainers` | `RedisClusterApplication` companion                                                                  | Testcontainers Redis Cluster singleton that automatically starts and stops 6 nodes (3 masters + 3 replicas) |
+| `Launcher.LettuceLib.clientResources(redisCluster)`                             | `bluetape4k-testcontainers` | `RedisClusterApplication.lettuceClientResource()`                                                    | One-step creation of Lettuce `ClientResources` matched to container ports                                   |
+| `LettuceClients` / `LettuceIntCodec` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce`        | `Bluetape4kLettuceUsageTest`                                                                         | Verifies 32-bit/64-bit typed codecs and coroutine-friendly async waiting on low-level Redis paths           |
+| `KLoggingChannel`                                                               | `bluetape4k-logging`        | `RedisClusterApplication` companion, `NumberService` companion, `AbstractRedisClusterTest` companion | Structured logging with coroutine MDC context                                                               |
+| `Fakers.faker` / `Fakers.fixedString`                                           | `bluetape4k-junit5`         | `AbstractRedisClusterTest`                                                                           | Generates reproducible random keys and values                                                               |
+| `bluetape4k-core` — `toByteArray()` / `toInt()`                                 | `bluetape4k-core`           | `NumberService`                                                                                      | Int-to-ByteArray conversion utilities used in binary cluster commands                                       |
 
 ## bluetape4k Before / After
 
@@ -115,8 +115,7 @@ companion object: KLoggingChannel() {
 
 ## How NumberService Works
 
-`NumberService` opens `clusterConnection` from `StringRedisTemplate` directly and stores numbers with binary serialization.
-The hash slot is determined automatically by the key (the number's byte array), and the value is distributed to one of the master nodes in the cluster.
+`NumberService` opens `clusterConnection` from `StringRedisTemplate` directly and stores numbers with binary serialization. The hash slot is determined automatically by the key (the number's byte array), and the value is distributed to one of the master nodes in the cluster.
 
 ```kotlin
 fun multiplyAndSave(number: Int) {
@@ -133,17 +132,15 @@ Spring Data Redis `clusterConnection` is responsible for proving Redis Cluster b
 
 ## Cluster Slot Distribution
 
-| Master Node | Slot Range | Replica |
-|-------------|-----------|---------|
-| Master 1 | 0-5460 | Replica 1 |
-| Master 2 | 5461-10922 | Replica 2 |
-| Master 3 | 10923-16383 | Replica 3 |
+| Master Node | Slot Range  | Replica   |
+|-------------|-------------|-----------|
+| Master 1    | 0-5460      | Replica 1 |
+| Master 2    | 5461-10922  | Replica 2 |
+| Master 3    | 10923-16383 | Replica 3 |
 
 ## Operational Notes
 
-- **Mac AirPlay port conflict**: Redis Cluster uses ports 7000-7005 by default.
-  If AirPlay Receiver mode is enabled on macOS, port 7000 may conflict.
-  Disable AirPlay Receiver in System Settings, then try again.
+- **Mac AirPlay port conflict**: Redis Cluster uses ports 7000-7005 by default. If AirPlay Receiver mode is enabled on macOS, port 7000 may conflict. Disable AirPlay Receiver in System Settings, then try again.
 - **Lettuce adaptive refresh**: Without `adaptive: true`, cluster topology is not refreshed automatically when a node fails, so connections may be dropped.
 - **Testcontainers prerequisite**: Docker must be running. `RedisClusterServer.Launcher.redisCluster` starts containers on first access and cleans them up automatically when the JVM exits.
 

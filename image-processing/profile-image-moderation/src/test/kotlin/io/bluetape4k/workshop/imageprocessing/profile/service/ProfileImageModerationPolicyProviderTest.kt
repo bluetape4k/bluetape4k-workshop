@@ -3,12 +3,16 @@ package io.bluetape4k.workshop.imageprocessing.profile.service
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationRequest
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 class ProfileImageModerationPolicyProviderTest {
+
+    companion object: KLogging()
 
     @ParameterizedTest(name = "banned profile marker {0} is rejected")
     @ValueSource(
@@ -27,6 +31,7 @@ class ProfileImageModerationPolicyProviderTest {
 
         val result = provider.moderate(request(filename))
 
+        log.debug { "result=$result" }
         result.decision shouldBeEqualTo ModerationDecision.REJECTED
     }
 
@@ -37,6 +42,7 @@ class ProfileImageModerationPolicyProviderTest {
 
         val result = provider.moderate(request(filename))
 
+        log.debug { "result=$result" }
         result.decision shouldBeEqualTo ModerationDecision.APPROVED
     }
 
@@ -44,6 +50,6 @@ class ProfileImageModerationPolicyProviderTest {
         userId = "user-1",
         uploadId = "upload-a",
         originalFilename = filename,
-        originalKey = ImageObjectKey.of("profile-images/user-1/upload-a/private/original", "uploaded-profile.jpg"),
+        originalKey = ImageObjectKey("profile-images/user-1/upload-a/private/original", "uploaded-profile.jpg"),
     )
 }

@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.config
 
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
@@ -16,9 +19,9 @@ data class ShiftCoverageProperties(
     val plannerQueue: Int = 8,
     val outboxWorkers: Int = 4,
     val outboxBatchSize: Int = 10,
-    val outboxLease: Duration = Duration.ofSeconds(30),
-    val ioTimeout: Duration = Duration.ofSeconds(5),
-    val shutdownDrain: Duration = Duration.ofSeconds(30),
+    val outboxLease: Duration = 30.seconds(),
+    val ioTimeout: Duration = 5.seconds(),
+    val shutdownDrain: Duration = 30.seconds(),
     val zoneOffset: String = ZoneOffset.UTC.id,
     /** demo fixture 전용 비밀값이며 provider profile은 secret source에서 재정의해야 합니다. */
     val callbackSecret: String = "shift-coverage-fixture-secret",
@@ -31,15 +34,11 @@ data class ShiftCoverageProperties(
         plannerQueue.requirePositiveNumber("shift-coverage.plannerQueue")
         outboxWorkers.requirePositiveNumber("shift-coverage.outboxWorkers")
         outboxBatchSize.requirePositiveNumber("shift-coverage.outboxBatchSize")
-        require(!outboxLease.isZero && !outboxLease.isNegative) {
-            "shift-coverage.outboxLease must be positive"
-        }
-        require(!ioTimeout.isZero && !ioTimeout.isNegative) {
-            "shift-coverage.ioTimeout must be positive"
-        }
-        require(!shutdownDrain.isZero && !shutdownDrain.isNegative) {
-            "shift-coverage.shutdownDrain must be positive"
-        }
-        require(callbackSecret.isNotBlank()) { "shift-coverage.callbackSecret must not be blank" }
+
+        outboxLease.requirePositiveDuration("outboxLease")
+        ioTimeout.requirePositiveDuration("ioTimeout")
+        shutdownDrain.requirePositiveDuration("shutdownDrain")
+
+        callbackSecret.requireNotBlank { "shift-coverage.callbackSecret must not be blank" }
     }
 }

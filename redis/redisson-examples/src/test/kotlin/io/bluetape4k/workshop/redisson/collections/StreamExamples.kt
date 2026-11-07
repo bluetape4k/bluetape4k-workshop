@@ -19,6 +19,7 @@ import org.redisson.api.stream.StreamCreateGroupArgs
 import org.redisson.api.stream.StreamMessageId
 import org.redisson.api.stream.StreamReadGroupArgs
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -29,9 +30,9 @@ import kotlin.time.toJavaDuration
  * - [Redis Stream for Java](https://redisson.org/articles/redis-streams-for-java.html)
  * - [Redisson Stream](https://github.com/redisson/redisson/wiki/7.-distributed-collections/#720-stream)
  */
-class StreamExamples : AbstractRedissonTest() {
+class StreamExamples: AbstractRedissonTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `stream 기본 사용 예`() {
@@ -142,7 +143,7 @@ class StreamExamples : AbstractRedissonTest() {
         // 새 message 하나를 발행합니다.
         val messageId3 = stream.addAsync(streamAddArgsOf("3" to 3, "4" to 4)).await()
         log.debug { "메시지 전송, messageId3=$messageId3" }
-        delay(10)
+        delay(10.milliseconds)
         consumerJob.join()
 
         stream.deleteAsync().await()

@@ -2,9 +2,9 @@ package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceApprovalService
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceCommandService
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceDispatchService
@@ -22,6 +22,9 @@ import org.springframework.mock.web.MockHttpServletResponse
 import java.time.Instant
 
 internal class FieldServiceControllerContractTest {
+
+    companion object: KLogging()
+
     private val repository = FieldServiceRepository()
     private val controller = FieldServiceController(
         repository = repository,
@@ -68,7 +71,7 @@ internal class FieldServiceControllerContractTest {
         val source = MockHttpServletRequest("POST", "/api/field-service/visits").apply {
             setContent(ByteArray(FieldServiceLimits.MAX_BODY_BYTES + 1) { 'x'.code.toByte() })
         }
-        val request = object : HttpServletRequestWrapper(source) {
+        val request = object: HttpServletRequestWrapper(source) {
             override fun getContentLength(): Int = -1
 
             override fun getContentLengthLong(): Long = -1L

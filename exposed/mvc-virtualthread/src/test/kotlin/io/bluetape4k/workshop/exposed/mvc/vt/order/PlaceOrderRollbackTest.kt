@@ -8,31 +8,23 @@ import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.OrderLineTable
 import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.OrderTable
 import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.ProductTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 
-class PlaceOrderRollbackTest : AbstractMvcVirtualThreadTest() {
-
-    @Autowired
-    private lateinit var db: Database
-
-    private fun <T> inTx(block: () -> T): T = transaction(db) { block() }
+class PlaceOrderRollbackTest: AbstractMvcVirtualThreadTest() {
 
     @Test
     fun `failed order with invalid product rolls back all tables`() {
         val productId = firstProductId()
 
-        val originalStock = inTx {
+        val originalStock = withTx {
             ProductTable.selectAll()
                 .where { ProductTable.id eq productId }
                 .single()[ProductTable.stock]
         }
-        val orderCountBefore = inTx { OrderTable.selectAll().count() }
-        val lineCountBefore = inTx { OrderLineTable.selectAll().count() }
+        val orderCountBefore = withTx { OrderTable.selectAll().count() }
+        val lineCountBefore = withTx { OrderLineTable.selectAll().count() }
 
         val req = PlaceOrderRequest(
             customerId = 1L,
@@ -48,7 +40,7 @@ class PlaceOrderRollbackTest : AbstractMvcVirtualThreadTest() {
             .exchange()
             .expectStatus().isNotFound
 
-        inTx {
+        withTx {
             OrderTable.selectAll().count() shouldBeEqualTo orderCountBefore
             OrderLineTable.selectAll().count() shouldBeEqualTo lineCountBefore
             val finalStock = ProductTable.selectAll()

@@ -2,14 +2,15 @@ package io.bluetape4k.workshop.graph.io
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointConflictException
-import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointSession
 import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointPhase
+import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointSession
 import io.bluetape4k.graph.io.checkpoint.InMemoryGraphImportCheckpointStore
 import io.bluetape4k.graph.io.micrometer.GraphIoMicrometerProgressListener
 import io.bluetape4k.graph.io.options.GraphImportOptions
@@ -21,18 +22,18 @@ import io.bluetape4k.graph.io.report.GraphIoFileRole
 import io.bluetape4k.graph.io.report.GraphIoFormat
 import io.bluetape4k.graph.io.report.GraphIoPhase
 import io.bluetape4k.graph.io.report.GraphIoProgressEventType
-import io.bluetape4k.graph.io.report.GraphIoProgressListener
 import io.bluetape4k.graph.io.report.GraphIoStatus
 import io.bluetape4k.graph.io.support.GraphIoExternalIdMap
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotNull
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.extension
@@ -45,12 +46,14 @@ import kotlin.io.path.writeText
 
 class GraphIoPipelineTest {
 
+    companion object: KLogging()
+
     @Test
     fun `forwards CSV lifecycle to user and Micrometer listeners`() {
         val registry = SimpleMeterRegistry()
         val observed = mutableListOf<GraphIoProgressEventType>()
         val listener = GraphIoCompositeProgressListener.of(
-            GraphIoProgressListener { observed += it.type },
+            { observed += it.type },
             GraphIoMicrometerProgressListener(registry),
         )
 
@@ -58,6 +61,7 @@ class GraphIoPipelineTest {
             val report = GraphIoPipeline(ops, progressListener = listener)
                 .importCsv(fixture("vertices.csv"), fixture("edges.csv"))
 
+            log.debug { "report=$report" }
             report.status shouldBeEqualTo GraphIoStatus.COMPLETED
             observed shouldContain GraphIoProgressEventType.STARTED
             observed shouldContain GraphIoProgressEventType.PHASE_COMPLETED
@@ -117,6 +121,7 @@ class GraphIoPipelineTest {
         TinkerGraphOperations().use { ops ->
             val report = GraphIoPipeline(ops, progressListener = listener).importCsv(vertices, edges)
 
+            log.debug { "report=$report" }
             report.status shouldBeEqualTo GraphIoStatus.FAILED
             report.failures shouldHaveSize 1
         }
@@ -126,11 +131,13 @@ class GraphIoPipelineTest {
             .tag("format", "csv")
             .tag("status", "failed")
             .counter().count() shouldBeEqualTo 1.0
+
         registry.get(GraphIoMicrometerProgressListener.METER_RECORDS)
             .tag("operation", "import")
             .tag("format", "csv")
             .tag("kind", "failures")
             .counter().count() shouldBeEqualTo 1.0
+
         registry.get(GraphIoMicrometerProgressListener.METER_ACTIVE)
             .tag("operation", "import")
             .tag("format", "csv")
@@ -148,6 +155,7 @@ class GraphIoPipelineTest {
 
             val report = pipeline.exportJackson3NdJson(tempDir.resolve("graph.ndjson"))
 
+            log.debug { "report=$report" }
             report.status shouldBeEqualTo GraphIoStatus.COMPLETED
             report.verticesWritten shouldBeEqualTo 3L
             report.edgesWritten shouldBeEqualTo 2L
@@ -185,6 +193,7 @@ class GraphIoPipelineTest {
 
             val report = pipeline.importCsv(fixture("vertices.csv"), fixture("edges.csv"))
 
+            log.debug { "report=$report" }
             report.status shouldBeEqualTo GraphIoStatus.COMPLETED
             report.format shouldBeEqualTo GraphIoFormat.CSV
             report.failures shouldHaveSize 0
@@ -215,6 +224,7 @@ class GraphIoPipelineTest {
         TinkerGraphOperations().use { operations ->
             val pipeline = GraphIoPipeline(operations)
             val failed = pipeline.importCsv(vertices, edges, options)
+            log.debug { "failed=$failed" }
 
             failed.status shouldBeEqualTo GraphIoStatus.FAILED
             store.load("graph-io-pipeline-csv")?.phase shouldBeEqualTo GraphImportCheckpointPhase.FAILED
@@ -251,10 +261,11 @@ class GraphIoPipelineTest {
                 options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
             )
 
+            log.debug { "resumed=$resumed" }
             resumed.status shouldBeEqualTo GraphIoStatus.COMPLETED
             resumed.verticesCreated shouldBeEqualTo 0L
             resumed.edgesCreated shouldBeEqualTo 1L
-            store.load("graph-io-pipeline-csv") shouldBeEqualTo null
+            store.load("graph-io-pipeline-csv").shouldBeNull()
             totalVertices(operations) shouldBeEqualTo 2
             totalEdges(operations) shouldBeEqualTo 1
         }
@@ -283,6 +294,7 @@ class GraphIoPipelineTest {
             val pipeline = GraphIoPipeline(operations)
             pipeline.importJackson3NdJson(source, options).status shouldBeEqualTo GraphIoStatus.FAILED
             store.load("graph-io-pipeline-jackson3")?.phase shouldBeEqualTo GraphImportCheckpointPhase.FAILED
+
             totalVertices(operations) shouldBeEqualTo 2
 
             source.writeText(
@@ -297,10 +309,11 @@ class GraphIoPipelineTest {
                 options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
             )
 
+            log.debug { "resumed=$resumed" }
             resumed.status shouldBeEqualTo GraphIoStatus.COMPLETED
             resumed.verticesCreated shouldBeEqualTo 0L
             resumed.edgesCreated shouldBeEqualTo 1L
-            store.load("graph-io-pipeline-jackson3") shouldBeEqualTo null
+            store.load("graph-io-pipeline-jackson3").shouldBeNull()
             totalVertices(operations) shouldBeEqualTo 2
             totalEdges(operations) shouldBeEqualTo 1
         }
@@ -331,10 +344,11 @@ class GraphIoPipelineTest {
                 options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
             )
 
+            log.debug { "resumed=$resumed" }
             resumed.status shouldBeEqualTo GraphIoStatus.COMPLETED
             resumed.verticesCreated shouldBeEqualTo 0L
             resumed.edgesCreated shouldBeEqualTo 1L
-            store.load("graph-io-pipeline-graphml") shouldBeEqualTo null
+            store.load("graph-io-pipeline-graphml").shouldBeNull()
             totalVertices(operations) shouldBeEqualTo 2
             totalEdges(operations) shouldBeEqualTo 1
         }
@@ -380,8 +394,9 @@ class GraphIoPipelineTest {
             options = options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
             idMap = GraphIoExternalIdMap(options.onDuplicateVertexId),
         )
+        log.debug { "resumed=$resumed" }
         resumed.completed()
-        store.load("graph-io-pipeline-claim") shouldBeEqualTo null
+        store.load("graph-io-pipeline-claim").shouldBeNull()
     }
 
     @Test
@@ -457,6 +472,7 @@ class GraphIoPipelineTest {
         TinkerGraphOperations().use { ops ->
             val report = GraphIoPipeline(ops).importCsv(vertices, edges)
 
+            log.debug { "report=$report" }
             report.status shouldBeEqualTo GraphIoStatus.FAILED
             report.failures shouldHaveSize 1
             report.failures.single().severity shouldBeEqualTo GraphIoFailureSeverity.ERROR
@@ -482,6 +498,7 @@ class GraphIoPipelineTest {
         TinkerGraphOperations().use { ops ->
             val report = GraphIoPipeline(ops).importCsv(vertices, edges)
 
+            log.debug { "report=$report" }
             report.status shouldBeEqualTo GraphIoStatus.FAILED
             report.failures shouldHaveSize 1
             report.failures.single().severity shouldBeEqualTo GraphIoFailureSeverity.ERROR
@@ -515,6 +532,7 @@ class GraphIoPipelineTest {
         TinkerGraphOperations().use { ops ->
             val report = GraphIoPipeline(ops).importGraphMl(graphml)
 
+            log.debug { "report=$report" }
             report.status shouldBeEqualTo GraphIoStatus.FAILED
             report.format shouldBeEqualTo GraphIoFormat.GRAPHML
             report.failures shouldHaveSize 1
@@ -522,6 +540,7 @@ class GraphIoPipelineTest {
             report.failures.single().elementName shouldBeEqualTo "port"
             report.verticesCreated shouldBeEqualTo 0L
             report.edgesCreated shouldBeEqualTo 0L
+
             totalVertices(ops) shouldBeEqualTo 0
             totalEdges(ops) shouldBeEqualTo 0
         }
@@ -633,7 +652,7 @@ class GraphIoPipelineTest {
 
         if (expectOriginalExternalIds) {
             people.associate { it.properties["code"] to it.properties["_graphIoExternalId"] } shouldBeEqualTo
-                mapOf("alice" to "person-alice", "bob" to "person-bob")
+                    mapOf("alice" to "person-alice", "bob" to "person-bob")
             projects.single().properties["_graphIoExternalId"] shouldBeEqualTo "project-graphio"
         }
 
@@ -653,7 +672,7 @@ class GraphIoPipelineTest {
             val properties = when (element) {
                 is io.bluetape4k.graph.model.GraphVertex -> element.properties
                 is io.bluetape4k.graph.model.GraphEdge -> element.properties
-                else -> error("Unsupported graph element: $element")
+                else                                   -> error("Unsupported graph element: $element")
             }
             properties.keys shouldBeEqualTo expected
         }
@@ -687,7 +706,6 @@ class GraphIoPipelineTest {
         return target
     }
 
-    @OptIn(ExperimentalPathApi::class)
     private fun assertTempOutputs(tempDir: Path, expectedNames: Set<String>) {
         val actual = tempDir.walk()
             .filter { it.isRegularFile() }

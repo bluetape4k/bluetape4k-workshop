@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
@@ -23,6 +25,9 @@ import javax.sql.DataSource
 
 @Configuration
 class JobConsoleSpringConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun jobRepository(dataSource: DataSource): JobRepository {
         JobMigrationRunner(
@@ -38,7 +43,7 @@ class JobConsoleSpringConfiguration {
 
     @Bean
     fun jobEventFanout(jobWorkerExecutor: ExecutorService): BoundedJobEventFanout =
-        BoundedJobEventFanout(Duration.ofSeconds(2), jobWorkerExecutor)
+        BoundedJobEventFanout(2.seconds(), jobWorkerExecutor)
 
     @Bean
     fun jobConsoleService(
@@ -50,7 +55,7 @@ class JobConsoleSpringConfiguration {
     ): JobConsoleService =
         JobConsoleService(
             repository = repository,
-            cancelSignal = signalProvider.ifAvailable ?: io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal,
+            cancelSignal = signalProvider.ifAvailable ?: NoOpCancelSignal,
             boundedWaitEnabled = boundedWaitEnabled,
             expectedPolicyFingerprint = expectedPolicyFingerprint.takeIf(String::isNotBlank),
             executor = jobWorkerExecutor,

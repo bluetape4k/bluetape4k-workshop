@@ -2,14 +2,18 @@ package io.bluetape4k.workshop.exposed.mvc.jdbc.order
 
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.AbstractMvcJdbcTest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.OrderDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.OrderLineRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.PlaceOrderRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
 
-class OrderControllerTest : AbstractMvcJdbcTest() {
+class OrderControllerTest: AbstractMvcJdbcTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `POST orders places order successfully`() {
@@ -23,7 +27,7 @@ class OrderControllerTest : AbstractMvcJdbcTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderDTO::class.java)
+            .expectBody<OrderDTO>()
             .returnResult()
         result.responseBody.shouldNotBeNull().id shouldBeGreaterOrEqualTo 1L
     }
@@ -55,7 +59,7 @@ class OrderControllerTest : AbstractMvcJdbcTest() {
             .bodyValue(placeReq)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderDTO::class.java)
+            .expectBody<OrderDTO>()
             .returnResult().responseBody.shouldNotBeNull()
 
         // 이후 해당 order를 취소한다.

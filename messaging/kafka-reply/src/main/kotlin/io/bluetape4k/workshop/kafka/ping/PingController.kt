@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class PingController {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val TOPIC_PINGPONG = "pingpong"
         private const val PING_PAYLOAD = "ping"
     }
@@ -37,6 +37,7 @@ class PingController {
         val payload = PING_PAYLOAD.requireNotBlank("payload")
         val record = ProducerRecord<String, String>(TOPIC_PINGPONG, payload)
         val replyFuture: RequestReplyFuture<String, String, String> = template.sendAndReceive(record)
+
         replyFuture
             .onSuccess { result -> log.info { "callback result: $result" } }
             .onFailure { e -> log.error(e) { "callback exception." } }

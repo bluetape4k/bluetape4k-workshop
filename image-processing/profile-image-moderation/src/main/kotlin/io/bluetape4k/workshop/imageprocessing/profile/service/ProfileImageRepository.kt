@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.profile.service
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationResult
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProfileImageState
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProfileImageStatus
@@ -12,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap
  * 워크숍 예제용 인메모리 프로필 이미지 상태 저장소입니다.
  */
 class ProfileImageRepository {
+
+    private companion object: KLogging()
 
     private val states = ConcurrentHashMap<String, ProfileImageState>()
 
@@ -29,12 +33,15 @@ class ProfileImageRepository {
                 current
             } else {
                 completed = true
-                when (result.decision) {
-                    io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision.APPROVED ->
-                        current.copy(status = ProfileImageStatus.APPROVED, reason = result.reason, updatedAt = Instant.now())
-                    io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision.REJECTED ->
-                        current.copy(status = ProfileImageStatus.REJECTED, reason = result.reason, updatedAt = Instant.now())
+                val status = when (result.decision) {
+                    ModerationDecision.APPROVED -> ProfileImageStatus.APPROVED
+                    ModerationDecision.REJECTED -> ProfileImageStatus.REJECTED
                 }
+                current.copy(
+                    status = status,
+                    reason = result.reason,
+                    updatedAt = Instant.now()
+                )
             }
         }
         return completed
@@ -47,7 +54,11 @@ class ProfileImageRepository {
                 current
             } else {
                 completed = true
-                current.copy(status = ProfileImageStatus.MODERATION_FAILED, reason = reason, updatedAt = Instant.now())
+                current.copy(
+                    status = ProfileImageStatus.MODERATION_FAILED,
+                    reason = reason,
+                    updatedAt = Instant.now()
+                )
             }
         }
         return completed

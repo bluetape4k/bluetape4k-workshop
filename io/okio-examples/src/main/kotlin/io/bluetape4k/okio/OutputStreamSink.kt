@@ -29,7 +29,7 @@ class OutputStreamSink(
             source.readUnsafe(cursor).use { ignored ->
                 cursor.seek(0)
                 val length = minOf(cursor.end - cursor.start, remaining.toInt())
-                out.write(cursor.data, cursor.start, length)
+                out.write(cursor.data!!, cursor.start, length)
                 log.debug { "Wrote $length bytes to channel at position=${cursor.start}" }
                 remaining -= length.toLong()
                 source.skip(length.toLong())

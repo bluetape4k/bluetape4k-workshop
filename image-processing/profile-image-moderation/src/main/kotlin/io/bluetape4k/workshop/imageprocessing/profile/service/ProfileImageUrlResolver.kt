@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.imageprocessing.profile.service
 
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requireNull
 import io.bluetape4k.workshop.imageprocessing.profile.config.ProfileImageModerationProperties
@@ -16,6 +17,10 @@ class ProfileImageUrlResolver(
     private val properties: ProfileImageModerationProperties,
     storageProperties: ImageStorageProperties,
 ) {
+
+    companion object: KLogging() {
+        private val LOOPBACK_HOSTS = setOf("localhost", "127.0.0.1", "::1", "[::1]")
+    }
 
     private val baseUri: URI = validateBaseUri(properties, storageProperties)
     private val baseUrl = baseUri.toString().trimEnd('/')
@@ -55,7 +60,4 @@ class ProfileImageUrlResolver(
         return baseUri
     }
 
-    companion object {
-        private val LOOPBACK_HOSTS = setOf("localhost", "127.0.0.1", "::1", "[::1]")
-    }
 }

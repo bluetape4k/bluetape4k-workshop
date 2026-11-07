@@ -3,10 +3,12 @@ package io.bluetape4k.workshop.leader.k8slease.config
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
 import io.bluetape4k.leader.micrometer.LeaderObservationOptions
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderAopMetricsRecorder
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderElectionListener
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.k8slease.leader.DisabledLeaderCoordinator
 import io.bluetape4k.workshop.leader.k8slease.leader.LeaderCoordinator
 import io.fabric8.kubernetes.client.KubernetesClient
@@ -28,6 +30,8 @@ class K8sLeaseMicrometerContextTest(
     private val observationListener: MicrometerObservationLeaderElectionListener,
 ) {
 
+    companion object: KLogging()
+
     @Test
     fun `default context uses disabled coordinator and does not create Kubernetes client`() {
         coordinator.shouldBeInstanceOf<DisabledLeaderCoordinator>()
@@ -36,10 +40,10 @@ class K8sLeaseMicrometerContextTest(
 
     @Test
     fun `default context wires observation components with hashed identity policy`() {
-        observationRecorder shouldBeInstanceOf MicrometerObservationLeaderAopMetricsRecorder::class
-        observationListener shouldBeInstanceOf MicrometerObservationLeaderElectionListener::class
-        observationOptions.includeLockName shouldBeEqualTo true
-        observationOptions.includeLeaderId shouldBeEqualTo true
+        observationRecorder.shouldBeInstanceOf<MicrometerObservationLeaderAopMetricsRecorder>()
+        observationListener.shouldBeInstanceOf<MicrometerObservationLeaderElectionListener>()
+        observationOptions.includeLockName.shouldBeTrue()
+        observationOptions.includeLeaderId.shouldBeTrue()
         observationOptions.tagOptions.lockName.mode shouldBeEqualTo LeaderMetricTagMode.HASH
         observationOptions.tagOptions.lockName.hashLength shouldBeEqualTo 12
         observationOptions.tagOptions.leaderId.mode shouldBeEqualTo LeaderMetricTagMode.HASH

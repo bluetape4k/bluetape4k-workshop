@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.leader.k8slease.config
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.k8s.KubernetesLeaseOptions
 import io.bluetape4k.support.requireInRange
@@ -24,13 +26,13 @@ data class K8sLeaseMicrometerProperties(
     val namespace: String = "workshop",
     val identity: String = "local-workshop",
     val leaseName: String = "workshop-nightly-export",
-    val waitTime: Duration = Duration.ofSeconds(2),
-    val leaseTime: Duration = Duration.ofSeconds(30),
-    val retryDelay: Duration = Duration.ofMillis(50),
-    val jobFixedDelay: Duration = Duration.ofSeconds(10),
-    val simulatedWorkTime: Duration = Duration.ofMillis(100),
+    val waitTime: Duration = 2.seconds(),
+    val leaseTime: Duration = 30.seconds(),
+    val retryDelay: Duration = 50.millis(),
+    val jobFixedDelay: Duration = 10.seconds(),
+    val simulatedWorkTime: Duration = 100.millis(),
     val autoExtend: Boolean = true,
-) : Serializable {
+): Serializable {
 
     init {
         namespace.requireNotBlank("namespace")
@@ -72,6 +74,7 @@ private fun Duration.requirePositive(parameterName: String): Duration = apply {
     compareTo(Duration.ZERO).requireInRange(1, Int.MAX_VALUE, parameterName)
 }
 
-private fun Duration.requireGreaterOrEqual(minimum: Duration, parameterName: String, minimumName: String): Duration = apply {
-    compareTo(minimum).requireInRange(0, Int.MAX_VALUE, "$parameterName.compareTo($minimumName)")
-}
+private fun Duration.requireGreaterOrEqual(minimum: Duration, parameterName: String, minimumName: String): Duration =
+    apply {
+        compareTo(minimum).requireInRange(0, Int.MAX_VALUE, "$parameterName.compareTo($minimumName)")
+    }

@@ -1,15 +1,18 @@
 package io.bluetape4k.workshop.leader.jobsafety.coordination.redis
 
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.leader.ExtendOutcome
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.LeaderSlot
 import io.bluetape4k.leader.LockExtender
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.coordination.LeaderElectionPort
 import io.bluetape4k.workshop.leader.jobsafety.coordination.LeaderLease
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobName
 import io.bluetape4k.workshop.leader.jobsafety.domain.LeaderOwnerId
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
@@ -31,7 +34,10 @@ class RedisLeaderElectionAdapter(
     private val backend: LeaderElector,
     private val executor: Executor,
     private val ownerIds: () -> LeaderOwnerId = { LeaderOwnerId(Uuid.V7.nextId().toString()) },
-) : LeaderElectionPort {
+): LeaderElectionPort {
+
+    companion object: KLogging()
+
     override fun tryAcquire(jobName: JobName): LeaderLease? {
         val ownerId = ownerIds()
         val entered = CompletableFuture<Unit>()
@@ -48,7 +54,7 @@ class RedisLeaderElectionAdapter(
                     session.awaitCommands()
                 }
                 if (!elected) {
-                    entered.completeExceptionally(LeaderNotAcquired)
+                    entered.completeExceptionally(LeaderNotAcquired())
                 } else {
                     completed.complete(Unit)
                 }
@@ -70,9 +76,9 @@ class RedisLeaderElectionAdapter(
         } catch (failure: ExecutionException) {
             session.cancel()
             when (val cause = failure.cause ?: failure) {
-                LeaderNotAcquired -> null
-                is RuntimeException -> throw cause
-                else -> throw IllegalStateException("leader election failed", cause)
+                is LeaderNotAcquired -> null
+                is RuntimeException  -> throw cause
+                else                 -> throw IllegalStateException("leader election failed", cause)
             }
         }
     }
@@ -82,9 +88,9 @@ class RedisLeaderElectionAdapter(
             data class ExtendViaLockExtender(
                 val duration: Duration,
                 val result: CompletableFuture<ExtendOutcome>,
-            ) : Command
+            ): Command
 
-            data object Release : Command
+            data object Release: Command
         }
 
         private val commands = ArrayBlockingQueue<Command>(COMMAND_CAPACITY)
@@ -118,15 +124,15 @@ class RedisLeaderElectionAdapter(
                                 LockExtender.extendActiveLockDetailed(command.duration)
                             }.getOrElse { failure ->
                                 when (failure) {
-                                    is java.util.concurrent.CancellationException -> throw failure
-                                    is Exception -> ExtendOutcome.BackendError(failure)
-                                    else -> throw failure
+                                    is CancellationException -> throw failure
+                                    is Exception             -> ExtendOutcome.BackendError(failure)
+                                    else                     -> throw failure
                                 }
                             })
                         }
                     }
 
-                    Command.Release -> {
+                    Command.Release                  -> {
                         released.set(true)
                         rejectPending()
                         return
@@ -189,7 +195,7 @@ class RedisLeaderElectionAdapter(
                 .inWholeNanoseconds
                 .coerceAtLeast(1L)
 
-        private companion object {
+        private companion object: KLogging() {
             private const val COMMAND_CAPACITY = 32
             private val COMMAND_POLL_INTERVAL = 25.milliseconds
             private val MIN_RESPONSE_TIMEOUT = 1.milliseconds
@@ -201,14 +207,14 @@ class RedisLeaderElectionAdapter(
         override val ownerId: LeaderOwnerId,
         private val session: SyncSession,
         private val completed: CompletableFuture<Unit>,
-    ) : LeaderLease {
+    ): LeaderLease {
         override fun extendViaLockExtender(lockAtMostFor: Duration): ExtendOutcome =
             session.extendViaLockExtender(lockAtMostFor)
 
         override fun release() {
             session.release()
             try {
-                completed.get(RELEASE_TIMEOUT.inWholeNanoseconds, TimeUnit.NANOSECONDS)
+                completed.get(RELEASE_TIMEOUT)
             } catch (_: TimeoutException) {
                 throw IllegalStateException("leader lease release timed out")
             } catch (failure: InterruptedException) {
@@ -226,5 +232,5 @@ class RedisLeaderElectionAdapter(
         }
     }
 
-    private data object LeaderNotAcquired : RuntimeException("leader_not_acquired")
+    private class LeaderNotAcquired: RuntimeException("leader_not_acquired")
 }

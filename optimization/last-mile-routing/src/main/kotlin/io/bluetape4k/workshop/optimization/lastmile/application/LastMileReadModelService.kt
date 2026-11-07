@@ -1,13 +1,16 @@
 package io.bluetape4k.workshop.optimization.lastmile.application
 
-import io.bluetape4k.workshop.optimization.lastmile.domain.DriverId
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.lastmile.domain.DeliveryJob
+import io.bluetape4k.workshop.optimization.lastmile.domain.DriverId
+import io.bluetape4k.workshop.optimization.lastmile.domain.JobId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanProposal
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileRoute
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileRouteStop
 import io.bluetape4k.workshop.optimization.lastmile.domain.StartedStop
 import io.bluetape4k.workshop.optimization.lastmile.domain.Vehicle
+import io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -93,6 +96,9 @@ internal data class StartedStopProjection(
 internal class LastMileReadModelService(
     private val repository: LastMileRepository,
 ) {
+
+    companion object: KLogging()
+
     @Transactional(readOnly = true)
     fun plan(planId: LastMilePlanId): LastMilePlanProjection? {
         val jobs = repository.findJobs().associateBy { it.jobId }
@@ -119,8 +125,8 @@ internal class LastMileReadModelService(
     }
 
     private fun LastMilePlanProposal.toProjection(
-        jobs: Map<io.bluetape4k.workshop.optimization.lastmile.domain.JobId, DeliveryJob>,
-        vehicles: Map<io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId, Vehicle>,
+        jobs: Map<JobId, DeliveryJob>,
+        vehicles: Map<VehicleId, Vehicle>,
     ) = LastMilePlanProjection(
         planId = planId.value,
         revision = planRevision,
@@ -142,8 +148,8 @@ internal class LastMileReadModelService(
     )
 
     private fun LastMileRoute.toProjection(
-        jobs: Map<io.bluetape4k.workshop.optimization.lastmile.domain.JobId, DeliveryJob>,
-        vehicles: Map<io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId, Vehicle>,
+        jobs: Map<JobId, DeliveryJob>,
+        vehicles: Map<VehicleId, Vehicle>,
     ) = LastMileRouteProjection(
         vehicleId = vehicleId.value,
         depot = vehicles[vehicleId]?.let { point(it.depotCoordinateId.value) },

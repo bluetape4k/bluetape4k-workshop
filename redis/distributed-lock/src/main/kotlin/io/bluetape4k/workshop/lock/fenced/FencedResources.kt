@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class FencedResources {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val map = ConcurrentHashMap<Long, FencedResource>()
 

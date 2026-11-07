@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 import java.time.Instant
 import java.util.UUID
 
-enum class JobState(
-    @get:JsonValue val wireValue: String,
-) {
+enum class JobState(@get:JsonValue val wireValue: String) {
     QUEUED("queued"),
     RUNNING("running"),
     CANCEL_REQUESTED("cancel_requested"),
@@ -33,9 +31,7 @@ enum class JobSignal {
     NON_RETRYABLE_FAILURE,
 }
 
-enum class JobProblemCode(
-    @get:JsonValue val wireValue: String,
-) {
+enum class JobProblemCode(@get:JsonValue val wireValue: String) {
     VALIDATION_FAILED("validation_failed"),
     INVALID_IDEMPOTENCY_REQUEST("invalid_idempotency_request"),
     IDEMPOTENCY_REQUEST_TOO_LARGE("idempotency_request_too_large"),
@@ -62,4 +58,4 @@ data class JobLease(
 class InvalidJobTransition(
     val code: JobProblemCode,
     message: String,
-) : IllegalStateException(message)
+): IllegalStateException(message)

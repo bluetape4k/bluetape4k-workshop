@@ -2,12 +2,17 @@ package io.bluetape4k.workshop.operations.jobconsole.spring
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 
 class JobConsoleSpringSubmissionHttpTest {
+
+    companion object: KLogging()
+
     @Test
     fun `scope and key are validated before bounded JSON parsing`() {
         val request = request("{}", key = "bad,key")
@@ -37,7 +42,9 @@ class JobConsoleSpringSubmissionHttpTest {
             """{"jobType":"document_export","workUnits":3,"unexpected":true}""",
             """{"jobType":"document_export","workUnits":3} {}""",
         ).forEach { body ->
-            assertFailsWith<JobSubmissionInvalidRequestException> { JobConsoleSpringSubmissionHttp.readSubmitRequest(request(body, "spring-key")) }
+            assertFailsWith<JobSubmissionInvalidRequestException> {
+                JobConsoleSpringSubmissionHttp.readSubmitRequest(request(body, "spring-key"))
+            }
         }
     }
 
@@ -67,6 +74,6 @@ class JobConsoleSpringSubmissionHttpTest {
             addHeader("X-Demo-Submitter", "submitter-a")
             addHeader("Idempotency-Key", key)
             contentType = "application/json; charset=UTF-8"
-            setContent(body.toByteArray(Charsets.UTF_8))
+            setContent(body.toUtf8Bytes())
         }
 }

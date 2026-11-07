@@ -70,9 +70,9 @@ import kotlin.concurrent.write
 internal class SpringJobConsoleProfileApplication
 
 internal sealed interface SpringReplacementOutcome {
-    data class Claimed(val job: ClaimedJob) : SpringReplacementOutcome
+    data class Claimed(val job: ClaimedJob): SpringReplacementOutcome
 
-    data object Completed : SpringReplacementOutcome
+    data object Completed: SpringReplacementOutcome
 }
 
 internal fun awaitSpringReplacement(
@@ -143,7 +143,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     private val topology: JobConsoleProxiedTopology,
     private val journal: HighContentionJournal,
     private val journalRoot: Path,
-) : JobConsoleLiveProfileAdapter {
+): JobConsoleLiveProfileAdapter {
 
     private val action = SpringJobConsoleProfileAction.resolve(profile.profileId)
     private val lifecycleLock = ReentrantReadWriteLock(true)
@@ -264,29 +264,29 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 SpringJobConsoleProfileAction.REDIS_PATH_OUTAGE ->
                     redisPathEvidence?.let {
                         ",oldConnectionFailure=${it.oldConnectionFailureObserved}," +
-                            "newConnectionFailure=${it.newConnectionFailureObserved}," +
-                            "redisRecovered=${it.recovered}," +
-                            "durableCancelsDuringOutage=${it.durableCancelsDuringOutage}"
+                                "newConnectionFailure=${it.newConnectionFailureObserved}," +
+                                "redisRecovered=${it.recovered}," +
+                                "durableCancelsDuringOutage=${it.durableCancelsDuringOutage}"
                     }.orEmpty()
 
-                SpringJobConsoleProfileAction.REDIS_KEY_LOSS ->
+                SpringJobConsoleProfileAction.REDIS_KEY_LOSS    ->
                     redisKeyLossEvidence?.let {
                         ",deletedOwnedKeys=${it.deletedKeyCount}," +
-                            "durableCancelsAfterKeyLoss=${it.durableCancelsAfterKeyLoss}"
+                                "durableCancelsAfterKeyLoss=${it.durableCancelsAfterKeyLoss}"
                     }.orEmpty()
 
                 SpringJobConsoleProfileAction.SLOW_PROVIDER,
                 SpringJobConsoleProfileAction.WORKER_RESTART,
-                -> staleAttemptEvidence?.let {
+                                                                -> staleAttemptEvidence?.let {
                     ",staleCode=${it.staleErrorCode}," +
-                        "contextExecutorStopped=${it.contextExecutorStopped}," +
-                        "lateEffects=${it.lateEffectCount},lateReceipts=${it.lateReceiptCount}"
+                            "contextExecutorStopped=${it.contextExecutorStopped}," +
+                            "lateEffects=${it.lateEffectCount},lateReceipts=${it.lateReceiptCount}"
                 }.orEmpty()
 
-                else -> ""
+                else                                            -> ""
             }
             "hikari=true,maxPool=${application.dataSource.maximumPoolSize}," +
-                "redisProxy=${application.redisUri == topology.redisUri}$profileEvidence"
+                    "redisProxy=${application.redisUri == topology.redisUri}$profileEvidence"
         }
 
     override fun assertProfileInvariants(delta: JobConsoleAuthorityBaseline) {
@@ -346,7 +346,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
 
             SpringJobConsoleProfileAction.SLOW_PROVIDER,
             SpringJobConsoleProfileAction.WORKER_RESTART,
-            -> assertStaleAttemptEvidence()
+                                                -> assertStaleAttemptEvidence()
 
             SpringJobConsoleProfileAction.DUPLICATE_DELIVERY ->
                 check(deliveredEventIds.isNotEmpty() && duplicateOutboxLogicalEventCount() == 0L) {
@@ -424,7 +424,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 WorkloadTerminalDisposition.COMPLETED
             }
 
-            else -> error("profile action[$action] must use its dedicated lifecycle path")
+            else                                -> error("profile action[$action] must use its dedicated lifecycle path")
         }
     }
 
@@ -488,7 +488,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 val oldApplication = application
                 closeApplication(oldApplication)
                 contextExecutorStopped = oldApplication.workerExecutor.isShutdown &&
-                    oldApplication.dataSource.isClosed
+                        oldApplication.dataSource.isClosed
                 application = startApplication()
             }
 

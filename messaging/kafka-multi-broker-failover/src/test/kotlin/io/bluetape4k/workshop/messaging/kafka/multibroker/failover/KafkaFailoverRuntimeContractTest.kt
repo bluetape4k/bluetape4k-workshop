@@ -1,7 +1,11 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.SpringBootApplication
 
@@ -13,17 +17,26 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
  */
 class KafkaFailoverRuntimeContractTest {
 
+    private companion object: KLogging() {
+        const val APPLICATION_CLASS_NAME =
+            "io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaMultiBrokerFailoverApplication"
+        const val MAIN_CLASS_NAME =
+            "io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaMultiBrokerFailoverApplicationKt"
+    }
+
     @Test
     fun `runtime is a headless self-contained spring shell`() {
         val applicationType = runCatching {
             Class.forName(APPLICATION_CLASS_NAME)
         }.getOrNull()
+
         val mainType = runCatching {
             Class.forName(MAIN_CLASS_NAME)
         }.getOrNull()
 
-        (applicationType != null).shouldBeTrue()
-        (mainType != null).shouldBeTrue()
+        applicationType.shouldNotBeNull()
+        mainType.shouldNotBeNull()
+
         applicationType?.isAnnotationPresent(SpringBootApplication::class.java).shouldBeTrue()
 
         val applicationYaml = javaClass.classLoader
@@ -32,16 +45,10 @@ class KafkaFailoverRuntimeContractTest {
             ?.use { it.readText() }
             .orEmpty()
 
-        applicationYaml.contains("web-application-type: none").shouldBeTrue()
-        applicationYaml.contains("management").shouldBeFalse()
-        applicationYaml.contains("spring.kafka.bootstrap").shouldBeFalse()
-        applicationYaml.contains("KAFKA").shouldBeFalse()
-    }
-
-    private companion object {
-        const val APPLICATION_CLASS_NAME =
-            "io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaMultiBrokerFailoverApplication"
-        const val MAIN_CLASS_NAME =
-            "io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaMultiBrokerFailoverApplicationKt"
+        log.debug { "applicationYaml=$applicationYaml" }
+        applicationYaml shouldContain "web-application-type: none"
+        applicationYaml shouldNotContain "management"
+        applicationYaml shouldNotContain "spring.kafka.bootstrap"
+        applicationYaml shouldNotContain "KAFKA"
     }
 }

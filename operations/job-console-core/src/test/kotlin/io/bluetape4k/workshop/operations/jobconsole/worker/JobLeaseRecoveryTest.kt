@@ -2,6 +2,12 @@ package io.bluetape4k.workshop.operations.jobconsole.worker
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
@@ -18,20 +24,27 @@ import java.time.Instant
 @Tag("integration")
 class JobLeaseRecoveryTest {
 
+    companion object: KLogging()
+
     @Test
     fun `expired lease rejects stale checkpoint before another worker reclaims it`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
             val repository = JobRepository(fixture.dataSource)
-            val submitted =
-                repository.submit(
-                    DemoCallerScope("tenant-expired", "submitter-a"),
-                    "job-key",
-                    SubmitJobRequest(JobType.DOCUMENT_EXPORT, 3),
-                    Instant.parse("2026-07-21T00:00:00Z"),
-                )
-            val stale = requireNotNull(repository.claimNext("tenant-expired", Duration.ofSeconds(30)))
-            fixture.execute("UPDATE jobs SET lease_expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE job_id = '${submitted.jobId}'")
+            val submitted = repository.submit(
+                DemoCallerScope("tenant-expired", "submitter-a"),
+                "job-key",
+                SubmitJobRequest(JobType.DOCUMENT_EXPORT, 3),
+                Instant.parse("2026-07-21T00:00:00Z"),
+            )
+            log.debug { "submitted=$submitted" }
+
+            val stale = repository.claimNext("tenant-expired", 30.seconds()).shouldNotBeNull()
+            log.debug { "stale=$stale" }
+
+            fixture.execute(
+                "UPDATE jobs SET lease_expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE job_id = '${submitted.jobId}'"
+            )
 
             assertFailsWith<JobRepositoryException> {
                 repository.checkpoint(stale.lease, completedChunk = 1, progress = 33)
@@ -45,19 +58,23 @@ class JobLeaseRecoveryTest {
             fixture.migrate()
             val repository = JobRepository(fixture.dataSource)
             val scope = DemoCallerScope("tenant-cancel-recovery", "submitter-a")
-            val submitted =
-                repository.submit(
-                    scope,
-                    "job-key",
-                    SubmitJobRequest(JobType.DOCUMENT_EXPORT, 3),
-                    Instant.parse("2026-07-21T00:00:00Z"),
-                )
-            repository.claimNext(scope.tenantId, Duration.ofSeconds(30))
-            repository.cancel(scope, submitted.jobId)
-            fixture.execute("UPDATE jobs SET lease_expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE job_id = '${submitted.jobId}'")
+            val submitted = repository.submit(
+                scope,
+                "job-key",
+                SubmitJobRequest(JobType.DOCUMENT_EXPORT, 3),
+                Instant.parse("2026-07-21T00:00:00Z"),
+            )
+            log.debug { "submitted=$submitted" }
 
-            repository.reclaimExpired(scope.tenantId, Duration.ofSeconds(30)) shouldBeEqualTo null
-            requireNotNull(repository.load(submitted.jobId)).state shouldBeEqualTo JobState.CANCELLED
+            repository.claimNext(scope.tenantId, 30.seconds())
+            repository.cancel(scope, submitted.jobId)
+
+            fixture.execute(
+                "UPDATE jobs SET lease_expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE job_id = '${submitted.jobId}'"
+            )
+
+            repository.reclaimExpired(scope.tenantId, 30.seconds()).shouldBeNull()
+            repository.load(submitted.jobId).shouldNotBeNull().state shouldBeEqualTo JobState.CANCELLED
         }
     }
 
@@ -66,24 +83,30 @@ class JobLeaseRecoveryTest {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
             val repository = JobRepository(fixture.dataSource)
-            val submitted =
-                repository.submit(
-                    DemoCallerScope("tenant-a", "submitter-a"),
-                    "job-key",
-                    SubmitJobRequest(JobType.DOCUMENT_EXPORT, 3),
-                    Instant.parse("2026-07-21T00:00:00Z"),
-                )
-            val stale = requireNotNull(repository.claimNext("tenant-a", Duration.ofSeconds(30)))
+            val submitted = repository.submit(
+                DemoCallerScope("tenant-a", "submitter-a"),
+                "job-key",
+                SubmitJobRequest(JobType.DOCUMENT_EXPORT, 3),
+                Instant.parse("2026-07-21T00:00:00Z"),
+            )
+            val stale = repository.claimNext("tenant-a", 30.seconds()).shouldNotBeNull()
+            log.debug { "stale=$stale" }
+
             repository.checkpoint(stale.lease, completedChunk = 1, progress = 33)
-            fixture.execute("UPDATE jobs SET lease_expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE job_id = '${submitted.jobId}'")
 
-            val recovered = requireNotNull(repository.reclaimExpired("tenant-a", Duration.ofSeconds(30)))
+            fixture.execute(
+                "UPDATE jobs SET lease_expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE job_id = '${submitted.jobId}'"
+            )
 
-            (recovered.lease.token == stale.lease.token) shouldBeEqualTo false
+            val recovered = repository.reclaimExpired("tenant-a", 30.seconds()).shouldNotBeNull()
+            log.debug { "recovered=$recovered" }
+            recovered.lease.token shouldNotBeEqualTo stale.lease.token
             recovered.completedChunk shouldBeEqualTo 1L
+
             assertFailsWith<JobRepositoryException> {
                 repository.checkpoint(stale.lease, completedChunk = 2, progress = 66)
             }.code shouldBeEqualTo JobProblemCode.LEASE_LOST
+
             repository.checkpoint(recovered.lease, completedChunk = 2, progress = 66).completedChunk shouldBeEqualTo 2L
         }
     }

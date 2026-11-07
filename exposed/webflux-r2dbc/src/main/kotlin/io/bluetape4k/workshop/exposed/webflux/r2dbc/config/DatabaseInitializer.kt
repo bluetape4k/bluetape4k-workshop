@@ -22,9 +22,9 @@ class DatabaseInitializer(
     @Value("\${spring.r2dbc.url}") private val r2dbcUrl: String,
     @Value("\${spring.r2dbc.username}") private val username: String,
     @Value("\${spring.r2dbc.password}") private val password: String,
-) : ApplicationListener<ApplicationReadyEvent> {
+): ApplicationListener<ApplicationReadyEvent> {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
         log.info { "Initializing database schema via JDBC ..." }
@@ -47,7 +47,7 @@ class DatabaseInitializer(
         try {
             val db = Database.connect(dataSource)
             transaction(db) {
-                SchemaUtils.createMissingTablesAndColumns(
+                SchemaUtils.create(
                     AuthorTable,
                     BookTable,
                     ProductTable,

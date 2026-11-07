@@ -12,7 +12,8 @@ import io.bluetape4k.graph.schema.VertexLabel
  * - `occurredAt` 백엔드 중립성을 위해 문자열로 저장하는 ISO-8601 타임스탬프입니다.
  * - `summary` 학습자가 읽을 수 있는 이벤트 설명입니다.
  */
-object EventLabel : VertexLabel("Event") {
+object EventLabel: VertexLabel("Event") {
+    private fun readResolve(): Any = EventLabel
     val eventId = string("eventId")
     val type = string("type")
     val occurredAt = string("occurredAt")
@@ -22,7 +23,8 @@ object EventLabel : VertexLabel("Event") {
 /**
  * 이벤트를 발행하는 aggregate 상태 스냅샷의 정점 레이블입니다.
  */
-object AggregateLabel : VertexLabel("Aggregate") {
+object AggregateLabel: VertexLabel("Aggregate") {
+    private fun readResolve(): Any = AggregateLabel
     val aggregateId = string("aggregateId")
     val aggregateType = string("aggregateType")
     val state = string("state")
@@ -32,7 +34,8 @@ object AggregateLabel : VertexLabel("Aggregate") {
 /**
  * 결정을 담당하는 사람 또는 시스템의 정점 레이블입니다.
  */
-object ActorLabel : VertexLabel("Actor") {
+object ActorLabel: VertexLabel("Actor") {
+    private fun readResolve(): Any = ActorLabel
     val actorId = string("actorId")
     val displayName = string("displayName")
     val role = string("role")
@@ -41,7 +44,8 @@ object ActorLabel : VertexLabel("Actor") {
 /**
  * 명시적인 승인 또는 검토 결정의 정점 레이블입니다.
  */
-object DecisionLabel : VertexLabel("Decision") {
+object DecisionLabel: VertexLabel("Decision") {
+    private fun readResolve(): Any = DecisionLabel
     val decisionId = string("decisionId")
     val decisionType = string("decisionType")
     val status = string("status")
@@ -51,24 +55,34 @@ object DecisionLabel : VertexLabel("Decision") {
 /**
  * aggregate 감사 스트림에 속한 이벤트를 기록하는 Aggregate -> Event 간선입니다.
  */
-object EmitsLabel : EdgeLabel("EMITS", AggregateLabel, EventLabel)
+object EmitsLabel: EdgeLabel("EMITS", AggregateLabel, EventLabel) {
+    private fun readResolve(): Any = EmitsLabel
+}
 
 /**
  * 인과 lineage를 기록하는 Event -> upstream Event 간선입니다.
  */
-object CausedByLabel : EdgeLabel("CAUSED_BY", EventLabel, EventLabel)
+object CausedByLabel: EdgeLabel("CAUSED_BY", EventLabel, EventLabel) {
+    private fun readResolve(): Any = CausedByLabel
+}
 
 /**
  * 승인 증거를 기록하는 Event -> Decision 간선입니다.
  */
-object ApprovedByLabel : EdgeLabel("APPROVED_BY", EventLabel, DecisionLabel)
+object ApprovedByLabel: EdgeLabel("APPROVED_BY", EventLabel, DecisionLabel) {
+    private fun readResolve(): Any = ApprovedByLabel
+}
 
 /**
  * 누가 또는 무엇이 결정을 내렸는지 기록하는 Decision -> Actor 간선입니다.
  */
-object DecidedByLabel : EdgeLabel("DECIDED_BY", DecisionLabel, ActorLabel)
+object DecidedByLabel: EdgeLabel("DECIDED_BY", DecisionLabel, ActorLabel) {
+    private fun readResolve(): Any = DecidedByLabel
+}
 
 /**
  * 이벤트 정정 또는 대체를 기록하는 Event -> previous Event 간선입니다.
  */
-object SupersedesLabel : EdgeLabel("SUPERSEDES", EventLabel, EventLabel)
+object SupersedesLabel: EdgeLabel("SUPERSEDES", EventLabel, EventLabel) {
+    private fun readResolve(): Any = SupersedesLabel
+}

@@ -1,15 +1,21 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.junit5.awaitility.untilSuspending
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * 큐
@@ -34,8 +40,8 @@ class QueueExamples: AbstractRedissonTest() {
 
         val job = scope.launch {
             log.debug { "최대 요소 5개를 가져온다" }
-            while (queue.sizeAsync().await() < 5) {
-                delay(10)
+            await atMost 5.seconds withPollInterval 10.milliseconds untilSuspending {
+                queue.sizeAsync().await() >= 5
             }
             val items = queue.pollAsync(5).await()
             log.debug { "최대 요소 5개 = $items" }
@@ -43,16 +49,18 @@ class QueueExamples: AbstractRedissonTest() {
 
             log.debug { "[6,7] 이 새로 들어오는데, 7 을 queue2 로 이동시킨다." }
             queue.pollLastAndOfferFirstToAsync(queue2.name).await() shouldBeEqualTo 7
-            while (!queue2.containsAsync(7).await()) {
-                delay(10)
+
+            await atMost 5.seconds withPollInterval 10.milliseconds untilSuspending {
+                queue2.containsAsync(7).await()
             }
         }
+
         // 새롭게 요소 [5,6,7]을 추가한다
         queue.addAllAsync(listOf(5, 6, 7)).await().shouldBeTrue()
-        delay(10)
+        delay(10.milliseconds)
 
         job.join()
-        delay(10)
+        delay(10.milliseconds)
 
         // queue2에 [7]이 새로 들어왔다
         queue2.peekAsync().await() shouldBeEqualTo 7

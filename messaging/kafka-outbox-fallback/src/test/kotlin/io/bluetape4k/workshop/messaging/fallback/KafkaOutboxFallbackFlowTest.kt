@@ -3,13 +3,22 @@ package io.bluetape4k.workshop.messaging.fallback
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldStartWith
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.completableFutureOf
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.utils.Runtimex
+import io.bluetape4k.workshop.messaging.fallback.api.OrderPublicationStatus
 import io.bluetape4k.workshop.messaging.fallback.api.OrderRequest
 import io.bluetape4k.workshop.messaging.fallback.api.OrderResponse
-import io.bluetape4k.workshop.messaging.fallback.api.OrderPublicationStatus
 import io.bluetape4k.workshop.messaging.fallback.domain.OrderTable
 import io.bluetape4k.workshop.messaging.fallback.domain.TransactionalOrderWriter
 import io.bluetape4k.workshop.messaging.fallback.publication.EventPublicationRelay
@@ -17,8 +26,9 @@ import io.bluetape4k.workshop.messaging.fallback.publication.EventPublicationRep
 import io.bluetape4k.workshop.messaging.fallback.publication.EventPublicationStatus
 import io.bluetape4k.workshop.messaging.fallback.publication.EventPublicationTable
 import io.bluetape4k.workshop.messaging.fallback.publication.PublicationReconciler
-import io.mockk.every
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.jetbrains.exposed.v1.core.eq
@@ -32,17 +42,17 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.support.SendResult
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
-import io.micrometer.core.instrument.MeterRegistry
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CyclicBarrier
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.seconds
 
-class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
+class KafkaOutboxFallbackFlowTest: AbstractKafkaOutboxFallbackTest() {
 
     @Autowired
     private lateinit var transactionalOrderWriter: TransactionalOrderWriter
@@ -67,8 +77,10 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
 
     @BeforeEach
     fun clearTables() {
-        val successFuture = CompletableFuture.completedFuture<SendResult<String, String>>(mockk())
-        every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns successFuture
+        val successFuture = completableFutureOf<SendResult<String, String>>(mockk())
+        every {
+            kafkaTemplate.send(any<String>(), any<String>(), any<String>())
+        } returns successFuture
 
         transactionTemplate.execute {
             EventPublicationTable.deleteAll()
@@ -84,7 +96,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             quantity = 3,
         )
 
-        order.id.shouldBeGreaterThan(0L)
+        order.id shouldBeGreaterThan 0L
 
         val counts = transactionTemplate.execute {
             val orderCount = OrderTable.selectAll().count()
@@ -131,11 +143,13 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .exchange()
             .expectStatus().isBadRequest
 
+        // @formatter:off
         webTestClient.post().uri("/api/orders")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1,}""")
+            .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1},""")
             .exchange()
             .expectStatus().isBadRequest
+        // @formatter:on
     }
 
     @Test
@@ -151,10 +165,10 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .bodyValue(request)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderResponse::class.java)
+            .expectBody<OrderResponse>()
             .value { response ->
                 response.requireNotNull("response").publicationStatus shouldBeEqualTo
-                    OrderPublicationStatus.PUBLISHED_DIRECT
+                        OrderPublicationStatus.PUBLISHED_DIRECT
             }
 
         val counts = transactionTemplate.execute {
@@ -182,10 +196,10 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .bodyValue(request)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderResponse::class.java)
+            .expectBody<OrderResponse>()
             .value { response ->
                 response.requireNotNull("response").publicationStatus shouldBeEqualTo
-                    OrderPublicationStatus.FALLBACK_STORED
+                        OrderPublicationStatus.FALLBACK_STORED
             }
 
         verify(exactly = 3) {
@@ -200,13 +214,15 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         row[EventPublicationTable.directAttemptCount] shouldBeEqualTo 3
         row[EventPublicationTable.relayRetryCount] shouldBeEqualTo 0
         row[EventPublicationTable.lastErrorSummary].requireNotNull("lastErrorSummary")
-            .contains("secret://") shouldBeEqualTo false
+            .contains("secret://").shouldBeFalse()
     }
 
     @Test
     fun `direct publish timeout stores NOT_PUBLISHED fallback row`() {
         val pending = CompletableFuture<SendResult<String, String>>()
-        every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns pending
+        every {
+            kafkaTemplate.send(any<String>(), any<String>(), any<String>())
+        } returns pending
 
         val elapsed = measureTimeMillis {
             val request = OrderRequest(
@@ -220,15 +236,15 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
                 .bodyValue(request)
                 .exchange()
                 .expectStatus().isCreated
-                .expectBody(OrderResponse::class.java)
+                .expectBody<OrderResponse>()
                 .value { response ->
                     response.requireNotNull("response").publicationStatus shouldBeEqualTo
-                        OrderPublicationStatus.FALLBACK_STORED
+                            OrderPublicationStatus.FALLBACK_STORED
                 }
         }
 
         elapsed.shouldBeLessThan(1000L)
-        pending.isCancelled shouldBeEqualTo true
+        pending.isCancelled.shouldBeTrue()
 
         val status = transactionTemplate.execute {
             EventPublicationTable.selectAll().single()[EventPublicationTable.status]
@@ -257,10 +273,10 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .bodyValue(request)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderResponse::class.java)
+            .expectBody<OrderResponse>()
             .value { response ->
                 response.requireNotNull("response").publicationStatus shouldBeEqualTo
-                    OrderPublicationStatus.FALLBACK_STORE_FAILED
+                        OrderPublicationStatus.FALLBACK_STORE_FAILED
             }
     }
 
@@ -276,8 +292,9 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         }
 
         row[EventPublicationTable.status] shouldBeEqualTo EventPublicationStatus.PUBLISHED
-        (row[EventPublicationTable.publishedAt] != null) shouldBeEqualTo true
-        row[EventPublicationTable.claimedBy] shouldBeEqualTo null
+        (row[EventPublicationTable.publishedAt] != null).shouldBeTrue()
+        row[EventPublicationTable.claimedBy].shouldBeNull()
+
         verify(exactly = 1) {
             kafkaTemplate.send(any<String>(), eventId, match { it.contains("\"orderId\"") })
         }
@@ -295,7 +312,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .bodyValue("""{"customerId":"고객🙂","product":"상품","quantity":2}""")
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderResponse::class.java)
+            .expectBody<OrderResponse>()
             .value { response = it.requireNotNull("response") }
 
         val eventId = "order-placed:${response.id}:v1"
@@ -312,8 +329,9 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         storedPayload shouldBeEqualTo expectedPayload
 
         clearMocks(kafkaTemplate)
-        every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns
-            CompletableFuture.completedFuture<SendResult<String, String>>(mockk())
+        every {
+            kafkaTemplate.send(any<String>(), any<String>(), any<String>())
+        } returns completableFutureOf(mockk())
 
         eventPublicationRelay.relayOnce().published shouldBeEqualTo 1
         verify(exactly = 1) {
@@ -338,7 +356,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         row[EventPublicationTable.status] shouldBeEqualTo EventPublicationStatus.DEAD_LETTER
         row[EventPublicationTable.relayRetryCount] shouldBeEqualTo 3
         row[EventPublicationTable.lastErrorSummary].requireNotNull("lastErrorSummary")
-            .contains("secret") shouldBeEqualTo false
+            .contains("secret").shouldBeFalse()
     }
 
     @Test
@@ -349,10 +367,10 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         val emptyClaims = AtomicInteger()
 
         MultithreadingTester()
-            .workers(2)
+            .workers(Runtimex.availableProcessors)
             .rounds(1)
             .add {
-                barrier.await(5, TimeUnit.SECONDS)
+                barrier.await(5.seconds)
                 val workerId = Thread.currentThread().name
                 val claimed = eventPublicationRepository.claimNextBatch(workerId, 1)
                 if (claimed.isEmpty()) {
@@ -364,7 +382,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .run()
 
         claimedBy.size shouldBeEqualTo 1
-        emptyClaims.get() shouldBeEqualTo 1
+        emptyClaims.get() shouldBeEqualTo Runtimex.availableProcessors - 1
         val storedClaim = transactionTemplate.execute {
             EventPublicationTable.selectAll().single()[EventPublicationTable.claimedBy]
         }
@@ -424,8 +442,8 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
 
         claimStates.getValue(first) shouldBeEqualTo "worker-sql"
         claimStates.getValue(second) shouldBeEqualTo "worker-sql"
-        claimStates.getValue(future) shouldBeEqualTo null
-        claimStates.getValue(published) shouldBeEqualTo null
+        claimStates.getValue(future).shouldBeNull()
+        claimStates.getValue(published).shouldBeNull()
     }
 
     @Test
@@ -439,11 +457,13 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             product = faker.commerce().productName(),
             quantity = 1,
         )
+
         webTestClient.post().uri("/api/orders")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(request)
             .exchange()
             .expectStatus().isCreated
+
         transactionTemplate.execute {
             EventPublicationTable.deleteAll()
             OrderTable.update {
@@ -453,20 +473,22 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
 
         val result = publicationReconciler.reconcileOnce()
 
+        log.debug { "result=$result" }
         result.reconstructed shouldBeEqualTo 1
-        result.duplicateRiskDocumented shouldBeEqualTo true
+        result.duplicateRiskDocumented.shouldBeTrue()
+
         val eventId = transactionTemplate.execute {
             EventPublicationTable.selectAll().single()[EventPublicationTable.eventId]
         }
-
-        eventId.startsWith("order-placed:") shouldBeEqualTo true
+        log.debug { "eventId=$eventId" }
+        eventId shouldStartWith "order-placed:"
     }
 
     @Test
     fun `reconciler uses SQL cutoff and anti join for missing publications`() {
-        val oldMissingOrderId = createOrderWithCreatedAt(LocalDateTime.now().minusMinutes(5))
-        val futureMissingOrderId = createOrderWithCreatedAt(LocalDateTime.now().plusMinutes(5))
-        val existingOrderId = createOrderWithCreatedAt(LocalDateTime.now().minusMinutes(5))
+        val oldMissingOrderId = createOrderWithCreatedAt(LocalDateTime.now() - 5.minutes())
+        val futureMissingOrderId = createOrderWithCreatedAt(LocalDateTime.now() + 5.minutes())
+        val existingOrderId = createOrderWithCreatedAt(LocalDateTime.now() - 5.minutes())
         val existingEventId = insertPublicationRow(
             eventId = "order-placed:$existingOrderId:v1",
             aggregateId = existingOrderId.toString(),
@@ -482,9 +504,9 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
                 .toSet()
         }
 
-        eventIds.contains("order-placed:$oldMissingOrderId:v1") shouldBeEqualTo true
-        eventIds.contains("order-placed:$futureMissingOrderId:v1") shouldBeEqualTo false
-        eventIds.contains(existingEventId) shouldBeEqualTo true
+        eventIds.contains("order-placed:$oldMissingOrderId:v1").shouldBeTrue()
+        eventIds.contains("order-placed:$futureMissingOrderId:v1").shouldBeFalse()
+        eventIds.contains(existingEventId).shouldBeTrue()
     }
 
     @Test
@@ -494,6 +516,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         webTestClient.post().uri("/api/publications/relay")
             .exchange()
             .expectStatus().isNotFound
+
         webTestClient.post().uri("/api/publications/reconcile")
             .exchange()
             .expectStatus().isNotFound
@@ -580,14 +603,14 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
     fun `metrics record direct failure fallback relay and reconciler outcomes`() {
         createFallbackPublication()
 
-        meterRegistry.counter("workshop.outbox.direct.publish.attempts", "result", "failure").count()
-            .shouldBeGreaterThan(0.0)
-        meterRegistry.counter("workshop.outbox.fallback.stored", "result", "success").count()
-            .shouldBeGreaterThan(0.0)
+        meterRegistry.counter("workshop.outbox.direct.publish.attempts", "result", "failure")
+            .count() shouldBeGreaterThan 0.0
+        meterRegistry.counter("workshop.outbox.fallback.stored", "result", "success")
+            .count() shouldBeGreaterThan 0.0
 
         eventPublicationRelay.relayOnce()
-        meterRegistry.counter("workshop.outbox.relay.events", "result", "published").count()
-            .shouldBeGreaterThan(0.0)
+        meterRegistry.counter("workshop.outbox.relay.events", "result", "published")
+            .count() shouldBeGreaterThan 0.0
 
         transactionTemplate.execute {
             EventPublicationTable.deleteAll()
@@ -597,13 +620,13 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
                 quantity = 1,
             )
             OrderTable.update({ OrderTable.id eq order.id }) {
-                it[createdAt] = LocalDateTime.now().minusMinutes(5)
+                it[createdAt] = LocalDateTime.now() - 5.minutes()
             }
         }
 
         publicationReconciler.reconcileOnce()
-        meterRegistry.counter("workshop.outbox.reconciler.events", "result", "reconstructed").count()
-            .shouldBeGreaterThan(0.0)
+        meterRegistry.counter("workshop.outbox.reconciler.events", "result", "reconstructed")
+            .count() shouldBeGreaterThan 0.0
     }
 
     private fun createFallbackPublication(
@@ -629,6 +652,8 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         val eventId = transactionTemplate.execute {
             EventPublicationTable.selectAll().single()[EventPublicationTable.eventId]
         }
+        log.debug { "eventId=$eventId" }
+
         if (relayRetryCount > 0) {
             transactionTemplate.execute {
                 EventPublicationTable.update({ EventPublicationTable.eventId eq eventId }) {
@@ -638,8 +663,9 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         }
 
         clearMocks(kafkaTemplate)
-        every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns
-            CompletableFuture.completedFuture<SendResult<String, String>>(mockk())
+        every {
+            kafkaTemplate.send(any<String>(), any<String>(), any<String>())
+        } returns completableFutureOf(mockk<SendResult<String, String>>())
 
         return eventId
     }

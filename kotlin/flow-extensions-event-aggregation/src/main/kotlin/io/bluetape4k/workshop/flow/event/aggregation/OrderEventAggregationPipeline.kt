@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.flow.event.aggregation
 
 import io.bluetape4k.coroutines.flow.extensions.GroupItem
-import io.bluetape4k.coroutines.flow.extensions.bufferUntilChanged
 import io.bluetape4k.coroutines.flow.extensions.bufferTimeout
+import io.bluetape4k.coroutines.flow.extensions.bufferUntilChanged
 import io.bluetape4k.coroutines.flow.extensions.chunked
 import io.bluetape4k.coroutines.flow.extensions.groupBy
 import io.bluetape4k.coroutines.flow.extensions.log
@@ -14,8 +14,6 @@ import io.bluetape4k.support.requireGe
 import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireLt
 import io.bluetape4k.support.requirePositiveNumber
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -23,6 +21,8 @@ import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 /**
  * 학습용 in-memory order event aggregation pipeline 입니다.

@@ -5,7 +5,6 @@ import ai.timefold.solver.core.api.domain.entity.PlanningPin
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.Comparator
 
 /** Timefold가 배치할 synthetic 예약 planning entity. */
 @PlanningEntity(comparatorClass = ClinicAppointmentDifficultyComparator::class)
@@ -47,11 +46,11 @@ class ClinicAppointmentPlanning(
 
     /** Timefold의 reflection 기반 domain discovery를 위한 no-arg 생성자다. */
     @Suppress("unused")
-    constructor() : this(requestId = "")
+    constructor(): this(requestId = "")
 }
 
 /** First Fit Decreasing에서 장비·긴 진료·제한된 날짜를 먼저 배치하는 비교기다. */
-class ClinicAppointmentDifficultyComparator : Comparator<ClinicAppointmentPlanning> {
+class ClinicAppointmentDifficultyComparator: Comparator<ClinicAppointmentPlanning> {
     override fun compare(left: ClinicAppointmentPlanning, right: ClinicAppointmentPlanning): Int =
         compareValuesBy(
             left,

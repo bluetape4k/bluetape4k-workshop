@@ -16,7 +16,7 @@ import org.springframework.cache.annotation.EnableCaching
 @EnableCaching
 class RedisApplication {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         private val redisServer = RedisServer.Launcher.redis
     }

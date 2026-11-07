@@ -55,7 +55,7 @@ class SocialNetworkService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         /**
          * network query에 허용하는 최대 순회 깊이입니다.
          * LinkedIn의 "6 degrees of separation"에 해당하는 상한입니다.
@@ -100,6 +100,7 @@ class SocialNetworkService(
     ): GraphVertex {
         personId.requireNotBlank("personId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(PersonLabel.label, mapOf(PersonLabel.personId.name to personId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -129,6 +130,7 @@ class SocialNetworkService(
     ): GraphVertex {
         companyId.requireNotBlank("companyId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(CompanyLabel.label, mapOf(CompanyLabel.companyId.name to companyId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -169,6 +171,7 @@ class SocialNetworkService(
         requireDistinctEndpoints(fromVertexId, toVertexId, "fromVertexId", "toVertexId")
         ops.requireEndpoint(fromVertexId, PersonLabel.label, "fromVertexId")
         ops.requireEndpoint(toVertexId, PersonLabel.label, "toVertexId")
+
         val props = buildMap {
             if (since.isNotBlank()) put(KnowsLabel.since.name, since)
             put(KnowsLabel.strength.name, strength.toString())
@@ -192,6 +195,7 @@ class SocialNetworkService(
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
         ops.requireEndpoint(followerVertexId, PersonLabel.label, "followerVertexId")
         ops.requireEndpoint(followeeVertexId, PersonLabel.label, "followeeVertexId")
+
         return ops.createEdge(followerVertexId, followeeVertexId, FollowsLabel.label, emptyMap())
     }
 
@@ -273,8 +277,10 @@ class SocialNetworkService(
      */
     fun getNthDegreeConnections(personVertexId: GraphElementId, degree: Int): List<GraphVertex> {
         degree.requireInRange(1, MAX_TRAVERSAL_DEPTH, "degree")
+
         val allWithin = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, degree))
             .filter { it.id != personVertexId }
+
         val closerIds = if (degree > 1) {
             ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, degree - 1))
                 .filter { it.id != personVertexId }
@@ -305,19 +311,21 @@ class SocialNetworkService(
         val directFriends = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
         val directFriendIds = directFriends.map { it.id }.toSet()
 
-        val candidates = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 2))
+        val candidates = ops
+            .neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 2))
             .filter { it.id != personVertexId && it.id !in directFriendIds }
 
-        return candidates.map { candidate ->
-            val candidateFriends = ops.neighbors(candidate.id, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
-                .filter { it.id != personVertexId }
-            val mutualConnections = candidateFriends.filter { it.id in directFriendIds }
-            ConnectionRecommendation(
-                person = candidate,
-                mutualConnectionCount = mutualConnections.size,
-                mutualConnections = mutualConnections,
-            )
-        }
+        val outgoingOptions = NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1)
+        return candidates
+            .map { candidate ->
+                val candidateFriends = ops.neighbors(candidate.id, outgoingOptions).filter { it.id != personVertexId }
+                val mutualConnections = candidateFriends.filter { it.id in directFriendIds }
+                ConnectionRecommendation(
+                    person = candidate,
+                    mutualConnectionCount = mutualConnections.size,
+                    mutualConnections = mutualConnections,
+                )
+            }
             .filter { it.mutualConnectionCount > 0 }
             .sortedWith(
                 compareByDescending<ConnectionRecommendation> { it.mutualConnectionCount }
@@ -334,9 +342,11 @@ class SocialNetworkService(
      */
     fun findColleagues(personVertexId: GraphElementId): List<GraphVertex> {
         val companies = ops.neighbors(personVertexId, NeighborOptions(WorksAtLabel.label, Direction.OUTGOING, 1))
+
+        val incomingOptions = NeighborOptions(WorksAtLabel.label, Direction.INCOMING, 1)
         return companies
             .flatMap { company ->
-                ops.neighbors(company.id, NeighborOptions(WorksAtLabel.label, Direction.INCOMING, 1))
+                ops.neighbors(company.id, incomingOptions)
             }
             .filter { it.id != personVertexId }
             .distinctBy { it.id }
@@ -382,6 +392,7 @@ class SocialNetworkService(
         direction: Direction = Direction.OUTGOING,
     ): GraphPath? {
         maxDepth.requireInRange(0, MAX_TRAVERSAL_DEPTH, "maxDepth")
+
         return ops.shortestPath(
             fromVertexId,
             toVertexId,
@@ -409,6 +420,7 @@ class SocialNetworkService(
         maxDepth: Int = 5,
     ): List<GraphPath> {
         maxDepth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "maxDepth")
+
         return ops.allPaths(
             fromVertexId,
             toVertexId,

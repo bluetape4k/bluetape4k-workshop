@@ -75,7 +75,7 @@ class RecommendationSuspendService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * named graph가 존재하도록 보장합니다. 여러 번 호출해도 안전하며, 이미 생성되어 있으면 no-op입니다.
@@ -100,6 +100,7 @@ class RecommendationSuspendService(
     suspend fun addUser(userId: String, name: String): GraphVertex {
         userId.requireNotBlank("userId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(UserLabel.label, mapOf(UserLabel.userId.name to userId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -121,6 +122,7 @@ class RecommendationSuspendService(
     suspend fun addProduct(productId: String, name: String, category: String = ""): GraphVertex {
         productId.requireNotBlank("productId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(ProductLabel.label, mapOf(ProductLabel.productId.name to productId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -161,7 +163,13 @@ class RecommendationSuspendService(
             if (rating > 0) put(PurchasedLabel.rating.name, rating.toString())
             if (purchasedAt.isNotBlank()) put(PurchasedLabel.purchasedAt.name, purchasedAt)
         }
-        return ops.createEdge(userVertexId, productVertexId, PurchasedLabel.label, props)
+
+        return ops.createEdge(
+            userVertexId,
+            productVertexId,
+            PurchasedLabel.label,
+            props
+        )
     }
 
     /**
@@ -177,7 +185,13 @@ class RecommendationSuspendService(
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
         ops.requireEndpoint(followerVertexId, UserLabel.label, "followerVertexId")
         ops.requireEndpoint(followeeVertexId, UserLabel.label, "followeeVertexId")
-        return ops.createEdge(followerVertexId, followeeVertexId, FollowsLabel.label, emptyMap())
+
+        return ops.createEdge(
+            followerVertexId,
+            followeeVertexId,
+            FollowsLabel.label,
+            emptyMap()
+        )
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -196,7 +210,10 @@ class RecommendationSuspendService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
      * @return 순위화된 [ProductRecommendation] 목록입니다. User를 찾을 수 없거나 구매가 없으면 `emptyList()`입니다.
      */
-    suspend fun recommendProducts(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<ProductRecommendation> {
+    suspend fun recommendProducts(
+        userVertexId: GraphElementId,
+        limit: Int = DEFAULT_RECOMMENDATION_LIMIT,
+    ): List<ProductRecommendation> {
         return explainProductRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
@@ -218,16 +235,16 @@ class RecommendationSuspendService(
         // candidateMap: candidateProductId -> (candidateVertex, evidence path)
         val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<ProductEvidencePath>>>()
 
+        val incomingOptions = NeighborOptions(PurchasedLabel.label, Direction.INCOMING, 1)
+        val outcomingOptions = NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1)
         for (product in myProducts) {
-            val coBuyers = ops.neighbors(product.id, NeighborOptions(PurchasedLabel.label, Direction.INCOMING, 1))
+            val coBuyers = ops.neighbors(product.id, incomingOptions)
                 .toList()
                 .filter { it.id != userVertexId }
 
             for (coBuyer in coBuyers) {
-                val theirProducts = ops.neighbors(
-                    coBuyer.id,
-                    NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1)
-                ).toList()
+                val theirProducts = ops.neighbors(coBuyer.id, outcomingOptions)
+                    .toList()
                     .filter { it.id !in myProductIds }
 
                 for (candidate in theirProducts) {
@@ -267,7 +284,10 @@ class RecommendationSuspendService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
      * @return 순위화된 [FollowRecommendation] 목록입니다. User를 찾을 수 없거나 follow가 없으면 `emptyList()`입니다.
      */
-    suspend fun recommendFollows(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<FollowRecommendation> {
+    suspend fun recommendFollows(
+        userVertexId: GraphElementId,
+        limit: Int = DEFAULT_RECOMMENDATION_LIMIT,
+    ): List<FollowRecommendation> {
         return explainFollowRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
@@ -287,11 +307,9 @@ class RecommendationSuspendService(
         val excludedCandidates = myFollows.map { CandidateExclusion(it.id, ALREADY_FOLLOWED) }.toMutableList()
         val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<FollowEvidencePath>>>()
 
+        val outgoingOptions = NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1)
         for (intermediary in myFollows) {
-            val candidates = ops.neighbors(
-                intermediary.id,
-                NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1)
-            ).toList()
+            val candidates = ops.neighbors(intermediary.id, outgoingOptions).toList()
 
             for (candidate in candidates) {
                 when {
@@ -301,7 +319,7 @@ class RecommendationSuspendService(
                     candidate.id in myFollowIds ->
                         excludedCandidates += CandidateExclusion(candidate.id, ALREADY_FOLLOWED, intermediary)
 
-                    else ->
+                    else                        ->
                         candidateMap.getOrPut(candidate.id) { candidate to mutableListOf() }
                             .second += FollowEvidencePath(intermediary, candidate)
                 }

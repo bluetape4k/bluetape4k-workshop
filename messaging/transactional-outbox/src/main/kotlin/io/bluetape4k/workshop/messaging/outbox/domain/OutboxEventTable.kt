@@ -21,12 +21,12 @@ import org.jetbrains.exposed.v1.javatime.datetime
  * - `created_at` — row creation wall-clock time 입니다.
  * - `processed_at` — successful publish wall-clock time 이며 nullable 입니다.
  */
-object OutboxEventTable : LongIdTable("outbox_events") {
+object OutboxEventTable: LongIdTable("outbox_events") {
     val aggregateType = varchar("aggregate_type", 100)
     val aggregateId = varchar("aggregate_id", 100)
     val eventType = varchar("event_type", 100)
     val payload = text("payload")
-    val status = enumerationByName("status", 20, OutboxStatus::class).default(OutboxStatus.PENDING)
+    val status = enumerationByName<OutboxStatus>("status", 20).default(OutboxStatus.PENDING)
     val retryCount = integer("retry_count").default(0)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val processedAt = datetime("processed_at").nullable()

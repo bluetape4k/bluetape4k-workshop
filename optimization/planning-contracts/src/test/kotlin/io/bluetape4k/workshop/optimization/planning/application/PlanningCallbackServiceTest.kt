@@ -2,11 +2,15 @@ package io.bluetape4k.workshop.optimization.planning.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.planning.PlanningContractsApplication
 import io.bluetape4k.workshop.optimization.planning.adapter.http.CallbackSignatureVerifier
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
+import io.bluetape4k.workshop.optimization.planning.observability.PlanningObservations
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAggregateRepository
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAggregateTable
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAuditRepository
@@ -14,9 +18,8 @@ import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAuditTab
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningCallbackInboxRepository
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningCallbackInboxTable
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningOutboxTable
-import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestTable
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestRepository
-import io.bluetape4k.workshop.optimization.planning.observability.PlanningObservations
+import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestTable
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
@@ -26,9 +29,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.support.TransactionTemplate
-import java.nio.charset.StandardCharsets
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 
 @SpringBootTest(
     classes = [PlanningContractsApplication::class],
@@ -47,6 +49,20 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
     private val clock: Clock,
     private val observations: PlanningObservations,
 ) {
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
+        private val RAW_BODY = "{\"eventId\":\"event-42\"}".toUtf8Bytes()
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { postgres.password.shouldNotBeNull() }
+        }
+    }
 
     @BeforeEach
     fun resetSchema() {
@@ -72,9 +88,10 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
     @Test
     fun `duplicate callback creates one accepted audit`() {
         callbackService.handle(callback("event-42", 2), RAW_BODY, "fake") shouldBeEqualTo
-            PlanningCallbackDecision.ACCEPTED
+                PlanningCallbackDecision.ACCEPTED
+
         callbackService.handle(callback("event-42", 2), RAW_BODY, "fake") shouldBeEqualTo
-            PlanningCallbackDecision.DUPLICATE
+                PlanningCallbackDecision.DUPLICATE
 
         transaction {
             inboxRepository.count() shouldBeEqualTo 1L
@@ -85,9 +102,9 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
     @Test
     fun `out of order callback is audited but cannot replace accepted revision`() {
         callbackService.handle(callback("event-42", 2), RAW_BODY, "fake") shouldBeEqualTo
-            PlanningCallbackDecision.ACCEPTED
+                PlanningCallbackDecision.ACCEPTED
         callbackService.handle(callback("event-43", 1), RAW_BODY, "fake") shouldBeEqualTo
-            PlanningCallbackDecision.STALE_REVISION
+                PlanningCallbackDecision.STALE_REVISION
 
         transaction { auditRepository.count() } shouldBeEqualTo 2L
     }
@@ -116,9 +133,10 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
         transaction { aggregateRepository.updateVersion("roster-42", 8) shouldBeEqualTo true }
 
         callbackService.handle(callback("event-42", 2), RAW_BODY, "fake") shouldBeEqualTo
-            PlanningCallbackDecision.AGGREGATE_CHANGED
+                PlanningCallbackDecision.AGGREGATE_CHANGED
+
         commandService.createCandidate(REQUEST_ID) shouldBeEqualTo
-            PlanningCommandResult.Conflict("aggregate version changed")
+                PlanningCommandResult.Conflict("aggregate version changed")
     }
 
     @Test
@@ -133,7 +151,7 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
         } shouldBeEqualTo PlanningCallbackDecision.PROVIDER_MISMATCH
 
         commandService.createCandidate(REQUEST_ID) shouldBeEqualTo
-            PlanningCommandResult.Conflict("planning result is not accepted")
+                PlanningCommandResult.Conflict("planning result is not accepted")
         transaction { auditRepository.count() } shouldBeEqualTo 1L
     }
 
@@ -142,12 +160,12 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
         callbackService.handle(callback("event-42", 2), RAW_BODY, "fake")
 
         commandService.createCandidate(REQUEST_ID) shouldBeEqualTo
-            PlanningCommandResult.Ready(
-                requestId = REQUEST_ID,
-                aggregateId = "roster-42",
-                aggregateVersion = 7,
-                acceptedRevision = 2,
-            )
+                PlanningCommandResult.Ready(
+                    requestId = REQUEST_ID,
+                    aggregateId = "roster-42",
+                    aggregateVersion = 7,
+                    acceptedRevision = 2,
+                )
     }
 
     @Test
@@ -197,18 +215,4 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
         scoreSummary = "0hard/-2soft",
         constraintExplanations = listOf("balanced workload"),
     )
-
-    companion object {
-        private val postgres = PostgreSQLServer.Launcher.postgres
-        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
-        private val RAW_BODY = "{\"eventId\":\"event-42\"}".toByteArray(StandardCharsets.UTF_8)
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
-            registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
-        }
-    }
 }

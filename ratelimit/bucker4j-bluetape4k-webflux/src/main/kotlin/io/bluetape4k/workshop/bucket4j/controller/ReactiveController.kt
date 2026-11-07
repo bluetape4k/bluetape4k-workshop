@@ -9,7 +9,7 @@ import java.time.Instant
 @RestController
 class ReactiveController {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * `/api/v1/reactive/...`에 rate limiting을 적용합니다.

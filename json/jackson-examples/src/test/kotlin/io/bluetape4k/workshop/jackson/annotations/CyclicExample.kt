@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNull
 import org.junit.jupiter.api.Test
 import tools.jackson.module.kotlin.readValue
 import java.io.Serializable
@@ -37,7 +37,7 @@ class CyclicExample: AbstractJacksonTest() {
             var phone: String,
             @JsonIgnoreProperties("contactData", allowSetters = true)  // allowSetters is required for deserialization
             var user: User? = null,
-        ) : Serializable {
+        ): Serializable {
             companion object {
                 private const val serialVersionUID: Long = 1L
             }

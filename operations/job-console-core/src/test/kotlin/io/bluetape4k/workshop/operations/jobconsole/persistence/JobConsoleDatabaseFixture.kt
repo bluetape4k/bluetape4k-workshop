@@ -4,9 +4,10 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import java.sql.DriverManager
-import java.util.UUID
+import java.util.*
 
-internal class JobConsoleDatabaseFixture : AutoCloseable {
+internal class JobConsoleDatabaseFixture: AutoCloseable {
+
     private val schema = "job_console_${UUID.randomUUID().toString().replace("-", "")}"
     val dataSource: HikariDataSource
 

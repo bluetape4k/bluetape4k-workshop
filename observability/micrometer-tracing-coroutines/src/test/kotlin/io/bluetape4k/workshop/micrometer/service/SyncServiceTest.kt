@@ -1,19 +1,19 @@
 package io.bluetape4k.workshop.micrometer.service
 
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.micrometer.AbstractTracingTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.micrometer.AbstractTracingTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class SyncServiceTest(
     @param:Autowired private val service: SyncService,
-) : AbstractTracingTest() {
+): AbstractTracingTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `context loading`() {

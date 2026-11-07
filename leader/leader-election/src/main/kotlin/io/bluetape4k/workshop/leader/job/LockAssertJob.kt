@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.job
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.leader.LockAssert
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
@@ -24,7 +25,11 @@ import java.time.Duration
  *   [LeaderScheduledJobService]에 자동 주입됩니다.
  */
 @Component
-class LockAssertJob : LeaderGuardedJob {
+class LockAssertJob: LeaderGuardedJob {
+
+    companion object: KLogging() {
+        private val ASSERTION_DEMO_DURATION: Duration = 20.millis()
+    }
 
     override val lockName = "leader:lock-assert-demo"
 
@@ -53,7 +58,4 @@ class LockAssertJob : LeaderGuardedJob {
         log.info { "[LockAssertJob] Job complete" }
     }
 
-    companion object : KLogging() {
-        private val ASSERTION_DEMO_DURATION: Duration = Duration.ofMillis(20)
-    }
 }

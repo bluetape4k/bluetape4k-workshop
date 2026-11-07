@@ -25,7 +25,7 @@ import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.CancellationException
 
 // extension function 은 companion object 를 가질 수 없으므로 file-private holder 를 사용합니다.
-private object BookRoutesLog : KLoggingChannel()
+private object BookRoutesLog: KLoggingChannel()
 
 /**
  * [Application] 에 모든 book catalog route 를 등록합니다.

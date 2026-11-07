@@ -2,16 +2,19 @@ package io.bluetape4k.workshop.imageprocessing.barcode
 
 import io.bluetape4k.images.barcode.BarcodeException
 import io.bluetape4k.images.barcode.BarcodeFailureReason
+import io.bluetape4k.logging.KLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.multipart.MaxUploadSizeExceededException
 import org.springframework.web.multipart.support.MissingServletRequestPartException
-import java.util.Locale
+import java.util.*
 
 @RestControllerAdvice
 internal class BarcodeApiExceptionHandler {
+
+    private companion object: KLogging()
 
     @ExceptionHandler(BarcodeRequestException::class)
     fun handleRequest(exception: BarcodeRequestException): ResponseEntity<BarcodeErrorResponse> =
@@ -45,16 +48,17 @@ internal class BarcodeApiExceptionHandler {
     fun handleBarcode(exception: BarcodeException): ResponseEntity<BarcodeErrorResponse> {
         val status = when (exception.reason) {
             BarcodeFailureReason.MALFORMED_INPUT,
-            BarcodeFailureReason.UNSUPPORTED_FORMAT -> HttpStatus.BAD_REQUEST
+            BarcodeFailureReason.UNSUPPORTED_FORMAT,
+                 -> HttpStatus.BAD_REQUEST
 
             BarcodeFailureReason.PROVIDER_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE
             else -> HttpStatus.INTERNAL_SERVER_ERROR
         }
         val message = when (exception.reason) {
-            BarcodeFailureReason.MALFORMED_INPUT -> "The uploaded file is not a decodable image."
+            BarcodeFailureReason.MALFORMED_INPUT    -> "The uploaded file is not a decodable image."
             BarcodeFailureReason.UNSUPPORTED_FORMAT -> "The requested barcode format is not supported."
             BarcodeFailureReason.PROVIDER_UNAVAILABLE -> "The barcode provider is unavailable."
-            else -> "Barcode extraction failed."
+            else                                    -> "Barcode extraction failed."
         }
         return ResponseEntity.status(status).body(
             BarcodeErrorResponse(

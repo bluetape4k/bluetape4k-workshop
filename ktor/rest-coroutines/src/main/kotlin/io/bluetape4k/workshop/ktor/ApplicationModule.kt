@@ -20,7 +20,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.sse.SSE
 import kotlinx.serialization.json.Json
 
-private object ApplicationModuleLog : KLogging()
+private object ApplicationModuleLog: KLogging()
 
 /**
  * ContentNegotiation 과 BookRoutes 의 SSE encoding 에서 함께 사용하는 shared [Json] instance 입니다.

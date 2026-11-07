@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.bucket4j.filter
 
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
@@ -23,9 +24,9 @@ class UserRateLimitWebFilter(
     private val keyResolver: UserKeyResolver,
     private val rateLimiter: DistributedRateLimiter,
     private val targetProvider: RateLimitTargetProvider,
-) : WebFilter {
+): WebFilter {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         return doFilter(exchange, chain)
@@ -42,9 +43,9 @@ class UserRateLimitWebFilter(
                 if (!key.isNullOrBlank()) {
                     val rateLimitKey = key.requireNotBlank("key")
                     val result = rateLimiter.consume(rateLimitKey, 1)
+                    log.debug { "Bucket[$rateLimitKey] remains token=${result.availableTokens}" }
                     writeRateLimitHeaders(exchange, result.availableTokens)
                     if (result.consumedTokens > 0L) {
-                        log.trace { "Bucket[$rateLimitKey] remains token=${result.availableTokens}" }
                         chain.filter(exchange)
                     } else {
                         sendErrorResponse(exchange)
@@ -83,7 +84,6 @@ class UserRateLimitWebFilter(
         status: HttpStatus = HttpStatus.TOO_MANY_REQUESTS,
     ) {
         log.warn { "Sending error response with status=$status" }
-        exchange.response.statusCode = status
-        // JSON body를 보낼 때만 contentType을 명시합니다.
+        exchange.response.statusCode = status  // JSON body를 보낼 때만 contentType을 명시합니다.
     }
 }

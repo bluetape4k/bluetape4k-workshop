@@ -4,6 +4,7 @@ import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
 import io.bluetape4k.leader.micrometer.LeaderMetricTagOptions
 import io.bluetape4k.leader.micrometer.LeaderMetricTagRule
 import io.bluetape4k.leader.micrometer.LeaderMetricTagSanitizer
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.micrometer.core.instrument.Counter
@@ -22,7 +23,7 @@ import kotlin.time.toJavaDuration
 data class LeaseMetricTags(
     val lockName: String,
     val namespace: String,
-) : Serializable {
+): Serializable {
 
     init {
         lockName.requireNotBlank("lockName")
@@ -44,6 +45,8 @@ class K8sLeaseMetrics(
     private val registry: MeterRegistry,
     private val tagSanitizer: LeaderMetricTagSanitizer = DefaultWorkshopTagSanitizer,
 ) {
+
+    companion object: KLogging()
 
     private val activeGauges = ConcurrentHashMap<LeaseMetricTags, AtomicInteger>()
 

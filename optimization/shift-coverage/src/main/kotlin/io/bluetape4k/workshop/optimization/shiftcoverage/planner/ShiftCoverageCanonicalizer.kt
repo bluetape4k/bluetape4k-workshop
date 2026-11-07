@@ -1,22 +1,28 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.planner
 
+import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.InvalidShiftCoverageInput
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageLimits
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageSnapshot
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.SnapshotDigest
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.TimeInterval
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerPreference
+import tools.jackson.databind.ObjectMapper
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import tools.jackson.databind.ObjectMapper
-import tools.jackson.databind.json.JsonMapper
 
 /** immutable snapshot을 provider-independent canonical v1 JSON으로 정규화합니다. */
 class ShiftCoverageCanonicalizer(
-    private val mapper: ObjectMapper = JsonMapper.builder().build(),
+    private val mapper: ObjectMapper = Jackson.defaultJsonMapper,
 ) {
+
+    companion object: KLogging()
+
     fun canonicalBytes(snapshot: ShiftCoverageSnapshot): ByteArray {
         validateSnapshot(snapshot)
         val json = buildString {
@@ -73,7 +79,7 @@ class ShiftCoverageCanonicalizer(
 
     private fun canonicalBytesSizeUpperBound(snapshot: ShiftCoverageSnapshot): Int =
         snapshot.workers.sumOf { it.displayName.length + it.skills.sumOf { skill -> skill.value.length } } +
-            snapshot.shifts.sumOf { shift -> shift.requiredSkills.sumOf { skill -> skill.value.length } } + 512
+                snapshot.shifts.sumOf { shift -> shift.requiredSkills.sumOf { skill -> skill.value.length } } + 512
 
     private fun StringBuilder.field(name: String, value: StringBuilder.() -> Unit) {
         appendString(name)
@@ -83,46 +89,53 @@ class ShiftCoverageCanonicalizer(
 
     private fun StringBuilder.appendWorkers(snapshot: ShiftCoverageSnapshot) {
         append('[')
-        snapshot.workers.sortedBy { it.workerId.value }.forEachIndexed { index, worker ->
-            if (index > 0) append(',')
-            append('{')
-            field("availability") { appendIntervals(worker.availability) }
-            append(','); field("displayName") { appendString(worker.displayName) }
-            append(','); field("preferences") { appendPreferences(worker.preferences) }
-            append(','); field("revision") { append(worker.revision) }
-            append(','); field("scheduleRevision") { append(worker.scheduleRevision) }
-            append(','); field("sickCalled") { append(worker.sickCalled) }
-            append(','); field("siteId") { appendString(worker.siteId.value) }
-            append(','); field("skills") { appendStrings(worker.skills.map { it.value }) }
-            append(','); field("workerId") { appendString(worker.workerId.value) }
-            append('}')
-        }
+        snapshot.workers
+            .sortedBy { it.workerId.value }
+            .forEachIndexed { index, worker ->
+                if (index > 0) append(',')
+                append('{')
+                field("availability") { appendIntervals(worker.availability) }
+                append(','); field("displayName") { appendString(worker.displayName) }
+                append(','); field("preferences") { appendPreferences(worker.preferences) }
+                append(','); field("revision") { append(worker.revision) }
+                append(','); field("scheduleRevision") { append(worker.scheduleRevision) }
+                append(','); field("sickCalled") { append(worker.sickCalled) }
+                append(','); field("siteId") { appendString(worker.siteId.value) }
+                append(','); field("skills") { appendStrings(worker.skills.map { it.value }) }
+                append(','); field("workerId") { appendString(worker.workerId.value) }
+                append('}')
+            }
         append(']')
     }
 
     private fun StringBuilder.appendShifts(snapshot: ShiftCoverageSnapshot) {
         append('[')
-        snapshot.shifts.sortedWith(compareBy({ it.startAt }, { it.shiftId.value })).forEachIndexed { index, shift ->
-            if (index > 0) append(',')
-            append('{')
-            append("\"demand\":"); append(shift.demand)
-            append(",\"endAt\":"); appendInstant(shift.endAt)
-            append(",\"pinnedWorkerId\":"); shift.pinnedWorkerId?.let { appendString(it.value) } ?: append("null")
-            append(",\"preference\":"); shift.preference?.let { appendPreference(it) } ?: append("null")
-            append(",\"requiredSkills\":"); appendStrings(shift.requiredSkills.map { it.value })
-            append(",\"revision\":"); append(shift.revision)
-            append(",\"shiftId\":"); appendString(shift.shiftId.value)
-            append(",\"siteId\":"); appendString(shift.siteId.value)
-            append(",\"startAt\":"); appendInstant(shift.startAt)
-            append(",\"startedAt\":"); shift.startedAt?.let { instant -> appendInstant(instant) } ?: append("null")
-            append('}')
-        }
+        snapshot.shifts
+            .sortedWith(compareBy({ it.startAt }, { it.shiftId.value }))
+            .forEachIndexed { index, shift ->
+                if (index > 0) append(',')
+                append('{')
+                append("\"demand\":"); append(shift.demand)
+                append(",\"endAt\":"); appendInstant(shift.endAt)
+                append(",\"pinnedWorkerId\":"); shift.pinnedWorkerId?.let { appendString(it.value) } ?: append("null")
+                append(",\"preference\":"); shift.preference?.let { appendPreference(it) } ?: append("null")
+                append(",\"requiredSkills\":"); appendStrings(shift.requiredSkills.map { it.value })
+                append(",\"revision\":"); append(shift.revision)
+                append(",\"shiftId\":"); appendString(shift.shiftId.value)
+                append(",\"siteId\":"); appendString(shift.siteId.value)
+                append(",\"startAt\":"); appendInstant(shift.startAt)
+                append(",\"startedAt\":"); shift.startedAt?.let { instant -> appendInstant(instant) } ?: append("null")
+                append('}')
+            }
         append(']')
     }
 
     private fun StringBuilder.appendAssignments(snapshot: ShiftCoverageSnapshot) {
         append('[')
-        snapshot.assignments.sortedWith(compareBy({ it.shiftId.value }, { it.workerId.value }, { it.assignmentId.value }))
+        snapshot.assignments
+            .sortedWith(
+                compareBy({ it.shiftId.value }, { it.workerId.value }, { it.assignmentId.value })
+            )
             .forEachIndexed { index, assignment ->
                 if (index > 0) append(',')
                 append('{')
@@ -138,48 +151,63 @@ class ShiftCoverageCanonicalizer(
         append(']')
     }
 
-    private fun StringBuilder.appendIntervals(intervals: List<io.bluetape4k.workshop.optimization.shiftcoverage.domain.TimeInterval>) {
+    private fun StringBuilder.appendIntervals(intervals: List<TimeInterval>) {
         append('[')
-        intervals.sortedWith(compareBy({ it.startAt }, { it.endAt })).forEachIndexed { index, interval ->
-            if (index > 0) append(',')
-            append('{'); append("\"endAt\":"); appendInstant(interval.endAt)
-            append(",\"startAt\":"); appendInstant(interval.startAt); append('}')
-        }
+        intervals
+            .sortedWith(compareBy({ it.startAt }, { it.endAt }))
+            .forEachIndexed { index, interval ->
+                if (index > 0) append(',')
+                append('{'); append("\"endAt\":"); appendInstant(interval.endAt)
+                append(",\"startAt\":"); appendInstant(interval.startAt); append('}')
+            }
         append(']')
     }
 
-    private fun StringBuilder.appendPreferences(preferences: List<io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerPreference>) {
+    private fun StringBuilder.appendPreferences(preferences: List<WorkerPreference>) {
         append('[')
-        preferences.sortedBy { it.skill.value }.forEachIndexed { index, preference ->
-            if (index > 0) append(',')
-            appendPreference(preference)
-        }
+        preferences
+            .sortedBy { it.skill.value }
+            .forEachIndexed { index, preference ->
+                if (index > 0) append(',')
+                appendPreference(preference)
+            }
         append(']')
     }
 
-    private fun StringBuilder.appendPreference(preference: io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerPreference) {
-        append('{'); append("\"skill\":"); appendString(preference.skill.value)
-        append(",\"weightMinor\":"); append(preference.weightMinor); append('}')
+    private fun StringBuilder.appendPreference(preference: WorkerPreference) {
+        append('{'); append("\"skill\":")
+        appendString(preference.skill.value)
+        append(",\"weightMinor\":")
+        append(preference.weightMinor)
+        append('}')
     }
 
     private fun StringBuilder.appendStrings(values: List<String>) {
         append('[')
-        values.map(::nfc).sorted().forEachIndexed { index, value ->
-            if (index > 0) append(',')
-            appendString(value)
-        }
+        values
+            .map(::nfc)
+            .sorted()
+            .forEachIndexed { index, value ->
+                if (index > 0) append(',')
+                appendString(value)
+            }
         append(']')
     }
 
-    private fun StringBuilder.appendInstant(value: Instant) = appendString(DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC).format(value))
+    private fun StringBuilder.appendInstant(value: Instant) =
+        appendString(DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC).format(value))
 
     private fun StringBuilder.appendString(value: String) {
         // Jackson 3 supplies the escaping contract; NFC is applied before the bytes are emitted.
         append(mapper.writeValueAsString(nfc(value)))
     }
 
-    private fun nfc(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFC)
+    private fun nfc(value: String): String =
+        Normalizer.normalize(value, Normalizer.Form.NFC)
 
 }
 
-enum class DigestMatch { MATCH, MISMATCH }
+enum class DigestMatch {
+    MATCH,
+    MISMATCH
+}

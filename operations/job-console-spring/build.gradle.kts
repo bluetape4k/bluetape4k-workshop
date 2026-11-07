@@ -43,6 +43,10 @@ dependencies {
     implementation(libs.micrometer.registry.prometheus)
     runtimeOnly(libs.postgresql.driver)
 
+    // Coroutines
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+
     testImplementation(testFixtures(project(":operations-job-console-core")))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)

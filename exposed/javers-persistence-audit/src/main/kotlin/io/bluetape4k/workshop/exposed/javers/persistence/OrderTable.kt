@@ -20,7 +20,7 @@ import org.jetbrains.exposed.v1.core.Table
 object OrderTable: Table("orders") {
     val id = varchar("id", 64)
     val customerId = varchar("customer_id", 64)
-    val status = enumerationByName("status", 16, OrderStatus::class)
+    val status = enumerationByName<OrderStatus>("status", 16)
     val totalAmount = decimal("total_amount", precision = 19, scale = 4)
 
     override val primaryKey = PrimaryKey(id)

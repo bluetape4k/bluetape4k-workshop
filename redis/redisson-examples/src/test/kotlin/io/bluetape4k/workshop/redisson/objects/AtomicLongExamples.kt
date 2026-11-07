@@ -16,8 +16,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.junit.jupiter.api.RepeatedTest
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
+import kotlin.time.Duration.Companion.milliseconds
 
 class AtomicLongExamples: AbstractRedissonTest() {
 
@@ -79,7 +80,7 @@ class AtomicLongExamples: AbstractRedissonTest() {
             .rounds(8 * 32)
             .add {
                 counter.incrementAndGetAsync().await()
-                delay(10)
+                delay(1.milliseconds)
             }
             .run()
 
@@ -97,7 +98,7 @@ class AtomicLongExamples: AbstractRedissonTest() {
             .rounds(8)
             .add {
                 counter.incrementAndGet()
-                Thread.sleep(10)
+                Thread.sleep(1)
             }
             .run()
 
@@ -105,7 +106,7 @@ class AtomicLongExamples: AbstractRedissonTest() {
         counter.delete().shouldBeTrue()
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `AtomicLong in Virtual Threads`() {
         val counter = redisson.getAtomicLong(randomName())
@@ -115,7 +116,7 @@ class AtomicLongExamples: AbstractRedissonTest() {
             .rounds(32 * 8)
             .add {
                 counter.incrementAndGet()
-                Thread.sleep(10)
+                Thread.sleep(1)
             }
             .run()
 

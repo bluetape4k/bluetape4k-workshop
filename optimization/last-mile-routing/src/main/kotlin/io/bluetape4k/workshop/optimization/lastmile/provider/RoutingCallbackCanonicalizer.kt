@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.optimization.lastmile.provider
 
+import io.bluetape4k.support.toUtf8Bytes
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 /** raw provider body 대신 정규화된 callback 결과만 digest합니다. */
 object RoutingCallbackCanonicalizer {
+
     fun canonicalize(callback: RoutingCallback): String = buildString {
         append(callback.provider)
         append('|').append(callback.eventId.value)
@@ -15,6 +17,7 @@ object RoutingCallbackCanonicalizer {
         append('|').append(callback.result.proposal.matrixRevision)
         append('|').append(callback.result.proposal.score.hardScore)
         append('|').append(callback.result.proposal.score.softScore)
+
         callback.result.proposal.routes
             .sortedBy { it.vehicleId.value }
             .forEach { route ->
@@ -29,9 +32,15 @@ object RoutingCallbackCanonicalizer {
                     append(':').append(stop.pinned)
                 }
             }
+
         callback.result.proposal.unassigned
             .sortedBy { it.jobId.value }
-            .forEach { item -> append("|unassigned=").append(item.jobId.value).append(':').append(item.reason.name) }
+            .forEach { item ->
+                append("|unassigned=")
+                append(item.jobId.value)
+                append(':')
+                append(item.reason.name)
+            }
     }
 
     fun digest(callback: RoutingCallback): String = sha256(canonicalize(callback))
@@ -43,6 +52,6 @@ object RoutingCallbackCanonicalizer {
         )
 
     private fun sha256(value: String): String = MessageDigest.getInstance("SHA-256")
-        .digest(value.toByteArray(StandardCharsets.UTF_8))
+        .digest(value.toUtf8Bytes())
         .joinToString("") { "%02x".format(it) }
 }

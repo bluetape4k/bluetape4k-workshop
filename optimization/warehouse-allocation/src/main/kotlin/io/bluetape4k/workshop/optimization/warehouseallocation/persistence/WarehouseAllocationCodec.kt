@@ -3,15 +3,16 @@ package io.bluetape4k.workshop.optimization.warehouseallocation.persistence
 import io.bluetape4k.jackson3.CanonicalJson
 import io.bluetape4k.jackson3.CanonicalJsonLimits
 import io.bluetape4k.jackson3.CanonicalJsonStringNormalization
-import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationLimits
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PlanProposal
+import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationLimits
 import tools.jackson.core.StreamReadConstraints
 import tools.jackson.core.StreamReadFeature
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
 internal class WarehouseAllocationCodec {
@@ -45,9 +46,12 @@ internal class WarehouseAllocationCodec {
         stringNormalization = CanonicalJsonStringNormalization.NFC,
     )
 
-    fun encode(value: Any): String = canonicalJson.canonicalBytes(mapper.valueToTree(value)).toString(UTF_8)
+    fun encode(value: Any): String =
+        canonicalJson.canonicalBytes(mapper.valueToTree(value)).toUtf8String()
 
     fun <T> decode(value: String, type: Class<T>): T = mapper.readValue(value, type)
+
+    inline fun <reified T> decode(value: String): T = mapper.readValue(value, T::class.java)
 
     fun decodePlan(value: String): PlanProposal = mapper.readValue(value, PlanProposal::class.java)
 
@@ -56,7 +60,7 @@ internal class WarehouseAllocationCodec {
         return canonicalJson.canonicalBytes(body)
     }
 
-    fun digest(value: Any): String = sha256(encode(value).toByteArray(UTF_8))
+    fun digest(value: Any): String = sha256(encode(value).toUtf8Bytes())
 
     fun digestBytes(body: ByteArray): String = sha256(canonicalBytes(body))
 

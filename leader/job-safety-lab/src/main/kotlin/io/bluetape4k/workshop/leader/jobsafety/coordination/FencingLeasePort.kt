@@ -17,9 +17,9 @@ interface FencingLeasePort {
 }
 
 sealed interface FenceBootstrapResult {
-    data object Ready : FenceBootstrapResult
+    data object Ready: FenceBootstrapResult
 
-    data class BackendFailure(val cause: Throwable) : FenceBootstrapResult
+    data class BackendFailure(val cause: Throwable): FenceBootstrapResult
 }
 
 interface FencingLease {
@@ -31,11 +31,11 @@ interface FencingLease {
 }
 
 sealed interface FenceAcquireResult {
-    data class Acquired(val lease: FencingLease) : FenceAcquireResult
+    data class Acquired(val lease: FencingLease): FenceAcquireResult
 
-    data class AlreadyOwned(val lease: FencingLease) : FenceAcquireResult
+    data class AlreadyOwned(val lease: FencingLease): FenceAcquireResult
 
-    data object Contended : FenceAcquireResult
+    data object Contended: FenceAcquireResult
 
-    data class BackendFailure(val cause: Throwable) : FenceAcquireResult
+    data class BackendFailure(val cause: Throwable): FenceAcquireResult
 }

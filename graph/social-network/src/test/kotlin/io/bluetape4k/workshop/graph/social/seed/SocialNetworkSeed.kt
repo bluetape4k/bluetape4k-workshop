@@ -41,7 +41,7 @@ data class SocialNetworkSeed(
     val eve: GraphVertex,
     val acme: GraphVertex,
     val startup: GraphVertex,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

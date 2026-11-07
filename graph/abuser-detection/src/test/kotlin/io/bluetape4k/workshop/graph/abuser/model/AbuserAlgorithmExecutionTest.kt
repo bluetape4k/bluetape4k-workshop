@@ -6,9 +6,13 @@ import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecution
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmExecutionPath
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmFallbackReason
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmId
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class AbuserAlgorithmExecutionTest {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `provider ID는 안전한 64자 경계만 허용한다`() {
@@ -19,17 +23,20 @@ class AbuserAlgorithmExecutionTest {
             fallbackReason = GraphAlgorithmFallbackReason.NO_PROVIDER,
         )
 
+        log.debug { "execution=$execution" }
         execution.providerId shouldBeEqualTo "a".repeat(64)
-        listOf("bad\r\nid", "bad\u0000id", "bad\tid", "A-provider", "x".repeat(65)).forEach { providerId ->
-            assertFailsWith<IllegalArgumentException> {
-                AbuserAlgorithmExecution(
-                    algorithm = GraphAlgorithmId.PAGE_RANK,
-                    providerId = providerId,
-                    path = GraphAlgorithmExecutionPath.JVM_FALLBACK,
-                    fallbackReason = GraphAlgorithmFallbackReason.NO_PROVIDER,
-                )
+
+        listOf("bad\r\nid", "bad\u0000id", "bad\tid", "A-provider", "x".repeat(65))
+            .forEach { providerId ->
+                assertFailsWith<IllegalArgumentException> {
+                    AbuserAlgorithmExecution(
+                        algorithm = GraphAlgorithmId.PAGE_RANK,
+                        providerId = providerId,
+                        path = GraphAlgorithmExecutionPath.JVM_FALLBACK,
+                        fallbackReason = GraphAlgorithmFallbackReason.NO_PROVIDER,
+                    )
+                }
             }
-        }
     }
 
     @Test
@@ -40,6 +47,7 @@ class AbuserAlgorithmExecutionTest {
             path = GraphAlgorithmExecutionPath.NATIVE,
             fallbackReason = null,
         )
+
         AbuserAlgorithmExecution(
             algorithm = GraphAlgorithmId.PAGE_RANK,
             providerId = "jvm-fallback",
@@ -55,6 +63,7 @@ class AbuserAlgorithmExecutionTest {
                 fallbackReason = GraphAlgorithmFallbackReason.NO_PROVIDER,
             )
         }
+
         assertFailsWith<IllegalArgumentException> {
             AbuserAlgorithmExecution(
                 algorithm = GraphAlgorithmId.PAGE_RANK,

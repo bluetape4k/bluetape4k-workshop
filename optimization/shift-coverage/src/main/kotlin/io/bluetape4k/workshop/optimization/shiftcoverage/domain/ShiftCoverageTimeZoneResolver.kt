@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.domain
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -14,12 +16,17 @@ enum class ShiftCoverageTimeBoundaryCode {
 class ShiftCoverageTimeBoundaryException(
     val code: ShiftCoverageTimeBoundaryCode,
     message: String = code.name,
-) : IllegalArgumentException(message)
+): IllegalArgumentException(message)
 
 /** local wall-clock input을 명시적인 instant로 바꾸는 DST-safe boundary입니다. */
 class ShiftCoverageTimeZoneResolver {
+
+    companion object: KLogging()
+
     fun resolve(local: LocalDateTime, zoneId: ZoneId, explicitOffset: ZoneOffset? = null): Instant {
         val validOffsets = zoneId.rules.getValidOffsets(local)
+        log.debug { "valid offsets=$validOffsets" }
+        
         if (validOffsets.isEmpty()) {
             throw ShiftCoverageTimeBoundaryException(
                 ShiftCoverageTimeBoundaryCode.TIMEZONE_GAP,

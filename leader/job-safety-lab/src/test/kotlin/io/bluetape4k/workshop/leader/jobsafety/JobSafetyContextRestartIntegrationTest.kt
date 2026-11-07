@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.leader.jobsafety
 
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.leader.audit.LeaderAuditExporter
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.leader.jobsafety.config.JobSafetyAuditScope
@@ -24,21 +26,28 @@ import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.update
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
-import java.time.Instant
 import java.net.http.HttpClient
-import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.time.Instant
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.ScheduledThreadPoolExecutor
 
-@Tag("integration")
 internal class JobSafetyContextRestartIntegrationTest {
+
+    companion object: KLogging() {
+        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+        private val redis: RedisServer by lazy { RedisServer.Launcher.redis }
+        private val provider = DeterministicExternalEffectAdapter()
+    }
+
     @Test
     fun `ambiguous effect survives context restart and duplicate delivery remains idempotent`() {
         val operationId = OperationId("restart-operation")
@@ -52,18 +61,18 @@ internal class JobSafetyContextRestartIntegrationTest {
         lateinit var leaseExtensionObservation: JobSafetyLeaseExtensionObservation
 
         startContext().use { first ->
-            auditExporter = first.getBean(LeaderAuditExporter::class.java)
-            auditScope = first.getBean("jobSafetyAuditScope", JobSafetyAuditScope::class.java)
-            auditExecutor = first.getBean("jobSafetyAuditExecutor", ExecutorService::class.java)
-            auditScheduler = first.getBean("jobSafetyAuditScheduler", ScheduledThreadPoolExecutor::class.java)
-            auditHttpClient = first.getBean("jobSafetyAuditHttpClient", HttpClient::class.java)
-            first.getBeansOfType(JobSafetyLeaseExtensionObservation::class.java).size shouldBeEqualTo 1
-            leaseExtensionObservation = first.getBean(JobSafetyLeaseExtensionObservation::class.java)
+            auditExporter = first.getBean<LeaderAuditExporter>()
+            auditScope = first.getBean<JobSafetyAuditScope>("jobSafetyAuditScope")
+            auditExecutor = first.getBean<ExecutorService>("jobSafetyAuditExecutor")
+            auditScheduler = first.getBean<ScheduledThreadPoolExecutor>("jobSafetyAuditScheduler")
+            auditHttpClient = first.getBean<HttpClient>("jobSafetyAuditHttpClient")
+
+            first.getBeansOfType<JobSafetyLeaseExtensionObservation>() shouldHaveSize 1
+            leaseExtensionObservation = first.getBean<JobSafetyLeaseExtensionObservation>()
             resetSchema(first)
             seedOutbox(first, operationId)
 
-            first.getBean(EffectOperations::class.java).deliverNext() shouldBeEqualTo
-                EffectWorkResult.RECONCILIATION_REQUIRED
+            first.getBean<EffectOperations>().deliverNext() shouldBeEqualTo EffectWorkResult.RECONCILIATION_REQUIRED
         }
 
         auditExporter.snapshot().closed.shouldBeTrue()
@@ -78,8 +87,8 @@ internal class JobSafetyContextRestartIntegrationTest {
         leaseExtensionObservation.isClosed.shouldBeTrue()
 
         startContext().use { restarted ->
-            val worker = restarted.getBean(EffectOperations::class.java)
-            val repositories = restarted.getBean(JobSafetyRepositories::class.java)
+            val worker = restarted.getBean<EffectOperations>()
+            val repositories = restarted.getBean<JobSafetyRepositories>()
 
             worker.reconcileNext() shouldBeEqualTo EffectWorkResult.CONFIRMED
             repositories.effectReceipt.count(provider.providerName, operationId) shouldBeEqualTo 1L
@@ -116,7 +125,7 @@ internal class JobSafetyContextRestartIntegrationTest {
 
     private fun seedOutbox(context: ConfigurableApplicationContext, operationId: OperationId) {
         val now = Instant.now()
-        context.getBean(JobSafetyJdbcExecutor::class.java).transaction {
+        context.getBean<JobSafetyJdbcExecutor>().transaction {
             JobOutboxEntity.new {
                 this.operationId = operationId.value
                 effectType = "SUMMARY_PUBLISHED"
@@ -130,7 +139,7 @@ internal class JobSafetyContextRestartIntegrationTest {
     }
 
     private fun requeue(context: ConfigurableApplicationContext, operationId: OperationId) {
-        context.getBean(JobSafetyJdbcExecutor::class.java).transaction {
+        context.getBean<JobSafetyJdbcExecutor>().transaction {
             withExposed {
                 JobOutboxEntries.update({ JobOutboxEntries.operationId eq operationId.value }) {
                     it[status] = EffectDeliveryState.PENDING.name
@@ -145,11 +154,5 @@ internal class JobSafetyContextRestartIntegrationTest {
         @Bean
         @Primary
         fun sharedExternalEffectPort(): ExternalEffectPort = provider
-    }
-
-    companion object {
-        private val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
-        private val redis: RedisServer = RedisServer.Launcher.redis
-        private val provider = DeterministicExternalEffectAdapter()
     }
 }

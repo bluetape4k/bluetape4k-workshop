@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEvent
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanProposal
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Visit
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Worker
+import tools.jackson.module.kotlin.readValue
 import java.io.Serializable
 import java.time.Instant
 
@@ -21,7 +22,7 @@ data class FieldServiceCommand(
     val payloadSummary: String,
     val expectedVersion: Long = 0L,
     val eventVersion: Long = expectedVersion,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -46,7 +47,7 @@ data class FieldServicePlanRecord(
     val providerRevision: Long?,
     val requestGeneration: Long,
     val createdAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -72,7 +73,7 @@ data class OutboxRecord(
     val leaseExpiresAt: Instant? = null,
     val lastError: String? = null,
     val createdAt: Instant = Instant.now(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -84,13 +85,13 @@ internal object FieldServiceRecordCodec {
 
     fun encode(plan: PlanProposal): String = mapper.writeValueAsString(plan)
 
-    fun decodePlan(payload: String): PlanProposal = mapper.readValue(payload, PlanProposal::class.java)
+    fun decodePlan(payload: String): PlanProposal = mapper.readValue<PlanProposal>(payload)
 
     fun encodeWorker(worker: Worker): String = mapper.writeValueAsString(worker)
 
-    fun decodeWorker(payload: String): Worker = mapper.readValue(payload, Worker::class.java)
+    fun decodeWorker(payload: String): Worker = mapper.readValue<Worker>(payload)
 
     fun encodeVisit(visit: Visit): String = mapper.writeValueAsString(visit)
 
-    fun decodeVisit(payload: String): Visit = mapper.readValue(payload, Visit::class.java)
+    fun decodeVisit(payload: String): Visit = mapper.readValue<Visit>(payload)
 }

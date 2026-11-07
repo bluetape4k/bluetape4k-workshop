@@ -30,8 +30,14 @@ class LeaderBackendCatalog {
             avoidWhen = "Redis outage should not affect scheduler ownership or a session-bound lock is required.",
             practiceModulePath = "leader/leader-election",
             capabilities = listOf(
-                BackendCapability("Blocking and coroutine APIs", "LettuceLeaderElector plus LettuceSuspendLeaderElector."),
-                BackendCapability("TTL recovery", "Leadership can recover after lease expiry when an owner disappears."),
+                BackendCapability(
+                    "Blocking and coroutine APIs",
+                    "LettuceLeaderElector plus LettuceSuspendLeaderElector."
+                ),
+                BackendCapability(
+                    "TTL recovery",
+                    "Leadership can recover after lease expiry when an owner disappears."
+                ),
                 BackendCapability("Event observation", "ListeningLeaderElector exposes callbacks and Flow events."),
             ),
         ),
@@ -53,7 +59,10 @@ class LeaderBackendCatalog {
             capabilities = listOf(
                 BackendCapability("Single leadership", "One candidate owns the lock path and executes."),
                 BackendCapability("Group leadership", "Up to groupMaxLeaders candidates may enter."),
-                BackendCapability("Session recovery", "Ownership follows ZooKeeper session lifecycle, not a TTL field."),
+                BackendCapability(
+                    "Session recovery",
+                    "Ownership follows ZooKeeper session lifecycle, not a TTL field."
+                ),
             ),
         ),
         BackendProfile(
@@ -72,9 +81,18 @@ class LeaderBackendCatalog {
             avoidWhen = "Local tests must exercise a real backend without a cluster or service-account setup.",
             practiceModulePath = "leader/k8s-lease-micrometer",
             capabilities = listOf(
-                BackendCapability("Opt-in real backend", "Default workshop path stays disabled without Kubernetes credentials."),
-                BackendCapability("Micrometer visibility", "Application meters and leader-micrometer decorator meters are documented."),
-                BackendCapability("Kubernetes ownership", "Lease records namespace and identity for operational inspection."),
+                BackendCapability(
+                    "Opt-in real backend",
+                    "Default workshop path stays disabled without Kubernetes credentials."
+                ),
+                BackendCapability(
+                    "Micrometer visibility",
+                    "Application meters and leader-micrometer decorator meters are documented."
+                ),
+                BackendCapability(
+                    "Kubernetes ownership",
+                    "Lease records namespace and identity for operational inspection."
+                ),
             ),
         ),
     )

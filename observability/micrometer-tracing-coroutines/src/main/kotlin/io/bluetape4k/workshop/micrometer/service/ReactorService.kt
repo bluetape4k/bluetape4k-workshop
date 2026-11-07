@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.micrometer.service
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.model.Todo
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
-import java.time.Duration
 
 @Service
 @Observed
@@ -31,7 +31,7 @@ class ReactorService(
             .doOnEach {
                 log.debug { "Get fake name in reactor service." }
             }
-            .delayElement(Duration.ofMillis(100))
+            .delayElement(100.millis())
     }
 
     fun getTodoById(id: Int): Mono<Todo> {
@@ -40,7 +40,7 @@ class ReactorService(
             .retrieve()
             .bodyToMono<Todo>()
             .doOnEach { log.debug { "Get todo by id[$id] in reactor service." } }
-            .delayElement(Duration.ofMillis(100))
+            .delayElement(100.millis())
     }
 
 }

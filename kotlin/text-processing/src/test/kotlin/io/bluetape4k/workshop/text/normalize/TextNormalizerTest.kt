@@ -12,7 +12,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TextNormalizerTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `normalize lower-cases the input`() {

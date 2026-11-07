@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.lastmile.planner
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.lastmile.domain.InvalidLastMileInput
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileLimits
@@ -15,6 +17,8 @@ class TravelTimeMatrix(
     coordinateIds: Set<CoordinateId>,
     edges: Map<CoordinatePair, Long>,
 ) {
+    companion object: KLogging()
+
     val coordinateIds: Set<CoordinateId> = coordinateIds.toSet()
     private val edgeMap: Map<CoordinatePair, Long> = edges.toMap()
 
@@ -25,6 +29,7 @@ class TravelTimeMatrix(
             "matrix coordinates exceed configured limit"
         }
         require(edgeMap.size <= LastMileLimits.MAX_MATRIX_EDGES) { "matrix edges exceed configured limit" }
+
         edgeMap.forEach { (pair, seconds) ->
             require(pair.from in this.coordinateIds && pair.to in this.coordinateIds) {
                 "matrix edge references an unknown coordinate"
@@ -44,8 +49,16 @@ class TravelTimeMatrix(
             buildString {
                 append(revision)
                 coordinateIds.sortedBy { it.value }.forEach { append('|').append(it.value) }
-                edgeMap.entries.sortedWith(compareBy({ it.key.from.value }, { it.key.to.value }))
-                    .forEach { (pair, seconds) -> append('|').append(pair.from.value).append('>').append(pair.to.value).append('=').append(seconds) }
-            }.toByteArray(),
+                edgeMap.entries
+                    .sortedWith(compareBy({ it.key.from.value }, { it.key.to.value }))
+                    .forEach { (pair, seconds) ->
+                        append('|')
+                            .append(pair.from.value)
+                            .append('>')
+                            .append(pair.to.value)
+                            .append('=')
+                            .append(seconds)
+                    }
+            }.toUtf8Bytes()
         ).joinToString("") { "%02x".format(it) }
 }

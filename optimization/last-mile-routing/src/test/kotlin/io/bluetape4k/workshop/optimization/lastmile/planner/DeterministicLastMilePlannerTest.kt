@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.optimization.lastmile.planner
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.lastmile.domain.CarrierVersion
 import io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.lastmile.domain.DeliveryJob
@@ -21,6 +24,8 @@ import java.time.Instant
 
 class DeterministicLastMilePlannerTest {
 
+    companion object: KLogging()
+
     @Test
     fun `fixed matrix produces the same proposal and revision`() {
         val input = input(jobs = listOf(job("job-1")), vehicles = listOf(vehicle("vehicle-1")))
@@ -28,6 +33,7 @@ class DeterministicLastMilePlannerTest {
         val first = DeterministicLastMilePlanner().plan(input)
         val second = DeterministicLastMilePlanner().plan(input)
 
+        log.debug { "first=$first" }
         second shouldBeEqualTo first
         first.matrixRevision shouldBeEqualTo 7L
     }
@@ -36,36 +42,49 @@ class DeterministicLastMilePlannerTest {
     fun `pickup always precedes delivery`() {
         val proposal = DeterministicLastMilePlanner().plan(input(jobs = listOf(job("job-1"))))
         val stops = proposal.routes.single().stops
+            .onEach { log.debug { "stop=$it" } }
 
         stops[0].kind shouldBeEqualTo StopKind.PICKUP
         stops[1].kind shouldBeEqualTo StopKind.DELIVERY
-        (stops[0].sequence < stops[1].sequence).shouldBeTrue()
+        stops[0].sequence shouldBeLessThan stops[1].sequence
     }
 
     @Test
     fun `capacity violation becomes unassigned`() {
-        val proposal = DeterministicLastMilePlanner().plan(
-            input(jobs = listOf(job("job-1", demand = 4)), vehicles = listOf(vehicle("vehicle-1", capacity = 3))),
-        )
-
+        val proposal = DeterministicLastMilePlanner()
+            .plan(
+                input(jobs = listOf(job("job-1", demand = 4)), vehicles = listOf(vehicle("vehicle-1", capacity = 3))),
+            )
+        log.debug { "proposal=$proposal" }
         proposal.unassigned.single().reason shouldBeEqualTo LastMileUnassignedReason.CAPACITY
     }
 
     @Test
     fun `missing skill becomes unassigned`() {
-        val proposal = DeterministicLastMilePlanner().plan(
-            input(jobs = listOf(job("job-1", requiredSkill = "COLD")), vehicles = listOf(vehicle("vehicle-1"))),
-        )
+        val proposal = DeterministicLastMilePlanner()
+            .plan(
+                input(jobs = listOf(job("job-1", requiredSkill = "COLD")), vehicles = listOf(vehicle("vehicle-1"))),
+            )
 
+        log.debug { "proposal=$proposal" }
         proposal.unassigned.single().reason shouldBeEqualTo LastMileUnassignedReason.MISSING_SKILL
     }
 
     @Test
     fun `time window violation becomes unassigned`() {
-        val proposal = DeterministicLastMilePlanner().plan(
-            input(jobs = listOf(job("job-1", pickupWindow = TimeWindow(at("2026-08-24T08:00:00Z"), at("2026-08-24T08:00:30Z")))), vehicles = listOf(vehicle("vehicle-1"))),
-        )
+        val proposal = DeterministicLastMilePlanner()
+            .plan(
+                input(
+                    jobs = listOf(
+                        job(
+                            "job-1",
+                            pickupWindow = TimeWindow(at("2026-08-24T08:00:00Z"), at("2026-08-24T08:00:30Z"))
+                        )
+                    ), vehicles = listOf(vehicle("vehicle-1"))
+                ),
+            )
 
+        log.debug { "proposal=$proposal" }
         proposal.unassigned.single().reason shouldBeEqualTo LastMileUnassignedReason.TIME_WINDOW
     }
 
@@ -81,6 +100,7 @@ class DeterministicLastMilePlannerTest {
 
         val proposal = DeterministicLastMilePlanner().plan(input(jobs = listOf(job("job-1")), matrix = matrix))
 
+        log.debug { "proposal=$proposal" }
         proposal.unassigned.single().reason shouldBeEqualTo LastMileUnassignedReason.MATRIX_MISS
     }
 
@@ -99,8 +119,11 @@ class DeterministicLastMilePlannerTest {
                 vehicles = listOf(vehicle("vehicle-1", startedStop = started)),
             ),
         )
+        log.debug { "proposal=$proposal" }
 
         val pinned = proposal.routes.single().stops.firstOrNull { it.jobId == JobId("job-started") }
+
+        log.debug { "pinned=$pinned" }
         pinned.shouldNotBeNull()
         pinned.pinned.shouldBeTrue()
         pinned.sequence shouldBeEqualTo 0

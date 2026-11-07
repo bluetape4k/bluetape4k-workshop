@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.operations.jobconsole.idempotency
 
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobSubmissionIdempotencyRepository
 import java.sql.Connection
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
@@ -13,6 +17,7 @@ import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.nanoseconds
 
 /** Owner work that is deliberately kept outside the database transaction. */
 internal interface JobSubmissionOwnerAction {
@@ -90,7 +95,9 @@ internal class JobSubmissionIdempotencyCoordinator(
             if (abandoned) return
             abandoned = true
             runCatching {
-                acquireDatabaseForCleanup { repository.abandon(ownership, reason, clock.databaseNow()) }
+                acquireDatabaseForCleanup {
+                    repository.abandon(ownership, reason, clock.databaseNow())
+                }
             }
         }
 
@@ -118,7 +125,7 @@ internal class JobSubmissionIdempotencyCoordinator(
                 snapshotPolicy.validate(prepared)
             } catch (error: IllegalArgumentException) {
                 abandon(AbandonReason.PREPARE_FAILED)
-                throw JobRepositoryException(io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED)
+                throw JobRepositoryException(JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED)
             }
 
         val finalized =
@@ -148,9 +155,13 @@ internal class JobSubmissionIdempotencyCoordinator(
     ): PreparedJobSubmission {
         val remainingNanos = deadlineNanos - clock.monotonicNanos()
         if (remainingNanos <= 0L) throw PrepareDeadlineExceeded()
-        val future = prepareExecutor.submit<PreparedJobSubmission> { action.prepare(ownership) }
+
+        val future = prepareExecutor.submit<PreparedJobSubmission> {
+            action.prepare(ownership)
+        }
+
         return try {
-            future.get(remainingNanos, TimeUnit.NANOSECONDS)
+            future.get(remainingNanos.nanoseconds)
         } catch (error: TimeoutException) {
             future.cancel(true)
             throw PrepareDeadlineExceeded()
@@ -178,7 +189,9 @@ internal class JobSubmissionIdempotencyCoordinator(
                 return outcome(JobSubmissionOutcome.InFlightTimeout)
             }
             val registrationTimeout = remainingPermitTimeout(deadline, REGISTRATION_RESERVE_NANOS)
+
             if (registrationTimeout == null) return outcome(JobSubmissionOutcome.InFlightTimeout)
+
             val registrationResult = acquireDatabase(registrationTimeout) {
                 val remainingForRegistration = deadline - clock.monotonicNanos()
                 if (remainingForRegistration <= REGISTRATION_RESERVE_NANOS) {
@@ -186,17 +199,21 @@ internal class JobSubmissionIdempotencyCoordinator(
                 } else {
                     val elapsedSinceReservation =
                         (clock.monotonicNanos() - reserveCompletedNanos).coerceAtLeast(0L)
-                    val registrationNow = databaseNowAtReservation.plusNanos(elapsedSinceReservation)
+                    val registrationNow = databaseNowAtReservation + elapsedSinceReservation.nanos()
+
                     repository.registerWaiter(
                         InFlightOwnership(ownership),
                         registrationNow,
-                        Duration.ofNanos(remainingForRegistration),
-                        registrationNow.plusNanos(remainingForRegistration),
+                        remainingForRegistration.nanos(),
+                        registrationNow + remainingForRegistration.nanos(),
                     )
                 }
             }
             if (registrationResult == null) {
-                return outcome(if (clock.monotonicNanos() >= deadline) JobSubmissionOutcome.InFlightTimeout else JobSubmissionOutcome.WaiterOverflow)
+                val submissionOutcome =
+                    if (clock.monotonicNanos() >= deadline) JobSubmissionOutcome.InFlightTimeout
+                    else JobSubmissionOutcome.WaiterOverflow
+                return outcome(submissionOutcome)
             }
             val registered = when (registrationResult) {
                 is WaiterRegistration.Registered -> registrationResult
@@ -212,17 +229,16 @@ internal class JobSubmissionIdempotencyCoordinator(
                     awaitUntilDeadline(remainingBeforePoll)
                     return outcome(JobSubmissionOutcome.InFlightTimeout)
                 }
-                val pollTimeout = Duration.ofNanos(minNanos(policy.connectionAcquireTimeout.toNanos(), remainingBeforePoll))
+                val pollTimeout = minOf(policy.connectionAcquireTimeout.toNanos(), remainingBeforePoll).nanos()
                 val polled = acquireDatabase(pollTimeout) {
                     val remainingForStatement = deadline - clock.monotonicNanos()
                     if (remainingForStatement <= MIN_STATEMENT_TIMEOUT_NANOS) {
                         null
                     } else {
-                        val statementTimeout =
-                            Duration.ofNanos(
-                                minNanos(policy.statementTimeout.toNanos(), remainingForStatement)
-                                    .coerceAtLeast(MIN_STATEMENT_TIMEOUT_NANOS),
-                            )
+                        val statementTimeout = minOf(policy.statementTimeout.toNanos(), remainingForStatement)
+                            .coerceAtLeast(MIN_STATEMENT_TIMEOUT_NANOS)
+                            .nanos()
+
                         repository.poll(
                             ownership.scope,
                             ownership.keyHash,
@@ -237,8 +253,8 @@ internal class JobSubmissionIdempotencyCoordinator(
                     if (remainingAfterPermit <= 0L) return outcome(JobSubmissionOutcome.InFlightTimeout)
                     val retryDelay = minNanos(interval.toNanos(), remainingAfterPermit)
                     waiter.await(
-                        waitJitter(registered.waiterToken, Duration.ofNanos(retryDelay))
-                            .coerceAtMost(Duration.ofNanos(remainingAfterPermit)),
+                        waitJitter(registered.waiterToken, retryDelay.nanos())
+                            .coerceAtMost(remainingAfterPermit.nanos()),
                     )
                     interval = nextInterval(interval)
                     continue
@@ -253,7 +269,11 @@ internal class JobSubmissionIdempotencyCoordinator(
                 if (remaining <= 0L) return outcome(JobSubmissionOutcome.InFlightTimeout)
                 val delay = minNanos(interval.toNanos(), remaining)
                 if (delay <= 0L) return outcome(JobSubmissionOutcome.InFlightTimeout)
-                waiter.await(waitJitter(registered.waiterToken, Duration.ofNanos(delay)).coerceAtMost(Duration.ofNanos(remaining)))
+
+                waiter.await(
+                    waitJitter(registered.waiterToken, delay.nanos())
+                        .coerceAtMost(remaining.nanos())
+                )
                 interval = nextInterval(interval)
             }
         } catch (error: Throwable) {
@@ -277,11 +297,11 @@ internal class JobSubmissionIdempotencyCoordinator(
             }
             instanceWaiterPermits.release()
         }
-        rethrowCancellation(requireNotNull(cancellation))
+        rethrowCancellation(cancellation.requireNotNull("cancellation"))
         return outcome(JobSubmissionOutcome.Abandoned)
     }
 
-    private fun <T> acquireDatabase(
+    private inline fun <T> acquireDatabase(
         timeout: Duration = policy.connectionAcquireTimeout,
         block: () -> T,
     ): T? {
@@ -294,7 +314,7 @@ internal class JobSubmissionIdempotencyCoordinator(
     }
 
     /** Run best-effort cancellation cleanup while preserving the caller's interrupt state. */
-    private fun <T> acquireDatabaseForCleanup(block: () -> T): T? {
+    private inline fun <T> acquireDatabaseForCleanup(block: () -> T): T? {
         val wasInterrupted = Thread.interrupted()
         return try {
             acquireDatabase(block = block)
@@ -303,7 +323,10 @@ internal class JobSubmissionIdempotencyCoordinator(
         }
     }
 
-    private fun tryAcquire(semaphore: Semaphore, timeoutNanos: Long = policy.connectionAcquireTimeout.toNanos()): Boolean =
+    private fun tryAcquire(
+        semaphore: Semaphore,
+        timeoutNanos: Long = policy.connectionAcquireTimeout.toNanos(),
+    ): Boolean =
         try {
             semaphore.tryAcquire(timeoutNanos.coerceAtLeast(0L), TimeUnit.NANOSECONDS)
         } catch (error: InterruptedException) {
@@ -316,7 +339,7 @@ internal class JobSubmissionIdempotencyCoordinator(
             when (value) {
                 is JobSubmissionOutcome.OwnerCompleted -> JobSubmissionObservationOutcome.OWNER
                 is JobSubmissionOutcome.Replayed -> JobSubmissionObservationOutcome.REPLAY
-                JobSubmissionOutcome.Conflict -> JobSubmissionObservationOutcome.CONFLICT
+                JobSubmissionOutcome.Conflict  -> JobSubmissionObservationOutcome.CONFLICT
                 JobSubmissionOutcome.InFlightTimeout -> JobSubmissionObservationOutcome.TIMEOUT
                 JobSubmissionOutcome.WaiterOverflow -> JobSubmissionObservationOutcome.OVERFLOW
                 JobSubmissionOutcome.Abandoned -> JobSubmissionObservationOutcome.ABANDON
@@ -340,12 +363,12 @@ internal class JobSubmissionIdempotencyCoordinator(
     ): Duration? {
         val remaining = deadlineNanos - clock.monotonicNanos()
         if (remaining <= reserveNanos) return null
-        return Duration.ofNanos(minNanos(policy.connectionAcquireTimeout.toNanos(), remaining - reserveNanos))
+        return minOf(policy.connectionAcquireTimeout.toNanos(), remaining - reserveNanos).nanos()
     }
 
     private fun awaitUntilDeadline(remainingNanos: Long) {
         if (remainingNanos > 0L) {
-            waiter.await(Duration.ofNanos(remainingNanos))
+            waiter.await(remainingNanos.nanos())
         }
     }
 
@@ -359,22 +382,23 @@ internal class JobSubmissionIdempotencyCoordinator(
     private fun isCancellation(error: Throwable): Boolean =
         error is InterruptedException || error is CancellationException || Thread.currentThread().isInterrupted
 
-    private object SystemJobSubmissionClock : JobSubmissionClock {
+    private object SystemJobSubmissionClock: JobSubmissionClock {
         override fun databaseNow(): Instant = Instant.now()
 
         override fun monotonicNanos(): Long = System.nanoTime()
     }
 
-    private object ThreadSleepWaitStrategy : InterruptibleWaitStrategy {
+    private object ThreadSleepWaitStrategy: InterruptibleWaitStrategy {
         override fun await(interval: Duration) {
             TimeUnit.NANOSECONDS.sleep(interval.toNanos())
         }
     }
 
-    private class PrepareDeadlineExceeded : RuntimeException()
+    private class PrepareDeadlineExceeded: RuntimeException()
 
     private companion object {
         const val MIN_STATEMENT_TIMEOUT_NANOS: Long = 1_000_000L
+
         // Registration has four SQL statements plus setup/commit overhead.
         const val REGISTRATION_RESERVE_NANOS: Long = 25_000_000L
     }
@@ -384,5 +408,6 @@ internal fun deterministicWaitJitter(waiterToken: UUID, interval: Duration): Dur
     val bucket = ((waiterToken.mostSignificantBits xor waiterToken.leastSignificantBits).ushr(1) % 41L).toInt() - 20
     val nanos = interval.toNanos()
     val adjusted = nanos + (nanos / 100L) * bucket
-    return Duration.ofNanos(adjusted.coerceAtLeast(1L))
+
+    return adjusted.coerceAtLeast(1L).nanos()
 }

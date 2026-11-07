@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -10,6 +13,8 @@ import java.nio.file.Path
 import java.time.Instant
 
 class HighContentionReportTest {
+
+    companion object: KLogging()
 
     @TempDir
     lateinit var tempDir: Path
@@ -24,6 +29,7 @@ class HighContentionReportTest {
             failedInvariantIds = emptyList(),
             redactedErrorClass = null,
         ).validate()
+
         HighContentionSubmissionConservation(
             scheduledCount = 8,
             dispatchedCount = 6,
@@ -40,6 +46,7 @@ class HighContentionReportTest {
                 HighContentionTerminalDisposition.TIMED_OUT to 2,
             ),
         ).validate()
+
         HighContentionAttemptConservation(
             expectedAttemptsByIdentity = mapOf(
                 0 to HighContentionIdentityAttemptExpectation(
@@ -68,6 +75,7 @@ class HighContentionReportTest {
                 redactedErrorClass = "java.lang.IllegalStateException",
             ).validate()
         }
+
         assertFailsWith<IllegalArgumentException> {
             HighContentionAttemptConservation(
                 expectedAttemptsByIdentity = mapOf(
@@ -82,6 +90,7 @@ class HighContentionReportTest {
                 ),
             ).validate()
         }
+
         assertFailsWith<IllegalArgumentException> {
             HighContentionSubmissionConservation(
                 scheduledCount = 8,
@@ -118,7 +127,7 @@ class HighContentionReportTest {
             status = HighContentionPercentileStatus.INSUFFICIENT_SAMPLES,
         )
         HighContentionMeasurements.notApplicablePercentiles().p50.status shouldBeEqualTo
-            HighContentionPercentileStatus.NOT_APPLICABLE
+                HighContentionPercentileStatus.NOT_APPLICABLE
 
         val saturation = HighContentionMeasurements.saturation(
             samples = listOf(
@@ -131,6 +140,7 @@ class HighContentionReportTest {
         saturation.sampleCount shouldBeEqualTo 3
         saturation.maxUsed shouldBeEqualTo 2
         saturation.timeAtCapacityNanos shouldBeEqualTo 70L
+
         assertFailsWith<IllegalArgumentException> {
             HighContentionMeasurements.saturation(
                 samples = listOf(
@@ -145,6 +155,7 @@ class HighContentionReportTest {
     @Test
     fun `terminal report cross-validates operation and cleanup evidence`() {
         report().validate()
+
         report().deadlines.single().copy(
             expired = true,
             timeoutOrigin = HighContentionTimeoutOrigin.OPERATION,
@@ -158,6 +169,7 @@ class HighContentionReportTest {
                 ),
             ).validate()
         }
+
         assertFailsWith<IllegalArgumentException> {
             report().copy(
                 cleanup = HighContentionCleanupSummary(
@@ -168,6 +180,7 @@ class HighContentionReportTest {
                 ),
             ).validate()
         }
+
         assertFailsWith<IllegalArgumentException> {
             report().copy(
                 deadlines = listOf(
@@ -178,6 +191,7 @@ class HighContentionReportTest {
                 ),
             ).validate()
         }
+
         assertFailsWith<IllegalArgumentException> {
             report().copy(
                 deadlines = listOf(
@@ -193,6 +207,7 @@ class HighContentionReportTest {
     fun `execution failure preserves disposition failure point and terminal error evidence`() {
         val base = report()
         val baseWorkload = base.workload.requireNotNull("base workload")
+
         val executionFailureWorkload = baseWorkload.copy(
             submissionConservation = baseWorkload.submissionConservation.copy(
                 terminalDispositionCounts = dispositionCounts(
@@ -262,7 +277,7 @@ class HighContentionReportTest {
         unavailable.validate()
         val path = HighContentionArtifactStore.create(tempDir, "run-01")
             .writeTerminalReport("job-core", "burst", unavailable)
-        Files.readString(path).contains("\"workload\":null") shouldBeEqualTo true
+        Files.readString(path).contains("\"workload\":null").shouldBeTrue()
         assertFailsWith<IllegalArgumentException> {
             unavailable.copy(invariantResults = report().invariantResults).validate()
         }
@@ -275,14 +290,15 @@ class HighContentionReportTest {
     fun `successful cleanup finalization cannot preserve PASS after the profile deadline`() {
         val original = report()
         val deadline = original.deadlines.single()
+        log.debug { "deadline=$deadline" }
 
         val finalized = original.finalizeAfterSuccessfulCleanup(
             completedNanos = deadline.absoluteDeadlineNanos + 1,
         )
 
-        finalized.deadlines.single().expired shouldBeEqualTo true
-        finalized.deadlines.single().timeoutOrigin shouldBeEqualTo
-            HighContentionTimeoutOrigin.PROFILE_EXECUTION
+        log.debug { "finalized=$finalized" }
+        finalized.deadlines.single().expired.shouldBeTrue()
+        finalized.deadlines.single().timeoutOrigin shouldBeEqualTo HighContentionTimeoutOrigin.PROFILE_EXECUTION
         finalized.result.terminalStatus shouldBeEqualTo HighContentionTerminalStatus.ERROR
         finalized.result.errorCode shouldBeEqualTo HighContentionErrorCode.WORKLOAD_TIMEOUT
         finalized.cleanup.result shouldBeEqualTo HighContentionCleanupResult.PASS
@@ -295,7 +311,8 @@ class HighContentionReportTest {
         val report = report()
 
         val path = store.writeTerminalReport("job-core", "burst", report)
-        Files.exists(path) shouldBeEqualTo true
+        Files.exists(path).shouldBeTrue()
+
         assertFailsWith<HighContentionArtifactException> {
             store.writeTerminalReport("job-core", "burst", report)
         }
@@ -305,15 +322,19 @@ class HighContentionReportTest {
         assertFailsWith<IllegalArgumentException> {
             HighContentionArtifactStore.create(tempDir, "../escape")
         }
+
         val outside = Files.createTempDirectory("high-contention-artifact-outside")
         val linkedRoot = tempDir.resolve("linked-root")
         Files.createSymbolicLink(linkedRoot, outside)
+
         assertFailsWith<HighContentionArtifactException> {
             HighContentionArtifactStore.create(linkedRoot, "run-03")
         }
+
         val linkedAncestor = tempDir.resolve("linked-ancestor")
         Files.createDirectory(linkedAncestor)
         Files.createSymbolicLink(linkedAncestor.resolve("reports"), outside)
+
         assertFailsWith<HighContentionArtifactException> {
             HighContentionArtifactStore.create(
                 linkedAncestor.resolve("reports/high-contention"),
@@ -339,7 +360,7 @@ class HighContentionReportTest {
             report().copy(runId = "parent-run"),
         )
 
-        Files.isRegularFile(path) shouldBeEqualTo true
+        Files.isRegularFile(path).shouldBeTrue()
         assertFailsWith<HighContentionArtifactException> {
             HighContentionArtifactStore.create(
                 outputRoot = tempDir,
@@ -372,6 +393,7 @@ class HighContentionReportTest {
         }
 
         val fallback = HighContentionJournal.read(journalPath).single()
+        log.debug { "fallback: $fallback" }
         fallback.payload.event shouldBeEqualTo HighContentionJournalEvent.REPORT_SERIALIZATION_FALLBACK
         fallback.payload.fields shouldBeEqualTo mapOf(
             "errorCode" to "REPORT_SERIALIZATION",

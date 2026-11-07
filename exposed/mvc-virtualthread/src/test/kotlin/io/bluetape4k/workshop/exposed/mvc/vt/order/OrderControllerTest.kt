@@ -2,14 +2,19 @@ package io.bluetape4k.workshop.exposed.mvc.vt.order
 
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.mvc.vt.AbstractMvcVirtualThreadTest
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.OrderDTO
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.OrderLineRequest
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.PlaceOrderRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
 
-class OrderControllerTest : AbstractMvcVirtualThreadTest() {
+class OrderControllerTest: AbstractMvcVirtualThreadTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `POST orders places order successfully`() {
@@ -24,10 +29,11 @@ class OrderControllerTest : AbstractMvcVirtualThreadTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderDTO::class.java)
+            .expectBody<OrderDTO>()
             .returnResult()
-        val body = result.responseBody.shouldNotBeNull()
-        body.id shouldBeGreaterOrEqualTo 1L
+        val order = result.responseBody.shouldNotBeNull()
+        log.debug { "order=$order" }
+        order.id shouldBeGreaterOrEqualTo 1L
     }
 
     @Test
@@ -57,8 +63,9 @@ class OrderControllerTest : AbstractMvcVirtualThreadTest() {
             .bodyValue(placeReq)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderDTO::class.java)
+            .expectBody<OrderDTO>()
             .returnResult().responseBody.shouldNotBeNull()
+        log.debug { "order=$order" }
 
         webTestClient.patch()
             .uri("/api/v1/orders/${order.id}/cancel")

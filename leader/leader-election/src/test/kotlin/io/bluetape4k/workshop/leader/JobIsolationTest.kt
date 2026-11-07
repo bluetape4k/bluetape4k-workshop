@@ -1,10 +1,11 @@
 package io.bluetape4k.workshop.leader
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.job.LeaderGuardedJob
 import io.bluetape4k.workshop.leader.job.LeaderScheduledJobService
 import org.junit.jupiter.api.Test
-import io.bluetape4k.codec.Base58
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -16,19 +17,21 @@ import java.util.concurrent.atomic.AtomicInteger
  * [AbstractLeaderElectionTest]를 통해 실제 [LettuceLeaderElector]를 사용합니다.
  * 각 job은 고유한 lockName을 가지므로 두 job 모두 자신의 lock을 독립적으로 획득합니다.
  */
-class JobIsolationTest : AbstractLeaderElectionTest() {
+class JobIsolationTest: AbstractLeaderElectionTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `failing job does not prevent subsequent jobs from running`() {
         val successCount = AtomicInteger(0)
 
-        val failingJob = object : LeaderGuardedJob {
+        val failingJob = object: LeaderGuardedJob {
             override val lockName = "test:isolate:fail:${Base58.randomString(8)}"
             override fun execute() {
                 throw RuntimeException("intentional failure in failingJob")
             }
         }
-        val successJob = object : LeaderGuardedJob {
+        val successJob = object: LeaderGuardedJob {
             override val lockName = "test:isolate:success:${Base58.randomString(8)}"
             override fun execute() {
                 successCount.incrementAndGet()

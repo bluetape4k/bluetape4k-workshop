@@ -3,32 +3,41 @@ package io.bluetape4k.workshop.leader.k8slease.job
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.k8slease.config.K8sLeaseMicrometerProperties
 import io.bluetape4k.workshop.leader.k8slease.leader.LeaderCoordinator
 import io.bluetape4k.workshop.leader.k8slease.metrics.K8sLeaseMetrics
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.time.Duration.Companion.milliseconds
 
 class K8sLeaseGuardedTaskTest {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `elected coordinator executes task and records success metrics`() = runSuspendIO {
         val registry = SimpleMeterRegistry()
         val task = K8sLeaseGuardedTask(
             coordinator = FakeLeaderCoordinator(elected = true),
-            properties = K8sLeaseMicrometerProperties(simulatedWorkTime = java.time.Duration.ofMillis(1)),
+            properties = K8sLeaseMicrometerProperties(simulatedWorkTime = 1.millis()),
             metrics = K8sLeaseMetrics(registry),
         )
 
         val report = task.runOnce()
 
+        log.debug { "report=$report" }
         report.executed.shouldBeTrue()
         report.reason shouldBeEqualTo "elected"
+
         task.executionCount.get() shouldBeEqualTo 1
-        registry.counter("workshop.k8s.lease.guard.attempts", "lock.name", "redacted-lock", "namespace", "redacted").count() shouldBeEqualTo 1.0
+
+        registry.counter("workshop.k8s.lease.guard.attempts", "lock.name", "redacted-lock", "namespace", "redacted")
+            .count() shouldBeEqualTo 1.0
+
         registry.counter(
             "workshop.k8s.lease.task.executions",
             "lock.name", "redacted-lock", "namespace", "redacted",
@@ -48,8 +57,10 @@ class K8sLeaseGuardedTaskTest {
 
         val report = task.runOnce()
 
+        log.debug { "report=$report" }
         report.executed.shouldBeFalse()
         report.reason shouldBeEqualTo "not-elected"
+
         task.executionCount.get() shouldBeEqualTo 0
         registry.counter(
             "workshop.k8s.lease.guard.skipped",
@@ -64,20 +75,23 @@ class K8sLeaseGuardedTaskTest {
         val registry = SimpleMeterRegistry()
         val task = K8sLeaseGuardedTask(
             coordinator = FakeLeaderCoordinator(elected = true),
-            properties = K8sLeaseMicrometerProperties(simulatedWorkTime = java.time.Duration.ofMillis(1)),
+            properties = K8sLeaseMicrometerProperties(simulatedWorkTime = 1.millis()),
             metrics = K8sLeaseMetrics(registry),
         ).also { it.failWork = true }
 
         val report = task.runOnce()
 
+        log.debug { "report=$report" }
         report.executed.shouldBeFalse()
         report.reason shouldBeEqualTo "task-failed"
+
         registry.counter(
             "workshop.k8s.lease.task.executions",
             "lock.name", "redacted-lock", "namespace", "redacted",
             "result",
             "failure",
         ).count() shouldBeEqualTo 1.0
+
         registry.find("workshop.k8s.lease.leader.active")
             .tag("lock.name", "redacted-lock")
             .tag("namespace", "redacted")
@@ -87,7 +101,7 @@ class K8sLeaseGuardedTaskTest {
 
     private class FakeLeaderCoordinator(
         private val elected: Boolean,
-    ) : LeaderCoordinator {
+    ): LeaderCoordinator {
         val attempts = AtomicInteger()
 
         override suspend fun <T> runIfLeader(lockName: String, action: suspend () -> T): T? {

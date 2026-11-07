@@ -27,7 +27,7 @@ class SyncService(
     @param:Value("\${workshop.micrometer.jsonplaceholder-base-url:https://jsonplaceholder.typicode.com}")
     private val jsonplaceholderBaseUrl: String,
 ) {
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val SIMULATED_BLOCKING_WORK_MILLIS = 100L
         private val faker = Faker()
     }
@@ -47,16 +47,6 @@ class SyncService(
                 simulateBlockingWork()
                 faker.name().fullName()
             }
-
-        // Nested span 으로 사용하기 위해서는 @Observed 대신 `withObservation` 함수를 사용하여 관찰을 합니다.
-//        return withObservation("sync-get-name-at-function", observationRegistry) {
-//            Thread.sleep(100)
-//            log.debug { "Get fake name in nested span" }
-//            faker.name().fullName()
-//        }
-//            .apply {
-//                Thread.sleep(100)
-//            }
     }
 
     @Observed(contextualName = "sync-get-todo-at-service")
@@ -83,19 +73,6 @@ class SyncService(
                         .awaitSingleOrNull()
                 }
             }
-
-//        return withObservation("get-todo-by-webclient", observationRegistry) {
-//            log.debug { "Get todo by id[$id] in sync service." }
-//            Thread.sleep(100)
-//
-//            runBlocking(Dispatchers.VT) {
-//                client.get()
-//                    .uri("/todos/${id}")
-//                    .retrieve()
-//                    .bodyToMono<Todo>()
-//                    .awaitSingleOrNull()
-//            } as? Todo
-//        }
     }
 
     private fun preProcessing() {

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     `java-test-fixtures`
+    kotlin("kapt")
 }
 
 springBoot {
