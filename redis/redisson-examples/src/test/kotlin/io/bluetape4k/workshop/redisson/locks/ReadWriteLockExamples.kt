@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -9,11 +12,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.redisson.api.RReadWriteLock
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Redisson ReadWriteLock example
@@ -42,20 +45,18 @@ class ReadWriteLockExamples: AbstractRedissonTest() {
         val writeLockId = redisson.getLockId(lockName)  // Coroutine 환경에서는 lock id 를 제공해야 합니다.
         writeLock.tryLockAsync(1, 60, TimeUnit.SECONDS, writeLockId).await().shouldBeTrue()
 
-        delay(1000)
+        delay(1.seconds)
 
-        scope
-            .launch(exceptionHandler) {
-                log.debug {
-                    "WriteLock이 걸린 상태에서 ReadLock 을 획득 시도합니다... -> 실패해야 합니다. ${Thread.currentThread().threadId()}"
-                }
-                val readLock = lock.readLock()
-                val readLockId = redisson.getLockId(lockName)
-
-                // 이미 write lock이 걸려 있으므로 read lock을 획득할 수 없다.
-                readLock.tryLockAsync(1, 60, TimeUnit.SECONDS, readLockId).await().shouldBeFalse()
+        scope.launch(exceptionHandler) {
+            log.debug {
+                "WriteLock이 걸린 상태에서 ReadLock 을 획득 시도합니다... -> 실패해야 합니다. ${Thread.currentThread().threadId()}"
             }
-            .join()
+            val readLock = lock.readLock()
+            val readLockId = redisson.getLockId(lockName)
+
+            // 이미 write lock이 걸려 있으므로 read lock을 획득할 수 없다.
+            readLock.tryLockAsync(1, 60, TimeUnit.SECONDS, readLockId).await().shouldBeFalse()
+        }.join()
 
         log.debug { "WriteLock을 반납합니다... threadId=${Thread.currentThread().threadId()}" }
         writeLock.unlockAsync(writeLockId).await()
@@ -74,7 +75,7 @@ class ReadWriteLockExamples: AbstractRedissonTest() {
 
                 try {
                     log.debug { "Some suspending job" }
-                    delay(it * 500L)
+                    delay((it * 500).milliseconds)
 
                     log.debug { "ReadLock을 반납합니다... $it:${Thread.currentThread().threadId()}, readLockId=$readLockId" }
                     readLock.isLocked.shouldBeTrue()
@@ -83,7 +84,7 @@ class ReadWriteLockExamples: AbstractRedissonTest() {
                     // 같은 coroutine context id 에서만 unlock 이 가능하다
                     readLock.unlockAsync(readLockId).await()
                 }
-            }
+            }.log("Job #$it")
         }
         jobs.joinAll()
     }

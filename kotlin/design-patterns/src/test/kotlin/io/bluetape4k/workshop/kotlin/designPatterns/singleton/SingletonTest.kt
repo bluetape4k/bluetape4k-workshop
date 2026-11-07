@@ -11,7 +11,7 @@ import io.bluetape4k.utils.Runtimex
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -55,7 +55,7 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         instances.all { it === expectedInstance }.shouldBeTrue()
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @Test
     fun `Virtual 스레드 환경에서 싱글턴 객체를 생성한다`() {
         val instances = CopyOnWriteArrayList<T>()

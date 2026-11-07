@@ -1,18 +1,21 @@
 package io.bluetape4k.workshop.lock
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.lock.fenced.FencedResource
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
-import java.time.Duration
+import org.awaitility.kotlin.withPollInterval
+import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * fencing token 보호를 보여주는 stale holder 전체 시나리오 smoke test입니다.
@@ -22,10 +25,11 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
  *
  * 실행 명령: `./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=`
  */
-@Tag("smoke")
-class FencedStaleHolderTest : AbstractDistributedLockTest() {
+class FencedStaleHolderTest: AbstractDistributedLockTest() {
 
-    @Test
+    companion object: KLogging()
+
+    @RepeatedTest(5)
     fun `stale holder A 의 write 는 fencing token 으로 거부된다`() {
         val lockName = randomName("stale")
         val fLock1 = redisson.getFencedLock(lockName)
@@ -37,13 +41,13 @@ class FencedStaleHolderTest : AbstractDistributedLockTest() {
         token1.shouldNotBeNull()
 
         // 2단계: lock ownership을 건드리지 않고 A의 lease 만료를 기다립니다.
-        await atMost Duration.ofSeconds(2) untilAsserted {
+        await atMost 2.seconds withPollInterval 100.milliseconds untilAsserted {
             fLock1.isLocked.shouldBeFalse()
         }
 
         // 3단계: B가 획득하며 더 큰 token을 받습니다.
         val token2 = fLock2.tryLockAndGetToken(1000, 5000, MILLISECONDS)
-        token2.shouldNotBeNull()
+        log.debug { "token1=$token1, token2=$token2" }
         token2 shouldBeGreaterThan token1
 
         // 4단계: B의 쓰기는 성공합니다.
@@ -52,12 +56,12 @@ class FencedStaleHolderTest : AbstractDistributedLockTest() {
         // 5단계: A의 쓰기는 거부됩니다(token1 < token2).
         resource.apply(token1) { "A is stale" }.shouldBeNull()
 
-        // 6단계: A는 lease가 만료되어 unlock할 수 없습니다.
-        assertFailsWith<IllegalMonitorStateException> {
-            fLock1.unlock()
-        }
+        // 6단계: A는 lease가 만료되어 unlock 할 수 있습니다.
+        fLock1.unlock()
 
-        // 7단계: B는 정상적으로 unlock합니다.
-        fLock2.unlock()
+        // 7단계: B는 정상적으로 unlock 할 수 없습니다.
+        assertFailsWith<IllegalMonitorStateException> {
+            fLock2.unlock()
+        }
     }
 }

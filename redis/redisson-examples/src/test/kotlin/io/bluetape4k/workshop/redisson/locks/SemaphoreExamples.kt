@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -9,11 +11,10 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -46,7 +47,7 @@ class SemaphoreExamples: AbstractRedissonTest() {
             .add {
                 // 해당 Job은 semaphore 2개 반납
                 val s2 = redisson2.getSemaphore(semaphoreName)
-                delay(1)
+                delay(1.milliseconds)
 
                 // 2개 반납 (4개 남음)
                 s2.releaseAsync(2).await()
@@ -55,12 +56,13 @@ class SemaphoreExamples: AbstractRedissonTest() {
             .add {
                 // 해당 Job은 semaphore 2개 획득 
                 val s3 = redisson3.getSemaphore(semaphoreName)
-                delay(1)
+                delay(1.milliseconds)
                 // 2개 확보
                 s3.tryAcquireAsync(2, 5.seconds.toJavaDuration()).await().shouldBeTrue()
-                delay(1)
+                delay(1.milliseconds)
             }
             .run()
+
         redisson2.shutdown()
         redisson3.shutdown()
 
@@ -126,7 +128,7 @@ class SemaphoreExamples: AbstractRedissonTest() {
         semaphore.delete()
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @Test
     fun `Virtual thread 환경에서 세마포어 사용하기`() {
         val semaphoreName = randomName()

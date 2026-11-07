@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
 
@@ -33,7 +33,7 @@ class CountDownLatchExamples: AbstractRedissonTest() {
 
         List(3) {
             launch {
-                delay(Random.nextLong(100, 500))
+                delay(timeMillis = Random.nextLong(100, 500))
                 log.debug { "Before Latch count=${latch.count}" }
                 latch.countDownAsync().await()
                 log.debug { "After Latch count=${latch.count}" }

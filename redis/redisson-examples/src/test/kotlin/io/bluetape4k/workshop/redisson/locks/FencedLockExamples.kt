@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -10,15 +12,14 @@ import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * FencedLock examples
@@ -115,7 +116,7 @@ class FencedLockExamples: AbstractRedissonTest() {
         lockCounter.get() shouldBeEqualTo 8 * 2
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `Virtual Thread 환경에서 FencedLock 획득 및 해제`() {
         val lock = redisson.getFencedLock(randomName())
@@ -161,12 +162,12 @@ class FencedLockExamples: AbstractRedissonTest() {
                         log.debug { "Lock 획득. locked=$token" }
                         lockCounter.incrementAndGet()
                         // 더미 작업 표현
-                        delay(Random.nextLong(50))
+                        delay(Random.nextLong(50).milliseconds)
 
                         // lock 해제
                         lock.unlockAsync(mlockId).await()
                         log.debug { "Lock 해제." }
-                        delay(1)
+                        delay(1.milliseconds)
                     }
                 }
             }

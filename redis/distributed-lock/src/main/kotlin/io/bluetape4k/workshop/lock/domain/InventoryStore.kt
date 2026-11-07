@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class InventoryStore {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val store = ConcurrentHashMap<Long, AtomicInteger>()
 

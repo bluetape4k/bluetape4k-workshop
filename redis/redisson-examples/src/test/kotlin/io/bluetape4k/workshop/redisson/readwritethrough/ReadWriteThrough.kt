@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.redisson.readwritethrough
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.jdbc.sql.extract
 import io.bluetape4k.jdbc.sql.runQuery
 import io.bluetape4k.jdbc.sql.withConnect
@@ -11,10 +12,8 @@ import org.redisson.api.map.MapWriter
 import org.redisson.api.map.RetryableMapWriter
 import java.sql.ResultSet
 import javax.sql.DataSource
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.toJavaDuration
 
-object ReadWriteThrough : KLogging() {
+object ReadWriteThrough: KLogging() {
 
     const val SELECT_ACTORS = "SELECT * FROM Actors"
     const val SELECT_ACTOR_IDS = "SELECT id FROM Actors"
@@ -33,30 +32,28 @@ object ReadWriteThrough : KLogging() {
      * @return
      */
     fun actorMapLoader(dataSource: DataSource): MapLoader<Int, Actor> {
-        return object : MapLoader<Int, Actor> {
+        return object: MapLoader<Int, Actor> {
             override fun load(key: Int): Actor? {
                 log.debug { "Load actor from DB. actor id=$key" }
 
-                return dataSource
-                    .withConnect { conn ->
-                        conn.prepareStatement(SELECT_ACTOR_BY_ID).use { ps ->
-                            ps.setInt(1, key)
-                            val rs: ResultSet = ps.executeQuery()
+                return dataSource.withConnect { conn ->
+                    conn.prepareStatement(SELECT_ACTOR_BY_ID).use { ps ->
+                        ps.setInt(1, key)
+                        val rs: ResultSet = ps.executeQuery()
 
-                            rs.extract {
-                                Actor(
-                                    int[Actor::id.name],
-                                    string[Actor::firstname.name],
-                                    string[Actor::lastname.name]
-                                )
-                            }
+                        rs.extract {
+                            Actor(
+                                int[Actor::id.name],
+                                string[Actor::firstname.name],
+                                string[Actor::lastname.name]
+                            )
                         }
                     }
-                    .firstOrNull()
+                }.firstOrNull()
             }
 
             override fun loadAllKeys(): MutableIterable<Int> {
-                    // read-through loading에는 모든 key가 필요합니다.
+                // read-through loading에는 모든 key가 필요합니다.
                 log.debug { "Load all actor ids." }
 
                 return dataSource.runQuery(SELECT_ACTOR_IDS) { rs ->
@@ -80,7 +77,7 @@ object ReadWriteThrough : KLogging() {
      */
     fun actorMapWriter(dataSource: DataSource): MapWriter<Int, Actor> {
 
-        val mapWriter = object : MapWriter<Int, Actor> {
+        val mapWriter = object: MapWriter<Int, Actor> {
             override fun write(map: MutableMap<Int, Actor>) {
                 log.debug { "Write actor to DB. actors=${map.values.joinToString()}" }
 
@@ -95,7 +92,6 @@ object ReadWriteThrough : KLogging() {
                         ps.executeBatch()
                     }
                 }
-
             }
 
             override fun delete(keys: MutableCollection<Int>?) {
@@ -105,7 +101,7 @@ object ReadWriteThrough : KLogging() {
         // 참고: 여기서는 Redisson RetryableMapWriter로 충분하며, Resilience4j Retry도 가능한 wrapper입니다.
         val options = MapOptions.defaults<Int, Actor>()
             .writerRetryAttempts(3)
-            .writerRetryInterval(100.milliseconds.toJavaDuration())
+            .writerRetryInterval(100.millis())
 
         return RetryableMapWriter(options, mapWriter)
     }

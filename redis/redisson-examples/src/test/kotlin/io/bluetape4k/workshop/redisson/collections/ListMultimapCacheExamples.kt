@@ -1,17 +1,16 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.redisson.api.BatchOptions
 import org.redisson.api.RListMultimapCache
 import java.util.concurrent.TimeUnit
-
 
 /**
  * List based Multimap
@@ -49,9 +48,8 @@ class ListMultimapCacheExamples: AbstractRedissonTest() {
         mmap.containsKeyAsync("1").await().shouldBeTrue()
         mmap.containsValueAsync(3).await().shouldBeTrue()
 
-
         mmap.entries().forEach { (key, value) ->
-            log.debug { "key=$key, value=$value" }
+            log.debug { "entries key=$key, value=$value" }
         }
 
         mmap.removeAsync("1", 3).await().shouldBeTrue()

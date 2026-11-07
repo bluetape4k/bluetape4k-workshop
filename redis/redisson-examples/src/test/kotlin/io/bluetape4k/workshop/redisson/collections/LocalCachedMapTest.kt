@@ -5,6 +5,9 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.support.awaitUntil
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.awaitility.untilSuspending
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -12,9 +15,12 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.codec.RedissonCodecs
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
@@ -25,13 +31,10 @@ import org.redisson.api.RedissonClient
 import org.redisson.api.options.LocalCachedMapOptions
 import org.redisson.client.RedisException
 import org.redisson.codec.CompositeCodec
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.time.toJavaDuration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.delay
 
 private val intCodec = CompositeCodec(
     RedissonCodecs.String,
@@ -65,16 +68,16 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     private val options1 = LocalCachedMapOptions.name<String, Int>(cacheName)
         .cacheSize(100)
         .evictionPolicy(LocalCachedMapOptions.EvictionPolicy.LFU)
-        .maxIdle(10.seconds.toJavaDuration())
-        .timeToLive(10.seconds.toJavaDuration())
+        .maxIdle(10.seconds())
+        .timeToLive(10.seconds())
         .codec(intCodec)
 
 
     private val options2 = LocalCachedMapOptions.name<String, Int>(cacheName)
         .cacheSize(100)
         .evictionPolicy(LocalCachedMapOptions.EvictionPolicy.LFU)
-        .maxIdle(10.seconds.toJavaDuration())
-        .timeToLive(10.seconds.toJavaDuration())
+        .maxIdle(10.seconds())
+        .timeToLive(10.seconds())
         .codec(intCodec)
 
     private val frontCache1: RLocalCachedMap<String, Int> by lazy { redisson1.getLocalCachedMap(options1) }
@@ -92,18 +95,22 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         var firstFailure: Throwable? = null
 
         if (this::redisson1.isInitialized) {
-            runCatching { redisson1.shutdown(0, 5, TimeUnit.SECONDS) }
-                .onFailure { firstFailure = it }
+            runCatching {
+                redisson1.shutdown(0, 5, TimeUnit.SECONDS)
+            }.onFailure {
+                firstFailure = it
+            }
         }
         if (this::redisson2.isInitialized) {
-            runCatching { redisson2.shutdown(0, 5, TimeUnit.SECONDS) }
-                .onFailure { failure ->
-                    if (firstFailure == null) {
-                        firstFailure = failure
-                    } else {
-                        checkNotNull(firstFailure).addSuppressed(failure)
-                    }
+            runCatching {
+                redisson2.shutdown(0, 5, TimeUnit.SECONDS)
+            }.onFailure { failure ->
+                if (firstFailure == null) {
+                    firstFailure = failure
+                } else {
+                    firstFailure.shouldNotBeNull().addSuppressed(failure)
                 }
+            }
         }
 
         firstFailure?.let { throw it }
@@ -124,7 +131,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     }
 
     @Test
-    fun `frontCache1 에 cache item을 추가하면 frontCache2에 추가됩니다`() = runSuspendIO(timeout = 60.seconds) {
+    fun `frontCache1 에 cache item을 추가하면 frontCache2에 추가됩니다`() = runSuspendIO {
         val keyToAdd = randomName()
 
         log.debug { "front cache1: put key=$keyToAdd" }
@@ -137,7 +144,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     }
 
     @Test
-    fun `frontCache1의 cache item을 삭제하면 frontCache2에서도 삭제됩니다`() = runSuspendIO(timeout = 60.seconds) {
+    fun `frontCache1의 cache item을 삭제하면 frontCache2에서도 삭제됩니다`() = runSuspendIO {
         val keyToRemove = randomName()
 
         log.debug { "front cache1: put $keyToRemove" }
@@ -156,7 +163,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     }
 
     @Test
-    fun `backCache에 cache item을 추가하면 frontCache 에 반영된다`() = runSuspendIO(timeout = 60.seconds) {
+    fun `backCache에 cache item을 추가하면 frontCache 에 반영된다`() = runSuspendIO {
         val key = randomName()
 
         // 초기에 frontCache에 존재하지 않는다.
@@ -183,26 +190,26 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     }
 
     @Test
-    fun `frontCache1 remote update invalidates both cached values`() = runSuspendIO(timeout = 60.seconds) {
+    fun `frontCache1 remote update invalidates both cached values`() = runSuspendIO {
         val key = randomName()
 
         awaitRedis(frontCache1.fastPutAsync(key, 7)).shouldBeTrue()
         await atMost 10.seconds untilSuspending {
             awaitRedis(frontCache1.getAsync(key)) == 7 &&
-                awaitRedis(frontCache2.getAsync(key)) == 7
+                    awaitRedis(frontCache2.getAsync(key)) == 7
         }
 
         awaitRedis(frontCache1.fastPutAsync(key, 42)).shouldBeFalse()
-        await atMost 10.seconds untilSuspending {
+        await atMost 10.seconds withPollInterval 100.milliseconds untilSuspending {
             awaitRedis(frontCache1.getAsync(key)) == 42 &&
-                awaitRedis(frontCache2.getAsync(key)) == 42
+                    awaitRedis(frontCache2.getAsync(key)) == 42
         }
 
         awaitRedis(frontCache1.fastRemoveAsync(key)) shouldBeEqualTo 1L
     }
 
     @Test
-    fun `concurrent Int increments match independent remote final value`() = runSuspendIO(timeout = 60.seconds) {
+    fun `concurrent Int increments match independent remote final value`() = runSuspendIO {
         val name = randomName()
         val calls = 32 * 8
         val completed = AtomicInteger()
@@ -223,7 +230,8 @@ class LocalCachedMapTest: AbstractRedissonTest() {
                     .workers(4)
                     .rounds(calls)
                     .add {
-                        awaitRedis(map1.addAndGetAsync("count", 1), timeout = 30.seconds)
+                        val count = map1.addAndGetAsync("count", 1).awaitUntil(30.seconds)
+                        log.debug { "count=$count" }
                         completed.incrementAndGet()
                     }
                     .run()
@@ -233,16 +241,16 @@ class LocalCachedMapTest: AbstractRedissonTest() {
             awaitRedis(remote.getAsync("count")) shouldBeEqualTo calls
         }
 
-        await atMost 10.seconds untilSuspending {
+        await atMost 10.seconds withPollInterval 100.milliseconds untilSuspending {
             awaitRedis(map1.getAsync("count")) == calls &&
-                awaitRedis(map2.getAsync("count")) == calls
+                    awaitRedis(map2.getAsync("count")) == calls
         }
         awaitRedis(map1.getAsync("count")) shouldBeEqualTo calls
         awaitRedis(map2.getAsync("count")) shouldBeEqualTo calls
     }
 
     @Test
-    fun `concurrent Double increments match independent remote final value`() = runSuspendIO(timeout = 60.seconds) {
+    fun `concurrent Double increments match independent remote final value`() = runSuspendIO {
         val name = randomName()
         val calls = 32 * 8
         val expected = calls * 0.25
@@ -264,7 +272,8 @@ class LocalCachedMapTest: AbstractRedissonTest() {
                     .workers(4)
                     .rounds(calls)
                     .add {
-                        awaitRedis(map1.addAndGetAsync("ratio", 0.25), timeout = 30.seconds)
+                        val count = map1.addAndGetAsync("ratio", 0.25).awaitUntil(30.seconds)
+                        log.debug { "count=$count" }
                         completed.incrementAndGet()
                     }
                     .run()
@@ -274,16 +283,16 @@ class LocalCachedMapTest: AbstractRedissonTest() {
             awaitRedis(remote.getAsync("ratio")) shouldBeEqualTo expected
         }
 
-        await atMost 10.seconds untilSuspending {
+        await atMost 10.seconds withPollInterval 100.milliseconds untilSuspending {
             awaitRedis(map1.getAsync("ratio")) == expected &&
-                awaitRedis(map2.getAsync("ratio")) == expected
+                    awaitRedis(map2.getAsync("ratio")) == expected
         }
         awaitRedis(map1.getAsync("ratio")) shouldBeEqualTo expected
         awaitRedis(map2.getAsync("ratio")) shouldBeEqualTo expected
     }
 
     @Test
-    fun `non numeric stored value is rejected by numeric increment`() = runSuspendIO(timeout = 60.seconds) {
+    fun `non numeric stored value is rejected by numeric increment`() = runSuspendIO {
         val name = randomName()
         val raw = redisson.getMap<String, String>(name, RedissonCodecs.String)
         awaitRedis(raw.fastPutAsync("ratio", "not-a-number")).shouldBeTrue()
@@ -303,7 +312,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
      * [RLocalCachedMap.getAsync]는 cache miss에서 Redis를 다시 읽으므로, 동시 갱신 직후의
      * consistency를 검증하려면 두 client가 보유한 기존 entry를 먼저 확인한 뒤 clear barrier를 사용해야 합니다.
      */
-    private suspend fun <V> withLocalCacheClearBarrier(
+    private suspend inline fun <V> withLocalCacheClearBarrier(
         source: RLocalCachedMap<String, V>,
         observer: RLocalCachedMap<String, V>,
         key: String,
@@ -322,18 +331,22 @@ class LocalCachedMapTest: AbstractRedissonTest() {
      */
     @Disabled("PRO 버전에서만 지원합니다.")
     @Test
-    fun `frontCache1의 cache item을 expire 되면 frontCache2에서도 삭제됩니다`() = runSuspendIO(timeout = 30.seconds) {
+    fun `frontCache1의 cache item을 expire 되면 frontCache2에서도 삭제됩니다`() = runSuspendIO {
         val keyToEvict = randomName()
 
         log.debug { "front cache1: put $keyToEvict" }
         awaitRedis(frontCache1.fastPutAsync(keyToEvict, 42))
-        await atMost 5.seconds.toJavaDuration() until { frontCache2.containsKey(keyToEvict) }
+        await atMost 5.seconds withPollInterval 100.milliseconds until {
+            frontCache2.containsKey(keyToEvict)
+        }
 
         awaitRedis(frontCache2.getAsync(keyToEvict)) shouldBeEqualTo 42
 
-        delay(5000L)
+        delay(5.seconds)
         log.debug { "front cache1: expired $keyToEvict" }
-        await atMost 5.seconds.toJavaDuration() until { frontCache2.containsKey(keyToEvict).not() }
+        await atMost 5.seconds withPollInterval 100.milliseconds until {
+            frontCache2.containsKey(keyToEvict).not()
+        }
         awaitRedis(frontCache2.getAsync(keyToEvict)).shouldBeNull()
     }
 }

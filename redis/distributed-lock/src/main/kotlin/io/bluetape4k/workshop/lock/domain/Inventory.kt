@@ -17,7 +17,7 @@ data class Inventory(
     val id: Long,
     val name: String,
     val initialStock: Int,
-) : Serializable {
+): Serializable {
 
     init {
         id.requirePositiveNumber("id")
@@ -25,7 +25,7 @@ data class Inventory(
         initialStock.requireZeroOrPositiveNumber("initialStock")
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val serialVersionUID = 1L
     }
 }

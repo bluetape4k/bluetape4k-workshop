@@ -1,5 +1,12 @@
 package io.bluetape4k.workshop.redisson.readwritethrough
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.jdbc.sql.withConnect
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -10,12 +17,6 @@ import io.bluetape4k.workshop.redisson.readwritethrough.ReadWriteThrough.SELECT_
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
@@ -29,11 +30,9 @@ import org.redisson.api.options.MapCacheOptions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.time.Duration
 import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 
 /**
  * Redisson Map을 이용한 read/write through 기능 예제
@@ -162,7 +161,9 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
         }
 
         // delay 되어 있던 item들이 DB에 저장될 때까지 대기한다
-        await atMost Duration.ofSeconds(5) until { getActorCountFromDB() >= prevActorCount + ACTOR_SIZE }
+        await atMost 5.seconds until {
+            getActorCountFromDB() >= (prevActorCount + ACTOR_SIZE)
+        }
 
         map.delete()
     }
@@ -202,7 +203,7 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
                 val id = 300_000 + it
                 val actor = newActor(id)
                 map.fastPutAsync(id, actor).await().shouldBeTrue()
-            }
+            }.log("Insert Job")
         }
         insertJobs.joinAll()
 
@@ -213,7 +214,7 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
             launch {
                 val id = 300_000 + it
                 map.getAsync(id).await().shouldNotBeNull()
-            }
+            }.log("Get Job")
         }
         checkJob.joinAll()
 
@@ -247,7 +248,9 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
         insertJobs.joinAll()
 
         // delay 되어 있던 item들이 DB에 저장될 때까지 대기한다
-        await atMost 5.seconds.toJavaDuration() until { getActorCountFromDB() >= prevActorCount + ACTOR_SIZE }
+        await atMost 3.seconds until {
+            getActorCountFromDB() >= (prevActorCount + ACTOR_SIZE)
+        }
 
         map.keys.size shouldBeGreaterOrEqualTo ACTOR_SIZE
 

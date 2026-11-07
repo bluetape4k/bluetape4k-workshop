@@ -13,9 +13,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory
 class NumberServiceTest(
     @param:Autowired private val numberService: NumberService,
     @param:Autowired private val connectionFactory: RedisConnectionFactory,
-) : AbstractRedisClusterTest() {
+): AbstractRedisClusterTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {
@@ -33,11 +33,11 @@ class NumberServiceTest(
     fun `operation to redis cluster`() {
         numberService.get(0).shouldBeNull()
 
-        for (i in 1 until 100) {
+        for (i in 1..100) {
             numberService.multiplyAndSave(i)
         }
 
-        for (i in 1 until 100) {
+        for (i in 1..100) {
             numberService.get(i) shouldBeEqualTo (i * 2)
         }
     }
