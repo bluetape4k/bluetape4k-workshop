@@ -1,19 +1,20 @@
 package io.bluetape4k.workshop.movierating
 
-import io.bluetape4k.junit5.coroutines.runSuspendTest
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.vertx.tests.withSuspendTestContext
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendTest
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.vertx.tests.withSuspendTestContext
 import io.vertx.core.Vertx
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.codec.BodyCodec
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.coAwait
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(VertxExtension::class)
 class MovieRatingVerticeTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * BeforeAll, BeforeEach 에서는 testContext 가 불필요합니다. 만약 injection을 받으면 꼭 completeNow() 를 호출해야 합니다.
@@ -33,7 +34,7 @@ class MovieRatingVerticeTest {
     }
 
     @Test
-    fun `get movie by id`(vertx: Vertx, testContext: VertxTestContext) = runSuspendTest {
+    fun `get movie by id`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         vertx.withSuspendTestContext(testContext) {
             val client = WebClient.create(vertx)
 
@@ -46,16 +47,17 @@ class MovieRatingVerticeTest {
                 .coAwait()
 
             log.debug { "Response body=${response.body()}" }
-
             response.statusCode() shouldBeEqualTo 200
+
             val movie = response.body().shouldNotBeNull()
+            log.debug { "movie=$movie" }
             movie.getString("id") shouldBeEqualTo movieId
             movie.getString("title").shouldNotBeEmpty()
         }
     }
 
     @Test
-    fun `get rating`(vertx: Vertx, testContext: VertxTestContext) = runSuspendTest {
+    fun `get rating`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         vertx.withSuspendTestContext(testContext) {
             val client = WebClient.create(vertx)
 
@@ -68,16 +70,17 @@ class MovieRatingVerticeTest {
                 .coAwait()
 
             log.debug { "Response body=${response.body()}" }
-
             response.statusCode() shouldBeEqualTo 200
+
             val movie = response.body().shouldNotBeNull()
+            log.debug { "movie=$movie" }
             movie.getString("id") shouldBeEqualTo movieId
             movie.getDouble("getRating") shouldBeGreaterThan 0.0
         }
     }
 
     @Test
-    fun `post movie rating`(vertx: Vertx, testContext: VertxTestContext) = runSuspendTest {
+    fun `post movie rating`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         vertx.withSuspendTestContext(testContext) {
             val client = WebClient.create(vertx)
 
@@ -89,6 +92,7 @@ class MovieRatingVerticeTest {
                 .send()
                 .coAwait()
 
+            log.debug { "Response body=${response.body()}" }
             response.statusCode() shouldBeEqualTo 200
         }
     }

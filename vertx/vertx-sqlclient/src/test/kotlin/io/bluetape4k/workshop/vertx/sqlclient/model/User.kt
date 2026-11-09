@@ -6,7 +6,7 @@ data class User(
     val id: Long,
     val firstName: String,
     val lastName: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
