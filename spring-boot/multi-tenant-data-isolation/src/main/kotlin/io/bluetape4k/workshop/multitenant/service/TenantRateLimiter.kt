@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.multitenant.service
 
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.multitenant.domain.TenantId
 import org.springframework.stereotype.Component
@@ -14,6 +17,10 @@ import java.util.concurrent.ConcurrentHashMap
 class TenantRateLimiter(
     private val keyFactory: TenantKeyFactory,
 ) {
+    companion object: KLogging() {
+        private const val DEFAULT_LIMIT: Int = 2
+        private val DEFAULT_WINDOW: Duration = 1.minutes()
+    }
 
     private val buckets = ConcurrentHashMap<String, RateLimitBucket>()
 
@@ -27,9 +34,9 @@ class TenantRateLimiter(
         window: Duration = DEFAULT_WINDOW,
     ): RateLimitDecision {
         limit.requirePositiveNumber("limit")
-        val windowMillis = window.toMillis()
-        windowMillis.requirePositiveNumber("windowMillis")
+        window.requirePositiveDuration("window")
 
+        val windowMillis = window.toMillis()
         val key = keyFactory.rateLimitKey(tenantId, principal)
         val windowStart = (System.currentTimeMillis() / windowMillis) * windowMillis
         val bucket = buckets.compute(key) { _, current ->
@@ -55,10 +62,6 @@ class TenantRateLimiter(
         buckets.clear()
     }
 
-    companion object {
-        private const val DEFAULT_LIMIT: Int = 2
-        private val DEFAULT_WINDOW: Duration = Duration.ofMinutes(1)
-    }
 }
 
 /**
@@ -69,7 +72,7 @@ data class RateLimitDecision(
     val allowed: Boolean,
     val remaining: Int,
     val resetAtEpochMillis: Long,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 104L
@@ -79,7 +82,7 @@ data class RateLimitDecision(
 private data class RateLimitBucket(
     val windowStartEpochMillis: Long,
     val used: Int,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 104L

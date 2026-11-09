@@ -6,7 +6,7 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(proxyBeanMethods = false)
 class IdGeneratorApplication {
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 fun main(args: Array<String>) {

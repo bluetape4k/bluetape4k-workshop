@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.resilience.service.coroutines
 
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.exception.BusinessException
 import io.github.resilience4j.bulkhead.annotation.Bulkhead
@@ -23,7 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 @Service("backendACoService")
 class BackendACoService: CoService {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_A: String = "backendA"
     }
 
@@ -78,7 +79,7 @@ class BackendACoService: CoService {
     @CircuitBreaker(name = BACKEND_A)
     @Retry(name = BACKEND_A)
     override fun flowSuccess(): Flow<String> {
-        return flowOf("Hello", "World")
+        return flowOf("Hello", "World").log("SUCCESS")
     }
 
     /**
@@ -92,13 +93,13 @@ class BackendACoService: CoService {
     @Bulkhead(name = BACKEND_A)
     @Retry(name = BACKEND_A)
     override fun flowFailure(): Flow<String> {
-        return flowOf("Hello", "World")
+        return flowOf("Hello", "World").log("FAILURE")
             .onStart { throw IOException("BAM!") }
     }
 
     @CircuitBreaker(name = BACKEND_A, fallbackMethod = "flowFallback")
     override fun flowTimeout(): Flow<String> {
-        return flowOf("Hello", "World")
+        return flowOf("Hello", "World").log("TIMEOUT")
             .onStart { delay(3.seconds) }
     }
 

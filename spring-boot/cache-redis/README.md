@@ -18,21 +18,21 @@ This module shows Spring Cache backed by Redis and Lettuce. It mirrors the Caffe
 
 ## Main Components
 
-| Class | Role |
-|---|---|
-| `LettuceRedisCacheConfiguration` | Configures `RedisCacheManager`, `RedisTemplate`, binary serialization, and Lettuce connection factory |
-| `AsyncConfig` | Owns the shared `VirtualThreads` executor, adapts it for Spring, and applies the shared `MdcTaskDecorator` |
-| `CountryRepository` | Applies bluetape4k validation plus `@Cacheable` and `@CacheEvict` to Redis-backed country lookup |
+| Class                            | Role                                                                                                       |
+|----------------------------------|------------------------------------------------------------------------------------------------------------|
+| `LettuceRedisCacheConfiguration` | Configures `RedisCacheManager`, `RedisTemplate`, binary serialization, and Lettuce connection factory      |
+| `AsyncConfig`                    | Owns the shared `VirtualThreads` executor, adapts it for Spring, and applies the shared `MdcTaskDecorator` |
+| `CountryRepository`              | Applies bluetape4k validation plus `@Cacheable` and `@CacheEvict` to Redis-backed country lookup           |
 
 ## bluetape4k Features Used
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `RedisCacheApplication` | Starts a shared Redis Testcontainers instance for tests and local runs |
-| `RedisBinarySerializers.LZ4Kryo` | `bluetape4k-spring-boot4-redis` | `LettuceRedisCacheConfiguration.redisTemplate()` | Stores compact binary values in Redis |
-| `requireNotBlank()` | `bluetape4k-core` | `CountryRepository.findByCode()` and `evictCache()` | Rejects invalid cache keys before loading or eviction |
-| `VirtualThreads.executorService()` | `bluetape4k-virtualthread-api` + `bluetape4k-virtualthread-jdk25` | `AsyncConfig` | Selects the supported provider or platform fallback while Spring owns shutdown |
-| `CountryPrefetcher` | Warms random country codes when the `app` profile is active |
+| Feature                            | Artifact                                                          | Code Location                                       | Benefit                                                                        |
+|------------------------------------|-------------------------------------------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------------|
+| `RedisServer.Launcher.redis`       | `bluetape4k-testcontainers`                                       | `RedisCacheApplication`                             | Starts a shared Redis Testcontainers instance for tests and local runs         |
+| `RedisBinarySerializers.LZ4Kryo`   | `bluetape4k-spring-boot4-redis`                                   | `LettuceRedisCacheConfiguration.redisTemplate()`    | Stores compact binary values in Redis                                          |
+| `requireNotBlank()`                | `bluetape4k-core`                                                 | `CountryRepository.findByCode()` and `evictCache()` | Rejects invalid cache keys before loading or eviction                          |
+| `VirtualThreads.executorService()` | `bluetape4k-virtualthread-api` + `bluetape4k-virtualthread-jdk25` | `AsyncConfig`                                       | Selects the supported provider or platform fallback while Spring owns shutdown |
+| `CountryPrefetcher`                | Warms random country codes when the `app` profile is active       |
 
 ## Executor Ownership
 
@@ -47,12 +47,8 @@ fun asyncTaskExecutor(executorService: ExecutorService): AsyncTaskExecutor =
     }
 ```
 
-Spring owns one delegate used by both `@Async` and Lettuce. Context shutdown rejects new work but does not
-interrupt already submitted tasks or wait indefinitely for them. The provider-defined thread name is intentional;
-use the `cacheRedisVirtualThreadExecutor` bean name and `VirtualThreads.runtimeName()` for observation. The shared
-`MdcTaskDecorator` captures an immutable caller snapshot, handles empty caller context, and restores the worker's
-previous context after success or failure.
-Both virtual-thread artifacts are versionless module declarations resolved by `bluetape4k-dependencies:2.1.0-SNAPSHOT`.
+Spring owns one delegate used by both `@Async` and Lettuce. Context shutdown rejects new work but does not interrupt already submitted tasks or wait indefinitely for them. The provider-defined thread name is intentional; use the `cacheRedisVirtualThreadExecutor` bean name and `VirtualThreads.runtimeName()` for observation. The shared
+`MdcTaskDecorator` captures an immutable caller snapshot, handles empty caller context, and restores the worker's previous context after success or failure. Both virtual-thread artifacts are versionless module declarations resolved by `bluetape4k-dependencies:2.1.0-SNAPSHOT`.
 
 ## Redis Configuration Example
 

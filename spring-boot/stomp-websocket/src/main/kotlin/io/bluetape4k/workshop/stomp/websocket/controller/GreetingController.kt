@@ -13,7 +13,7 @@ import org.springframework.web.util.HtmlUtils
 @Controller
 class GreetingController {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * websocket configuration에서 application destination prefix 에 "/app"을 지정해서 "/app/hello" 를 호출해야 한다
@@ -23,8 +23,10 @@ class GreetingController {
     fun greeting(message: HelloMessage): Greeting {
         val name = message.name.requireNotBlank("message.name")
         log.debug { "Received message: $name" }
-        return Greeting("Hello, ${HtmlUtils.htmlEscape(name)}!").apply {
-            log.debug { "Sending greeting to client. $this" }
-        }
+
+        return Greeting("Hello, ${HtmlUtils.htmlEscape(name)}!")
+            .apply {
+                log.debug { "Sending greeting to client. $this" }
+            }
     }
 }

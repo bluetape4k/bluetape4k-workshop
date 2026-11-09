@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 class ReactiveRetryTest: AbstractRetryTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     // Reactive Mono/Flux pipelines do not update Resilience4j registry metrics synchronously.
     // Disable the hard assertion in checkMetrics for all reactive test paths.
@@ -15,6 +15,7 @@ class ReactiveRetryTest: AbstractRetryTest() {
 
     @Nested
     inner class MonoMethod {
+
         @Nested
         inner class BackendA {
             @Test

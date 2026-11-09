@@ -6,11 +6,11 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 /**
  * 공유 invoice table 입니다. tenant isolation 은 repository predicate 로 강제합니다.
  */
-object InvoiceTable : LongIdTable("tenant_invoices") {
+object InvoiceTable: LongIdTable("tenant_invoices") {
     val tenantId = varchar("tenant_id", 64)
     val customerName = varchar("customer_name", 120)
     val amount = decimal("amount", 19, 2)
-    val status = enumerationByName("status", 20, InvoiceStatus::class).default(InvoiceStatus.OPEN)
+    val status = enumerationByName<InvoiceStatus>("status", 20).default(InvoiceStatus.OPEN)
 }
 
 /**

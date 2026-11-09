@@ -2,7 +2,10 @@ package io.bluetape4k.workshop.resilience.controller
 
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.completableFutureOf
+import io.bluetape4k.concurrent.failedCompletableFutureOf
 import io.bluetape4k.junit5.concurrency.TestingExecutors
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.resilience.service.Service
 import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
@@ -17,6 +20,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ScheduledExecutorService
 
 class BackendBControllerLifecycleTest {
+
+    companion object: KLogging()
 
     @Test
     fun `close shuts down the programmatic resilience scheduler`() {
@@ -61,8 +66,8 @@ class BackendBControllerLifecycleTest {
         override fun monoSuccess(): Mono<String> = Mono.just("ok")
         override fun monoFailure(): Mono<String> = Mono.error(IllegalStateException("not used"))
         override fun monoTimeout(): Mono<String> = Mono.just("ok")
-        override fun futureSuccess(): CompletableFuture<String> = CompletableFuture.completedFuture("ok")
-        override fun futureFailure(): CompletableFuture<String> = CompletableFuture.failedFuture(error("not used"))
-        override fun futureTimeout(): CompletableFuture<String> = CompletableFuture.completedFuture("ok")
+        override fun futureSuccess(): CompletableFuture<String> = completableFutureOf("ok")
+        override fun futureFailure() = failedCompletableFutureOf<String>(IllegalStateException("not used"))
+        override fun futureTimeout(): CompletableFuture<String> = completableFutureOf("ok")
     }
 }

@@ -18,17 +18,17 @@ Chaos Monkey can delay or fail watched method calls before the normal student AP
 
 ## Main Endpoints
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/students` | List students from H2 |
-| `GET` | `/students/{id}` | Load one student |
-| `POST` | `/students` | Insert a student |
-| `PUT` | `/students/{id}` | Update a student |
-| `DELETE` | `/students/{id}` | Delete a student |
-| `GET` | `/actuator/chaosmonkey` | Inspect Chaos Monkey state |
-| `POST` | `/actuator/chaosmonkey/enable` | Enable assaults |
-| `POST` | `/actuator/chaosmonkey/disable` | Disable assaults |
-| `GET` | `/actuator/chaosmonkey/assaults` | Inspect assault settings |
+| Method   | Path                             | Purpose                    |
+|----------|----------------------------------|----------------------------|
+| `GET`    | `/students`                      | List students from H2      |
+| `GET`    | `/students/{id}`                 | Load one student           |
+| `POST`   | `/students`                      | Insert a student           |
+| `PUT`    | `/students/{id}`                 | Update a student           |
+| `DELETE` | `/students/{id}`                 | Delete a student           |
+| `GET`    | `/actuator/chaosmonkey`          | Inspect Chaos Monkey state |
+| `POST`   | `/actuator/chaosmonkey/enable`   | Enable assaults            |
+| `POST`   | `/actuator/chaosmonkey/disable`  | Disable assaults           |
+| `GET`    | `/actuator/chaosmonkey/assaults` | Inspect assault settings   |
 
 ## Configuration Highlights
 

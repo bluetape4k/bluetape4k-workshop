@@ -2,15 +2,14 @@ package io.bluetape4k.workshop.cache.caffeine.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.bluetape4k.cache.caffeine.caffeine
-import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.cache.caffeine.CaffeineCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.toJavaDuration
 
 @Configuration(proxyBeanMethods = false)
 @EnableCaching
@@ -20,19 +19,20 @@ class CaffeineConfig {
 
     @Bean
     fun cacheManager(caffeine: Caffeine<Any, Any>): CacheManager {
-        return CaffeineCacheManager("cache:contries", "cache:cities").apply {
-            setCaffeine(caffeine)
-        }
+        return CaffeineCacheManager("cache:contries", "cache:cities")
+            .apply {
+                setCaffeine(caffeine)
+            }
     }
 
     @Bean
     fun caffeineBean(): Caffeine<Any, Any> {
         return caffeine {
             initialCapacity(100)
-            maximumSize(1000)
-            expireAfterAccess(5.minutes.toJavaDuration())
+            maximumSize(1_000)
+            expireAfterAccess(5.minutes())
             recordStats()
-            executor(VirtualThreadExecutor)  // Virtual Threads 를 사용하여 Lazy Loading 을 수행합니다.
+            executor(VirtualThreads.executorService())  // Virtual Threads 를 사용하여 Lazy Loading 을 수행합니다.
         }
     }
 }

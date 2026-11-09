@@ -14,12 +14,12 @@ import org.springframework.boot.runApplication
 @SpringBootApplication(proxyBeanMethods = false)
 class IdempotencyApplication {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         /**
          * local development 와 test 를 위해 Testcontainers 로 시작되는 singleton Redis server 입니다.
          */
         @JvmStatic
-        val redisServer: RedisServer = RedisServer.Launcher.redis
+        val redisServer: RedisServer by lazy { RedisServer.Launcher.redis }
     }
 }
 

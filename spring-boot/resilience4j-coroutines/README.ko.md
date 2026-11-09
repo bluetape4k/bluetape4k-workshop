@@ -4,10 +4,7 @@
 
 ## 이 예제가 보여 주는 것
 
-이 모듈은 Spring Boot 4 애플리케이션에서 Resilience4j 적용 방식이 달라지는 지점을 비교합니다.
-blocking controller, Reactor `Mono`/`Flux`, `CompletableFuture`, Kotlin `suspend` 함수, Kotlin `Flow`,
-그리고 bluetape4k `SuspendDecorators` API를 같은 설정 위에서 확인합니다. 어떤 resilience 규칙을
-annotation으로 둘지, Reactor/Future wrapper로 둘지, 명시적인 coroutine decorator로 둘지 판단할 때 유용합니다.
+이 모듈은 Spring Boot 4 애플리케이션에서 Resilience4j 적용 방식이 달라지는 지점을 비교합니다. blocking controller, Reactor `Mono`/`Flux`, `CompletableFuture`, Kotlin `suspend` 함수, Kotlin `Flow`, 그리고 bluetape4k `SuspendDecorators` API를 같은 설정 위에서 확인합니다. 어떤 resilience 규칙을 annotation으로 둘지, Reactor/Future wrapper로 둘지, 명시적인 coroutine decorator로 둘지 판단할 때 유용합니다.
 
 ## 아키텍처
 
@@ -23,25 +20,23 @@ annotation으로 둘지, Reactor/Future wrapper로 둘지, 명시적인 coroutin
 
 ## 개요
 
-Spring Boot 4 애플리케이션에서 Kotlin 코루틴과 함께 Resilience4j 2.4.0 장애 허용 패턴을 적용하는 방법을 보여 줍니다.
-CircuitBreaker, Bulkhead, Retry, TimeLimiter, RateLimiter를 blocking 경로와 non-blocking(suspend / Flow / Mono / Flux / CompletableFuture) 코드 경로 모두에서 다룹니다.
+Spring Boot 4 애플리케이션에서 Kotlin 코루틴과 함께 Resilience4j 2.4.0 장애 허용 패턴을 적용하는 방법을 보여 줍니다. CircuitBreaker, Bulkhead, Retry, TimeLimiter, RateLimiter를 blocking 경로와 non-blocking(suspend / Flow / Mono / Flux / CompletableFuture) 코드 경로 모두에서 다룹니다.
 
 ## 사용한 Bluetape4k 기능
 
-| 모듈 | 기능 | 사용 방식 |
-|---|---|---|
-| `bluetape4k-logging` | `KLogging()` / `KLoggingChannel()` | 서비스와 테스트의 구조적 로깅 |
-| `bluetape4k-junit5` | `runSuspendIO { }` | 실제 I/O를 사용하는 suspend 테스트 블록 실행 |
-| `bluetape4k-resilience4j` | `SuspendDecorators` | suspend 함수용 프로그래밍 방식 resilience decorator chain |
-| `bluetape4k-testcontainers` | 테스트 인프라 | 이 모듈에는 외부 인프라가 필요하지 않음 |
-| `bluetape4k-assertions` | `shouldBeEqualTo`, `shouldBeTrue` 등 | 타입 안전 테스트 assertion |
+| 모듈                        | 기능                                 | 사용 방식                                                 |
+|-----------------------------|--------------------------------------|-----------------------------------------------------------|
+| `bluetape4k-logging`        | `KLogging()` / `KLoggingChannel()`   | 서비스와 테스트의 구조적 로깅                             |
+| `bluetape4k-junit5`         | `runSuspendIO { }`                   | 실제 I/O를 사용하는 suspend 테스트 블록 실행              |
+| `bluetape4k-resilience4j`   | `SuspendDecorators`                  | suspend 함수용 프로그래밍 방식 resilience decorator chain |
+| `bluetape4k-testcontainers` | 테스트 인프라                        | 이 모듈에는 외부 인프라가 필요하지 않음                   |
+| `bluetape4k-assertions`     | `shouldBeEqualTo`, `shouldBeTrue` 등 | 타입 안전 테스트 assertion                                |
 
 ## Resilience4j 패턴
 
 ### Circuit Breaker
 
-실패율이 설정된 임계값을 초과하면 열려서 성능이 저하된 백엔드 호출을 막습니다.
-HALF-OPEN 상태에서 probe 호출이 성공하면 CLOSED 상태로 돌아갑니다.
+실패율이 설정된 임계값을 초과하면 열려서 성능이 저하된 백엔드 호출을 막습니다. HALF-OPEN 상태에서 probe 호출이 성공하면 CLOSED 상태로 돌아갑니다.
 
 ```kotlin
 @CircuitBreaker(name = "backendA", fallbackMethod = "fallback")
@@ -100,15 +95,15 @@ override suspend fun suspendSuccess(): String = "Hello World"
 
 ## 주요 코루틴 통합 결과
 
-| 패턴 | 지원 | 참고 |
-|---|---|---|
-| `@CircuitBreaker` + `suspend` | ✅ | AOP proxy가 suspend 함수를 올바르게 감쌉니다. |
-| `@Bulkhead` + `suspend` | ✅ | Semaphore bulkhead가 suspend와 동작합니다. |
-| `@Retry` + `suspend` | ⚠️ | Annotation 동작에는 제한이 있습니다. 명시적인 retry chain에는 `SuspendDecorators`를 사용합니다. |
-| `@TimeLimiter` + `suspend` | ❌ | 이 endpoint에서는 사용하지 않습니다. `withTimeout {}` 또는 programmatic decorator를 사용합니다. |
-| `@Retry` + `Flow` | ❌ | 적용되지 않습니다. `Flow.retry(retry)` 확장을 사용합니다. |
-| suspend용 CircuitBreaker fallback | ⚠️ | fallback 메서드는 non-suspend여야 합니다. |
-| suspend/reactive metric 업데이트 | ⚠️ | async 경로는 registry를 동기적으로 갱신하지 않습니다. |
+| 패턴                              | 지원 | 참고                                                                                            |
+|-----------------------------------|------|-------------------------------------------------------------------------------------------------|
+| `@CircuitBreaker` + `suspend`     | ✅   | AOP proxy가 suspend 함수를 올바르게 감쌉니다.                                                   |
+| `@Bulkhead` + `suspend`           | ✅   | Semaphore bulkhead가 suspend와 동작합니다.                                                      |
+| `@Retry` + `suspend`              | ⚠️   | Annotation 동작에는 제한이 있습니다. 명시적인 retry chain에는 `SuspendDecorators`를 사용합니다. |
+| `@TimeLimiter` + `suspend`        | ❌   | 이 endpoint에서는 사용하지 않습니다. `withTimeout {}` 또는 programmatic decorator를 사용합니다. |
+| `@Retry` + `Flow`                 | ❌   | 적용되지 않습니다. `Flow.retry(retry)` 확장을 사용합니다.                                       |
+| suspend용 CircuitBreaker fallback | ⚠️   | fallback 메서드는 non-suspend여야 합니다.                                                       |
+| suspend/reactive metric 업데이트  | ⚠️   | async 경로는 registry를 동기적으로 갱신하지 않습니다.                                           |
 
 ## 설정
 

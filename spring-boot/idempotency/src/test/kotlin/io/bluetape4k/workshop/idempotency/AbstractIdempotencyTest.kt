@@ -13,7 +13,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractIdempotencyTest {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         @JvmStatic
         val redis: RedisServer = RedisServer.Launcher.redis
 

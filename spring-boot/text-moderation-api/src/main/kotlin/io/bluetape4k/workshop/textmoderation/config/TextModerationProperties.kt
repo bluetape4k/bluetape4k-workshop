@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.textmoderation.config
 
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.text.search.NormalizationForm
-import java.io.Serializable
 import org.springframework.boot.context.properties.ConfigurationProperties
+import java.io.Serializable
 
 /**
  * text moderation API workshop module 의 configuration property 입니다.
@@ -13,7 +13,8 @@ data class TextModerationProperties(
     val maxTextCharacters: Int = 2_000,
     val blockwords: List<String> = listOf("spam", "badword", "abuse", "hate"),
     val normalization: NormalizationForm = NormalizationForm.NFC,
-) : Serializable {
+): Serializable {
+    
     init {
         maxTextCharacters.requirePositiveNumber("maxTextCharacters")
     }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.multitenant.service
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.tenant.ScopedValueTenantContext
 import io.bluetape4k.tenant.ThreadLocalTenantContext
 import io.bluetape4k.tenant.reactor.ReactorTenantContext
@@ -23,6 +24,8 @@ class TenantContextCarrierService(
     private val invoiceService: TenantInvoiceService,
     private val meterRegistry: MeterRegistry,
 ) {
+
+    companion object: KLogging()
 
     private val mvcContext = ThreadLocalTenantContext()
     private val virtualThreadContext = ScopedValueTenantContext()
@@ -58,12 +61,14 @@ class TenantContextCarrierService(
     /**
      * 현재 virtual-thread ScopedValue scope의 tenant를 읽습니다.
      */
-    fun currentVirtualThreadTenant(): TenantId? = virtualThreadContext.currentOrNull()?.let { TenantId(it.value) }
+    fun currentVirtualThreadTenant(): TenantId? =
+        virtualThreadContext.currentOrNull()?.let { TenantId(it.value) }
 
     /**
      * 현재 virtual-thread ScopedValue scope를 요구합니다.
      */
-    fun requireVirtualThreadTenant(): TenantId = TenantId(virtualThreadContext.requireCurrent().value)
+    fun requireVirtualThreadTenant(): TenantId =
+        TenantId(virtualThreadContext.requireCurrent().value)
 
     /**
      * ScopedValue carrier가 공급한 tenant로 기존 tenant-safe invoice service를 호출합니다.
@@ -77,7 +82,7 @@ class TenantContextCarrierService(
      * Reactor [ContextView]는 immutable이므로 scheduler hop과 concurrent subscription 사이에서
      * 값을 공유하지 않고, publisher가 종료되거나 취소되면 호출자 쪽 상태로 남지 않습니다.
      */
-    fun <T : Any> withReactorTenant(tenantId: TenantId, publisher: Mono<T>): Mono<T> =
+    fun <T: Any> withReactorTenant(tenantId: TenantId, publisher: Mono<T>): Mono<T> =
         publisher.contextWrite { context ->
             ReactorTenantContext.withTenant(context, tenantId.toCarrierTenantId())
         }

@@ -21,6 +21,7 @@ import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.CacheManager
+import org.springframework.cache.get
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.measureTimeMillis
@@ -156,5 +157,5 @@ class CountryRepositoryTest(
     }
 
     private fun cachedCountry(code: String): Country? =
-        cacheManager.getCache("cache:contries")?.get("country:$code", Country::class.java)
+        cacheManager.getCache("cache:contries")?.get<Country>("country:$code")
 }

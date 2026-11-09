@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service
  * caching 이 제거하는 overhead 를 측정하기 위한 baseline 입니다.
  */
 @Service
-class NoCacheService(private val productRepository: ProductRepository) : ProductCacheService {
-    companion object : KLoggingChannel()
+class NoCacheService(private val productRepository: ProductRepository): ProductCacheService {
+    companion object: KLoggingChannel()
 
     override fun findById(id: Long): Product? = productRepository.findById(id).orElse(null)
 

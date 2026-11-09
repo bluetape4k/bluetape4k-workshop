@@ -10,6 +10,7 @@ pluginManagement {
         // https://plugins.gradle.org/plugin/org.gradle.toolchains.foojay-resolver-convention
         id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0")
         kotlin("kapt") version "2.4.21"
+        kotlin("plugin.jpa") version "2.4.21"
     }
 }
 

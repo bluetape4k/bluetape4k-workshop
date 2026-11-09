@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.cache.resilience.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
@@ -15,7 +16,6 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
-import java.time.Duration
 
 /**
  * resilient cache 설정입니다.
@@ -29,7 +29,7 @@ import java.time.Duration
 @EnableCaching
 class ResilientCacheConfig {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val REDIS_CIRCUIT_BREAKER = "redis-cache"
         const val LOCAL_CACHE_NAME = "products-local"
         const val REDIS_CACHE_NAME = "products-redis"
@@ -65,10 +65,7 @@ class ResilientCacheConfig {
      */
     @Bean(LOCAL_CACHE_NAME)
     fun localCache(): com.github.benmanes.caffeine.cache.Cache<String, String> {
-        return Caffeine.newBuilder()
-            .maximumSize(1_000)
-            .expireAfterWrite(Duration.ofSeconds(30))
-            .build()
+        return Caffeine.newBuilder().maximumSize(1_000).expireAfterWrite(30.seconds()).build()
     }
 
     /**
@@ -83,21 +80,21 @@ class ResilientCacheConfig {
             .slidingWindowSize(5)
             .minimumNumberOfCalls(3)
             .failureRateThreshold(60f)              // 60% failure → OPEN
-            .waitDurationInOpenState(Duration.ofSeconds(5))
+            .waitDurationInOpenState(5.seconds())
             .permittedNumberOfCallsInHalfOpenState(2)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .recordExceptions(Exception::class.java)
             .build()
 
-        val cb = registry.circuitBreaker(REDIS_CIRCUIT_BREAKER, config)
+        val circuitBreaker = registry.circuitBreaker(REDIS_CIRCUIT_BREAKER, config)
 
-        cb.eventPublisher
+        circuitBreaker.eventPublisher
             .onStateTransition { e ->
                 log.info { "[CircuitBreaker] state transition: ${e.stateTransition}" }
             }
             .onSuccess { log.info { "[CircuitBreaker] call succeeded" } }
             .onError { e -> log.info { "[CircuitBreaker] call failed: ${e.throwable.message}" } }
 
-        return cb
+        return circuitBreaker
     }
 }

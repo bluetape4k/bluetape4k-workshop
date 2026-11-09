@@ -28,11 +28,12 @@ import java.math.MathContext
 import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
+import kotlin.time.toKotlinDuration
 
 @Service
 class QuoteGenerator {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private val mapper by lazy { jsonMapper() }
         private val MATH_CONTEXT = MathContext(2)
     }
@@ -56,7 +57,7 @@ class QuoteGenerator {
 
     fun fetchQuoteStringFlow(period: Duration): Flow<String> = flow {
         while (currentCoroutineContext().isActive) {
-            delay(period.toMillis())
+            delay(period.toKotlinDuration())
             val quotes = generateStringQuotes(period.toMillis())
             emit(quotes)
         }
@@ -72,7 +73,7 @@ class QuoteGenerator {
     }
 
     fun fetchQuoteAsFlow(period: Duration): Flow<Quote> = flow {
-        withTimeoutOrNull(period.toMillis()) {
+        withTimeoutOrNull(period.toKotlinDuration()) {
             while (currentCoroutineContext().isActive) {
                 val quotes = generateQuotes(period.toMillis())
                 emitAll(quotes.asFlow().log("quote")) // .onEach { log.info { "emit quote. $it" } })
@@ -81,11 +82,15 @@ class QuoteGenerator {
         }
     }
         .flowOn(Dispatchers.IO)
+        //.buffer(onBufferOverflow = BufferOverflow.DROP_OLDEST)
         .conflate()  // conflate는 onBackpressureDrop() 과 같이 적체되면 무시해버린다.
+
 
     fun getQuotes(): Flow<Event> {
         // conflate는 onBackpressureDrop() 과 같이 적체되면 무시해버린다.
-        return flowOf(createEvent(0)).conflate().flowOn(Dispatchers.IO)
+        return flowOf(createEvent(0))
+            .flowOn(Dispatchers.IO)
+            .conflate()   // conflate는 onBackpressureDrop() 과 같이 적체되면 무시해버린다.
     }
 
     private fun createEvent(interval: Long): Event {

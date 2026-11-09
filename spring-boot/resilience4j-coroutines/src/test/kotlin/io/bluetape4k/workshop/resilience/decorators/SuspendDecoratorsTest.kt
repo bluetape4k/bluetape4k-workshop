@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldStartWith
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -13,6 +14,8 @@ import io.bluetape4k.workshop.resilience.AbstractResilienceTest
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.RetryRegistry
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.IOException
@@ -44,9 +47,9 @@ import java.util.concurrent.atomic.AtomicInteger
  * - decorator 순서는 중요합니다. 바깥 decorator 가 먼저 실행됩니다.
  * - 권장 순서: CircuitBreaker -> Retry -> TimeLimiter -> Bulkhead.
  */
-class SuspendDecoratorsTest : AbstractResilienceTest() {
+class SuspendDecoratorsTest: AbstractResilienceTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Autowired
     private val retryRegistry: RetryRegistry = uninitialized()
@@ -101,18 +104,23 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
                 .slidingWindowSize(4)
                 .minimumNumberOfCalls(4)
                 .failureRateThreshold(100f)   // 100% → opens immediately after 4 failures
-                .waitDurationInOpenState(java.time.Duration.ofSeconds(10))
+                .waitDurationInOpenState(10.seconds())
                 .build()
         )
 
         // circuit breaker 를 open 하도록 4번 실패를 발생시킵니다.
         repeat(4) {
             runCatching {
-                SuspendDecorators.ofSupplier<String> {
-                    throw IOException("simulated failure")
-                }
+                SuspendDecorators
+                    .ofSupplier<String> {
+                        throw IOException("simulated failure")
+                    }
                     .withCircuitBreaker(circuitBreaker)
                     .invoke()
+            }.onFailure {
+                if (it is CancellationException) {
+                    ensureActive()
+                }
             }
         }
 
@@ -141,35 +149,41 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
                 .slidingWindowSize(4)
                 .minimumNumberOfCalls(4)
                 .failureRateThreshold(100f)
-                .waitDurationInOpenState(java.time.Duration.ofSeconds(10))
+                .waitDurationInOpenState(10.seconds())
                 .build()
         )
 
         // circuit breaker 를 open 합니다.
         repeat(4) {
             runCatching {
-                SuspendDecorators.ofSupplier<String> {
-                    throw IOException("simulated failure")
-                }
+                SuspendDecorators
+                    .ofSupplier<String> {
+                        throw IOException("simulated failure")
+                    }
                     .withCircuitBreaker(circuitBreaker)
                     .invoke()
+            }.onFailure {
+                if (it is CancellationException) {
+                    ensureActive()
+                }
             }
         }
 
         circuitBreaker.state shouldBeEqualTo CircuitBreaker.State.OPEN
 
         // fallback 과 함께 호출하므로 exception 이 throw 되지 않습니다.
-        val result = SuspendDecorators.ofSupplier<String> {
-            "should not reach here"
-        }
+        val result = SuspendDecorators
+            .ofSupplier {
+                "should not reach here"
+            }
             .withCircuitBreaker(circuitBreaker)
             .withFallback { ex ->
                 "fallback: ${ex?.message}"
             }
             .invoke()
 
-        result shouldStartWith "fallback:"
         log.debug { "Fallback returned: $result" }
+        result shouldStartWith "fallback:"
     }
 
     @Test
@@ -183,16 +197,17 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
 
         val callCount = AtomicInteger(0)
 
-        val result = SuspendDecorators.ofSupplier {
-            callCount.incrementAndGet()
-            "Hello from Spring-registered backendA circuit breaker"
-        }
+        val result = SuspendDecorators
+            .ofSupplier {
+                callCount.incrementAndGet()
+                "Hello from Spring-registered backendA circuit breaker"
+            }
             .withCircuitBreaker(circuitBreaker)
             .withRetry(retry)
             .invoke()
 
+        log.debug { "Spring-registered CB result: $result, attempts: ${callCount.get()}" }
         result shouldBeEqualTo "Hello from Spring-registered backendA circuit breaker"
         callCount.get() shouldBeEqualTo 1
-        log.debug { "Spring-registered CB result: $result, attempts: ${callCount.get()}" }
     }
 }

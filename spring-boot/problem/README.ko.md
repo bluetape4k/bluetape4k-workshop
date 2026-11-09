@@ -2,9 +2,7 @@
 
 [English](README.md) | 한국어
 
-이 모듈은 WebFlux controller에서 task-domain 예외나 Resilience4j 실패가 발생했을 때
-RFC 9457 Problem Details 응답으로 변환하는 흐름을 보여줍니다. 핵심 경로는
-controller exception -> `RestApiExceptionHandler` -> Zalando `ProblemHandling` 응답입니다.
+이 모듈은 WebFlux controller에서 task-domain 예외나 Resilience4j 실패가 발생했을 때 RFC 9457 Problem Details 응답으로 변환하는 흐름을 보여줍니다. 핵심 경로는 controller exception -> `RestApiExceptionHandler` -> Zalando `ProblemHandling` 응답입니다.
 
 ## 아키텍처 다이어그램
 
@@ -14,8 +12,7 @@ controller exception -> `RestApiExceptionHandler` -> Zalando `ProblemHandling` �
 
 ![Problem Web Demo 오류 시퀀스 다이어그램](../../docs/images/readme-diagrams/spring-boot-problem-readme-sequence-01.png)
 
-이 오류 처리 예제는 RFC 9457 Problem Details를 내장 지원하는 Spring Boot 4와 Zalando Problem Spring Web을 함께 사용합니다.
-bluetape4k `KLogging`과 `bluetape4k-resilience4j`를 사용해 Circuit Breaker 관련 예외를 RFC 9457 형식으로 변환합니다.
+이 오류 처리 예제는 RFC 9457 Problem Details를 내장 지원하는 Spring Boot 4와 Zalando Problem Spring Web을 함께 사용합니다. bluetape4k `KLogging`과 `bluetape4k-resilience4j`를 사용해 Circuit Breaker 관련 예외를 RFC 9457 형식으로 변환합니다.
 
 ## RFC 9457 Problem Details 개념
 
@@ -33,24 +30,24 @@ Problem Details(`application/problem+json`)는 API 오류 응답을 표준화하
 }
 ```
 
-| 필드 | 설명 |
-|---|---|
-| `type` | 오류 타입을 식별하는 URI(선택 사항) |
-| `title` | 사람이 읽을 수 있는 오류 요약 |
-| `status` | HTTP 상태 코드 |
-| `detail` | 오류에 대한 상세 설명 |
-| `instance` | 오류가 발생한 특정 리소스의 URI |
+| 필드       | 설명                                |
+|------------|-------------------------------------|
+| `type`     | 오류 타입을 식별하는 URI(선택 사항) |
+| `title`    | 사람이 읽을 수 있는 오류 요약       |
+| `status`   | HTTP 상태 코드                      |
+| `detail`   | 오류에 대한 상세 설명               |
+| `instance` | 오류가 발생한 특정 리소스의 URI     |
 
 ## 주요 구성 요소
 
-| 클래스 | 역할 |
-|---|---|
-| `RestApiExceptionHandler` | `@ControllerAdvice` — `ProblemHandling` + `TaskAdviceTrait` + `Resilience4jTrait` 조합 |
-| `TaskAdviceTrait` | `TaskNotFoundException`을 404로, `InvalidTaskIdException`을 400으로 변환 |
-| `Resilience4jTrait` | Resilience4j 예외를 Circuit Breaker/Bulkhead/RateLimit Problem 응답으로 변환 |
-| `RestControllerLoggingFilter` | 요청/응답 로깅을 위한 WebFilter |
-| `TaskController` | 코루틴 `suspend` 함수로 구현한 `/tasks` CRUD |
-| `Resilience4jController` | Circuit Breaker와 통합된 예제 컨트롤러 |
+| 클래스                        | 역할                                                                                   |
+|-------------------------------|----------------------------------------------------------------------------------------|
+| `RestApiExceptionHandler`     | `@ControllerAdvice` — `ProblemHandling` + `TaskAdviceTrait` + `Resilience4jTrait` 조합 |
+| `TaskAdviceTrait`             | `TaskNotFoundException`을 404로, `InvalidTaskIdException`을 400으로 변환               |
+| `Resilience4jTrait`           | Resilience4j 예외를 Circuit Breaker/Bulkhead/RateLimit Problem 응답으로 변환           |
+| `RestControllerLoggingFilter` | 요청/응답 로깅을 위한 WebFilter                                                        |
+| `TaskController`              | 코루틴 `suspend` 함수로 구현한 `/tasks` CRUD                                           |
+| `Resilience4jController`      | Circuit Breaker와 통합된 예제 컨트롤러                                                 |
 
 ## 예외 계층
 
@@ -66,10 +63,10 @@ MaxRetriesExceededException   → 500 Internal Server Error
 
 ## 사용한 bluetape4k 기능
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
-|---|---|---|---|
-| `KLogging` | `bluetape4k-logging` | 모든 companion object | 지연 lambda 로깅과 구조적 예외 로깅 |
-| `bluetape4k-resilience4j` | `bluetape4k-resilience4j` | `Resilience4jTrait` | Resilience4j 예외를 Problem JSON으로 변환하는 trait 제공 |
+| 기능                      | 아티팩트                  | 코드 위치             | 이점                                                     |
+|---------------------------|---------------------------|-----------------------|----------------------------------------------------------|
+| `KLogging`                | `bluetape4k-logging`      | 모든 companion object | 지연 lambda 로깅과 구조적 예외 로깅                      |
+| `bluetape4k-resilience4j` | `bluetape4k-resilience4j` | `Resilience4jTrait`   | Resilience4j 예외를 Problem JSON으로 변환하는 trait 제공 |
 
 ## bluetape4k 적용 전 / 후
 

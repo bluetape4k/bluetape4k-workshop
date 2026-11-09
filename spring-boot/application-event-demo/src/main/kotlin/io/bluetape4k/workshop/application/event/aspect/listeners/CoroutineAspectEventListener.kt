@@ -8,11 +8,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactor.mono
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
+import kotlin.time.Duration.Companion.milliseconds
 
 @Component
 class CoroutineAspectEventListener {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @EventListener(classes = [AspectEvent::class])
     fun handleEvent(event: AspectEvent) = mono(Dispatchers.IO) {
@@ -20,7 +21,7 @@ class CoroutineAspectEventListener {
     }
 
     private suspend fun doHandleEvent(event: AspectEvent) {
-        delay(10L) // Simulate some processing
+        delay(10.milliseconds) // Simulate some processing
         log.debug { "Handle aspect event by coroutine listener. $event" }
     }
 }

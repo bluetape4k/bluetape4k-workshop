@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
+import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_BEHIND_BATCH_SIZE
 import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_BEHIND_DELAY_MILLIS
 import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_RETRY_ATTEMPTS
 import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_RETRY_INTERVAL
 import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.requireExistingProduct
-import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import org.redisson.api.RMap
 import org.redisson.api.RedissonClient
 import org.redisson.api.map.WriteMode
@@ -29,24 +29,24 @@ class WriteBehindService(
     productMapLoader: ProductMapLoader,
     productMapWriter: ProductMapWriter,
     @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
-) : ProductCacheService {
+): ProductCacheService {
     companion object {
         const val CACHE_NAME = "products:write-behind"
     }
 
     private val mapName = qualifiedCacheName(namespace, CACHE_NAME)
 
+    private val options = MapOptions.name<Long, Product>(mapName)
+        .loader(productMapLoader)
+        .writer(productMapWriter)
+        .writeMode(WriteMode.WRITE_BEHIND)
+        .writeBehindBatchSize(WRITE_BEHIND_BATCH_SIZE)
+        .writeBehindDelay(WRITE_BEHIND_DELAY_MILLIS)
+        .writeRetryAttempts(WRITE_RETRY_ATTEMPTS)
+        .writeRetryInterval(WRITE_RETRY_INTERVAL)
+
     private val products: RMap<Long, Product> =
-        redissonClient.getMap(
-            MapOptions.name<Long, Product>(mapName)
-                .loader(productMapLoader)
-                .writer(productMapWriter)
-                .writeMode(WriteMode.WRITE_BEHIND)
-                .writeBehindBatchSize(WRITE_BEHIND_BATCH_SIZE)
-                .writeBehindDelay(WRITE_BEHIND_DELAY_MILLIS)
-                .writeRetryAttempts(WRITE_RETRY_ATTEMPTS)
-                .writeRetryInterval(WRITE_RETRY_INTERVAL)
-        )
+        redissonClient.getMap(options)
 
     private val cacheOnlyProducts: RMap<Long, Product> = redissonClient.getMap(mapName)
 

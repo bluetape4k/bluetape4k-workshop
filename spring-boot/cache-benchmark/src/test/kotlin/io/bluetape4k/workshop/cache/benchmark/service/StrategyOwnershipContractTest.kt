@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
 import org.junit.jupiter.api.Test
 
 class StrategyOwnershipContractTest {
+
+    companion object: KLogging()
 
     @Test
     fun `canonical strategy services do not own repository access directly`() {
@@ -13,10 +16,11 @@ class StrategyOwnershipContractTest {
             WriteThroughService::class.java,
             WriteBehindService::class.java,
         ).forEach { serviceType ->
-            val ownsRepository =
-                serviceType.declaredConstructors.any { constructor ->
-                    constructor.parameterTypes.any { parameterType -> parameterType == ProductRepository::class.java }
+            val ownsRepository = serviceType.declaredConstructors.any { constructor ->
+                constructor.parameterTypes.any { parameterType ->
+                    parameterType == ProductRepository::class.java
                 }
+            }
 
             ownsRepository.shouldBeFalse()
         }

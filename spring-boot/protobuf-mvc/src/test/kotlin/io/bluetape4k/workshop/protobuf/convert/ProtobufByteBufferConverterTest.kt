@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.protobuf.convert
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.protobuf.serializers.ProtobufSerializer
 import io.bluetape4k.workshop.protobuf.course
 import org.junit.jupiter.api.Test
@@ -12,11 +14,13 @@ import java.nio.ReadOnlyBufferException
 
 class ProtobufByteBufferConverterTest {
 
+    companion object: KLogging()
+
     private val course = course {
         id = 7
         courseName = "Caller-owned buffer"
     }
-    private val allocatingWire = ProtobufSerializer().serialize(course)
+    private val allocatingWire: ByteArray = ProtobufSerializer().serialize(course)
 
     @Test
     fun `serializeTo writes allocating wire bytes to heap and direct targets`() {
@@ -24,6 +28,7 @@ class ProtobufByteBufferConverterTest {
             ByteBuffer.allocate(allocatingWire.size + 8),
             ByteBuffer.allocateDirect(allocatingWire.size + 8),
         ).forEach { target ->
+            // Protobuf 데이터 크기를 나타내는 Long 값의 길이 (MAGIC NUMBER)
             target.position(4)
 
             course.serializeTo(target) shouldBeEqualTo allocatingWire.size
@@ -42,9 +47,9 @@ class ProtobufByteBufferConverterTest {
             target.clear()
             course.serializeTo(target) shouldBeEqualTo allocatingWire.size
             target.flip()
-            target.bytesBetween(0, target.limit())
-                .contentEquals(allocatingWire)
-                .shouldBeTrue()
+
+            target.bytesBetween(0, target.limit()) shouldContentEqual allocatingWire
+
         }
     }
 
@@ -62,7 +67,7 @@ class ProtobufByteBufferConverterTest {
         }
 
         target.position() shouldBeEqualTo start
-        target.allBytes().contentEquals(content).shouldBeTrue()
+        target.allBytes() shouldContentEqual content
     }
 
     @Test
@@ -80,7 +85,7 @@ class ProtobufByteBufferConverterTest {
         }
 
         target.position() shouldBeEqualTo start
-        target.allBytes().contentEquals(content).shouldBeTrue()
+        target.allBytes() shouldContentEqual content
     }
 
     private fun ByteBuffer.bytesBetween(start: Int, end: Int): ByteArray =

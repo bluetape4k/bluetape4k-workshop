@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.cache.resilience.service
 
 import com.github.benmanes.caffeine.cache.Cache
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -11,7 +12,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 /**
  * Redis primary cache 와 Caffeine fallback 을 사용하는 product service 입니다.
@@ -33,7 +33,7 @@ class ResilientProductService(
     private val localCache: Cache<String, String>,
     private val circuitBreaker: CircuitBreaker,
 ) {
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val REDIS_KEY_PREFIX = "product:"
     }
 
@@ -46,10 +46,11 @@ class ResilientProductService(
     suspend fun getProduct(id: String): String? {
         val redisKey = "$REDIS_KEY_PREFIX$id"
 
-        val result = SuspendDecorators.ofSupplier {
-            log.debug { "Fetching product[$id] from Redis" }
-            redisTemplate.opsForValue().get(redisKey)
-        }
+        val result = SuspendDecorators
+            .ofSupplier {
+                log.debug { "Fetching product[$id] from Redis" }
+                redisTemplate.opsForValue().get(redisKey)
+            }
             .withCircuitBreaker(circuitBreaker)
             .withFallback { ex ->
                 log.warn { "Redis fallback triggered for product[$id]: ${ex?.message}" }
@@ -80,7 +81,7 @@ class ResilientProductService(
         log.debug { "Stored product[$id] in local cache" }
 
         try {
-            redisTemplate.opsForValue().set(redisKey, value, Duration.ofMinutes(5))
+            redisTemplate.opsForValue().set(redisKey, value, 5.minutes())
             log.info { "Stored product[$id] in Redis" }
         } catch (ex: Exception) {
             log.warn(ex) { "Redis write failed for product[$id]; local cache updated only" }

@@ -47,17 +47,16 @@ Then open:
 ./gradlew :spring-boot-cache-resilience:test
 ```
 
-Tests start Docker containers (Redis + Toxiproxy), inject failures, and verify the full
-circuit breaker state machine without mocking.
+Tests start Docker containers (Redis + Toxiproxy), inject failures, and verify the full circuit breaker state machine without mocking.
 
 ## Used Bluetape4k Features
 
-| Module | Feature | Usage |
-|--------|---------|-------|
-| `bluetape4k-logging` | `KLoggingChannel()` | Coroutine-aware structured logging in service and test |
-| `bluetape4k-resilience4j` | `SuspendDecorators` | Programmatic CB + fallback chain for suspend functions |
-| `bluetape4k-testcontainers` | `ToxiproxyServer`, `RedisServer` | Real network failure injection in integration tests |
-| `bluetape4k-junit5` | `runSuspendIO { }` | Suspend-based integration test runner |
+| Module                      | Feature                          | Usage                                                  |
+|-----------------------------|----------------------------------|--------------------------------------------------------|
+| `bluetape4k-logging`        | `KLoggingChannel()`              | Coroutine-aware structured logging in service and test |
+| `bluetape4k-resilience4j`   | `SuspendDecorators`              | Programmatic CB + fallback chain for suspend functions |
+| `bluetape4k-testcontainers` | `ToxiproxyServer`, `RedisServer` | Real network failure injection in integration tests    |
+| `bluetape4k-junit5`         | `runSuspendIO { }`               | Suspend-based integration test runner                  |
 
 ## Source Map
 

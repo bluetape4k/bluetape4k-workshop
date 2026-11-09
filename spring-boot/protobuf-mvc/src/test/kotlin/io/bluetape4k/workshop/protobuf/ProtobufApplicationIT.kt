@@ -1,17 +1,17 @@
 package io.bluetape4k.workshop.protobuf
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.protobuf.School.Course
-import io.bluetape4k.workshop.protobuf.convert.toJson
-import io.bluetape4k.spring.tests.httpGet
-import kotlinx.coroutines.reactive.awaitSingle
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.workshop.protobuf.School.Course
+import io.bluetape4k.workshop.protobuf.convert.toJson
+import kotlinx.coroutines.reactive.awaitSingle
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClients
 import org.junit.jupiter.api.Test
@@ -33,7 +33,7 @@ import java.io.InputStream
 )
 class ProtobufApplicationIT {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val restTemplate: RestTemplate by lazy {
         RestTemplate(listOf(ProtobufHttpMessageConverter()))
@@ -75,7 +75,6 @@ class ProtobufApplicationIT {
         val protobufStream = executeHttpRequest(request)
 
         val course1 = Course.parseFrom(protobufStream)
-        log.debug { "course1=$course1" }
         assertCourse1(course1)
     }
 
@@ -91,7 +90,6 @@ class ProtobufApplicationIT {
             .httpGet("/courses/1")
             .awaitBody<Course>()
 
-        log.debug { "course1=$course1" }
         assertCourse1(course1)
     }
 
@@ -106,11 +104,12 @@ class ProtobufApplicationIT {
 
         val course1 = Course.parseFrom(bytes)
 
-        log.debug { "course1=$course1" }
         assertCourse1(course1)
     }
 
     private fun assertCourse1(course: Course) {
+        log.debug { "course1=$course" }
+        
         course.id shouldBeEqualTo 1
         course.courseName shouldBeEqualTo "Kotlin Programming"
         course.studentList shouldHaveSize 3
@@ -137,7 +136,7 @@ class ProtobufApplicationIT {
 
         // Protobuf 메시지를 JSON 문자열로 직렬화한 결과입니다.
         val jsonText = course1.toJson()
-        log.debug { "jsonText=$jsonText" }
+        log.debug { "jsonText=\n$jsonText" }
         jsonText shouldContain "Kotlin Programming"
         jsonText shouldContain "john.doe@example.com"
     }

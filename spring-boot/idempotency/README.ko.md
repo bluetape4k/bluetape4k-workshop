@@ -2,9 +2,7 @@
 
 [English](README.md) | 한국어
 
-이 모듈은 **Idempotency-Key** 헤더로 중복 주문 생성을 막는 WebFlux 예제입니다.
-첫 `POST /api/orders` 요청의 응답을 Redisson `RMapCache`에 5분 동안 저장하고,
-같은 key로 재시도하면 새 주문을 만들지 않고 원래 응답 body를 그대로 반환합니다.
+이 모듈은 **Idempotency-Key** 헤더로 중복 주문 생성을 막는 WebFlux 예제입니다. 첫 `POST /api/orders` 요청의 응답을 Redisson `RMapCache`에 5분 동안 저장하고, 같은 key로 재시도하면 새 주문을 만들지 않고 원래 응답 body를 그대로 반환합니다.
 
 ## 아키텍처
 
@@ -16,15 +14,15 @@
 
 ## 핵심 기능
 
-| 기능 | 상세 |
-|---|---|
-| **중복 감지** | `Idempotency-Key` request header를 Redis cache와 매칭 |
-| **Storage backend** | Redisson `RMapCache` — atomic `putIfAbsent`(SET NX semantics) |
-| **TTL** | key당 5분 |
-| **Concurrency** | `putIfAbsent`로 first writer wins; 늦은 concurrent writer는 cached response 수신 |
-| **Missing header** | HTTP 400 Bad Request |
-| **First creation** | HTTP 201 Created |
-| **Replay** | HTTP 200 OK with original response body |
+| 기능                | 상세                                                                             |
+|---------------------|----------------------------------------------------------------------------------|
+| **중복 감지**       | `Idempotency-Key` request header를 Redis cache와 매칭                            |
+| **Storage backend** | Redisson `RMapCache` — atomic `putIfAbsent`(SET NX semantics)                    |
+| **TTL**             | key당 5분                                                                        |
+| **Concurrency**     | `putIfAbsent`로 first writer wins; 늦은 concurrent writer는 cached response 수신 |
+| **Missing header**  | HTTP 400 Bad Request                                                             |
+| **First creation**  | HTTP 201 Created                                                                 |
+| **Replay**          | HTTP 200 OK with original response body                                          |
 
 ## Before / After
 
@@ -88,10 +86,10 @@ http POST :8080/api/orders productId=prod-001 quantity:=2 userId=user-123
 
 ## 설정
 
-| 속성 | 기본값 | 설명 |
-|---|---|---|
+| 속성                     | 기본값      | 설명       |
+|--------------------------|-------------|------------|
 | `spring.data.redis.host` | `localhost` | Redis host |
-| `spring.data.redis.port` | `6379` | Redis port |
+| `spring.data.redis.port` | `6379`      | Redis port |
 
 ## 테스트 실행
 

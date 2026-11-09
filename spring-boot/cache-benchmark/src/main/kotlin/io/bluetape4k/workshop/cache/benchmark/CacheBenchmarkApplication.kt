@@ -8,7 +8,7 @@ import org.springframework.cache.annotation.EnableCaching
 @SpringBootApplication(proxyBeanMethods = false)
 @EnableCaching
 class CacheBenchmarkApplication {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 }
 
 fun main(vararg args: String) {

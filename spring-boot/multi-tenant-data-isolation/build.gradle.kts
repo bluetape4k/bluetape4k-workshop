@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.exposed)
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    kotlin("kapt")
 }
 
 exposed {

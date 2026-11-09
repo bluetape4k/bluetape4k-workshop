@@ -29,13 +29,13 @@ class TextModerationService @Autowired constructor(
         properties: TextModerationProperties,
         languageDetector: LanguageDetector,
         moderationAutomaton: AhoCorasickAutomaton<String>,
-    ) : this(
+    ): this(
         properties = properties,
         languageDetector = languageDetector,
         moderationDictionary = VersionedModerationDictionary.fromAutomaton(moderationAutomaton),
     )
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val ABUSE_WORD_MATCHED = "ABUSE_WORD_MATCHED"
         private const val LANGUAGE_UNDETERMINED = "LANGUAGE_UNDETERMINED"
     }

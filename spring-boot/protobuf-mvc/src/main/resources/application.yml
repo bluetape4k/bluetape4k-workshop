@@ -1,9 +1,9 @@
 spring:
-    aot:
-        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
+  aot:
+    enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
 
-    application:
-        name: ProtobufJsonMvcApplication
-    info:
-        build:
-            encoding: UTF-8
+  application:
+    name: ProtobufJsonMvcApplication
+  info:
+    build:
+      encoding: UTF-8

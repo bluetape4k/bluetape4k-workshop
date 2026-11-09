@@ -13,13 +13,13 @@ import org.springframework.transaction.annotation.Transactional
  * application 시작 시 workshop table 을 생성합니다.
  */
 @Component
-class ExposedSchemaInitializer : ApplicationRunner {
+class ExposedSchemaInitializer: ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Transactional
     override fun run(args: ApplicationArguments) {
         log.info { "Creating tenant isolation workshop schema." }
-        SchemaUtils.createMissingTablesAndColumns(InvoiceTable)
+        SchemaUtils.create(InvoiceTable)
     }
 }

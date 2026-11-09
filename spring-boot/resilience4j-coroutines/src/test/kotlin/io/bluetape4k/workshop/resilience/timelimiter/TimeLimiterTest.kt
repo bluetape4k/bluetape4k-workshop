@@ -4,17 +4,17 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldStartWith
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.resilience.AbstractResilienceTest
-import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBody
-import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 
@@ -42,9 +42,9 @@ import kotlin.time.measureTime
  * - timeout 이 발생하면 `TimeoutException` 이 throw 됩니다.
  * - `fallbackMethod` 를 지정하면 fallback 이 호출되고, 없으면 error 가 5xx 로 전파됩니다.
  */
-class TimeLimiterTest : AbstractResilienceTest() {
+class TimeLimiterTest: AbstractResilienceTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Autowired
     private val timeLimiterRegistry: TimeLimiterRegistry = uninitialized()
@@ -55,9 +55,9 @@ class TimeLimiterTest : AbstractResilienceTest() {
         timeLimiter.shouldNotBeNull()
 
         val timeoutDuration = timeLimiter.timeLimiterConfig.timeoutDuration
-        log.debug { "backendA TimeLimiter timeoutDuration=$timeoutDuration" }
 
-        timeoutDuration shouldBeEqualTo Duration.ofSeconds(2)
+        log.debug { "backendA TimeLimiter timeoutDuration=$timeoutDuration" }
+        timeoutDuration shouldBeEqualTo 2.seconds()
     }
 
     @Test
@@ -66,9 +66,9 @@ class TimeLimiterTest : AbstractResilienceTest() {
         timeLimiter.shouldNotBeNull()
 
         val timeoutDuration = timeLimiter.timeLimiterConfig.timeoutDuration
-        log.debug { "backendB TimeLimiter timeoutDuration=$timeoutDuration" }
 
-        timeoutDuration shouldBeEqualTo Duration.ofSeconds(2)
+        log.debug { "backendB TimeLimiter timeoutDuration=$timeoutDuration" }
+        timeoutDuration shouldBeEqualTo 2.seconds()
     }
 
     @Test
@@ -82,8 +82,8 @@ class TimeLimiterTest : AbstractResilienceTest() {
             .shouldNotBeNull()
 
         // Fallback 은 "Recovered Mono Exception: ..." 을 반환합니다.
-        response shouldStartWith "Recovered"
         log.debug { "TimeLimiter fallback response: $response" }
+        response shouldStartWith "Recovered"
     }
 
     @Test
@@ -96,8 +96,8 @@ class TimeLimiterTest : AbstractResilienceTest() {
             .returnResult().responseBody
             .shouldNotBeNull()
 
-        response shouldStartWith "Recovered"
         log.debug { "Flux TimeLimiter fallback response: $response" }
+        response shouldStartWith "Recovered"
     }
 
     @Test
@@ -110,8 +110,8 @@ class TimeLimiterTest : AbstractResilienceTest() {
             .returnResult().responseBody
             .shouldNotBeNull()
 
-        response shouldStartWith "Recovered Future TimeoutException"
         log.debug { "Future TimeLimiter fallback response: $response" }
+        response shouldStartWith "Recovered Future TimeoutException"
     }
 
     @Test
@@ -124,8 +124,8 @@ class TimeLimiterTest : AbstractResilienceTest() {
                 .returnResult().responseBody
                 .shouldNotBeNull()
 
-            response shouldStartWith "Recovered"
             log.debug { "BackendB Mono TimeLimiter fallback response: $response" }
+            response shouldStartWith "Recovered"
         }
 
         elapsed shouldBeLessThan 3.seconds
@@ -141,8 +141,9 @@ class TimeLimiterTest : AbstractResilienceTest() {
                 .returnResult().responseBody
                 .shouldNotBeNull()
 
-            response shouldStartWith "Recovered"
             log.debug { "BackendB Flux TimeLimiter fallback response: $response" }
+            response shouldStartWith "Recovered"
+
         }
 
         elapsed shouldBeLessThan 3.seconds
@@ -166,7 +167,7 @@ class TimeLimiterTest : AbstractResilienceTest() {
             .shouldNotBeNull()
 
         // @TimeLimiter 는 무시되므로 delay(3초)가 완료되고 fallback 없이 정상 result 를 반환합니다.
-        response shouldBeEqualTo "Hello World from backend A Coroutines"
         log.debug { "Suspend timeout completes normally (no @TimeLimiter enforcement): $response" }
+        response shouldBeEqualTo "Hello World from backend A Coroutines"
     }
 }

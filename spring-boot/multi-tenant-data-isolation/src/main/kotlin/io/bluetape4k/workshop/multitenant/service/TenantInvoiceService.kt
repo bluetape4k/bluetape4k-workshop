@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.multitenant.service
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.multitenant.domain.InvoiceRecord
 import io.bluetape4k.workshop.multitenant.domain.InvoiceStatus
 import io.bluetape4k.workshop.multitenant.domain.TenantId
@@ -22,16 +23,21 @@ class TenantInvoiceService(
     private val metrics: TenantMetrics,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * tenant-scoped invoice 를 생성합니다.
      */
     @Transactional
-    fun createInvoice(invoice: InvoiceRecord): InvoiceRecord =
-        tenantRepository.saveInvoice(invoice).also {
-            metrics.recordInvoiceWrite(it.tenantId)
-        }
+    fun createInvoice(invoice: InvoiceRecord): InvoiceRecord {
+        log.debug { "Creating Invoice... invoice=$invoice" }
+
+        return tenantRepository.saveInvoice(invoice)
+            .also {
+                metrics.recordInvoiceWrite(it.tenantId)
+                log.debug { "Created Invoice. invoice=$it" }
+            }
+    }
 
     /**
      * tenant-safe repository 와 cache 를 통해 invoice 를 읽습니다.
@@ -49,11 +55,12 @@ class TenantInvoiceService(
      */
     @Transactional
     fun markPaid(tenantId: TenantId, invoiceId: Long): Boolean =
-        tenantRepository.updateStatus(tenantId, invoiceId, InvoiceStatus.PAID).also { updated ->
-            if (updated) {
-                invoiceCache.evict(tenantId, invoiceId)
+        tenantRepository.updateStatus(tenantId, invoiceId, InvoiceStatus.PAID)
+            .also { updated ->
+                if (updated) {
+                    invoiceCache.evict(tenantId, invoiceId)
+                }
             }
-        }
 
     /**
      * tenant scope 를 의도적으로 생략하는 baseline read path 입니다.
@@ -82,6 +89,7 @@ class TenantInvoiceService(
      * 테스트와 반복 가능한 workshop 실행을 위해 volatile state 를 지웁니다.
      */
     fun resetVolatileState() {
+        log.debug { "Reset Volatile State..." }
         invoiceCache.clear()
         lockRegistry.clear()
         rateLimiter.clear()
@@ -92,6 +100,8 @@ class TenantInvoiceService(
      */
     @Transactional
     fun resetWorkshopState() {
+        log.debug { "Reset WorkshopState..." }
+        
         tenantRepository.deleteAllInvoices()
         resetVolatileState()
     }

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import tools.jackson.databind.JsonNode
+import kotlin.time.Duration.Companion.milliseconds
 
 @RestController
 @RequestMapping("/controller/vt")
@@ -35,8 +36,8 @@ class VTCoroutineController(
     @Value("\${server.port:8080}") private val port: String,
 ): CoroutineScope by CoroutineScope(Dispatchers.VT + CoroutineName("vt")) {
 
-    companion object : KLoggingChannel() {
-        private const val DEFAULT_DELAY = 100L
+    companion object: KLoggingChannel() {
+        private val DEFAULT_DELAY = 100.milliseconds
     }
 
     private val client: WebClient by lazy {
