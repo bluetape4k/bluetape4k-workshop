@@ -5,9 +5,9 @@ import io.bluetape4k.logging.KLogging
 import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
 import net.datafaker.Faker
+import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
-import org.junit.jupiter.api.TestInstance
 
 /**
  * `@DataJpaTest`를 사용하려면 SpringBootApplication 이 정의되어 있어야 합니다 (see [SpringDataJpaTestApplication])
@@ -75,7 +75,7 @@ abstract class AbstractQuerydslTest(
     protected val tem: TestEntityManager,
 ) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         // @DataJpaTest 는 H2 를 사용합니다. @SprintBootTest 로 직접적으로 사용하려면 MySQLServer를 생성해야 합니다.
         //        val mysql: MySQLServer by lazy {
         //            MySQLServer(useDefaultPort = true).apply {

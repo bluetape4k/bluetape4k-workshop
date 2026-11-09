@@ -1,10 +1,5 @@
 package io.bluetape4k.workshop.redis.repositories
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.data.buildExampleMatcher
-import io.bluetape4k.support.toUtf8Bytes
-import io.bluetape4k.workshop.redis.AbstractRedisTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
@@ -12,6 +7,11 @@ import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldNotContainAny
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.data.buildExampleMatcher
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.workshop.redis.AbstractRedisTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -31,7 +31,7 @@ class PersonRepositoryTest @Autowired constructor(
     private val repository: PersonRepository,
 ): AbstractRedisTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private val CHARSET = Charsets.UTF_8
     }
 

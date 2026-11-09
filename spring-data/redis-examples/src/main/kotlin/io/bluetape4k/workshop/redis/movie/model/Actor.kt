@@ -12,7 +12,7 @@ data class Actor(
     @Indexed val lastname: String,
     @get:Id
     var hashId: String? = null,
-) : Serializable {
+): Serializable {
 
     var description: String = randomString(1024)
         private set

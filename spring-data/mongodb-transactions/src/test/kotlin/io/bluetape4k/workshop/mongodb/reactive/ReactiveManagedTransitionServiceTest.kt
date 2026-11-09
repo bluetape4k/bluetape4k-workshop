@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.mongodb.reactive
 
 import com.mongodb.reactivestreams.client.MongoClient
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.State
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -28,7 +28,7 @@ import reactor.test.StepVerifier
 @ContextConfiguration(classes = [ReactiveManagedTransitionServiceTest.TestConfig::class])
 class ReactiveManagedTransitionServiceTest: AbstractMongodbTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-reactive-demo"
     }
 

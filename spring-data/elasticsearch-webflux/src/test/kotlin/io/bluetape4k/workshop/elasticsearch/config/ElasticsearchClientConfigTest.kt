@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.elasticsearch.config
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.elasticsearch.ElasticsearchApplication
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,13 +24,13 @@ class ElasticsearchClientConfigTest {
     private var elasticsearchOperations: ElasticsearchTemplate? = null
 
     private val operations: ElasticsearchTemplate
-        get() = checkNotNull(elasticsearchOperations) { "elasticsearchOperations is not injected." }
+        get() = elasticsearchOperations.shouldNotBeNull()
 
     @Autowired
     private var reactiveElasticsearchOperations: ReactiveElasticsearchTemplate? = null
 
     private val reactiveOperations: ReactiveElasticsearchTemplate
-        get() = checkNotNull(reactiveElasticsearchOperations) { "reactiveElasticsearchOperations is not injected." }
+        get() = reactiveElasticsearchOperations.shouldNotBeNull()
 
     @Test
     fun `context loading`() {

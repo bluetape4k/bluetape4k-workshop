@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.mongodb.reactive
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.coroutines.flow.extensions.subject.PublishSubject
 import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.domain.Person
 import io.bluetape4k.workshop.mongodb.domain.PersonCoroutineRepository
@@ -15,15 +18,15 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.mono
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class PersonCoroutineRepositoryTest @Autowired constructor(
@@ -31,23 +34,23 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     private val operations: ReactiveMongoOperations,
 ): AbstractReactiveMongoTest(operations) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `insert and count`() = runSuspendIO {
         val prevCount = repository.count()
 
-        // 신규 Person 2명 추가 
-        repository.saveAll(flowOf(newPerson(), newPerson())).log("save").collect()
+        // 신규 Person 2명 추가
+        val entities = flowOf(newPerson(), newPerson())
+        repository.saveAll(entities).log("save").collect()
 
         val saveAndCount = repository.count()
-
         saveAndCount shouldBeEqualTo prevCount + 2
     }
 
     @Test
     fun `perform conversion before result processing`() = runSuspendIO {
-        repository.findAll().log("#1").count() shouldBeEqualTo 4
+        repository.findAll().log("findAll").count() shouldBeEqualTo 4
     }
 
     @Test
@@ -64,16 +67,20 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
         // await coUntil { queue.size >= prevCount }
 
         repository.save(newPerson())
-        await until { queue.size > prevCount }
+        await atMost 3.seconds withPollInterval 100.milliseconds until {
+            queue.size > prevCount
+        }
 
         repository.save(newPerson())
-        await until { queue.size > prevCount + 1 }
+        await atMost 3.seconds withPollInterval 100.milliseconds until {
+            queue.size > prevCount + 1
+        }
 
         // flux가 dispose 되면 doOnNext 를 실행하지 않습니다.
         flux.dispose()
 
         repository.save(newPerson())
-        delay(10)
+        delay(10.milliseconds)
 
         // flux 의 dispose 된 후에 추가된 Person은 는 받지 않습니다.
         queue.size shouldBeEqualTo prevCount + 2
@@ -106,10 +113,14 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
         }.log("tailableJob")
 
         repository.save(newPerson())
-        await until { queue.size > prevCount }
+        await atMost 3.seconds withPollInterval 100.milliseconds until {
+            queue.size > prevCount
+        }
 
         repository.save(newPerson())
-        await until { queue.size > prevCount + 1 }
+        await atMost 3.seconds withPollInterval 100.milliseconds until {
+            queue.size > prevCount + 1
+        }
 
         // subject 의 complete 가 호출되면 collect 가 종료됩니다.
         subject.complete()
@@ -117,7 +128,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
         tailableJob.cancelAndJoin()
 
         repository.save(newPerson())
-        delay(10)
+        delay(10.milliseconds)
 
         // subject의 collect 가 완료 된 후의 추가된 Person는 제외
         queue.size shouldBeEqualTo prevCount + 2

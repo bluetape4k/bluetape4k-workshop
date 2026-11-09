@@ -1,11 +1,5 @@
 package io.bluetape4k.workshop.elasticsearch.domain.repository
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchApplicationTest
-import io.bluetape4k.workshop.elasticsearch.domain.model.Book
-import kotlinx.coroutines.flow.toList
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
@@ -14,27 +8,34 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.uninitialized
+import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchApplicationTest
+import io.bluetape4k.workshop.elasticsearch.domain.model.Book
+import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchTemplate
 
 @Disabled("Elasticsearch Client 가 Jackson2 를 사용합니다. Spring Boot 4 는 Jackson 3를 사용해서 충돌이 발생합니다.")
-class BookRepositoryTest : AbstractElasticsearchApplicationTest() {
+class BookRepositoryTest: AbstractElasticsearchApplicationTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Autowired
-    private var injectedRepository: BookRepository? = null
+    private val injectedRepository: BookRepository = uninitialized()
 
     private val repository: BookRepository
-        get() = checkNotNull(injectedRepository) { "repository is not injected." }
+        get() = injectedRepository
 
     @Autowired
-    private var reactiveTemplate: ReactiveElasticsearchTemplate? = null
+    private val reactiveTemplate: ReactiveElasticsearchTemplate = uninitialized()
 
     private val template: ReactiveElasticsearchTemplate
-        get() = checkNotNull(reactiveTemplate) { "reactiveTemplate is not injected." }
+        get() = reactiveTemplate
 
     @Test
     fun `context loading`() {

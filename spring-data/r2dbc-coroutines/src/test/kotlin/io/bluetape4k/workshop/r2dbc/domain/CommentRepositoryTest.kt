@@ -1,14 +1,15 @@
 package io.bluetape4k.workshop.r2dbc.domain
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
-import kotlinx.coroutines.flow.toList
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
+import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -16,18 +17,18 @@ class CommentRepositoryTest(
     @param:Autowired private val commentRepository: CommentRepository,
 ): AbstractR2dbcApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `find comments by post id`() = runSuspendIO {
-        val comments = commentRepository.findAllByPostId(1L).toList()
+        val comments = commentRepository.findAllByPostId(1L).log("FindAll").toList()
         comments.shouldNotBeEmpty()
         comments.size shouldBeGreaterOrEqualTo 2
     }
 
     @Test
     fun `find comments by non-existing post id`() = runSuspendIO {
-        val comments = commentRepository.findAllByPostId(-1L).toList()
+        val comments = commentRepository.findAllByPostId(-1L).log("FindAll").toList()
         comments.shouldBeEmpty()
     }
 

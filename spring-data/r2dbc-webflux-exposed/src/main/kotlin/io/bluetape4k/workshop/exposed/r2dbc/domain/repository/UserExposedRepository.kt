@@ -7,7 +7,6 @@ import io.bluetape4k.workshop.exposed.r2dbc.domain.schema.UserSchema.UserTable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.selectAll
@@ -24,13 +23,13 @@ class UserExposedRepository: R2dbcRepository<Int, UserRecord> {
 
     override suspend fun ResultRow.toEntity(): UserRecord = toUserRecord()
 
-    suspend fun save(user: UserRecord): EntityID<Int> {
+    suspend fun save(user: UserRecord): Int {
         return table.insertAndGetId {
             it[table.name] = user.name
             it[table.login] = user.login
             it[table.email] = user.email
             it[table.avatar] = user.avatar
-        }
+        }.value
     }
 
     suspend fun update(user: UserRecord): Int {

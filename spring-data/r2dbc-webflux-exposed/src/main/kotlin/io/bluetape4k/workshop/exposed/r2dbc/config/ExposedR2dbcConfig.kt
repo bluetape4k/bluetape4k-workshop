@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.exposed.r2dbc.config
 
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.utils.Runtimex
@@ -15,13 +17,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import java.time.Duration
 import kotlin.math.max
 
 @Configuration(proxyBeanMethods = false)
 class ExposedR2dbcConfig {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * Java 21 가상 스레드 기반 코루틴 컨텍스트를 제공합니다.
@@ -46,8 +47,7 @@ class ExposedR2dbcConfig {
         if (password.isNotBlank()) {
             builder.option(ConnectionFactoryOptions.PASSWORD, password)
         }
-        val options = builder
-            .build()
+        val options = builder.build()
 
         log.info { "R2DBC 연결 설정: driver=${options.getValue(ConnectionFactoryOptions.DRIVER)}" }
         return options
@@ -62,12 +62,12 @@ class ExposedR2dbcConfig {
     fun connectionPool(connectionFactoryOptions: ConnectionFactoryOptions): ConnectionPool {
         val connectionFactory = ConnectionFactories.get(connectionFactoryOptions)
         val poolConfig = ConnectionPoolConfiguration.builder(connectionFactory)
-            .maxIdleTime(Duration.ofMinutes(30))
+            .maxIdleTime(30.minutes())
             .initialSize(5)
             .minIdle(5)
             .maxSize(max(Runtimex.availableProcessors * 8, 100))
             .acquireRetry(3)
-            .maxAcquireTime(Duration.ofSeconds(3))
+            .maxAcquireTime(3.seconds())
             .validationQuery("SELECT 1")
             .build()
 

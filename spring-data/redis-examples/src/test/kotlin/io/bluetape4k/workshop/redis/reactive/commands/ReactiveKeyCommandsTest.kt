@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.redis.reactive.commands
 
-import io.bluetape4k.io.getString
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.io.toByteBuffer
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -10,15 +12,12 @@ import io.bluetape4k.support.toUtf8ByteBuffer
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactor.asFlux
@@ -33,14 +32,13 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
 import org.springframework.data.redis.connection.ReactiveStringCommands.SetCommand
 import org.springframework.data.redis.serializer.RedisSerializer
 import java.nio.ByteBuffer
-import java.time.Duration
 
 class ReactiveKeyCommandsTest(
     @param:Autowired private val connectionFactory: ReactiveRedisConnectionFactory,
 ): AbstractReactiveRedisTest() {
 
-    companion object : KLoggingChannel() {
-        private val PREFIX = ReactiveKeyCommandsTest::class.simpleName.shouldNotBeNull()
+    companion object: KLoggingChannel() {
+        private val PREFIX = ReactiveKeyCommandsTest::class.simpleName!!
         private val KEY_PATTERN = "$PREFIX*"
         private const val KEY_SIZE = 50
 
@@ -80,7 +78,7 @@ class ReactiveKeyCommandsTest(
             .asFlow()
             .buffer()
             .flatMapConcat { it.asFlow() }
-            .onEach { log.debug { it.getString() } }
+            .log("Key")
             .count()
 
         keyCoount shouldBeEqualTo KEY_SIZE
@@ -92,7 +90,7 @@ class ReactiveKeyCommandsTest(
         val value = listOf(serializer.serialize("item").toByteBuffer())
 
         val popResult = connection.listCommands()
-            .brPop(listOf(key), Duration.ofSeconds(1))
+            .brPop(listOf(key), 1.seconds())
 
         val llen = connection.listCommands().lLen(key)
 
@@ -120,7 +118,7 @@ class ReactiveKeyCommandsTest(
         with(connection.listCommands()) {
             rPush(key, value).awaitSingle()
 
-            val popResult = brPop(listOf(key), Duration.ofSeconds(1)).awaitSingle()
+            val popResult = brPop(listOf(key), 1.seconds()).awaitSingle()
             log.debug { "pop value: ${popResult.value?.toUtf8String()}" }
 
             val length = lLen(key).awaitSingle()

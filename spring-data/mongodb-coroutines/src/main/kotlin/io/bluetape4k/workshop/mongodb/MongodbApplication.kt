@@ -10,8 +10,8 @@ import org.springframework.data.mongodb.core.mapping.event.LoggingEventListener
 @SpringBootApplication(proxyBeanMethods = false)
 class MongoApplication {
 
-    companion object : KLoggingChannel() {
-        val mongodb = MongoDBServer.Launcher.mongoDB
+    companion object: KLoggingChannel() {
+        val mongodb by lazy { MongoDBServer.Launcher.mongoDB }
     }
 
     /**

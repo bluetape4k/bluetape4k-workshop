@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.mongodb.config
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.MongoDBServer
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration
@@ -10,6 +11,8 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration(proxyBeanMethods = false)
 @EnableMongoRepositories(basePackages = ["io.bluetape4k.workshop.mongodb.domain"])
 class MongoClientConfig: AbstractMongoClientConfiguration() {
+
+    companion object: KLogging()
 
     override fun getDatabaseName(): String = "people"
 

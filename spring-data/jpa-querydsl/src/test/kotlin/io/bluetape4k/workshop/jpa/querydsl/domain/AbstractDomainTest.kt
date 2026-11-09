@@ -8,7 +8,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 abstract class AbstractDomainTest(
     private val initMemberService: InitMemberService,
     tem: TestEntityManager,
-) : AbstractQuerydslTest(tem) {
+): AbstractQuerydslTest(tem) {
 
     @BeforeAll
     fun beforeAll() {

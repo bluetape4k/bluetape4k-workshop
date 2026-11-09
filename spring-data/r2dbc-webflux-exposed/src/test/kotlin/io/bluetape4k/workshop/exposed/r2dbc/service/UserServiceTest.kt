@@ -1,11 +1,5 @@
 package io.bluetape4k.workshop.exposed.r2dbc.service
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.r2dbc.AbstractWebfluxR2dbcExposedApplicationTest
-import io.bluetape4k.workshop.exposed.r2dbc.domain.repository.UserExposedRepository
-import io.r2dbc.spi.ConnectionFactory
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
@@ -14,6 +8,12 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.exposed.r2dbc.AbstractWebfluxR2dbcExposedApplicationTest
+import io.bluetape4k.workshop.exposed.r2dbc.domain.repository.UserExposedRepository
+import io.r2dbc.spi.ConnectionFactory
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -27,7 +27,7 @@ class UserServiceTest(
     @param:Autowired private val repository: UserExposedRepository,
 ): AbstractWebfluxR2dbcExposedApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     @Order(1)
@@ -40,10 +40,7 @@ class UserServiceTest(
     @Test
     @Order(2)
     fun `find all users`() = runSuspendIO {
-        val users = service.findAll()
-        users.forEach {
-            log.debug { it }
-        }
+        val users = service.findAll().onEach { log.debug { "user=$it" } }
         users.shouldNotBeEmpty()
     }
 
@@ -52,9 +49,9 @@ class UserServiceTest(
     fun `find user by id`() = runSuspendIO {
         val expected = service.findAll().random()
 
-        val actual = service.findByIdOrNull(expected.id)
-        log.debug { actual }
-        actual.shouldNotBeNull() shouldBeEqualTo expected
+        val actual = service.findByIdOrNull(expected.id).shouldNotBeNull()
+        log.debug { "actual=$actual" }
+        actual shouldBeEqualTo expected
     }
 
     @Test
@@ -70,14 +67,13 @@ class UserServiceTest(
         val expected = service.findAll().random()
 
         val actual = service.findByEmail(expected.email).single()
-        log.debug { actual }
-        actual.shouldNotBeNull() shouldBeEqualTo expected
+        actual shouldBeEqualTo expected
     }
 
     @Test
     @Order(6)
     fun `find user by invalid email`() = runSuspendIO {
-        val notFounds = service.findByEmail("not-exists@example.com").toList()
+        val notFounds = service.findByEmail("not-exists@example.com")
         notFounds.shouldBeEmpty()
     }
 
@@ -85,9 +81,8 @@ class UserServiceTest(
     @Order(7)
     fun `add new user`() = runSuspendIO {
         val newUser = createUserRecord()
-        val savedUser = service.addUser(newUser)
+        val savedUser = service.addUser(newUser).shouldNotBeNull()
 
-        savedUser.shouldNotBeNull()
         savedUser.id.shouldNotBeNull()
         savedUser shouldBeEqualTo newUser.withId(savedUser.id)
     }
@@ -97,14 +92,13 @@ class UserServiceTest(
     fun `update existing user`() = runSuspendIO {
         val user = service.findAll().random()
 
-        val updated = service.updateUser(user.id, user.copy(avatar = "updated-avatar.jpg"))
+        val updated = service.updateUser(user.id, user.copy(avatar = "updated-avatar.jpg")).shouldNotBeNull()
+
         log.debug { "Updated=$updated" }
-        updated.shouldNotBeNull()
         updated.id shouldBeEqualTo user.id
         updated.avatar shouldNotBeEqualTo user.avatar
 
         val saved = service.findByEmail(user.email).first()
-        saved.shouldNotBeNull()
         saved.avatar shouldBeEqualTo updated.avatar
     }
 
@@ -120,9 +114,7 @@ class UserServiceTest(
     @Order(10)
     fun `delete existing user`() = runSuspendIO {
         val user = createUserRecord()
-        val saved = service.addUser(user)
-
-        saved.shouldNotBeNull()
+        val saved = service.addUser(user).shouldNotBeNull()
         saved.id.shouldNotBeNull()
 
         service.deleteUser(saved.id).shouldBeTrue()

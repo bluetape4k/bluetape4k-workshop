@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.elasticsearch.testcontainers
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.ElasticsearchOssServer
 import io.bluetape4k.testcontainers.storage.ElasticsearchServer
 import io.bluetape4k.testcontainers.storage.Spring
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -16,7 +16,7 @@ import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clien
 @Execution(ExecutionMode.SAME_THREAD)
 class ElasticsearchServerTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Nested
     inner class UseDockerPort {
