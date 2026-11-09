@@ -1,15 +1,15 @@
 package io.bluetape4k.workshop.virtualthread.part2
 
+import io.bluetape4k.assertions.fail
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeInRange
 import org.junit.jupiter.api.RepeatedTest
-import io.bluetape4k.assertions.fail
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
@@ -24,9 +24,9 @@ import java.util.concurrent.Executors
  *  - 신규 제작 시에는 Kotlin Coroutines 를 활용하는 방법도 있다.
  *      - 신규 제작 함수를 suspend 함수로 작성하고, Coroutine 을 이용하여 실행한다.
  */
-class Rule2WriteBlockingSynchronousCode : AbstractVirtualThreadTest() {
+class Rule2WriteBlockingSynchronousCode: AbstractVirtualThreadTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val REPEAT_SIZE = 3
     }
 

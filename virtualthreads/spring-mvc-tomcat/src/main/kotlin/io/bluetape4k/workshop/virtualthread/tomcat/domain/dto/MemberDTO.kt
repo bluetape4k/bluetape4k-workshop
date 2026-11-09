@@ -10,7 +10,7 @@ data class MemberDTO(
     val id: Long,
     val name: String,
     val age: Int? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

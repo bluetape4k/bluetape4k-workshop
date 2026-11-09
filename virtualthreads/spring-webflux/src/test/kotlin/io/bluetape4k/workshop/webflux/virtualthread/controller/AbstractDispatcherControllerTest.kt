@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.webflux.virtualthread.controller
 
+import io.bluetape4k.assertions.shouldBeAfter
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -12,9 +16,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.assertions.shouldBeAfter
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -23,10 +24,11 @@ import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.node.JsonNodeFactory
 import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 
-abstract class AbstractDispatcherControllerTest : AbstractWebfluxVirtualThreadTest() {
+abstract class AbstractDispatcherControllerTest: AbstractWebfluxVirtualThreadTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val REPEAT_SIZE = 3
     }
 
@@ -83,6 +85,7 @@ abstract class AbstractDispatcherControllerTest : AbstractWebfluxVirtualThreadTe
             .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
             .asFlow()
+            .log("Banner")
             .toList()
 
         banners.all { it.createdAt.isAfter(now) }.shouldBeTrue()
@@ -98,6 +101,7 @@ abstract class AbstractDispatcherControllerTest : AbstractWebfluxVirtualThreadTe
             .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
             .asFlow()
+            .log("Banner")
             .toList()
 
         banners.all { it.createdAt.isAfter(now) }.shouldBeTrue()
@@ -116,7 +120,7 @@ abstract class AbstractDispatcherControllerTest : AbstractWebfluxVirtualThreadTe
     fun `request as stream`() = runSuspendIO {
         val request = (1..5).asFlow()
             .onEach {
-                delay(5)
+                delay(5.milliseconds)
                 log.debug { "request node=$it" }
             }
             .map {
@@ -131,6 +135,7 @@ abstract class AbstractDispatcherControllerTest : AbstractWebfluxVirtualThreadTe
             .expectStatus().is2xxSuccessful
             .returnResult<JsonNode>().responseBody
             .asFlow()
+            .log("JsonNode")
             .toList()
 
         nodes shouldBeEqualTo request.toList()
