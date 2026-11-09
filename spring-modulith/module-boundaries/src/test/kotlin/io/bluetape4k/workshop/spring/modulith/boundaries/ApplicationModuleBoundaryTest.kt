@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.spring.modulith.boundaries
 import com.tngtech.archunit.core.importer.ImportOption
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.spring.modulith.boundaries.invalid.InvalidBoundaryApplication
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -11,6 +13,8 @@ import org.springframework.modulith.core.Violations
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApplicationModuleBoundaryTest {
+
+    companion object: KLogging()
 
     @Test
     fun `application modules allow only exported catalog API and order events`() {
@@ -26,6 +30,8 @@ class ApplicationModuleBoundaryTest {
         }
 
         val messages = violations.messages.joinToString("\n")
+
+        log.debug { "messages=$messages" }
         messages shouldContain "ordering"
         messages shouldContain "internal"
     }

@@ -12,4 +12,4 @@ import org.springframework.test.context.TestConstructor
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-annotation class IntegrationTest()
+annotation class IntegrationTest

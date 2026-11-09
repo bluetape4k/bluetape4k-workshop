@@ -17,7 +17,7 @@ import org.springframework.test.context.TestConstructor
 abstract class AbstractDddOrderAuditTest {
 
     companion object : KLogging() {
-        val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
         @DynamicPropertySource

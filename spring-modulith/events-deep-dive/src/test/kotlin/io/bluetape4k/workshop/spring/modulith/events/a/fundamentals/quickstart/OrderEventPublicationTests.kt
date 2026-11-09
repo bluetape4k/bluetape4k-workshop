@@ -19,7 +19,7 @@ class OrderEventPublicationTests(
     @param:Autowired private val repository: OrderRepository,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @BeforeEach
     fun setup() {
