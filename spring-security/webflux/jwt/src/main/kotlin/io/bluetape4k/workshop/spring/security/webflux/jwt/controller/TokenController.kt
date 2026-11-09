@@ -22,7 +22,7 @@ class TokenController(@param:Autowired private val encoder: JwtEncoder) {
         val expiry = 10 * 60 * 60L  // 10 hours
 
         val scope = authentication.authorities.joinToString(" ") { it.authority ?: "" }
-        log.debug { "user=${authentication.name} scope=$scope" }
+        log.debug { "user=${authentication.name}, scope=$scope" }
 
         val claims = JwtClaimsSet.builder()
             .issuer("self")
@@ -34,7 +34,7 @@ class TokenController(@param:Autowired private val encoder: JwtEncoder) {
 
         val jwt = this.encoder.encode(JwtEncoderParameters.from(claims))
         val token = jwt.tokenValue
-        log.debug { "user=${authentication.name} token=$token" }
+        log.debug { "user=${authentication.name}, token=$token" }
 
         return token
     }
