@@ -2,18 +2,18 @@ package io.bluetape4k.workshop.aws.s3
 
 import io.awspring.cloud.s3.ObjectMetadata
 import io.awspring.cloud.s3.S3Template
-import io.bluetape4k.aws.spring.s3.S3Resource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.aws.spring.s3.S3Resource
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.aws.FlociServer
-import org.springframework.beans.factory.annotation.Qualifier
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.support.ResourcePatternResolver
@@ -108,7 +108,7 @@ class SpringCloudAwsS3Test @Autowired constructor(
                 .getResources("s3://$bucket/config/application.yml")
                 .single()
             exact.exists().shouldBeTrue()
-            exact.contentLength() shouldBeEqualTo exactBody.toByteArray().size.toLong()
+            exact.contentLength() shouldBeEqualTo exactBody.toUtf8Bytes().size.toLong()
             (exact.lastModified() > 0).shouldBeTrue()
             (exact is S3Resource).shouldBeTrue()
             exact.inputStream.use { it.bufferedReader().readText() } shouldBeEqualTo exactBody
