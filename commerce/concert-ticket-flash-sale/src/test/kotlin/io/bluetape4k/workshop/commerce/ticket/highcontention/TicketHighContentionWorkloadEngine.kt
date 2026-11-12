@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.support.requireEndsWith
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.time.Duration
@@ -11,9 +13,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.locks.LockSupport
+import kotlin.time.Duration.Companion.nanoseconds
 
 internal data class TicketWorkloadIdentity(
     val namespace: String,
@@ -92,7 +94,7 @@ internal class TicketHighContentionWorkloadEngine(
             .requireEndsWith(":", "measuredNamespace")
         require(
             !validWarmupNamespace.startsWith(validMeasuredNamespace) &&
-                !validMeasuredNamespace.startsWith(validWarmupNamespace),
+                    !validMeasuredNamespace.startsWith(validWarmupNamespace),
         ) {
             "warm-up and measured namespaces must not overlap"
         }
@@ -107,7 +109,7 @@ internal class TicketHighContentionWorkloadEngine(
         )
         require(
             faultObserverTiming != TicketFaultObserverTiming.WORKLOAD_COMPLETION ||
-                faultObserverStartAfterScheduledCount == orderedSchedule.size,
+                    faultObserverStartAfterScheduledCount == orderedSchedule.size,
         ) {
             "workload-completion observer timing requires the end-of-schedule threshold"
         }
@@ -127,8 +129,7 @@ internal class TicketHighContentionWorkloadEngine(
 
         VirtualThreads.executorService().use { workloadExecutor ->
             VirtualThreads.executorService().use { observerExecutor ->
-                val observeAfterWorkload =
-                    faultObserverTiming == TicketFaultObserverTiming.WORKLOAD_COMPLETION
+                val observeAfterWorkload = faultObserverTiming == TicketFaultObserverTiming.WORKLOAD_COMPLETION
                 var observerFuture: Future<*>? = null
                 fun startObserver(scheduledCount: Int) {
                     if (
@@ -145,8 +146,12 @@ internal class TicketHighContentionWorkloadEngine(
                     awaitOffset(startNanos, token.offsetNanos)
                     if (!totalPermits.tryAcquire()) {
                         putExactlyOnce(
-                            records,
-                            TicketWorkloadRecord(token, TicketWorkloadDisposition.LOCALLY_REJECTED, false),
+                            records = records,
+                            record = TicketWorkloadRecord(
+                                token,
+                                TicketWorkloadDisposition.LOCALLY_REJECTED,
+                                false
+                            ),
                         )
                     } else {
                         futures += workloadExecutor.submit {
@@ -196,11 +201,13 @@ internal class TicketHighContentionWorkloadEngine(
 
         val realized = records.values.sortedBy { it.token.stableOrdinal }
         validateRealization(orderedSchedule, realized)
+
         val dispatched = realized.count { it.disposition != TicketWorkloadDisposition.LOCALLY_REJECTED }
         val completed = realized.count { it.disposition == TicketWorkloadDisposition.COMPLETED }
         val cancelled = realized.count { it.disposition == TicketWorkloadDisposition.CANCELLED }
         val timedOut = realized.count { it.disposition == TicketWorkloadDisposition.TIMED_OUT }
         val rejected = realized.count { it.disposition == TicketWorkloadDisposition.LOCALLY_REJECTED }
+
         check(orderedSchedule.size == dispatched + rejected)
         check(dispatched == completed + cancelled + timedOut)
 
@@ -229,11 +236,12 @@ internal class TicketHighContentionWorkloadEngine(
         val started = System.nanoTime()
         val timeoutNanos = workloadJoinTimeout.toNanos()
         var activeObserver = observerFuture
+
         try {
-            activeObserver?.get(remainingNanos(started, timeoutNanos), TimeUnit.NANOSECONDS)
-            futures.forEach { it.get(remainingNanos(started, timeoutNanos), TimeUnit.NANOSECONDS) }
+            activeObserver?.get(remainingNanos(started, timeoutNanos).nanoseconds)
+            futures.forEach { it.get(remainingNanos(started, timeoutNanos).nanoseconds) }
             activeObserver = deferredObserver?.invoke()
-            activeObserver?.get(remainingNanos(started, timeoutNanos), TimeUnit.NANOSECONDS)
+            activeObserver?.get(remainingNanos(started, timeoutNanos).nanoseconds)
         } catch (error: TimeoutException) {
             futures.forEach { it.cancel(true) }
             activeObserver?.cancel(true)
@@ -259,11 +267,13 @@ internal class TicketHighContentionWorkloadEngine(
         ) {
             val expectedByOrdinal = expected.associateBy(TicketScheduleToken::stableOrdinal)
             check(expectedByOrdinal.size == expected.size) { "expected schedule contains duplicate ordinals" }
+
             val realizedByOrdinal = realized.groupBy { it.token.stableOrdinal }
             check(realizedByOrdinal.values.none { it.size != 1 }) { "realized schedule contains duplicate ordinals" }
             check(realizedByOrdinal.keys == expectedByOrdinal.keys) {
                 "realized schedule has missing or unknown ordinals"
             }
+
             realizedByOrdinal.forEach { (ordinal, records) ->
                 check(records.single().token == expectedByOrdinal.getValue(ordinal)) {
                     "realized token $ordinal differs from expected"
@@ -272,7 +282,7 @@ internal class TicketHighContentionWorkloadEngine(
         }
 
         private fun validateExpectedSchedule(schedule: List<TicketScheduleToken>): List<TicketScheduleToken> {
-            require(schedule.isNotEmpty()) { "schedule must not be empty" }
+            schedule.requireNotEmpty("schedule")
             val ordered = schedule.sortedWith(
                 compareBy<TicketScheduleToken> { it.offsetNanos }.thenBy { it.stableOrdinal },
             )

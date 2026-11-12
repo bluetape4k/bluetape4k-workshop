@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.ticket.admission
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionExpired
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
@@ -12,10 +13,13 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Executors
 
 internal class AdmissionConcurrencyIntegrationTest {
+
+    companion object: KLogging()
+
     @Test
     fun `one admission grant can be consumed once`() {
         TicketDatabaseFixture().use { fixture ->
@@ -23,10 +27,12 @@ internal class AdmissionConcurrencyIntegrationTest {
             val saleId = Uuid.V7.nextId()
             val buyerId = Uuid.V7.nextId()
             val ipId = Uuid.V7.nextId()
+
             // grantNonce는 승인 토큰의 보안 nonce fallback이므로 영속 식별자 생성 계약에서 제외한다.
             val grantNonce = UUID.randomUUID()
             val firstAttempt = Uuid.V7.nextId()
             val secondAttempt = Uuid.V7.nextId()
+
             fixture.execute(
                 """
                 INSERT INTO ticket_sales(sale_id, state, current_policy_version, opens_at, closes_at)
@@ -49,8 +55,8 @@ internal class AdmissionConcurrencyIntegrationTest {
                 """.trimIndent(),
             )
             val service = AdmissionService(fixture.executor, Clock.fixed(now, ZoneOffset.UTC))
-
             service.consume(command(saleId, buyerId, grantNonce, firstAttempt))
+
             assertFailsWith<AdmissionExpired> {
                 service.consume(command(saleId, buyerId, grantNonce, secondAttempt))
             }
@@ -67,6 +73,7 @@ internal class AdmissionConcurrencyIntegrationTest {
             // grantNonce는 승인 토큰의 보안 nonce fallback이므로 영속 식별자 생성 계약에서 제외한다.
             val grantNonce = UUID.randomUUID()
             val attempts = listOf(Uuid.V7.nextId(), Uuid.V7.nextId())
+
             fixture.execute(
                 """
                 INSERT INTO ticket_sales(sale_id, state, current_policy_version, opens_at, closes_at)
@@ -90,16 +97,13 @@ internal class AdmissionConcurrencyIntegrationTest {
             )
             val service = AdmissionService(fixture.executor, Clock.fixed(now, ZoneOffset.UTC))
 
-            val results =
-                Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-                    attempts.map { attemptId ->
-                        executor.submit<Boolean> {
-                            runCatching {
-                                service.consume(command(saleId, buyerId, grantNonce, attemptId))
-                            }.isSuccess
-                        }
-                    }.map { it.get() }
+            val results: List<Boolean> = Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                attempts.map { attemptId ->
+                    executor.submit<Boolean> {
+                        runCatching { service.consume(command(saleId, buyerId, grantNonce, attemptId)) }.isSuccess
+                    }.get()
                 }
+            }
 
             results.count { it } shouldBeEqualTo 1
         }
@@ -110,5 +114,12 @@ internal class AdmissionConcurrencyIntegrationTest {
         buyerId: UUID,
         nonce: UUID,
         attemptId: UUID,
-    ) = ConsumeGrant(saleId, nonce, buyerId, policyVersion = 1, attemptId = attemptId)
+    ): ConsumeGrant =
+        ConsumeGrant(
+            saleId = saleId,
+            grantNonce = nonce,
+            buyerSubjectId = buyerId,
+            policyVersion = 1,
+            attemptId = attemptId
+        )
 }

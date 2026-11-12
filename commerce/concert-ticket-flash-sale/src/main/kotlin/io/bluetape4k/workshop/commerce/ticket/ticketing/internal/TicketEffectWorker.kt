@@ -1,11 +1,10 @@
 package io.bluetape4k.workshop.commerce.ticket.ticketing.internal
 
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
-import java.io.Serial
-import java.io.Serializable
-import java.util.UUID
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketDisposition
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectOperationEntity
@@ -21,9 +20,11 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import java.io.Serial
+import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
-import io.bluetape4k.idgenerators.uuid.Uuid
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -33,16 +34,21 @@ fun interface TicketProvider {
     fun lookup(operationId: UUID): TicketEffectOutcome? = null
 }
 
-class TicketResponseLost : IllegalStateException("ticket_response_lost")
+class TicketResponseLost: IllegalStateException("ticket_response_lost")
 
-class FakeTicketProvider : TicketProvider {
+class FakeTicketProvider: TicketProvider {
+
+    companion object: KLogging()
+
     private val outcomes = ConcurrentHashMap<UUID, TicketEffectOutcome>()
     private val calls = ConcurrentHashMap<UUID, AtomicInteger>()
     private val responseLosses = ConcurrentHashMap.newKeySet<UUID>()
 
     override fun issue(operationId: UUID): TicketEffectOutcome {
         calls.computeIfAbsent(operationId) { AtomicInteger() }.incrementAndGet()
-        val outcome = outcomes.computeIfAbsent(operationId) { TicketEffectOutcome.SUCCEEDED }
+        val outcome = outcomes.computeIfAbsent(operationId) {
+            TicketEffectOutcome.SUCCEEDED
+        }
         if (responseLosses.remove(operationId)) throw TicketResponseLost()
         return outcome
     }
@@ -61,7 +67,7 @@ data class TicketEffectClaim(
     val orderId: UUID,
     val token: UUID,
     val revision: Long,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -71,17 +77,23 @@ data class TicketEffectClaim(
 class TicketEffectRepository(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,
-) : TicketExposedJdbcRepository<TicketEffectOperationEntity, Long>(TicketEffectOperationEntity::class.java) {
+): TicketExposedJdbcRepository<TicketEffectOperationEntity, Long>(TicketEffectOperationEntity::class) {
+
+    companion object: KLogging()
+
     fun claim(operationId: UUID, ttl: Duration): TicketEffectClaim? = jdbc.transaction {
         val now = clock.instant()
         val token = Uuid.V7.nextId()
-        val claimed = TicketEffectOperations.update({
+
+        val whereOp = {
             (TicketEffectOperations.operationId eq operationId) and
-                (TicketEffectOperations.effectKind eq "issue") and
-                ((TicketEffectOperations.status eq "pending") or
-                    (TicketEffectOperations.status eq "retry") or
-                    ((TicketEffectOperations.status eq "claimed") and (TicketEffectOperations.claimUntil lessEq now)))
-        }) {
+                    (TicketEffectOperations.effectKind eq "issue") and
+                    ((TicketEffectOperations.status eq "pending") or
+                            (TicketEffectOperations.status eq "retry") or
+                            ((TicketEffectOperations.status eq "claimed") and (TicketEffectOperations.claimUntil lessEq now)))
+        }
+
+        val claimed = TicketEffectOperations.update(whereOp) {
             it[status] = "claimed"
             it[claimToken] = token
             it[claimRevision] = claimRevision + 1
@@ -89,11 +101,20 @@ class TicketEffectRepository(
             it[updatedAt] = now
         }
         if (claimed != 1) return@transaction null
-        TicketEffectOperations.selectAll().where {
-            (TicketEffectOperations.operationId eq operationId) and (TicketEffectOperations.claimToken eq token)
-        }.single().let {
-            TicketEffectClaim(operationId, it[TicketEffectOperations.orderId], token, it[TicketEffectOperations.claimRevision])
-        }
+
+        TicketEffectOperations.selectAll()
+            .where {
+                (TicketEffectOperations.operationId eq operationId) and (TicketEffectOperations.claimToken eq token)
+            }
+            .single()
+            .let {
+                TicketEffectClaim(
+                    operationId,
+                    it[TicketEffectOperations.orderId],
+                    token,
+                    it[TicketEffectOperations.claimRevision]
+                )
+            }
     }
 }
 
@@ -102,17 +123,21 @@ class TicketEffectWorker(
     private val purchases: PurchaseCommands,
     private val provider: TicketProvider,
     clock: Clock = Clock.systemUTC(),
-    private val claimTtl: Duration = Duration.ofSeconds(5),
+    private val claimTtl: Duration = 5.seconds(),
     private val effects: TicketEffectRepository = TicketEffectRepository(jdbc, clock),
 ) {
+    companion object: KLogging()
+
     fun run(operationId: UUID): Boolean {
         val claim = effects.claim(operationId, claimTtl) ?: return false
-        val outcome = provider.lookup(operationId) ?: try {
-            provider.issue(operationId)
-        } catch (failure: TicketResponseLost) {
-            log.warn(failure) { "ticket_issue_response_lost operationId=$operationId" }
-            TicketEffectOutcome.RETRYABLE_FAILURE
-        }
+        val outcome = provider.lookup(operationId)
+            ?: try {
+                provider.issue(operationId)
+            } catch (failure: TicketResponseLost) {
+                log.warn(failure) { "ticket_issue_response_lost operationId=$operationId" }
+                TicketEffectOutcome.RETRYABLE_FAILURE
+            }
+
         purchases.applyTicketOutcome(
             ApplyTicketOutcome(
                 orderId = claim.orderId,
@@ -126,6 +151,4 @@ class TicketEffectWorker(
         log.info { "ticket_effect_applied operationId=$operationId outcome=$outcome" }
         return true
     }
-
-    companion object : KLogging()
 }

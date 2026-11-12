@@ -1,12 +1,18 @@
 package io.bluetape4k.workshop.commerce.ticket.purchase.internal
 
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.support.checkNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketDisposition
 import io.bluetape4k.workshop.commerce.ticket.domain.refundTransition
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketActiveIdentityGuards
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketBuyerSaleStates
-import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectReceipts
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketInventories
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketOrderEntity
@@ -14,6 +20,7 @@ import io.bluetape4k.workshop.commerce.ticket.persistence.TicketOrders
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPaymentOperationEntity
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPaymentOperations
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPurchaseAttempts
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.lessEq
@@ -25,18 +32,18 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.io.Serial
 import java.io.Serializable
+import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
-import java.nio.charset.StandardCharsets.UTF_8
-import java.security.MessageDigest
-import io.bluetape4k.idgenerators.uuid.Uuid
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.info
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
-enum class RefundOutcome { SUCCEEDED, UNKNOWN, FAILED }
+enum class RefundOutcome {
+    SUCCEEDED,
+    UNKNOWN,
+    FAILED
+}
 
 fun interface RefundProvider {
     fun refund(operationId: UUID): RefundOutcome
@@ -44,7 +51,7 @@ fun interface RefundProvider {
     fun lookup(operationId: UUID): RefundOutcome? = null
 }
 
-class FakeRefundProvider : RefundProvider {
+class FakeRefundProvider: RefundProvider {
     private val outcomes = ConcurrentHashMap<UUID, RefundOutcome>()
     private val configured = ConcurrentHashMap<UUID, RefundOutcome>()
     private val calls = ConcurrentHashMap<UUID, AtomicInteger>()
@@ -68,27 +75,40 @@ data class RefundClaim(
     val orderId: UUID,
     val token: UUID,
     val revision: Long,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
     }
 }
 
+fun ResultRow.toRefundClaim(operationId: UUID, token: UUID): RefundClaim =
+    RefundClaim(
+        operationId = operationId,
+        orderId = this[TicketPaymentOperations.orderId].checkNotNull("orderId"),
+        token = token,
+        revision = this[TicketPaymentOperations.claimRevision]
+    )
+
 class RefundOperationRepository(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,
-) : TicketExposedJdbcRepository<TicketPaymentOperationEntity, Long>(TicketPaymentOperationEntity::class.java) {
+): TicketExposedJdbcRepository<TicketPaymentOperationEntity, Long>(TicketPaymentOperationEntity::class) {
+
+    companion object: KLogging()
+
     fun claim(operationId: UUID, ttl: Duration): RefundClaim? = jdbc.transaction {
         val now = clock.instant()
         val token = Uuid.V7.nextId()
-        val claimed = TicketPaymentOperations.update({
+
+        val whereOp = {
             (TicketPaymentOperations.operationId eq operationId) and
-                (TicketPaymentOperations.operationKind eq "refund") and
-                ((TicketPaymentOperations.status eq "pending") or
-                    ((TicketPaymentOperations.status eq "unknown") and (TicketPaymentOperations.nextReconcileAt lessEq now)) or
-                    ((TicketPaymentOperations.status eq "claimed") and (TicketPaymentOperations.claimUntil lessEq now)))
-        }) {
+                    (TicketPaymentOperations.operationKind eq "refund") and
+                    ((TicketPaymentOperations.status eq "pending") or
+                            ((TicketPaymentOperations.status eq "unknown") and (TicketPaymentOperations.nextReconcileAt lessEq now)) or
+                            ((TicketPaymentOperations.status eq "claimed") and (TicketPaymentOperations.claimUntil lessEq now)))
+        }
+        val claimed = TicketPaymentOperations.update(whereOp) {
             it[status] = "claimed"
             it[claimToken] = token
             it[claimRevision] = claimRevision + 1
@@ -96,31 +116,41 @@ class RefundOperationRepository(
             it[updatedAt] = now
         }
         if (claimed != 1) return@transaction null
-        TicketPaymentOperations.selectAll().where {
-            (TicketPaymentOperations.operationId eq operationId) and (TicketPaymentOperations.claimToken eq token)
-        }.single().let {
-            RefundClaim(operationId, checkNotNull(it[TicketPaymentOperations.orderId]), token, it[TicketPaymentOperations.claimRevision])
-        }
+
+        TicketPaymentOperations.selectAll()
+            .where {
+                (TicketPaymentOperations.operationId eq operationId) and (TicketPaymentOperations.claimToken eq token)
+            }
+            .single()
+            .toRefundClaim(operationId, token)
     }
 }
 
 class TicketRefundRepository(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,
-) : TicketExposedJdbcRepository<TicketOrderEntity, UUID>(TicketOrderEntity::class.java) {
+): TicketExposedJdbcRepository<TicketOrderEntity, UUID>(TicketOrderEntity::class) {
+
+    companion object: KLogging()
+
     fun apply(claim: RefundClaim, outcome: RefundOutcome): Boolean = jdbc.transaction {
-        val operation = TicketPaymentOperations.selectAll().where {
-            (TicketPaymentOperations.operationId eq claim.operationId) and
-                (TicketPaymentOperations.operationKind eq "refund") and
-                (TicketPaymentOperations.status eq "claimed") and
-                (TicketPaymentOperations.claimToken eq claim.token) and
-                (TicketPaymentOperations.claimRevision eq claim.revision)
-        }.forUpdate().singleOrNull() ?: return@transaction false
+        val operation = TicketPaymentOperations.selectAll()
+            .where {
+                (TicketPaymentOperations.operationId eq claim.operationId) and
+                        (TicketPaymentOperations.operationKind eq "refund") and
+                        (TicketPaymentOperations.status eq "claimed") and
+                        (TicketPaymentOperations.claimToken eq claim.token) and
+                        (TicketPaymentOperations.claimRevision eq claim.revision)
+            }
+            .forUpdate()
+            .singleOrNull() ?: return@transaction false
+
         val now = clock.instant()
         if (outcome != RefundOutcome.SUCCEEDED) {
-            TicketPaymentOperations.update({ TicketPaymentOperations.id eq operation[TicketPaymentOperations.id] }) {
+            val whereOp = { TicketPaymentOperations.id eq operation[TicketPaymentOperations.id] }
+            TicketPaymentOperations.update(whereOp) {
                 it[status] = if (outcome == RefundOutcome.UNKNOWN) "unknown" else "failed"
-                it[nextReconcileAt] = if (outcome == RefundOutcome.UNKNOWN) now.plusSeconds(1) else null
+                it[nextReconcileAt] = if (outcome == RefundOutcome.UNKNOWN) now + 1.seconds() else null
                 it[claimToken] = null
                 it[claimUntil] = null
                 it[revision] = revision + 1
@@ -130,20 +160,29 @@ class TicketRefundRepository(
         }
         val order = TicketOrders.selectAll().where { TicketOrders.id eq claim.orderId }.forUpdate().single()
         val attemptId = order[TicketOrders.attemptId]
-        val attempt = TicketPurchaseAttempts.selectAll().where { TicketPurchaseAttempts.id eq attemptId }.forUpdate().single()
+
+        val attempt = TicketPurchaseAttempts.selectAll()
+            .where { TicketPurchaseAttempts.id eq attemptId }
+            .forUpdate()
+            .single()
+
         val state = PurchaseState.entries.single { it.code == attempt[TicketPurchaseAttempts.state] }
         val disposition = TicketDisposition.entries.single { it.code == order[TicketOrders.ticketDisposition] }
         val change = refundTransition(state, disposition)
+
         check(change.next == PurchaseState.REFUNDED) { "ticket is not safe to restock" }
         val quantity = order[TicketOrders.quantity]
         val saleId = order[TicketOrders.saleId]
         val grade = order[TicketOrders.grade]
-        check(TicketInventories.update({
+
+        val affected = TicketInventories.update({
             (TicketInventories.saleId eq saleId) and (TicketInventories.grade eq grade)
         }) {
             it[soldQuantity] = soldQuantity + change.soldDelta * quantity
             it[revision] = revision + 1
-        } == 1)
+        }
+        check(affected == 1) { "ticket is not safe to restock" }
+
         TicketPurchaseAttempts.update({ TicketPurchaseAttempts.id eq attemptId }) {
             it[TicketPurchaseAttempts.state] = change.next.code
             it[revision] = revision + 1
@@ -156,7 +195,7 @@ class TicketRefundRepository(
         }
         TicketBuyerSaleStates.update({
             (TicketBuyerSaleStates.saleId eq saleId) and
-                (TicketBuyerSaleStates.userSubjectId eq attempt[TicketPurchaseAttempts.userSubjectId])
+                    (TicketBuyerSaleStates.userSubjectId eq attempt[TicketPurchaseAttempts.userSubjectId])
         }) {
             it[purchasedQuantity] = purchasedQuantity + -quantity
             it[revision] = revision + 1
@@ -166,7 +205,7 @@ class TicketRefundRepository(
             it[consumerName] = "refund-service"
             it[operationId] = claim.operationId
             it[payloadDigest] = MessageDigest.getInstance("SHA-256")
-                .digest("refund-effect-v1:${claim.operationId}".toByteArray(UTF_8))
+                .digest("refund-effect-v1:${claim.operationId}".toUtf8Bytes())
             it[createdAt] = now
         }
         TicketPaymentOperations.update({ TicketPaymentOperations.id eq operation[TicketPaymentOperations.id] }) {
@@ -186,17 +225,21 @@ class RefundService(
     jdbc: TicketJdbcExecutor,
     private val provider: RefundProvider,
     clock: Clock = Clock.systemUTC(),
-    private val claimTtl: Duration = Duration.ofSeconds(5),
+    private val claimTtl: Duration = 5.seconds(),
     private val operations: RefundOperationRepository = RefundOperationRepository(jdbc, clock),
     private val refunds: TicketRefundRepository = TicketRefundRepository(jdbc, clock),
 ) {
+    companion object: KLogging()
+
     fun run(operationId: UUID): Boolean {
+        log.info { "refunc started for $operationId" }
+
         val claim = operations.claim(operationId, claimTtl) ?: return false
         val outcome = provider.lookup(operationId) ?: provider.refund(operationId)
-        return refunds.apply(claim, outcome).also { applied ->
-            log.info { "refund_outcome_applied operationId=$operationId outcome=$outcome applied=$applied" }
-        }
-    }
 
-    companion object : KLogging()
+        return refunds.apply(claim, outcome)
+            .also { applied ->
+                log.info { "refund_outcome_applied operationId=$operationId outcome=$outcome applied=$applied" }
+            }
+    }
 }

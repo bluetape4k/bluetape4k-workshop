@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.commerce.ticket.config
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.ticket.operations.internal.OperationsService
 import io.bluetape4k.workshop.commerce.ticket.operations.internal.ReconciliationJob
 import io.bluetape4k.workshop.commerce.ticket.web.TicketEventStream
 import io.micrometer.core.instrument.MeterRegistry
-import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,7 +24,7 @@ data class TicketProperties(
     val redis: TicketRedisProperties = TicketRedisProperties(),
     val worker: TicketWorkerProperties = TicketWorkerProperties(),
     val sse: TicketSseProperties = TicketSseProperties(),
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -36,9 +38,9 @@ data class TicketDatabaseProperties(
     val workerPermits: Int = 3,
     val ssePermits: Int = 2,
     val operatorPermits: Int = 1,
-    val permitTimeout: Duration = Duration.ofMillis(250),
-    val transactionTimeout: Duration = Duration.ofMillis(750),
-) : Serializable {
+    val permitTimeout: Duration = 250.millis(),
+    val transactionTimeout: Duration = 750.millis(),
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -48,12 +50,12 @@ data class TicketDatabaseProperties(
 /** Redis admission lease timing입니다. */
 data class TicketRedisProperties(
     val uri: String = "redis://localhost:6379",
-    val commandTimeout: Duration = Duration.ofMillis(500),
-    val renewInterval: Duration = Duration.ofSeconds(2),
-    val leaseTtl: Duration = Duration.ofSeconds(5),
+    val commandTimeout: Duration = 500.millis(),
+    val renewInterval: Duration = 2.seconds(),
+    val leaseTtl: Duration = 5.seconds(),
     val rateLimitCapacity: Long = 30,
-    val rateLimitPeriod: Duration = Duration.ofSeconds(1),
-) : Serializable {
+    val rateLimitPeriod: Duration = 1.seconds(),
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -63,8 +65,8 @@ data class TicketRedisProperties(
 /** background worker의 실행 한계입니다. */
 data class TicketWorkerProperties(
     val batchSize: Int = 50,
-    val runDeadline: Duration = Duration.ofSeconds(10),
-) : Serializable {
+    val runDeadline: Duration = 10.seconds(),
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -75,7 +77,7 @@ data class TicketWorkerProperties(
 data class TicketSseProperties(
     val queueSize: Int = 32,
     val maxConnections: Int = 512,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -95,7 +97,7 @@ enum class TicketStartupFailure {
 /** raw configuration value를 누출하지 않고 startup을 실패시킵니다. */
 class TicketStartupException(
     val code: TicketStartupFailure,
-) : IllegalStateException(code.name) {
+): IllegalStateException(code.name) {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -120,7 +122,7 @@ object TicketStartupValidator {
         ) {
             throw TicketStartupException(TicketStartupFailure.INVALID_DATABASE_CAPACITY)
         }
-        if (!db.permitTimeout.isPositive() || !db.transactionTimeout.isPositive()) {
+        if (!db.permitTimeout.isPositive || !db.transactionTimeout.isPositive) {
             throw TicketStartupException(TicketStartupFailure.INVALID_DATABASE_TIMING)
         }
     }
@@ -196,7 +198,7 @@ internal class TicketConfiguration {
 
     @Bean
     fun ticketRedisHealth(resources: TicketRedisResources): TicketRedisHealthIndicator =
-        TicketRedisHealthIndicator(TicketRedisHealthProbe { resources.commands().ping() })
+        TicketRedisHealthIndicator { resources.commands().ping() }
 
     @Bean
     fun ticketLivenessHealth(): TicketLivenessHealthIndicator = TicketLivenessHealthIndicator()

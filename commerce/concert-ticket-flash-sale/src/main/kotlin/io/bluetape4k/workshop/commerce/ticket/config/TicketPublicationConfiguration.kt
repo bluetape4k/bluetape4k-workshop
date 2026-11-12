@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.config
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.FakePaymentProvider
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
@@ -22,6 +23,9 @@ import javax.sql.DataSource
 /** transaction-coupled Modulith publication을 lookup-first effect worker에 연결합니다. */
 @Configuration(proxyBeanMethods = false)
 internal class TicketPublicationConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun ticketClock(): Clock = Clock.systemUTC()
 
@@ -56,11 +60,16 @@ internal class TicketPublicationConfiguration {
     fun paymentProvider(): FakePaymentProvider = FakePaymentProvider()
 
     @Bean
-    fun paymentWorker(jdbc: TicketJdbcExecutor, purchases: PurchaseService, provider: FakePaymentProvider): PaymentWorker =
+    fun paymentWorker(
+        jdbc: TicketJdbcExecutor,
+        purchases: PurchaseService,
+        provider: FakePaymentProvider,
+    ): PaymentWorker =
         PaymentWorker(jdbc, purchases, provider)
 
     @Bean
-    fun refundService(jdbc: TicketJdbcExecutor, provider: FakeRefundProvider): RefundService = RefundService(jdbc, provider)
+    fun refundService(jdbc: TicketJdbcExecutor, provider: FakeRefundProvider): RefundService =
+        RefundService(jdbc, provider)
 
     @Bean
     fun refundProvider(): FakeRefundProvider = FakeRefundProvider()
@@ -80,9 +89,9 @@ internal class TicketPublicationConfiguration {
         AuthorizationPublicationListener(worker)
 }
 
-internal class AuthorizationPublicationListener(private val worker: PaymentWorker) {
+internal open class AuthorizationPublicationListener(private val worker: PaymentWorker) {
     @ApplicationModuleListener
-    fun on(event: AuthorizationRequested) {
+    open fun on(event: AuthorizationRequested) {
         worker.run(event.operationId)
     }
 }

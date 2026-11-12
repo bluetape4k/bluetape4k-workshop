@@ -2,32 +2,42 @@ package io.bluetape4k.workshop.commerce.ticket.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.ticket.operations.api.OperatorReconcile
 import io.bluetape4k.workshop.commerce.ticket.operations.internal.OperationsService
 import io.bluetape4k.workshop.commerce.ticket.operations.internal.ReconciliationJob
+import io.bluetape4k.workshop.commerce.ticket.web.StreamScope
 import io.bluetape4k.workshop.commerce.ticket.web.TicketEventStream
 import io.bluetape4k.workshop.commerce.ticket.web.TicketStreamCapacityExceeded
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 import org.springframework.boot.health.contributor.Status
 import java.time.Clock
-import java.time.Duration
 import java.time.Instant
 
 internal class TicketHealthLifecycleIntegrationTest {
+
+    companion object: KLogging()
+
     @Test
     fun `migration readiness and liveness are independent`() {
         val readiness = TicketMigrationReadiness()
+        log.debug { "readiness.isReady=${readiness.isReady}" }
         TicketMigrationHealthIndicator(readiness).health().status shouldBeEqualTo Status.OUT_OF_SERVICE
         TicketLivenessHealthIndicator().health().status shouldBeEqualTo Status.UP
+
         readiness.markReady()
+        log.debug { "readiness.isReady=${readiness.isReady}" }
         TicketMigrationHealthIndicator(readiness).health().status shouldBeEqualTo Status.UP
     }
 
     @Test
     fun `redis outage degrades purchase readiness but not liveness`() {
-        val redis = TicketRedisHealthIndicator(TicketRedisHealthProbe { error("redis unavailable") })
+        val redis = TicketRedisHealthIndicator { error("redis unavailable") }
 
         redis.health().status shouldBeEqualTo Status.OUT_OF_SERVICE
         redis.health().details["code"] shouldBeEqualTo "redis_unavailable"
@@ -40,7 +50,7 @@ internal class TicketHealthLifecycleIntegrationTest {
             jobs = listOf(ReconciliationJob { error("provider unavailable") }),
             operatorPermits = 1,
             maxBatchSize = 50,
-            runDeadline = Duration.ofSeconds(10),
+            runDeadline = 10.seconds(),
             clock = Clock.systemUTC(),
         )
         assertFailsWith<IllegalStateException> {
@@ -58,10 +68,11 @@ internal class TicketHealthLifecycleIntegrationTest {
         metrics.recordOutcome("approved")
         lifecycle.shutdown()
 
-        lifecycle.acceptsForegroundWork() shouldBeEqualTo false
+        lifecycle.acceptsForegroundWork().shouldBeFalse()
         registry.counter("ticket.purchase.outcomes", "outcome", "approved").count() shouldBeEqualTo 1.0
+
         assertFailsWith<TicketStreamCapacityExceeded> {
-            stream.subscribe(io.bluetape4k.workshop.commerce.ticket.web.StreamScope.PublicSale(Uuid.V7.nextId())) { emptyMap() }
+            stream.subscribe(StreamScope.PublicSale(Uuid.V7.nextId())) { emptyMap() }
         }
     }
 }

@@ -1,11 +1,14 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import tools.jackson.core.ObjectReadContext
 import tools.jackson.core.StreamReadConstraints
 import tools.jackson.core.StreamReadFeature
@@ -24,7 +27,7 @@ import java.security.MessageDigest
 internal class TicketHighContentionContractException(
     message: String,
     cause: Throwable? = null,
-) : IllegalArgumentException(message, cause)
+): IllegalArgumentException(message, cause)
 
 internal fun interface TicketContractReadObserver {
     fun afterRead(path: Path)
@@ -33,7 +36,31 @@ internal fun interface TicketContractReadObserver {
 internal class TicketHighContentionContractLoader(
     private val observer: TicketContractReadObserver = TicketContractReadObserver {},
 ) {
-    private val mapper = Jackson.createDefaultJsonMapper()
+
+    private companion object: KLogging() {
+        const val TICKET_IMPLEMENTATION = "ticket-spring"
+        const val MAX_DOCUMENT_BYTES = 1_048_576L
+        const val SCHEDULE_ALGORITHM = "hc-v1-sha256-unsigned-rank"
+
+        val IMPLEMENTATIONS = listOf(
+            "job-core",
+            "job-spring",
+            "job-ktor",
+            TICKET_IMPLEMENTATION
+        )
+
+        val PROFILE_IDS = listOf(
+            "burst",
+            "duplicate-storm",
+            "redis-path-outage",
+            "redis-key-loss",
+            "slow-provider",
+            "worker-restart",
+            "duplicate-delivery",
+        )
+    }
+
+    private val mapper = Jackson.defaultJsonMapper
     private val strictFactory = JsonFactory.builder()
         .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
         .streamReadConstraints(
@@ -191,11 +218,11 @@ internal class TicketHighContentionContractLoader(
 
     private fun sameIdentity(before: BasicFileAttributes, after: BasicFileAttributes): Boolean =
         before.isRegularFile &&
-            after.isRegularFile &&
-            before.fileKey() != null &&
-            before.fileKey() == after.fileKey() &&
-            before.size() == after.size() &&
-            before.lastModifiedTime() == after.lastModifiedTime()
+                after.isRegularFile &&
+                before.fileKey() != null &&
+                before.fileKey() == after.fileKey() &&
+                before.size() == after.size() &&
+                before.lastModifiedTime() == after.lastModifiedTime()
 
     private fun validateVersions(
         suite: TicketHighContentionSuite,
@@ -254,7 +281,8 @@ internal class TicketHighContentionContractLoader(
         profile.profileId.requireEquals(entry.profileId, "profileId")
         profile.mode.requireEquals(entry.mode, "mode")
         profile.seed.requireNotBlank("seed")
-        val limits = requireNotNull(contract.limits[profile.mode.wireValue]) { "missing mode limits" }
+
+        val limits = contract.limits[profile.mode.wireValue].requireNotNull { "missing mode limits" }
         profile.operationCount.requireInRange(1, limits.maxOperationCount, "operationCount")
         profile.concurrency.requireInRange(1, limits.maxConcurrency, "concurrency")
         profile.warmupOperationCount.requireInRange(0, limits.maxWarmupOperationCount, "warmupOperationCount")
@@ -263,7 +291,12 @@ internal class TicketHighContentionContractLoader(
         profile.expectedInvariants.ticket.requireNotEmpty("ticket invariants")
         profile.observationFields.requireNotEmpty("observationFields")
         profile.knownLimitations.requireNotEmpty("knownLimitations")
-        require(profile.cleanupReserveMs >= Math.addExact(profile.cleanupActionBudgetsMs.total(), profile.reportFinalizeReserveMs)) {
+        require(
+            profile.cleanupReserveMs >= Math.addExact(
+                profile.cleanupActionBudgetsMs.total(),
+                profile.reportFinalizeReserveMs
+            )
+        ) {
             "cleanup reserve does not cover cleanup and report finalization"
         }
         require(profile.cleanupReserveMs < profile.profileDeadlineMs) {
@@ -284,8 +317,8 @@ internal class TicketHighContentionContractLoader(
             append(",\"expectedTokens\":")
             append(vector.expectedTokens.joinToString(",", "[", "]") {
                 "{\"attemptOrdinal\":${it.attemptOrdinal},\"authorityOrdinal\":${it.authorityOrdinal}," +
-                    "\"identityOrdinal\":${it.identityOrdinal},\"offsetNanos\":${it.offsetNanos}," +
-                    "\"stableOrdinal\":${it.stableOrdinal}}"
+                        "\"identityOrdinal\":${it.identityOrdinal},\"offsetNanos\":${it.offsetNanos}," +
+                        "\"stableOrdinal\":${it.stableOrdinal}}"
             })
             append(",\"name\":${mapper.writeValueAsString(vector.name)},\"operationCount\":${vector.operationCount}")
             append(",\"profileSchemaVersion\":${vector.profileSchemaVersion},\"retryShape\":")
@@ -299,22 +332,6 @@ internal class TicketHighContentionContractLoader(
 
     private fun sha256(value: String): String =
         MessageDigest.getInstance("SHA-256")
-            .digest(value.toByteArray())
+            .digest(value.toUtf8Bytes())
             .joinToString("") { "%02x".format(it) }
-
-    private companion object {
-        const val TICKET_IMPLEMENTATION = "ticket-spring"
-        const val MAX_DOCUMENT_BYTES = 1_048_576L
-        const val SCHEDULE_ALGORITHM = "hc-v1-sha256-unsigned-rank"
-        val IMPLEMENTATIONS = listOf("job-core", "job-spring", "job-ktor", TICKET_IMPLEMENTATION)
-        val PROFILE_IDS = listOf(
-            "burst",
-            "duplicate-storm",
-            "redis-path-outage",
-            "redis-key-loss",
-            "slow-provider",
-            "worker-restart",
-            "duplicate-delivery",
-        )
-    }
 }

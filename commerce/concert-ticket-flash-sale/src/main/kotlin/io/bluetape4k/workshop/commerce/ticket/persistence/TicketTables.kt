@@ -1,18 +1,18 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
 import io.bluetape4k.spring.data.exposed.common.annotation.ExposedEntity
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.LongEntityClass
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
-import java.util.*
 
-object TicketSales : UUIDTable("ticket_sales", "sale_id") {
+object TicketSales: TimebasedUUIDTable("ticket_sales", "sale_id") {
     val state = varchar("state", 24)
     val currentPolicyVersion = long("current_policy_version")
     val opensAt = timestamp("opens_at")
@@ -23,8 +23,8 @@ object TicketSales : UUIDTable("ticket_sales", "sale_id") {
 }
 
 @ExposedEntity
-class TicketSaleEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<TicketSaleEntity>(TicketSales)
+class TicketSaleEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<TicketSaleEntity>(TicketSales)
 
     var state by TicketSales.state
     var currentPolicyVersion by TicketSales.currentPolicyVersion
@@ -35,7 +35,7 @@ class TicketSaleEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by TicketSales.updatedAt
 }
 
-object TicketSalePolicies : LongIdTable("ticket_sale_policy_versions") {
+object TicketSalePolicies: LongIdTable("ticket_sale_policy_versions") {
     val saleId = javaUUID("sale_id")
     val policyVersion = long("policy_version")
     val perUserLimit = integer("per_user_limit")
@@ -45,8 +45,8 @@ object TicketSalePolicies : LongIdTable("ticket_sale_policy_versions") {
 }
 
 @ExposedEntity
-class TicketSalePolicyEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketSalePolicyEntity>(TicketSalePolicies)
+class TicketSalePolicyEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketSalePolicyEntity>(TicketSalePolicies)
 
     var saleId by TicketSalePolicies.saleId
     var policyVersion by TicketSalePolicies.policyVersion
@@ -56,7 +56,7 @@ class TicketSalePolicyEntity(id: EntityID<Long>) : LongEntity(id) {
     var createdAt by TicketSalePolicies.createdAt
 }
 
-object TicketInventories : LongIdTable("ticket_inventory") {
+object TicketInventories: LongIdTable("ticket_inventory") {
     val saleId = javaUUID("sale_id")
     val grade = varchar("grade", 32)
     val totalQuantity = integer("total_quantity")
@@ -66,8 +66,8 @@ object TicketInventories : LongIdTable("ticket_inventory") {
 }
 
 @ExposedEntity
-class TicketInventoryEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketInventoryEntity>(TicketInventories)
+class TicketInventoryEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketInventoryEntity>(TicketInventories)
 
     var saleId by TicketInventories.saleId
     var grade by TicketInventories.grade
@@ -79,22 +79,22 @@ class TicketInventoryEntity(id: EntityID<Long>) : LongEntity(id) {
     fun toRecord() = InventoryRecord(saleId, grade, totalQuantity, heldQuantity, soldQuantity, revision)
 }
 
-object TicketIdentitySubjects : UUIDTable("ticket_identity_subjects", "subject_id") {
+object TicketIdentitySubjects: TimebasedUUIDTable("ticket_identity_subjects", "subject_id") {
     val identityKind = varchar("identity_kind", 8)
     val createdAt = timestamp("created_at")
     val anonymizedAt = timestamp("anonymized_at").nullable()
 }
 
 @ExposedEntity
-class TicketIdentitySubjectEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<TicketIdentitySubjectEntity>(TicketIdentitySubjects)
+class TicketIdentitySubjectEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<TicketIdentitySubjectEntity>(TicketIdentitySubjects)
 
     var identityKind by TicketIdentitySubjects.identityKind
     var createdAt by TicketIdentitySubjects.createdAt
     var anonymizedAt by TicketIdentitySubjects.anonymizedAt
 }
 
-object TicketIdentityAliases : LongIdTable("ticket_identity_aliases") {
+object TicketIdentityAliases: LongIdTable("ticket_identity_aliases") {
     val identityKind = varchar("identity_kind", 8)
     val keyVersion = integer("key_version")
     val digest = binary("digest", 32)
@@ -103,8 +103,8 @@ object TicketIdentityAliases : LongIdTable("ticket_identity_aliases") {
 }
 
 @ExposedEntity
-class TicketIdentityAliasEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketIdentityAliasEntity>(TicketIdentityAliases)
+class TicketIdentityAliasEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketIdentityAliasEntity>(TicketIdentityAliases)
 
     var identityKind by TicketIdentityAliases.identityKind
     var keyVersion by TicketIdentityAliases.keyVersion
@@ -113,7 +113,7 @@ class TicketIdentityAliasEntity(id: EntityID<Long>) : LongEntity(id) {
     var createdAt by TicketIdentityAliases.createdAt
 }
 
-object TicketWaitingRoomEntries : LongIdTable("ticket_waiting_room_entries") {
+object TicketWaitingRoomEntries: LongIdTable("ticket_waiting_room_entries") {
     val entryId = javaUUID("entry_id")
     val saleId = javaUUID("sale_id")
     val userSubjectId = javaUUID("user_subject_id")
@@ -125,8 +125,8 @@ object TicketWaitingRoomEntries : LongIdTable("ticket_waiting_room_entries") {
 }
 
 @ExposedEntity
-class TicketWaitingRoomEntryEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketWaitingRoomEntryEntity>(TicketWaitingRoomEntries)
+class TicketWaitingRoomEntryEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketWaitingRoomEntryEntity>(TicketWaitingRoomEntries)
 
     var entryId by TicketWaitingRoomEntries.entryId
     var saleId by TicketWaitingRoomEntries.saleId
@@ -140,7 +140,7 @@ class TicketWaitingRoomEntryEntity(id: EntityID<Long>) : LongEntity(id) {
     fun toRecord() = WaitingEntryRecord(id.value, entryId, saleId, userSubjectId, sequence)
 }
 
-object TicketAdmissionGrants : LongIdTable("ticket_admission_grants") {
+object TicketAdmissionGrants: LongIdTable("ticket_admission_grants") {
     val saleId = javaUUID("sale_id")
     val grantNonce = javaUUID("grant_nonce")
     val buyerSubjectId = javaUUID("buyer_subject_id")
@@ -152,8 +152,8 @@ object TicketAdmissionGrants : LongIdTable("ticket_admission_grants") {
 }
 
 @ExposedEntity
-class TicketAdmissionGrantEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketAdmissionGrantEntity>(TicketAdmissionGrants)
+class TicketAdmissionGrantEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketAdmissionGrantEntity>(TicketAdmissionGrants)
 
     var saleId by TicketAdmissionGrants.saleId
     var grantNonce by TicketAdmissionGrants.grantNonce
@@ -165,7 +165,7 @@ class TicketAdmissionGrantEntity(id: EntityID<Long>) : LongEntity(id) {
     var createdAt by TicketAdmissionGrants.createdAt
 }
 
-object TicketBuyerSaleStates : LongIdTable("ticket_buyer_sale_states") {
+object TicketBuyerSaleStates: LongIdTable("ticket_buyer_sale_states") {
     val saleId = javaUUID("sale_id")
     val userSubjectId = javaUUID("user_subject_id")
     val policyVersion = long("policy_version")
@@ -174,8 +174,8 @@ object TicketBuyerSaleStates : LongIdTable("ticket_buyer_sale_states") {
 }
 
 @ExposedEntity
-class TicketBuyerSaleStateEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketBuyerSaleStateEntity>(TicketBuyerSaleStates)
+class TicketBuyerSaleStateEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketBuyerSaleStateEntity>(TicketBuyerSaleStates)
 
     var saleId by TicketBuyerSaleStates.saleId
     var userSubjectId by TicketBuyerSaleStates.userSubjectId
@@ -184,7 +184,7 @@ class TicketBuyerSaleStateEntity(id: EntityID<Long>) : LongEntity(id) {
     var revision by TicketBuyerSaleStates.revision
 }
 
-object TicketPurchaseAttempts : UUIDTable("ticket_purchase_attempts", "attempt_id") {
+object TicketPurchaseAttempts: TimebasedUUIDTable("ticket_purchase_attempts", "attempt_id") {
     val saleId = javaUUID("sale_id")
     val userSubjectId = javaUUID("user_subject_id")
     val ipSubjectId = javaUUID("ip_subject_id")
@@ -200,8 +200,8 @@ object TicketPurchaseAttempts : UUIDTable("ticket_purchase_attempts", "attempt_i
 }
 
 @ExposedEntity
-class TicketPurchaseAttemptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<TicketPurchaseAttemptEntity>(TicketPurchaseAttempts)
+class TicketPurchaseAttemptEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<TicketPurchaseAttemptEntity>(TicketPurchaseAttempts)
 
     var saleId by TicketPurchaseAttempts.saleId
     var userSubjectId by TicketPurchaseAttempts.userSubjectId
@@ -217,7 +217,7 @@ class TicketPurchaseAttemptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by TicketPurchaseAttempts.updatedAt
 }
 
-object TicketActiveIdentityGuards : LongIdTable("ticket_active_identity_guards") {
+object TicketActiveIdentityGuards: LongIdTable("ticket_active_identity_guards") {
     val saleId = javaUUID("sale_id")
     val identityKind = varchar("identity_kind", 8)
     val identitySubjectId = javaUUID("identity_subject_id")
@@ -226,8 +226,8 @@ object TicketActiveIdentityGuards : LongIdTable("ticket_active_identity_guards")
 }
 
 @ExposedEntity
-class TicketActiveIdentityGuardEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketActiveIdentityGuardEntity>(TicketActiveIdentityGuards)
+class TicketActiveIdentityGuardEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketActiveIdentityGuardEntity>(TicketActiveIdentityGuards)
 
     var saleId by TicketActiveIdentityGuards.saleId
     var identityKind by TicketActiveIdentityGuards.identityKind
@@ -236,7 +236,7 @@ class TicketActiveIdentityGuardEntity(id: EntityID<Long>) : LongEntity(id) {
     var createdAt by TicketActiveIdentityGuards.createdAt
 }
 
-object TicketOrders : UUIDTable("ticket_orders", "order_id") {
+object TicketOrders: TimebasedUUIDTable("ticket_orders", "order_id") {
     val attemptId = javaUUID("attempt_id")
     val saleId = javaUUID("sale_id")
     val grade = varchar("grade", 32)
@@ -251,8 +251,8 @@ object TicketOrders : UUIDTable("ticket_orders", "order_id") {
 }
 
 @ExposedEntity
-class TicketOrderEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<TicketOrderEntity>(TicketOrders)
+class TicketOrderEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<TicketOrderEntity>(TicketOrders)
 
     var attemptId by TicketOrders.attemptId
     var saleId by TicketOrders.saleId
@@ -267,7 +267,7 @@ class TicketOrderEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by TicketOrders.updatedAt
 }
 
-object TicketPaymentOperations : LongIdTable("ticket_payment_operations") {
+object TicketPaymentOperations: LongIdTable("ticket_payment_operations") {
     val provider = varchar("provider", 32)
     val operationId = javaUUID("operation_id")
     val attemptId = javaUUID("attempt_id")
@@ -284,8 +284,8 @@ object TicketPaymentOperations : LongIdTable("ticket_payment_operations") {
 }
 
 @ExposedEntity
-class TicketPaymentOperationEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketPaymentOperationEntity>(TicketPaymentOperations)
+class TicketPaymentOperationEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketPaymentOperationEntity>(TicketPaymentOperations)
 
     var provider by TicketPaymentOperations.provider
     var operationId by TicketPaymentOperations.operationId
@@ -302,7 +302,7 @@ class TicketPaymentOperationEntity(id: EntityID<Long>) : LongEntity(id) {
     var updatedAt by TicketPaymentOperations.updatedAt
 }
 
-object TicketTickets : LongIdTable("ticket_tickets") {
+object TicketTickets: LongIdTable("ticket_tickets") {
     val orderId = javaUUID("order_id")
     val externalTicketDigest = binary("external_ticket_digest", 32).nullable()
     val state = varchar("state", 24)
@@ -312,8 +312,8 @@ object TicketTickets : LongIdTable("ticket_tickets") {
 }
 
 @ExposedEntity
-class TicketTicketEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketTicketEntity>(TicketTickets)
+class TicketTicketEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketTicketEntity>(TicketTickets)
 
     var orderId by TicketTickets.orderId
     var externalTicketDigest by TicketTickets.externalTicketDigest
@@ -323,7 +323,7 @@ class TicketTicketEntity(id: EntityID<Long>) : LongEntity(id) {
     var updatedAt by TicketTickets.updatedAt
 }
 
-object TicketEffectOperations : LongIdTable("ticket_effect_operations") {
+object TicketEffectOperations: LongIdTable("ticket_effect_operations") {
     val effectKind = varchar("effect_kind", 16)
     val operationId = javaUUID("operation_id")
     val orderId = javaUUID("order_id")
@@ -337,8 +337,8 @@ object TicketEffectOperations : LongIdTable("ticket_effect_operations") {
 }
 
 @ExposedEntity
-class TicketEffectOperationEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketEffectOperationEntity>(TicketEffectOperations)
+class TicketEffectOperationEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketEffectOperationEntity>(TicketEffectOperations)
 
     var effectKind by TicketEffectOperations.effectKind
     var operationId by TicketEffectOperations.operationId
@@ -352,7 +352,7 @@ class TicketEffectOperationEntity(id: EntityID<Long>) : LongEntity(id) {
     var updatedAt by TicketEffectOperations.updatedAt
 }
 
-object TicketEffectReceipts : LongIdTable("ticket_effect_receipts") {
+object TicketEffectReceipts: LongIdTable("ticket_effect_receipts") {
     val consumerName = varchar("consumer_name", 80)
     val operationId = javaUUID("operation_id")
     val payloadDigest = binary("payload_digest", 32)
@@ -360,8 +360,8 @@ object TicketEffectReceipts : LongIdTable("ticket_effect_receipts") {
 }
 
 @ExposedEntity
-class TicketEffectReceiptEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketEffectReceiptEntity>(TicketEffectReceipts)
+class TicketEffectReceiptEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketEffectReceiptEntity>(TicketEffectReceipts)
 
     var consumerName by TicketEffectReceipts.consumerName
     var operationId by TicketEffectReceipts.operationId
@@ -369,7 +369,7 @@ class TicketEffectReceiptEntity(id: EntityID<Long>) : LongEntity(id) {
     var createdAt by TicketEffectReceipts.createdAt
 }
 
-object TicketHttpIdempotencies : LongIdTable("ticket_http_idempotency") {
+object TicketHttpIdempotencies: LongIdTable("ticket_http_idempotency") {
     val principalSubjectId = javaUUID("principal_subject_id")
     val httpMethod = varchar("http_method", 8)
     val canonicalRoute = varchar("canonical_route", 128)
@@ -387,8 +387,8 @@ object TicketHttpIdempotencies : LongIdTable("ticket_http_idempotency") {
 }
 
 @ExposedEntity
-class TicketHttpIdempotencyEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<TicketHttpIdempotencyEntity>(TicketHttpIdempotencies)
+class TicketHttpIdempotencyEntity(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TicketHttpIdempotencyEntity>(TicketHttpIdempotencies)
 
     var principalSubjectId by TicketHttpIdempotencies.principalSubjectId
     var httpMethod by TicketHttpIdempotencies.httpMethod

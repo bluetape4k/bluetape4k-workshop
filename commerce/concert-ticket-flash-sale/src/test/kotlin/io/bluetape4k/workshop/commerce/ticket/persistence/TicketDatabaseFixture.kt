@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
-import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.database.getDataSource
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigration
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigrationRunner
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
@@ -12,9 +14,16 @@ import io.bluetape4k.workshop.commerce.ticket.domain.SaleState
 import org.springframework.core.io.ClassPathResource
 import java.sql.DriverManager
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-internal class TicketDatabaseFixture : AutoCloseable {
+internal class TicketDatabaseFixture: AutoCloseable {
+
+    companion object: KLogging() {
+        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+
+        const val MAXIMUM_POOL_SIZE = 8
+    }
+
     private val schema = "ticket_repository_${Base58.randomString(8).lowercase()}"
     val dataSource: HikariDataSource
     val executor: TicketJdbcExecutor
@@ -23,16 +32,11 @@ internal class TicketDatabaseFixture : AutoCloseable {
         adminConnection().use { connection ->
             connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
         }
-        dataSource = HikariDataSource(
-            HikariConfig().apply {
-                jdbcUrl = postgres.jdbcUrl
-                username = postgres.username ?: PostgreSQLServer.USERNAME
-                password = postgres.password ?: PostgreSQLServer.PASSWORD
-                schema = this@TicketDatabaseFixture.schema
-                maximumPoolSize = MAXIMUM_POOL_SIZE
-                poolName = "ticket-test-$schema"
-            },
-        )
+        dataSource = postgres.getDataSource {
+            schema = this@TicketDatabaseFixture.schema
+            maximumPoolSize = MAXIMUM_POOL_SIZE
+            poolName = "ticket-test-$schema"
+        }
         TicketMigrationRunner(
             dataSource = dataSource,
             migration = TicketMigration("001", ClassPathResource("db/migration/V001__concert_ticket_flash_sale.sql")),
@@ -49,12 +53,9 @@ internal class TicketDatabaseFixture : AutoCloseable {
         secondAttemptId: UUID,
     ) {
         val now = Instant.now()
-        val seededSaleId = saleId
-        val seededUserSubjectId = userSubjectId
-        val seededIpSubjectId = ipSubjectId
 
         executor.transaction {
-            TicketSaleEntity.new(seededSaleId) {
+            TicketSaleEntity.new(saleId) {
                 state = SaleState.OPEN.code
                 currentPolicyVersion = 1L
                 opensAt = now.minusSeconds(60)
@@ -64,7 +65,7 @@ internal class TicketDatabaseFixture : AutoCloseable {
                 updatedAt = now
             }
             TicketSalePolicyEntity.new {
-                this.saleId = seededSaleId
+                this.saleId = saleId
                 policyVersion = 1L
                 perUserLimit = 1
                 maxQuantity = 4
@@ -72,28 +73,28 @@ internal class TicketDatabaseFixture : AutoCloseable {
                 createdAt = now
             }
             TicketInventoryEntity.new {
-                this.saleId = seededSaleId
+                this.saleId = saleId
                 grade = "GENERAL"
                 totalQuantity = 10
                 heldQuantity = 0
                 soldQuantity = 0
                 revision = 0L
             }
-            TicketIdentitySubjectEntity.new(seededUserSubjectId) {
+            TicketIdentitySubjectEntity.new(userSubjectId) {
                 identityKind = IdentityKind.USER.name
                 createdAt = now
                 anonymizedAt = null
             }
-            TicketIdentitySubjectEntity.new(seededIpSubjectId) {
+            TicketIdentitySubjectEntity.new(ipSubjectId) {
                 identityKind = IdentityKind.IP.name
                 createdAt = now
                 anonymizedAt = null
             }
             listOf(firstAttemptId, secondAttemptId).forEach { attemptId ->
                 TicketPurchaseAttemptEntity.new(attemptId) {
-                    this.saleId = seededSaleId
-                    this.userSubjectId = seededUserSubjectId
-                    this.ipSubjectId = seededIpSubjectId
+                    this.saleId = saleId
+                    this.userSubjectId = userSubjectId
+                    this.ipSubjectId = ipSubjectId
                     grade = "GENERAL"
                     quantity = 1
                     policyVersion = 1L
@@ -113,10 +114,9 @@ internal class TicketDatabaseFixture : AutoCloseable {
         totalQuantity: Int? = null,
     ) {
         val now = Instant.now()
-        val seededSaleId = saleId
 
         executor.transaction {
-            TicketSaleEntity.new(seededSaleId) {
+            TicketSaleEntity.new(saleId) {
                 state = SaleState.OPEN.code
                 currentPolicyVersion = 1L
                 opensAt = now
@@ -127,12 +127,12 @@ internal class TicketDatabaseFixture : AutoCloseable {
             }
             totalQuantity?.let { quantity ->
                 TicketInventoryEntity.new {
-                    this.saleId = seededSaleId
-                    grade = "GENERAL"
+                    this.saleId = saleId
+                    this.grade = "GENERAL"
                     this.totalQuantity = quantity
-                    heldQuantity = 0
-                    soldQuantity = 0
-                    revision = 0L
+                    this.heldQuantity = 0
+                    this.soldQuantity = 0
+                    this.revision = 0L
                 }
             }
         }
@@ -146,15 +146,17 @@ internal class TicketDatabaseFixture : AutoCloseable {
         executor.transaction {
             TicketIdentitySubjectEntity.new(subjectId) {
                 this.identityKind = identityKind.name
-                createdAt = now
-                anonymizedAt = null
+                this.createdAt = now
+                this.anonymizedAt = null
             }
         }
     }
 
     fun execute(sql: String) {
         dataSource.connection.use { connection ->
-            connection.createStatement().use { statement -> statement.execute(sql) }
+            connection.createStatement().use { statement ->
+                statement.execute(sql.requireNotBlank("sql"))
+            }
         }
     }
 
@@ -164,7 +166,9 @@ internal class TicketDatabaseFixture : AutoCloseable {
             dataSource.close()
         } finally {
             adminConnection().use { connection ->
-                connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
+                connection.createStatement().use { stmt ->
+                    stmt.execute("DROP SCHEMA IF EXISTS $schema CASCADE")
+                }
             }
         }
     }
@@ -175,9 +179,4 @@ internal class TicketDatabaseFixture : AutoCloseable {
             postgres.username ?: PostgreSQLServer.USERNAME,
             postgres.password ?: PostgreSQLServer.PASSWORD,
         )
-
-    companion object {
-        const val MAXIMUM_POOL_SIZE = 8
-        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
-    }
 }

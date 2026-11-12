@@ -1,15 +1,24 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.testcontainers.DockerClientFactory
@@ -18,21 +27,34 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.nio.file.StandardOpenOption.APPEND
-import java.time.Duration
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 internal class TicketHighContentionContractTest {
+
+    private companion object: KLogging() {
+        val PROFILE_IDS = listOf(
+            "burst",
+            "duplicate-storm",
+            "redis-path-outage",
+            "redis-key-loss",
+            "slow-provider",
+            "worker-restart",
+            "duplicate-delivery",
+        )
+    }
+
     @Test
     fun `profile application exposes production services from a Hikari backed Spring context`() {
         TicketHighContentionProfileApplication.start(RedisServer.Launcher.redis.url).use { application ->
             application.dataSource.maximumPoolSize shouldBeEqualTo 20
-            application.dataSource.isClosed shouldBeEqualTo false
-            application.jdbc
-            application.purchases
-            application.paymentWorker
-            application.ticketWorker
+            application.dataSource.isClosed.shouldBeFalse()
+            application.jdbc.shouldNotBeNull()
+            application.purchases.shouldNotBeNull()
+            application.paymentWorker.shouldNotBeNull()
+            application.ticketWorker.shouldNotBeNull()
         }
     }
 
@@ -45,22 +67,25 @@ internal class TicketHighContentionContractTest {
                 topology.openConnection().use { oldConnection ->
                     oldConnection.ping() shouldBeEqualTo "PONG"
                     topology.cutExistingConnections()
-                    await.atMost(Duration.ofSeconds(5)).untilAsserted {
+                    await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
                         assertFailsWith<Exception> { oldConnection.ping() }
                     }
+
                     topology.recover()
                     topology.openConnection().use { recovered ->
                         recovered.ping() shouldBeEqualTo "PONG"
                     }
+
                     topology.disableNewConnections()
-                    await.atMost(Duration.ofSeconds(5)).untilAsserted {
+                    await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
                         assertFailsWith<Exception> {
                             topology.openConnection().use(TicketRedisProbeConnection::ping)
                         }
                     }
+
                     topology.recover()
                     topology.openConnection().use { recovered ->
-                        await.atMost(Duration.ofSeconds(5)).untilAsserted {
+                        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
                             recovered.ping() shouldBeEqualTo "PONG"
                         }
                     }
@@ -84,7 +109,7 @@ internal class TicketHighContentionContractTest {
                         runId = runId,
                         profileId = "redis-path-outage",
                         journal = journal,
-                        cutpoint = TicketTopologyCutpoint { observedPhase, resourceKey ->
+                        cutpoint = { observedPhase, resourceKey ->
                             if (observedPhase == phase && resourceKey == "redis") {
                                 throw ExpectedTicketCutpointException()
                             }
@@ -103,13 +128,12 @@ internal class TicketHighContentionContractTest {
 
     @Test
     fun `Ticket independently loads every profile and matches every golden schedule vector`() {
-        val contract = TicketHighContentionContractLoader().load(
-            contractRoot(),
-            TicketHighContentionMode.CI_CORRECTNESS,
-        )
+        val contract = TicketHighContentionContractLoader()
+            .load(contractRoot(), TicketHighContentionMode.CI_CORRECTNESS)
 
         contract.selections.map { it.profile.profileId } shouldBeEqualTo PROFILE_IDS
         contract.selections.all { it.implementation == "ticket-spring" }.shouldBeTrue()
+
         contract.scheduleVectors.vectors.forEach { vector ->
             TicketDeterministicSchedule.generate(vector) shouldBeEqualTo vector.expectedTokens
         }
@@ -175,7 +199,7 @@ internal class TicketHighContentionContractTest {
     @Test
     fun `warm-up precedes baseline and stays outside measured conservation`() {
         val events = mutableListOf<String>()
-        val adapter = object : TicketHighContentionWorkloadAdapter {
+        val adapter = object: TicketHighContentionWorkloadAdapter {
             override fun warmUp(identity: TicketWorkloadIdentity) {
                 events += "warmup:${identity.namespace}:${identity.ordinal}"
             }
@@ -194,16 +218,18 @@ internal class TicketHighContentionContractTest {
             }
         }
 
-        val result = TicketHighContentionWorkloadEngine(Duration.ofSeconds(5)).run(
-            schedule = burstSchedule(operationCount = 3),
-            warmupOperationCount = 2,
-            warmupNamespace = "ticket:warmup:",
-            measuredNamespace = "ticket:measured:",
-            concurrency = 1,
-            dispatcherBacklogCapacity = 3,
-            maxScheduleDelayNanos = Long.MAX_VALUE,
-            adapter = adapter,
-        )
+        val result = TicketHighContentionWorkloadEngine(5.seconds())
+            .run(
+                schedule = burstSchedule(operationCount = 3),
+                warmupOperationCount = 2,
+                warmupNamespace = "ticket:warmup:",
+                measuredNamespace = "ticket:measured:",
+                concurrency = 1,
+                dispatcherBacklogCapacity = 3,
+                maxScheduleDelayNanos = Long.MAX_VALUE,
+                adapter = adapter,
+            )
+        log.debug { "result=$result" }
 
         events.take(3) shouldBeEqualTo listOf(
             "warmup:ticket:warmup::0",
@@ -228,7 +254,8 @@ internal class TicketHighContentionContractTest {
         val release = CountDownLatch(1)
         val completed = AtomicInteger()
         val observerCompletedCount = AtomicInteger(-1)
-        val adapter = object : TicketHighContentionWorkloadAdapter {
+
+        val adapter = object: TicketHighContentionWorkloadAdapter {
             override fun warmUp(identity: TicketWorkloadIdentity) = Unit
 
             override fun snapshotBaseline(): String = "baseline"
@@ -238,13 +265,13 @@ internal class TicketHighContentionContractTest {
                 identity: TicketWorkloadIdentity,
             ): TicketWorkloadDisposition {
                 entered.countDown()
-                check(release.await(5, TimeUnit.SECONDS))
+                release.await(5.seconds).shouldBeTrue()
                 completed.incrementAndGet()
                 return TicketWorkloadDisposition.COMPLETED
             }
         }
 
-        TicketHighContentionWorkloadEngine(Duration.ofSeconds(5)).run(
+        TicketHighContentionWorkloadEngine(5.seconds()).run(
             schedule = burstSchedule(operationCount = 2),
             warmupOperationCount = 0,
             warmupNamespace = "ticket:warmup:",
@@ -255,7 +282,7 @@ internal class TicketHighContentionContractTest {
             adapter = adapter,
             faultObserverStartAfterScheduledCount = 2,
             faultObserver = {
-                check(entered.await(5, TimeUnit.SECONDS))
+                entered.await(5.seconds).shouldBeTrue()
                 observerCompletedCount.set(completed.get())
                 release.countDown()
             },
@@ -271,7 +298,7 @@ internal class TicketHighContentionContractTest {
         val observerStarted = CountDownLatch(1)
         val completed = AtomicInteger()
         val observerCompletedCount = AtomicInteger(-1)
-        val adapter = object : TicketHighContentionWorkloadAdapter {
+        val adapter = object: TicketHighContentionWorkloadAdapter {
             override fun warmUp(identity: TicketWorkloadIdentity) = Unit
 
             override fun snapshotBaseline(): String = "baseline"
@@ -281,7 +308,7 @@ internal class TicketHighContentionContractTest {
                 identity: TicketWorkloadIdentity,
             ): TicketWorkloadDisposition {
                 entered.countDown()
-                check(release.await(5, TimeUnit.SECONDS))
+                release.await(5.seconds).shouldBeTrue()
                 completed.incrementAndGet()
                 return TicketWorkloadDisposition.COMPLETED
             }
@@ -289,29 +316,30 @@ internal class TicketHighContentionContractTest {
 
         VirtualThreads.executorService().use { controller ->
             val observerStartedBeforeRelease = controller.submit<Boolean> {
-                check(entered.await(5, TimeUnit.SECONDS))
-                observerStarted.await(250, TimeUnit.MILLISECONDS).also {
+                entered.await(5.seconds).shouldBeTrue()
+                observerStarted.await(250.milliseconds).also {
                     release.countDown()
                 }
             }
-            TicketHighContentionWorkloadEngine(Duration.ofSeconds(5)).run(
-                schedule = burstSchedule(operationCount = 2),
-                warmupOperationCount = 0,
-                warmupNamespace = "ticket:warmup:",
-                measuredNamespace = "ticket:measured:",
-                concurrency = 2,
-                dispatcherBacklogCapacity = 0,
-                maxScheduleDelayNanos = Long.MAX_VALUE,
-                adapter = adapter,
-                faultObserverStartAfterScheduledCount = 2,
-                faultObserverTiming = TicketFaultObserverTiming.WORKLOAD_COMPLETION,
-                faultObserver = {
-                    observerCompletedCount.set(completed.get())
-                    observerStarted.countDown()
-                },
-            )
+            TicketHighContentionWorkloadEngine(5.seconds())
+                .run(
+                    schedule = burstSchedule(operationCount = 2),
+                    warmupOperationCount = 0,
+                    warmupNamespace = "ticket:warmup:",
+                    measuredNamespace = "ticket:measured:",
+                    concurrency = 2,
+                    dispatcherBacklogCapacity = 0,
+                    maxScheduleDelayNanos = Long.MAX_VALUE,
+                    adapter = adapter,
+                    faultObserverStartAfterScheduledCount = 2,
+                    faultObserverTiming = TicketFaultObserverTiming.WORKLOAD_COMPLETION,
+                    faultObserver = {
+                        observerCompletedCount.set(completed.get())
+                        observerStarted.countDown()
+                    },
+                )
 
-            observerStartedBeforeRelease.get(5, TimeUnit.SECONDS).shouldBeFalse()
+            observerStartedBeforeRelease.get(5.seconds).shouldBeFalse()
         }
         observerCompletedCount.get() shouldBeEqualTo 2
     }
@@ -319,7 +347,7 @@ internal class TicketHighContentionContractTest {
     @Test
     fun `overlapping warm-up namespace and invalid realization fail closed`() {
         val schedule = burstSchedule(operationCount = 2)
-        val adapter = object : TicketHighContentionWorkloadAdapter {
+        val adapter = object: TicketHighContentionWorkloadAdapter {
             override fun warmUp(identity: TicketWorkloadIdentity) = Unit
             override fun snapshotBaseline(): String = "baseline"
             override fun execute(
@@ -327,17 +355,19 @@ internal class TicketHighContentionContractTest {
                 identity: TicketWorkloadIdentity,
             ): TicketWorkloadDisposition = TicketWorkloadDisposition.COMPLETED
         }
+
         assertFailsWith<IllegalArgumentException> {
-            TicketHighContentionWorkloadEngine(Duration.ofSeconds(5)).run(
-                schedule = schedule,
-                warmupOperationCount = 1,
-                warmupNamespace = "ticket:shared:",
-                measuredNamespace = "ticket:shared:measured:",
-                concurrency = 1,
-                dispatcherBacklogCapacity = 1,
-                maxScheduleDelayNanos = Long.MAX_VALUE,
-                adapter = adapter,
-            )
+            TicketHighContentionWorkloadEngine(5.seconds())
+                .run(
+                    schedule = schedule,
+                    warmupOperationCount = 1,
+                    warmupNamespace = "ticket:shared:",
+                    measuredNamespace = "ticket:shared:measured:",
+                    concurrency = 1,
+                    dispatcherBacklogCapacity = 1,
+                    maxScheduleDelayNanos = Long.MAX_VALUE,
+                    adapter = adapter,
+                )
         }
 
         val first = TicketWorkloadRecord(
@@ -381,24 +411,30 @@ internal class TicketHighContentionContractTest {
 
         Files.isRegularFile(reportPath).shouldBeTrue()
         assertFailsWith<TicketHighContentionArtifactException> {
-            store.writeTerminalReport("ticket-spring", "burst", report, report.keys, emptyList())
-        }
-        assertFailsWith<IllegalArgumentException> {
             store.writeTerminalReport(
-                "ticket-spring",
-                "slow-provider",
-                report + ("observations" to "raw-ticket-sentinel"),
-                report.keys,
-                listOf("raw-ticket-sentinel"),
+                implementation = "ticket-spring",
+                profileId = "burst",
+                report = report,
+                requiredFields = report.keys,
+                forbiddenPatterns = emptyList()
             )
         }
         assertFailsWith<IllegalArgumentException> {
             store.writeTerminalReport(
-                "ticket-spring",
-                "missing-field",
-                report - "cleanup",
-                report.keys,
-                emptyList(),
+                implementation = "ticket-spring",
+                profileId = "slow-provider",
+                report = report + ("observations" to "raw-ticket-sentinel"),
+                requiredFields = report.keys,
+                forbiddenPatterns = listOf("raw-ticket-sentinel"),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            store.writeTerminalReport(
+                implementation = "ticket-spring",
+                profileId = "missing-field",
+                report = report - "cleanup",
+                requiredFields = report.keys,
+                forbiddenPatterns = emptyList(),
             )
         }
         assertFailsWith<TicketHighContentionArtifactException> {
@@ -408,6 +444,7 @@ internal class TicketHighContentionContractTest {
         val outside = Files.createTempDirectory("ticket-artifact-outside")
         val linkedRoot = trustedRoot.resolve("linked-root")
         Files.createSymbolicLink(linkedRoot, outside)
+
         assertFailsWith<TicketHighContentionArtifactException> {
             TicketHighContentionArtifactStore.create(linkedRoot, "escaped")
         }
@@ -417,6 +454,7 @@ internal class TicketHighContentionContractTest {
     fun `parent-owned Ticket artifact store opens only an existing trusted run root`(@TempDir tempDir: Path) {
         val trustedRoot = tempDir.toRealPath()
         Files.createDirectory(trustedRoot.resolve("parent-run"))
+
         val store = TicketHighContentionArtifactStore.create(
             outputRoot = trustedRoot,
             runId = "parent-run",
@@ -451,6 +489,7 @@ internal class TicketHighContentionContractTest {
         }
 
         val records = TicketHighContentionJournal.read(path)
+            .onEach { log.debug { "record=$it" } }
         records.map(TicketHighContentionJournalRecord::sequence) shouldBeEqualTo listOf(0L, 1L)
         records[1].previousRecordSha256 shouldBeEqualTo records[0].recordSha256
 
@@ -509,13 +548,15 @@ internal class TicketHighContentionContractTest {
     private fun assertNoDockerObjects(runId: String) {
         val docker = DockerClientFactory.instance().client()
         val labels = mapOf(TicketDockerResource.RUN_LABEL to runId)
+
         docker.listContainersCmd()
             .withShowAll(true)
             .withLabelFilter(labels)
-            .exec() shouldBeEqualTo emptyList()
+            .exec().shouldBeEmpty()
+
         docker.listNetworksCmd()
             .withFilter("label", labels.map { (key, value) -> "$key=$value" })
-            .exec() shouldBeEqualTo emptyList()
+            .exec().shouldBeEmpty()
     }
 
     private fun copyContract(target: Path): Path {
@@ -534,21 +575,10 @@ internal class TicketHighContentionContractTest {
     }
 
     private fun contractRoot(): Path =
-        Path.of(requireNotNull(System.getProperty("highContentionContractRoot")) {
-            "highContentionContractRoot must be supplied by Gradle"
-        })
-
-    private companion object {
-        val PROFILE_IDS = listOf(
-            "burst",
-            "duplicate-storm",
-            "redis-path-outage",
-            "redis-key-loss",
-            "slow-provider",
-            "worker-restart",
-            "duplicate-delivery",
+        Path.of(
+            System.getProperty("highContentionContractRoot")
+                .requireNotNull { "highContentionContractRoot must be supplied by Gradle" }
         )
-    }
 }
 
-private class ExpectedTicketCutpointException : RuntimeException()
+private class ExpectedTicketCutpointException: RuntimeException()

@@ -12,7 +12,13 @@ enum class SaleState(val code: String) {
 }
 
 /** sale lifecycle을 위한 명시적인 operator 또는 scheduler command입니다. */
-enum class SaleCommand { SCHEDULE, OPEN, SUSPEND, RESUME, CLOSE }
+enum class SaleCommand {
+    SCHEDULE,
+    OPEN,
+    SUSPEND,
+    RESUME,
+    CLOSE
+}
 
 /** PostgreSQL에 저장되는 안정적인 purchase lifecycle code입니다. */
 enum class PurchaseState(val code: String) {
@@ -30,7 +36,13 @@ enum class PurchaseState(val code: String) {
 }
 
 /** 일치하는 operation이 fenced 상태일 때만 해석되는 provider outcome입니다. */
-enum class PaymentOutcome { APPROVED, DECLINED, UNKNOWN, CANCELLATION_REQUESTED, EXPIRED }
+enum class PaymentOutcome {
+    APPROVED,
+    DECLINED,
+    UNKNOWN,
+    CANCELLATION_REQUESTED,
+    EXPIRED
+}
 
 /** 발급된 ticket이 inventory restock을 허용할 수 있는지에 대한 durable proof입니다. */
 enum class TicketDisposition(val code: String) {
@@ -51,7 +63,11 @@ enum class TicketState(val code: String) {
 }
 
 /** 단일 external ticket effect의 결정적 결과입니다. */
-enum class TicketEffectOutcome { SUCCEEDED, RETRYABLE_FAILURE, RETRY_BUDGET_EXHAUSTED }
+enum class TicketEffectOutcome {
+    SUCCEEDED,
+    RETRYABLE_FAILURE,
+    RETRY_BUDGET_EXHAUSTED
+}
 
 /** purchase transition과 함께 commit해야 하는 inventory 및 guard effect입니다. */
 data class PurchaseTransition(
@@ -60,7 +76,7 @@ data class PurchaseTransition(
     val soldDelta: Int,
     val releaseGuards: Boolean,
     val ticketDisposition: TicketDisposition? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
