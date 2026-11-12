@@ -22,15 +22,19 @@ import org.springframework.stereotype.Repository
 import java.io.Serializable
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-internal enum class IdempotencyStatus { IN_PROGRESS, SUCCEEDED, FAILED }
+internal enum class IdempotencyStatus {
+    IN_PROGRESS,
+    SUCCEEDED,
+    FAILED
+}
 
 internal data class IdempotencyScope(
     val tenantId: String,
     val operation: String,
     val keyHash: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -50,17 +54,18 @@ internal data class IdempotencyRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
 
-internal sealed interface AcquireResult : Serializable {
+internal sealed interface AcquireResult: Serializable {
+
     data class Acquired(
         val record: IdempotencyRecord,
-    ) : AcquireResult {
+    ): AcquireResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -70,17 +75,19 @@ internal sealed interface AcquireResult : Serializable {
         val status: Int,
         val body: String,
         val failed: Boolean,
-    ) : AcquireResult {
+    ): AcquireResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    data object FingerprintConflict : AcquireResult
+    data object FingerprintConflict: AcquireResult {
+        private fun readResolve(): Any = FingerprintConflict
+    }
 
     data class InProgress(
         val retryAfter: Duration,
-    ) : AcquireResult {
+    ): AcquireResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -88,7 +95,13 @@ internal sealed interface AcquireResult : Serializable {
 }
 
 @Repository
-internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable> {
+internal class HttpIdempotencyRepository: LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable> {
+
+    companion object: KLogging() {
+        const val MAX_RESPONSE_BODY = 64 * 1024
+        const val MAX_CLEANUP_BATCH = 1_000
+    }
+
     override val table = HttpIdempotencyTable
 
     override fun extractId(entity: IdempotencyRecord) = entity.id
@@ -123,33 +136,27 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
         require(scope.keyHash.length == 64)
         require(fingerprint.length == 64)
 
-        val inserted =
-            table
-                .insertIgnore {
-                    it[tenantId] = scope.tenantId
-                    it[operation] = scope.operation
-                    it[keyHash] = scope.keyHash
-                    it[requestFingerprint] = fingerprint
-                    it[status] = IdempotencyStatus.IN_PROGRESS
-                    it[HttpIdempotencyTable.ownerToken] = ownerToken
-                    it[leaseUntil] = now.plus(lease)
-                    it[expiresAt] = now.plus(retention)
-                }.insertedCount == 1
+        val inserted = table.insertIgnore {
+            it[tenantId] = scope.tenantId
+            it[operation] = scope.operation
+            it[keyHash] = scope.keyHash
+            it[requestFingerprint] = fingerprint
+            it[status] = IdempotencyStatus.IN_PROGRESS
+            it[HttpIdempotencyTable.ownerToken] = ownerToken
+            it[leaseUntil] = now.plus(lease)
+            it[expiresAt] = now.plus(retention)
+        }.insertedCount == 1
 
         var current = findByScope(scope) ?: error("idempotency record was not persisted")
         if (inserted) {
             log.debug {
-                "idempotency_record_acquired operation=${scope.operation} keyHashPrefix=${scope.keyHash.take(
-                    12
-                )}"
+                "idempotency_record_acquired operation=${scope.operation} keyHashPrefix=${scope.keyHash.take(12)}"
             }
             return AcquireResult.Acquired(current)
         }
         if (current.requestFingerprint != fingerprint) {
             log.warn {
-                "idempotency_record_conflict operation=${scope.operation} keyHashPrefix=${scope.keyHash.take(
-                    12
-                )}"
+                "idempotency_record_conflict operation=${scope.operation} keyHashPrefix=${scope.keyHash.take(12)}"
             }
             return AcquireResult.FingerprintConflict
         }
@@ -164,25 +171,22 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
             return AcquireResult.InProgress(Duration.between(now, current.leaseUntil))
         }
 
-        val reclaimed =
-            auditedUpdateAll(
-                predicate = {
-                    (table.id eq current.id) and
+        val reclaimed = auditedUpdateAll(
+            predicate = {
+                (table.id eq current.id) and
                         (table.status eq IdempotencyStatus.IN_PROGRESS) and
                         (table.ownerToken eq current.ownerToken) and
                         (table.leaseUntil eq current.leaseUntil)
-                }
-            ) {
-                it[HttpIdempotencyTable.ownerToken] = ownerToken
-                it[leaseUntil] = now.plus(lease)
-            } == 1
+            }
+        ) {
+            it[HttpIdempotencyTable.ownerToken] = ownerToken
+            it[leaseUntil] = now.plus(lease)
+        } == 1
 
         current = findByScope(scope) ?: error("idempotency record disappeared")
         return if (reclaimed) {
             log.warn {
-                "idempotency_lease_reclaimed operation=${scope.operation} keyHashPrefix=${scope.keyHash.take(
-                    12
-                )}"
+                "idempotency_lease_reclaimed operation=${scope.operation} keyHashPrefix=${scope.keyHash.take(12)}"
             }
             AcquireResult.Acquired(current)
         } else {
@@ -200,8 +204,8 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
         auditedUpdateAll(
             predicate = {
                 (table.id eq id) and
-                    (table.ownerToken eq ownerToken) and
-                    (table.status eq IdempotencyStatus.IN_PROGRESS)
+                        (table.ownerToken eq ownerToken) and
+                        (table.status eq IdempotencyStatus.IN_PROGRESS)
             }
         ) {
             it[HttpIdempotencyTable.status] = if (failed) IdempotencyStatus.FAILED else IdempotencyStatus.SUCCEEDED
@@ -216,10 +220,10 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
             .selectAll()
             .where {
                 (table.tenantId eq scope.tenantId) and
-                    (table.operation eq scope.operation) and
-                    (table.keyHash eq scope.keyHash)
+                        (table.operation eq scope.operation) and
+                        (table.keyHash eq scope.keyHash)
             }.firstOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
 
     /** recoverable owner는 보존하면서 만료된 terminal response를 bounded batch로 삭제합니다. */
     fun deleteExpiredTerminal(
@@ -231,23 +235,18 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
             table
                 .selectAll()
                 .where {
-                    (
-                        (table.status eq IdempotencyStatus.SUCCEEDED) or
-                            (table.status eq IdempotencyStatus.FAILED)
-                    ) and
-                        (table.expiresAt lessEq now)
+                    ((table.status eq IdempotencyStatus.SUCCEEDED) or (table.status eq IdempotencyStatus.FAILED)) and
+                            (table.expiresAt lessEq now)
                 }.orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
                 .limit(limit)
                 .map { it[table.id] }
+
         if (candidateIds.isEmpty()) return 0
 
-        return table.deleteWhere { table.id inList candidateIds }.also { deleted ->
-            log.debug { "idempotency_terminal_cleanup deleted=$deleted requestedLimit=$limit" }
-        }
+        return table.deleteWhere { table.id inList candidateIds }
+            .also { deleted ->
+                log.debug { "idempotency_terminal_cleanup deleted=$deleted requestedLimit=$limit" }
+            }
     }
 
-    companion object : KLogging() {
-        const val MAX_RESPONSE_BODY = 64 * 1024
-        const val MAX_CLEANUP_BATCH = 1_000
-    }
 }

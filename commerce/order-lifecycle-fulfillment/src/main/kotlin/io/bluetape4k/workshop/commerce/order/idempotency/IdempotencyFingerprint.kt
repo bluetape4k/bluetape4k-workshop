@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.commerce.order.idempotency
 
-import java.nio.charset.StandardCharsets
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import java.security.MessageDigest
 
-internal object IdempotencyFingerprint {
+internal object IdempotencyFingerprint: KLogging() {
+
     fun key(rawKey: String): String = sha256(rawKey)
 
     fun request(lines: Map<String, Int>): String =
@@ -14,6 +16,6 @@ internal object IdempotencyFingerprint {
     private fun sha256(value: String): String =
         MessageDigest
             .getInstance("SHA-256")
-            .digest(value.toByteArray(StandardCharsets.UTF_8))
+            .digest(value.toUtf8Bytes())
             .joinToString("") { byte -> "%02x".format(byte) }
 }

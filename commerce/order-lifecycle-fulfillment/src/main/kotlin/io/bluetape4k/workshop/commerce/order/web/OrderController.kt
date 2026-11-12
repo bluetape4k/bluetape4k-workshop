@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.io.Serializable
-import java.util.UUID
+import java.util.*
 
 internal data class AdvanceFulfillmentRequest(
     val target: FulfillmentStatus,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -35,7 +35,7 @@ internal data class AdvanceFulfillmentRequest(
 internal data class CancelLineRequest(
     val quantity: Int,
     val reasonCode: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -51,6 +51,12 @@ internal class OrderController(
     private val reconciliation: PublicationReconciliationService,
     private val paymentEvents: PaymentEventService,
 ) {
+
+    companion object: KLogging() {
+        const val WORKSHOP_OPERATOR_HEADER = "X-Workshop-Operator"
+        const val WORKSHOP_OPERATOR_VALUE = "local-console"
+    }
+
     @PostMapping(
         "/orders",
         consumes = [MediaType.APPLICATION_JSON_VALUE],
@@ -63,14 +69,14 @@ internal class OrderController(
         val result = submissions.submit(idempotencyKey, request)
         log.debug {
             "http_order_submit status=${result.status.value()} replayed=${result.replayed} " +
-                "providerMode=${request.providerMode} lineCount=${request.lines.size}"
+                    "providerMode=${request.providerMode} lineCount=${request.lines.size}"
         }
-        val response =
-            ResponseEntity
-                .status(result.status)
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Idempotency-Replayed", result.replayed.toString())
+        val response = ResponseEntity
+            .status(result.status)
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("Idempotency-Replayed", result.replayed.toString())
         result.retryAfterSeconds?.let { response.header(HttpHeaders.RETRY_AFTER, it.toString()) }
+
         return response.body(result.body)
     }
 
@@ -87,6 +93,7 @@ internal class OrderController(
     ): ResponseEntity<Void> {
         val snapshot = queries.snapshot(orderId)
         check(snapshot.fulfillments.any { it.id == groupId }) { "fulfillment group does not belong to order" }
+
         return if (commands.advanceFulfillment(groupId, request.target)) {
             ResponseEntity.noContent().build()
         } else {
@@ -114,6 +121,7 @@ internal class OrderController(
     ): ResponseEntity<Map<String, Int>> {
         requireWorkshopOperator(operatorGuard)
         val result = reconciliation.replayFailed(batchSize)
+
         return ResponseEntity.accepted().body(mapOf("requested" to result.requested))
     }
 
@@ -124,15 +132,11 @@ internal class OrderController(
     ): ResponseEntity<Map<String, String>> {
         requireWorkshopOperator(operatorGuard)
         val disposition = paymentEvents.reconcileDelayedSuccess(paymentAttemptId)
+
         return ResponseEntity.accepted().body(mapOf("disposition" to disposition.name))
     }
 
     private fun requireWorkshopOperator(operatorGuard: String?) {
         require(operatorGuard == WORKSHOP_OPERATOR_VALUE) { "invalid workshop operator guard" }
-    }
-
-    companion object : KLogging() {
-        const val WORKSHOP_OPERATOR_HEADER = "X-Workshop-Operator"
-        const val WORKSHOP_OPERATOR_VALUE = "local-console"
     }
 }
