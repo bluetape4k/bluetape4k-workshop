@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedRebuildManagementService
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.RebuildGenerationRequest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.RebuildManagementResult
@@ -40,20 +41,25 @@ internal data class RebuildHttpResponse(
 internal class EventSourcedRebuildController(
     private val service: EventSourcedRebuildManagementService,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping
     fun start(
         @PathVariable projection: String,
         @RequestHeader headers: HttpHeaders,
         @Valid @RequestBody body: StartRebuildHttpRequest,
     ): ResponseEntity<Any> =
-        service.start(
-            StartRebuildRequest(
-                identity = headers.operatorIdentity(),
-                projection = projection,
-                targetPosition = body.targetPosition,
-                expectedToken = headers.expectedGenerationToken(),
-            ),
-        ).toResponse(HttpStatus.ACCEPTED)
+        service
+            .start(
+                request = StartRebuildRequest(
+                    identity = headers.operatorIdentity(),
+                    projection = projection,
+                    targetPosition = body.targetPosition,
+                    expectedToken = headers.expectedGenerationToken(),
+                ),
+            )
+            .toResponse(HttpStatus.ACCEPTED)
 
     @GetMapping("/{generation}")
     fun status(
@@ -61,9 +67,9 @@ internal class EventSourcedRebuildController(
         @PathVariable generation: Long,
         @RequestHeader headers: HttpHeaders,
     ): ResponseEntity<Any> =
-        service.status(
-            headers.generationRequest(projection, generation),
-        ).toResponse(HttpStatus.OK)
+        service
+            .status(headers.generationRequest(projection, generation))
+            .toResponse(HttpStatus.OK)
 
     @PostMapping("/{generation}/cancel")
     fun cancel(
@@ -71,9 +77,9 @@ internal class EventSourcedRebuildController(
         @PathVariable generation: Long,
         @RequestHeader headers: HttpHeaders,
     ): ResponseEntity<Any> =
-        service.cancel(
-            headers.generationRequest(projection, generation),
-        ).toResponse(HttpStatus.OK)
+        service
+            .cancel(headers.generationRequest(projection, generation))
+            .toResponse(HttpStatus.OK)
 
     @PostMapping("/{generation}/resume")
     fun resume(
@@ -81,9 +87,9 @@ internal class EventSourcedRebuildController(
         @PathVariable generation: Long,
         @RequestHeader headers: HttpHeaders,
     ): ResponseEntity<Any> =
-        service.resume(
-            headers.generationRequest(projection, generation),
-        ).toResponse(HttpStatus.OK)
+        service
+            .resume(headers.generationRequest(projection, generation))
+            .toResponse(HttpStatus.OK)
 }
 
 private fun HttpHeaders.generationRequest(
@@ -91,9 +97,9 @@ private fun HttpHeaders.generationRequest(
     generation: Long,
 ): RebuildGenerationRequest =
     RebuildGenerationRequest(
-        operatorIdentity(),
-        ProjectionKey(projection, generation),
-        expectedGenerationToken(),
+        identity = operatorIdentity(),
+        key = ProjectionKey(projection, generation),
+        expectedToken = expectedGenerationToken(),
     )
 
 private fun RebuildManagementResult.toResponse(successStatus: HttpStatus): ResponseEntity<Any> =
@@ -102,14 +108,17 @@ private fun RebuildManagementResult.toResponse(successStatus: HttpStatus): Respo
             ResponseEntity.status(successStatus)
                 .header("X-Idempotent-Replay", replayed.toString())
                 .body(generation.toHttp(replayed))
+
         is RebuildManagementResult.StaleToken ->
             ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
                 .header(EXPECTED_GENERATION_TOKEN_HEADER, currentToken.toString())
                 .body(EventSourcedApiError("STALE_GENERATION_TOKEN", "generation token is stale"))
+
         is RebuildManagementResult.Conflict ->
             ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(EventSourcedApiError(reason, "rebuild conflicts with current state"))
-        RebuildManagementResult.NotFound -> ResponseEntity.notFound().build()
+
+        RebuildManagementResult.NotFound    -> ResponseEntity.notFound().build()
     }
 
 private fun ProjectionGeneration.toHttp(replayed: Boolean): RebuildHttpResponse =

@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
@@ -19,8 +21,8 @@ import java.util.concurrent.locks.LockSupport
 private const val CAMPAIGN_PROJECTION = "voucher-lifecycle"
 private const val MAX_CONSISTENCY_WAIT_SECONDS = 5L
 private const val CONSISTENCY_POLL_INTERVAL_MILLIS = 25L
-private val MAX_CONSISTENCY_WAIT: Duration = Duration.ofSeconds(MAX_CONSISTENCY_WAIT_SECONDS)
-private val CONSISTENCY_POLL_INTERVAL: Duration = Duration.ofMillis(CONSISTENCY_POLL_INTERVAL_MILLIS)
+private val MAX_CONSISTENCY_WAIT: Duration = MAX_CONSISTENCY_WAIT_SECONDS.seconds()
+private val CONSISTENCY_POLL_INTERVAL: Duration = CONSISTENCY_POLL_INTERVAL_MILLIS.millis()
 
 internal data class CampaignProjectionSnapshot(
     val campaign: CampaignProjectionReadModel?,
@@ -38,9 +40,13 @@ internal class ExposedCampaignProjectionSnapshotReader(
     database: Database,
     permits: EventSourcedDatabasePermitGate,
     private val repository: ProjectionRepository,
-) : CampaignProjectionSnapshotReader {
-    private val transactions =
-        EventSourcedPermitTransactionRunner(database, permits, EventSourcedDatabaseLane.FOREGROUND)
+): CampaignProjectionSnapshotReader {
+
+    private val transactions = EventSourcedPermitTransactionRunner(
+        database = database,
+        permits = permits,
+        lane = EventSourcedDatabaseLane.FOREGROUND
+    )
 
     override fun read(
         tenantId: TenantId,
@@ -50,14 +56,14 @@ internal class ExposedCampaignProjectionSnapshotReader(
             val active = findActive(CAMPAIGN_PROJECTION)
             val key = active?.let { ProjectionKey(it.projection, it.generation) }
             val projectionPosition = key?.let(repository::checkpoint)?.position ?: 0L
-            val streamPosition =
-                EventLog
-                    .selectAll()
-                    .orderBy(EventLog.globalPosition to SortOrder.DESC)
-                    .limit(1)
-                    .singleOrNull()
-                    ?.get(EventLog.globalPosition)
-                    ?: 0L
+            val streamPosition = EventLog
+                .selectAll()
+                .orderBy(EventLog.globalPosition to SortOrder.DESC)
+                .limit(1)
+                .singleOrNull()
+                ?.get(EventLog.globalPosition)
+                ?: 0L
+
             CampaignProjectionSnapshot(
                 campaign = key?.let { repository.campaign(it, tenantId, campaignId) },
                 positions = ProjectionPositions(streamPosition, projectionPosition),
@@ -74,7 +80,7 @@ internal class WaitingCampaignProjectionQuery(
     private val clock: Clock = Clock.systemUTC(),
     private val nanoTime: () -> Long = System::nanoTime,
     private val waiter: CampaignProjectionWaiter = PARKING_WAITER,
-) : CampaignProjectionQuery {
+): CampaignProjectionQuery {
     override fun campaign(request: CampaignProjectionRequest): CampaignProjectionResult {
         val startedAt = nanoTime()
         var snapshot = snapshots.read(TenantId(request.tenant), request.campaignId)
@@ -91,15 +97,14 @@ internal class WaitingCampaignProjectionQuery(
         when {
             isBefore(minimumPosition) -> CampaignProjectionResult.Pending(positions)
             campaign == null -> CampaignProjectionResult.NotFound
-            else -> CampaignProjectionResult.Fresh(campaign.toHttp(clock), positions)
+            else             -> CampaignProjectionResult.Fresh(campaign.toHttp(clock), positions)
         }
 
     private companion object {
-        val PARKING_WAITER =
-            CampaignProjectionWaiter {
-                LockSupport.parkNanos(CONSISTENCY_POLL_INTERVAL.toNanos())
-                !Thread.currentThread().isInterrupted
-            }
+        val PARKING_WAITER = CampaignProjectionWaiter {
+            LockSupport.parkNanos(CONSISTENCY_POLL_INTERVAL.toNanos())
+            !Thread.currentThread().isInterrupted
+        }
     }
 }
 

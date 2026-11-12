@@ -10,11 +10,10 @@ internal fun String.validCommandIdentity(name: String): String = requireNotBlank
 
 internal fun String.validIdempotencyKey(): String {
     val validKey = requireNotBlank("Idempotency-Key")
-    val validLength =
-        validKey.length.requireInRange(
-            MIN_IDEMPOTENCY_KEY_LENGTH,
-            MAX_IDEMPOTENCY_KEY_LENGTH,
-            "Idempotency-Key.length",
-        )
+    val validLength = validKey.length.requireInRange(
+        MIN_IDEMPOTENCY_KEY_LENGTH,
+        MAX_IDEMPOTENCY_KEY_LENGTH,
+        "Idempotency-Key.length",
+    )
     return validKey.take(validLength)
 }

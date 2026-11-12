@@ -2,16 +2,21 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
-import org.junit.jupiter.api.Tag
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.util.UUID
+import java.util.*
 
-@Tag("stress")
 internal class EventSourcedPerformancePolicyTest {
+
+    companion object: KLogging()
 
     @Test
     fun `runtime budgets preserve replay projection rebuild and maintenance boundaries`() {
@@ -19,56 +24,52 @@ internal class EventSourcedPerformancePolicyTest {
 
         budget.snapshotEveryEvents shouldBeEqualTo 250
         budget.maxReplayEvents shouldBeEqualTo 10_000
-        budget.maxReplayDuration shouldBeEqualTo Duration.ofSeconds(2)
+        budget.maxReplayDuration shouldBeEqualTo 2.seconds()
         budget.projectionBatchEvents shouldBeEqualTo 200
         budget.projectionBatchBytes shouldBeEqualTo 2 * 1024 * 1024
-        budget.projectionTransactionTimeout shouldBeEqualTo Duration.ofSeconds(2)
+        budget.projectionTransactionTimeout shouldBeEqualTo 2.seconds()
         budget.rebuildBatchEvents shouldBeEqualTo 200
         budget.rebuildMaxEvents shouldBeEqualTo 100_000
-        budget.rebuildMaxDuration shouldBeEqualTo Duration.ofMinutes(10)
+        budget.rebuildMaxDuration shouldBeEqualTo 10.minutes()
         budget.maintenanceQueueCapacity shouldBeEqualTo 64
         budget.maintenanceBatchRows shouldBeEqualTo 100
         budget.maintenanceBatchBytes shouldBeEqualTo 2 * 1024 * 1024
-        budget.maintenanceTransactionTimeout shouldBeEqualTo Duration.ofSeconds(2)
-        budget.maintenanceMinBackoff shouldBeEqualTo Duration.ofMillis(100)
-        budget.maintenanceMaxBackoff shouldBeEqualTo Duration.ofSeconds(5)
+        budget.maintenanceTransactionTimeout shouldBeEqualTo 2.seconds()
+        budget.maintenanceMinBackoff shouldBeEqualTo 100.millis()
+        budget.maintenanceMaxBackoff shouldBeEqualTo 5.seconds()
     }
 
     @Test
     fun `rebuild throttle reacts only at lag or foreground saturation boundaries`() {
         val budget = EventSourcedRuntimeBudget()
 
-        budget.shouldThrottleRebuild(lagEvents = 9_999, foregroundActive = 11, foregroundCapacity = 14)
-            .shouldBeFalse()
-        budget.shouldThrottleRebuild(lagEvents = 10_000, foregroundActive = 11, foregroundCapacity = 14)
-            .shouldBeTrue()
-        budget.shouldThrottleRebuild(lagEvents = 0, foregroundActive = 12, foregroundCapacity = 14)
-            .shouldBeTrue()
+        budget.shouldThrottleRebuild(lagEvents = 9_999, foregroundActive = 11, foregroundCapacity = 14).shouldBeFalse()
+        budget.shouldThrottleRebuild(lagEvents = 10_000, foregroundActive = 11, foregroundCapacity = 14).shouldBeTrue()
+        budget.shouldThrottleRebuild(lagEvents = 0, foregroundActive = 12, foregroundCapacity = 14).shouldBeTrue()
     }
 
     @Test
     fun `normal and exceeded replay projection rebuild and maintenance budgets stay distinct`() {
         val budget = EventSourcedRuntimeBudget()
 
-        budget.acceptsReplay(10_000, Duration.ofSeconds(2)).shouldBeTrue()
-        budget.acceptsReplay(10_001, Duration.ofSeconds(2)).shouldBeFalse()
-        budget.acceptsReplay(10_000, Duration.ofSeconds(2).plusNanos(1)).shouldBeFalse()
+        budget.acceptsReplay(10_000, 2.seconds()).shouldBeTrue()
+        budget.acceptsReplay(10_001, 2.seconds()).shouldBeFalse()
+        budget.acceptsReplay(10_000, 2.seconds() + 1.nanos()).shouldBeFalse()
 
-        budget.acceptsProjectionBatch(200, 2 * 1024 * 1024, Duration.ofSeconds(2)).shouldBeTrue()
-        budget.acceptsProjectionBatch(201, 2 * 1024 * 1024, Duration.ofSeconds(2)).shouldBeFalse()
-        budget.acceptsProjectionBatch(200, 2 * 1024 * 1024 + 1, Duration.ofSeconds(2)).shouldBeFalse()
+        budget.acceptsProjectionBatch(200, 2 * 1024 * 1024, 2.seconds()).shouldBeTrue()
+        budget.acceptsProjectionBatch(201, 2 * 1024 * 1024, 2.seconds()).shouldBeFalse()
+        budget.acceptsProjectionBatch(200, 2 * 1024 * 1024 + 1, 2.seconds()).shouldBeFalse()
 
-        budget.acceptsRebuild(100_000, Duration.ofMinutes(10)).shouldBeTrue()
-        budget.acceptsRebuild(100_001, Duration.ofMinutes(10)).shouldBeFalse()
-        budget.acceptsRebuild(100_000, Duration.ofMinutes(10).plusNanos(1)).shouldBeFalse()
+        budget.acceptsRebuild(100_000, 10.minutes()).shouldBeTrue()
+        budget.acceptsRebuild(100_001, 10.minutes()).shouldBeFalse()
+        budget.acceptsRebuild(100_000, 10.minutes() + 1.nanos()).shouldBeFalse()
 
-        budget.acceptsMaintenanceBatch(100, 2 * 1024 * 1024, Duration.ofSeconds(2)).shouldBeTrue()
-        budget.acceptsMaintenanceBatch(101, 2 * 1024 * 1024, Duration.ofSeconds(2)).shouldBeFalse()
-        budget.acceptsMaintenanceBatch(100, 2 * 1024 * 1024, Duration.ofSeconds(2).plusNanos(1))
-            .shouldBeFalse()
+        budget.acceptsMaintenanceBatch(100, 2 * 1024 * 1024, 2.seconds()).shouldBeTrue()
+        budget.acceptsMaintenanceBatch(101, 2 * 1024 * 1024, 2.seconds()).shouldBeFalse()
+        budget.acceptsMaintenanceBatch(100, 2 * 1024 * 1024, 2.seconds() + 1.nanos()).shouldBeFalse()
 
-        budget.maintenanceBackoff(0) shouldBeEqualTo Duration.ofMillis(100)
-        budget.maintenanceBackoff(20) shouldBeEqualTo Duration.ofSeconds(5)
+        budget.maintenanceBackoff(0) shouldBeEqualTo 100.millis()
+        budget.maintenanceBackoff(20) shouldBeEqualTo 5.seconds()
     }
 
     @Test
@@ -85,7 +86,7 @@ internal class EventSourcedPerformancePolicyTest {
 
         queue.poll() shouldBeEqualTo SnapshotMaintenanceRequest(first, 500)
         queue.poll() shouldBeEqualTo SnapshotMaintenanceRequest(second, 250)
-        queue.poll() shouldBeEqualTo null
+        queue.poll().shouldBeNull()
     }
 
     @Test
@@ -93,7 +94,7 @@ internal class EventSourcedPerformancePolicyTest {
         val queue = SnapshotMaintenanceQueue()
         repeat(64) { index ->
             queue.offer(SnapshotMaintenanceRequest(stream(), (index + 1).toLong())) shouldBeEqualTo
-                MaintenanceOffer.ENQUEUED
+                    MaintenanceOffer.ENQUEUED
         }
         queue.size() shouldBeEqualTo 64
         queue.offer(SnapshotMaintenanceRequest(stream(), 1)) shouldBeEqualTo MaintenanceOffer.REJECTED
@@ -108,5 +109,9 @@ internal class EventSourcedPerformancePolicyTest {
         gate.snapshot(EventSourcedDatabaseLane.READINESS).available shouldBeEqualTo 1
     }
 
-    private fun stream(): StreamKey = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
+    private fun stream(): StreamKey = StreamKey(
+        tenantId = TenantId("tenant-a"),
+        streamType = "campaign",
+        streamId = UUID.randomUUID()
+    )
 }

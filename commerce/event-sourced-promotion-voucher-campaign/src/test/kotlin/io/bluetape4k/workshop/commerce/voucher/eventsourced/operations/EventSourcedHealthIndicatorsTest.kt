@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
 import org.junit.jupiter.api.Test
 import org.springframework.boot.health.contributor.Status
 
 internal class EventSourcedHealthIndicatorsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `startup authority failure and shutdown alone refuse readiness`() {
@@ -13,10 +17,13 @@ internal class EventSourcedHealthIndicatorsTest {
         val readiness = EventSourcedReadinessHealthIndicator(state)
 
         readiness.health().status shouldBeEqualTo Status.OUT_OF_SERVICE
+
         state.markReady()
         readiness.health().status shouldBeEqualTo Status.UP
+
         state.markAuthorityFailure()
         readiness.health().status shouldBeEqualTo Status.DOWN
+
         state.beginShutdown()
         readiness.health().status shouldBeEqualTo Status.OUT_OF_SERVICE
     }
@@ -32,11 +39,13 @@ internal class EventSourcedHealthIndicatorsTest {
         state.degradeAggregate()
         aggregate.health().status shouldBeEqualTo EVENT_SOURCED_DEGRADED_STATUS
         readiness.health().status shouldBeEqualTo Status.UP
+
         state.projectionHealth(degraded = true, rebuildState = ProjectionGenerationState.FAILED)
         projection.health().status shouldBeEqualTo EVENT_SOURCED_DEGRADED_STATUS
         readiness.health().status shouldBeEqualTo Status.UP
 
         ProjectionGenerationState.entries.forEach { rebuildState ->
+            log.debug { "rebuildState=$rebuildState" }
             state.rebuildState(rebuildState)
             projection.health().details["rebuildState"] shouldBeEqualTo rebuildState.name
             readiness.health().status shouldBeEqualTo Status.UP

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal const val TENANT_HEADER = "X-Workshop-Tenant"
 internal const val PRINCIPAL_HEADER = "X-Workshop-Principal"
@@ -67,13 +67,13 @@ internal sealed interface CampaignProjectionResult {
     data class Fresh(
         val campaign: CampaignHttpResponse,
         val positions: ProjectionPositions,
-    ) : CampaignProjectionResult
+    ): CampaignProjectionResult
 
     data class Pending(
         val positions: ProjectionPositions,
-    ) : CampaignProjectionResult
+    ): CampaignProjectionResult
 
-    data object NotFound : CampaignProjectionResult
+    data object NotFound: CampaignProjectionResult
 }
 
 internal fun interface CampaignProjectionQuery {
@@ -93,21 +93,17 @@ internal class EventSourcedCampaignQueryController(
         @RequestHeader(PRINCIPAL_HEADER, required = false) principalHeader: String?,
         @RequestHeader(MIN_STREAM_POSITION_HEADER, required = false) minimumStreamPositionHeader: String?,
     ): ResponseEntity<Any> {
-        val tenant =
-            tenantHeader.requireNotNull(TENANT_HEADER)
-                .requireNotBlank(TENANT_HEADER)
-        val principal =
-            principalHeader.requireNotNull(PRINCIPAL_HEADER)
-                .requireNotBlank(PRINCIPAL_HEADER)
-        val result =
-            queries.campaign(
-                CampaignProjectionRequest(
-                    tenant = tenant,
-                    principal = principal,
-                    campaignId = campaignId,
-                    minimumStreamPosition = minimumStreamPositionHeader.toMinimumStreamPosition(),
-                ),
-            )
+        val tenant = tenantHeader.requireNotBlank(TENANT_HEADER)
+        val principal = principalHeader.requireNotBlank(PRINCIPAL_HEADER)
+
+        val result = queries.campaign(
+            CampaignProjectionRequest(
+                tenant = tenant,
+                principal = principal,
+                campaignId = campaignId,
+                minimumStreamPosition = minimumStreamPositionHeader.toMinimumStreamPosition(),
+            ),
+        )
         return result.toResponse()
     }
 }

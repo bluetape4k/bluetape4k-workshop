@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionPoisonEvents
@@ -12,10 +14,10 @@ import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class ProjectionPoisonStore {
     fun recordFailure(
@@ -24,25 +26,25 @@ internal class ProjectionPoisonStore {
         reasonClass: String,
         now: Instant,
     ): ProjectionPoisonRecord {
-        val inserted =
-            ProjectionPoisonEvents.insertIgnore { row ->
-                row[ProjectionPoisonEvents.projection] = key.projection
-                row[ProjectionPoisonEvents.generation] = key.generation
-                row[ProjectionPoisonEvents.eventId] = event.eventId
-                row[ProjectionPoisonEvents.globalPosition] = event.globalPosition
-                row[ProjectionPoisonEvents.eventType] = event.eventType
-                row[ProjectionPoisonEvents.reasonClass] = reasonClass
-                row[ProjectionPoisonEvents.attempts] = FIRST_POISON_ATTEMPT
-                row[ProjectionPoisonEvents.state] = ProjectionPoisonState.FAILED
-                row[ProjectionPoisonEvents.nextRetryAt] = nextRetryAt(now, FIRST_POISON_ATTEMPT)
-                row[ProjectionPoisonEvents.resolvedAt] = null
-                row[ProjectionPoisonEvents.occurredAt] = now
-                row[ProjectionPoisonEvents.updatedAt] = now
-            }.insertedCount == 1
+        val inserted = ProjectionPoisonEvents.insertIgnore { row ->
+            row[ProjectionPoisonEvents.projection] = key.projection
+            row[ProjectionPoisonEvents.generation] = key.generation
+            row[ProjectionPoisonEvents.eventId] = event.eventId
+            row[ProjectionPoisonEvents.globalPosition] = event.globalPosition
+            row[ProjectionPoisonEvents.eventType] = event.eventType
+            row[ProjectionPoisonEvents.reasonClass] = reasonClass
+            row[ProjectionPoisonEvents.attempts] = FIRST_POISON_ATTEMPT
+            row[ProjectionPoisonEvents.state] = ProjectionPoisonState.FAILED
+            row[ProjectionPoisonEvents.nextRetryAt] = nextRetryAt(now, FIRST_POISON_ATTEMPT)
+            row[ProjectionPoisonEvents.resolvedAt] = null
+            row[ProjectionPoisonEvents.occurredAt] = now
+            row[ProjectionPoisonEvents.updatedAt] = now
+        }.insertedCount == 1
+
         if (!inserted) {
             incrementFailure(key, event.eventId, reasonClass, now)
         }
-        return checkNotNull(find(key, event.eventId)) { "poison event was not persisted" }
+        return find(key, event.eventId).checkNotNull { "poison event was not persisted" }
     }
 
     fun find(
@@ -53,7 +55,7 @@ internal class ProjectionPoisonStore {
             .selectAll()
             .where {
                 poisonKey(key) and
-                    (ProjectionPoisonEvents.eventId eq eventId)
+                        (ProjectionPoisonEvents.eventId eq eventId)
             }.singleOrNull()
             ?.let(::toPoisonRecord)
 
@@ -62,21 +64,19 @@ internal class ProjectionPoisonStore {
         eventId: UUID,
         now: Instant,
     ) {
-        check(
-            ProjectionPoisonEvents.update(
-                where = {
-                    poisonKey(key) and
+        val updated = ProjectionPoisonEvents.update(
+            where = {
+                poisonKey(key) and
                         (ProjectionPoisonEvents.eventId eq eventId) and
                         (ProjectionPoisonEvents.state eq ProjectionPoisonState.FAILED)
-                },
-            ) { row ->
-                row[ProjectionPoisonEvents.state] = ProjectionPoisonState.RESOLVED
-                row[ProjectionPoisonEvents.resolvedAt] = now
-                row[ProjectionPoisonEvents.updatedAt] = now
-            } == 1,
-        ) {
-            "poison event resolution lost its state fence"
-        }
+            },
+        ) { row ->
+            row[ProjectionPoisonEvents.state] = ProjectionPoisonState.RESOLVED
+            row[ProjectionPoisonEvents.resolvedAt] = now
+            row[ProjectionPoisonEvents.updatedAt] = now
+        } == 1
+
+        check(updated) { "poison event resolution lost its state fence" }
     }
 
     fun failedCountsByReasonClass(
@@ -85,6 +85,7 @@ internal class ProjectionPoisonStore {
     ): Map<String, Long> {
         if (generations.isEmpty()) return emptyMap()
         val failedCount = ProjectionPoisonEvents.id.count()
+
         return ProjectionPoisonEvents
             .select(ProjectionPoisonEvents.reasonClass, failedCount)
             .where { ProjectionPoisonEvents.projection eq projection }
@@ -102,18 +103,20 @@ internal class ProjectionPoisonStore {
         reasonClass: String,
         now: Instant,
     ) {
-        val current = checkNotNull(find(key, eventId)) { "poison event disappeared" }
+        val current = find(key, eventId).checkNotNull { "poison event disappeared" }
+
         if (current.state != ProjectionPoisonState.FAILED ||
             current.attempts >= MAX_PROJECTION_POISON_ATTEMPTS
         ) {
             return
         }
         val nextAttempt = current.attempts + 1
+
         ProjectionPoisonEvents.update(
             where = {
                 poisonKey(key) and
-                    (ProjectionPoisonEvents.eventId eq eventId) and
-                    (ProjectionPoisonEvents.attempts eq current.attempts)
+                        (ProjectionPoisonEvents.eventId eq eventId) and
+                        (ProjectionPoisonEvents.attempts eq current.attempts)
             },
         ) { row ->
             row[ProjectionPoisonEvents.attempts] = nextAttempt
@@ -130,11 +133,11 @@ internal class ProjectionPoisonStatusQuery(
     fun failedCountsByReasonClass(projection: String): Map<String, Long> {
         TransactionManager.current()
         val validProjection = projection.requireNotBlank("projection")
-        val generations =
-            listOfNotNull(
-                findActive(validProjection)?.generation,
-                findInProgressGeneration(validProjection)?.key?.generation,
-            ).distinct()
+        val generations = listOfNotNull(
+            findActive(validProjection)?.generation,
+            findInProgressGeneration(validProjection)?.key?.generation,
+        ).distinct()
+
         return poisons.failedCountsByReasonClass(validProjection, generations)
     }
 }
@@ -147,12 +150,12 @@ private fun nextRetryAt(
     attempt: Int,
 ): Instant {
     val delaySeconds = (1L shl (attempt - 1)).coerceAtMost(MAX_POISON_RETRY_BACKOFF_SECONDS)
-    return now.plusSeconds(delaySeconds)
+    return now + delaySeconds.seconds()
 }
 
 private fun poisonKey(key: ProjectionKey) =
     (ProjectionPoisonEvents.projection eq key.projection) and
-        (ProjectionPoisonEvents.generation eq key.generation)
+            (ProjectionPoisonEvents.generation eq key.generation)
 
 private fun toPoisonRecord(row: ResultRow): ProjectionPoisonRecord =
     ProjectionPoisonRecord(

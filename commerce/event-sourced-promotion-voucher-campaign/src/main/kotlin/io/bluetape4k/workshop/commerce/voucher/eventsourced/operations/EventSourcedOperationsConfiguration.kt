@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.jdbc.sql.singleString
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.micrometer.core.instrument.MeterRegistry
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
@@ -12,8 +15,11 @@ import javax.sql.DataSource
 @Configuration(proxyBeanMethods = false)
 internal class EventSourcedOperationsConfiguration {
 
+    companion object: KLogging()
+
     @Bean
-    fun eventSourcedMetrics(registry: MeterRegistry): EventSourcedMetrics = EventSourcedMetrics(registry)
+    fun eventSourcedMetrics(registry: MeterRegistry): EventSourcedMetrics =
+        EventSourcedMetrics(registry)
 
     @Bean
     fun eventSourcedDatabasePermitGate(metrics: EventSourcedMetrics): EventSourcedDatabasePermitGate =
@@ -24,7 +30,7 @@ internal class EventSourcedOperationsConfiguration {
         metrics: EventSourcedMetrics,
         dataSource: DataSource,
     ): EventSourcedHikariMetricsBinding {
-        val hikari = checkNotNull(dataSource as? HikariDataSource) { "event-sourced datasource must use HikariCP" }
+        val hikari = (dataSource as? HikariDataSource).checkNotNull { "event-sourced datasource must use HikariCP" }
         metrics.bind(hikari)
         return EventSourcedHikariMetricsBinding
     }
@@ -35,21 +41,19 @@ internal class EventSourcedOperationsConfiguration {
         permits: EventSourcedDatabasePermitGate,
     ): EventSourcedStartupProbe =
         EventSourcedPermitTransactionRunner(
-            registration.database,
-            permits,
-            EventSourcedDatabaseLane.READINESS,
+            database = registration.database,
+            permits = permits,
+            lane = EventSourcedDatabaseLane.READINESS,
         ).let { transactions ->
             EventSourcedStartupProbe {
                 transactions.inTransaction {
                     val transaction = TransactionManager.current()
                     transaction.exec("SELECT 1")
-                    val authorityAvailable =
-                        transaction.exec("SELECT to_regclass('voucher_event_log')") { result ->
-                            result.next() && result.getString(1) != null
+                    val authorityAvailable = transaction
+                        .exec("SELECT to_regclass('voucher_event_log')") { result ->
+                            result.singleString() != null
                         } ?: false
-                    check(authorityAvailable) {
-                        "voucher_event_log schema is unavailable"
-                    }
+                    check(authorityAvailable) { "voucher_event_log schema is unavailable" }
                 }
             }
         }

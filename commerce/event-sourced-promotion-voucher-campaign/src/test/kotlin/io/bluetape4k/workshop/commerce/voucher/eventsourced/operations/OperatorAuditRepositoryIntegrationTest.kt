@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
@@ -19,15 +21,20 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Instant
 
-@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class OperatorAuditRepositoryIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    private companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+
+        private const val PROJECTION = "voucher-lifecycle"
+        private val NOW = Instant.parse("2026-07-23T14:00:00Z")
+    }
+
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private val rebuilds = ProjectionRebuildRepository()
@@ -38,16 +45,15 @@ internal class OperatorAuditRepositoryIntegrationTest {
     fun connectPostgres() {
         postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-operator-audit")
         database = postgresDatabase.database
-        operator =
-            EventSourcedRebuildOperator(
-                EventSourcedPermitTransactionRunner(
-                    database,
-                    EventSourcedDatabasePermitGate(),
-                    EventSourcedDatabaseLane.FOREGROUND,
-                ),
-                rebuilds,
-                audits,
-            )
+        operator = EventSourcedRebuildOperator(
+            EventSourcedPermitTransactionRunner(
+                database,
+                EventSourcedDatabasePermitGate(),
+                EventSourcedDatabaseLane.FOREGROUND,
+            ),
+            rebuilds,
+            audits,
+        )
     }
 
     @AfterAll
@@ -69,13 +75,16 @@ internal class OperatorAuditRepositoryIntegrationTest {
 
     @Test
     fun `duplicate audit insertion rolls back its rebuild cancellation mutation`() {
-        val candidate =
-            transaction(database) {
-                rebuilds.initializeActive(PROJECTION, NOW)
-                rebuilds.start(PROJECTION, targetPosition = 1, now = NOW)
-            }
+        val candidate = transaction(database) {
+            rebuilds.initializeActive(PROJECTION, NOW)
+            rebuilds.start(PROJECTION, targetPosition = 1, now = NOW)
+        }
+        log.debug { "candidate=$candidate" }
+
         val audit = audit(candidate.key.generation)
-        transaction(database) { audits.append(audit) }
+        transaction(database) {
+            audits.append(audit)
+        }
 
         assertFailsWith<Exception> {
             operator.cancel(cancellation(candidate.key.generation))
@@ -86,22 +95,23 @@ internal class OperatorAuditRepositoryIntegrationTest {
                 .selectAll()
                 .where { ProjectionGenerations.generation eq candidate.key.generation }
                 .single()[ProjectionGenerations.state] shouldBeEqualTo ProjectionGenerationState.BUILDING
+
             OperatorAudits.selectAll().count() shouldBeEqualTo 1L
         }
     }
 
     @Test
     fun `fenced cancellation writes applied audit with its state transition`() {
-        val candidate =
-            transaction(database) {
-                rebuilds.initializeActive(PROJECTION, NOW)
-                rebuilds.start(PROJECTION, targetPosition = 1, now = NOW)
-            }
+        val candidate = transaction(database) {
+            rebuilds.initializeActive(PROJECTION, NOW)
+            rebuilds.start(PROJECTION, targetPosition = 1, now = NOW)
+        }
 
         val outcome = operator.cancel(cancellation(candidate.key.generation))
 
         outcome.state shouldBeEqualTo ProjectionGenerationState.CANCELLING
         outcome.audit.outcome shouldBeEqualTo OperatorAuditOutcome.APPLIED
+
         transaction(database) {
             OperatorAudits.selectAll().single().let { row ->
                 row[OperatorAudits.beforeState] shouldBeEqualTo ProjectionGenerationState.BUILDING
@@ -113,41 +123,33 @@ internal class OperatorAuditRepositoryIntegrationTest {
 
     private fun audit(generation: Long): OperatorAuditEntry =
         OperatorAuditEntry(
-            identity =
-                OperatorAuditIdentity(
-                    actorDigest = ReceiptDigest.sha256("operator-a"),
-                    tenant = "tenant-a",
-                    requestDigest = ReceiptDigest.sha256("request-a"),
-                ),
+            identity = OperatorAuditIdentity(
+                actorDigest = ReceiptDigest.sha256("operator-a"),
+                tenant = "tenant-a",
+                requestDigest = ReceiptDigest.sha256("request-a"),
+            ),
             action = OperatorAuditAction.REBUILD_CANCELLED,
             target = OperatorAuditTarget(PROJECTION, generation, expectedFencingToken = 1),
-            transition =
-                OperatorAuditTransition(
-                    beforeState = ProjectionGenerationState.BUILDING,
-                    afterState = ProjectionGenerationState.CANCELLING,
-                    checkpointPosition = 0,
-                    streamPosition = 1,
-                    reasonClass = null,
-                ),
+            transition = OperatorAuditTransition(
+                beforeState = ProjectionGenerationState.BUILDING,
+                afterState = ProjectionGenerationState.CANCELLING,
+                checkpointPosition = 0,
+                streamPosition = 1,
+                reasonClass = null,
+            ),
             result = OperatorAuditResult(OperatorAuditOutcome.APPLIED, NOW),
         )
 
     private fun cancellation(generation: Long): RebuildCancellationCommand =
         RebuildCancellationCommand(
-            identity =
-                OperatorAuditIdentity(
-                    actorDigest = ReceiptDigest.sha256("operator-a"),
-                    tenant = "tenant-a",
-                    requestDigest = ReceiptDigest.sha256("request-a"),
-                ),
+            identity = OperatorAuditIdentity(
+                actorDigest = ReceiptDigest.sha256("operator-a"),
+                tenant = "tenant-a",
+                requestDigest = ReceiptDigest.sha256("request-a"),
+            ),
             target = OperatorAuditTarget(PROJECTION, generation, expectedFencingToken = 1),
             checkpointPosition = 0,
             streamPosition = 1,
             occurredAt = NOW,
         )
-
-    private companion object {
-        private const val PROJECTION = "voucher-lifecycle"
-        private val NOW = Instant.parse("2026-07-23T14:00:00Z")
-    }
 }

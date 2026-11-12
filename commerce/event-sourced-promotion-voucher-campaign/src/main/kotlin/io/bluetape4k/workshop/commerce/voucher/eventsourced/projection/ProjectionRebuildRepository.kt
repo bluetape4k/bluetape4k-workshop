@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.support.requireGe
 import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireNull
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
@@ -39,7 +41,8 @@ internal data class ProjectionGeneration private constructor(
     val progress: ProjectionGenerationProgress,
     val canonicalDigest: ReceiptDigest?,
     val retryableFailure: Boolean,
-) : Serializable {
+): Serializable {
+
     val targetPosition: Long get() = progress.targetPosition
 
     val currentPosition: Long get() = progress.currentPosition
@@ -67,7 +70,7 @@ internal data class ProjectionGenerationProgress private constructor(
     val currentPosition: Long,
     val fencingToken: Long,
     val cancellationRevision: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -80,6 +83,7 @@ internal data class ProjectionGenerationProgress private constructor(
             targetPosition.requireGe(currentPosition, "targetPosition")
             fencingToken.requirePositiveNumber("fencingToken")
             cancellationRevision.requireZeroOrPositiveNumber("cancellationRevision")
+
             return ProjectionGenerationProgress(targetPosition, currentPosition, fencingToken, cancellationRevision)
         }
     }
@@ -90,7 +94,7 @@ internal data class ActiveProjectionGeneration private constructor(
     val projection: String,
     val generation: Long,
     val revision: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -114,7 +118,7 @@ internal data class ProjectionRebuildCursor private constructor(
     val cancellationRevision: Long,
     val expectedPosition: Long,
     val position: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -157,11 +161,11 @@ internal data class ProjectionValidationTargetExtension private constructor(
 }
 
 internal sealed interface ProjectionActivationResult {
-    data object Activated : ProjectionActivationResult
+    data object Activated: ProjectionActivationResult
 
-    data object StalePointer : ProjectionActivationResult
+    data object StalePointer: ProjectionActivationResult
 
-    data object CandidateNotReady : ProjectionActivationResult
+    data object CandidateNotReady: ProjectionActivationResult
 }
 
 /**
@@ -170,23 +174,25 @@ internal sealed interface ProjectionActivationResult {
  */
 internal class ProjectionRebuildRepository {
 
+    companion object: KLogging()
+
     fun initializeActive(
         projection: String,
         now: Instant,
     ): ActiveProjectionGeneration {
         TransactionManager.current()
         projection.requireNotBlank("projection")
-        val inserted =
-            ActiveProjectionGenerations.insertIgnore { row ->
-                row[ActiveProjectionGenerations.projection] = projection
-                row[ActiveProjectionGenerations.generation] = FIRST_REBUILD_GENERATION
-                row[ActiveProjectionGenerations.revision] = FIRST_ACTIVE_POINTER_REVISION
-                row[ActiveProjectionGenerations.updatedAt] = now
-            }.insertedCount == 1
+        val inserted = ActiveProjectionGenerations.insertIgnore { row ->
+            row[ActiveProjectionGenerations.projection] = projection
+            row[ActiveProjectionGenerations.generation] = FIRST_REBUILD_GENERATION
+            row[ActiveProjectionGenerations.revision] = FIRST_ACTIVE_POINTER_REVISION
+            row[ActiveProjectionGenerations.updatedAt] = now
+        }.insertedCount == 1
+
         if (inserted) {
             insertInitialProjectionGeneration(projection, now)
         }
-        return checkNotNull(findActive(projection)) { "active projection pointer disappeared" }
+        return findActive(projection).checkNotNull { "active projection pointer disappeared" }
     }
 
     fun start(
@@ -213,7 +219,7 @@ internal class ProjectionRebuildRepository {
             row[ProjectionGenerations.updatedAt] = now
         }
         val key = ProjectionKey(projection, generation)
-        return checkNotNull(findGeneration(key)) { "building generation was not persisted" }
+        return findGeneration(key).checkNotNull { "building generation was not persisted" }
     }
 
     fun advance(
@@ -225,10 +231,10 @@ internal class ProjectionRebuildRepository {
         return ProjectionGenerations.update(
             where = {
                 generationPredicate(key) and
-                    (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING) and
-                    (ProjectionGenerations.fencingToken eq cursor.fencingToken) and
-                    (ProjectionGenerations.cancellationRevision eq cursor.cancellationRevision) and
-                    (ProjectionGenerations.currentPosition eq cursor.expectedPosition)
+                        (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING) and
+                        (ProjectionGenerations.fencingToken eq cursor.fencingToken) and
+                        (ProjectionGenerations.cancellationRevision eq cursor.cancellationRevision) and
+                        (ProjectionGenerations.currentPosition eq cursor.expectedPosition)
             },
         ) { row ->
             row[ProjectionGenerations.currentPosition] = cursor.position
@@ -248,10 +254,10 @@ internal class ProjectionRebuildRepository {
         return ProjectionGenerations.update(
             where = {
                 generationPredicate(key) and
-                    (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING) and
-                    (ProjectionGenerations.fencingToken eq fencingToken) and
-                    (ProjectionGenerations.cancellationRevision eq cancellationRevision) and
-                    (ProjectionGenerations.currentPosition eq ProjectionGenerations.targetPosition)
+                        (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING) and
+                        (ProjectionGenerations.fencingToken eq fencingToken) and
+                        (ProjectionGenerations.cancellationRevision eq cancellationRevision) and
+                        (ProjectionGenerations.currentPosition eq ProjectionGenerations.targetPosition)
             },
         ) { row ->
             row[ProjectionGenerations.state] = ProjectionGenerationState.VALIDATING
@@ -269,11 +275,11 @@ internal class ProjectionRebuildRepository {
         return ProjectionGenerations.update(
             where = {
                 generationPredicate(key) and
-                    (ProjectionGenerations.state eq ProjectionGenerationState.VALIDATING) and
-                    (ProjectionGenerations.fencingToken eq extension.fencingToken) and
-                    (ProjectionGenerations.cancellationRevision eq extension.cancellationRevision) and
-                    (ProjectionGenerations.targetPosition eq extension.currentTargetPosition) and
-                    (ProjectionGenerations.currentPosition eq extension.currentTargetPosition)
+                        (ProjectionGenerations.state eq ProjectionGenerationState.VALIDATING) and
+                        (ProjectionGenerations.fencingToken eq extension.fencingToken) and
+                        (ProjectionGenerations.cancellationRevision eq extension.cancellationRevision) and
+                        (ProjectionGenerations.targetPosition eq extension.currentTargetPosition) and
+                        (ProjectionGenerations.currentPosition eq extension.currentTargetPosition)
             },
         ) { row ->
             row[ProjectionGenerations.state] = ProjectionGenerationState.BUILDING
@@ -291,17 +297,20 @@ internal class ProjectionRebuildRepository {
         now: Instant,
     ): ProjectionActivationResult {
         TransactionManager.current()
-        val pointer = requireLockedActive(key.projection)
-        val candidate = checkNotNull(lockProjectionGeneration(key)) { "candidate generation disappeared" }
+        val pointer: ActiveProjectionGeneration = requireLockedActive(key.projection)
+        val candidate: ProjectionGeneration =
+            lockProjectionGeneration(key).checkNotNull { "candidate generation disappeared" }
+
         return when {
-            pointer.revision != expectedPointerRevision -> ProjectionActivationResult.StalePointer
+            pointer.revision != expectedPointerRevision          -> ProjectionActivationResult.StalePointer
+
             candidate.state != ProjectionGenerationState.VALIDATING ||
-                candidate.targetPosition != targetHead ||
-                candidate.currentPosition != targetHead ||
-                candidate.canonicalDigest != canonicalDigest ->
+                    candidate.targetPosition != targetHead ||
+                    candidate.currentPosition != targetHead ||
+                    candidate.canonicalDigest != canonicalDigest ->
                 ProjectionActivationResult.CandidateNotReady
 
-            else -> {
+            else                                                 -> {
                 retirePreviousProjectionGeneration(pointer, now)
                 updateActiveProjectionPointer(key, pointer, now)
                 ProjectionGenerations.update(where = { generationPredicate(key) }) { row ->
@@ -318,19 +327,20 @@ internal class ProjectionRebuildRepository {
         now: Instant,
     ): ProjectionGeneration? {
         TransactionManager.current()
-        return lockProjectionGeneration(key)?.let { current ->
-            if (current.state !in CANCELLABLE_STATES) {
-                current
-            } else {
-                ProjectionGenerations.update(where = { generationPredicate(key) }) { row ->
-                    row[ProjectionGenerations.state] = ProjectionGenerationState.CANCELLING
-                    row[ProjectionGenerations.fencingToken] = current.fencingToken + 1
-                    row[ProjectionGenerations.cancellationRevision] = current.cancellationRevision + 1
-                    row[ProjectionGenerations.updatedAt] = now
+        return lockProjectionGeneration(key)
+            ?.let { current ->
+                if (current.state !in CANCELLABLE_STATES) {
+                    current
+                } else {
+                    ProjectionGenerations.update(where = { generationPredicate(key) }) { row ->
+                        row[ProjectionGenerations.state] = ProjectionGenerationState.CANCELLING
+                        row[ProjectionGenerations.fencingToken] = current.fencingToken + 1
+                        row[ProjectionGenerations.cancellationRevision] = current.cancellationRevision + 1
+                        row[ProjectionGenerations.updatedAt] = now
+                    }
+                    findGeneration(key).checkNotNull { "cancelling generation disappeared" }
                 }
-                checkNotNull(findGeneration(key)) { "cancelling generation disappeared" }
             }
-        }
     }
 
     fun completeCancellation(
@@ -342,8 +352,8 @@ internal class ProjectionRebuildRepository {
         return ProjectionGenerations.update(
             where = {
                 generationPredicate(key) and
-                    (ProjectionGenerations.state eq ProjectionGenerationState.CANCELLING) and
-                    (ProjectionGenerations.fencingToken eq fencingToken)
+                        (ProjectionGenerations.state eq ProjectionGenerationState.CANCELLING) and
+                        (ProjectionGenerations.fencingToken eq fencingToken)
             },
         ) { row ->
             row[ProjectionGenerations.state] = ProjectionGenerationState.CANCELLED
@@ -361,8 +371,8 @@ internal class ProjectionRebuildRepository {
         return ProjectionGenerations.update(
             where = {
                 generationPredicate(key) and
-                    (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING) and
-                    (ProjectionGenerations.fencingToken eq fencingToken)
+                        (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING) and
+                        (ProjectionGenerations.fencingToken eq fencingToken)
             },
         ) { row ->
             row[ProjectionGenerations.state] = ProjectionGenerationState.FAILED
@@ -376,18 +386,18 @@ internal class ProjectionRebuildRepository {
         now: Instant,
     ): ProjectionGeneration? {
         TransactionManager.current()
-        return lockProjectionGeneration(key)?.let { current ->
-            if (current.state != ProjectionGenerationState.FAILED || !current.retryableFailure) {
-                current
-            } else {
-                ProjectionGenerations.update(where = { generationPredicate(key) }) { row ->
-                    row[ProjectionGenerations.state] = ProjectionGenerationState.BUILDING
-                    row[ProjectionGenerations.fencingToken] = current.fencingToken + 1
-                    row[ProjectionGenerations.updatedAt] = now
+        return lockProjectionGeneration(key)
+            ?.let { current ->
+                if (current.state != ProjectionGenerationState.FAILED || !current.retryableFailure) {
+                    current
+                } else {
+                    ProjectionGenerations.update(where = { generationPredicate(key) }) { row ->
+                        row[ProjectionGenerations.state] = ProjectionGenerationState.BUILDING
+                        row[ProjectionGenerations.fencingToken] = current.fencingToken + 1
+                        row[ProjectionGenerations.updatedAt] = now
+                    }
+                    findGeneration(key).checkNotNull { "resumed generation disappeared" }
                 }
-                checkNotNull(findGeneration(key)) { "resumed generation disappeared" }
             }
-        }
     }
-
 }

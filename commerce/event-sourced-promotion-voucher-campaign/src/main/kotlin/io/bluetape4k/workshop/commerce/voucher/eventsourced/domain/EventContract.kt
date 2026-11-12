@@ -7,11 +7,11 @@ import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.Locale
-import java.util.UUID
+import java.util.*
 
 internal const val MAX_EVENT_PAYLOAD_BYTES = 64 * 1024
 internal const val MAX_EVENT_PAYLOAD_DEPTH = 16
@@ -40,29 +40,28 @@ internal data class EventPayload(val canonicalJson: String) {
         validateJsonBounds(canonicalJson)
     }
 
-    private fun payloadByteSize(): Int = canonicalJson.toByteArray(StandardCharsets.UTF_8).size
+    private fun payloadByteSize(): Int = canonicalJson.toUtf8Bytes().size
 
     private fun containsField(fieldName: String): Boolean =
         canonicalJson.contains("\"$fieldName\"", ignoreCase = true)
 
     private companion object {
-        val SENSITIVE_FIELD_NAMES =
-            setOf(
-                "voucherCode",
-                "email",
-                "phone",
-                "accessToken",
-                "token",
-                "idempotencyKey",
-                "authorization",
-                "authorizationHeader",
-                "user",
-                "userId",
-                "device",
-                "deviceId",
-                "ip",
-                "ipAddress",
-            )
+        val SENSITIVE_FIELD_NAMES = setOf(
+            "voucherCode",
+            "email",
+            "phone",
+            "accessToken",
+            "token",
+            "idempotencyKey",
+            "authorization",
+            "authorizationHeader",
+            "user",
+            "userId",
+            "device",
+            "deviceId",
+            "ip",
+            "ipAddress",
+        )
 
         fun validateJsonBounds(json: String) {
             var depth = 0
@@ -72,14 +71,14 @@ internal data class EventPayload(val canonicalJson: String) {
             json.forEach { char ->
                 if (inString) {
                     when {
-                        escaped -> escaped = false
+                        escaped     -> escaped = false
                         char == '\\' -> escaped = true
                         char == '"' -> {
                             inString = false
                             stringBytes = 0
                         }
-                        else -> {
-                            stringBytes += char.toString().toByteArray(StandardCharsets.UTF_8).size
+                        else        -> {
+                            stringBytes += char.toString().toUtf8Bytes().size
                             stringBytes.requireLe(MAX_EVENT_PAYLOAD_STRING_BYTES, "payload.stringBytes")
                         }
                     }
@@ -120,8 +119,7 @@ internal data class EventEnvelope(
     val payload: EventPayload,
     val actorHmacKeyVersion: Int = 1,
 ) {
-    val canonicalChecksum: String
-        get() = checksumOf(canonicalFields())
+    val canonicalChecksum: String by lazy { checksumOf(canonicalFields()) }
 
     init {
         eventId.version().requireEquals(UUID_V7, "eventId.version")
@@ -157,7 +155,7 @@ internal data class EventEnvelope(
         fun checksumOf(fields: List<Any>): String =
             fields
                 .joinToString("|")
-                .toByteArray(StandardCharsets.UTF_8)
+                .toUtf8Bytes()
                 .let { MessageDigest.getInstance("SHA-256").digest(it) }
                 .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
     }
@@ -194,7 +192,7 @@ internal data class UpcastGoldenFixture(
     }
 }
 
-internal data class EventSchema<T : Any>(
+internal data class EventSchema<T: Any>(
     val eventType: String,
     val currentVersion: Int,
     val decode: (EventPayload) -> T,
@@ -205,7 +203,7 @@ internal data class EventSchema<T : Any>(
     }
 }
 
-internal class UnknownEventSchemaException(message: String) : IllegalArgumentException(message)
+internal class UnknownEventSchemaException(message: String): IllegalArgumentException(message)
 
 internal class EventSchemaRegistry(
     schemas: Set<EventSchema<*>>,
@@ -252,7 +250,9 @@ internal class EventSchemaRegistry(
 
 internal object EventReplay {
     fun ordered(events: List<EventEnvelope>): List<EventEnvelope> {
-        events.map(EventEnvelope::eventId).toSet().size.requireEquals(events.size, "uniqueEventIds.size")
+        events.map(EventEnvelope::eventId).toSet().size
+            .requireEquals(events.size, "uniqueEventIds.size")
+
         return events.sortedBy { it.globalPosition }
     }
 }

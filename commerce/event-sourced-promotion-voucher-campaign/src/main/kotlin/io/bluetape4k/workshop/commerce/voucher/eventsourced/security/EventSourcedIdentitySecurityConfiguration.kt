@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.security
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
@@ -10,7 +11,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
 import java.time.Instant
-import java.util.Base64
+import java.util.*
 
 @ConfigurationProperties("voucher.security.hmac")
 internal data class EventSourcedHmacProperties(
@@ -28,6 +29,9 @@ internal data class RetiredHmacKeyProperties(
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(EventSourcedHmacProperties::class)
 internal class EventSourcedIdentitySecurityConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun eventSourcedHmacKeyRing(
         properties: EventSourcedHmacProperties,

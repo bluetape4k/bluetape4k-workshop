@@ -37,22 +37,22 @@ internal class EventSourcedApplicationLifecycle(
     gate: EventSourcedDatabasePermitGate,
     private val probe: EventSourcedStartupProbe,
     private val workers: EventSourcedRuntimeWorkers,
-) : SmartLifecycle {
+): SmartLifecycle {
     private val running = AtomicBoolean()
-    private val coordinator =
-        EventSourcedLifecycleCoordinator(
-            state,
-            gate,
-            EventSourcedWorkerShutdown(
-                projection = workers::stopProjection,
-                rebuild = workers::stopRebuild,
-                maintenance = workers::stopMaintenance,
-                releaseFencedLeases = workers::releaseFencedLeases,
-            ),
-        )
+    private val coordinator = EventSourcedLifecycleCoordinator(
+        state,
+        gate,
+        EventSourcedWorkerShutdown(
+            projection = workers::stopProjection,
+            rebuild = workers::stopRebuild,
+            maintenance = workers::stopMaintenance,
+            releaseFencedLeases = workers::releaseFencedLeases,
+        ),
+    )
 
     override fun start() {
         if (!running.compareAndSet(false, true)) return
+
         runCatching(probe::verify)
             .onSuccess {
                 workers.start()
@@ -82,7 +82,7 @@ internal class EventSourcedApplicationLifecycle(
 
     override fun getPhase(): Int = Int.MAX_VALUE - LIFECYCLE_PHASE_OFFSET
 
-    private companion object : KLogging() {
+    private companion object: KLogging() {
         private const val LIFECYCLE_PHASE_OFFSET = 100
     }
 }

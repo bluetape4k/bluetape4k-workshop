@@ -1,27 +1,31 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.context.support.StaticApplicationContext
 
 internal class EventSourcedApplicationLifecycleTest {
 
+    companion object: KLogging()
+
     @Test
     fun `startup raises readiness only after authority probe succeeds`() {
         val state = EventSourcedOperationalState()
         val workers = RecordingRuntimeWorkers()
-        val lifecycle = lifecycle(state, EventSourcedStartupProbe {}, workers)
+        val lifecycle = lifecycle(state, {}, workers)
 
         lifecycle.start()
 
         state.readinessState() shouldBeEqualTo EventSourcedReadinessState.READY
-        workers.started shouldBeEqualTo true
+        workers.started.shouldBeTrue()
     }
 
     @Test
     fun `startup authority failure leaves the process running but readiness down`() {
         val state = EventSourcedOperationalState()
-        val lifecycle = lifecycle(state, EventSourcedStartupProbe { error("database unavailable") })
+        val lifecycle = lifecycle(state, { error("database unavailable") })
 
         lifecycle.start()
 
@@ -32,30 +36,30 @@ internal class EventSourcedApplicationLifecycleTest {
     fun `shutdown invokes every concrete runtime stage after readiness drops`() {
         val state = EventSourcedOperationalState()
         val workers = RecordingRuntimeWorkers()
-        val lifecycle = lifecycle(state, EventSourcedStartupProbe {}, workers)
+        val lifecycle = lifecycle(state, {}, workers)
+
         lifecycle.start()
 
         lifecycle.stop()
 
-        workers.stopped shouldBeEqualTo
-            listOf("projection", "rebuild", "maintenance", "leases")
+        workers.stopped shouldBeEqualTo listOf("projection", "rebuild", "maintenance", "leases")
     }
 
     private fun lifecycle(
         state: EventSourcedOperationalState,
         probe: EventSourcedStartupProbe,
         workers: EventSourcedRuntimeWorkers = RecordingRuntimeWorkers(),
-    ) =
+    ): EventSourcedApplicationLifecycle =
         EventSourcedApplicationLifecycle(
-            StaticApplicationContext(),
-            state,
-            EventSourcedDatabasePermitGate(),
-            probe,
-            workers,
+            applicationContext = StaticApplicationContext(),
+            state = state,
+            gate = EventSourcedDatabasePermitGate(),
+            probe = probe,
+            workers = workers,
         )
 }
 
-private class RecordingRuntimeWorkers : EventSourcedRuntimeWorkers {
+private class RecordingRuntimeWorkers: EventSourcedRuntimeWorkers {
     var started: Boolean = false
     val stopped = mutableListOf<String>()
 

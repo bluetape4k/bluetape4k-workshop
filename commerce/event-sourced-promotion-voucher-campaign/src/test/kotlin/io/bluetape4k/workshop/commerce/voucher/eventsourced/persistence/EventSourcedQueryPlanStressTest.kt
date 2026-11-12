@@ -3,6 +3,10 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.info
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -12,27 +16,29 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import java.sql.Connection
 
-@Tag("stress")
-@EnabledIfSystemProperty(named = "eventSourcedStress", matches = "true")
+@Suppress("SqlResolve")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSourcedQueryPlanStressTest {
+
+    private companion object: KLogging() {
+        private const val MAX_SHARED_BUFFERS = 512
+        private const val MAX_EXECUTION_MILLIS = 100.0
+    }
+
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
 
     @BeforeAll
     fun connectPostgres() {
-        postgresDatabase =
-            EventSourcedPostgresTestDatabase(
-                PostgreSQLServer.Launcher.postgres,
-                "issue-538-query-plan-stress",
-                maximumPoolSize = 4,
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(
+            PostgreSQLServer.Launcher.postgres,
+            "issue-538-query-plan-stress",
+            maximumPoolSize = 4,
+        )
         database = postgresDatabase.database
     }
 
@@ -62,21 +68,24 @@ internal class EventSourcedQueryPlanStressTest {
     }
 
     @AfterEach
-    fun dropSchema() =
+    fun dropSchema() {
         transaction(database) {
             SchemaUtils.drop(ProjectionReadModels, IdempotencyReceipts, EventSnapshots, EventLog)
         }
+    }
 
     @Test
     fun `seeded authority queries retain bounded index plans`() {
         postgresDatabase.dataSource.connection.use { connection ->
             queryShapes().forEach { query ->
+                log.debug { "query: $query" }
                 val evidence = connection.explain(query)
-                println(evidence.summary())
+
+                log.info { "summary=${evidence.summary()}" }
                 evidence.plan shouldContain "Index"
                 evidence.plan shouldNotContain "Seq Scan"
-                evidence.sharedBuffers shouldBeLessOrEqualTo(MAX_SHARED_BUFFERS)
-                evidence.executionMillis shouldBeLessOrEqualTo(MAX_EXECUTION_MILLIS)
+                evidence.sharedBuffers shouldBeLessOrEqualTo MAX_SHARED_BUFFERS
+                evidence.executionMillis shouldBeLessOrEqualTo MAX_EXECUTION_MILLIS
             }
         }
     }
@@ -270,11 +279,6 @@ internal class EventSourcedQueryPlanStressTest {
     private fun Connection.execute(sql: String) {
         createStatement().use { statement -> statement.execute(sql) }
     }
-
-    private companion object {
-        private const val MAX_SHARED_BUFFERS = 512
-        private const val MAX_EXECUTION_MILLIS = 100.0
-    }
 }
 
 private data class QueryShape(
@@ -293,24 +297,23 @@ private data class QueryPlanEvidence(
 }
 
 private fun Connection.explain(query: QueryShape): QueryPlanEvidence {
-    val plan =
-        prepareStatement("EXPLAIN (ANALYZE, BUFFERS) ${query.sql}").use { statement ->
-            statement.executeQuery().use { result ->
-                buildList {
-                    while (result.next()) add(result.getString(1))
-                }.joinToString("\n")
-            }
+    val plan = prepareStatement("EXPLAIN (ANALYZE, BUFFERS) ${query.sql}").use { statement ->
+        statement.executeQuery().use { result ->
+            buildList {
+                while (result.next()) add(result.getString(1))
+            }.joinToString("\n")
         }
-    val sharedBuffers =
-        SHARED_BUFFER_PATTERN
-            .findAll(plan)
-            .map { match -> match.groupValues[1].toInt() }
-            .maxOrNull()
-            ?: 0
-    val executionMillis =
-        checkNotNull(EXECUTION_TIME_PATTERN.find(plan)) { "execution time missing for ${query.name}" }
-            .groupValues[1]
-            .toDouble()
+    }
+    val sharedBuffers = SHARED_BUFFER_PATTERN
+        .findAll(plan)
+        .map { match -> match.groupValues[1].toInt() }
+        .maxOrNull()
+        ?: 0
+    val executionMillis = EXECUTION_TIME_PATTERN
+        .find(plan).checkNotNull { "execution time missing for ${query.name}" }
+        .groupValues[1]
+        .toDouble()
+
     return QueryPlanEvidence(query.name, plan, sharedBuffers, executionMillis)
 }
 

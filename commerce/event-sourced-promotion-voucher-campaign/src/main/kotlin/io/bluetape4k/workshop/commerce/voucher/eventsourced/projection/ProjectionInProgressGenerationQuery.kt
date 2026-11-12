@@ -12,7 +12,7 @@ internal fun findInProgressGeneration(projection: String): ProjectionGeneration?
         .selectAll()
         .where {
             (ProjectionGenerations.projection eq projection) and
-                (ProjectionGenerations.state inList IN_PROGRESS_GENERATION_STATES)
+                    (ProjectionGenerations.state inList IN_PROGRESS_GENERATION_STATES)
         }.orderBy(ProjectionGenerations.generation to SortOrder.ASC)
         .limit(1)
         .singleOrNull()
@@ -25,9 +25,8 @@ internal fun findInProgressGeneration(projection: String): ProjectionGeneration?
             )
         }
 
-private val IN_PROGRESS_GENERATION_STATES =
-    listOf(
-        ProjectionGenerationState.BUILDING,
-        ProjectionGenerationState.VALIDATING,
-        ProjectionGenerationState.CANCELLING,
-    )
+private val IN_PROGRESS_GENERATION_STATES = listOf(
+    ProjectionGenerationState.BUILDING,
+    ProjectionGenerationState.VALIDATING,
+    ProjectionGenerationState.CANCELLING,
+)

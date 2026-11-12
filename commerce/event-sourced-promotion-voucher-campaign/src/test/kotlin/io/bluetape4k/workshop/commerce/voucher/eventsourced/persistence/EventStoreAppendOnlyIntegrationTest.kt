@@ -5,14 +5,16 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.database.getHikariDataSource
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
 
-@Tag("integration")
+// @Tag("integration")
 internal class EventStoreAppendOnlyIntegrationTest {
+
+    companion object: KLogging()
 
     @Test
     fun `application role can append but cannot rewrite delete or truncate events`() {
@@ -75,6 +77,7 @@ internal class EventStoreAppendOnlyIntegrationTest {
                 applicationDataSource.connection.use { application ->
                     application.createStatement().use { statement ->
                         statement.execute("INSERT INTO $schema.voucher_event_log VALUES ('00000000-0000-0000-0000-000000000001', '{}')")
+
                         assertFailsWith<SQLException> {
                             statement.execute("UPDATE $schema.voucher_event_log SET payload = 'changed'")
                         }
