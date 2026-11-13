@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.config
 
+import io.bluetape4k.javatimes.days
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency.CommandReceiptService
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
 import org.jetbrains.exposed.v1.core.DatabaseConfig
@@ -25,7 +27,7 @@ class EventSourcingConfiguration {
         CommandReceiptService(repository, COMMAND_LEASE_DURATION, COMMAND_RETENTION)
 
     private companion object {
-        val COMMAND_LEASE_DURATION: Duration = Duration.ofSeconds(30)
-        val COMMAND_RETENTION: Duration = Duration.ofDays(7)
+        val COMMAND_LEASE_DURATION: Duration = 30.seconds()
+        val COMMAND_RETENTION: Duration = 7.days()
     }
 }

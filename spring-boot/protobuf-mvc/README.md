@@ -131,7 +131,7 @@ target.clear() // the caller owns buffer reuse and lifecycle
 ```
 
 The returned bytes are the same Protobuf `Any` envelope produced by the allocating
-`ProtobufSerializer.serialize` API; they are not raw `Course.toByteArray()` bytes. Success advances the target position by `written`. Insufficient capacity and read-only targets throw
+`ProtobufSerializer.serialize` API; they are not raw `Course.toUtf8Bytes()` bytes. Success advances the target position by `written`. Insufficient capacity and read-only targets throw
 `BufferOverflowException` and `ReadOnlyBufferException`, respectively, without committing a new position. This example makes no allocation or throughput benchmark claim.
 
 ## Build Configuration

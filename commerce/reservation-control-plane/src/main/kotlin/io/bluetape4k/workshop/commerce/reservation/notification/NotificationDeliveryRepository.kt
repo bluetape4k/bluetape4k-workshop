@@ -16,7 +16,7 @@ import java.io.Serializable
 import java.time.Instant
 
 /** enqueue deduplication을 위해 안정적인 delivery id로 keying되는 durable outbox row입니다. */
-internal object NotificationDeliveryTable : AuditableLongIdTable("reservation_notification_deliveries") {
+internal object NotificationDeliveryTable: AuditableLongIdTable("reservation_notification_deliveries") {
     val deliveryId = varchar("delivery_id", 160).uniqueIndex()
     val channel = enumerationByName<NotificationChannel>("channel", 24)
     val templateCode = varchar("template_code", 80)
@@ -40,8 +40,8 @@ internal data class NotificationDeliveryRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -49,7 +49,7 @@ internal data class NotificationDeliveryRecord(
 
 /** provider effect가 발생하기 전에 caller의 PostgreSQL transaction에 notification intent를 저장합니다. */
 @Repository
-internal class NotificationDeliveryRepository :
+internal class NotificationDeliveryRepository:
     LongAuditableJdbcRepository<NotificationDeliveryRecord, NotificationDeliveryTable> {
     override val table: NotificationDeliveryTable = NotificationDeliveryTable
 
@@ -103,7 +103,7 @@ internal class NotificationDeliveryRepository :
             .singleOrNull()
             ?.let { with(this) { it.toEntity() } }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 /** schema bootstrap과 PostgreSQL fixture에서 사용하는 application-owned table reference입니다. */

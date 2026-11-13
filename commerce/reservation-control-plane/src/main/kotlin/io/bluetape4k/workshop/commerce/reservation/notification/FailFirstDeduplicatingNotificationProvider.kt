@@ -48,7 +48,7 @@ internal class FailFirstDeduplicatingNotificationProvider(
             if (deliveryId in accepted) 1 else 0
         }
 
-    private companion object : KLogging() {
+    private companion object: KLogging() {
         val TRANSIENT_CODE = NotificationFailureCode.FAKE_TRANSIENT
     }
 }

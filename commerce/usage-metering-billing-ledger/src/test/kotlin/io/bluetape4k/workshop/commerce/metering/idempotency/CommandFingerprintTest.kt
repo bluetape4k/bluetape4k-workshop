@@ -29,7 +29,7 @@ class CommandFingerprintTest {
         CommandFingerprint.decimal(BigDecimal("1.2300")) shouldBeEqualTo "1.23"
         CommandFingerprint.decimal(BigDecimal("0.000")) shouldBeEqualTo "0"
         CommandFingerprint.instant(Instant.parse("2026-07-01T00:00:00.000Z")) shouldBeEqualTo
-            "2026-07-01T00:00:00Z"
+                "2026-07-01T00:00:00Z"
     }
 
     @Test
@@ -38,6 +38,6 @@ class CommandFingerprintTest {
         val digest = CommandFingerprint.key(rawKey)
 
         digest.value.length shouldBeEqualTo 64
-        (digest.value == rawKey) shouldBeEqualTo false
+        digest.value shouldBeEqualTo rawKey
     }
 }

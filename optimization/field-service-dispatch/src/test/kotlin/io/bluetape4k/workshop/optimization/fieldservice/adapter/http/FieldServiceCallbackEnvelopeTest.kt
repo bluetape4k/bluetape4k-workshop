@@ -10,6 +10,7 @@ import io.bluetape4k.concurrent.get
 import io.bluetape4k.junit5.concurrency.TestingExecutors
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.fieldservice.adapter.fake.FieldServicePlanningFixture
 import io.bluetape4k.workshop.optimization.fieldservice.adapter.fake.FieldServicePlanningFixtureMetadata
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ConstraintReasonCode
@@ -51,17 +52,17 @@ class FieldServiceCallbackEnvelopeTest {
         }
         assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
-                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0,"secret":"token=abc"},"constraintExplanations":[]}""".toByteArray(),
+                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0,"secret":"token=abc"},"constraintExplanations":[]}""".toUtf8Bytes(),
             )
         }
         assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
-                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"raw provider address"}]}""".toByteArray(),
+                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"raw provider address"}]}""".toUtf8Bytes(),
             )
         }
         assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
-                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":NaN},"constraintExplanations":[]}""".toByteArray(),
+                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":NaN},"constraintExplanations":[]}""".toUtf8Bytes(),
             )
         }
     }
@@ -267,7 +268,7 @@ class FieldServiceCallbackEnvelopeTest {
     private fun sign(body: ByteArray): String =
         signatureVerifier.sign(FieldServiceProvider.FAKE, canonicalizer.canonicalBytes(body))
 
-    private fun sign(body: String): String = sign(body.toByteArray())
+    private fun sign(body: String): String = sign(body.toUtf8Bytes())
 
     private fun successBody(
         provider: String = "FAKE",
@@ -278,6 +279,6 @@ class FieldServiceCallbackEnvelopeTest {
         scoreHardScore: Long = 10,
         extraField: String = "",
     ) =
-        """{"provider":"$provider","eventId":"$eventId","planningRequestId":"request-1","providerRequestId":"$providerRequestId","providerRevision":$providerRevision,"requestGeneration":$requestGeneration,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":$scoreHardScore,"softScore":-2,"assignedCount":1,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"TIME_WINDOW"}]$extraField}""".toByteArray()
+        """{"provider":"$provider","eventId":"$eventId","planningRequestId":"request-1","providerRequestId":"$providerRequestId","providerRevision":$providerRevision,"requestGeneration":$requestGeneration,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":$scoreHardScore,"softScore":-2,"assignedCount":1,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"TIME_WINDOW"}]$extraField}""".toUtf8Bytes()
 
 }

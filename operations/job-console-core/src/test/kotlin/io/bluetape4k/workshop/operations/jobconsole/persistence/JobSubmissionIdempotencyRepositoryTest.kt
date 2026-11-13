@@ -61,7 +61,7 @@ class JobSubmissionIdempotencyRepositoryTest {
 
             val prepared = PreparedJobSubmission(
                 request = command.request,
-                responseBody = "accepted".toByteArray(),
+                responseBody = "accepted".toUtf8Bytes(),
             )
             val snapshot = repository.finalizeOwner(owner.ownership, prepared, NOW + 1.seconds())
             snapshot.jobId shouldBeEqualTo owner.ownership.jobId
@@ -101,7 +101,7 @@ class JobSubmissionIdempotencyRepositoryTest {
                         owner.ownership,
                         PreparedJobSubmission(
                             command.request,
-                            responseBody = "accepted".toByteArray(),
+                            responseBody = "accepted".toUtf8Bytes(),
                             responseHeaders = headers
                         ),
                         NOW,
@@ -134,7 +134,7 @@ class JobSubmissionIdempotencyRepositoryTest {
                     PreparedJobSubmission(
                         request = command.request,
                         responseStatus = 422,
-                        responseBody = "synthetic problem".toByteArray(),
+                        responseBody = "synthetic problem".toUtf8Bytes(),
                         responseContentType = "application/problem+json",
                     ),
                     NOW,
@@ -259,7 +259,7 @@ class JobSubmissionIdempotencyRepositoryTest {
             val failure = assertFailsWith<JobRepositoryException> {
                 repository.finalizeOwner(
                     owner.ownership,
-                    PreparedJobSubmission(command.request, responseBody = "late".toByteArray()),
+                    PreparedJobSubmission(command.request, responseBody = "late".toUtf8Bytes()),
                     NOW + 1.seconds(),
                 )
             }
@@ -358,7 +358,7 @@ class JobSubmissionIdempotencyRepositoryTest {
             val failure = assertFailsWith<JobRepositoryException> {
                 repository.finalizeOwner(
                     owner.ownership,
-                    PreparedJobSubmission(command.request, responseBody = "late".toByteArray()),
+                    PreparedJobSubmission(command.request, responseBody = "late".toUtf8Bytes()),
                     NOW + 1.seconds(),
                 )
             }

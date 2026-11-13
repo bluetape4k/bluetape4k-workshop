@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore
 
+import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AggregateReducer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventHashMaterial
@@ -36,7 +37,7 @@ data class AggregateReplayRequest<S>(
     val policy: ReplayPolicy,
 )
 
-class EventHashMismatchException(eventId: java.util.UUID) : IllegalStateException("event_hash_mismatch:$eventId")
+class EventHashMismatchException(eventId: java.util.UUID): IllegalStateException("event_hash_mismatch:$eventId")
 
 object AggregateReplayer {
     fun <S> replay(
@@ -54,9 +55,9 @@ object AggregateReplayer {
         val startedAt = System.nanoTime()
         val validSnapshot = request.snapshot?.takeIf { candidate ->
             candidate.reducerVersion == request.policy.reducerVersion &&
-                request.events
-                    .firstOrNull { it.streamVersion == candidate.streamVersion }
-                    ?.eventHash == candidate.lastEventHash
+                    request.events
+                        .firstOrNull { it.streamVersion == candidate.streamVersion }
+                        ?.eventHash == candidate.lastEventHash
         }
         if (request.snapshot != null && validSnapshot == null) telemetry?.recordSnapshotFallback("invalid")
         var state = validSnapshot?.state ?: request.initialState
@@ -84,7 +85,7 @@ object AggregateReplayer {
         }.getOrThrow()
     }
 
-    private fun elapsedSince(startedAt: Long): Duration = Duration.ofNanos(System.nanoTime() - startedAt)
+    private fun elapsedSince(startedAt: Long): Duration = (System.nanoTime() - startedAt).nanos()
 
     private fun verifyHash(event: PersistedEvent, expectedPreviousHash: String?) {
         val material = EventHashMaterial(

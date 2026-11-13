@@ -17,8 +17,11 @@ class DefaultWarehouseAllocationFixturePort: WarehouseAllocationFixturePort {
 
     override fun ingest(canonicalEvent: String): String {
         require(canonicalEvent.toByteArray().size <= 256 * 1024) { "event body too large" }
-        val digest = MessageDigest.getInstance("SHA-256").digest(canonicalEvent.toByteArray())
+
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(canonicalEvent.toByteArray())
             .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+
         if (!events.add(digest)) return "duplicate:$digest"
         version++
         return "accepted:$digest"

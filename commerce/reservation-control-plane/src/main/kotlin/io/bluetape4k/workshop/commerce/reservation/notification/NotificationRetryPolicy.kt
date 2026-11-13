@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.reservation.notification
 
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requirePositiveNumber
@@ -8,8 +10,8 @@ import java.time.Duration
 /** deterministic fixture에 jitter를 추가하지 않고 capped exponential retry delay를 계산합니다. */
 internal class NotificationRetryPolicy(
     val maxAttempts: Int = 5,
-    private val initialDelay: Duration = Duration.ofSeconds(1),
-    private val maxDelay: Duration = Duration.ofMinutes(1),
+    private val initialDelay: Duration = 1.seconds(),
+    private val maxDelay: Duration = 1.minutes(),
 ) {
     init {
         maxAttempts.requirePositiveNumber("maxAttempts")
@@ -27,7 +29,7 @@ internal class NotificationRetryPolicy(
         }
     }
 
-    private companion object : KLogging() {
+    private companion object: KLogging() {
         const val MAX_SHIFT = 30
     }
 }

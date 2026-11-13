@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.application
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
@@ -163,7 +164,7 @@ internal class ReservationCommandService(
     }
 
     companion object : KLogging() {
-        private val HOLD_TTL: Duration = Duration.ofSeconds(30)
+        private val HOLD_TTL: Duration = 30.seconds()
     }
 }
 

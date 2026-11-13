@@ -2,11 +2,15 @@ package io.bluetape4k.workshop.commerce.usagebilling.composition
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBillingMicroserviceFixture
-import org.awaitility.Awaitility.await
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.util.UUID
+import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Tag("integration")
 class SchemaEvolutionIntegrationTest {
@@ -20,7 +24,7 @@ class SchemaEvolutionIntegrationTest {
             fixture.sendQueryEvent(compatibleEventId, TENANT, "InvoiceIssued", schemaVersion = 2)
             fixture.sendQueryEvent(unsupportedEventId, TENANT, "InvoiceIssued", schemaVersion = 99)
 
-            await().pollInterval(Duration.ofMillis(250)).atMost(TIMEOUT).untilAsserted {
+            await atMost TIMEOUT withPollInterval 250.milliseconds untilAsserted {
                 fixture.queryAppliedEventCount() shouldBeEqualTo 1
                 fixture.queryRecoverySnapshot().quarantineCount shouldBeEqualTo 1L
             }
@@ -28,7 +32,7 @@ class SchemaEvolutionIntegrationTest {
     }
 
     private companion object {
-        val TIMEOUT: Duration = Duration.ofSeconds(20)
+        val TIMEOUT: kotlin.time.Duration = 20.seconds
         const val TENANT = "tenant-schema"
     }
 }

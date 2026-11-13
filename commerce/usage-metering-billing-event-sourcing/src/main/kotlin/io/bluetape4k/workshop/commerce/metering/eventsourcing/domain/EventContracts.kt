@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.domain
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class StreamKey(
     val tenantId: String,
     val streamType: String,
     val streamId: String,
-) : Comparable<StreamKey> {
+): Comparable<StreamKey> {
     init {
         require(tenantId.isNotBlank() && tenantId.length <= MAX_TENANT_LENGTH) { "tenant_id_invalid" }
         require(streamType.isNotBlank() && streamType.length <= MAX_STREAM_TYPE_LENGTH) { "stream_type_invalid" }

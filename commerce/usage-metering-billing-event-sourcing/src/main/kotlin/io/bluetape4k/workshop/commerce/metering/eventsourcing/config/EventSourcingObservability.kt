@@ -13,12 +13,11 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 @Component
 class EventSourcingMetrics(
     private val registry: MeterRegistry,
-) : BillingTelemetry, ProjectionTelemetry {
+): BillingTelemetry, ProjectionTelemetry {
     fun recordAppend(outcome: String, duration: Duration) {
         timer("billing.event.append", "outcome", outcome).record(duration)
     }
@@ -59,7 +58,7 @@ class EventSourcingMetrics(
         registry.timer(name, tagName, tagValue)
 
     private fun Timer.record(duration: Duration) {
-        record(duration.toNanos(), TimeUnit.NANOSECONDS)
+        record(duration)
     }
 }
 
@@ -69,7 +68,7 @@ class EventSourcingHealthIndicator(
     private val generations: ProjectionGenerationRepository,
     private val failures: ProjectionFailureRepository,
     transactionManager: PlatformTransactionManager,
-) : HealthIndicator {
+): HealthIndicator {
     private val transactions = TransactionTemplate(transactionManager).apply { isReadOnly = true }
 
     override fun health(): Health = runCatching {

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherProperties
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import tools.jackson.databind.ObjectMapper
 import java.net.URI
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
 /** operator controller가 호출되기 전에 명시적인 loopback demo trust boundary를 강제합니다. */
@@ -22,7 +22,7 @@ import java.security.MessageDigest
 internal class OperatorAccessFilter(
     private val properties: VoucherProperties,
     private val mapper: ObjectMapper,
-) : OncePerRequestFilter() {
+): OncePerRequestFilter() {
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !request.requestURI.startsWith("/operator/")
 
@@ -51,7 +51,12 @@ internal class OperatorAccessFilter(
         if (request.serverName.lowercase() !in http.allowedHosts.map(String::lowercase)) return false
         if (!constantTimeEquals(request.getHeader(OPERATOR_SECRET_HEADER), http.operatorSecret)) return false
         if (!constantTimeEquals(request.getHeader(OPERATOR_GUARD_HEADER), http.operatorGuard)) return false
-        if (runCatching { requireAsciiIdentifier(request.getHeader(TENANT_HEADER), TENANT_HEADER) }.isFailure) return false
+        if (runCatching {
+                requireAsciiIdentifier(
+                    request.getHeader(TENANT_HEADER),
+                    TENANT_HEADER
+                )
+            }.isFailure) return false
         if (!sameOrigin(request)) return false
         if (request.method !in SAFE_METHODS && request.contentType?.startsWith(MediaType.APPLICATION_JSON_VALUE) != true) {
             return false
@@ -73,22 +78,22 @@ internal class OperatorAccessFilter(
         val uri = runCatching { URI(value) }.getOrNull() ?: return false
         val originPort = if (uri.port >= 0) uri.port else if (uri.scheme == "https") 443 else 80
         return uri.scheme in setOf("http", "https") &&
-            uri.host.equals(request.serverName, ignoreCase = true) &&
-            originPort == request.serverPort
+                uri.host.equals(request.serverName, ignoreCase = true) &&
+                originPort == request.serverPort
     }
 
     private fun constantTimeEquals(
         actual: String?,
         expected: String,
     ): Boolean {
-        val actualBytes = actual?.toByteArray(UTF_8) ?: ByteArray(0)
-        return MessageDigest.isEqual(actualBytes, expected.toByteArray(UTF_8))
+        val actualBytes = actual?.toUtf8Bytes() ?: ByteArray(0)
+        return MessageDigest.isEqual(actualBytes, expected.toUtf8Bytes())
     }
 
     private fun HttpServletRequest.requestId(): String =
         getAttribute(REQUEST_ID_ATTRIBUTE) as? String ?: "unavailable"
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private val LOOPBACK_ADDRESSES = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
         private val SAFE_METHODS = setOf("GET", "HEAD")
     }

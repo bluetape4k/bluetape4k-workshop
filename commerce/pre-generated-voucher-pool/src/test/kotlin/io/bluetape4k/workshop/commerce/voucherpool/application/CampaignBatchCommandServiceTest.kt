@@ -6,6 +6,9 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotContainIgnoringCase
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcExecutionLane
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcTimeoutPhase
@@ -16,11 +19,21 @@ import org.postgresql.util.PSQLException
 import org.postgresql.util.ServerErrorMessage
 import java.sql.SQLException
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class CampaignBatchCommandServiceTest {
+
+    companion object: KLogging() {
+        private const val TENANT = "tenant-a"
+        private val CAMPAIGN = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        private val BATCH = UUID.fromString("22222222-2222-2222-2222-222222222222")
+        private val MANIFEST = DigestValue.of(ByteArray(32) { 1 })
+        private const val REVISION = 3L
+        private const val IDEMPOTENCY_KEY = "unit-idempotency-key"
+    }
+
     @Test
     fun `batch and chunk commands enforce bounded input before JDBC`() {
         assertFailsWith<IllegalArgumentException> {
@@ -30,7 +43,16 @@ internal class CampaignBatchCommandServiceTest {
             importChunk(codes = List(501) { "CODE-$it" })
         }
         assertFailsWith<IllegalArgumentException> {
-            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 501, REVISION, IDEMPOTENCY_KEY)
+            GenerateChunkCommand(
+                tenantId = TENANT,
+                batchId = BATCH,
+                campaignId = CAMPAIGN,
+                firstOrdinal = 0,
+                manifestDigest = MANIFEST,
+                count = 501,
+                expectedRevision = REVISION,
+                idempotencyKey = IDEMPOTENCY_KEY
+            )
         }
         assertFailsWith<IllegalArgumentException> {
             importChunk(codes = listOf("x".repeat(4 * 1_024 * 1_024 + 1)))
@@ -46,7 +68,7 @@ internal class CampaignBatchCommandServiceTest {
             canonicalUser = "user-1",
             expectedRevision = REVISION,
             idempotencyKey = IDEMPOTENCY_KEY,
-        ).allocationId.version().shouldBeEqualTo(7)
+        ).allocationId.version() shouldBeEqualTo 7
 
         ReplaceLostRevealCommand(
             tenantId = TENANT,
@@ -55,37 +77,68 @@ internal class CampaignBatchCommandServiceTest {
             canonicalUser = "user-1",
             expectedRevision = REVISION,
             idempotencyKey = IDEMPOTENCY_KEY,
-        ).reservationId.version().shouldBeEqualTo(7)
+        ).reservationId.version() shouldBeEqualTo 7
 
         ReserveVoucherCommand(
             tenantId = TENANT,
             campaignId = CAMPAIGN,
             canonicalUser = "user-1",
             idempotencyKey = IDEMPOTENCY_KEY,
-        ).reservationId.version().shouldBeEqualTo(7)
+        ).reservationId.version() shouldBeEqualTo 7
     }
 
     @Test
     fun `import and generation commands reject invalid ordinals and empty work`() {
-        assertFailsWith<IllegalArgumentException> { importChunk(firstOrdinal = -1) }
-        assertFailsWith<IllegalArgumentException> { importChunk(codes = emptyList()) }
         assertFailsWith<IllegalArgumentException> {
-            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, -1, MANIFEST, 1, REVISION, IDEMPOTENCY_KEY)
+            importChunk(firstOrdinal = -1)
         }
         assertFailsWith<IllegalArgumentException> {
-            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 0, REVISION, IDEMPOTENCY_KEY)
+            importChunk(codes = emptyList())
+        }
+        assertFailsWith<IllegalArgumentException> {
+            GenerateChunkCommand(
+                tenantId = TENANT,
+                batchId = BATCH,
+                campaignId = CAMPAIGN,
+                firstOrdinal = -1,                  // not negative 
+                manifestDigest = MANIFEST,
+                count = 1,
+                expectedRevision = REVISION,
+                idempotencyKey = IDEMPOTENCY_KEY
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            GenerateChunkCommand(
+                tenantId = TENANT,
+                batchId = BATCH,
+                campaignId = CAMPAIGN,
+                firstOrdinal = 0,
+                manifestDigest = MANIFEST,
+                count = 0,
+                expectedRevision = REVISION,
+                idempotencyKey = IDEMPOTENCY_KEY
+            )
         }
         assertFailsWith<IllegalArgumentException> {
             importChunk(expectedRevision = -1)
         }
         assertFailsWith<IllegalArgumentException> {
-            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 1, -1, IDEMPOTENCY_KEY)
+            GenerateChunkCommand(
+                tenantId = TENANT,
+                batchId = BATCH,
+                campaignId = CAMPAIGN,
+                firstOrdinal = 0,
+                manifestDigest = MANIFEST,
+                count = 1,
+                expectedRevision = -1,                  // not negative
+                idempotencyKey = IDEMPOTENCY_KEY
+            )
         }
     }
 
     @Test
     fun `known deterministic generation is rejected outside loopback test mode`() {
-        val deterministic = object : GeneratedVoucherCodeSource {
+        val deterministic = object: GeneratedVoucherCodeSource {
             override val deterministic: Boolean = true
             override fun nextCode(): String = "KNOWN-CODE"
         }
@@ -100,7 +153,7 @@ internal class CampaignBatchCommandServiceTest {
                 generatedCodes = deterministic,
                 runtimeProfile = VoucherPoolRuntimeProfile.PRODUCTION,
             )
-        }
+        }.also { log.debug { it.message } }
     }
 
     @Test
@@ -111,7 +164,9 @@ internal class CampaignBatchCommandServiceTest {
         source.deterministic.shouldBeFalse()
         generated.distinct() shouldHaveSize generated.size
         generated.all { it.startsWith("VP-") && it.removePrefix("VP-").length >= 22 }.shouldBeTrue()
-        source.toString().contains("seed", ignoreCase = true).shouldBeFalse()
+
+        log.debug { "source=$source" }
+        source.toString() shouldNotContainIgnoringCase "seed"
     }
 
     @Test
@@ -151,41 +206,43 @@ internal class CampaignBatchCommandServiceTest {
             }
         }
 
-        attempts.get() shouldBeEqualTo 8
+        attempts.get() shouldBeEqualTo MAX_OWNER_RELEASE_ATTEMPTS // 8
     }
 
-    private fun importBatch(expectedCount: Long) = CreateImportBatchCommand(
-        tenantId = TENANT,
-        batchId = BATCH,
-        campaignId = CAMPAIGN,
-        sourceKind = BatchSourceKind.IMPORTED,
-        manifestDigest = MANIFEST,
-        requestFingerprint = DigestValue.of(ByteArray(32) { 2 }),
-        expectedCount = expectedCount,
-        activatesAt = Instant.EPOCH,
-        initialCodes = listOf("CODE-0"),
-        idempotencyKey = IDEMPOTENCY_KEY,
-    )
+    private fun importBatch(expectedCount: Long): CreateImportBatchCommand =
+        CreateImportBatchCommand(
+            tenantId = TENANT,
+            batchId = BATCH,
+            campaignId = CAMPAIGN,
+            sourceKind = BatchSourceKind.IMPORTED,
+            manifestDigest = MANIFEST,
+            requestFingerprint = DigestValue.of(ByteArray(32) { 2 }),
+            expectedCount = expectedCount,
+            activatesAt = Instant.EPOCH,
+            initialCodes = listOf("CODE-0"),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
     private fun importChunk(
         firstOrdinal: Long = 0,
         codes: List<String> = listOf("CODE-0"),
         expectedRevision: Long = REVISION,
-    ) = ImportChunkCommand(TENANT, BATCH, CAMPAIGN, firstOrdinal, MANIFEST, codes, expectedRevision, IDEMPOTENCY_KEY)
+    ): ImportChunkCommand =
+        ImportChunkCommand(
+            tenantId = TENANT,
+            batchId = BATCH,
+            campaignId = CAMPAIGN,
+            firstOrdinal = firstOrdinal,
+            manifestDigest = MANIFEST,
+            codes = codes,
+            expectedRevision = expectedRevision,
+            idempotencyKey = IDEMPOTENCY_KEY
+        )
 
-    private fun jdbcTimeout() =
+    private fun jdbcTimeout(): VoucherPoolJdbcTimeoutException =
         VoucherPoolJdbcTimeoutException(
             JdbcExecutionLane.OPERATOR,
             JdbcTimeoutPhase.TRANSACTION,
             TimeoutException("owner release timeout"),
         )
-
-    companion object {
-        private const val TENANT = "tenant-a"
-        private val CAMPAIGN = UUID.fromString("11111111-1111-1111-1111-111111111111")
-        private val BATCH = UUID.fromString("22222222-2222-2222-2222-222222222222")
-        private val MANIFEST = DigestValue.of(ByteArray(32) { 1 })
-        private const val REVISION = 3L
-        private const val IDEMPOTENCY_KEY = "unit-idempotency-key"
-    }
 }

@@ -12,8 +12,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReposi
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigest
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 internal data class RedeemVoucherCommand(
     val tenantId: String,
@@ -52,15 +51,15 @@ internal class JdbcRedemptionService(
     private val repository: VoucherPoolRepository,
     idempotency: VoucherPoolIdempotencyRepository,
     private val digests: VoucherDigestService,
-) : RedemptionService {
+): RedemptionService {
     private val mutations = LifecycleMutationExecutor(executor, idempotency)
 
     override fun redeem(command: RedeemVoucherCommand): MutationResult<AllocationSnapshot> =
         mutations.execute(
-            command.tenantId,
-            "voucher-redeem",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-redeem",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-redeem",
                 "campaignId" to command.campaignId,
                 "allocationId" to command.allocationId,
@@ -70,9 +69,9 @@ internal class JdbcRedemptionService(
                     digests.stableDedup(command.tenantId, command.code).copyBytes(),
                 ),
             ),
-            command.allocationId,
-            LIFECYCLE_HTTP_OK,
-            LifecycleLane.FOREGROUND,
+            effectId = command.allocationId,
+            successStatus = LIFECYCLE_HTTP_OK,
+            lane = LifecycleLane.FOREGROUND,
         ) { connection, _ ->
             val keyVersion = repository.userIdentityKeyVersion(command.tenantId, command.campaignId)
                 ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
@@ -82,16 +81,20 @@ internal class JdbcRedemptionService(
             val chain = repository.lockAllocationChain(
                 command.tenantId, command.allocationId, userDigest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
+
             requireCampaignUsable(chain.campaign.state)
             requireBatchUsable(chain.batch.state)
+
             if (chain.allocation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             if (chain.entry.state != EntryState.ALLOCATED) fail(VoucherPoolErrorCode.STALE_REVISION)
             if (chain.entry.quarantinedAt != null) fail(VoucherPoolErrorCode.CIPHERTEXT_INVALID)
+
             val transactionTime = repository.transactionTime()
             if (chain.allocation.expiresAt <= transactionTime) fail(VoucherPoolErrorCode.ALLOCATION_EXPIRED)
             if (chain.batch.expiresAt?.let { it <= transactionTime } == true) fail(VoucherPoolErrorCode.BATCH_EXPIRED)
             if (!matchesVerification(command, chain)) fail(VoucherPoolErrorCode.SCOPE_NOT_FOUND)
             if (chain.entry.revealedAt == null) fail(VoucherPoolErrorCode.STALE_REVISION)
+
             val redeemed = repository.transitionAllocationTerminal(chain, EntryState.REDEEMED, "REDEEMED")
             repository.appendLifecycleAudit(
                 redeemed.allocation.tenantId,
@@ -123,19 +126,19 @@ internal class JdbcRedemptionService(
 
     override fun release(command: ReleaseAllocationCommand): MutationResult<AllocationSnapshot> =
         mutations.execute(
-            command.tenantId,
-            "voucher-allocation-release",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-allocation-release",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-allocation-release",
                 "campaignId" to command.campaignId,
                 "allocationId" to command.allocationId,
                 "canonicalUser" to command.canonicalUser,
                 "expectedRevision" to command.expectedRevision,
             ),
-            command.allocationId,
-            LIFECYCLE_HTTP_OK,
-            LifecycleLane.FOREGROUND,
+            effectId = command.allocationId,
+            successStatus = LIFECYCLE_HTTP_OK,
+            lane = LifecycleLane.FOREGROUND,
         ) { connection, _ ->
             val keyVersion = repository.userIdentityKeyVersion(command.tenantId, command.campaignId)
                 ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
@@ -147,8 +150,10 @@ internal class JdbcRedemptionService(
                 command.allocationId,
                 userDigest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
+
             if (chain.allocation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             if (chain.entry.state != EntryState.ALLOCATED) fail(VoucherPoolErrorCode.STALE_REVISION)
+
             val released = repository.transitionAllocationTerminal(
                 chain,
                 EntryState.RELEASED,
@@ -169,20 +174,21 @@ internal class JdbcRedemptionService(
 
     override fun revoke(command: RevokeAllocationCommand): MutationResult<AllocationSnapshot> =
         mutations.execute(
-            command.tenantId,
-            "voucher-allocation-revoke",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-allocation-revoke",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-allocation-revoke",
                 "allocationId" to command.allocationId,
                 "expectedRevision" to command.expectedRevision,
             ),
-            command.allocationId,
-            LIFECYCLE_HTTP_OK,
-            LifecycleLane.OPERATOR,
+            effectId = command.allocationId,
+            successStatus = LIFECYCLE_HTTP_OK,
+            lane = LifecycleLane.OPERATOR,
         ) { connection, _ ->
             val chain = repository.lockAllocationChain(command.tenantId, command.allocationId, null)
                 ?: fail(VoucherPoolErrorCode.SCOPE_NOT_FOUND)
+
             if (
                 chain.entry.state == EntryState.REDEEMED &&
                 chain.allocation.revision - 1 == command.expectedRevision
@@ -200,8 +206,10 @@ internal class JdbcRedemptionService(
                 )
                 failCommitted(VoucherPoolErrorCode.STALE_REVISION)
             }
+
             if (chain.allocation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             if (chain.entry.state != EntryState.ALLOCATED) fail(VoucherPoolErrorCode.STALE_REVISION)
+
             val revoked = repository.transitionAllocationTerminal(chain, EntryState.REVOKED, "OPERATOR_REVOKED")
             repository.appendLifecycleAudit(
                 revoked.allocation.tenantId,

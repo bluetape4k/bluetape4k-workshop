@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.voucher.config
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -71,7 +73,7 @@ internal class VoucherStartupValidationTest {
                 ),
                 InvalidConfiguration(
                     name = "negative worker scheduling initial delay",
-                    properties = valid.copy(worker = valid.worker.copy(initialDelay = Duration.ofMillis(-1))),
+                    properties = valid.copy(worker = valid.worker.copy(initialDelay = (-1).millis())),
                     expectedCode = StartupFailureCode.INVALID_RANGE,
                 ),
                 InvalidConfiguration(
@@ -137,8 +139,8 @@ internal class VoucherStartupValidationTest {
                     VoucherDatabaseProperties(
                         foregroundPermits = 12,
                         backgroundPermits = 4,
-                        permitTimeout = Duration.ofMillis(250),
-                        lockTimeout = Duration.ofSeconds(5),
+                        permitTimeout = 250.millis(),
+                        lockTimeout = 5.seconds(),
                     ),
                 keys =
                     VoucherKeyProperties(

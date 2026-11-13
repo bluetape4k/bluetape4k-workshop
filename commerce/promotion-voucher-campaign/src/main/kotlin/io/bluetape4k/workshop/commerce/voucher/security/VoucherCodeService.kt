@@ -5,7 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.util.UUID
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -38,7 +38,7 @@ internal data class VoucherGenerationInput(
     }
 
     fun canonicalBytes(): ByteArray =
-        "$tenantId\u0000$campaignId\u0000$allocationId".toByteArray(StandardCharsets.UTF_8)
+        "$tenantId\u0000$campaignId\u0000$allocationId".toUtf8Bytes()
 }
 
 internal data class IssuedVoucherCode(
@@ -118,9 +118,9 @@ internal class VoucherCodeService(
         val matched = MessageDigest.isEqual(actualVerifier, expectedVerifier)
         val valid =
             parsed != null &&
-                parsed.verificationKeyVersion == verificationKeyVersion &&
-                keyRing.verificationKeys.containsKey(verificationKeyVersion) &&
-                matched
+                    parsed.verificationKeyVersion == verificationKeyVersion &&
+                    keyRing.verificationKeys.containsKey(verificationKeyVersion) &&
+                    matched
         if (!valid) log.debug { "voucher_code_rejected reason=INVALID_CODE" }
         return valid
     }
@@ -144,7 +144,7 @@ internal class VoucherCodeService(
         val payload = match.groupValues[2]
         val suppliedChecksum = match.groupValues[3]
         val prefix = "V$verificationKeyVersion-$payload"
-        if (!MessageDigest.isEqual(checksum(prefix).toByteArray(), suppliedChecksum.toByteArray())) return null
+        if (!MessageDigest.isEqual(checksum(prefix).toUtf8Bytes(), suppliedChecksum.toUtf8Bytes())) return null
         return ParsedVoucherCode(verificationKeyVersion)
     }
 
@@ -157,7 +157,7 @@ internal class VoucherCodeService(
         val digest = MessageDigest.getInstance(SHA_256).digest(prefix.toByteArray(StandardCharsets.US_ASCII))
         val checksumValue =
             (((digest[0].toInt() and 0xff) shl 8) or (digest[1].toInt() and 0xff)) %
-                (BASE58_ALPHABET.length * BASE58_ALPHABET.length)
+                    (BASE58_ALPHABET.length * BASE58_ALPHABET.length)
         return buildString(CHECKSUM_LENGTH) {
             append(BASE58_ALPHABET[checksumValue / BASE58_ALPHABET.length])
             append(BASE58_ALPHABET[checksumValue % BASE58_ALPHABET.length])
@@ -178,7 +178,7 @@ internal class VoucherCodeService(
 
     private data class ParsedVoucherCode(val verificationKeyVersion: Int)
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val GENERATION_DOMAIN = "voucher-generation"
         private const val VERIFIER_DOMAIN = "voucher-verifier"
         private const val HMAC_SHA_256 = "HmacSHA256"
@@ -193,6 +193,7 @@ internal class VoucherCodeService(
         private val ASCII_RANGE = 0..127
         private val DOMAIN_SEPARATOR = byteArrayOf(0)
         private val DUMMY_KEY = ByteArray(32) { 0x5a }
-        private val CODE_PATTERN = Regex("V([1-9][0-9]?)-([$BASE58_ALPHABET]{$PAYLOAD_LENGTH})([$BASE58_ALPHABET]{$CHECKSUM_LENGTH})")
+        private val CODE_PATTERN =
+            Regex("V([1-9][0-9]?)-([$BASE58_ALPHABET]{$PAYLOAD_LENGTH})([$BASE58_ALPHABET]{$CHECKSUM_LENGTH})")
     }
 }

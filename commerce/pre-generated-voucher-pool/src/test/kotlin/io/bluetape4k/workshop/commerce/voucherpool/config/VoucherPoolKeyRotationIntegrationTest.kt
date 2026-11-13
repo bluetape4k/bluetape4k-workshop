@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterAll
@@ -8,14 +9,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import java.util.UUID
-import javax.sql.DataSource
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 internal class VoucherPoolKeyRotationIntegrationTest {
+
     private lateinit var schema: String
-    private lateinit var dataSource: DataSource
+    private lateinit var dataSource: HikariDataSource
 
     @BeforeAll
     fun createSchema() {
@@ -28,6 +29,9 @@ internal class VoucherPoolKeyRotationIntegrationTest {
     @AfterAll
     fun dropSchema() {
         VOUCHER_POOL_TASK_12_POSTGRES.dropSchema(schema)
+        if (this::dataSource.isInitialized) {
+            dataSource.close()
+        }
     }
 
     @Test
@@ -42,8 +46,10 @@ internal class VoucherPoolKeyRotationIntegrationTest {
         policy.canRetire("unused").shouldBeFalse()
 
         execute(
-            """UPDATE voucher_pool_backup_inventory
-                SET restore_rehearsed_at=statement_timestamp(),retained_until=statement_timestamp()""",
+            """
+                UPDATE voucher_pool_backup_inventory
+                SET restore_rehearsed_at=statement_timestamp(),retained_until=statement_timestamp()
+                """.trimIndent(),
         )
 
         policy.canRetire("unused").shouldBeTrue()
@@ -56,17 +62,22 @@ internal class VoucherPoolKeyRotationIntegrationTest {
         val batch = UUID.randomUUID()
         val entry = UUID.randomUUID()
         val effect = UUID.randomUUID()
+
         execute(
-            """INSERT INTO voucher_pool_campaigns
+            """
+                INSERT INTO voucher_pool_campaigns
                 (tenant_id,campaign_id,state,user_identity_key_version,policy_version)
-                VALUES ('$tenant','$campaign','ACTIVE',12,1)""",
+                VALUES ('$tenant','$campaign','ACTIVE',12,1)
+                """.trimIndent(),
         )
         execute(
-            """INSERT INTO voucher_pool_batches
+            """
+                INSERT INTO voucher_pool_batches
                 (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
                  policy_version,activates_at,expected_count,next_source_ordinal,accepted_count)
                 VALUES ('$tenant','$batch','$campaign','ACTIVE','GENERATED',decode('01','hex'),decode('02','hex'),
-                        1,statement_timestamp(),1,1,1)""",
+                        1,statement_timestamp(),1,1,1)
+                """.trimIndent(),
         )
         execute(
             """INSERT INTO voucher_pool_entries
@@ -74,29 +85,29 @@ internal class VoucherPoolKeyRotationIntegrationTest {
                  verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,wrap_nonce,kek_version)
                 VALUES ('$tenant','$entry','$campaign','$batch',0,'AVAILABLE',decode('03','hex'),decode('04','hex'),11,
                         decode('05','hex'),decode('060606060606060606060606','hex'),decode('07','hex'),
-                        decode('080808080808080808080808','hex'),'kek-v1')""",
+                        decode('080808080808080808080808','hex'),'kek-v1')""".trimIndent(),
         )
         execute(
             """INSERT INTO voucher_pool_code_dedup
                 (tenant_id,stable_dedup_digest,first_campaign_id,first_batch_id,first_entry_id,key_version)
-                VALUES ('$tenant',decode('03','hex'),'$campaign','$batch','$entry',1)""",
+                VALUES ('$tenant',decode('03','hex'),'$campaign','$batch','$entry',1)""".trimIndent(),
         )
         execute(
             """INSERT INTO voucher_pool_command_tombstones
                 (tenant_id,operation,key_version,scoped_key_digest,fingerprint,effect_id)
-                VALUES ('$tenant','reserve',2,decode('09','hex'),decode('0a','hex'),'$effect')""",
+                VALUES ('$tenant','reserve',2,decode('09','hex'),decode('0a','hex'),'$effect')""".trimIndent(),
         )
         execute(
             """INSERT INTO voucher_pool_audits
                 (tenant_id,campaign_id,aggregate_type,aggregate_id,revision,policy_version,actor_type,reason_code,audit_key_version)
-                VALUES ('$tenant','$campaign','CAMPAIGN','$campaign',0,1,'SYSTEM','KEY_REFERENCE',15)""",
+                VALUES ('$tenant','$campaign','CAMPAIGN','$campaign',0,1,'SYSTEM','KEY_REFERENCE',15)""".trimIndent(),
         )
         execute(
             """INSERT INTO voucher_pool_revoke_preview_grants
                 (tenant_id,grant_id,aggregate_type,aggregate_id,aggregate_revision,impact_digest,
                  affected_count,signature_key_version,signature_digest,expires_at)
                 VALUES ('$tenant','${UUID.randomUUID()}','CAMPAIGN','$campaign',0,decode('0b','hex'),
-                        1,16,decode('0c','hex'),statement_timestamp()+interval '1 hour')""",
+                        1,16,decode('0c','hex'),statement_timestamp()+interval '1 hour')""".trimIndent(),
         )
         execute(
             """INSERT INTO voucher_pool_backup_inventory
@@ -105,11 +116,15 @@ internal class VoucherPoolKeyRotationIntegrationTest {
                  command_tombstone_version,retained_until)
                 VALUES ('${UUID.randomUUID()}','$tenant',ARRAY['retired-kek'],ARRAY['13'],ARRAY['14'],ARRAY['17'],
                         ARRAY['18'],'1','2',
-                        statement_timestamp()+interval '1 day')""",
+                        statement_timestamp()+interval '1 day')""".trimIndent(),
         )
     }
 
     private fun execute(sql: String) {
-        dataSource.connection.use { connection -> connection.createStatement().use { it.execute(sql) } }
+        dataSource.connection.use { conn ->
+            conn.createStatement().use {
+                it.execute(sql)
+            }
+        }
     }
 }

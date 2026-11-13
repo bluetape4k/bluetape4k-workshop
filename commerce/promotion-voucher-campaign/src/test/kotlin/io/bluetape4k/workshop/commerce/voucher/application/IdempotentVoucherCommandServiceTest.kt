@@ -19,7 +19,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 import java.util.function.Supplier
 
 internal class IdempotentVoucherCommandServiceTest {
@@ -34,7 +34,7 @@ internal class IdempotentVoucherCommandServiceTest {
             context.refresh()
 
             context.getBean(IdempotentVoucherCommandService::class.java).javaClass shouldBeEqualTo
-                IdempotentVoucherCommandService::class.java
+                    IdempotentVoucherCommandService::class.java
         }
     }
 
@@ -58,20 +58,20 @@ internal class IdempotentVoucherCommandServiceTest {
 
         result shouldBeEqualTo IdempotentCommandResult.Completed(RESPONSE, replayed = false)
         events shouldBeEqualTo
-            listOf(
-                "tx:start",
-                "lookup",
-                "tx:commit",
-                "admission",
-                "tx:start",
-                "acquire",
-                "tx:commit",
-                "tx:start",
-                "owner-check",
-                "business",
-                "finalize",
-                "tx:commit",
-            )
+                listOf(
+                    "tx:start",
+                    "lookup",
+                    "tx:commit",
+                    "admission",
+                    "tx:start",
+                    "acquire",
+                    "tx:commit",
+                    "tx:start",
+                    "owner-check",
+                    "business",
+                    "finalize",
+                    "tx:commit",
+                )
         store.businessFinalizeSharedTransaction.shouldBeTrue()
     }
 
@@ -91,7 +91,8 @@ internal class IdempotentVoucherCommandServiceTest {
         assertFailsWith<IllegalStateException> {
             service.execute(COMMAND, admission = { null }) { effects++; RESPONSE }
         }
-        val replay = service(store, RecordingTransactions()).execute(COMMAND, admission = { null }) { effects++; RESPONSE }
+        val replay =
+            service(store, RecordingTransactions()).execute(COMMAND, admission = { null }) { effects++; RESPONSE }
 
         replay shouldBeEqualTo IdempotentCommandResult.Completed(RESPONSE, replayed = true)
         effects shouldBeEqualTo 1
@@ -118,7 +119,7 @@ internal class IdempotentVoucherCommandServiceTest {
         failed shouldBeEqualTo IdempotentCommandResult.Retryable(RETRYABLE)
         store.released.shouldBeTrue()
         service.execute(COMMAND, admission = { null }) { RESPONSE } shouldBeEqualTo
-            IdempotentCommandResult.Completed(RESPONSE, replayed = false)
+                IdempotentCommandResult.Completed(RESPONSE, replayed = false)
     }
 
     private fun service(
@@ -135,7 +136,7 @@ internal class IdempotentVoucherCommandServiceTest {
 
     private class RecordingTransactions(
         private val events: MutableList<String> = mutableListOf(),
-    ) : VoucherTransactionRunner {
+    ): VoucherTransactionRunner {
         var active = false
 
         override fun <T> foregroundTransaction(block: () -> T): T {
@@ -152,7 +153,7 @@ internal class IdempotentVoucherCommandServiceTest {
     private class FakeStore(
         private val events: MutableList<String> = mutableListOf(),
         private val transactionActive: () -> Boolean = { true },
-    ) : VoucherIdempotencyStore {
+    ): VoucherIdempotencyStore {
         private var terminal: StoredHttpResponse? = null
         private var owned = false
         var acquireCalled = false

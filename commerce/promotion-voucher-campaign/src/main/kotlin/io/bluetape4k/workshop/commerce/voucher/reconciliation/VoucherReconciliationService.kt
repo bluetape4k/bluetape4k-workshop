@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.reconciliation
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -311,7 +312,7 @@ internal class VoucherReconciliationService(
     }
 
     private fun backoffFor(attempt: Int): Duration =
-        Duration.ofSeconds(1L shl (attempt - 1).coerceIn(0, MAX_BACKOFF_SHIFT))
+        (1L shl (attempt - 1).coerceIn(0, MAX_BACKOFF_SHIFT)).seconds()
 
     private fun cursorOf(id: Long): String =
         Base64.getUrlEncoder().withoutPadding().encodeToString(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(id).array())
@@ -341,6 +342,6 @@ internal class VoucherReconciliationService(
         private const val MAX_BATCH_SIZE = 50
         private const val DEFAULT_MAX_ATTEMPTS = 5
         private const val MAX_BACKOFF_SHIFT = 5
-        private val DEFAULT_RUN_DEADLINE: Duration = Duration.ofSeconds(10)
+        private val DEFAULT_RUN_DEADLINE: Duration = 10.seconds()
     }
 }

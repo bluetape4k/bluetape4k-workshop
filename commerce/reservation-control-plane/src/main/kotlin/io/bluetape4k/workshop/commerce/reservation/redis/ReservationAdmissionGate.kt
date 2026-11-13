@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.redis
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -11,15 +12,21 @@ import java.time.Duration
 import java.util.concurrent.CancellationException
 import java.util.concurrent.locks.LockSupport
 
-enum class AdmissionMode { REDIS_ADVISORY, LOCAL_FALLBACK }
+enum class AdmissionMode {
+    REDIS_ADVISORY,
+    LOCAL_FALLBACK
+}
 
-enum class AdmissionRejection { LOCAL_CAPACITY, REDIS_CAPACITY }
+enum class AdmissionRejection {
+    LOCAL_CAPACITY,
+    REDIS_CAPACITY
+}
 
-sealed interface AdmissionOutcome<out T> : Serializable {
+sealed interface AdmissionOutcome<out T>: Serializable {
     data class Executed<out T>(
         val value: T,
         val mode: AdmissionMode,
-    ) : AdmissionOutcome<T> {
+    ): AdmissionOutcome<T> {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -27,7 +34,7 @@ sealed interface AdmissionOutcome<out T> : Serializable {
 
     data class Rejected(
         val reason: AdmissionRejection,
-    ) : AdmissionOutcome<Nothing> {
+    ): AdmissionOutcome<Nothing> {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -47,9 +54,9 @@ interface AdmissionPermitBackend {
 class ReservationAdmissionGate(
     private val localBulkhead: NodeLocalDatabaseBulkhead,
     private val redisBackend: AdmissionPermitBackend? = null,
-    private val redisWaitTime: Duration = Duration.ofMillis(100),
+    private val redisWaitTime: Duration = 100.millis(),
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     init {
         require(!redisWaitTime.isNegative) { "redisWaitTime must not be negative" }
@@ -108,9 +115,9 @@ class LettuceSemaphoreAdmissionBackend(
     connection: StatefulRedisConnection<String, String>,
     semaphoreKey: String = "reservation:admission",
     totalPermits: Int = 64,
-    private val retryInterval: Duration = Duration.ofMillis(10),
-) : AdmissionPermitBackend {
-    companion object : KLogging()
+    private val retryInterval: Duration = 10.millis(),
+): AdmissionPermitBackend {
+    companion object: KLogging()
 
     private val semaphore =
         LettuceSemaphore(

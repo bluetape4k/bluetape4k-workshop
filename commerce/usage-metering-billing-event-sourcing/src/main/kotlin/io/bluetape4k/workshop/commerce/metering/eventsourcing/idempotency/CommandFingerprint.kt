@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
-import java.nio.charset.StandardCharsets.UTF_8
+import io.bluetape4k.support.toUtf8Bytes
 import java.security.MessageDigest
-import java.util.Locale
+import java.util.*
 
 @JvmInline
 value class CommandDigest(val value: String) {
@@ -31,7 +31,7 @@ object CommandFingerprint {
     }
 
     private fun sha256(value: String): CommandDigest = CommandDigest(
-        MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8))
+        MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes())
             .joinToString("") { "%02x".format(Locale.ROOT, it) },
     )
 

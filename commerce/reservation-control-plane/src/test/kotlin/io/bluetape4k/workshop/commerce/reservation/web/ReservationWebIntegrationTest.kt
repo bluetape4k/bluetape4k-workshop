@@ -8,7 +8,7 @@ import org.springframework.http.MediaType
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class ReservationWebIntegrationTest : AbstractReservationIntegrationTest() {
+internal class ReservationWebIntegrationTest: AbstractReservationIntegrationTest() {
     @Test
     fun `capacity one admits exactly one of ten concurrent live HTTP holds`() {
         val accepted = AtomicInteger()

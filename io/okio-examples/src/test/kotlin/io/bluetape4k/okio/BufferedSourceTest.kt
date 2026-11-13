@@ -543,7 +543,7 @@ class BufferedSourceTest: AbstractOkioTest() {
             }
 
             // 내용 자체는 읽을 수 있어야 함
-            bytes shouldBeEqualTo "Hello".toByteArray() + byteArrayOf(0)
+            bytes shouldBeEqualTo "Hello".toUtf8Bytes() + byteArrayOf(0)
             source.exhausted().shouldBeTrue()  // source is exhausted after reading all bytes
         }
     }

@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.javatimes.days
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.DomainEventJsonCodec
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.ReconciliationQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.ReconciliationService
@@ -27,7 +29,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 class TenantIsolationIntegrationTest {
@@ -117,7 +119,7 @@ class TenantIsolationIntegrationTest {
     }
 
     private fun query(tenantId: String): ReconciliationQuery =
-        ReconciliationQuery(tenantId, PROJECTION, NOW.minusSeconds(1), NOW.plusSeconds(1))
+        ReconciliationQuery(tenantId, PROJECTION, NOW.minusSeconds(1), NOW + 1.seconds())
 
     private companion object {
         const val TENANT_A = "tenant-a"
@@ -125,7 +127,7 @@ class TenantIsolationIntegrationTest {
         const val PROJECTION = "billing"
         const val SHARED_EXTERNAL_ID = "shared-usage"
         val NOW: Instant = Instant.parse("2026-07-01T00:00:00Z")
-        val LEASE_DURATION: Duration = Duration.ofSeconds(30)
-        val RETENTION: Duration = Duration.ofDays(7)
+        val LEASE_DURATION: Duration = 30.seconds()
+        val RETENTION: Duration = 7.days()
     }
 }

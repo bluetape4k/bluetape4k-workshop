@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolProperties
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.ObjectProvider
@@ -20,7 +21,9 @@ internal data class TenantPrincipal(
     val tenantId: String,
     val principalId: String,
 ) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 /** production authentication integration point입니다. 구현체는 두 값을 모두 trusted server state에서 도출해야 합니다. */
@@ -35,6 +38,9 @@ internal class TenantPrincipalResolver(
     private val productionAdapters: ObjectProvider<VoucherPoolProductionAuthAdapter>,
 ) : HandlerMethodArgumentResolver,
     WebMvcConfigurer {
+
+    companion object: KLogging()
+
     override fun supportsParameter(parameter: MethodParameter): Boolean =
         parameter.parameterType == TenantPrincipal::class.java
 
@@ -49,9 +55,11 @@ internal class TenantPrincipalResolver(
         if (request.getHeader(DEMO_PRINCIPAL_HEADER) != null) throw resourceNotFound()
         val adapters = productionAdapters.orderedStream().limit(2).toList()
         if (adapters.size > 1) throw resourceNotFound()
+
         adapters.singleOrNull()?.let { adapter ->
             return adapter.resolve(request)?.validated() ?: throw resourceNotFound()
         }
+
         return if (request.hasLoopbackDemoIdentity()) {
             resolveLoopbackDemoPrincipal(request)
         } else {
@@ -69,8 +77,8 @@ internal class TenantPrincipalResolver(
             throw resourceNotFound()
         }
         return boundedPrincipal(
-            request.getHeader(TENANT_HEADER),
-            request.getHeader(PRINCIPAL_HEADER),
+            tenant = request.getHeader(TENANT_HEADER),
+            principal = request.getHeader(PRINCIPAL_HEADER),
         )
     }
 
@@ -86,6 +94,7 @@ internal class TenantPrincipalResolver(
 
     private fun boundedPrincipal(tenant: String?, principal: String?): TenantPrincipal {
         val http = properties.http
+
         return try {
             TenantPrincipal(
                 tenantId = requireBoundedAscii(tenant, 1, http.maxTenantLength),
@@ -96,7 +105,8 @@ internal class TenantPrincipalResolver(
         }
     }
 
-    private fun serverAddress(): String = environment.getProperty("server.address", "127.0.0.1")
+    private fun serverAddress(): String =
+        environment.getProperty("server.address", "127.0.0.1")
 }
 
 /** unauthenticated workshop adapter가 public bind에서 접근 가능해지지 못하게 합니다. */
@@ -106,6 +116,9 @@ internal class VoucherPoolAuthStartupValidator(
     private val environment: Environment,
     private val productionAdapters: ObjectProvider<VoucherPoolProductionAuthAdapter>,
 ) : SmartInitializingSingleton {
+
+    companion object: KLogging()
+
     override fun afterSingletonsInstantiated() {
         validateOperatorCredentials()
         val adapterCount = productionAdapters.orderedStream().limit(2).count()

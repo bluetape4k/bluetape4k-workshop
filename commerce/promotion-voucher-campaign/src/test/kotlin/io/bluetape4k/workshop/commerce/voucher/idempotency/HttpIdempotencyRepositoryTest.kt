@@ -6,13 +6,13 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class HttpIdempotencyRepositoryTest {
     private val gate =
@@ -20,7 +20,7 @@ internal class HttpIdempotencyRepositoryTest {
             foregroundPermits = 1,
             workerPermits = 1,
             sseMaintenancePermits = 1,
-            acquireTimeout = Duration.ofSeconds(1),
+            acquireTimeout = 1.seconds(),
         )
     private val repository = HttpIdempotencyRepository(gate)
 
@@ -29,9 +29,9 @@ internal class HttpIdempotencyRepositoryTest {
         withTables(TestDB.POSTGRESQL, HttpIdempotencyTable) {
             val owner = withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW) } as IdempotencyAcquireResult.Owner
 
-            withPermit { repository.finalize(SCOPE, owner.ownerToken, NOW.plusSeconds(1), RESPONSE) }.shouldBeTrue()
-            withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW.plusSeconds(2)) } shouldBeEqualTo
-                IdempotencyAcquireResult.Replay(RESPONSE)
+            withPermit { repository.finalize(SCOPE, owner.ownerToken, NOW + 1.seconds(), RESPONSE) }.shouldBeTrue()
+            withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW + 2.seconds()) } shouldBeEqualTo
+                    IdempotencyAcquireResult.Replay(RESPONSE)
         }
     }
 
@@ -40,8 +40,8 @@ internal class HttpIdempotencyRepositoryTest {
         withTables(TestDB.POSTGRESQL, HttpIdempotencyTable) {
             withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW) }
 
-            withPermit { repository.acquire(SCOPE, Digest.sha256("different"), NOW.plusSeconds(1)) } shouldBeEqualTo
-                IdempotencyAcquireResult.FingerprintConflict
+            withPermit { repository.acquire(SCOPE, Digest.sha256("different"), NOW + 1.seconds()) } shouldBeEqualTo
+                    IdempotencyAcquireResult.FingerprintConflict
         }
     }
 
@@ -50,11 +50,11 @@ internal class HttpIdempotencyRepositoryTest {
         withTables(TestDB.POSTGRESQL, HttpIdempotencyTable) {
             val first = withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW) } as IdempotencyAcquireResult.Owner
             withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW.plusSeconds(30)) } shouldBeEqualTo
-                IdempotencyAcquireResult.InProgress(Duration.ofSeconds(60))
+                    IdempotencyAcquireResult.InProgress(60.seconds())
 
             val second =
                 withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW.plusSeconds(91)) }
-                    as IdempotencyAcquireResult.Owner
+                        as IdempotencyAcquireResult.Owner
 
             withPermit { repository.finalize(SCOPE, first.ownerToken, NOW.plusSeconds(92), RESPONSE) }.shouldBeFalse()
             withPermit { repository.finalize(SCOPE, second.ownerToken, NOW.plusSeconds(92), RESPONSE) }.shouldBeTrue()
@@ -69,7 +69,7 @@ internal class HttpIdempotencyRepositoryTest {
             withPermit { repository.isOwner(SCOPE, owner.ownerToken, NOW.plusSeconds(61)) }.shouldBeFalse()
             withPermit { repository.finalize(SCOPE, owner.ownerToken, NOW.plusSeconds(61), RESPONSE) }.shouldBeFalse()
             withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW.plusSeconds(61)) } shouldBeEqualTo
-                IdempotencyAcquireResult.InProgress(Duration.ofSeconds(29))
+                    IdempotencyAcquireResult.InProgress(29.seconds())
         }
     }
 
@@ -79,7 +79,7 @@ internal class HttpIdempotencyRepositoryTest {
             val first = withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW) } as IdempotencyAcquireResult.Owner
 
             withPermit { repository.release(SCOPE, first.ownerToken) }.shouldBeTrue()
-            withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW.plusSeconds(1)) }
+            withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW + 1.seconds()) }
                 .let { it is IdempotencyAcquireResult.Owner }
                 .shouldBeTrue()
         }
@@ -92,11 +92,12 @@ internal class HttpIdempotencyRepositoryTest {
             val activeScope = SCOPE.copy(resourceId = "active", keyDigest = Digest.sha256("active"))
             val expired =
                 withPermit {
-                    repository.acquire(expiredScope, FINGERPRINT, NOW, retention = Duration.ofSeconds(120))
+                    repository.acquire(expiredScope, FINGERPRINT, NOW, retention = 120.seconds())
                 } as IdempotencyAcquireResult.Owner
-            val active = withPermit { repository.acquire(activeScope, FINGERPRINT, NOW) } as IdempotencyAcquireResult.Owner
-            withPermit { repository.finalize(expiredScope, expired.ownerToken, NOW.plusSeconds(1), RESPONSE) }
-            withPermit { repository.finalize(activeScope, active.ownerToken, NOW.plusSeconds(1), RESPONSE) }
+            val active =
+                withPermit { repository.acquire(activeScope, FINGERPRINT, NOW) } as IdempotencyAcquireResult.Owner
+            withPermit { repository.finalize(expiredScope, expired.ownerToken, NOW + 1.seconds(), RESPONSE) }
+            withPermit { repository.finalize(activeScope, active.ownerToken, NOW + 1.seconds(), RESPONSE) }
 
             withPermit { repository.cleanupExpired(NOW.plusSeconds(121), limit = 1) } shouldBeEqualTo 1
             withPermit { repository.find(expiredScope) }.shouldBeNull()
@@ -108,12 +109,14 @@ internal class HttpIdempotencyRepositoryTest {
     fun `storage excludes raw idempotency keys arbitrary json and voucher codes`() {
         withTables(TestDB.POSTGRESQL, HttpIdempotencyTable) {
             val owner = withPermit { repository.acquire(SCOPE, FINGERPRINT, NOW) } as IdempotencyAcquireResult.Owner
-            withPermit { repository.finalize(SCOPE, owner.ownerToken, NOW.plusSeconds(1), RESPONSE) }
+            withPermit { repository.finalize(SCOPE, owner.ownerToken, NOW + 1.seconds(), RESPONSE) }
 
             val columns = HttpIdempotencyTable.columns.map { it.name }.toSet()
             columns.any { it in setOf("raw_key", "response_body", "voucher_code", "owner_token") }.shouldBeFalse()
-            withPermit { HttpIdempotencyTable.selectAll().single()[HttpIdempotencyTable.responseHeaders] } shouldBeEqualTo
-                "ETag=%22claim-3%22&Location=%2Fclaims%2Fclaim-1"
+            withPermit {
+                HttpIdempotencyTable.selectAll().single()[HttpIdempotencyTable.responseHeaders]
+            } shouldBeEqualTo
+                    "ETag=%22claim-3%22&Location=%2Fclaims%2Fclaim-1"
         }
     }
 

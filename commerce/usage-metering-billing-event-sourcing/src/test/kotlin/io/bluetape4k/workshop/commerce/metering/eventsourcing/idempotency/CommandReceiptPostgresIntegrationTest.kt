@@ -3,24 +3,25 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Duration
-import java.time.Instant
 import java.math.BigDecimal
-import java.util.UUID
+import java.time.Instant
+import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -28,7 +29,7 @@ class CommandReceiptPostgresIntegrationTest {
     private val fixture = EventStoreDatabaseFixture()
     private val repository = CommandReceiptRepository()
     private val eventStore = EventStoreRepository()
-    private val service = CommandReceiptService(repository, Duration.ofSeconds(30), Duration.ofHours(24))
+    private val service = CommandReceiptService(repository, 30.seconds(), 24.hours())
     private val scope = CommandScope("tenant-a", "meter-register", CommandFingerprint.key("stable-key"))
     private val fingerprint = CommandFingerprint.request("meter-register", mapOf("code" to "api_calls"))
 
@@ -36,7 +37,8 @@ class CommandReceiptPostgresIntegrationTest {
     fun `same command replays its exact terminal response`() {
         fixture.reset()
         val now = Instant.parse("2026-07-01T00:00:00Z")
-        val owned = fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
+        val owned =
+            fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
         fixture.executor.transaction { service.succeed(owned, 201, "{\"code\":\"api_calls\"}", now) }.shouldBeTrue()
 
         val replay = fixture.executor.transaction { service.acquire(scope, fingerprint, now) }
@@ -61,7 +63,13 @@ class CommandReceiptPostgresIntegrationTest {
     fun `expired owner is fenced after takeover`() {
         fixture.reset()
         val acquiredAt = Instant.parse("2026-07-01T00:00:00Z")
-        val first = fixture.executor.transaction { service.acquire(scope, fingerprint, acquiredAt) } as CommandAcquireResult.Owned
+        val first = fixture.executor.transaction {
+            service.acquire(
+                scope,
+                fingerprint,
+                acquiredAt
+            )
+        } as CommandAcquireResult.Owned
         val second = fixture.executor.transaction {
             service.acquire(scope, fingerprint, acquiredAt.plusSeconds(31))
         }
@@ -77,7 +85,13 @@ class CommandReceiptPostgresIntegrationTest {
     fun `stale owner is rejected before event append`() {
         fixture.reset()
         val acquiredAt = Instant.parse("2026-07-01T00:00:00Z")
-        val first = fixture.executor.transaction { service.acquire(scope, fingerprint, acquiredAt) } as CommandAcquireResult.Owned
+        val first = fixture.executor.transaction {
+            service.acquire(
+                scope,
+                fingerprint,
+                acquiredAt
+            )
+        } as CommandAcquireResult.Owned
         fixture.executor.transaction { service.acquire(scope, fingerprint, acquiredAt.plusSeconds(31)) }
 
         assertFailsWith<CommandOwnerLostException> {
@@ -89,7 +103,8 @@ class CommandReceiptPostgresIntegrationTest {
     fun `event append and terminal response roll back together`() {
         fixture.reset()
         val now = Instant.parse("2026-07-01T00:00:00Z")
-        val owned = fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
+        val owned =
+            fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
         val stream = StreamKey("tenant-a", "Usage", "atomic")
 
         assertFailsWith<IllegalStateException> {
@@ -102,7 +117,8 @@ class CommandReceiptPostgresIntegrationTest {
         }
 
         fixture.executor.transaction { eventStore.load(stream) }.shouldBeEmpty()
-        fixture.executor.transaction { service.acquire(scope, fingerprint, now.plusSeconds(1)) }.shouldBeInstanceOf<CommandAcquireResult.InProgress>()
+        fixture.executor.transaction { service.acquire(scope, fingerprint, now + 1.seconds()) }
+            .shouldBeInstanceOf<CommandAcquireResult.InProgress>()
     }
 
     private fun usageEvent(now: Instant): NewEvent = NewEvent(

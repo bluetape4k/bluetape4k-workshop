@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.integration
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.tink.digest.TinkDigesters
 import org.junit.jupiter.api.Test
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.HexFormat
+import java.util.*
 
 class TinkDigestCompatibilityTest {
 
@@ -25,12 +27,12 @@ class TinkDigestCompatibilityTest {
         val payload = "한글과 emoji🙂"
         val digest = jdkDigestHex(payload)
 
-        TinkDigesters.SHA256.matchesHex(payload, digest) shouldBeEqualTo true
-        TinkDigesters.SHA256.matchesHex(payload, digest.uppercase()) shouldBeEqualTo false
-        TinkDigesters.SHA256.matchesHex(payload, "not-hex") shouldBeEqualTo false
-        TinkDigesters.SHA256.matchesHex(payload, digest.dropLast(2)) shouldBeEqualTo false
+        TinkDigesters.SHA256.matchesHex(payload, digest).shouldBeTrue()
+        TinkDigesters.SHA256.matchesHex(payload, digest.uppercase()).shouldBeFalse()
+        TinkDigesters.SHA256.matchesHex(payload, "not-hex").shouldBeFalse()
+        TinkDigesters.SHA256.matchesHex(payload, digest.dropLast(2)).shouldBeFalse()
     }
 
     private fun jdkDigestHex(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.sweeper
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.LeaderRunResult
 import io.bluetape4k.leader.LeaderSlot
@@ -18,7 +19,7 @@ data class SweepBatchSummary(
     val expiredHolds: Int,
     val promotedEntries: Int,
     val staleConflicts: Int,
-) : Serializable {
+): Serializable {
     init {
         require(scannedResources >= 0) { "scannedResources must not be negative" }
         require(expiredHolds >= 0) { "expiredHolds must not be negative" }
@@ -53,8 +54,8 @@ fun interface SweepLeaderGate {
 /** elected-null과 skipped를 합치지 않고 published leader 0.4.0 result API를 호출합니다. */
 class LeaderElectorSweepGate(
     private val elector: LeaderElector,
-) : SweepLeaderGate {
-    companion object : KLogging()
+): SweepLeaderGate {
+    companion object: KLogging()
 
     override fun run(
         slot: LeaderSlot,
@@ -63,25 +64,29 @@ class LeaderElectorSweepGate(
 }
 
 /** 안정적인 operational failure category입니다. 어떤 category도 PostgreSQL correctness 약화를 의미하지 않습니다. */
-enum class SweepFailureCode { LEADER_BACKEND_UNAVAILABLE, ACTION_FAILED, EMPTY_RESULT }
+enum class SweepFailureCode {
+    LEADER_BACKEND_UNAVAILABLE,
+    ACTION_FAILED,
+    EMPTY_RESULT
+}
 
 /** local suppression과 distributed leader skip을 포함하는 scheduler tick outcome 하나입니다. */
-sealed interface SweepTickOutcome : Serializable {
+sealed interface SweepTickOutcome: Serializable {
     data class Completed(
         val summary: SweepBatchSummary,
-    ) : SweepTickOutcome {
+    ): SweepTickOutcome {
         companion object {
             private const val serialVersionUID = 1L
         }
     }
 
-    data object Skipped : SweepTickOutcome
+    data object Skipped: SweepTickOutcome
 
-    data object LocalBusy : SweepTickOutcome
+    data object LocalBusy: SweepTickOutcome
 
     data class Failed(
         val code: SweepFailureCode,
-    ) : SweepTickOutcome {
+    ): SweepTickOutcome {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -97,9 +102,9 @@ class ReservationExpirySweeper(
     private val sweepWork: ReservationSweepWork,
     private val instanceId: String,
     private val maxResources: Int = 32,
-    private val tickBudget: Duration = Duration.ofSeconds(5),
+    private val tickBudget: Duration = 5.seconds(),
 ) {
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val LOCK_NAME = "reservation-expiry-sweeper"
     }
 
@@ -148,8 +153,8 @@ class ReservationExpirySweeper(
                     } else {
                         log.debug {
                             "reservation_sweep_completed scanned=${summary.scannedResources} " +
-                                "expired=${summary.expiredHolds} promoted=${summary.promotedEntries} " +
-                                "stale=${summary.staleConflicts}"
+                                    "expired=${summary.expiredHolds} promoted=${summary.promotedEntries} " +
+                                    "stale=${summary.staleConflicts}"
                         }
                         SweepTickOutcome.Completed(summary)
                     }

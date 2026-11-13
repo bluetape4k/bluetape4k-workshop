@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.ZoneOffset
 
-internal class ClaimCommandServiceTest : VoucherCommandTestSupport() {
+internal class ClaimCommandServiceTest: VoucherCommandTestSupport() {
     @Test
     fun `redemption changes allocated claim once without changing capacity`() {
         createCampaign()

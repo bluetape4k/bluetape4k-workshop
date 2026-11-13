@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -29,7 +31,7 @@ internal data class VoucherMigration(
         return MigrationScript(
             version = version,
             checksum = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString(),
-            sql = bytes.toString(Charsets.UTF_8),
+            sql = bytes.toUtf8String(),
         )
     }
 }
@@ -55,14 +57,14 @@ internal enum class VoucherMigrationFailureCode {
 internal class VoucherMigrationException(
     val code: VoucherMigrationFailureCode,
     cause: Throwable? = null,
-) : RuntimeException(code.name, cause)
+): RuntimeException(code.name, cause)
 
 /** application-owned schema를 PostgreSQL transaction advisory lock 아래에서 정확히 한 번 적용합니다. */
 internal class VoucherMigrationRunner(
     private val dataSource: DataSource,
     private val migration: VoucherMigration,
     private val advisoryLockKey: Long,
-    private val lockTimeout: Duration = Duration.ofSeconds(30),
+    private val lockTimeout: Duration = 30.seconds(),
 ) {
     init {
         require(!lockTimeout.isNegative && !lockTimeout.isZero) { "lockTimeout must be positive" }
@@ -93,7 +95,7 @@ internal class VoucherMigrationRunner(
                 connection.rollbackQuietly()
                 log.warn {
                     "voucher_migration_failed version=${script.version} " +
-                        "code=${VoucherMigrationFailureCode.STATEMENT_FAILED}"
+                            "code=${VoucherMigrationFailureCode.STATEMENT_FAILED}"
                 }
                 throw VoucherMigrationException(VoucherMigrationFailureCode.STATEMENT_FAILED, failure)
             }
@@ -171,7 +173,7 @@ internal class VoucherMigrationRunner(
         runCatching { rollback() }
     }
 
-    companion object : KLogging() {
-        private val LOCK_RETRY_DELAY: Duration = Duration.ofMillis(10)
+    companion object: KLogging() {
+        private val LOCK_RETRY_DELAY: Duration = 10.millis()
     }
 }

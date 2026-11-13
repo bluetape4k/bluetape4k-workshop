@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.commerce.reservation.redis
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.junit.jupiter.api.Test
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 
 class LettuceReservationCoordinationIntegrationTest {
     @Test
@@ -16,10 +20,10 @@ class LettuceReservationCoordinationIntegrationTest {
             val second = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
 
             try {
-                first.tryAcquire(Duration.ZERO) shouldBeEqualTo true
-                second.tryAcquire(Duration.ZERO) shouldBeEqualTo false
+                first.tryAcquire(Duration.ZERO).shouldBeTrue()
+                second.tryAcquire(Duration.ZERO).shouldBeFalse()
                 first.release()
-                second.tryAcquire(Duration.ofMillis(200)) shouldBeEqualTo true
+                second.tryAcquire(200.millis()).shouldBeTrue()
                 second.release()
             } finally {
                 connection.sync().del(key)
@@ -30,15 +34,15 @@ class LettuceReservationCoordinationIntegrationTest {
     fun `published Lettuce lock suppresses the same opaque command until token checked release`() =
         withRedisConnection { connection ->
             val prefix = "reservation:test:suppression:${UUID.randomUUID()}"
-            val backend = LettuceLockSuppressionBackend(connection, prefix, Duration.ofSeconds(2))
+            val backend = LettuceLockSuppressionBackend(connection, prefix, 2.seconds())
 
             val first = backend.tryAcquire("opaque_id_123")
             first?.let {
-                backend.tryAcquire("opaque_id_123") shouldBeEqualTo null
+                backend.tryAcquire("opaque_id_123").shouldBeNull()
                 it.close()
                 backend.tryAcquire("opaque_id_123")?.close()
             }
-            (first != null) shouldBeEqualTo true
+            (first != null).shouldBeTrue()
             connection.sync().del("$prefix:opaque_id_123")
         }
 
@@ -49,9 +53,9 @@ class LettuceReservationCoordinationIntegrationTest {
             val beforeEviction = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
             val afterEviction = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
 
-            beforeEviction.tryAcquire(Duration.ZERO) shouldBeEqualTo true
+            beforeEviction.tryAcquire(Duration.ZERO).shouldBeTrue()
             connection.sync().del(key)
-            afterEviction.tryAcquire(Duration.ZERO) shouldBeEqualTo true
+            afterEviction.tryAcquire(Duration.ZERO).shouldBeTrue()
             afterEviction.release()
             connection.sync().del(key)
         }

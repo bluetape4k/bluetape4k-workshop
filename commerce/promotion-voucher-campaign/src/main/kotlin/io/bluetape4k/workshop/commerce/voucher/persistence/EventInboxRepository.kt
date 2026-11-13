@@ -23,12 +23,12 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Repository
 internal class EventInboxRepository(
     private val gate: DatabasePermitGate,
-) : LongAuditableJdbcRepository<EventInboxRecord, EventInboxTable> {
+): LongAuditableJdbcRepository<EventInboxRecord, EventInboxTable> {
     override val table = EventInboxTable
     override fun extractId(entity: EventInboxRecord): Long = entity.id
 
@@ -117,8 +117,8 @@ internal class EventInboxRepository(
         gate.requireHeld()
         val predicate =
             (table.tenantId eq tenantId) and
-                (table.status inList BACKLOG_STATUSES) and
-                (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
+                    (table.status inList BACKLOG_STATUSES) and
+                    (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
         return table.selectAll()
             .where { predicate }
             .orderBy(table.id to SortOrder.ASC)
@@ -138,7 +138,7 @@ internal class EventInboxRepository(
                 .selectAll()
                 .where {
                     ((table.status eq InboxStatus.PENDING) and (table.nextAttemptAt lessEq now)) or
-                        ((table.status eq InboxStatus.CLAIMED) and (table.claimUntil lessEq now))
+                            ((table.status eq InboxStatus.CLAIMED) and (table.claimUntil lessEq now))
                 }.orderBy(table.nextAttemptAt to SortOrder.ASC, table.id to SortOrder.ASC)
                 .limit(1)
                 .forUpdate(
@@ -185,7 +185,7 @@ internal class EventInboxRepository(
     fun lockAggregate(record: EventInboxRecord) {
         gate.requireHeld()
         val material = "${record.tenantId}:${record.aggregateType}:${record.aggregateId}"
-        val digest = MessageDigest.getInstance("SHA-256").digest(material.toByteArray(StandardCharsets.UTF_8))
+        val digest = MessageDigest.getInstance("SHA-256").digest(material.toUtf8Bytes())
         val lockKey = ByteBuffer.wrap(digest).long
         TransactionManager.current().exec("SELECT pg_advisory_xact_lock($lockKey)")
     }
@@ -196,9 +196,9 @@ internal class EventInboxRepository(
             .selectAll()
             .where {
                 (table.tenantId eq record.tenantId) and
-                    (table.aggregateType eq record.aggregateType) and
-                    (table.aggregateId eq record.aggregateId) and
-                    (table.status eq InboxStatus.APPLIED)
+                        (table.aggregateType eq record.aggregateType) and
+                        (table.aggregateId eq record.aggregateId) and
+                        (table.status eq InboxStatus.APPLIED)
             }.orderBy(table.observedSequence to SortOrder.DESC)
             .limit(1)
             .singleOrNull()
@@ -242,7 +242,7 @@ internal class EventInboxRepository(
         return findById(record.id)
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private val TERMINAL_OUTCOMES = setOf(InboxStatus.APPLIED, InboxStatus.IGNORED, InboxStatus.CONFLICT)
         private val BACKLOG_STATUSES = listOf(InboxStatus.PENDING, InboxStatus.CLAIMED, InboxStatus.FAILED)
     }

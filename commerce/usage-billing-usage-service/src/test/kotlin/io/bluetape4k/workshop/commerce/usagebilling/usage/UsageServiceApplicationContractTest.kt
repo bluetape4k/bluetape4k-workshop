@@ -7,6 +7,6 @@ class UsageServiceApplicationContractTest {
     @Test
     fun `usage service exposes its own boot application class`() {
         Class.forName("io.bluetape4k.workshop.commerce.usagebilling.usage.UsageServiceApplication").name shouldBeEqualTo
-            "io.bluetape4k.workshop.commerce.usagebilling.usage.UsageServiceApplication"
+                "io.bluetape4k.workshop.commerce.usagebilling.usage.UsageServiceApplication"
     }
 }

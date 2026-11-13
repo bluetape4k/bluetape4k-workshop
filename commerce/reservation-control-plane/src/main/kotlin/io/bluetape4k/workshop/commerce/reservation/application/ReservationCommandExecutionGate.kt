@@ -49,5 +49,5 @@ internal class ReservationCommandExecutionGate(
         }
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

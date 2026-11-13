@@ -6,7 +6,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.TestPropertySource
 
 @TestPropertySource(properties = ["reservation.operator.enabled=true"])
-internal class OperatorWebIntegrationTest : AbstractReservationIntegrationTest() {
+internal class OperatorWebIntegrationTest: AbstractReservationIntegrationTest() {
     @Test
     fun `operator key protects idempotent force release and bounded manual sweep`() {
         val owner = "operator-fixture-owner-0123456789abcdef0123456789abcdef"

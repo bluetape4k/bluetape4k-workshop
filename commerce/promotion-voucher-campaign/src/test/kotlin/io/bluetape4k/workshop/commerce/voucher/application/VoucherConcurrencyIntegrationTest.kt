@@ -1,21 +1,27 @@
 package io.bluetape4k.workshop.commerce.voucher.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeIn
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.nanos
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.ZoneOffset
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
-internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
+internal class VoucherConcurrencyIntegrationTest: VoucherCommandTestSupport() {
     @Test
     fun `capacity storm has exactly N winners and never oversells`() {
         createCampaign(capacity = 3, perUserLimit = 1)
         val outcomes =
-            race(*(1..12).map { index ->
+            race(
+                *(1..12).map { index ->
                     { allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "user-$index")) }
                 }.toTypedArray(),
             )
@@ -35,7 +41,8 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
             )
 
         outcomes.count(Result<Any>::isSuccess) shouldBeEqualTo 1
-        outcomes.filter(Result<Any>::isFailure).all { it.exceptionOrNull() is VoucherCommandException } shouldBeEqualTo true
+        outcomes.filter(Result<Any>::isFailure)
+            .all { it.exceptionOrNull() is VoucherCommandException }.shouldBeTrue()
         val campaign = campaignSnapshot()
         val contributingClaims =
             queryLong(
@@ -73,10 +80,11 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
             )
 
         outcomes.count(Result<Any>::isSuccess) shouldBeEqualTo 1
-        outcomes.filter(Result<Any>::isFailure).all { it.exceptionOrNull() is VoucherCommandException } shouldBeEqualTo true
+        outcomes.filter(Result<Any>::isFailure)
+            .all { it.exceptionOrNull() is VoucherCommandException }.shouldBeTrue()
         jdbc.foregroundTransaction { audits.findAggregate(TENANT_ID, allocated.claim.claimId) }
             .count { it.revision == 1L } shouldBeEqualTo 1
-        campaignSnapshot().allocatedCount.let { it == 0 || it == 1 } shouldBeEqualTo true
+        campaignSnapshot().allocatedCount.let { it == 0 || it == 1 }.shouldBeTrue()
     }
 
     @Test
@@ -92,7 +100,8 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
             )
 
         outcomes.count(Result<Any>::isSuccess) shouldBeEqualTo 1
-        outcomes.filter(Result<Any>::isFailure).all { it.exceptionOrNull() is VoucherCommandException } shouldBeEqualTo true
+        outcomes.filter(Result<Any>::isFailure)
+            .all { it.exceptionOrNull() is VoucherCommandException }.shouldBeTrue()
         campaignSnapshot().allocatedCount shouldBeEqualTo 0
         jdbc.foregroundTransaction { audits.findAggregate(TENANT_ID, allocated.claim.claimId) }
             .count { it.revision == 1L } shouldBeEqualTo 1
@@ -122,14 +131,31 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
                         ReviewDecisionCommand(TENANT_ID, CAMPAIGN_ID, pending.claimId, review.id, 0, pending.revision),
                     )
                 },
-                { claimCommands.expire(ClaimTransitionCommand(TENANT_ID, CAMPAIGN_ID, pending.claimId, pending.revision)) },
+                {
+                    claimCommands.expire(
+                        ClaimTransitionCommand(
+                            TENANT_ID,
+                            CAMPAIGN_ID,
+                            pending.claimId,
+                            pending.revision
+                        )
+                    )
+                },
             )
 
         outcomes.count(Result<Any>::isSuccess) shouldBeEqualTo 1
-        outcomes.filter(Result<Any>::isFailure).all { it.exceptionOrNull() is VoucherCommandException } shouldBeEqualTo true
+        outcomes.filter(Result<Any>::isFailure)
+            .all { it.exceptionOrNull() is VoucherCommandException }.shouldBeTrue()
         campaignSnapshot().allocatedCount shouldBeEqualTo 0
-        jdbc.foregroundTransaction { checkNotNull(claims.findPublic(TENANT_ID, pending.claimId)) }.state.name shouldBeEqualTo
-            "EXPIRED"
+        jdbc.foregroundTransaction {
+            checkNotNull(
+                claims.findPublic(
+                    TENANT_ID,
+                    pending.claimId
+                )
+            )
+        }.state.name shouldBeEqualTo
+                "EXPIRED"
     }
 
     @Test
@@ -159,11 +185,11 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
                         runCatching {
                             allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "blocked-user"))
                         }.exceptionOrNull()
-                    }.get(8, TimeUnit.SECONDS)
-                val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt)
+                    }.get(8.seconds)
+                val elapsedMillis = (System.nanoTime() - startedAt).nanos().toMillis()
 
-                (failure != null).shouldBeTrue()
-                (elapsedMillis in 4_500..7_500).shouldBeTrue()
+                failure.shouldNotBeNull()
+                elapsedMillis shouldBeIn 4_500..7_500
             }
             blocker.rollback()
         }
@@ -181,14 +207,14 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
                     executor.submit(
                         Callable {
                             ready.countDown()
-                            check(start.await(2, TimeUnit.SECONDS)) { "race start barrier timed out" }
+                            start.await(2.seconds).shouldBeTrue()
                             runCatching(action)
                         },
                     )
                 }
-            check(ready.await(2, TimeUnit.SECONDS)) { "race readiness barrier timed out" }
+            ready.await(2.seconds).shouldBeTrue()
             start.countDown()
-            futures.map { it.get(10, TimeUnit.SECONDS) }
+            futures.map { it.get(10.seconds) }
         }
     }
 }

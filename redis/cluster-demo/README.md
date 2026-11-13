@@ -14,7 +14,7 @@ The example keeps two boundaries separate. Spring Data Redis proves cluster rout
 
 ![Redis Cluster Demo number service sequence](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-sequence-01.png)
 
-`NumberService` opens `StringRedisTemplate.requiredConnectionFactory.clusterConnection`, writes `number.toByteArray()` as the key, writes `(number * 2).toByteArray()` as the value, then reads the bytes back as `Int`.
+`NumberService` opens `StringRedisTemplate.requiredConnectionFactory.clusterConnection`, writes `number.toUtf8Bytes()` as the key, writes `(number * 2).toUtf8Bytes()` as the value, then reads the bytes back as `Int`.
 
 ## Key Components
 
@@ -120,7 +120,7 @@ companion object: KLoggingChannel() {
 ```kotlin
 fun multiplyAndSave(number: Int) {
     operations.requiredConnectionFactory.clusterConnection.use { conn ->
-        conn.stringCommands()[number.toByteArray()] = (number * 2).toByteArray()
+        conn.stringCommands()[number.toUtf8Bytes()] = (number * 2).toUtf8Bytes()
     }
 }
 ```

@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucherpool.persistence
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucherpool.admission.PoolBusyException
 import org.springframework.transaction.PlatformTransactionManager
@@ -13,8 +15,7 @@ import java.sql.SQLException
 import java.sql.SQLTimeoutException
 import java.sql.SQLTransientConnectionException
 import java.time.Duration
-import java.util.Collections
-import java.util.IdentityHashMap
+import java.util.*
 
 private const val DEFAULT_CONNECTION_ACQUISITION_TIMEOUT_SECONDS = 2L
 private const val DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS = 5L
@@ -33,10 +34,11 @@ private const val POSTGRES_LOCK_NOT_AVAILABLE = "55P03"
 private const val POSTGRES_QUERY_CANCELED = "57014"
 
 private fun Throwable.timeoutPhaseInCauseChain(): JdbcTimeoutPhase? {
-    val visited = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
+    val visited: MutableSet<Throwable?> = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
     var current: Throwable? = this
     var phase: JdbcTimeoutPhase? = null
     var depth = 0
+
     while (current != null && depth < MAX_TIMEOUT_CAUSE_DEPTH) {
         if (phase != null || !visited.add(current)) break
         phase = current.directTimeoutPhase()
@@ -48,18 +50,20 @@ private fun Throwable.timeoutPhaseInCauseChain(): JdbcTimeoutPhase? {
 
 private fun Throwable.directTimeoutPhase(): JdbcTimeoutPhase? =
     when {
-        PoolBusyException::class.java.isInstance(this) -> JdbcTimeoutPhase.PERMIT
+        PoolBusyException::class.java.isInstance(this)              -> JdbcTimeoutPhase.PERMIT
         SQLTransientConnectionException::class.java.isInstance(this) -> JdbcTimeoutPhase.ACQUISITION
         SQLException::class.java.isInstance(this) &&
-            SQLException::class.java.cast(this).sqlState == POSTGRES_LOCK_NOT_AVAILABLE -> JdbcTimeoutPhase.LOCK
+                SQLException::class.java.cast(this)
+                    .sqlState == POSTGRES_LOCK_NOT_AVAILABLE        -> JdbcTimeoutPhase.LOCK
 
-        SQLTimeoutException::class.java.isInstance(this) -> JdbcTimeoutPhase.TRANSACTION
+        SQLTimeoutException::class.java.isInstance(this)            -> JdbcTimeoutPhase.TRANSACTION
         SQLException::class.java.isInstance(this) &&
-            SQLException::class.java.cast(this).sqlState == POSTGRES_QUERY_CANCELED -> JdbcTimeoutPhase.TRANSACTION
+                SQLException::class.java
+                    .cast(this).sqlState == POSTGRES_QUERY_CANCELED -> JdbcTimeoutPhase.TRANSACTION
 
-        TransactionTimedOutException::class.java.isInstance(this) -> JdbcTimeoutPhase.TRANSACTION
+        TransactionTimedOutException::class.java.isInstance(this)   -> JdbcTimeoutPhase.TRANSACTION
 
-        else -> null
+        else                                                        -> null
     }
 
 internal enum class JdbcExecutionLane {
@@ -77,15 +81,15 @@ internal enum class JdbcTimeoutPhase {
 }
 
 internal data class VoucherPoolJdbcTimeouts(
-    val connectionAcquisition: Duration = Duration.ofSeconds(DEFAULT_CONNECTION_ACQUISITION_TIMEOUT_SECONDS),
-    val foregroundTransaction: Duration = Duration.ofSeconds(DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS),
-    val operatorTransaction: Duration = Duration.ofSeconds(DEFAULT_OPERATOR_TRANSACTION_TIMEOUT_SECONDS),
-    val workerChunkTransaction: Duration = Duration.ofSeconds(DEFAULT_WORKER_TRANSACTION_TIMEOUT_SECONDS),
-    val sseTransaction: Duration = Duration.ofSeconds(DEFAULT_SSE_TRANSACTION_TIMEOUT_SECONDS),
-    val foregroundLock: Duration = Duration.ofSeconds(DEFAULT_FOREGROUND_LOCK_TIMEOUT_SECONDS),
-    val operatorLock: Duration = Duration.ofSeconds(DEFAULT_OPERATOR_LOCK_TIMEOUT_SECONDS),
-    val workerLock: Duration = Duration.ofSeconds(DEFAULT_WORKER_LOCK_TIMEOUT_SECONDS),
-    val sseLock: Duration = Duration.ofSeconds(DEFAULT_SSE_LOCK_TIMEOUT_SECONDS),
+    val connectionAcquisition: Duration = DEFAULT_CONNECTION_ACQUISITION_TIMEOUT_SECONDS.seconds(),
+    val foregroundTransaction: Duration = DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS.seconds(),
+    val operatorTransaction: Duration = DEFAULT_OPERATOR_TRANSACTION_TIMEOUT_SECONDS.seconds(),
+    val workerChunkTransaction: Duration = DEFAULT_WORKER_TRANSACTION_TIMEOUT_SECONDS.seconds(),
+    val sseTransaction: Duration = DEFAULT_SSE_TRANSACTION_TIMEOUT_SECONDS.seconds(),
+    val foregroundLock: Duration = DEFAULT_FOREGROUND_LOCK_TIMEOUT_SECONDS.seconds(),
+    val operatorLock: Duration = DEFAULT_OPERATOR_LOCK_TIMEOUT_SECONDS.seconds(),
+    val workerLock: Duration = DEFAULT_WORKER_LOCK_TIMEOUT_SECONDS.seconds(),
+    val sseLock: Duration = DEFAULT_SSE_LOCK_TIMEOUT_SECONDS.seconds(),
 ) {
     init {
         require(
@@ -101,33 +105,32 @@ internal data class VoucherPoolJdbcTimeouts(
                 sseLock,
             ).all { !it.isNegative && !it.isZero },
         ) { "JDBC timeouts must be positive" }
+
         require(listOf(foregroundLock, operatorLock, workerLock, sseLock).all { it.toMillis() >= 1L }) {
             "JDBC lock timeouts must be at least one millisecond"
         }
     }
 
-    fun transactionTimeout(lane: JdbcExecutionLane): Duration =
-        when (lane) {
-            JdbcExecutionLane.FOREGROUND -> foregroundTransaction
-            JdbcExecutionLane.OPERATOR -> operatorTransaction
-            JdbcExecutionLane.WORKER -> workerChunkTransaction
-            JdbcExecutionLane.SSE -> sseTransaction
-        }
+    fun transactionTimeout(lane: JdbcExecutionLane): Duration = when (lane) {
+        JdbcExecutionLane.FOREGROUND -> foregroundTransaction
+        JdbcExecutionLane.OPERATOR   -> operatorTransaction
+        JdbcExecutionLane.WORKER     -> workerChunkTransaction
+        JdbcExecutionLane.SSE        -> sseTransaction
+    }
 
-    fun lockTimeout(lane: JdbcExecutionLane): Duration =
-        when (lane) {
-            JdbcExecutionLane.FOREGROUND -> foregroundLock
-            JdbcExecutionLane.OPERATOR -> operatorLock
-            JdbcExecutionLane.WORKER -> workerLock
-            JdbcExecutionLane.SSE -> sseLock
-        }
+    fun lockTimeout(lane: JdbcExecutionLane): Duration = when (lane) {
+        JdbcExecutionLane.FOREGROUND -> foregroundLock
+        JdbcExecutionLane.OPERATOR   -> operatorLock
+        JdbcExecutionLane.WORKER     -> workerLock
+        JdbcExecutionLane.SSE        -> sseLock
+    }
 }
 
 internal class VoucherPoolJdbcTimeoutException(
     val lane: JdbcExecutionLane,
     val phase: JdbcTimeoutPhase,
     cause: Throwable,
-) : RuntimeException("voucher pool JDBC timeout lane=$lane phase=$phase", cause)
+): RuntimeException("voucher pool JDBC timeout lane=$lane phase=$phase", cause)
 
 internal fun interface VoucherPoolJdbcMetrics {
     fun timedOut(
@@ -141,6 +144,7 @@ internal fun interface VoucherPoolJdbcMetrics {
 }
 
 internal fun interface VoucherPoolLockTimeoutApplier {
+
     fun apply(timeout: Duration)
 
     companion object {
@@ -156,43 +160,45 @@ internal class VoucherPoolJdbcExecutor(
     private val metrics: VoucherPoolJdbcMetrics = VoucherPoolJdbcMetrics.NONE,
     private val lockTimeoutApplier: VoucherPoolLockTimeoutApplier = VoucherPoolLockTimeoutApplier.NONE,
 ) {
-    fun <T> foregroundTransaction(block: () -> T): T = execute(JdbcExecutionLane.FOREGROUND, block)
+    fun <T> foregroundTransaction(block: () -> T): T =
+        execute(JdbcExecutionLane.FOREGROUND, block)
 
-    fun <T> operatorTransaction(block: () -> T): T = execute(JdbcExecutionLane.OPERATOR, block)
+    fun <T> operatorTransaction(block: () -> T): T =
+        execute(JdbcExecutionLane.OPERATOR, block)
 
-    fun <T> workerTransaction(block: () -> T): T = execute(JdbcExecutionLane.WORKER, block)
+    fun <T> workerTransaction(block: () -> T): T =
+        execute(JdbcExecutionLane.WORKER, block)
 
-    fun <T> sseTransaction(block: () -> T): T = execute(JdbcExecutionLane.SSE, block)
+    fun <T> sseTransaction(block: () -> T): T =
+        execute(JdbcExecutionLane.SSE, block)
 
     fun afterCommit(action: () -> Unit) {
         check(TransactionSynchronizationManager.isSynchronizationActive()) {
             "afterCommit requires active transaction synchronization"
         }
         TransactionSynchronizationManager.registerSynchronization(
-            object : TransactionSynchronization {
+            object: TransactionSynchronization {
                 override fun afterCommit() = action()
             },
         )
     }
 
-    private fun <T> execute(
+    private inline fun <T> execute(
         lane: JdbcExecutionLane,
-        block: () -> T,
+        crossinline block: () -> T,
     ): T =
         try {
             withPermit(lane) {
-                val template =
-                    TransactionTemplate(transactionManager).apply {
+                val template = TransactionTemplate(transactionManager)
+                    .apply {
                         timeout = timeouts.transactionTimeout(lane).toSpringTimeoutSeconds()
                     }
-                val result =
-                    checkNotNull(
-                        template.execute {
-                            lockTimeoutApplier.apply(timeouts.lockTimeout(lane))
-                            TransactionResult(block())
-                        },
-                    )
-                log.debug { "voucher_pool_jdbc_transaction_completed lane=$lane" }
+                val result = template.execute {
+                    lockTimeoutApplier.apply(timeouts.lockTimeout(lane))
+                    TransactionResult(block())
+                } // .checkNotNull { "Lock timeouts must not be null" }
+                log.debug { "voucher_pool_jdbc_transaction_completed lane=$lane, result=$result" }
+
                 result.value
             }
         } catch (failure: PoolBusyException) {
@@ -210,7 +216,7 @@ internal class VoucherPoolJdbcExecutor(
         when (lane) {
             JdbcExecutionLane.FOREGROUND,
             JdbcExecutionLane.OPERATOR,
-            -> gate.withForegroundPermit(block)
+                                  -> gate.withForegroundPermit(block)
 
             JdbcExecutionLane.WORKER -> gate.withWorkerPermit(block)
             JdbcExecutionLane.SSE -> gate.withSsePermit(block)
@@ -227,7 +233,9 @@ internal class VoucherPoolJdbcExecutor(
     }
 
     private fun Throwable.toTimeoutFailure(lane: JdbcExecutionLane): VoucherPoolJdbcTimeoutException? =
-        timeoutPhaseInCauseChain()?.let { phase -> timeoutFailure(lane, phase, this) }
+        timeoutPhaseInCauseChain()?.let { phase ->
+            timeoutFailure(lane, phase, this)
+        }
 
     private data class TransactionResult<T>(val value: T)
 
@@ -237,5 +245,5 @@ internal class VoucherPoolJdbcExecutor(
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

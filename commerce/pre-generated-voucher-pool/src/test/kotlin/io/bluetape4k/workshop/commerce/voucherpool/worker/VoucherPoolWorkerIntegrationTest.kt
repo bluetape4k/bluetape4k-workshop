@@ -5,22 +5,29 @@ package io.bluetape4k.workshop.commerce.voucherpool.worker
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.application.LifecycleHarness
+import io.bluetape4k.workshop.commerce.voucherpool.application.RedeemVoucherCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReplaceLostRevealCommand
-import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolLifecycleException
 import io.bluetape4k.workshop.commerce.voucherpool.application.UserCounts
+import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolLifecycleException
 import io.bluetape4k.workshop.commerce.voucherpool.application.applied
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRuntimeControl
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolWorkerDispatcher
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolWorkerTrigger
+import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
-import io.bluetape4k.workshop.commerce.voucherpool.application.RedeemVoucherCommand
-import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
-import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRuntimeControl
-import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolWorkerDispatcher
-import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolWorkerTrigger
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -30,18 +37,23 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 internal class VoucherPoolWorkerIntegrationTest {
+
+    companion object: KLogging()
+
     private val harness = LifecycleHarness("workers")
     private lateinit var claims: JdbcVoucherPoolWorkerRepository
     private lateinit var workers: JdbcVoucherPoolWorkers
 
-    @BeforeAll fun migrate() = harness.migrate()
+    @BeforeAll
+    fun migrate() = harness.migrate()
 
-    @AfterAll fun cleanup() = harness.cleanup()
+    @AfterAll
+    fun cleanup() = harness.cleanup()
 
     @BeforeEach
     fun reset() {
@@ -106,26 +118,31 @@ internal class VoucherPoolWorkerIntegrationTest {
     @Test
     fun `batch expiry preserves redeemed entries while expiring remaining capacity`() {
         val fixture = harness.activePool("batch-expiry", listOf("REDEEMED", "ALLOCATED", "EXPIRE-ME"))
-        val reservation = harness.reservations.reserve(harness.reserve(fixture, "redeemer", "expiry-redeem-reserve")).applied()
-        val allocation = harness.allocations.allocate(harness.allocate(reservation, "redeemer", "expiry-redeem-allocate")).applied()
+        val reservation =
+            harness.reservations.reserve(harness.reserve(fixture, "redeemer", "expiry-redeem-reserve")).applied()
+        val allocation =
+            harness.allocations.allocate(harness.allocate(reservation, "redeemer", "expiry-redeem-allocate")).applied()
         val reveal = harness.allocations.reveal(harness.reveal(allocation, "redeemer", "expiry-reveal")).applied()
         harness.redemptions.redeem(
             RedeemVoucherCommand(
-                harness.tenant,
-                fixture.campaign.campaignId,
-                allocation.allocationId,
-                "redeemer",
-                CanonicalVoucherCode.of("REDEEMED"),
-                reveal.revision,
-                "expiry-redeem",
+                tenantId = harness.tenant,
+                campaignId = fixture.campaign.campaignId,
+                allocationId = allocation.allocationId,
+                canonicalUser = "redeemer",
+                code = CanonicalVoucherCode.of("REDEEMED"),
+                expectedRevision = reveal.revision,
+                idempotencyKey = "expiry-redeem",
             ),
         ).applied()
+
         val activeReservation = harness.reservations.reserve(
             harness.reserve(fixture, "allocated-user", "expiry-active-reserve"),
         ).applied()
+
         val activeAllocation = harness.allocations.allocate(
             harness.allocate(activeReservation, "allocated-user", "expiry-active-allocate"),
         ).applied()
+
         harness.expireBatch(fixture.batch.batchId)
 
         runToCompletion(WorkerKind.BATCH_EXPIRY, fixture.batch.batchId)
@@ -141,11 +158,16 @@ internal class VoucherPoolWorkerIntegrationTest {
     @Test
     fun `batch expiry rejects a batch whose database expiry is not due`() {
         val fixture = harness.activePool("batch-not-due", listOf("NOT-DUE"))
-        val claim = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_EXPIRY, fixture.batch.batchId, "not-due-owner"),
-        )
+        val claim = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_EXPIRY,
+            scopeId = fixture.batch.batchId,
+            owner = "not-due-owner"
+        ).shouldNotBeNull()
 
-        assertFailsWith<IllegalStateException> { workers.runChunk(claim) }
+        assertFailsWith<IllegalStateException> {
+            workers.runChunk(claim)
+        }
 
         harness.batchState(fixture.batch.batchId).name shouldBeEqualTo "ACTIVE"
         claims.release(claim).state shouldBeEqualTo WorkerClaimState.IDLE
@@ -154,9 +176,12 @@ internal class VoucherPoolWorkerIntegrationTest {
     @Test
     fun `released claim resumes at its durable cursor and duplicate terminalization is harmless`() {
         val fixture = harness.activePool("restart", listOf("RESTART-1", "RESTART-2", "RESTART-3"))
-        val original = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_REVOKE, fixture.batch.batchId, "owner-a"),
-        )
+        val original = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_REVOKE,
+            scopeId = fixture.batch.batchId,
+            owner = "owner-a"
+        ).shouldNotBeNull()
 
         val first = workers.runChunk(original, requestedLimit = 1)
         first.processed shouldBeEqualTo 1
@@ -164,10 +189,14 @@ internal class VoucherPoolWorkerIntegrationTest {
         val checkpoint = checkNotNull(first.claim)
         claims.release(checkpoint)
 
-        var resumed = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_REVOKE, fixture.batch.batchId, "owner-b"),
-        )
-        (resumed.cursor > 0L).shouldBeTrue()
+        var resumed = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_REVOKE,
+            scopeId = fixture.batch.batchId,
+            owner = "owner-b"
+        ).shouldNotBeNull()
+
+        resumed.cursor shouldBeGreaterThan 0L
         val second = workers.runChunk(resumed, requestedLimit = 1)
         resumed = checkNotNull(second.claim)
         runToCompletion(resumed)
@@ -176,9 +205,13 @@ internal class VoucherPoolWorkerIntegrationTest {
         harness.poolDepth(fixture.batch.batchId, EntryState.REVOKED) shouldBeEqualTo 3L
         harness.auditCount("BATCH", fixture.batch.batchId, "REVOKED") shouldBeEqualTo 1L
 
-        val duplicate = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_REVOKE, fixture.batch.batchId, "owner-c"),
-        )
+        val duplicate = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_REVOKE,
+            scopeId = fixture.batch.batchId,
+            owner = "owner-c"
+        ).shouldNotBeNull()
+
         workers.runChunk(duplicate).completed.shouldBeTrue()
         harness.auditCount("BATCH", fixture.batch.batchId, "REVOKED") shouldBeEqualTo 1L
     }
@@ -187,15 +220,19 @@ internal class VoucherPoolWorkerIntegrationTest {
     fun `postgres dispatcher resumes durable work without Redis`() {
         val fixture = harness.activePool("postgres-dispatch", listOf("DISPATCH-1", "DISPATCH-2", "DISPATCH-3"))
         harness.expireBatch(fixture.batch.batchId)
-        val original = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_EXPIRY, fixture.batch.batchId, "departed-owner"),
-        )
+        val original = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_EXPIRY,
+            scopeId = fixture.batch.batchId,
+            owner = "departed-owner"
+        ).shouldNotBeNull()
+
         val first = workers.runChunk(original, requestedLimit = 1)
-        claims.release(checkNotNull(first.claim))
+        claims.release(first.claim!!)
         val dispatcher = VoucherPoolWorkerDispatcher(
-            claims,
-            VoucherPoolWorkerTrigger(workers, VoucherPoolRuntimeControl()),
-            "replacement-owner",
+            claims = claims,
+            trigger = VoucherPoolWorkerTrigger(workers, VoucherPoolRuntimeControl()),
+            owner = "replacement-owner",
         )
 
         val outcomes = dispatcher.runOnce()
@@ -210,15 +247,19 @@ internal class VoucherPoolWorkerIntegrationTest {
     fun `cursor wrap around rechecks earlier active rows`() {
         val fixture = harness.activePool("wrap", listOf("WRAP-1", "WRAP-2"))
         harness.expireBatch(fixture.batch.batchId)
-        val claim = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_EXPIRY, fixture.batch.batchId, "wrap-owner"),
-        )
+        val claim = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_EXPIRY,
+            scopeId = fixture.batch.batchId,
+            owner = "wrap-owner"
+        ).shouldNotBeNull()
+
         val beyondEnd = claims.checkpoint(claim, Long.MAX_VALUE)
 
         val outcome = workers.runChunk(beyondEnd)
 
         outcome.effects shouldBeEqualTo 2
-        runToCompletion(checkNotNull(outcome.claim))
+        runToCompletion(outcome.claim!!)
         harness.batchState(fixture.batch.batchId).name shouldBeEqualTo "EXPIRED"
     }
 
@@ -228,9 +269,11 @@ internal class VoucherPoolWorkerIntegrationTest {
         val reservation = harness.reservations.reserve(
             harness.reserve(fixture, "reconcile-user", "reconcile-reserve"),
         ).applied()
+
         harness.allocations.allocate(
             harness.allocate(reservation, "reconcile-user", "reconcile-allocate"),
         ).applied()
+
         harness.corruptPoolDepth(fixture.batch.batchId, EntryState.AVAILABLE, 9)
         harness.corruptUserCounts(fixture.campaign.campaignId, "reconcile-user", 7, 8, 9)
 
@@ -258,17 +301,18 @@ internal class VoucherPoolWorkerIntegrationTest {
         harness.expireReservation(reservation.reservationId)
         harness.corruptPoolDepth(fixture.batch.batchId, EntryState.RESERVED, 0)
 
-        val outcome = workers.run(
+        val outcome: WorkerRunOutcome = workers.run(
             WorkerRunRequest(
-                harness.tenant,
-                WorkerKind.RESERVATION_EXPIRY,
-                fixture.batch.batchId,
-                "runner-owner",
+                tenantId = harness.tenant,
+                kind = WorkerKind.RESERVATION_EXPIRY,
+                scopeId = fixture.batch.batchId,
+                owner = "runner-owner"
             ),
         )
+        log.debug { "outcome: $outcome" }
 
         outcome.state shouldBeEqualTo WorkerRunState.RETRYABLE
-        checkNotNull(outcome.claim).apply {
+        outcome.claim!!.apply {
             owner.shouldBeNull()
             attempt shouldBeEqualTo 1
             nextAction shouldBeEqualTo "RETRY_AFTER_BACKOFF"
@@ -283,26 +327,27 @@ internal class VoucherPoolWorkerIntegrationTest {
 
         val cancelled = workers.run(
             WorkerRunRequest(
-                harness.tenant,
-                WorkerKind.BATCH_REVOKE,
-                fixture.batch.batchId,
-                "cancel-owner",
+                tenantId = harness.tenant,
+                kind = WorkerKind.BATCH_REVOKE,
+                scopeId = fixture.batch.batchId,
+                owner = "cancel-owner",
                 requestedLimit = 1,
             ),
         ) { checks++ == 0 }
 
+        log.debug { "cancelled: $cancelled" }
         cancelled.state shouldBeEqualTo WorkerRunState.CANCELLED
         cancelled.effects shouldBeEqualTo 1
-        checkNotNull(cancelled.claim).apply {
+        cancelled.claim!!.apply {
             owner.shouldBeNull()
-            (cursor > 0L).shouldBeTrue()
+            cursor shouldBeGreaterThan 0L
         }
         workers.run(
             WorkerRunRequest(
-                harness.tenant,
-                WorkerKind.BATCH_REVOKE,
-                fixture.batch.batchId,
-                "resume-owner",
+                tenantId = harness.tenant,
+                kind = WorkerKind.BATCH_REVOKE,
+                scopeId = fixture.batch.batchId,
+                owner = "resume-owner",
                 requestedLimit = 1,
             ),
         ).state shouldBeEqualTo WorkerRunState.COMPLETED
@@ -316,13 +361,14 @@ internal class VoucherPoolWorkerIntegrationTest {
         harness.setCampaignState(fixture.campaign.campaignId, CampaignState.REVOKING)
         workers.run(
             WorkerRunRequest(
-                harness.tenant,
-                WorkerKind.CAMPAIGN_REVOKE,
-                fixture.campaign.campaignId,
-                "campaign-coordinator",
+                tenantId = harness.tenant,
+                kind = WorkerKind.CAMPAIGN_REVOKE,
+                scopeId = fixture.campaign.campaignId,
+                owner = "campaign-coordinator",
                 requestedLimit = 1,
             ),
         ).state shouldBeEqualTo WorkerRunState.COMPLETED
+
         runToCompletion(WorkerKind.BATCH_REVOKE, fixture.batch.batchId)
 
         harness.campaignState(fixture.campaign.campaignId) shouldBeEqualTo CampaignState.REVOKED
@@ -334,10 +380,15 @@ internal class VoucherPoolWorkerIntegrationTest {
         val reservation = harness.reservations.reserve(
             harness.reserve(fixture, "race-user", "race-reserve"),
         ).applied()
+
         val allocationCommand = harness.allocate(reservation, "race-user", "race-allocate")
-        val claim = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_REVOKE, fixture.batch.batchId, "race-worker"),
-        )
+        val claim = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_REVOKE,
+            scopeId = fixture.batch.batchId,
+            owner = "race-worker"
+        ).shouldNotBeNull()
+
         val start = CountDownLatch(1)
         val pool = Executors.newFixedThreadPool(2)
         try {
@@ -351,12 +402,12 @@ internal class VoucherPoolWorkerIntegrationTest {
             }
             start.countDown()
 
-            val firstChunk = workerFuture.get(10, TimeUnit.SECONDS)
-            allocationFuture.get(10, TimeUnit.SECONDS)?.let { failure ->
-                check(failure is VoucherPoolLifecycleException)
+            val firstChunk = workerFuture.get(10.seconds)
+            allocationFuture.get(10.seconds)?.let { failure ->
+                failure.shouldBeInstanceOf<VoucherPoolLifecycleException>()
                 failure.code shouldBeEqualTo VoucherPoolErrorCode.BATCH_REVOKED
             }
-            runToCompletion(checkNotNull(firstChunk.claim))
+            runToCompletion(firstChunk.claim!!)
         } finally {
             pool.shutdownNow()
         }
@@ -365,7 +416,7 @@ internal class VoucherPoolWorkerIntegrationTest {
         val counts = harness.userCounts(fixture.campaign.campaignId, "race-user")
         counts.activeReservations shouldBeEqualTo 0
         counts.activeAllocations shouldBeEqualTo 0
-        (counts.lifetimeConsumed in 0..1).shouldBeTrue()
+        counts.lifetimeConsumed shouldBeInRange 0..1
         harness.poolDepth(fixture.batch.batchId, EntryState.REVOKED) shouldBeEqualTo 1L
     }
 
@@ -375,23 +426,30 @@ internal class VoucherPoolWorkerIntegrationTest {
         val reservation = harness.reservations.reserve(
             harness.reserve(fixture, "replacement-user", "replacement-race-reserve"),
         ).applied()
+
         val allocation = harness.allocations.allocate(
             harness.allocate(reservation, "replacement-user", "replacement-race-allocate"),
         ).applied()
+
         val reveal = harness.allocations.reveal(
             harness.reveal(allocation, "replacement-user", "replacement-race-reveal"),
         ).applied()
+
         val replacementCommand = ReplaceLostRevealCommand(
-            harness.tenant,
-            fixture.campaign.campaignId,
-            allocation.allocationId,
-            "replacement-user",
-            reveal.revision,
-            "replacement-race",
+            tenantId = harness.tenant,
+            campaignId = fixture.campaign.campaignId,
+            allocationId = allocation.allocationId,
+            canonicalUser = "replacement-user",
+            expectedRevision = reveal.revision,
+            idempotencyKey = "replacement-race"
         )
-        val claim = checkNotNull(
-            claims.claim(harness.tenant, WorkerKind.BATCH_REVOKE, fixture.batch.batchId, "replacement-worker"),
-        )
+        val claim = claims.claim(
+            tenantId = harness.tenant,
+            kind = WorkerKind.BATCH_REVOKE,
+            scopeId = fixture.batch.batchId,
+            owner = "replacement-worker"
+        ).shouldNotBeNull()
+
         val start = CountDownLatch(1)
         val pool = Executors.newFixedThreadPool(2)
         try {
@@ -405,12 +463,12 @@ internal class VoucherPoolWorkerIntegrationTest {
             }
             start.countDown()
 
-            val firstChunk = workerFuture.get(10, TimeUnit.SECONDS)
-            replacementFuture.get(10, TimeUnit.SECONDS)?.let { failure ->
-                check(failure is VoucherPoolLifecycleException)
+            val firstChunk = workerFuture.get(10.seconds)
+            replacementFuture.get(10.seconds)?.let { failure ->
+                failure.shouldBeInstanceOf<VoucherPoolLifecycleException>()
                 failure.code shouldBeEqualTo VoucherPoolErrorCode.BATCH_REVOKED
             }
-            runToCompletion(checkNotNull(firstChunk.claim))
+            runToCompletion(firstChunk.claim!!)
         } finally {
             pool.shutdownNow()
         }
@@ -420,7 +478,7 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     private fun runToCompletion(kind: WorkerKind, scopeId: java.util.UUID) {
-        runToCompletion(checkNotNull(claims.claim(harness.tenant, kind, scopeId, "test-owner")))
+        runToCompletion(claims.claim(harness.tenant, kind, scopeId, "test-owner")!!)
     }
 
     private fun runToCompletion(initial: WorkerClaim) {
@@ -428,7 +486,7 @@ internal class VoucherPoolWorkerIntegrationTest {
         repeat(10) {
             val outcome = workers.runChunk(claim)
             if (outcome.completed) return
-            claim = checkNotNull(outcome.claim)
+            claim = outcome.claim.shouldNotBeNull()
         }
         error("worker did not complete within the bounded test run")
     }

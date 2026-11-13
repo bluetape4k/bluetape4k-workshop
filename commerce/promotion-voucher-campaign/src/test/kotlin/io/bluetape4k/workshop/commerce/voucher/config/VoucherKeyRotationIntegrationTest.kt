@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.idgenerators.uuid.Uuid
 import org.junit.jupiter.api.Test
 import java.sql.Timestamp
@@ -52,7 +54,7 @@ internal class VoucherKeyRotationIntegrationTest : VoucherCompatibilityTestSuppo
 
         val source = PostgresReferencedKeyVersionSource(dataSource)
         source.referencedVersions() shouldBeEqualTo ReferencedKeyVersions(setOf(2), setOf(3))
-        VoucherKeyRotationPolicy(source).canRetire(2) shouldBeEqualTo false
-        VoucherKeyRotationPolicy(source).canRetire(4) shouldBeEqualTo true
+        VoucherKeyRotationPolicy(source).canRetire(2).shouldBeFalse()
+        VoucherKeyRotationPolicy(source).canRetire(4).shouldBeTrue()
     }
 }

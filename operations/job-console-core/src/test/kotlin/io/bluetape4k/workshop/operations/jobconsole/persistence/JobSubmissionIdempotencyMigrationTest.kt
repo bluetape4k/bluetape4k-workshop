@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -84,7 +85,7 @@ class JobSubmissionIdempotencyMigrationTest {
     fun `V002 checksum drift fails closed after V001 and V002 are applied`() {
         JobConsoleDatabaseFixture().use { fixture ->
             JobMigrationRunner(fixture.dataSource, migrations(), advisoryLockKey = 520_005L).migrate()
-            val drifted = JobMigration("002", "CREATE TABLE drifted_migration(id UUID)".toByteArray())
+            val drifted = JobMigration("002", "CREATE TABLE drifted_migration(id UUID)".toUtf8Bytes())
 
             val failure = assertFailsWith<JobMigrationException> {
                 JobMigrationRunner(

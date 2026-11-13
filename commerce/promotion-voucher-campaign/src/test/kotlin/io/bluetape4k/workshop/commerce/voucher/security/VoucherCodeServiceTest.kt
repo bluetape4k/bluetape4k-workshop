@@ -5,13 +5,13 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 
 internal class VoucherCodeServiceTest {
     private val service = VoucherCodeService(fixedKeyRing())
@@ -22,7 +22,7 @@ internal class VoucherCodeServiceTest {
 
         issued.code.matches(Regex("V7-[1-9A-HJ-NP-Za-km-z]{22}[1-9A-HJ-NP-Za-km-z]{2}")).shouldBeTrue()
         service.verify(issued.code, issued.verifier, verificationKeyVersion = 7).shouldBeTrue()
-        issued.verifier.contentEquals(issued.code.toByteArray()).shouldBeFalse()
+        issued.verifier.contentEquals(issued.code.toUtf8Bytes()).shouldBeFalse()
         issued.generationKeyVersion shouldBeEqualTo 5
         issued.verificationKeyVersion shouldBeEqualTo 7
     }
@@ -33,7 +33,7 @@ internal class VoucherCodeServiceTest {
 
         issued.code shouldBeEqualTo "V7-2JNj1cRbsKnoHUCJNpSTTmjR"
         issued.verifier.toHexString() shouldBeEqualTo
-            "90e3bbf91f398b35d6e209fe13fa222f44137d142a54b4a0811ac896e2157689"
+                "90e3bbf91f398b35d6e209fe13fa222f44137d142a54b4a0811ac896e2157689"
     }
 
     @ParameterizedTest
@@ -61,9 +61,9 @@ internal class VoucherCodeServiceTest {
 
         baseline.code shouldNotBeEqualTo service.issue(input.copy(tenantId = "tenant-b")).code
         baseline.code shouldNotBeEqualTo
-            service.issue(input.copy(campaignId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ac"))).code
+                service.issue(input.copy(campaignId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ac"))).code
         baseline.code shouldNotBeEqualTo
-            service.issue(input.copy(allocationId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ce"))).code
+                service.issue(input.copy(allocationId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ce"))).code
     }
 
     @Test
@@ -74,7 +74,7 @@ internal class VoucherCodeServiceTest {
                 currentVerificationVersion = 8,
                 verificationKeys =
                     fixedKeyRing().verificationKeys +
-                        (8 to "verification-secret-material-00000002".toByteArray()),
+                            (8 to "verification-secret-material-00000002".toUtf8Bytes()),
             )
         val rotated = VoucherCodeService(rotatedRing)
         val retired =
@@ -113,8 +113,8 @@ internal class VoucherCodeServiceTest {
         VoucherCodeKeyRing(
             currentGenerationVersion = 5,
             currentVerificationVersion = 7,
-            generationKeys = mapOf(5 to "generation-secret-material-0000000001".toByteArray()),
-            verificationKeys = mapOf(7 to "verification-secret-material-00000001".toByteArray()),
+            generationKeys = mapOf(5 to "generation-secret-material-0000000001".toUtf8Bytes()),
+            verificationKeys = mapOf(7 to "verification-secret-material-00000001".toUtf8Bytes()),
         )
 
     private fun fixedGenerationInput(): VoucherGenerationInput =

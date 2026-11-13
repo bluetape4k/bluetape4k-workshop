@@ -5,7 +5,12 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.io.serializer.BinarySerializers
+import io.bluetape4k.jdbc.sql.singleLong
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.CommandScope
@@ -25,19 +30,22 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.testFixture
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
+@Suppress("SqlResolve")
 internal class VoucherPoolBackupRestoreIntegrationTest {
+
+    private companion object: KLogging() {
+        const val RESTORE_TENANT = "restore-tenant"
+    }
+
     @Test
     fun `restore preflight validates every key before database import`() {
         val imported = AtomicInteger()
         val complete = availableKeys()
+
         val missingCases = listOf(
             complete.copy(kekVersions = setOf("kek-v2")),
             complete.copy(verificationVersions = emptySet()),
@@ -48,11 +56,16 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             complete.copy(commandTombstoneVersions = emptySet()),
         )
 
-        missingCases.forEach { available ->
+        missingCases.forEach { missingCase ->
             val failure = assertFailsWith<VoucherPoolRestoreException> {
-                VoucherPoolRestoreCoordinator(available)
-                    .restore(manifest(), backupInventory(), { imported.incrementAndGet() }, ::passingSmoke)
+                VoucherPoolRestoreCoordinator(missingCase).restore(
+                    manifest = manifest(),
+                    inventory = backupInventory(),
+                    importer = { imported.incrementAndGet() },
+                    smoke = ::passingSmoke
+                )
             }
+            log.debug { "failure: $failure" }
             failure.code shouldBeEqualTo VoucherPoolRestoreFailureCode.MISSING_KEY
         }
 
@@ -63,22 +76,23 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
     fun `restore rejects a manifest that omits keys referenced by backup content`() {
         val imported = AtomicInteger()
         val complete = manifest()
-        val incompleteCases =
-            listOf(
-                complete.copy(userIdentityVersions = emptySet()),
-                complete.copy(auditVersions = emptySet()),
-                complete.copy(signatureVersions = emptySet()),
-            )
+
+        val incompleteCases = listOf(
+            complete.copy(userIdentityVersions = emptySet()),
+            complete.copy(auditVersions = emptySet()),
+            complete.copy(signatureVersions = emptySet()),
+        )
 
         incompleteCases.forEach { incomplete ->
             val failure = assertFailsWith<VoucherPoolRestoreException> {
                 VoucherPoolRestoreCoordinator(availableKeys()).restore(
-                    incomplete,
-                    backupInventory(),
-                    { imported.incrementAndGet() },
-                    ::passingSmoke,
+                    manifest = incomplete,
+                    inventory = backupInventory(),
+                    importer = { imported.incrementAndGet() },
+                    smoke = ::passingSmoke,
                 )
             }
+            log.debug { "failure: $failure" }
             failure.code shouldBeEqualTo VoucherPoolRestoreFailureCode.INCOMPLETE_MANIFEST
         }
 
@@ -90,22 +104,28 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         val effectCount = AtomicInteger(1)
         val coordinator = VoucherPoolRestoreCoordinator(availableKeys())
 
-        val restored = coordinator.restore(manifest(), backupInventory(), {}, ::passingSmoke)
+        val restored = coordinator.restore(
+            manifest = manifest(),
+            inventory = backupInventory(),
+            importer = {},
+            smoke = ::passingSmoke
+        )
+        log.debug { "restored: $restored" }
+
         val retryCode = if (restored.replayFenceRetained) VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED else null
 
         retryCode shouldBeEqualTo VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED
         effectCount.get() shouldBeEqualTo 1
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `backup manifest remains a stable serializable recovery contract`() {
         val original = manifest()
-        val bytes = ByteArrayOutputStream().use { output ->
-            ObjectOutputStream(output).use { it.writeObject(original) }
-            output.toByteArray()
-        }
-        val restored = ObjectInputStream(ByteArrayInputStream(bytes)).use { it.readObject() }
+        val bytes = BinarySerializers.JdkUnfiltered.serialize(original)
 
+        val restored = BinarySerializers.JdkUnfiltered.deserialize<BackupKeyManifest>(bytes).shouldNotBeNull()
+        log.debug { "restored: $restored" }
         restored shouldBeEqualTo original
     }
 
@@ -114,9 +134,16 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         val coordinator = VoucherPoolRestoreCoordinator(availableKeys())
 
         val failure = assertFailsWith<VoucherPoolRestoreException> {
-            coordinator.restore(manifest(), backupInventory(), {}) { passingSmoke().copy(cursorRestarted = false) }
+            coordinator.restore(
+                manifest = manifest(),
+                inventory = backupInventory(),
+                importer = {}
+            ) {
+                passingSmoke().copy(cursorRestarted = false)
+            }
         }
 
+        log.debug { "failure: $failure" }
         failure.code shouldBeEqualTo VoucherPoolRestoreFailureCode.SMOKE_FAILED
     }
 
@@ -131,16 +158,12 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             val coordinator = VoucherPoolRestoreCoordinator(availableKeys())
 
             val restored = coordinator.restore(
-                manifest(),
-                backupInventory(),
-                {
-                    restoreLogicalBackup(dataSource, fixture)
-                },
-                {
-                    inspectRestoredData(dataSource, fixture)
-                },
+                manifest = manifest(),
+                inventory = backupInventory(),
+                importer = { restoreLogicalBackup(dataSource, fixture) },
+                smoke = { inspectRestoredData(dataSource, fixture) },
             )
-
+            log.debug { "restored: $restored" }
             restored.passed.shouldBeTrue()
         } finally {
             VOUCHER_POOL_TASK_12_POSTGRES.dropSchema(schema)
@@ -154,6 +177,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             verifiedBackup = false,
             restoreRehearsalPassed = false,
         ) shouldBeEqualTo VoucherPoolRollbackStrategy.COMPATIBLE_PREVIOUS_BINARY
+
         VoucherPoolRollbackPolicy.select(
             previousBinaryCompatible = false,
             verifiedBackup = true,
@@ -169,27 +193,29 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         }
     }
 
-    private fun manifest() = BackupKeyManifest(
-        kekVersions = setOf("kek-v1"),
-        verificationVersions = setOf("2"),
-        stableDedupVersion = "1",
-        commandTombstoneVersion = "4",
-        userIdentityVersions = setOf("3"),
-        auditVersions = setOf("6"),
-        signatureVersions = setOf("7"),
-    )
+    private fun manifest(): BackupKeyManifest =
+        BackupKeyManifest(
+            kekVersions = setOf("kek-v1"),
+            verificationVersions = setOf("2"),
+            stableDedupVersion = "1",
+            commandTombstoneVersion = "4",
+            userIdentityVersions = setOf("3"),
+            auditVersions = setOf("6"),
+            signatureVersions = setOf("7"),
+        )
 
-    private fun availableKeys(kekVersions: Set<String> = setOf("kek-v1")) = VoucherPoolAvailableKeys(
-        kekVersions = kekVersions,
-        verificationVersions = setOf("2"),
-        stableDedupVersions = setOf("1"),
-        commandTombstoneVersions = setOf("4"),
-        userIdentityVersions = setOf("3"),
-        auditVersions = setOf("6"),
-        signatureVersions = setOf("7"),
-    )
+    private fun availableKeys(kekVersions: Set<String> = setOf("kek-v1")): VoucherPoolAvailableKeys =
+        VoucherPoolAvailableKeys(
+            kekVersions = kekVersions,
+            verificationVersions = setOf("2"),
+            stableDedupVersions = setOf("1"),
+            commandTombstoneVersions = setOf("4"),
+            userIdentityVersions = setOf("3"),
+            auditVersions = setOf("6"),
+            signatureVersions = setOf("7"),
+        )
 
-    private fun backupInventory() =
+    private fun backupInventory(): VoucherPoolBackupKeyInventory =
         VoucherPoolBackupKeyInventory(
             kekVersions = setOf("kek-v1"),
             verificationVersions = setOf("2"),
@@ -200,7 +226,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             signatureVersions = setOf("7"),
         )
 
-    private fun passingSmoke() =
+    private fun passingSmoke(): VoucherPoolRestoreSmokeResult =
         VoucherPoolRestoreSmokeResult(
             ciphertextReadableOrQuarantined = true,
             countersConsistent = true,
@@ -223,7 +249,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             dataSource,
             """INSERT INTO voucher_pool_campaigns
                 (tenant_id,campaign_id,state,user_identity_key_version,policy_version)
-                VALUES ('$RESTORE_TENANT','${fixture.campaignId}','ACTIVE',3,1)""",
+                VALUES ('$RESTORE_TENANT','${fixture.campaignId}','ACTIVE',3,1)""".trimIndent(),
         )
         execute(
             dataSource,
@@ -231,7 +257,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
                 (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
                  policy_version,activates_at,expected_count,next_source_ordinal,accepted_count)
                 VALUES ('$RESTORE_TENANT','${fixture.batchId}','${fixture.campaignId}','ACTIVE','GENERATED',decode('01','hex'),
-                        decode('02','hex'),1,statement_timestamp()-interval '1 hour',1,1,1)""",
+                        decode('02','hex'),1,statement_timestamp()-interval '1 hour',1,1,1)""".trimIndent(),
         )
         execute(
             dataSource,
@@ -244,12 +270,12 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
                         decode('${fixture.encrypted.copyCodeCiphertext().toHexString()}','hex'),
                         decode('${fixture.encrypted.copyCodeNonce().toHexString()}','hex'),
                         decode('${fixture.encrypted.copyWrappedDek().toHexString()}','hex'),
-                        decode('${fixture.encrypted.copyWrapNonce().toHexString()}','hex'),'kek-v1')""",
+                        decode('${fixture.encrypted.copyWrapNonce().toHexString()}','hex'),'kek-v1')""".trimIndent(),
         )
         execute(
             dataSource,
             """INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count)
-                VALUES ('$RESTORE_TENANT','${fixture.batchId}','AVAILABLE',1)""",
+                VALUES ('$RESTORE_TENANT','${fixture.batchId}','AVAILABLE',1)""".trimIndent(),
         )
     }
 
@@ -260,28 +286,30 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
                 (tenant_id,operation,scoped_key_digest,fingerprint,status,command_deadline,descriptor,expires_at)
                 VALUES ('$RESTORE_TENANT','reveal',decode('${fixture.scopedKeyDigest.toHexString()}','hex'),
                         decode('${fixture.fingerprint.copyBytes().toHexString()}','hex'),'COMPLETED',
-                        statement_timestamp()+interval '1 hour',NULL,statement_timestamp())""",
+                        statement_timestamp()+interval '1 hour',NULL,statement_timestamp())""".trimIndent(),
         )
         execute(
             dataSource,
             """INSERT INTO voucher_pool_command_tombstones
                 (tenant_id,operation,key_version,scoped_key_digest,fingerprint,effect_id)
                 VALUES ('$RESTORE_TENANT','reveal',4,decode('${fixture.scopedKeyDigest.toHexString()}','hex'),
-                        decode('${fixture.fingerprint.copyBytes().toHexString()}','hex'),'${fixture.effectId}')""",
+                        decode('${
+                fixture.fingerprint.copyBytes().toHexString()
+            }','hex'),'${fixture.effectId}')""".trimIndent(),
         )
         execute(
             dataSource,
             """INSERT INTO voucher_pool_audits
                 (tenant_id,campaign_id,aggregate_type,aggregate_id,revision,policy_version,actor_type,
                  reason_code,audit_key_version)
-                VALUES ('$RESTORE_TENANT','${fixture.campaignId}','CAMPAIGN','${fixture.campaignId}',0,1,'SYSTEM','BACKUP_RESTORE',6)""",
+                VALUES ('$RESTORE_TENANT','${fixture.campaignId}','CAMPAIGN','${fixture.campaignId}',0,1,'SYSTEM','BACKUP_RESTORE',6)""".trimIndent(),
         )
         execute(
             dataSource,
             """INSERT INTO voucher_pool_worker_claims
                 (tenant_id,worker_type,scope_id,owner_id,claim_until,next_attempt_at,checkpoint)
                 VALUES ('$RESTORE_TENANT','PURGE','${fixture.workerScopeId}','stale-worker',
-                        statement_timestamp()-interval '1 minute',statement_timestamp(),1)""",
+                        statement_timestamp()-interval '1 minute',statement_timestamp(),1)""".trimIndent(),
         )
         execute(
             dataSource,
@@ -289,7 +317,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
                 (tenant_id,grant_id,aggregate_type,aggregate_id,aggregate_revision,impact_digest,
                  affected_count,signature_key_version,signature_digest,expires_at)
                 VALUES ('$RESTORE_TENANT','${UUID.randomUUID()}','CAMPAIGN','${fixture.campaignId}',0,
-                        decode('0b','hex'),1,7,decode('0c','hex'),statement_timestamp()+interval '1 hour')""",
+                        decode('0b','hex'),1,7,decode('0c','hex'),statement_timestamp()+interval '1 hour')""".trimIndent(),
         )
     }
 
@@ -306,61 +334,86 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             """INSERT INTO voucher_pool_audits
                 (tenant_id,campaign_id,aggregate_type,aggregate_id,revision,policy_version,actor_type,
                  reason_code,audit_key_version)
-                VALUES ('$RESTORE_TENANT','${fixture.campaignId}','CAMPAIGN','${fixture.campaignId}',1,1,'SYSTEM','RESTORE_CURSOR_SMOKE',6)""",
+                VALUES (
+                  '$RESTORE_TENANT',
+                  '${fixture.campaignId}',
+                  'CAMPAIGN',
+                  '${fixture.campaignId}',
+                  1,
+                  1,
+                  'SYSTEM',
+                  'RESTORE_CURSOR_SMOKE'
+                  ,6
+                  )""".trimIndent(),
         )
         val takeoverCount = executeUpdate(
             dataSource,
             """UPDATE voucher_pool_worker_claims SET owner_id='restore-smoke',
                        claim_until=statement_timestamp()+interval '1 minute',revision=revision+1
                 WHERE tenant_id='$RESTORE_TENANT' AND scope_id='${fixture.workerScopeId}'
-                  AND claim_until<statement_timestamp()""",
+                  AND claim_until<statement_timestamp()""".trimIndent(),
         )
         val replayDecisions = List(2) { restoredReplayDecision(dataSource, fixture) }
         val replayFenceRetained = replayDecisions.all {
             it == IdempotencyDecision.Expired(fixture.effectId, null)
         }
+
         return VoucherPoolRestoreSmokeResult(
             ciphertextReadableOrQuarantined = restoredCiphertextIsReadable(dataSource, fixture),
             countersConsistent = queryLong(
-                dataSource,
-                """SELECT count(*) FROM voucher_pool_batches b
-                    WHERE b.tenant_id='$RESTORE_TENANT' AND b.accepted_count=(
-                        SELECT count(*) FROM voucher_pool_entries e
-                        WHERE e.tenant_id=b.tenant_id AND e.batch_id=b.batch_id)""".trimIndent(),
+                dataSource = dataSource,
+                sql = """SELECT count(*) FROM voucher_pool_batches b
+                          WHERE b.tenant_id='$RESTORE_TENANT' AND b.accepted_count=(
+                              SELECT count(*) FROM voucher_pool_entries e
+                              WHERE e.tenant_id=b.tenant_id AND e.batch_id=b.batch_id)""".trimIndent(),
             ) == 1L,
             replayFenceRetained = replayFenceRetained,
             cursorRestarted = queryLong(
-                dataSource,
-                "SELECT max(id) FROM voucher_pool_audits WHERE tenant_id='$RESTORE_TENANT'",
+                dataSource = dataSource,
+                sql = "SELECT max(id) FROM voucher_pool_audits WHERE tenant_id='$RESTORE_TENANT'",
             ) > priorCursor,
             staleWorkerTakenOver = takeoverCount == 1,
-            exactlyOnceRevealRetained = replayFenceRetained && queryLong(
-                dataSource,
-                """SELECT count(*) FROM voucher_pool_command_tombstones
-                    WHERE tenant_id='$RESTORE_TENANT' AND operation='reveal' AND effect_id IS NOT NULL""".trimIndent(),
-            ) == 1L,
+            exactlyOnceRevealRetained = replayFenceRetained &&
+                    queryLong(
+                        dataSource = dataSource,
+                        sql = """SELECT count(*) FROM voucher_pool_command_tombstones
+                          WHERE tenant_id='$RESTORE_TENANT' 
+                            AND operation='reveal' 
+                            AND effect_id IS NOT NULL""".trimIndent(),
+                    ) == 1L,
         )
     }
 
     private fun restoredReplayDecision(dataSource: DataSource, fixture: RestoreFixture): IdempotencyDecision {
         val database = Database.connect(dataSource)
         val repository = JdbcVoucherPoolIdempotencyRepository(fixture.digests)
+
         return transaction(database) {
             repository.acquire(fixture.commandScope, fixture.rawIdempotencyKey, fixture.fingerprint)
         }
     }
 
     private fun execute(dataSource: DataSource, sql: String) {
-        dataSource.connection.use { connection -> connection.createStatement().use { it.execute(sql) } }
+        dataSource.connection.use { connection ->
+            connection.createStatement().use {
+                it.execute(sql)
+            }
+        }
     }
 
     private fun executeUpdate(dataSource: DataSource, sql: String): Int =
-        dataSource.connection.use { connection -> connection.createStatement().use { it.executeUpdate(sql) } }
+        dataSource.connection.use { connection ->
+            connection.createStatement().use {
+                it.executeUpdate(sql)
+            }
+        }
 
     private fun queryLong(dataSource: DataSource, sql: String): Long =
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result -> check(result.next()); result.getLong(1) }
+                statement.executeQuery(sql).use { result ->
+                    result.singleLong()
+                }
             }
         }
 
@@ -368,28 +421,34 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         dataSource.connection.use { connection ->
             connection.prepareStatement(
                 """SELECT stable_dedup_digest,code_ciphertext,code_nonce,wrapped_dek,wrap_nonce,kek_version
-                    FROM voucher_pool_entries WHERE tenant_id=? AND entry_id=?""",
+                    FROM voucher_pool_entries 
+                    WHERE tenant_id=? AND entry_id=?""".trimIndent(),
             ).use { statement ->
                 statement.setString(1, RESTORE_TENANT)
                 statement.setObject(2, fixture.entryId)
+
                 statement.executeQuery().use { result ->
                     check(result.next())
-                    val digest = VoucherDigest.of(DigestPurpose.STABLE_DEDUP, 1, result.getBytes("stable_dedup_digest"))
-                    val encrypted = EncryptedVoucherCode.of(
-                        result.getBytes("code_ciphertext"),
-                        result.getBytes("code_nonce"),
-                        result.getBytes("wrapped_dek"),
-                        result.getBytes("wrap_nonce"),
-                        result.getString("kek_version"),
+                    val digest = VoucherDigest(
+                        purpose = DigestPurpose.STABLE_DEDUP,
+                        keyVersion = 1,
+                        value = result.getBytes("stable_dedup_digest")
                     )
-                    fixture.crypto.decryptAndVerify(fixture.identity, encrypted, digest) == fixture.code
+                    val encrypted = EncryptedVoucherCode(
+                        codeCiphertext = result.getBytes("code_ciphertext"),
+                        codeNonce = result.getBytes("code_nonce"),
+                        wrappedDek = result.getBytes("wrapped_dek"),
+                        wrapNonce = result.getBytes("wrap_nonce"),
+                        kekVersion = result.getString("kek_version"),
+                    )
+                    fixture.crypto.decryptAndVerify(
+                        entryIdentity = fixture.identity,
+                        encrypted = encrypted,
+                        expectedStableDedup = digest
+                    ) == fixture.code
                 }
             }
         }
-
-    private companion object {
-        const val RESTORE_TENANT = "restore-tenant"
-    }
 
     private class RestoreFixture(
         val campaignId: UUID = UUID.randomUUID(),
@@ -402,18 +461,25 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         val code = CanonicalVoucherCode.of("POOL-RESTORE-SMOKE")
         val digests = VoucherDigestService.testFixture()
         val crypto: VoucherEnvelopeCrypto = AesGcmVoucherEnvelopeCrypto(
-            VoucherKekRing.of(VoucherKek.of("kek-v1", ByteArray(32) { (31 + it).toByte() })),
-            digests,
+            kekRing = VoucherKekRing(VoucherKek("kek-v1", ByteArray(32) { (31 + it).toByte() })),
+            digests = digests,
         )
         val stableDigest = digests.stableDedup(RESTORE_TENANT, code)
         val encrypted = crypto.encrypt(identity, code)
         val commandScope = CommandScope(RESTORE_TENANT, "reveal")
         val rawIdempotencyKey = "restore-reveal-key"
-        val fingerprint = VoucherPoolFingerprint.command("reveal", mapOf("entryId" to entryId.toString()))
-        val scopedKeyDigest = digests.commandTombstone(
-            RESTORE_TENANT,
-            commandScope.operation,
-            rawIdempotencyKey,
-        ).copyBytes()
+
+        val fingerprint = VoucherPoolFingerprint.command(
+            operation = "reveal",
+            fields = mapOf("entryId" to entryId.toString())
+        )
+
+        val scopedKeyDigest = digests
+            .commandTombstone(
+                tenantId = RESTORE_TENANT,
+                operation = commandScope.operation,
+                rawIdempotencyKey = rawIdempotencyKey,
+            )
+            .copyBytes()
     }
 }

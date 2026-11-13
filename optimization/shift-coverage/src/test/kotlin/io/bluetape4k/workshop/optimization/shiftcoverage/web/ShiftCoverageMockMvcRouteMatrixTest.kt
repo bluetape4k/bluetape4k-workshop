@@ -149,7 +149,7 @@ class ShiftCoverageMockMvcRouteMatrixTest {
 
     @Test
     fun `callback signature and operator headers fail closed without writes`() {
-        val body = "{\"event\":\"availability.changed\"}".toByteArray()
+        val body = "{\"event\":\"availability.changed\"}".toUtf8Bytes()
         val eventId = "route-callback-invalid"
         val requestId = "route-callback-request"
 

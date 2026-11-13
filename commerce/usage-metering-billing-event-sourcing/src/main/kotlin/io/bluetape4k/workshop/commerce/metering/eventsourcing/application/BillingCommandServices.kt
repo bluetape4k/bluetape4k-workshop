@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingCloseStarted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodOpened
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodReducer
@@ -16,18 +17,17 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageReducer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageState
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.AggregateReplayer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.AggregateReplayRequest
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.AggregateReplayer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayPolicy
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayTelemetry
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.Locale
+import java.util.*
 
 @Service
 class MeterCommandService(
@@ -110,7 +110,7 @@ class UsageCommandService(
 
     private fun deterministicUsageId(sourceSystem: String, sourceEventId: String): String =
         MessageDigest.getInstance("SHA-256")
-            .digest("$sourceSystem\u0000$sourceEventId".toByteArray(UTF_8))
+            .digest("$sourceSystem\u0000$sourceEventId".toUtf8Bytes())
             .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 }
 

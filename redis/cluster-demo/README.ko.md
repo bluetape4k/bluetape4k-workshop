@@ -14,7 +14,7 @@
 
 ![Redis Cluster Demo number service sequence](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-sequence-01.png)
 
-`NumberService`는 `StringRedisTemplate.requiredConnectionFactory.clusterConnection`을 열고, `number.toByteArray()`를 key로, `(number * 2).toByteArray()`를 value로 저장한 뒤 bytes를 다시 `Int`로 읽습니다.
+`NumberService`는 `StringRedisTemplate.requiredConnectionFactory.clusterConnection`을 열고, `number.toUtf8Bytes()`를 key로, `(number * 2).toUtf8Bytes()`를 value로 저장한 뒤 bytes를 다시 `Int`로 읽습니다.
 
 ## 핵심 구성 요소
 
@@ -120,7 +120,7 @@ companion object: KLoggingChannel() {
 ```kotlin
 fun multiplyAndSave(number: Int) {
     operations.requiredConnectionFactory.clusterConnection.use { conn ->
-        conn.stringCommands()[number.toByteArray()] = (number * 2).toByteArray()
+        conn.stringCommands()[number.toUtf8Bytes()] = (number * 2).toUtf8Bytes()
     }
 }
 ```

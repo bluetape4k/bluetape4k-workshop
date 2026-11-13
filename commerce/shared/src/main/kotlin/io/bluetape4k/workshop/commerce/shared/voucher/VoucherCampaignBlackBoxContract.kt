@@ -1,14 +1,16 @@
 package io.bluetape4k.workshop.commerce.shared.voucher
 
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.javatimes.days
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
-import java.time.Duration
+import io.bluetape4k.support.toUtf8Bytes
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * normalized-state 예제와 event-sourced voucher 예제가 공유하는 표준 요청이다.
@@ -442,9 +444,9 @@ object VoucherCampaignBlackBoxContract {
     private const val CAPACITY = 20
 
     /** 실행일이 바뀌어도 공유 compatibility scenario가 만료되지 않도록 runtime-relative window를 사용합니다. */
-    private val CONTRACT_START: Instant = Instant.now().minus(Duration.ofMinutes(1))
+    private val CONTRACT_START: Instant = Instant.now().minus(1.minutes())
     private val STARTS_AT: Instant = CONTRACT_START
-    private val ENDS_AT: Instant = CONTRACT_START.plus(Duration.ofDays(2))
+    private val ENDS_AT: Instant = CONTRACT_START.plus(2.days())
 
     val createAndReplay: VoucherCampaignBlackBoxScenario =
         VoucherCampaignBlackBoxScenario(
@@ -589,7 +591,7 @@ object VoucherCampaignBlackBoxContract {
     }
 
     private fun missingCampaignAllocationFailure(): VoucherAllocationFailureBlackBoxScenario {
-        val campaignId = UUID.nameUUIDFromBytes("contract-missing-campaign".toByteArray())
+        val campaignId = UUID.nameUUIDFromBytes("contract-missing-campaign".toUtf8Bytes())
         return VoucherAllocationFailureBlackBoxScenario(
             name = "missing campaign rejects allocation without leaking storage details",
             campaign = null,
@@ -700,7 +702,7 @@ object VoucherCampaignBlackBoxContract {
             tenant = TENANT,
             principal = PRINCIPAL,
             idempotencyKey = key,
-            campaignId = UUID.nameUUIDFromBytes(key.toByteArray()),
+            campaignId = UUID.nameUUIDFromBytes(key.toUtf8Bytes()),
             startsAt = STARTS_AT,
             endsAt = ENDS_AT,
             capacity = capacity,

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
 import org.junit.jupiter.api.BeforeEach
@@ -18,7 +19,6 @@ import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import java.time.Duration
 import javax.sql.DataSource
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -39,6 +39,7 @@ internal abstract class AbstractReservationIntegrationTest {
     @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
+    @Suppress("SqlResolve")
     @BeforeEach
     fun resetReservationFixture() {
         JdbcTemplate(dataSource).execute(
@@ -62,12 +63,12 @@ internal abstract class AbstractReservationIntegrationTest {
     protected val webTestClient: WebTestClient by lazy {
         val connector =
             JdkClientHttpConnector().apply {
-                setReadTimeout(Duration.ofSeconds(60))
+                setReadTimeout(60.seconds())
             }
         WebTestClient
             .bindToServer(connector)
             .baseUrl("http://localhost:$port")
-            .responseTimeout(Duration.ofSeconds(60))
+            .responseTimeout(60.seconds())
             .build()
     }
 

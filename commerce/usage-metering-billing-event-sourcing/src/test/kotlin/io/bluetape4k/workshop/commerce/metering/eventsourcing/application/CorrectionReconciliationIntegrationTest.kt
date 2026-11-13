@@ -4,6 +4,8 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -26,9 +28,8 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -73,7 +74,7 @@ class CorrectionReconciliationIntegrationTest {
                 "USD",
             )
             eventStore.append(StreamKey("tenant-a", "Rating", "usage-1"), 0, listOf(codec.encode(rated, now)))
-            adjustments.post("tenant-a", "correction-1", credit("2.00"), now.plusSeconds(1))
+            adjustments.post("tenant-a", "correction-1", credit("2.00"), now + 1.seconds())
             generations.createInitialActive("billing", 1, now)
         }
         projectGeneration(1)
@@ -121,7 +122,7 @@ class CorrectionReconciliationIntegrationTest {
     }
 
     private fun acquire(generation: Int): ProjectionLease = fixture.executor.transaction {
-        checkpoints.acquireLease("billing", generation, UUID.randomUUID(), now, Duration.ofMinutes(1))
+        checkpoints.acquireLease("billing", generation, UUID.randomUUID(), now, 1.minutes())
     } ?: error("lease must be acquired")
 
     private fun credit(amount: String) = AdjustmentPosted(

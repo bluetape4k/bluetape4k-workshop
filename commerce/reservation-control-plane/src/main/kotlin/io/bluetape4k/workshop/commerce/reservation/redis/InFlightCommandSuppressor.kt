@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.redis
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -87,7 +88,7 @@ class InFlightCommandSuppressor(
 class LettuceLockSuppressionBackend(
     private val connection: StatefulRedisConnection<String, String>,
     private val keyPrefix: String = "reservation:suppression",
-    private val leaseTime: Duration = Duration.ofSeconds(2),
+    private val leaseTime: Duration = 2.seconds(),
 ) : CommandSuppressionBackend {
     companion object : KLogging() {
         private val OPAQUE_ID = Regex("[A-Za-z0-9_-]{8,32}")

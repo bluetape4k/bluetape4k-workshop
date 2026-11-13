@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.application
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
@@ -32,7 +33,7 @@ internal class WaitlistCommandService(
     private val offers: ReservationOfferRepository,
     private val credentials: ReservationCredentialService,
     private val clock: Clock,
-    @Value("\${reservation.offer.ttl:20s}") private val offerTtl: Duration = Duration.ofSeconds(20),
+    @Value("\${reservation.offer.ttl:20s}") private val offerTtl: Duration = 20.seconds(),
     private val resources: CapacityResourceRepository? = null,
     private val holds: ReservationHoldRepository? = null,
     private val audits: ReservationAuditRepository? = null,

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.reservation.redis
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.millis
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
@@ -60,12 +61,12 @@ class ReservationAdmissionGateTest {
                     acquireTimeout = Duration.ZERO
                 ),
             redisBackend = backend,
-            redisWaitTime = Duration.ofMillis(100)
+            redisWaitTime = 100.millis()
         )
 
     private class RecordingAdmissionBackend(
         private val acquireResults: ArrayDeque<Any>,
-    ) : AdmissionPermitBackend {
+    ): AdmissionPermitBackend {
         var releases = 0
 
         override fun tryAcquire(waitTime: Duration): Boolean {

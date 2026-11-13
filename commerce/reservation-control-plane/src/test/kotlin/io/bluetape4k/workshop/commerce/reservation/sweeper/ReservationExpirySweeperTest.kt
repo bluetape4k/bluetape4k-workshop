@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.reservation.sweeper
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LeaderRunResult
 import io.bluetape4k.leader.LeaderSlot
 import org.junit.jupiter.api.Test
@@ -27,7 +28,7 @@ class ReservationExpirySweeperTest {
             )
         gate.slot shouldBeEqualTo LeaderSlot("reservation-expiry-sweeper", "node-a")
         requestedMax shouldBeEqualTo 32
-        requestedBudget shouldBeEqualTo Duration.ofSeconds(5)
+        requestedBudget shouldBeEqualTo 5.seconds()
     }
 
     @Test
@@ -82,7 +83,7 @@ class ReservationExpirySweeperTest {
         sweepWork = work,
         instanceId = "node-a",
         maxResources = 32,
-        tickBudget = Duration.ofSeconds(5)
+        tickBudget = 5.seconds()
     )
 
     private enum class LeaderDecision { ELECT, SKIP, ACTION_FAILURE, BACKEND_FAILURE }

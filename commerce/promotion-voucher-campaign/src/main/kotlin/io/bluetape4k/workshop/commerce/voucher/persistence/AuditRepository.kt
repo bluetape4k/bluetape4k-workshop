@@ -11,13 +11,13 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
 /** tenant와 aggregate revision uniqueness를 보장하는 append-only audit repository입니다. */
 @Repository
 internal class AuditRepository(
     private val gate: DatabasePermitGate,
-) : LongAuditableJdbcRepository<AuditRecord, AuditTable> {
+): LongAuditableJdbcRepository<AuditRecord, AuditTable> {
     override val table = AuditTable
     override fun extractId(entity: AuditRecord): Long = entity.id
 
@@ -114,8 +114,8 @@ internal class AuditRepository(
             .selectAll()
             .where {
                 (table.tenantId eq tenantId) and
-                    (table.campaignId eq campaignId) and
-                    (table.id greater afterId)
+                        (table.campaignId eq campaignId) and
+                        (table.id greater afterId)
             }.orderBy(table.id to SortOrder.ASC)
             .limit(limit)
             .map { with(this) { it.toEntity() } }
@@ -131,8 +131,8 @@ internal class AuditRepository(
             .selectAll()
             .where {
                 (table.tenantId eq tenantId) and
-                    (table.aggregateId eq aggregateId) and
-                    (table.reasonCode eq reasonCode)
+                        (table.aggregateId eq aggregateId) and
+                        (table.reasonCode eq reasonCode)
             }.limit(1)
             .any()
     }
@@ -142,7 +142,7 @@ internal class AuditRepository(
         campaignId: UUID,
     ) = table.selectAll().where { (table.tenantId eq tenantId) and (table.campaignId eq campaignId) }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val MAX_STREAM_BATCH = 200
     }
 }

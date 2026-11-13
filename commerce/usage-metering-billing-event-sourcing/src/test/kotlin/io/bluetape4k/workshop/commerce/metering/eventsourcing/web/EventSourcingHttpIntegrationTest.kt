@@ -2,9 +2,10 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeBlank
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeBlank
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpClient
 import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpResponse
@@ -15,8 +16,8 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventSt
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.METERING_EVENT_TABLES
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.MeteringEventsJdbcExecutor
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.worker.ProjectionWorker
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.worker.ProjectionScheduler
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.worker.ProjectionWorker
 import io.micrometer.core.instrument.MeterRegistry
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.junit.jupiter.api.AfterAll
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.health.contributor.Status
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -33,7 +35,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.http.client.reactive.JdkClientHttpConnector
-import org.springframework.boot.health.contributor.Status
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
@@ -43,9 +44,8 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import tools.jackson.databind.ObjectMapper
 import java.net.http.HttpClient
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 @Tag("integration")
@@ -195,7 +195,7 @@ class EventSourcingHttpIntegrationTest {
             .exchange().expectStatus().isOk
 
         val reconciliation = "/api/admin/event-sourcing/reconciliation" +
-            "?tenantId=$TENANT_A&startsAt=2026-07-01T00:00:00Z&endsAt=2026-08-01T00:00:00Z"
+                "?tenantId=$TENANT_A&startsAt=2026-07-01T00:00:00Z&endsAt=2026-08-01T00:00:00Z"
         client.get().uri(reconciliation).headers { it.setBasicAuth(TENANT_A, PASSWORD) }
             .exchange().expectStatus().isForbidden
         client.get().uri(reconciliation).headers { it.setBasicAuth("operator", PASSWORD) }
@@ -327,7 +327,7 @@ class EventSourcingHttpIntegrationTest {
     companion object {
         private const val TENANT_A = "tenant-a"
         private const val PASSWORD = "test-secret"
-        private val HTTP_TIMEOUT = Duration.ofSeconds(30)
+        private val HTTP_TIMEOUT = 30.seconds()
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic

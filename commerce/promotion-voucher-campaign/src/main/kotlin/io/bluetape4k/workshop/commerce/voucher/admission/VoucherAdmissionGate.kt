@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.admission
 
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -32,7 +34,7 @@ internal sealed interface AdmissionDecision {
 internal data class AdmissionRecoveryPolicy(
     val failureThreshold: Int = 3,
     val recoverySuccessThreshold: Int = 3,
-    val probeInterval: Duration = Duration.ofSeconds(1),
+    val probeInterval: Duration = 1.seconds(),
     val maxInFlightProbes: Int = 1,
 ) {
     init {
@@ -191,7 +193,7 @@ internal class VoucherAdmissionGate(
     private data class BackendCall(val probe: Boolean)
 
     companion object : KLogging() {
-        private val DEFAULT_RETRY_AFTER = Duration.ofSeconds(1)
-        private val MINIMUM_RETRY_AFTER = Duration.ofMillis(1)
+        private val DEFAULT_RETRY_AFTER = 1.seconds()
+        private val MINIMUM_RETRY_AFTER = 1.millis()
     }
 }

@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.usage.persistence
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxOutcome
@@ -364,8 +365,8 @@ class ExposedUsageOutboxJournal : UsageOutboxJournal {
             (UsageOutboxEvents.claimUntil greater now)
 
     private companion object {
-        val CLAIM_LEASE: Duration = Duration.ofSeconds(30)
-        val RETRY_DELAY: Duration = Duration.ofSeconds(1)
+        val CLAIM_LEASE: Duration = 30.seconds()
+        val RETRY_DELAY: Duration = 1.seconds()
         const val MAX_ATTEMPTS = 3
     }
 }

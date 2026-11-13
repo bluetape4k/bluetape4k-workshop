@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherCompatibilityTestSupport
@@ -14,12 +15,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.lang.reflect.Proxy
 import java.sql.Connection
-import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
-internal class VoucherJdbcExecutorPermitTest : VoucherCompatibilityTestSupport() {
+internal class VoucherJdbcExecutorPermitTest: VoucherCompatibilityTestSupport() {
     private var exposedDatabase: Database? = null
 
     @BeforeEach
@@ -34,7 +34,7 @@ internal class VoucherJdbcExecutorPermitTest : VoucherCompatibilityTestSupport()
                 foregroundPermits = 1,
                 workerPermits = 1,
                 sseMaintenancePermits = 1,
-                acquireTimeout = Duration.ofSeconds(1),
+                acquireTimeout = 1.seconds(),
             )
         val probe = PermitCheckingDataSource(dataSource) { gate.requireHeld() }
         val manager = SpringTransactionManager(probe, DatabaseConfig {}, false)
@@ -60,7 +60,7 @@ internal class VoucherJdbcExecutorPermitTest : VoucherCompatibilityTestSupport()
     private class PermitCheckingDataSource(
         private val delegate: DataSource,
         private val requirePermit: () -> Unit,
-    ) : DataSource by delegate {
+    ): DataSource by delegate {
         val openCount = AtomicInteger()
         val closeCount = AtomicInteger()
 

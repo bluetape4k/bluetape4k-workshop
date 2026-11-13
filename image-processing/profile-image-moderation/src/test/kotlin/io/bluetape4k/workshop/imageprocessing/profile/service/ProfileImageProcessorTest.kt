@@ -112,7 +112,7 @@ class ProfileImageProcessorTest {
 
         val encodedBytes = PrivacyDerivativeJackson.encodePayloadBytes(payload)
         PrivacyDerivativeJackson.decodePayload(encodedBytes) shouldBeEqualTo payload
-        val input = TrackingInputStream(encodedBytes + "{}".toByteArray())
+        val input = TrackingInputStream(encodedBytes + "{}".toUtf8Bytes())
 
         val streamError = assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodePayload(input)

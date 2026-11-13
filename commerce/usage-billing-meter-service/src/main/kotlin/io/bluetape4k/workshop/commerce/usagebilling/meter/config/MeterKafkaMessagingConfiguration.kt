@@ -46,7 +46,7 @@ class MeterKafkaMessagingConfiguration {
 data class MeterKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val clientId: String = "usage-billing-meter-service",
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

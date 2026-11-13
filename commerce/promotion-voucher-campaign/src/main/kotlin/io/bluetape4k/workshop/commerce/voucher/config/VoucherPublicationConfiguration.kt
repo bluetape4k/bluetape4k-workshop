@@ -112,5 +112,5 @@ internal class VoucherPublicationConfiguration {
     fun voucherReconciliationScheduler(worker: VoucherReconciliationWorker): VoucherReconciliationScheduler =
         VoucherReconciliationScheduler(worker)
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

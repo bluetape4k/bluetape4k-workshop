@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.commerce.voucher
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord
@@ -55,15 +57,15 @@ internal class VoucherContextRestartIntegrationTest {
             publications.markCompleted(checkNotNull(publicationId), Instant.now())
             publications.findByStatus(Status.COMPLETED).single { it.identifier == publicationId }
             val result = restarted.getBean(VoucherReconciliationService::class.java)
-                .runBatch(50, Duration.ofSeconds(10))
+                .runBatch(50, 10.seconds())
             check(result.processed >= 1)
             readInbox(restarted, tenant, eventId).status shouldBeEqualTo InboxStatus.APPLIED
             queryAuditCount(tenant) shouldBeEqualTo 1L
-            await atMost Duration.ofSeconds(5) untilAsserted {
+            await atMost 5.seconds() untilAsserted {
                 publications.findCompletedPublications().any { publication ->
                     val event = publication.event as? VoucherInboxAppliedEvent
                     event?.eventId == eventId
-                } shouldBeEqualTo true
+                }.shouldBeTrue()
             }
         }
     }

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.application
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignSnapshot
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimSnapshot
@@ -21,11 +22,10 @@ import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherTransactionRun
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherGenerationInput
 import org.springframework.stereotype.Service
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal enum class RiskSignal {
     CLEAR,
@@ -55,7 +55,7 @@ internal enum class VoucherCommandFailure {
 
 internal class VoucherCommandException(
     val code: VoucherCommandFailure,
-) : RuntimeException(code.name)
+): RuntimeException(code.name)
 
 internal data class AllocateVoucherCommand(
     val tenantId: String,
@@ -134,7 +134,7 @@ internal class AllocationService(
             audits.append(claim.audit(if (reviewRequired) "ALLOCATION_REVIEW_REQUIRED" else "ALLOCATED"))
             log.debug {
                 "voucher_allocation_completed campaignId=${campaign.campaignId} claimId=${claim.claimId} " +
-                    "state=${claim.state}"
+                        "state=${claim.state}"
             }
             AllocationResult(
                 claim = claim.toSnapshot(),
@@ -168,7 +168,7 @@ internal class AllocationService(
         require(command.userRef.length in 1..128) { "userRef must contain 1..128 characters" }
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 internal fun voucherUserDigest(
@@ -244,7 +244,7 @@ internal fun digestHex(
 ): String =
     MessageDigest
         .getInstance("SHA-256")
-        .digest((sequenceOf(domain) + values.asSequence()).joinToString("\u0000").toByteArray(UTF_8))
+        .digest((sequenceOf(domain) + values.asSequence()).joinToString("\u0000").toUtf8Bytes())
         .joinToString("") { "%02x".format(it) }
 
 internal fun fail(code: VoucherCommandFailure): Nothing = throw VoucherCommandException(code)

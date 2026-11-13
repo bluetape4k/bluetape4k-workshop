@@ -4,9 +4,12 @@ import io.bluetape4k.exposed.core.auditable.Auditable
 import io.bluetape4k.exposed.core.auditable.AuditableLongIdTable
 import io.bluetape4k.exposed.core.auditable.UserContext
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
@@ -484,9 +487,9 @@ internal class HttpIdempotencyRepository(
         "operation=$operation resourceId=$resourceId keyDigestPrefix=${keyDigest.base64Url.take(LOG_DIGEST_PREFIX)}"
 
     companion object : KLogging() {
-        val DEFAULT_LEASE: Duration = Duration.ofSeconds(90)
-        val DEFAULT_COMMAND_TIMEOUT: Duration = Duration.ofSeconds(60)
-        val DEFAULT_RETENTION: Duration = Duration.ofHours(24)
+        val DEFAULT_LEASE: Duration = 90.seconds()
+        val DEFAULT_COMMAND_TIMEOUT: Duration = 60.seconds()
+        val DEFAULT_RETENTION: Duration = 24.hours()
         private const val MAX_RESPONSE_HEADERS = 512
         private const val MAX_CLEANUP_BATCH = 1_000
         private const val LOG_DIGEST_PREFIX = 12
@@ -511,7 +514,7 @@ private fun decodeHeaders(encoded: String): Map<String, String> =
 
 private fun urlEncode(value: String): String =
     buildString {
-        value.toByteArray(UTF_8).forEach { byte ->
+        value.toUtf8Bytes().forEach { byte ->
             val unsigned = byte.toInt() and 0xff
             if (
                 unsigned in 'a'.code..'z'.code ||

@@ -4,16 +4,27 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import org.junit.jupiter.api.Test
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 internal class VoucherEnvelopeCryptoTest {
+
+    companion object: KLogging() {
+        private val IDENTITY = EntryIdentity(
+            tenantId = "tenant-a",
+            campaignId = UUID.fromString("11111111-1111-1111-1111-111111111111"),
+            batchId = UUID.fromString("22222222-2222-2222-2222-222222222222"),
+            entryId = UUID.fromString("33333333-3333-3333-3333-333333333333"),
+            sourceOrdinal = 17,
+        )
+    }
+
     @Test
     fun `AES GCM envelope round trip uses unique nonces and redacted values`() {
         val crypto = crypto(kekVersion = "k1")
-        val code = CanonicalVoucherCode.of("POOL-ROUND-TRIP")
+        val code = CanonicalVoucherCode("POOL-ROUND-TRIP")
         val stableDigest = digests.stableDedup(IDENTITY.tenantId, code)
         val codeNonces = mutableSetOf<String>()
         val wrapNonces = mutableSetOf<String>()
@@ -32,7 +43,7 @@ internal class VoucherEnvelopeCryptoTest {
 
     @Test
     fun `unknown key tag failure digest mismatch and row swap fail closed`() {
-        val code = CanonicalVoucherCode.of("POOL-TAMPER")
+        val code = CanonicalVoucherCode("POOL-TAMPER")
         val encrypted = crypto(kekVersion = "k1").encrypt(IDENTITY, code)
         val stableDigest = digests.stableDedup(IDENTITY.tenantId, code)
 
@@ -41,25 +52,34 @@ internal class VoucherEnvelopeCryptoTest {
         }.reason shouldBeEqualTo VoucherCryptoFailureReason.UNKNOWN_KEY_VERSION
 
         val tamperedCiphertext = encrypted.copyCodeCiphertext().also { it[it.lastIndex] = (it.last() xor 1) }
+
         assertFailsWith<VoucherCryptoException> {
-            crypto(kekVersion = "k1").decryptAndVerify(
-                IDENTITY,
-                encrypted.copy(codeCiphertext = tamperedCiphertext),
-                stableDigest,
-            )
+            crypto(kekVersion = "k1")
+                .decryptAndVerify(
+                    entryIdentity = IDENTITY,
+                    encrypted = encrypted.copy(codeCiphertext = tamperedCiphertext),
+                    expectedStableDedup = stableDigest,
+                )
         }.reason shouldBeEqualTo VoucherCryptoFailureReason.INVALID_TAG
 
         val wrongDigest = digests.stableDedup(IDENTITY.tenantId, CanonicalVoucherCode.of("OTHER"))
+
         assertFailsWith<VoucherCryptoException> {
-            crypto(kekVersion = "k1").decryptAndVerify(IDENTITY, encrypted, wrongDigest)
+            crypto(kekVersion = "k1")
+                .decryptAndVerify(
+                    entryIdentity = IDENTITY,
+                    encrypted = encrypted,
+                    expectedStableDedup = wrongDigest
+                )
         }.reason shouldBeEqualTo VoucherCryptoFailureReason.DIGEST_MISMATCH
 
         assertFailsWith<VoucherCryptoException> {
-            crypto(kekVersion = "k1").decryptAndVerify(
-                IDENTITY.copy(entryId = UUID.randomUUID()),
-                encrypted,
-                stableDigest,
-            )
+            crypto(kekVersion = "k1")
+                .decryptAndVerify(
+                    entryIdentity = IDENTITY.copy(entryId = UUID.randomUUID()),
+                    encrypted = encrypted,
+                    expectedStableDedup = stableDigest,
+                )
         }.reason shouldBeEqualTo VoucherCryptoFailureReason.INVALID_TAG
     }
 
@@ -71,10 +91,11 @@ internal class VoucherEnvelopeCryptoTest {
         val rotated = crypto(kekVersion = "k2", retainedKekVersion = "k1")
 
         rotated.decryptAndVerify(
-            IDENTITY,
-            oldEncrypted,
-            digests.stableDedup(IDENTITY.tenantId, code),
+            entryIdentity = IDENTITY,
+            encrypted = oldEncrypted,
+            expectedStableDedup = digests.stableDedup(IDENTITY.tenantId, code),
         ) shouldBeEqualTo code
+
         rotated.encrypt(IDENTITY, code).kekVersion shouldBeEqualTo "k2"
     }
 
@@ -82,9 +103,12 @@ internal class VoucherEnvelopeCryptoTest {
         kekVersion: String,
         retainedKekVersion: String? = null,
     ): VoucherEnvelopeCrypto {
-        val retained = retainedKekVersion?.let { listOf(VoucherKek.of(it, kekBytes(it))) }.orEmpty()
+        val retained = retainedKekVersion?.let {
+            listOf(VoucherKek.of(it, kekBytes(it)))
+        }.orEmpty()
+
         return AesGcmVoucherEnvelopeCrypto(
-            VoucherKekRing.of(VoucherKek.of(kekVersion, kekBytes(kekVersion)), retained),
+            VoucherKekRing(VoucherKek(kekVersion, kekBytes(kekVersion)), retained),
             digests,
         )
     }
@@ -93,15 +117,5 @@ internal class VoucherEnvelopeCryptoTest {
 
     private val digests = VoucherDigestService.testFixture()
 
-    companion object {
-        private val IDENTITY = EntryIdentity(
-            tenantId = "tenant-a",
-            campaignId = UUID.fromString("11111111-1111-1111-1111-111111111111"),
-            batchId = UUID.fromString("22222222-2222-2222-2222-222222222222"),
-            entryId = UUID.fromString("33333333-3333-3333-3333-333333333333"),
-            sourceOrdinal = 17,
-        )
-    }
+    private infix fun Byte.xor(other: Int): Byte = (toInt() xor other).toByte()
 }
-
-private infix fun Byte.xor(other: Int): Byte = (toInt() xor other).toByte()

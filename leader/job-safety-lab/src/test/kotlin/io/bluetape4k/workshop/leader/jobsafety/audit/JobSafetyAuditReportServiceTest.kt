@@ -11,6 +11,7 @@ import io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions
 import io.bluetape4k.leader.audit.http.LeaderAuditTrustedHttpsEndpoint
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
 import java.net.URI
 import java.util.concurrent.Executors
@@ -22,8 +23,8 @@ internal class JobSafetyAuditReportServiceTest {
     @Test
     fun `report decodes transient bounded payloads and exposes fixed safe fields`() {
         val store = BoundedAuditPayloadStore(maxEntries = 4, maxBytes = 1024)
-        store.add("not-json".toByteArray())
-        store.add("{\"status\":\"COMPLETED\",\"safe\":true}".toByteArray())
+        store.add("not-json".toUtf8Bytes())
+        store.add("{\"status\":\"COMPLETED\",\"safe\":true}".toUtf8Bytes())
         val scheduler = Executors.newSingleThreadScheduledExecutor()
         val executor = Executors.newSingleThreadExecutor()
         val client = InMemoryAuditHttpClient()

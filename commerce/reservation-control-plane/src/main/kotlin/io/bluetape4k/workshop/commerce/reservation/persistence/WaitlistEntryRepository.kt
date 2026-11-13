@@ -27,8 +27,8 @@ internal data class WaitlistEntryRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -41,7 +41,7 @@ internal data class WaitlistEntryRecord(
  * transition update는 owner와 revision을 계속 확인하므로 retry가 같은 entry를 두 번 advance하지 못합니다.
  */
 @Repository
-internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEntryRecord, WaitlistEntryTable> {
+internal class WaitlistEntryRepository: LongAuditableJdbcRepository<WaitlistEntryRecord, WaitlistEntryTable> {
     override val table = WaitlistEntryTable
 
     override fun extractId(entity: WaitlistEntryRecord): Long = entity.id
@@ -128,9 +128,9 @@ internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEnt
         val applied =
             auditedUpdateAll({
                 (table.id eq id) and
-                    (table.ownerDigest eq ownerDigest) and
-                    (table.revision eq expectedRevision) and
-                    (table.state eq from)
+                        (table.ownerDigest eq ownerDigest) and
+                        (table.revision eq expectedRevision) and
+                        (table.state eq from)
             }) {
                 it[state] = to
                 it[revision] = expectedRevision + 1
@@ -141,7 +141,7 @@ internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEnt
         return applied
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val OWNER_DIGEST_LENGTH = 64
     }
 }

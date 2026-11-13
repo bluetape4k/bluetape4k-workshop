@@ -3,9 +3,11 @@ package io.bluetape4k.workshop.commerce.voucherpool
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.performance.RedisMode
 import io.bluetape4k.workshop.commerce.voucherpool.performance.VoucherPoolPerformanceProbe
@@ -19,11 +21,12 @@ import org.junit.jupiter.params.provider.CsvSource
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
-import java.util.Locale
+import java.util.*
 
 @Tag("stress")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class VoucherPoolStressProfileTest {
+
     private val runId = System.getProperty("voucherPool.stressRun", "dev")
     private val outputRoot = Path.of("build", "voucher-pool-stress")
     private val probe = VoucherPoolPerformanceProbe(PostgreSQLServer.Launcher.postgres, outputRoot)
@@ -76,7 +79,7 @@ internal class VoucherPoolStressProfileTest {
             .digest(Files.readAllBytes(path))
             .joinToString("") { "%02x".format(Locale.ROOT, it) }
 
-    companion object {
+    companion object: KLogging() {
         private val EXPECTED_PROFILES = linkedSetOf(
             "64-healthy",
             "64-unavailable",
@@ -87,6 +90,7 @@ internal class VoucherPoolStressProfileTest {
 }
 
 internal class VoucherPoolStressHardGateTest {
+
     @Test
     fun `hard gates require observed samples and reject a scheduler-inclusive over-limit wait`() {
         val passing = passingHardGateEvidence()
@@ -103,7 +107,7 @@ internal class VoucherPoolStressHardGateTest {
             )
         }
         waitFailure.message shouldBeEqualTo
-            "foreground permit wait exceeded hard limit: actual=501 ms maximum=500 ms"
+                "foreground permit wait exceeded hard limit: actual=501 ms maximum=500 ms"
 
         listOf(
             passing.copy(hikariAcquisitionWaitSamples = 0),
@@ -152,23 +156,26 @@ internal class VoucherPoolStressHardGateTest {
 
 private fun assertVoucherPoolStressHardGates(evidence: VoucherPoolStressEvidence) {
     assertMaximum("Hikari active connections", evidence.hikariActiveMax.toLong(), 16, "connections")
-    (evidence.hikariAcquisitionWaitSamples > 0).shouldBeTrue()
+    evidence.hikariAcquisitionWaitSamples shouldBeGreaterThan 0
     assertMaximum("Hikari acquisition wait", evidence.hikariAcquisitionWaitMaxMillis, 2_000, "ms")
     assertMaximum("total permit holders", evidence.totalPermitHoldersMax.toLong(), 15, "holders")
-    (evidence.foregroundWaitSamples > 0).shouldBeTrue()
+    evidence.foregroundWaitSamples shouldBeGreaterThan 0
+
     assertMaximum(
-        "foreground permit wait",
-        evidence.foregroundWaitMaxMillis,
-        FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS,
-        "ms",
+        name = "foreground permit wait",
+        actual = evidence.foregroundWaitMaxMillis,
+        maximum = FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS,
+        unit = "ms",
     )
-    (evidence.workerWaitSamples > 0).shouldBeTrue()
+    evidence.workerWaitSamples shouldBeGreaterThan 0
     assertMaximum("worker permit wait", evidence.workerWaitMaxMillis, 1_000, "ms")
-    (evidence.sseWaitSamples > 0).shouldBeTrue()
+    evidence.sseWaitSamples shouldBeGreaterThan 0
     assertMaximum("SSE permit wait", evidence.sseWaitMaxMillis, 1_000, "ms")
     evidence.deadlineViolations shouldBeEqualTo 0
+
     assertMaximum("Hikari pending drain", evidence.hikariPendingDrainMillis, 12_000, "ms")
-    (evidence.workerCheckpointProgress > 0).shouldBeTrue()
+
+    evidence.workerCheckpointProgress shouldBeGreaterThan 0
     evidence.duplicateWinnerCount shouldBeEqualTo 0
     evidence.authoritativeAllocationCount shouldBeEqualTo evidence.winners
     evidence.authoritativeAllocationCount shouldBeEqualTo evidence.successfulResponses

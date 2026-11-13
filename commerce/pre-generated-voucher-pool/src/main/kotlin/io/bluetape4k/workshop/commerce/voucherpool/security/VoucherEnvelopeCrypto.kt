@@ -2,6 +2,10 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.security
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.LockedVoucherCryptoRecord
@@ -11,7 +15,7 @@ import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
-import java.util.UUID
+import java.util.*
 import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
@@ -25,8 +29,8 @@ internal data class EntryIdentity(
     val sourceOrdinal: Long,
 ) {
     init {
-        require(tenantId.isNotBlank()) { "tenantId must not be blank" }
-        require(sourceOrdinal >= 0) { "sourceOrdinal must not be negative" }
+        tenantId.requireNotBlank("tenantId")
+        sourceOrdinal.requireGe(0, "sourceOrdinal")
     }
 }
 
@@ -39,11 +43,15 @@ internal class VoucherKek private constructor(
     override fun toString(): String = "VoucherKek(version=$version, material=[REDACTED])"
 
     companion object {
-        fun of(version: String, material: ByteArray): VoucherKek {
-            require(version.isNotBlank()) { "KEK version must not be blank" }
+        operator fun invoke(version: String, material: ByteArray): VoucherKek {
+            version.requireNotBlank("version")
             require(material.size in VALID_AES_KEY_BYTES) { "KEK must be a valid AES key" }
+
             return VoucherKek(version, material.copyOf())
         }
+
+        fun of(version: String, material: ByteArray): VoucherKek =
+            invoke(version, material)
     }
 }
 
@@ -51,18 +59,22 @@ internal class VoucherKekRing private constructor(
     val current: VoucherKek,
     retained: List<VoucherKek>,
 ) {
-    private val readable = (listOf(current) + retained).associateBy(VoucherKek::version)
+    private val readable: Map<String, VoucherKek> =
+        (listOf(current) + retained).associateBy(VoucherKek::version)
 
     init {
         require(readable.size == retained.size + 1) { "KEK versions must be unique" }
     }
 
-    fun require(version: String): VoucherKek = readable[version]
-        ?: throw VoucherCryptoException(VoucherCryptoFailureReason.UNKNOWN_KEY_VERSION)
+    fun require(version: String): VoucherKek =
+        readable[version] ?: throw VoucherCryptoException(VoucherCryptoFailureReason.UNKNOWN_KEY_VERSION)
 
     companion object {
-        fun of(current: VoucherKek, retained: List<VoucherKek> = emptyList()): VoucherKekRing =
+        operator fun invoke(current: VoucherKek, retained: List<VoucherKek> = emptyList()): VoucherKekRing =
             VoucherKekRing(current, retained.toList())
+
+        fun of(current: VoucherKek, retained: List<VoucherKek> = emptyList()): VoucherKekRing =
+            invoke(current, retained)
     }
 }
 
@@ -97,18 +109,26 @@ internal class EncryptedVoucherCode private constructor(
         wrappedDek: ByteArray = copyWrappedDek(),
         wrapNonce: ByteArray = copyWrapNonce(),
         kekVersion: String = this.kekVersion,
-    ): EncryptedVoucherCode = of(codeCiphertext, codeNonce, wrappedDek, wrapNonce, kekVersion)
+    ): EncryptedVoucherCode = invoke(codeCiphertext, codeNonce, wrappedDek, wrapNonce, kekVersion)
 
     override fun toString(): String = "EncryptedVoucherCode(kekVersion=$kekVersion, material=[REDACTED])"
 
     companion object {
-        fun of(
+        operator fun invoke(
             codeCiphertext: ByteArray,
             codeNonce: ByteArray,
             wrappedDek: ByteArray,
             wrapNonce: ByteArray,
             kekVersion: String,
         ): EncryptedVoucherCode = EncryptedVoucherCode(codeCiphertext, codeNonce, wrappedDek, wrapNonce, kekVersion)
+
+        fun of(
+            codeCiphertext: ByteArray,
+            codeNonce: ByteArray,
+            wrappedDek: ByteArray,
+            wrapNonce: ByteArray,
+            kekVersion: String,
+        ): EncryptedVoucherCode = invoke(codeCiphertext, codeNonce, wrappedDek, wrapNonce, kekVersion)
     }
 }
 
@@ -122,9 +142,10 @@ internal enum class VoucherCryptoFailureReason {
 internal class VoucherCryptoException(
     val reason: VoucherCryptoFailureReason,
     cause: Throwable? = null,
-) : IllegalStateException(reason.name, cause)
+): IllegalStateException(reason.name, cause)
 
 internal interface VoucherEnvelopeCrypto {
+
     fun encrypt(entryIdentity: EntryIdentity, code: CanonicalVoucherCode): EncryptedVoucherCode
 
     fun decryptAndVerify(
@@ -139,15 +160,19 @@ internal class AesGcmVoucherEnvelopeCrypto(
     private val kekRing: VoucherKekRing,
     private val digests: VoucherDigestService,
     private val secureRandom: SecureRandom = SecureRandom(),
-) : VoucherEnvelopeCrypto {
+): VoucherEnvelopeCrypto {
+
+    companion object: KLogging()
+
     override fun encrypt(entryIdentity: EntryIdentity, code: CanonicalVoucherCode): EncryptedVoucherCode {
         val dek = randomBytes(DEK_BYTES)
         val codeNonce = randomBytes(GCM_NONCE_BYTES)
         val wrapNonce = randomBytes(GCM_NONCE_BYTES)
-        val plaintext = code.withRawValue { it.toByteArray(StandardCharsets.UTF_8) }
+        val plaintext = code.withRawValue { it.toUtf8Bytes() }
         val kek = kekRing.current
+
         return try {
-            EncryptedVoucherCode.of(
+            EncryptedVoucherCode(
                 codeCiphertext = encrypt(dek, codeNonce, codeAad(entryIdentity), plaintext),
                 codeNonce = codeNonce,
                 wrappedDek = withKeyMaterial(kek) { encrypt(it, wrapNonce, wrapAad(entryIdentity, kek.version), dek) },
@@ -169,17 +194,29 @@ internal class AesGcmVoucherEnvelopeCrypto(
         expectedStableDedup: VoucherDigest,
     ): CanonicalVoucherCode {
         val kek = kekRing.require(encrypted.kekVersion)
+
         val dek = try {
             withKeyMaterial(kek) {
-                decrypt(it, encrypted.copyWrapNonce(), wrapAad(entryIdentity, kek.version), encrypted.copyWrappedDek())
+                decrypt(
+                    key = it,
+                    nonce = encrypted.copyWrapNonce(),
+                    aad = wrapAad(entryIdentity, kek.version),
+                    ciphertext = encrypted.copyWrappedDek()
+                )
             }
         } catch (failure: AEADBadTagException) {
             throw VoucherCryptoException(VoucherCryptoFailureReason.INVALID_TAG, failure)
         } catch (failure: GeneralSecurityException) {
             throw VoucherCryptoException(VoucherCryptoFailureReason.INVALID_CIPHERTEXT, failure)
         }
+
         val plaintext = try {
-            decrypt(dek, encrypted.copyCodeNonce(), codeAad(entryIdentity), encrypted.copyCodeCiphertext())
+            decrypt(
+                key = dek,
+                nonce = encrypted.copyCodeNonce(),
+                aad = codeAad(entryIdentity),
+                ciphertext = encrypted.copyCodeCiphertext()
+            )
         } catch (failure: AEADBadTagException) {
             throw VoucherCryptoException(VoucherCryptoFailureReason.INVALID_TAG, failure)
         } catch (failure: GeneralSecurityException) {
@@ -187,8 +224,9 @@ internal class AesGcmVoucherEnvelopeCrypto(
         } finally {
             dek.fill(0)
         }
+
         return try {
-            val code = CanonicalVoucherCode.of(decodeUtf8(plaintext))
+            val code = CanonicalVoucherCode(decodeUtf8(plaintext))
             val matches = try {
                 digests.matchesStableDedup(entryIdentity.tenantId, code, expectedStableDedup)
             } catch (failure: VoucherKeyMaterialUnavailableException) {
@@ -205,26 +243,29 @@ internal class AesGcmVoucherEnvelopeCrypto(
         }
     }
 
-    private fun randomBytes(size: Int): ByteArray = ByteArray(size).also(secureRandom::nextBytes)
+    private fun randomBytes(size: Int): ByteArray =
+        ByteArray(size).also(secureRandom::nextBytes)
 
-    private fun codeAad(identity: EntryIdentity): ByteArray = CanonicalFields.encode(
-        "voucher-code-aad-v1",
-        identity.tenantId.toByteArray(StandardCharsets.UTF_8),
-        identity.campaignId.bytes(),
-        identity.batchId.bytes(),
-        identity.entryId.bytes(),
-        ByteBuffer.allocate(Long.SIZE_BYTES).putLong(identity.sourceOrdinal).array(),
-    )
+    private fun codeAad(identity: EntryIdentity): ByteArray =
+        CanonicalFields.encode(
+            "voucher-code-aad-v1",
+            identity.tenantId.toUtf8Bytes(),
+            identity.campaignId.bytes(),
+            identity.batchId.bytes(),
+            identity.entryId.bytes(),
+            ByteBuffer.allocate(Long.SIZE_BYTES).putLong(identity.sourceOrdinal).array(),
+        )
 
-    private fun wrapAad(identity: EntryIdentity, kekVersion: String): ByteArray = CanonicalFields.encode(
-        "voucher-dek-wrap-aad-v1",
-        identity.tenantId.toByteArray(StandardCharsets.UTF_8),
-        identity.campaignId.bytes(),
-        identity.batchId.bytes(),
-        identity.entryId.bytes(),
-        ByteBuffer.allocate(Long.SIZE_BYTES).putLong(identity.sourceOrdinal).array(),
-        kekVersion.toByteArray(StandardCharsets.UTF_8),
-    )
+    private fun wrapAad(identity: EntryIdentity, kekVersion: String): ByteArray =
+        CanonicalFields.encode(
+            "voucher-dek-wrap-aad-v1",
+            identity.tenantId.toUtf8Bytes(),
+            identity.campaignId.bytes(),
+            identity.batchId.bytes(),
+            identity.entryId.bytes(),
+            ByteBuffer.allocate(Long.SIZE_BYTES).putLong(identity.sourceOrdinal).array(),
+            kekVersion.toUtf8Bytes(),
+        )
 
     private fun encrypt(key: ByteArray, nonce: ByteArray, aad: ByteArray, plaintext: ByteArray): ByteArray =
         cipher(Cipher.ENCRYPT_MODE, key, nonce, aad).doFinal(plaintext)
@@ -233,13 +274,15 @@ internal class AesGcmVoucherEnvelopeCrypto(
         cipher(Cipher.DECRYPT_MODE, key, nonce, aad).doFinal(ciphertext)
 
     private fun cipher(mode: Int, key: ByteArray, nonce: ByteArray, aad: ByteArray): Cipher =
-        Cipher.getInstance(AES_GCM).apply {
-            init(mode, SecretKeySpec(key, AES), GCMParameterSpec(GCM_TAG_BITS, nonce))
-            updateAAD(aad)
-        }
+        Cipher.getInstance(AES_GCM)
+            .apply {
+                init(mode, SecretKeySpec(key, AES), GCMParameterSpec(GCM_TAG_BITS, nonce))
+                updateAAD(aad)
+            }
 
-    private fun <T> withKeyMaterial(key: VoucherKek, block: (ByteArray) -> T): T {
+    private inline fun <T> withKeyMaterial(key: VoucherKek, block: (ByteArray) -> T): T {
         val material = key.copyMaterial()
+
         return try {
             block(material)
         } finally {
@@ -265,7 +308,7 @@ internal class VoucherCryptoStorage(
         identity: EntryIdentity,
         expectedRevision: Long,
     ): VoucherCryptoStorageOutcome {
-        val locked = repository.lockReservedCryptoEntry(
+        val locked: LockedVoucherCryptoRecord = repository.lockReservedCryptoEntry(
             identity.tenantId,
             identity.campaignId,
             identity.batchId,
@@ -273,6 +316,7 @@ internal class VoucherCryptoStorage(
             identity.sourceOrdinal,
             expectedRevision,
         ) ?: error("reserved voucher entry is missing, stale, or quarantined")
+
         return try {
             VoucherCryptoStorageOutcome.Revealed(
                 crypto.decryptAndVerify(identity, locked.encrypted(), locked.stableDedup()),
@@ -292,17 +336,21 @@ internal class VoucherCryptoStorage(
         identity: EntryIdentity,
         expectedRevision: Long,
     ): VoucherCryptoStorageOutcome {
-        val locked = repository.lockAllocatedCryptoEntry(
+        val locked: LockedVoucherCryptoRecord = repository.lockAllocatedCryptoEntry(
             identity.tenantId,
             identity.campaignId,
             identity.batchId,
             identity.entryId,
             identity.sourceOrdinal,
             expectedRevision,
-        )
-            ?: error("encrypted voucher entry is missing, stale, revealed, or already quarantined")
+        ) ?: error("encrypted voucher entry is missing, stale, revealed, or already quarantined")
+
         return try {
-            val code = crypto.decryptAndVerify(identity, locked.encrypted(), locked.stableDedup())
+            val code = crypto.decryptAndVerify(
+                entryIdentity = identity,
+                encrypted = locked.encrypted(),
+                expectedStableDedup = locked.stableDedup()
+            )
             repository.eraseVoucherCiphertext(identity.tenantId, identity.entryId, expectedRevision)
             VoucherCryptoStorageOutcome.Revealed(code)
         } catch (failure: VoucherCryptoException) {
@@ -318,41 +366,46 @@ internal class VoucherCryptoStorage(
         identity: EntryIdentity,
         locked: LockedVoucherCryptoRecord,
         reason: VoucherCryptoFailureReason,
-    ) = repository.quarantineVoucherCrypto(
-        identity.tenantId,
-        identity.entryId,
-        locked.state,
-        locked.revision,
-        reason.name,
-    )
+    ) =
+        repository.quarantineVoucherCrypto(
+            tenantId = identity.tenantId,
+            entryId = identity.entryId,
+            sourceState = locked.state,
+            sourceRevision = locked.revision,
+            reasonCode = reason.name,
+        )
 
-    private fun LockedVoucherCryptoRecord.stableDedup(): VoucherDigest = VoucherDigest.of(
-        DigestPurpose.STABLE_DEDUP,
-        stableDedupKeyVersion,
-        stableDedupDigest.requireCryptoBytes(),
-    )
+    private fun LockedVoucherCryptoRecord.stableDedup(): VoucherDigest =
+        VoucherDigest(
+            purpose = DigestPurpose.STABLE_DEDUP,
+            keyVersion = stableDedupKeyVersion,
+            value = stableDedupDigest.requireCryptoBytes(),
+        )
 
-    private fun LockedVoucherCryptoRecord.encrypted(): EncryptedVoucherCode = EncryptedVoucherCode.of(
-        codeCiphertext.requireCryptoBytes(),
-        codeNonce.requireCryptoBytes(),
-        wrappedDek.requireCryptoBytes(),
-        wrapNonce.requireCryptoBytes(),
-        kekVersion ?: throw IllegalArgumentException("missing KEK version"),
-    )
+    private fun LockedVoucherCryptoRecord.encrypted(): EncryptedVoucherCode =
+        EncryptedVoucherCode(
+            codeCiphertext = codeCiphertext.requireCryptoBytes(),
+            codeNonce = codeNonce.requireCryptoBytes(),
+            wrappedDek = wrappedDek.requireCryptoBytes(),
+            wrapNonce = wrapNonce.requireCryptoBytes(),
+            kekVersion = kekVersion ?: throw IllegalArgumentException("missing KEK version"),
+        )
 }
 
 internal sealed interface VoucherCryptoStorageOutcome {
-    data class Revealed(val code: CanonicalVoucherCode) : VoucherCryptoStorageOutcome
-    data class Quarantined(val reason: VoucherCryptoFailureReason) : VoucherCryptoStorageOutcome
+    data class Revealed(val code: CanonicalVoucherCode): VoucherCryptoStorageOutcome
+    data class Quarantined(val reason: VoucherCryptoFailureReason): VoucherCryptoStorageOutcome
 }
 
 private fun DigestValue?.requireCryptoBytes(): ByteArray =
     this?.copyBytes() ?: throw IllegalArgumentException("missing crypto material")
 
-private fun UUID.bytes(): ByteArray = ByteBuffer.allocate(Long.SIZE_BYTES * 2)
-    .putLong(mostSignificantBits)
-    .putLong(leastSignificantBits)
-    .array()
+private fun UUID.bytes(): ByteArray =
+    ByteBuffer
+        .allocate(Long.SIZE_BYTES * 2)
+        .putLong(mostSignificantBits)
+        .putLong(leastSignificantBits)
+        .array()
 
 private const val AES = "AES"
 private const val AES_GCM = "AES/GCM/NoPadding"

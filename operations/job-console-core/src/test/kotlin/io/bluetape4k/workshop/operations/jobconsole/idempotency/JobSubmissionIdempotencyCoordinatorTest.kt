@@ -11,6 +11,7 @@ import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
@@ -405,7 +406,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
         override fun prepare(ownership: JobSubmissionOwnership): PreparedJobSubmission {
             prepareCalls += 1
             prepare()
-            return PreparedJobSubmission(command().request, responseBody = "accepted".toByteArray())
+            return PreparedJobSubmission(command().request, responseBody = "accepted".toUtf8Bytes())
         }
 
         override fun commit(
@@ -606,7 +607,7 @@ class JobSubmissionIdempotencyCoordinatorTest {
                 jobId = JOB_ID,
                 enqueueSequence = 1,
                 responseStatus = 202,
-                responseBody = "accepted".toByteArray(),
+                responseBody = "accepted".toUtf8Bytes(),
                 responseContentType = "application/json",
                 responseHeaders = emptyMap(),
             )

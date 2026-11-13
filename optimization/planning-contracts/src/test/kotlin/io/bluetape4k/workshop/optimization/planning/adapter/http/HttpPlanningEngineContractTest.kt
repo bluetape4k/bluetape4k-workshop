@@ -12,6 +12,7 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.http.WireMockServer
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateId
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateVersion
@@ -112,7 +113,7 @@ internal class HttpPlanningEngineContractTest {
     @Test
     fun `response exactly at the byte limit is accepted for known length and chunked bodies`() {
         val prefix = "{\"providerRequestId\":\"provider-42\",\"status\":\"SUBMITTED\"}"
-        val responseBody = prefix + " ".repeat(MAX_RESPONSE_BYTES - prefix.toByteArray().size)
+        val responseBody = prefix + " ".repeat(MAX_RESPONSE_BYTES - prefix.toUtf8Bytes().size)
 
         listOf(
             aResponse()

@@ -1,20 +1,21 @@
 package io.bluetape4k.workshop.commerce.usagebilling.meter.messaging
 
+import io.bluetape4k.concurrent.get
 import org.springframework.kafka.KafkaException
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.seconds
 
 @Component
 class KafkaMeterEventTransport(
     private val kafkaTemplate: KafkaTemplate<String, String>,
-) : MeterEventTransport {
+): MeterEventTransport {
     @Suppress("ThrowsCount")
     override fun publish(partitionKey: String, payload: String) {
         try {
-            kafkaTemplate.send(TOPIC, partitionKey, payload).get(PUBLISH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            kafkaTemplate.send(TOPIC, partitionKey, payload).get(PUBLISH_TIMEOUT_SECONDS.seconds)
         } catch (failure: TimeoutException) {
             throw MeterEventTransportFailure(failure)
         } catch (failure: ExecutionException) {

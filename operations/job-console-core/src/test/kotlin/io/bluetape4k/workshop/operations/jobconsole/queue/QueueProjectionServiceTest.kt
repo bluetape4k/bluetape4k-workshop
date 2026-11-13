@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import org.junit.jupiter.api.Test
@@ -50,7 +51,7 @@ class QueueProjectionServiceTest {
 
     private fun row(sequence: Long, state: JobState) =
         QueueRow(
-            jobId = UUID.nameUUIDFromBytes("job-$sequence".toByteArray()),
+            jobId = UUID.nameUUIDFromBytes("job-$sequence".toUtf8Bytes()),
             jobType = JobType.DOCUMENT_EXPORT,
             state = state,
             enqueueSequence = sequence,

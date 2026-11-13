@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
@@ -53,8 +55,8 @@ class QueryProjectionPostgresIntegrationTest {
         val checkpoint = transaction { checkpoints.findAll().singleOrNull()?.position ?: 0 }
         val event = QueryInboxEvent(UUID.randomUUID(), "tenant-a", "InvoiceIssued")
 
-        inbox.apply(event).applied shouldBeEqualTo true
-        inbox.apply(event).applied shouldBeEqualTo false
+        inbox.apply(event).applied.shouldBeTrue()
+        inbox.apply(event).applied.shouldBeFalse()
 
         transaction { inboxEvents.findAll().count() } shouldBeEqualTo inboxCount + 1
         transaction { readModels.findAll().count() } shouldBeEqualTo readModelCount + 1
@@ -69,7 +71,7 @@ class QueryProjectionPostgresIntegrationTest {
             QueryQuarantineEvent(eventId, "tenant-a", "InvoiceIssued", "unsupported_schema", Instant.now()),
         )
 
-        recovery.redrive(eventId, "operator-a", "correlation-a").requested shouldBeEqualTo true
+        recovery.redrive(eventId, "operator-a", "correlation-a").requested.shouldBeTrue()
 
         transaction { redriveAudits.findAll().count() } shouldBeEqualTo auditCount + 1
         transaction { requireNotNull(redriveAudits.findAll().last()).currentState } shouldBeEqualTo "REDRIVE_REQUESTED"

@@ -18,7 +18,7 @@ internal class ReservationCredentialService(
 ) {
     private val key =
         SecretKeySpec(
-            secret.toByteArray(StandardCharsets.UTF_8).also {
+            secret.toUtf8Bytes().also {
                 require(it.size >= 32) { "reservation HMAC secret must contain at least 32 bytes" }
             },
             HMAC_SHA_256
@@ -62,7 +62,7 @@ internal class ReservationCredentialService(
     ): String {
         val mac = Mac.getInstance(HMAC_SHA_256)
         mac.init(key)
-        return mac.doFinal("$domain\u0000$value".toByteArray(StandardCharsets.UTF_8)).toHex()
+        return mac.doFinal("$domain\u0000$value".toUtf8Bytes()).toHex()
     }
 
     private fun ByteArray.toHex(): String = joinToString("") { byte -> "%02x".format(byte) }

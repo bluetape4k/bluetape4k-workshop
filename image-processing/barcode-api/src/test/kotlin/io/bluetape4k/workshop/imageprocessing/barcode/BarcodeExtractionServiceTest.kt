@@ -297,7 +297,7 @@ class BarcodeExtractionServiceTest {
         val image = ImageIO.read(ByteArrayInputStream(fixtures.bytes(BarcodeExampleFixture.SAMPLE)))
         return ByteArrayOutputStream().use { output ->
             check(ImageIO.write(image, "jpeg", output)) { "JPEG writer is not available." }
-            output.toByteArray()
+            output.toUtf8Bytes()
         }
     }
 

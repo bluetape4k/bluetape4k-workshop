@@ -4,19 +4,19 @@ import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
-import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
 @Repository
 internal class ReviewRepository(
     private val gate: DatabasePermitGate,
-) : LongAuditableJdbcRepository<ReviewRecord, ReviewTable> {
+): LongAuditableJdbcRepository<ReviewRecord, ReviewTable> {
     override val table = ReviewTable
     override fun extractId(entity: ReviewRecord): Long = entity.id
 
@@ -73,8 +73,8 @@ internal class ReviewRepository(
             .selectAll()
             .where {
                 (table.tenantId eq tenantId) and
-                    (table.claimId eq claimId) and
-                    (table.status eq ReviewStatus.OPEN)
+                        (table.claimId eq claimId) and
+                        (table.status eq ReviewStatus.OPEN)
             }.singleOrNull()
             ?.let { with(this) { it.toEntity() } }
     }
@@ -89,9 +89,9 @@ internal class ReviewRepository(
             .selectAll()
             .where {
                 (table.tenantId eq tenantId) and
-                    (table.claimId eq claimId) and
-                    (table.id eq reviewId) and
-                    (table.status eq ReviewStatus.OPEN)
+                        (table.claimId eq claimId) and
+                        (table.id eq reviewId) and
+                        (table.status eq ReviewStatus.OPEN)
             }.forUpdate()
             .singleOrNull()
             ?.let { with(this) { it.toEntity() } }
@@ -106,8 +106,8 @@ internal class ReviewRepository(
         gate.requireHeld()
         val predicate =
             (table.tenantId eq tenantId) and
-                (table.status eq status) and
-                (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
+                    (table.status eq status) and
+                    (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
         return table.selectAll()
             .where { predicate }
             .orderBy(table.id to SortOrder.ASC)
@@ -126,9 +126,9 @@ internal class ReviewRepository(
         return auditedUpdateAll(
             predicate = {
                 (table.tenantId eq review.tenantId) and
-                    (table.id eq review.id) and
-                    (table.status eq ReviewStatus.OPEN) and
-                    (table.revision eq expectedRevision)
+                        (table.id eq review.id) and
+                        (table.status eq ReviewStatus.OPEN) and
+                        (table.revision eq expectedRevision)
             },
         ) {
             it[ReviewTable.status] = status
@@ -137,5 +137,5 @@ internal class ReviewRepository(
         } == 1
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

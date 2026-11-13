@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoveryJournal
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoverySnapshot
@@ -19,7 +20,7 @@ class QueryRecoveryServiceTest {
             QueryQuarantineEvent(eventId, "tenant-a", "InvoiceIssued", "unsupported_schema", Instant.EPOCH),
         )
 
-        service.redrive(eventId, "operator-a", "correlation-a").requested shouldBeEqualTo true
+        service.redrive(eventId, "operator-a", "correlation-a").requested.shouldBeTrue()
         journal.snapshot().quarantineCount shouldBeEqualTo 0
         journal.redriveActors shouldBeEqualTo listOf("operator-a")
     }

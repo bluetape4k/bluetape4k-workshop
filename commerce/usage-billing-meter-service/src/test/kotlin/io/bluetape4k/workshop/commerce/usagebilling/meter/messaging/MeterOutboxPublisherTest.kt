@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 
 class MeterOutboxPublisherTest {
     private val journal = InMemoryMeterOutboxJournal()
@@ -39,7 +39,7 @@ class MeterOutboxPublisherTest {
         MeterOutboxStatus.PENDING,
     )
 
-    private class InMemoryMeterOutboxJournal : MeterOutboxJournal {
+    private class InMemoryMeterOutboxJournal: MeterOutboxJournal {
         val events = mutableListOf<MeterOutboxLease>()
 
         override fun claim(owner: String, now: Instant, limit: Int): List<MeterOutboxLease> =
@@ -67,7 +67,7 @@ class MeterOutboxPublisherTest {
         }
     }
 
-    private class RecordingMeterEventTransport : MeterEventTransport {
+    private class RecordingMeterEventTransport: MeterEventTransport {
         val keys = mutableListOf<String>()
         var failure: MeterEventTransportFailure? = null
 

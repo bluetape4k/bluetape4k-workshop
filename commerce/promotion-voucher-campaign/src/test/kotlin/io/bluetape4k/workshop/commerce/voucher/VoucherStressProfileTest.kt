@@ -8,14 +8,16 @@ import io.bluetape4k.bucket4j.ratelimit.RateLimitDiagnostics
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionDecision
-import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitRejected
 import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionGate
 import io.bluetape4k.workshop.commerce.voucher.application.AllocateVoucherCommand
@@ -35,10 +37,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 internal enum class RedisMode {
     HEALTHY,
@@ -52,7 +53,7 @@ internal data class StressProfile(
     val id: String = "c${concurrency}-${redisMode.name.lowercase()}-hotspot"
 }
 
-internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
+internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
     @Tag("stress")
     @ParameterizedTest(name = "{0}")
     @MethodSource("stressProfiles")
@@ -90,7 +91,7 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
                             expectedOperations = mapOf("allocation" to ALLOCATIONS, "redemption" to REDEMPTIONS),
                             capacityInvariant =
                                 campaign.allocatedCount <= campaign.capacity &&
-                                    campaign.allocatedCount.toLong() == contributing,
+                                        campaign.allocatedCount.toLong() == contributing,
                             deterministicLockTimeoutContractPassed = true,
                         )
 
@@ -118,7 +119,7 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
             val status =
                 try {
                     when (redis.admission.decide("v1:${profile.id}:$index")) {
-                        AdmissionDecision.Proceed -> {
+                        AdmissionDecision.Proceed        -> {
                             successes +=
                                 allocation.allocate(
                                     AllocateVoucherCommand(TENANT_ID, campaignId, "user-${Base58.randomString(8)}"),
@@ -134,7 +135,7 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
                         VoucherCommandFailure.CAPACITY_EXHAUSTED,
                         VoucherCommandFailure.PER_USER_LIMIT_REACHED,
                         VoucherCommandFailure.CONCURRENT_MODIFICATION,
-                        -> 409
+                            -> 409
 
                         else -> throw failure
                     }
@@ -172,7 +173,7 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
                         VoucherCommandFailure.ALREADY_REDEEMED,
                         VoucherCommandFailure.STALE_REVISION,
                         VoucherCommandFailure.CONCURRENT_MODIFICATION,
-                        -> 409
+                            -> 409
 
                         else -> throw failure
                     }
@@ -201,7 +202,7 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
                         }
                     }
                 }
-            futures.forEach { it.get(60, TimeUnit.SECONDS) }
+            futures.forEach { it.get(60.seconds) }
         }
     }
 
@@ -225,8 +226,8 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
                 password = postgresPassword()
                 maximumPoolSize = 16
                 minimumIdle = 0
-                connectionTimeout = Duration.ofSeconds(15).toMillis()
-                validationTimeout = Duration.ofSeconds(5).toMillis()
+                connectionTimeout = 15.seconds().toMillis()
+                validationTimeout = 5.seconds().toMillis()
                 addDataSourceProperty("ApplicationName", applicationName)
             },
         )
@@ -235,11 +236,11 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
         mode: RedisMode,
         probe: VoucherPerformanceProbe,
     ): StressRedisHarness {
-        val uri = RedisURI.create(redis.url).apply { timeout = Duration.ofMillis(25) }
+        val uri = RedisURI.create(redis.url).apply { timeout = 25.millis() }
         val client = LettuceClients.clientOf(uri)
         val connection = LettuceClients.connect(client)
         val limiter =
-            object : RateLimiter<String> {
+            object: RateLimiter<String> {
                 override fun consume(
                     key: String,
                     numToken: Long,
@@ -290,7 +291,7 @@ internal class VoucherStressProfileTest : VoucherCommandTestSupport() {
         val client: RedisClient,
         private val connection: StatefulRedisConnection<String, String>,
         val admission: VoucherAdmissionGate,
-    ) : AutoCloseable {
+    ): AutoCloseable {
         override fun close() {
             connection.close()
             LettuceClients.shutdown(client)

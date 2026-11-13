@@ -2,7 +2,10 @@ package io.bluetape4k.workshop.commerce.usagebilling.meter.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.ActivatePriceCommand
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandJournal
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandReceipt
@@ -11,13 +14,11 @@ import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterOutboxReco
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterPriceVersion
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.HexFormat
-import java.util.UUID
+import java.util.*
 
 class MeterCommandServiceTest {
     private val now = Instant.parse("2026-07-22T00:00:00Z")
@@ -28,7 +29,7 @@ class MeterCommandServiceTest {
     fun `price activation appends a version and PriceActivated outbox record together`() {
         val result = service.activatePrice(command())
 
-        result.replayed shouldBeEqualTo false
+        result.replayed.shouldBeFalse()
         journal.priceVersions.single().meterCode shouldBeEqualTo "api_calls"
         journal.outboxRecords.single().eventType shouldBeEqualTo "PriceActivated"
         journal.outboxRecords.single().partitionKey shouldBeEqualTo "tenant-a|Meter|api_calls"
@@ -44,7 +45,7 @@ class MeterCommandServiceTest {
         service.activatePrice(command())
         val replay = service.activatePrice(command())
 
-        replay.replayed shouldBeEqualTo true
+        replay.replayed.shouldBeTrue()
         journal.priceVersions.size shouldBeEqualTo 1
         journal.outboxRecords.size shouldBeEqualTo 1
     }
@@ -73,9 +74,9 @@ class MeterCommandServiceTest {
         )
 
     private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 
-    private class InMemoryMeterCommandJournal : MeterCommandJournal {
+    private class InMemoryMeterCommandJournal: MeterCommandJournal {
         val priceVersions = mutableListOf<MeterPriceVersion>()
         val outboxRecords = mutableListOf<MeterOutboxRecord>()
         private val receipts = mutableMapOf<String, MeterCommandReceipt>()

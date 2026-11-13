@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -156,7 +157,7 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
     }
 
     private companion object {
-        val STREAM_TIMEOUT: Duration = Duration.ofSeconds(5)
+        val STREAM_TIMEOUT: Duration = 5.seconds()
         val HTTP_CLIENT: HttpClient =
             HttpClient.newBuilder()
                 .connectTimeout(STREAM_TIMEOUT)

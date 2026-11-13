@@ -12,13 +12,13 @@ import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
 /** plaintext voucher code를 절대 받지 않고 claim verifier와 key version을 저장합니다. */
 @Repository
 internal class ClaimRepository(
     private val gate: DatabasePermitGate,
-) : LongAuditableJdbcRepository<ClaimRecord, ClaimTable> {
+): LongAuditableJdbcRepository<ClaimRecord, ClaimTable> {
     override val table = ClaimTable
 
     override fun extractId(entity: ClaimRecord): Long = entity.id
@@ -128,9 +128,9 @@ internal class ClaimRepository(
             .selectAll()
             .where {
                 (table.tenantId eq tenantId) and
-                    (table.campaignId eq campaignId) and
-                    (table.userDigest eq userDigest) and
-                    (table.state inList USER_LIMIT_STATES)
+                        (table.campaignId eq campaignId) and
+                        (table.userDigest eq userDigest) and
+                        (table.state inList USER_LIMIT_STATES)
             }.count()
     }
 
@@ -143,8 +143,8 @@ internal class ClaimRepository(
         return auditedUpdateAll(
             predicate = {
                 (table.tenantId eq record.tenantId) and
-                    (table.id eq record.id) and
-                    (table.revision eq expectedRevision)
+                        (table.id eq record.id) and
+                        (table.revision eq expectedRevision)
             },
         ) {
             it[state] = record.state
@@ -160,7 +160,7 @@ internal class ClaimRepository(
         } == 1
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private val USER_LIMIT_STATES =
             listOf(ClaimState.ALLOCATED, ClaimState.REVIEW_REQUIRED, ClaimState.REDEEMED)
     }

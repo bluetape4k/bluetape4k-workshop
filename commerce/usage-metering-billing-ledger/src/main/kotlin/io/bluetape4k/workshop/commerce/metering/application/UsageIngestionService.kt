@@ -11,12 +11,12 @@ import io.bluetape4k.workshop.commerce.metering.idempotency.Sha256Digest
 import io.bluetape4k.workshop.commerce.metering.persistence.MeterRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.UsageEventRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.UsageEvents
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class UsageIngestionCommand(
     val tenantId: TenantId,

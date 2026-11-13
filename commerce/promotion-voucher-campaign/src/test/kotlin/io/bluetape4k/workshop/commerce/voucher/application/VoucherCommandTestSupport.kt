@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.application
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherCompatibilityTestSupport
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherMigrationResult
@@ -23,10 +24,10 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
-internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupport() {
+internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSupport() {
     private val exposedDatabases = mutableListOf<Database>()
     private var previousDefaultDatabase: Database? = null
 
@@ -47,7 +48,12 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
     @BeforeEach
     fun createCommandRuntime() {
         previousDefaultDatabase = TransactionManager.defaultDatabase
-        check(migrationRunner().migrate() in setOf(VoucherMigrationResult.APPLIED, VoucherMigrationResult.ALREADY_APPLIED))
+        check(
+            migrationRunner().migrate() in setOf(
+                VoucherMigrationResult.APPLIED,
+                VoucherMigrationResult.ALREADY_APPLIED
+            )
+        )
         configureCommandRuntime()
     }
 
@@ -62,8 +68,8 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
     protected fun configureCommandRuntime(
         foregroundPermits: Int = 12,
         workerPermits: Int = 1,
-        acquireTimeout: Duration = Duration.ofSeconds(2),
-        lockTimeout: Duration = Duration.ofSeconds(5),
+        acquireTimeout: Duration = 2.seconds(),
+        lockTimeout: Duration = 5.seconds(),
         serviceClock: Clock = clock,
         runtimeDataSource: DataSource = dataSource,
     ) {

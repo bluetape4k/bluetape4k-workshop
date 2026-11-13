@@ -27,6 +27,7 @@ import io.bluetape4k.images.useGraphics
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.config.TiffMultiPageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
@@ -126,7 +127,7 @@ class ImageOcrServiceImplTest {
         val service = service(properties = properties(nativeEnabled = false))
 
         assertFailsWith<IllegalArgumentException> {
-            service.recognize(request(bytes = "not an image".toByteArray(), contentType = "image/png"))
+            service.recognize(request(bytes = "not an image".toUtf8Bytes(), contentType = "image/png"))
         }
     }
 
@@ -396,7 +397,7 @@ class ImageOcrServiceImplTest {
         )
 
         assertFailsWith<IllegalArgumentException> {
-            service.recognize(request(bytes = "not an image".toByteArray(), contentType = "image/png"))
+            service.recognize(request(bytes = "not an image".toUtf8Bytes(), contentType = "image/png"))
         }
     }
 

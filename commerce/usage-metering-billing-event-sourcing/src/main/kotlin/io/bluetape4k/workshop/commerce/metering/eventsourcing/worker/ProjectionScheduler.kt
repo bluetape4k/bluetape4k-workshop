@@ -1,10 +1,11 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.worker
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationQueryRepository
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionRebuilder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
@@ -69,7 +70,7 @@ class ProjectionGenerationSwitcher(
     }
 
     private companion object {
-        val SWITCH_LEASE: Duration = Duration.ofSeconds(30)
+        val SWITCH_LEASE: Duration = 30.seconds()
     }
 }
 

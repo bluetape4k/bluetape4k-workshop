@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.redis.lettuce.filter.LettuceBloomFilter
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradationState
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradedComponent
@@ -44,10 +45,10 @@ internal class VoucherAdmissionKeyFactory(
     ): String {
         val mac = Mac.getInstance(HMAC_SHA_256)
         mac.init(SecretKeySpec(key, HMAC_SHA_256))
-        mac.update(domain.toByteArray(UTF_8))
+        mac.update(domain.toUtf8Bytes())
         values.forEach { value ->
             mac.update(SEPARATOR)
-            mac.update(value.toByteArray(UTF_8))
+            mac.update(value.toUtf8Bytes())
         }
         return Base64.getUrlEncoder().withoutPadding().encodeToString(mac.doFinal())
     }

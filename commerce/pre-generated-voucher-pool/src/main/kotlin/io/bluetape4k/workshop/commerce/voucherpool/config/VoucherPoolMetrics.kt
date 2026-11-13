@@ -2,6 +2,11 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.hashOf
 import io.bluetape4k.workshop.commerce.voucherpool.admission.PermitLane
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcExecutionLane
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcTimeoutPhase
@@ -34,19 +39,19 @@ internal class VoucherPoolAlertWindow(
 )
 
 internal object VoucherPoolAlertPolicy {
-    private val windows =
-        mapOf(
-            VoucherPoolAlert.HIKARI_PENDING to VoucherPoolAlertWindow(0.0, Duration.ofSeconds(10)),
-            VoucherPoolAlert.WORKER_NO_PROGRESS to VoucherPoolAlertWindow(0.0, Duration.ofSeconds(30)),
-            VoucherPoolAlert.REDIS_DEGRADED to VoucherPoolAlertWindow(0.0, Duration.ofSeconds(30)),
-            VoucherPoolAlert.ELIGIBLE_DEPTH_LOW to VoucherPoolAlertWindow(0.10, Duration.ofSeconds(60)),
-            VoucherPoolAlert.SSE_RESET_BURST to VoucherPoolAlertWindow(10.0, Duration.ofMinutes(1)),
-            VoucherPoolAlert.QUARANTINE_PRESENT to VoucherPoolAlertWindow(1.0, Duration.ZERO),
-            VoucherPoolAlert.PURGE_LAG to VoucherPoolAlertWindow(0.0, Duration.ofHours(24)),
-            VoucherPoolAlert.RESTORE_FAILURE to VoucherPoolAlertWindow(1.0, Duration.ZERO),
-        )
+    private val windows: Map<VoucherPoolAlert, VoucherPoolAlertWindow> = mapOf(
+        VoucherPoolAlert.HIKARI_PENDING to VoucherPoolAlertWindow(0.0, 10.seconds()),
+        VoucherPoolAlert.WORKER_NO_PROGRESS to VoucherPoolAlertWindow(0.0, 30.seconds()),
+        VoucherPoolAlert.REDIS_DEGRADED to VoucherPoolAlertWindow(0.0, 30.seconds()),
+        VoucherPoolAlert.ELIGIBLE_DEPTH_LOW to VoucherPoolAlertWindow(0.10, 60.seconds()),
+        VoucherPoolAlert.SSE_RESET_BURST to VoucherPoolAlertWindow(10.0, 1.minutes()),
+        VoucherPoolAlert.QUARANTINE_PRESENT to VoucherPoolAlertWindow(1.0, Duration.ZERO),
+        VoucherPoolAlert.PURGE_LAG to VoucherPoolAlertWindow(0.0, 24.hours()),
+        VoucherPoolAlert.RESTORE_FAILURE to VoucherPoolAlertWindow(1.0, Duration.ZERO),
+    )
 
-    operator fun get(alert: VoucherPoolAlert): VoucherPoolAlertWindow = windows.getValue(alert)
+    operator fun get(alert: VoucherPoolAlert): VoucherPoolAlertWindow =
+        windows.getValue(alert)
 }
 
 /** voucher pool을 위한 bounded-tag operational metric만 등록합니다. */
@@ -54,7 +59,16 @@ internal object VoucherPoolAlertPolicy {
 @Suppress("TooManyFunctions")
 internal class VoucherPoolMetrics(
     private val registry: MeterRegistry,
-) : VoucherPoolJdbcMetrics {
+): VoucherPoolJdbcMetrics {
+
+    private companion object: KLogging() {
+        const val RATIO_SCALE = 100_000.0
+        val BOUNDED_VALUE = Regex("[A-Z][A-Z0-9_]{0,31}")
+
+        fun bounded(value: String): String =
+            value.uppercase().takeIf(BOUNDED_VALUE::matches) ?: "UNKNOWN"
+    }
+
     private val hikariActive = AtomicInteger()
     private val hikariPending = AtomicInteger()
     private val workerBacklog = ConcurrentHashMap<WorkerKind, AtomicLong>()
@@ -75,11 +89,14 @@ internal class VoucherPoolMetrics(
         gauge("voucher.pool.hikari.pending", hikariPending)
         gauge("voucher.pool.sse.subscribers", activeSse)
         gauge("voucher.pool.sse.resets", sseResets)
-        Gauge.builder("voucher.pool.depth.eligible.ratio", poolEligibleRatio) { it.get().toDouble() / RATIO_SCALE }
-            .register(registry)
+        Gauge.builder("voucher.pool.depth.eligible.ratio", poolEligibleRatio) {
+            it.get().toDouble() / RATIO_SCALE
+        }.register(registry)
+
         gauge("voucher.pool.quarantine.count", quarantineCount)
         gauge("voucher.pool.purge.lag", purgeLagSeconds, "seconds")
         gauge("voucher.pool.restore.failures", restoreFailures)
+
         WorkerKind.entries.forEach { kind ->
             gauge(
                 "voucher.pool.worker.backlog",
@@ -108,6 +125,7 @@ internal class VoucherPoolMetrics(
 
     fun permitWait(lane: PermitLane, outcome: String, duration: Duration) {
         val key = MetricKey(lane.name, bounded(outcome))
+
         permitWaits.computeIfAbsent(key) {
             Timer.builder("voucher.pool.permit.wait")
                 .tag("lane", it.first)
@@ -187,15 +205,14 @@ internal class VoucherPoolMetrics(
     }
 
     private class MetricKey(val first: String, val second: String) {
-        override fun equals(other: Any?): Boolean = other is MetricKey && first == other.first && second == other.second
 
-        override fun hashCode(): Int = 31 * first.hashCode() + second.hashCode()
-    }
+        override fun equals(other: Any?): Boolean =
+            other is MetricKey &&
+                    first == other.first &&
+                    second == other.second
 
-    private companion object {
-        const val RATIO_SCALE = 100_000.0
-        val BOUNDED_VALUE = Regex("[A-Z][A-Z0-9_]{0,31}")
+        override fun hashCode(): Int = hashOf(first, second)
 
-        fun bounded(value: String): String = value.uppercase().takeIf(BOUNDED_VALUE::matches) ?: "UNKNOWN"
+        override fun toString(): String = "MetricKey(first='$first', second='$second')"
     }
 }

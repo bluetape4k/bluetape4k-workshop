@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.usagebilling.composition
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -20,7 +21,7 @@ class KotlinPatternArchitectureTest {
                     if (serialVersionUidCount < dataClassCount) {
                         add(
                             "${source.fileName}:$dataClassCount data classes but " +
-                                "$serialVersionUidCount serialVersionUID values",
+                                    "$serialVersionUidCount serialVersionUID values",
                         )
                     }
                 }
@@ -51,7 +52,7 @@ class KotlinPatternArchitectureTest {
     fun `Query quarantine listener records its permanent-failure outcome`() {
         val content = repositoryRoot().resolve(QUERY_DECODER).toFile().readText()
 
-        (content.contains("query.inbound.quarantined")) shouldBeEqualTo true
+        content shouldContain "query.inbound.quarantined"
     }
 
     @Test
@@ -86,26 +87,26 @@ class KotlinPatternArchitectureTest {
         )
         val DECODER_FILES = listOf(
             "commerce/usage-billing-usage-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/usage/messaging/MeterPriceEvidenceConsumer.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/usage/messaging/MeterPriceEvidenceConsumer.kt",
             "commerce/usage-billing-billing-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/billing/messaging/BillingKafkaConsumer.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/billing/messaging/BillingKafkaConsumer.kt",
             "commerce/usage-billing-invoice-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/invoice/messaging/BillingChargeConsumer.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/invoice/messaging/BillingChargeConsumer.kt",
         )
         const val QUERY_DECODER =
             "commerce/usage-billing-query-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/query/messaging/QueryKafkaConsumer.kt"
+                    "io/bluetape4k/workshop/commerce/usagebilling/query/messaging/QueryKafkaConsumer.kt"
         val ENVELOPE_FILES = listOf(
             "commerce/usage-billing-meter-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/meter/integration/MeterIntegrationEnvelope.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/meter/integration/MeterIntegrationEnvelope.kt",
             "commerce/usage-billing-usage-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/usage/integration/UsageIntegrationEnvelope.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/usage/integration/UsageIntegrationEnvelope.kt",
             "commerce/usage-billing-billing-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/billing/integration/BillingIntegrationEnvelope.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/billing/integration/BillingIntegrationEnvelope.kt",
             "commerce/usage-billing-invoice-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/invoice/integration/InvoiceIntegrationEnvelope.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/invoice/integration/InvoiceIntegrationEnvelope.kt",
             "commerce/usage-billing-query-service/src/main/kotlin/" +
-                "io/bluetape4k/workshop/commerce/usagebilling/query/integration/QueryIntegrationEnvelope.kt",
+                    "io/bluetape4k/workshop/commerce/usagebilling/query/integration/QueryIntegrationEnvelope.kt",
         )
     }
 }

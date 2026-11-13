@@ -20,6 +20,7 @@ import io.bluetape4k.leader.audit.http.LeaderAuditTrustedHttpsEndpoint
 import io.bluetape4k.leader.history.LeaderHistoryStatus
 import io.bluetape4k.leader.history.LeaderLockHistoryRecord
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.AfterEach
@@ -135,7 +136,7 @@ internal class JobSafetyAuditExporterTest {
             endpoint = LeaderAuditTrustedHttpsEndpoint.trusted(URI("https://audit.example.test/hook")),
             headers = emptyMap(),
             encoder = {
-                LeaderAuditHttpPayload.of("application/json", "{}".toByteArray())
+                LeaderAuditHttpPayload.of("application/json", "{}".toUtf8Bytes())
             },
             exportOptions = LeaderAuditExportOptions(
                 queueCapacity = 64,
@@ -209,7 +210,7 @@ internal class JobSafetyAuditExporterTest {
                 ),
                 headers = emptyMap(),
                 encoder = {
-                    LeaderAuditHttpPayload.of("application/json", "{}".toByteArray())
+                    LeaderAuditHttpPayload.of("application/json", "{}".toUtf8Bytes())
                 },
                 exportOptions = options,
                 httpOptions = LeaderAuditHttpOptions.defaults(),

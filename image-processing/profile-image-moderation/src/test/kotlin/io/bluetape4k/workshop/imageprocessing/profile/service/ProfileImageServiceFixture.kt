@@ -140,7 +140,7 @@ internal class ControllableModerationProvider: ImageModerationProvider {
         return deferred.await()
     }
 
-    suspend fun complete(decision: ModerationDecision, reason: String = decision.name.lowercase()) {
+    fun complete(decision: ModerationDecision, reason: String = decision.name.lowercase()) {
         completions.removeFirst().complete(ModerationResult(decision, reason))
     }
 

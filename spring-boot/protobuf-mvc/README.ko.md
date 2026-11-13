@@ -130,7 +130,7 @@ val envelope = ByteArray(written).also(target::get)
 target.clear() // buffer 재사용과 lifecycle은 caller가 소유합니다.
 ```
 
-반환 byte는 allocating `ProtobufSerializer.serialize` API와 같은 Protobuf `Any` envelope이며 raw `Course.toByteArray()` byte가 아닙니다. 성공하면 target position이 `written`만큼 전진합니다. capacity 부족과 read-only target은 각각 `BufferOverflowException`, `ReadOnlyBufferException`을 던지며 새 position을 commit하지 않습니다. 이 예제는 allocation 또는 throughput benchmark 수치를 주장하지 않습니다.
+반환 byte는 allocating `ProtobufSerializer.serialize` API와 같은 Protobuf `Any` envelope이며 raw `Course.toUtf8Bytes()` byte가 아닙니다. 성공하면 target position이 `written`만큼 전진합니다. capacity 부족과 read-only target은 각각 `BufferOverflowException`, `ReadOnlyBufferException`을 던지며 새 position을 commit하지 않습니다. 이 예제는 allocation 또는 throughput benchmark 수치를 주장하지 않습니다.
 
 ## 빌드 설정
 

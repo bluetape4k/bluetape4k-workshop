@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.usagebilling.usage.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.MissingPriceEvidence
@@ -28,7 +30,7 @@ class UsageCommandServiceTest {
 
         val result = service.accept(command())
 
-        result.replayed shouldBeEqualTo false
+        result.replayed.shouldBeFalse()
         journal.usages.single().sourceEventId shouldBeEqualTo "source-usage-1"
         journal.outbox.single().eventType shouldBeEqualTo "UsageAccepted"
         journal.outbox.single().partitionKey shouldBeEqualTo "tenant-a|Usage|source-usage-1"
@@ -44,7 +46,7 @@ class UsageCommandServiceTest {
         journal.evidence += PriceEvidence("tenant-a", "api_calls", "USD", BigDecimal("0.10"), now)
         service.accept(command())
 
-        service.accept(command()).replayed shouldBeEqualTo true
+        service.accept(command()).replayed.shouldBeTrue()
         journal.usages.size shouldBeEqualTo 1
         journal.outbox.size shouldBeEqualTo 1
     }

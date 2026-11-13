@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets.ISO_8859_1
@@ -16,7 +17,7 @@ internal class AllocationServiceTest : VoucherCommandTestSupport() {
         val result = allocation.allocate(command("user-1"))
 
         result.claim.state shouldBeEqualTo ClaimState.ALLOCATED
-        result.oneTimeCode?.startsWith("V7-") shouldBeEqualTo true
+        result.oneTimeCode?.startsWith("V7-").shouldBeTrue()
         campaignSnapshot().allocatedCount shouldBeEqualTo 1
         val persisted = jdbc.foregroundTransaction { checkNotNull(claims.findPublic(TENANT_ID, result.claim.claimId)) }
         String(checkNotNull(persisted.codeVerifier), ISO_8859_1) shouldNotBeEqualTo result.oneTimeCode

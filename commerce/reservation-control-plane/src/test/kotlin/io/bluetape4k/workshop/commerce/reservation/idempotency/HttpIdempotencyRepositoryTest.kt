@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.commerce.reservation.idempotency
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -28,7 +31,7 @@ internal class HttpIdempotencyRepositoryTest {
 
             repository.finalize(acquired.record.id, owner, 201, "{\"holdId\":\"h-1\"}", failed = false) shouldBeEqualTo
                 true
-            repository.acquire(scope, fingerprint, UUID.randomUUID(), now.plusSeconds(1)) shouldBeEqualTo
+            repository.acquire(scope, fingerprint, UUID.randomUUID(), now + 1.seconds()) shouldBeEqualTo
                 AcquireResult.Replay(201, "{\"holdId\":\"h-1\"}", failed = false)
         }
     }
@@ -42,7 +45,7 @@ internal class HttpIdempotencyRepositoryTest {
                 scope,
                 IdempotencyFingerprint.request("create-hold", "resource=room-b"),
                 UUID.randomUUID(),
-                now.plusSeconds(1)
+                now + 1.seconds()
             ) shouldBeEqualTo AcquireResult.FingerprintConflict
         }
     }
@@ -53,7 +56,7 @@ internal class HttpIdempotencyRepositoryTest {
             repository.acquire(scope, fingerprint, UUID.randomUUID(), now)
 
             repository.acquire(scope, fingerprint, UUID.randomUUID(), now.plusSeconds(30)) shouldBeEqualTo
-                AcquireResult.InProgress(Duration.ofSeconds(60))
+                    AcquireResult.InProgress(60.seconds())
         }
     }
 
@@ -68,8 +71,8 @@ internal class HttpIdempotencyRepositoryTest {
                 repository.acquire(scope, fingerprint, replacementOwner, now.plusSeconds(91)) as AcquireResult.Takeover
 
             takeover.record.ownerToken shouldBeEqualTo replacementOwner
-            repository.finalize(original.record.id, staleOwner, 201, "stale", failed = false) shouldBeEqualTo false
-            repository.finalize(original.record.id, replacementOwner, 201, "fresh", failed = false) shouldBeEqualTo true
+            repository.finalize(original.record.id, staleOwner, 201, "stale", failed = false).shouldBeFalse()
+            repository.finalize(original.record.id, replacementOwner, 201, "fresh", failed = false).shouldBeTrue()
         }
     }
 }

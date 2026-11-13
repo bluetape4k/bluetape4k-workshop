@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -54,7 +55,7 @@ internal class IdempotencyFingerprintTest {
 
         first shouldNotBeEqualTo otherTenant
         first shouldNotBeEqualTo otherOperation
-        first.base64Url.contains("raw-key-123") shouldBeEqualTo false
+        first.base64Url.contains("raw-key-123").shouldBeFalse()
     }
 
     @Test

@@ -52,7 +52,7 @@ class SuspendedFileChannelSourceTest: AbstractOkioTest() {
 
     private fun createSuspendedSource(): SuspendedFileChannelSource {
         val tempFile = tempFolder.createFile().toPath()
-        Files.write(tempFile, MESSAGE.toByteArray())
+        Files.write(tempFile, MESSAGE.toUtf8Bytes())
 
         val channel = AsynchronousFileChannel.open(tempFile, StandardOpenOption.READ)
         return SuspendedFileChannelSource(channel)

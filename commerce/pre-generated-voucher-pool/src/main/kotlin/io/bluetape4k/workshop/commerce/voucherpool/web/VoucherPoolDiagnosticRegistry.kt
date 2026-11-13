@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.logging.KLogging
 import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.time.Duration
@@ -15,15 +17,19 @@ internal data class VoucherPoolDiagnosticRecord(
     val status: Int,
     val elapsedMillis: Long,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 private data class DiagnosticKey(
     val tenantId: String,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 /** short-lived operator diagnostics를 위해 bounded, code-free request metadata만 보존합니다. */
@@ -32,7 +38,18 @@ internal class VoucherPoolDiagnosticRegistry internal constructor(
     private val now: () -> Instant,
     private val retention: Duration,
 ) {
-    constructor() : this(Instant::now, DEFAULT_RETENTION)
+    private companion object: KLogging() {
+        const val MAX_RECORDS = 1_024
+        const val MIN_HTTP_STATUS = 100
+        const val MAX_HTTP_STATUS = 599
+        val DEFAULT_RETENTION: Duration = 15.minutes()
+        val SAFE_TENANT = Regex("[A-Za-z0-9._:-]{1,64}")
+        val SAFE_REQUEST_ID = Regex("[!-~]{1,64}")
+        val SAFE_PATH = Regex("/[A-Za-z0-9._~!$&'()*+,;=:@%/-]{0,511}")
+        val SAFE_METHODS = setOf("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE")
+    }
+
+    constructor(): this(Instant::now, DEFAULT_RETENTION)
 
     private val records = ConcurrentHashMap<DiagnosticKey, VoucherPoolDiagnosticRecord>()
     private val insertionOrder = ConcurrentLinkedQueue<DiagnosticKey>()
@@ -78,16 +95,5 @@ internal class VoucherPoolDiagnosticRegistry internal constructor(
         while (records.size > MAX_RECORDS) {
             insertionOrder.poll()?.let(records::remove) ?: return
         }
-    }
-
-    private companion object {
-        const val MAX_RECORDS = 1_024
-        const val MIN_HTTP_STATUS = 100
-        const val MAX_HTTP_STATUS = 599
-        val DEFAULT_RETENTION: Duration = Duration.ofMinutes(15)
-        val SAFE_TENANT = Regex("[A-Za-z0-9._:-]{1,64}")
-        val SAFE_REQUEST_ID = Regex("[!-~]{1,64}")
-        val SAFE_PATH = Regex("/[A-Za-z0-9._~!$&'()*+,;=:@%/-]{0,511}")
-        val SAFE_METHODS = setOf("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE")
     }
 }
