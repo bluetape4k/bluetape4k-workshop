@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.HexFormat
+import java.util.*
 
 class BillingChargeDecoderTest {
     private val decoder = BillingChargeDecoder()
@@ -57,10 +57,10 @@ class BillingChargeDecoderTest {
         )
 
     private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 
     private companion object {
         const val PAYLOAD = "{\"sourceEventId\":\"018f4a40-7d3e-7b3a-8c5b-7f0f9b2e1a02\"," +
-            "\"currency\":\"USD\",\"amount\":\"0.20\"}"
+                "\"currency\":\"USD\",\"amount\":\"0.20\"}"
     }
 }

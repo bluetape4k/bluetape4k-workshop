@@ -4,12 +4,16 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
-import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
+import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 class PlanningRequestRepositoryTest {
+
+    companion object: KLogging()
 
     private val repository = PlanningRequestRepository()
 
@@ -28,6 +32,7 @@ class PlanningRequestRepositoryTest {
         withTables(TestDB.POSTGRESQL, PlanningRequestTable) {
             val saved = repository.save(request)
 
+            log.debug { "saved=$saved" }
             repository.findByIdOrNull(request.id) shouldBeEqualTo saved
             repository.count() shouldBeEqualTo 1L
             repository.existsById(request.id).shouldBeTrue()

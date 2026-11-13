@@ -1,27 +1,27 @@
 package io.bluetape4k.workshop.virtualthread.part3
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.concurrent.virtualthread.api.StructuredSubtask
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeFailFast
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeFirstSuccess
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.io.Serializable
 import java.util.concurrent.StructuredTaskScope
 
-class StructuredConcurrencyExamples : AbstractVirtualThreadTest() {
+class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
-    data class Pasta(val name: String = "Spaghetti") : Serializable {
+    data class Pasta(val name: String = "Spaghetti"): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    data class Sauce(val name: String = "Tomato") : Serializable {
+    data class Sauce(val name: String = "Tomato"): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -30,7 +30,7 @@ class StructuredConcurrencyExamples : AbstractVirtualThreadTest() {
     data class Dish(
         val pasta: Pasta,
         val sauce: Sauce,
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }

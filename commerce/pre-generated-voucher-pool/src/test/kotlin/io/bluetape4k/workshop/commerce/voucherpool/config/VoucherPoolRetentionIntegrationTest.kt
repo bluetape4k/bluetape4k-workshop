@@ -1,15 +1,20 @@
-@file:Suppress("MagicNumber", "MaxLineLength")
+@file:Suppress("MagicNumber", "MaxLineLength", "SqlSourceToSinkFlow")
 
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldBeZero
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.database.getHikariDataSource
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -18,34 +23,36 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
 import java.sql.Connection
-import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 internal class VoucherPoolRetentionIntegrationTest {
-    private lateinit var schema: String
-    private lateinit var dataSource: DataSource
+
+    companion object: KLogging()
+
+    private lateinit var voucherSchema: String
+    private lateinit var dataSource: HikariDataSource
     private lateinit var retention: VoucherPoolRetention
     private val policy = VoucherPoolRetentionPolicy()
 
     @BeforeAll
     fun createSchema() {
-        schema = "voucher_retention_${Base58.randomString(8).lowercase()}"
-        VOUCHER_POOL_TASK_12_POSTGRES.createSchema(schema)
-        dataSource = postgresDataSource(schema)
+        voucherSchema = "voucher_retention_${Base58.randomString(8).lowercase()}"
+        VOUCHER_POOL_TASK_12_POSTGRES.createSchema(voucherSchema)
+        dataSource = postgresDataSource(voucherSchema)
         migrationRunner(dataSource).migrate()
         retention = VoucherPoolRetention(dataSource, policy)
     }
 
     @AfterAll
     fun dropSchema() {
-        VOUCHER_POOL_TASK_12_POSTGRES.dropSchema(schema)
+        VOUCHER_POOL_TASK_12_POSTGRES.dropSchema(voucherSchema)
+        dataSource.close()
     }
 
     @ParameterizedTest
@@ -58,17 +65,14 @@ internal class VoucherPoolRetentionIntegrationTest {
     fun `retention boundary uses database time`(kind: RetentionKind, amount: Long, unit: String) {
         val tenantBefore = "before-${kind.name.lowercase()}"
         val tenantAt = "at-${kind.name.lowercase()}"
+
         try {
             seed(kind, tenantBefore, "$amount $unit - 1 second")
-
             retention.purge(limit = 100)
-
             retainedCount(kind, tenantBefore) shouldBeEqualTo expectedRows(kind)
 
             seed(kind, tenantAt, "$amount $unit")
-
             retention.purge(limit = 100)
-
             retainedCount(kind, tenantAt) shouldBeEqualTo 0L
         } finally {
             deleteFixtureTenant(tenantBefore)
@@ -76,7 +80,7 @@ internal class VoucherPoolRetentionIntegrationTest {
         }
         queryLong(
             "SELECT count(*) FROM voucher_pool_backup_inventory " +
-                "WHERE tenant_id IN ('$tenantBefore','$tenantAt')",
+                    "WHERE tenant_id IN ('$tenantBefore','$tenantAt')",
         ).shouldBeZero()
     }
 
@@ -85,7 +89,8 @@ internal class VoucherPoolRetentionIntegrationTest {
         val heldTenant = "legal-hold"
         seed(RetentionKind.DESCRIPTOR, heldTenant, "25 hours")
         execute(
-            "INSERT INTO voucher_pool_legal_holds(tenant_id,reason_code) VALUES ('$heldTenant','LEGAL_REQUEST')",
+            "INSERT INTO voucher_pool_legal_holds(tenant_id,reason_code) " +
+                    "VALUES ('$heldTenant','LEGAL_REQUEST')",
         )
 
         retention.purge(limit = 100)
@@ -95,9 +100,11 @@ internal class VoucherPoolRetentionIntegrationTest {
         val quarantinedTenant = "quarantine-hold"
         val entry = seedTerminalEntry(quarantinedTenant, "31 days")
         execute(
-            """INSERT INTO voucher_pool_quarantines
+            """
+                INSERT INTO voucher_pool_quarantines
                 (tenant_id,entry_id,source_state,source_revision,reason_code)
-                VALUES ('$quarantinedTenant','$entry','EXPIRED',0,'INVALID_TAG')""",
+                VALUES ('$quarantinedTenant','$entry','EXPIRED',0,'INVALID_TAG')
+                """.trimIndent(),
         )
 
         retention.purge(limit = 100)
@@ -130,11 +137,13 @@ internal class VoucherPoolRetentionIntegrationTest {
 
         val report = retention.purge(limit = 100)
 
+        log.debug { "report: $report" }
         report.stages shouldBeEqualTo RetentionStage.entries
         report.count(RetentionStage.DESCRIPTORS) shouldBeEqualTo 1
         report.count(RetentionStage.TERMINAL_INBOX_AND_CLAIMS) shouldBeEqualTo 2
         report.count(RetentionStage.TERMINAL_RESERVATIONS_AND_ENTRIES) shouldBeEqualTo 2
         report.count(RetentionStage.AUDIT) shouldBeEqualTo 1
+
         queryLong("SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id='$tenant'") shouldBeEqualTo 1L
         queryLong("SELECT count(*) FROM voucher_pool_code_dedup WHERE tenant_id='$tenant'") shouldBeEqualTo 1L
     }
@@ -149,10 +158,12 @@ internal class VoucherPoolRetentionIntegrationTest {
 
         val backlog = retention.backlog()
 
+        log.debug { "backlog: $backlog" }
         backlog[RetentionKind.DESCRIPTOR].count shouldBeGreaterThan 0L
         backlog[RetentionKind.TERMINAL_INBOX_CLAIM].count shouldBeGreaterThan 1L
         backlog[RetentionKind.TERMINAL_ENTRY_RESERVATION].count shouldBeGreaterThan 1L
         backlog[RetentionKind.AUDIT].count shouldBeGreaterThan 0L
+
         RetentionKind.entries.forEach { kind ->
             backlog[kind].oldestAge.toMillis() shouldBeGreaterThan 0L
         }
@@ -192,8 +203,10 @@ internal class VoucherPoolRetentionIntegrationTest {
 
         invalid.get() shouldBeEqualTo 0
         hasReplayDecision(tenant).shouldBeTrue()
+
         queryLong(
-            "SELECT count(*) FROM voucher_pool_http_idempotency WHERE tenant_id='$tenant' AND descriptor IS NULL",
+            "SELECT count(*) FROM voucher_pool_http_idempotency " +
+                    "WHERE tenant_id='$tenant' AND descriptor IS NULL"
         ) shouldBeEqualTo 1L
     }
 
@@ -202,21 +215,21 @@ internal class VoucherPoolRetentionIntegrationTest {
         val tenant = "tenant-delete"
         seed(RetentionKind.DESCRIPTOR, tenant, "25 hours")
         execute(
-            """INSERT INTO voucher_pool_backup_inventory
+            """
+                INSERT INTO voucher_pool_backup_inventory
                 (backup_id,tenant_id,kek_versions,verification_versions,user_identity_versions,audit_versions,
                  signature_versions,stable_dedup_version,
                  command_tombstone_version,retained_until,restore_rehearsed_at)
                 VALUES ('${UUID.randomUUID()}','$tenant',ARRAY['kek-v1'],ARRAY['11'],ARRAY['12'],ARRAY['15'],
                         ARRAY[]::text[],'1','2',
-                        statement_timestamp()+interval '1 day',statement_timestamp())""",
+                        statement_timestamp()+interval '1 day',statement_timestamp())
+                """.trimIndent(),
         )
-
         retention.deleteTenant(tenant).shouldBeFalse()
 
-        execute(
-            "UPDATE voucher_pool_backup_inventory SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'",
-        )
+        execute("UPDATE voucher_pool_backup_inventory SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'")
         retention.deleteTenant(tenant).shouldBeTrue()
+
         queryLong("SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id='$tenant'") shouldBeEqualTo 0L
     }
 
@@ -232,11 +245,12 @@ internal class VoucherPoolRetentionIntegrationTest {
 
     private fun seed(kind: RetentionKind, tenant: String, age: String, backupReady: Boolean = true) {
         if (backupReady) seedRehearsedBackup(tenant)
+
         when (kind) {
-            RetentionKind.DESCRIPTOR -> seedDescriptor(tenant, age)
+            RetentionKind.DESCRIPTOR           -> seedDescriptor(tenant, age)
             RetentionKind.TERMINAL_INBOX_CLAIM -> seedInboxAndClaim(tenant, age)
             RetentionKind.TERMINAL_ENTRY_RESERVATION -> seedTerminalEntry(tenant, age)
-            RetentionKind.AUDIT -> seedAudit(tenant, age)
+            RetentionKind.AUDIT                -> seedAudit(tenant, age)
         }
     }
 
@@ -244,31 +258,40 @@ internal class VoucherPoolRetentionIntegrationTest {
         val effect = UUID.randomUUID()
         val expiresAt =
             "statement_timestamp()-interval '$age'+(${policy.descriptor.toMillis()} * interval '1 millisecond')"
+
         execute(
-            """INSERT INTO voucher_pool_http_idempotency
+            """
+                INSERT INTO voucher_pool_http_idempotency
                 (tenant_id,operation,scoped_key_digest,fingerprint,status,command_deadline,descriptor,completed_at,expires_at)
                 VALUES ('$tenant','reserve',decode('01','hex'),decode('02','hex'),'COMPLETED',
                         statement_timestamp()+interval '1 hour','{"status":201,"outcome":"CREATED","effectId":"$effect","revision":1}',
-                        statement_timestamp()-interval '$age',$expiresAt)""",
+                        statement_timestamp()-interval '$age',$expiresAt)
+                """.trimIndent(),
         )
         execute(
-            """INSERT INTO voucher_pool_command_tombstones
+            """
+                INSERT INTO voucher_pool_command_tombstones
                 (tenant_id,operation,key_version,scoped_key_digest,fingerprint,effect_id)
-                VALUES ('$tenant','reserve',2,decode('01','hex'),decode('02','hex'),'$effect')""",
+                VALUES ('$tenant','reserve',2,decode('01','hex'),decode('02','hex'),'$effect')
+                """.trimIndent(),
         )
     }
 
     private fun seedInboxAndClaim(tenant: String, age: String) {
         execute(
-            """INSERT INTO voucher_pool_reconciliation_inbox
+            """
+                INSERT INTO voucher_pool_reconciliation_inbox
                 (tenant_id,event_id,payload_digest,status,next_attempt_at,terminal_outcome)
                 VALUES ('$tenant','${UUID.randomUUID()}',decode('03','hex'),'APPLIED',
-                        statement_timestamp()-interval '$age','APPLIED')""",
+                        statement_timestamp()-interval '$age','APPLIED')
+                """.trimIndent(),
         )
         execute(
-            """INSERT INTO voucher_pool_worker_claims
+            """
+                INSERT INTO voucher_pool_worker_claims
                 (tenant_id,worker_type,scope_id,next_attempt_at,checkpoint)
-                VALUES ('$tenant','PURGE','${UUID.randomUUID()}',statement_timestamp()-interval '$age',1)""",
+                VALUES ('$tenant','PURGE','${UUID.randomUUID()}',statement_timestamp()-interval '$age',1)
+                """.trimIndent(),
         )
     }
 
@@ -278,38 +301,46 @@ internal class VoucherPoolRetentionIntegrationTest {
         val entry = UUID.randomUUID()
         val reservation = UUID.randomUUID()
         execute(
-            """INSERT INTO voucher_pool_campaigns
+            """
+                INSERT INTO voucher_pool_campaigns
                 (tenant_id,campaign_id,state,user_identity_key_version,policy_version)
-                VALUES ('$tenant','$campaign','REVOKED',12,1)""",
+                VALUES ('$tenant','$campaign','REVOKED',12,1)
+                """.trimIndent(),
         )
         execute(
-            """INSERT INTO voucher_pool_batches
-                (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
+            """
+                INSERT INTO voucher_pool_batches
+                 (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
                  policy_version,activates_at,expected_count,next_source_ordinal,accepted_count)
                 VALUES ('$tenant','$batch','$campaign','EXPIRED','GENERATED',decode('04','hex'),decode('05','hex'),
-                        1,statement_timestamp()-interval '40 days',1,1,1)""",
+                        1,statement_timestamp()-interval '40 days',1,1,1)
+                """.trimIndent(),
         )
         execute(
-            """INSERT INTO voucher_pool_entries
-                (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
+            """
+                INSERT INTO voucher_pool_entries
+                 (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
                  code_ciphertext,code_nonce,wrapped_dek,wrap_nonce,kek_version,terminal_reason,created_at,updated_at)
                 VALUES ('$tenant','$entry','$campaign','$batch',0,'EXPIRED',decode('06','hex'),
                         decode('07','hex'),decode('080808080808080808080808','hex'),decode('09','hex'),
                         decode('0a0a0a0a0a0a0a0a0a0a0a0a','hex'),'kek-v1','TTL_EXPIRED',
                         statement_timestamp()-interval '$age',
-                        statement_timestamp()-interval '$age')""",
+                        statement_timestamp()-interval '$age')
+                """.trimIndent(),
         )
         execute(
             """INSERT INTO voucher_pool_code_dedup
                 (tenant_id,stable_dedup_digest,first_campaign_id,first_batch_id,first_entry_id,key_version)
-                VALUES ('$tenant',decode('06','hex'),'$campaign','$batch','$entry',1)""",
+                VALUES ('$tenant',decode('06','hex'),'$campaign','$batch','$entry',1)""".trimIndent(),
         )
         execute(
-            """INSERT INTO voucher_pool_reservations
-                (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,idempotency_owner_digest,
+            """
+                INSERT INTO voucher_pool_reservations
+                 (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,idempotency_owner_digest,
                  state,reservation_expires_at,policy_version)
                 VALUES ('$tenant','$reservation','$campaign','$batch','$entry',decode('0b','hex'),decode('0c','hex'),
-                        'EXPIRED',statement_timestamp()-interval '$age',1)""",
+                        'EXPIRED',statement_timestamp()-interval '$age',1)
+                """.trimIndent(),
         )
         return entry
     }
@@ -317,40 +348,51 @@ internal class VoucherPoolRetentionIntegrationTest {
     private fun seedAudit(tenant: String, age: String) {
         val campaign = UUID.randomUUID()
         execute(
-            """INSERT INTO voucher_pool_campaigns
+            """
+                INSERT INTO voucher_pool_campaigns
                 (tenant_id,campaign_id,state,user_identity_key_version,policy_version)
-                VALUES ('$tenant','$campaign','REVOKED',12,1)""",
+                VALUES ('$tenant','$campaign','REVOKED',12,1)
+                """.trimIndent(),
         )
         execute(
-            """INSERT INTO voucher_pool_audits
+            """
+                INSERT INTO voucher_pool_audits
                 (tenant_id,campaign_id,aggregate_type,aggregate_id,revision,policy_version,actor_type,
                  reason_code,audit_key_version,created_at)
                 VALUES ('$tenant','$campaign','CAMPAIGN','$campaign',0,1,'SYSTEM','RETENTION_FIXTURE',15,
-                        statement_timestamp()-interval '$age')""",
+                        statement_timestamp()-interval '$age')
+                """.trimIndent(),
         )
     }
 
     private fun seedRehearsedBackup(tenant: String) {
         execute(
-            """INSERT INTO voucher_pool_backup_inventory
+            """
+                INSERT INTO voucher_pool_backup_inventory
                 (backup_id,tenant_id,kek_versions,verification_versions,user_identity_versions,audit_versions,
                  signature_versions,stable_dedup_version,command_tombstone_version,retained_until,restore_rehearsed_at)
                 VALUES ('${UUID.randomUUID()}','$tenant',ARRAY['kek-v1'],ARRAY['11'],ARRAY['12'],ARRAY['15'],
-                        ARRAY[]::text[],'1','2',statement_timestamp()+interval '1 day',statement_timestamp())""",
+                        ARRAY[]::text[],'1','2',statement_timestamp()+interval '1 day',statement_timestamp())
+                """.trimIndent(),
         )
     }
 
     private fun retainedCount(kind: RetentionKind, tenant: String): Long =
         when (kind) {
-            RetentionKind.DESCRIPTOR ->
+            RetentionKind.DESCRIPTOR                 ->
                 queryLong("SELECT count(*) FROM voucher_pool_http_idempotency WHERE tenant_id='$tenant' AND descriptor IS NOT NULL")
-            RetentionKind.TERMINAL_INBOX_CLAIM ->
-                queryLong("SELECT (SELECT count(*) FROM voucher_pool_reconciliation_inbox WHERE tenant_id='$tenant') + " +
-                    "(SELECT count(*) FROM voucher_pool_worker_claims WHERE tenant_id='$tenant')")
+            RetentionKind.TERMINAL_INBOX_CLAIM       ->
+                queryLong(
+                    "SELECT (SELECT count(*) FROM voucher_pool_reconciliation_inbox WHERE tenant_id='$tenant') + " +
+                            "(SELECT count(*) FROM voucher_pool_worker_claims WHERE tenant_id='$tenant')"
+                )
             RetentionKind.TERMINAL_ENTRY_RESERVATION ->
-                queryLong("SELECT (SELECT count(*) FROM voucher_pool_entries WHERE tenant_id='$tenant') + " +
-                    "(SELECT count(*) FROM voucher_pool_reservations WHERE tenant_id='$tenant')")
-            RetentionKind.AUDIT -> queryLong("SELECT count(*) FROM voucher_pool_audits WHERE tenant_id='$tenant'")
+                queryLong(
+                    "SELECT (SELECT count(*) FROM voucher_pool_entries WHERE tenant_id='$tenant') + " +
+                            "(SELECT count(*) FROM voucher_pool_reservations WHERE tenant_id='$tenant')"
+                )
+            RetentionKind.AUDIT                      ->
+                queryLong("SELECT count(*) FROM voucher_pool_audits WHERE tenant_id='$tenant'")
         }
 
     private fun expectedRows(kind: RetentionKind): Long =
@@ -360,33 +402,44 @@ internal class VoucherPoolRetentionIntegrationTest {
         if (queryLong("SELECT count(*) FROM voucher_pool_backup_inventory WHERE tenant_id='$tenant'") == 0L) return
         execute(
             "UPDATE voucher_pool_backup_inventory " +
-                "SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'",
+                    "SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'",
         )
         retention.deleteTenant(tenant).shouldBeTrue()
     }
 
     private fun execute(sql: String) {
-        dataSource.connection.use { connection -> connection.createStatement().use { it.execute(sql) } }
+        dataSource.connection.use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.execute(sql)
+            }
+        }
     }
 
     private fun queryLong(sql: String): Long =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result -> check(result.next()); result.getLong(1) }
+        dataSource.connection.use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.executeQuery(sql).use { result ->
+                    result.singleLong()
+                }
             }
         }
 
+    @Suppress("SameParameterValue")
     private fun hasReplayDecision(tenant: String): Boolean =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(
-                    """SELECT i.descriptor IS NOT NULL OR t.effect_id IS NOT NULL OR t.terminal_code IS NOT NULL
-                        FROM voucher_pool_http_idempotency i
-                        JOIN voucher_pool_command_tombstones t
-                          ON t.tenant_id=i.tenant_id AND t.operation=i.operation
-                         AND t.scoped_key_digest=i.scoped_key_digest
-                        WHERE i.tenant_id='$tenant'""".trimIndent(),
-                ).use { result -> result.next() && result.getBoolean(1) }
+        dataSource.connection.use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.executeQuery(
+                    """
+                    SELECT i.descriptor IS NOT NULL OR t.effect_id IS NOT NULL OR t.terminal_code IS NOT NULL
+                      FROM voucher_pool_http_idempotency i
+                      JOIN voucher_pool_command_tombstones t 
+                        ON t.tenant_id=i.tenant_id AND t.operation=i.operation AND t.scoped_key_digest=i.scoped_key_digest
+                    WHERE i.tenant_id='$tenant'
+                    """.trimIndent(),
+                ).use { result ->
+                    result.next()
+                    result.getBoolean(1)
+                }
             }
         }
 }
@@ -398,20 +451,25 @@ internal fun migrationRunner(dataSource: DataSource): VoucherPoolMigrationRunner
         537_012L,
     )
 
-internal fun postgresDataSource(schema: String): DataSource =
-    PGSimpleDataSource().apply {
-        setURL(VOUCHER_POOL_TASK_12_POSTGRES.jdbcUrl)
-        user = VOUCHER_POOL_TASK_12_POSTGRES.username ?: PostgreSQLServer.USERNAME
-        password = VOUCHER_POOL_TASK_12_POSTGRES.password ?: PostgreSQLServer.PASSWORD
-        currentSchema = schema
+internal fun postgresDataSource(schema: String): HikariDataSource =
+    VOUCHER_POOL_TASK_12_POSTGRES.getHikariDataSource {
+        this.schema = schema
     }
 
 internal fun PostgreSQLServer.createSchema(schema: String) {
-    adminConnection().use { connection -> connection.createStatement().use { it.execute("CREATE SCHEMA $schema") } }
+    adminConnection().use { connection ->
+        connection.createStatement().use {
+            it.execute("CREATE SCHEMA $schema")
+        }
+    }
 }
 
 internal fun PostgreSQLServer.dropSchema(schema: String) {
-    adminConnection().use { connection -> connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") } }
+    adminConnection().use { connection ->
+        connection.createStatement().use {
+            it.execute("DROP SCHEMA IF EXISTS $schema CASCADE")
+        }
+    }
 }
 
 private fun PostgreSQLServer.adminConnection(): Connection =

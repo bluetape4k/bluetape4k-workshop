@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety.execution
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
@@ -18,18 +19,25 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobAuthoritySeed
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyDatabaseFixture
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
 
-@Tag("integration")
 internal class FencedMutationPostgresIntegrationTest {
+
+    companion object: KLogging() {
+        private val CONFLICT_KEY = ConflictKey.summary(
+            tenantId = TenantId("tenant-a"),
+            period = YearMonth.of(2026, 7)
+        )
+    }
+
     @Test
     fun `independent workers cannot overwrite a committed higher generation`() {
         JobSafetyDatabaseFixture().use { fixture ->
             val repositories = JobSafetyRepositories(fixture.executor)
             fixture.seedAuthority(authority())
             fixture.seedResource(CONFLICT_KEY, NamespaceEpoch(2L))
+
             val firstWorker = FencedJobExecutionService(fixture.executor, repositories)
             val staleWorker = FencedJobExecutionService(fixture.executor, repositories)
 
@@ -71,7 +79,4 @@ internal class FencedMutationPostgresIntegrationTest {
             checkpointSchemaVersion = 1,
         )
 
-    companion object {
-        private val CONFLICT_KEY = ConflictKey.summary(TenantId("tenant-a"), YearMonth.of(2026, 7))
-    }
 }

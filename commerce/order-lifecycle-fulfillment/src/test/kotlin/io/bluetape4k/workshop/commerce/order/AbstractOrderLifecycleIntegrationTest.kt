@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.order
 
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
@@ -11,7 +13,6 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.reactive.server.WebTestClient
-import java.time.Duration
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -19,19 +20,9 @@ import java.time.Duration
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 internal abstract class AbstractOrderLifecycleIntegrationTest {
-    @LocalServerPort
-    protected var port: Int = 0
 
-    protected val webTestClient: WebTestClient by lazy {
-        WebTestClient
-            .bindToServer()
-            .baseUrl("http://localhost:$port")
-            .responseTimeout(Duration.ofSeconds(10))
-            .build()
-    }
-
-    companion object {
-        val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
+    companion object: KLogging() {
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
         @DynamicPropertySource
@@ -40,5 +31,16 @@ internal abstract class AbstractOrderLifecycleIntegrationTest {
             registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
             registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
         }
+    }
+
+    @LocalServerPort
+    protected var port: Int = 0
+
+    protected val webTestClient: WebTestClient by lazy {
+        WebTestClient
+            .bindToServer()
+            .baseUrl("http://localhost:$port")
+            .responseTimeout(10.seconds())
+            .build()
     }
 }

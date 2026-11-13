@@ -33,10 +33,10 @@ class SearchDocument private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is SearchDocument &&
-            id == other.id &&
-            title == other.title &&
-            text == other.text
+                other is SearchDocument &&
+                id == other.id &&
+                title == other.title &&
+                text == other.text
 
     override fun hashCode(): Int = listOf(id, title, text).hashCode()
 
@@ -241,6 +241,7 @@ class MultilingualSearchIndex private constructor(
 }
 
 private object DefaultSearchTermTokenizer: SearchTermTokenizer {
+    private fun readResolve(): Any = DefaultSearchTermTokenizer
     override fun tokenize(text: String, language: Language?): List<String> =
         tokenizeSearchText(text, language)
 }

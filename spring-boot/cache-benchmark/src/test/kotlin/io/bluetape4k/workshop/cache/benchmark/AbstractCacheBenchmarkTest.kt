@@ -6,13 +6,15 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.testcontainers.utility.Base58
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractCacheBenchmarkTest {
-    companion object : KLoggingChannel() {
+
+    companion object: KLoggingChannel() {
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
-        private val namespace = "test-${System.nanoTime()}"
+        private val namespace = "test-${Base58.randomString(8).lowercase()}"
 
         @JvmStatic
         @DynamicPropertySource

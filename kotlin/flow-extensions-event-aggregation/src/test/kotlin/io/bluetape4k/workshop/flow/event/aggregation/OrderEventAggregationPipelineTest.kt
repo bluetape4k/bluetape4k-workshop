@@ -1,40 +1,49 @@
 package io.bluetape4k.workshop.flow.event.aggregation
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.coroutines.flow.exceptions.FlowOperationException
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.coroutines.runSuspendTest
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.withTimeout
+import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.withTimeout
-import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class OrderEventAggregationPipelineTest {
+
+    companion object: KLogging()
 
     private val pipeline = OrderEventAggregationPipeline()
 
     @Test
     fun `chunked activity emits bounded event summaries`() = runSuspendTest {
-        val summaries = pipeline.chunkedActivity(sampleEvents().asFlow(), chunkSize = 2).toList()
+        val summaries = pipeline
+            .chunkedActivity(sampleEvents().asFlow(), chunkSize = 2)
+            .log("Chunk")
+            .toList()
 
         summaries.map { it.eventCount } shouldBeEqualTo listOf(2, 2, 1)
         summaries.map { it.orderIds } shouldBeEqualTo listOf(
@@ -51,7 +60,9 @@ class OrderEventAggregationPipelineTest {
             events = sampleEvents().asFlow(),
             maxSize = 2,
             timeout = 1.seconds,
-        ).toList()
+        )
+            .log("Summary")
+            .toList()
 
         summaries.map { it.eventCount } shouldBeEqualTo listOf(2, 2, 1)
     }
@@ -60,13 +71,15 @@ class OrderEventAggregationPipelineTest {
     fun `count or time activity emits a partial batch after an idle timeout`() = runSuspendTest {
         val events = flow {
             emit(sampleEvents()[0])
-            kotlinx.coroutines.delay(10)
+            delay(10.milliseconds)
             emit(sampleEvents()[1])
-            kotlinx.coroutines.delay(60)
+            delay(60.milliseconds)
             emit(sampleEvents()[2])
         }
 
-        val summaries = pipeline.countOrTimeActivity(events, maxSize = 3, timeout = 50.milliseconds).toList()
+        val summaries = pipeline.countOrTimeActivity(events, maxSize = 3, timeout = 50.milliseconds)
+            .log("Summary")
+            .toList()
 
         summaries.map { it.eventCount } shouldBeEqualTo listOf(2, 1)
     }
@@ -75,13 +88,15 @@ class OrderEventAggregationPipelineTest {
     fun `count or time activity locks the upstream idle timeout observation`() = runSuspendTest {
         val events = flow {
             emit(sampleEvents()[0])
-            kotlinx.coroutines.delay(40)
+            delay(40.milliseconds)
             emit(sampleEvents()[1])
-            kotlinx.coroutines.delay(20)
+            delay(20.milliseconds)
             emit(sampleEvents()[2])
         }
 
-        val summaries = pipeline.countOrTimeActivity(events, maxSize = 3, timeout = 50.milliseconds).toList()
+        val summaries = pipeline.countOrTimeActivity(events, maxSize = 3, timeout = 50.milliseconds)
+            .log("Summary")
+            .toList()
 
         // bluetape4k-coroutines 1.12.1 re-registers the timeout after each receive.
         summaries.map { it.eventCount } shouldBeEqualTo listOf(3)
@@ -89,7 +104,9 @@ class OrderEventAggregationPipelineTest {
 
     @Test
     fun `rolling activity emits overlapping summary windows`() = runSuspendTest {
-        val summaries = pipeline.rollingActivity(sampleEvents().asFlow(), size = 3, step = 2).toList()
+        val summaries = pipeline.rollingActivity(sampleEvents().asFlow(), size = 3, step = 2)
+            .log("Summary")
+            .toList()
 
         summaries.map { it.eventCount } shouldBeEqualTo listOf(3, 3, 1)
         summaries.first().latestStatuses["order-1"] shouldBeEqualTo OrderStatus.PAID
@@ -98,40 +115,50 @@ class OrderEventAggregationPipelineTest {
 
     @Test
     fun `rolling activity emits full and partial tail windows`() = runSuspendTest {
-        val summaries = pipeline.rollingActivity(sampleEvents().take(4).asFlow(), size = 3, step = 1).toList()
+        val summaries = pipeline.rollingActivity(sampleEvents().take(4).asFlow(), size = 3, step = 1)
+            .log("Summary")
+            .toList()
 
         summaries.map { it.eventCount } shouldBeEqualTo listOf(3, 3, 2, 1)
     }
 
     @Test
     fun `grouped events partition completed stream by order id`() = runSuspendTest {
-        val groups = pipeline.groupedByOrder(sampleEvents().asFlow()).toList().associateBy { it.key }
+        val groups = pipeline.groupedByOrder(sampleEvents().asFlow())
+            .log("GroupedByOrder")
+            .toList()
+            .associateBy { it.key }
 
         groups.keys shouldBeEqualTo setOf("order-1", "order-2")
         groups.getValue("order-1").values.map { it.eventType } shouldBeEqualTo
-            listOf("OrderCreated", "LineAdded", "PaymentAuthorized")
+                listOf("OrderCreated", "LineAdded", "PaymentAuthorized")
         groups.getValue("order-2").values.map { it.eventType } shouldBeEqualTo
-            listOf("OrderCreated", "ShipmentStarted")
+                listOf("OrderCreated", "ShipmentStarted")
     }
 
     @Test
     fun `finite high cardinality grouping emits every order group once`() = runSuspendTest {
-        val events = (1..160).map { index -> OrderCreated("order-$index", "customer-$index", t(index)) }
-
-        val groups = withTimeout(5_000) {
-            pipeline.groupedByOrder(events.asFlow()).toList()
+        val orderSize = 160
+        val events = List(orderSize) { index ->
+            OrderCreated("order-$index", "customer-$index", t(index))
         }
 
-        groups shouldHaveSize 160
-        groups.map { it.key }.toSet() shouldBeEqualTo (1..160).map { "order-$it" }.toSet()
+        val groups = withTimeout(5.seconds) {
+            pipeline.groupedByOrder(events.asFlow()).log("GroupedByOrder").toList()
+        }
+
+        groups shouldHaveSize orderSize
+        groups.map { it.key }.toSet() shouldBeEqualTo List(orderSize) { "order-$it" }.toSet()
         groups.all { it.values.single().orderId == it.key }.shouldBeTrue()
     }
 
     @Test
     fun `read models accumulate state per order id`() = runSuspendTest {
-        val models = pipeline.readModels(sampleEvents().asFlow()).toList()
+        val models = pipeline.readModels(sampleEvents().asFlow())
+            .log("ReadModel")
+            .toList()
 
-        models.first().orders.shouldHaveSize(0)
+        models.first().orders.shouldBeEmpty()
         val final = models.last()
         final.orders.getValue("order-1").status shouldBeEqualTo OrderStatus.PAID
         final.orders.getValue("order-1").lineCount shouldBeEqualTo 1
@@ -142,12 +169,17 @@ class OrderEventAggregationPipelineTest {
 
     @Test
     fun `bounded read model growth remains predictable for many active orders`() = runSuspendTest {
-        val events = (1..120).map { index -> OrderCreated("order-$index", "customer-$index", t(index)) }
+        val orderSize = 120
+        val events = List(orderSize) { index ->
+            OrderCreated("order-$index", "customer-$index", t(index))
+        }
 
-        val models = pipeline.readModels(events.asFlow()).toList()
+        val models = pipeline.readModels(events.asFlow())
+            .log("Models")
+            .toList()
 
-        models shouldHaveSize 121
-        models.last().orders shouldHaveSize 120
+        models shouldHaveSize orderSize + 1
+        models.last().orders shouldHaveSize orderSize
     }
 
     @Test
@@ -160,7 +192,9 @@ class OrderEventAggregationPipelineTest {
                 PaymentAuthorized("order-1", 1000, t(4)),
             ),
             orderId = "order-1",
-        ).toList()
+        )
+            .log("StatusRun")
+            .toList()
 
         runs.map { it.status } shouldBeEqualTo listOf(OrderStatus.CREATED, OrderStatus.PAID)
         runs.first().stateCount shouldBeEqualTo 3
@@ -170,10 +204,12 @@ class OrderEventAggregationPipelineTest {
     @Test
     fun `long unchanged status run collapses but retains run until boundary`() = runSuspendTest {
         val events = listOf(OrderCreated("order-1", "customer-1", t(1))) +
-            (1..20).map { index -> LineAdded("order-1", "sku-$index", 1, t(index + 1)) } +
-            PaymentAuthorized("order-1", 1000, t(30))
+                List(20) { index -> LineAdded("order-1", "sku-$index", 1, t(index + 1)) } +
+                PaymentAuthorized("order-1", 1000, t(30))
 
-        val runs = pipeline.statusRuns(events.asFlow(), "order-1").toList()
+        val runs = pipeline.statusRuns(events.asFlow(), "order-1")
+            .log("StatusRun")
+            .toList()
 
         runs.map { it.status } shouldBeEqualTo listOf(OrderStatus.CREATED, OrderStatus.PAID)
         runs.first().stateCount shouldBeEqualTo 21
@@ -181,19 +217,28 @@ class OrderEventAggregationPipelineTest {
 
     @Test
     fun `transitions emit lifecycle changes only`() = runSuspendTest {
-        val transitions = pipeline.transitions(sampleEvents().asFlow(), "order-1").toList()
+        val transitions = pipeline.transitions(sampleEvents().asFlow(), "order-1")
+            .log("Transition")
+            .toList()
 
         transitions.map { it.previousStatus to it.currentStatus } shouldBeEqualTo
-            listOf(OrderStatus.CREATED to OrderStatus.PAID)
+                listOf(OrderStatus.CREATED to OrderStatus.PAID)
     }
 
     @Test
     fun `audit stream preserves readable event order`() = runSuspendTest {
-        val audit = pipeline.audit(sampleEvents().asFlow()).toList()
+        val audit = pipeline.audit(sampleEvents().asFlow())
+            .log("Audit")
+            .toList()
 
         audit.map { it.sequence } shouldBeEqualTo listOf(1, 2, 3, 4, 5)
-        audit.map { it.eventType } shouldBeEqualTo
-            listOf("OrderCreated", "LineAdded", "PaymentAuthorized", "OrderCreated", "ShipmentStarted")
+        audit.map { it.eventType } shouldBeEqualTo listOf(
+            "OrderCreated",
+            "LineAdded",
+            "PaymentAuthorized",
+            "OrderCreated",
+            "ShipmentStarted"
+        )
         audit.first().status shouldBeEqualTo OrderStatus.CREATED
     }
 
@@ -241,31 +286,49 @@ class OrderEventAggregationPipelineTest {
             ShipmentStarted("order-1", "carrier-1", "secret-tracking", t(2)).toString(),
             OrderCancelled("order-1", "secret-reason", t(3)).toString(),
         ).joinToString()
+
         val audit = pipeline.audit(
             flowOf(
                 OrderCreated("order-1", "secret-customer", t(1)),
                 ShipmentStarted("order-1", "carrier-1", "secret-tracking", t(2)),
                 OrderCancelled("order-1", "secret-reason", t(3)),
             ),
-        ).toList().joinToString()
+        ).log("Audit").toList().joinToString()
 
-        rendered.contains("secret-customer").shouldBeFalse()
-        rendered.contains("secret-tracking").shouldBeFalse()
-        rendered.contains("secret-reason").shouldBeFalse()
-        audit.contains("secret-customer").shouldBeFalse()
-        audit.contains("secret-tracking").shouldBeFalse()
-        audit.contains("secret-reason").shouldBeFalse()
+        log.debug { "rendered=$rendered" }
+        rendered shouldNotContain "secret-customer"
+        rendered shouldNotContain "secret-tracking"
+        rendered shouldNotContain "secret-reason"
+
+        log.debug { "audit=$audit" }
+        audit shouldNotContain "secret-customer"
+        audit shouldNotContain "secret-tracking"
+        audit shouldNotContain "secret-reason"
     }
 
     @Test
     fun `invalid pipeline parameters fail before collection`() = runSuspendTest {
-        assertFailsWith<IllegalArgumentException> { pipeline.chunkedActivity(flowOf(), 0).toList() }
-        assertFailsWith<IllegalArgumentException> { pipeline.countOrTimeActivity(flowOf(), 0, 1.seconds) }
-        assertFailsWith<IllegalArgumentException> { pipeline.countOrTimeActivity(flowOf(), 1, Duration.ZERO) }
-        assertFailsWith<IllegalArgumentException> { pipeline.countOrTimeActivity(flowOf(), 1, Duration.INFINITE) }
-        assertFailsWith<IllegalArgumentException> { pipeline.rollingActivity(flowOf(), size = 0, step = 1).toList() }
-        assertFailsWith<IllegalArgumentException> { pipeline.rollingActivity(flowOf(), size = 2, step = 0).toList() }
-        assertFailsWith<IllegalArgumentException> { pipeline.rollingActivity(flowOf(), size = 2, step = 3).toList() }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.chunkedActivity(flowOf(), 0).toList()
+        }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.countOrTimeActivity(flowOf(), 0, 1.seconds).toList()
+        }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.countOrTimeActivity(flowOf(), 1, Duration.ZERO).toList()
+        }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.countOrTimeActivity(flowOf(), 1, Duration.INFINITE).toList()
+        }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.rollingActivity(flowOf(), size = 0, step = 1).toList()
+        }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.rollingActivity(flowOf(), size = 2, step = 0).toList()
+        }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.rollingActivity(flowOf(), size = 2, step = 3).toList()
+        }
     }
 
     @Test
@@ -276,10 +339,13 @@ class OrderEventAggregationPipelineTest {
                 OrderCancelled("order-1", "bad address", t(2)),
                 LineAdded("order-1", "sku-1", 1, t(3)),
             ),
-        ).toList().mapNotNull { it.orders["order-1"] }
+        ).log("Models").toList().mapNotNull { it.orders["order-1"] }
 
-        states.map { it.status } shouldBeEqualTo
-            listOf(OrderStatus.CREATED, OrderStatus.CANCELLED, OrderStatus.CANCELLED)
+        states.map { it.status } shouldBeEqualTo listOf(
+            OrderStatus.CREATED,
+            OrderStatus.CANCELLED,
+            OrderStatus.CANCELLED
+        )
         states.last().version shouldBeEqualTo 3
     }
 
@@ -292,7 +358,7 @@ class OrderEventAggregationPipelineTest {
                 PaymentAuthorized("order-1", 1200, t(3)),
                 OrderCancelled("order-1", "customer request", t(4)),
             ),
-        ).toList().last().orders.getValue("order-1")
+        ).log("Models").toList().last().orders.getValue("order-1")
 
         final.status shouldBeEqualTo OrderStatus.CANCELLED
         final.authorizedAmountCents shouldBeEqualTo 1200
@@ -314,8 +380,8 @@ class OrderEventAggregationPipelineTest {
         }
 
         val job = async {
-            pipeline.readModels(source).toList()
-        }
+            pipeline.readModels(source).log("Models").toList()
+        }.log("Job")
 
         started.await()
         job.cancelAndJoin()
@@ -337,7 +403,7 @@ class OrderEventAggregationPipelineTest {
         }
 
         countOrTimeFailure.message shouldBeEqualTo boom.message
-        emitted.shouldHaveSize(0)
+        emitted.shouldBeEmpty()
 
         assertFailsWith<IllegalStateException> { pipeline.chunkedActivity(failingEvents(boom), 2).toList() }
         assertFailsWith<IllegalStateException> { pipeline.rollingActivity(failingEvents(boom), 2, 1).toList() }
@@ -347,7 +413,7 @@ class OrderEventAggregationPipelineTest {
         assertFailsWith<IllegalStateException> { pipeline.audit(failingEvents(boom)).toList() }
 
         val grouped = assertFailsWith<FlowOperationException> {
-            pipeline.groupedByOrder(failingEvents(boom)).toList()
+            pipeline.groupedByOrder(failingEvents(boom)).log("Grouped").toList()
         }
         val groupByFailure = grouped.cause.shouldBeInstanceOf<FlowOperationException>()
         groupByFailure.cause shouldBeEqualTo boom
@@ -386,5 +452,6 @@ class OrderEventAggregationPipelineTest {
         throw cancellation
     }
 
-    private fun t(second: Int): Instant = Instant.parse("2026-06-29T00:00:00Z").plusSeconds(second.toLong())
+    private fun t(second: Int): Instant =
+        Instant.parse("2026-06-29T00:00:00Z") + second.seconds()
 }

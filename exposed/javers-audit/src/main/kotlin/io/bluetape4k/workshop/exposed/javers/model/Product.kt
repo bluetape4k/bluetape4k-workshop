@@ -21,35 +21,21 @@ import java.math.BigDecimal
  * ```
  */
 @TypeName("Product")
-@ConsistentCopyVisibility
-data class Product private constructor(
+data class Product(
     @Id val id: Long,
     val name: String,
     val price: BigDecimal,
     val category: String,
 ): Serializable {
+
+    init {
+        id.requirePositiveNumber("id")
+        name.requireNotBlank("name")
+        category.requireNotBlank("category")
+        require(price.signum() >= 0) { "price must be zero or positive" }
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
-
-        /**
-         * Exposed 영속화와 JaVers 감사를 위한 검증된 product 값을 만든다.
-         */
-        operator fun invoke(
-            id: Long,
-            name: String,
-            price: BigDecimal,
-            category: String,
-        ): Product {
-            id.requirePositiveNumber("id")
-            name.requireNotBlank("name")
-            category.requireNotBlank("category")
-            require(price.signum() >= 0) { "price must be zero or positive" }
-            return Product(
-                id = id,
-                name = name,
-                price = price,
-                category = category,
-            )
-        }
     }
 }

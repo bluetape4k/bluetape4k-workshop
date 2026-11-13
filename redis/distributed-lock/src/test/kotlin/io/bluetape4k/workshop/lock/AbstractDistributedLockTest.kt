@@ -18,7 +18,7 @@ import org.redisson.api.RedissonClient
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractDistributedLockTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         val redis = RedisServer.Launcher.redis
         val redisUrl: String get() = redis.url
     }

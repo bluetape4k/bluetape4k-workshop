@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety.execution
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
@@ -22,6 +23,14 @@ import org.junit.jupiter.api.Test
 import java.time.YearMonth
 
 internal class FencedJobExecutionServiceTest {
+
+    companion object: KLogging() {
+        private val CONFLICT_KEY = ConflictKey.summary(
+            tenantId = TenantId("tenant-a"),
+            period = YearMonth.of(2026, 7)
+        )
+    }
+
     @Test
     fun `fence 41 is rejected after fence 42 commits`() {
         JobSafetyDatabaseFixture().use { fixture ->
@@ -30,8 +39,9 @@ internal class FencedJobExecutionServiceTest {
             fixture.seedAuthority(authority())
             fixture.seedResource(CONFLICT_KEY, NamespaceEpoch(2L))
 
-            service.execute(request(fence = 42L, operation = "operation-42")).state shouldBeEqualTo
-                JobExecutionState.COMMITTED
+            service.execute(request(fence = 42L, operation = "operation-42"))
+                .state shouldBeEqualTo JobExecutionState.COMMITTED
+
             val stale = service.execute(request(fence = 41L, operation = "operation-41"))
 
             stale.rejection shouldBeEqualTo JobRejectionReason.STALE_FENCE
@@ -63,12 +73,15 @@ internal class FencedJobExecutionServiceTest {
                 request(fence = 10L, operation = "stale-membership").let {
                     it.copy(run = it.run.copy(membershipRevision = MembershipRevision(6L)))
                 } to JobRejectionReason.STALE_MEMBERSHIP,
+
                 request(fence = 11L, operation = "wrong-region").let {
                     it.copy(run = it.run.copy(regionId = RegionId("region-b")))
                 } to JobRejectionReason.WRONG_REGION,
+
                 request(fence = 12L, operation = "old-writer").let {
                     it.copy(run = it.run.copy(contractVersion = ExecutionContractVersion(1)))
                 } to JobRejectionReason.INCOMPATIBLE_VERSION,
+
                 request(fence = 13L, operation = "stale-namespace").let {
                     it.copy(run = it.run.copy(namespaceEpoch = NamespaceEpoch(1L)))
                 } to JobRejectionReason.STALE_NAMESPACE,
@@ -117,8 +130,4 @@ internal class FencedJobExecutionServiceTest {
             minimumWriterVersion = ExecutionContractVersion(2),
             checkpointSchemaVersion = 1,
         )
-
-    companion object {
-        private val CONFLICT_KEY = ConflictKey.summary(TenantId("tenant-a"), YearMonth.of(2026, 7))
-    }
 }

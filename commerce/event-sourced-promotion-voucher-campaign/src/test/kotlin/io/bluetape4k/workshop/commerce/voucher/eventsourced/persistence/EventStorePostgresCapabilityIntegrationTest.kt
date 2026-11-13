@@ -6,12 +6,18 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.database.getHikariDataSource
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedOperationsConfiguration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedOperationsConfiguration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.awaitility.Awaitility.await
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -20,25 +26,34 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.sql.Connection
 import java.time.Duration
 
-@Tag("integration")
+// @Tag("integration")
+@Suppress("SqlResolve")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventStorePostgresCapabilityIntegrationTest {
+
+    companion object: KLogging() {
+        private const val ADVISORY_LOCK_KEY = 538L
+        private const val TENANT = "tenant-capability"
+        private const val STREAM_TYPE = "campaign"
+        private const val STREAM_ID = "01984f10-a21e-7c0b-8e12-9d6d62f05462"
+        private const val SEEDED_EVENT_COUNT = 512
+        private val LOCK_TIMEOUT: Duration = 5.seconds()
+    }
+
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
 
     @BeforeAll
     fun connectPostgres() {
-        postgresDatabase =
-            EventSourcedPostgresTestDatabase(
-                postgres = PostgreSQLServer.Launcher.postgres,
-                poolName = "issue-538-postgres-capabilities",
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(
+            postgres = PostgreSQLServer.Launcher.postgres,
+            poolName = "issue-538-postgres-capabilities",
+        )
         database = postgresDatabase.database
     }
 
@@ -87,6 +102,7 @@ internal class EventStorePostgresCapabilityIntegrationTest {
             val indexName = connection.streamVersionIndexName()
             val plan = connection.streamTailPlan()
 
+            log.debug { "plan: $plan" }
             plan shouldContain "Index Scan"
             plan shouldContain indexName
             connection.rollback()
@@ -137,20 +153,22 @@ internal class EventStorePostgresCapabilityIntegrationTest {
         role: String,
     ) {
         val applicationDatabase = Database.connect(applicationDataSource)
-        val probe =
-            EventSourcedOperationsConfiguration()
-                .eventSourcedStartupProbe(
-                    EventSourcedExposedDatabaseRegistration(applicationDatabase),
-                    EventSourcedDatabasePermitGate(),
-                )
+        val probe = EventSourcedOperationsConfiguration()
+            .eventSourcedStartupProbe(
+                EventSourcedExposedDatabaseRegistration(applicationDatabase),
+                EventSourcedDatabasePermitGate(),
+            )
         probe.verify()
 
         executeAsAdmin("ALTER ROLE $role NOLOGIN")
         applicationDataSource.hikariPoolMXBean.softEvictConnections()
-        assertFailsWith<ExposedSQLException> { probe.verify() }
+
+        assertFailsWith<ExposedSQLException> {
+            probe.verify()
+        }
 
         executeAsAdmin("ALTER ROLE $role LOGIN")
-        await().atMost(LOCK_TIMEOUT).untilAsserted { probe.verify() }
+        await atMost LOCK_TIMEOUT untilAsserted { probe.verify() }
     }
 
     private fun dropProbeRole(role: String) {
@@ -242,13 +260,4 @@ internal class EventStorePostgresCapabilityIntegrationTest {
                 }
             }
         }
-
-    companion object {
-        private const val ADVISORY_LOCK_KEY = 538L
-        private const val TENANT = "tenant-capability"
-        private const val STREAM_TYPE = "campaign"
-        private const val STREAM_ID = "01984f10-a21e-7c0b-8e12-9d6d62f05462"
-        private const val SEEDED_EVENT_COUNT = 512
-        private val LOCK_TIMEOUT: Duration = Duration.ofSeconds(5)
-    }
 }

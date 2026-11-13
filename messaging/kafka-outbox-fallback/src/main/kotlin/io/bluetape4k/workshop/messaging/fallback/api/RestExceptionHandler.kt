@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.fallback.api
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -12,6 +13,8 @@ import java.io.Serializable
  */
 @RestControllerAdvice
 class RestExceptionHandler {
+
+    companion object: KLogging()
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationError(ex: MethodArgumentNotValidException): ResponseEntity<ApiErrorResponse> =
@@ -41,7 +44,7 @@ data class ApiErrorResponse(
     val error: String,
     val message: String,
     val fieldCount: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

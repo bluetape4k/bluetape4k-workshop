@@ -18,7 +18,7 @@ import io.bluetape4k.logging.debug
  * TextNormalizer.extractKeywords("the quick brown fox") // ["quick", "brown"]
  * ```
  */
-object TextNormalizer : KLogging() {
+object TextNormalizer: KLogging() {
 
     private val whitespaceRegex = Regex("\\s+")
 

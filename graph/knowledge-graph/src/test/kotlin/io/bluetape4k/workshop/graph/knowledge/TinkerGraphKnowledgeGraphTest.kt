@@ -11,8 +11,9 @@ import io.bluetape4k.logging.KLogging
  *
  * Docker가 필요하지 않으며 기본 `:test` task에서 실행됩니다.
  */
-class TinkerGraphKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
-    companion object : KLogging()
+class TinkerGraphKnowledgeGraphTest: AbstractKnowledgeGraphTest() {
+
+    companion object: KLogging()
 
     override val graphName: String = "default"
     override val ops: GraphOperations = TinkerGraphOperations()
@@ -23,8 +24,9 @@ class TinkerGraphKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
  *
  * Docker가 필요하지 않으며 기본 `:test` task에서 실행됩니다.
  */
-class TinkerGraphKnowledgeGraphSuspendTest : AbstractKnowledgeGraphSuspendTest() {
-    companion object : KLogging()
+class TinkerGraphKnowledgeGraphSuspendTest: AbstractKnowledgeGraphSuspendTest() {
+
+    companion object: KLogging()
 
     override val graphName: String = "default"
     override val ops: GraphSuspendOperations = TinkerGraphSuspendOperations()

@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.commerce.reservation.persistence
 
-import io.bluetape4k.exposed.tests.TestDB
-import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.exposed.tests.TestDB
+import io.bluetape4k.exposed.tests.withTables
 import org.junit.jupiter.api.Test
 
 class CapacityResourceRepositoryTest {

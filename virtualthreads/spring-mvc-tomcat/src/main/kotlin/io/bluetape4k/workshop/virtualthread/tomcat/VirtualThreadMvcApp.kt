@@ -20,9 +20,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableTransactionManagement
 class VirtualThreadMvcApp(
     private val databaseInitializer: DatabaseInitializer,
-) : ApplicationRunner {
+): ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override fun run(args: ApplicationArguments) {
         databaseInitializer.insertSampleData()

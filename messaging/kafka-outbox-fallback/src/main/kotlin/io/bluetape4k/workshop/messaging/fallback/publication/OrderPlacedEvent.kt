@@ -15,7 +15,7 @@ data class OrderPlacedEvent(
     val quantity: Int,
     val status: OrderStatus,
     val createdAt: LocalDateTime,
-) : Serializable {
+): Serializable {
     val eventId: String get() = "order-placed:$orderId:v1"
 
     companion object {

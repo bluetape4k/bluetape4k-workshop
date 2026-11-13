@@ -8,6 +8,14 @@ import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.hibernate.isLoaded
 import io.bluetape4k.hibernate.querydsl.core.inValues
 import io.bluetape4k.hibernate.querydsl.core.minus
@@ -27,13 +35,6 @@ import io.bluetape4k.workshop.jpa.querydsl.domain.model.Member
 import io.bluetape4k.workshop.jpa.querydsl.domain.model.QMember
 import io.bluetape4k.workshop.jpa.querydsl.domain.model.QTeam
 import io.bluetape4k.workshop.jpa.querydsl.domain.model.Team
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldContainSame
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -43,10 +44,10 @@ import java.time.LocalDateTime
 import kotlin.properties.Delegates
 
 class QuerydslExamples(
-    @param:Autowired tem: TestEntityManager,
-) : AbstractQuerydslTest(tem) {
+    @Autowired tem: TestEntityManager,
+): AbstractQuerydslTest(tem) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val MEMBER_COUNT = 4
     }
 
@@ -213,12 +214,10 @@ class QuerydslExamples(
             .where(qmember.name.startsWith("sort-member"))
             .orderBy(qmember.age.desc().nullsLast(), qmember.name.asc())
             .fetch()
+            .onEach { log.debug { "member=$it" } }
 
         members.last().age.shouldBeNull()
         members.first().name shouldBeEqualTo "sort-member-4"
-        members.forEach {
-            log.debug { it }
-        }
     }
 
     @Test
@@ -284,6 +283,7 @@ class QuerydslExamples(
             .groupBy(qteam.name)
             .having(avgAgeExpr.gt(20))
             .fetch()
+            .onEach { log.debug { "tuple=$it" } }
 
         val team = results.first()
 
@@ -300,7 +300,7 @@ class QuerydslExamples(
             .fetch()
 
         members shouldHaveSize 2
-        members.map { it.team.shouldNotBeNull().name }.distinct() shouldContainSame listOf("teamA")
+        members.map { it.team.shouldNotBeNull().name }.distinct() shouldBeEqualTo listOf("teamA")
     }
 
     @Test
@@ -335,8 +335,11 @@ class QuerydslExamples(
         }
         tuples.map { it.get(qteam).shouldNotBeNull().name }.distinct() shouldContainSame listOf("teamA")
 
-        val members = tuples.map { it.get(qmember) }
-        val teams = tuples.map { it.get(qteam) }
+        val members = tuples.map { it.get(qmember) }.onEach { log.debug { "member=$it" } }
+        members.shouldNotBeEmpty()
+
+        val teams = tuples.map { it.get(qteam) }.onEach { log.debug { "team=$it" } }
+        teams.shouldNotBeEmpty()
     }
 
     /**
@@ -350,6 +353,7 @@ class QuerydslExamples(
             .select(projections)
             .from(qmember)
             .fetch()
+            .onEach { log.debug { "memberDto=$it" } }
 
         memberDtos shouldHaveSize MEMBER_COUNT
     }
@@ -365,6 +369,7 @@ class QuerydslExamples(
             .from(qmember)
             .join(qmember.team(), qteam)
             .fetch()
+            .onEach { log.debug { "memberDto=$it" } }
 
         memberDtos shouldHaveSize MEMBER_COUNT
     }
@@ -382,6 +387,7 @@ class QuerydslExamples(
         loaded.shouldBeFalse()
 
         // team.members 를 여기서 가져온다
+        teamA.members.forEach { log.debug { "member=$it" } }
         teamA.members shouldHaveSize 2
     }
 
@@ -471,6 +477,7 @@ class QuerydslExamples(
             .selectFrom(qmember)
             .where(qmember.id.`in`(subquery))
             .fetch()
+            .onEach { log.debug { "member=$it" } }
 
         members shouldHaveSize 3
         members.map { it.age } shouldContainSame listOf(20, 30, 40)

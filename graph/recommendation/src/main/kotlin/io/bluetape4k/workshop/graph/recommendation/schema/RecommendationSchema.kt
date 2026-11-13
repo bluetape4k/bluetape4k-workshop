@@ -14,7 +14,8 @@ import io.bluetape4k.graph.schema.VertexLabel
  * - `userId` - 안정적인 도메인 키입니다. username이나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
  * - `name` - 표시 이름입니다.
  */
-object UserLabel : VertexLabel("User") {
+object UserLabel: VertexLabel("User") {
+    private fun readResolve(): Any = UserLabel
     val userId = string("userId")
     val name = string("name")
 }
@@ -27,7 +28,8 @@ object UserLabel : VertexLabel("User") {
  * - `name` - 표시 이름입니다.
  * - `category` - 상품 category입니다. 선택 값입니다.
  */
-object ProductLabel : VertexLabel("Product") {
+object ProductLabel: VertexLabel("Product") {
+    private fun readResolve(): Any = ProductLabel
     val productId = string("productId")
     val name = string("name")
     val category = string("category")
@@ -48,7 +50,8 @@ object ProductLabel : VertexLabel("Product") {
  * - `rating` - 문자열로 저장하는 구매 평점 `"1"`-`"5"`입니다. 평가가 없으면 저장하지 않습니다.
  * - `purchasedAt` - ISO-8601 타임스탬프입니다. 설정하지 않으면 저장하지 않습니다.
  */
-object PurchasedLabel : EdgeLabel("PURCHASED", UserLabel, ProductLabel) {
+object PurchasedLabel: EdgeLabel("PURCHASED", UserLabel, ProductLabel) {
+    private fun readResolve(): Any = PurchasedLabel
     val rating = string("rating")
     val purchasedAt = string("purchasedAt")
 }
@@ -59,4 +62,6 @@ object PurchasedLabel : EdgeLabel("PURCHASED", UserLabel, ProductLabel) {
  * 양방향 연결과 달리 `FOLLOWS`는 단방향입니다.
  * follower/followee 쌍마다 간선 하나만 만듭니다.
  */
-object FollowsLabel : EdgeLabel("FOLLOWS", UserLabel, UserLabel)
+object FollowsLabel: EdgeLabel("FOLLOWS", UserLabel, UserLabel) {
+    private fun readResolve(): Any = FollowsLabel
+}

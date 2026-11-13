@@ -1,93 +1,94 @@
 package io.bluetape4k.workshop.commerce.voucherpool.domain
 
+import io.bluetape4k.support.checkNull
 import java.io.Serializable
 
 /** 허용된 campaign lifecycle transition입니다. */
 object CampaignPolicy {
-    private val transitions =
-        setOf(
-            CampaignState.DRAFT to CampaignState.ACTIVE,
-            CampaignState.DRAFT to CampaignState.REVOKING,
-            CampaignState.ACTIVE to CampaignState.PAUSED,
-            CampaignState.ACTIVE to CampaignState.REVOKING,
-            CampaignState.PAUSED to CampaignState.ACTIVE,
-            CampaignState.PAUSED to CampaignState.REVOKING,
-            CampaignState.REVOKING to CampaignState.REVOKED,
-        )
+    private val transitions = setOf(
+        CampaignState.DRAFT to CampaignState.ACTIVE,
+        CampaignState.DRAFT to CampaignState.REVOKING,
+        CampaignState.ACTIVE to CampaignState.PAUSED,
+        CampaignState.ACTIVE to CampaignState.REVOKING,
+        CampaignState.PAUSED to CampaignState.ACTIVE,
+        CampaignState.PAUSED to CampaignState.REVOKING,
+        CampaignState.REVOKING to CampaignState.REVOKED,
+    )
 
     /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: CampaignState,
         to: CampaignState,
-    ): Boolean = from to to in transitions
+    ): Boolean =
+        (from to to) in transitions
 }
 
 /** 허용된 batch checkpoint 및 terminal lifecycle transition입니다. */
 object BatchPolicy {
-    private val transitions =
-        setOf(
-            BatchState.STAGING to BatchState.ACTIVE,
-            BatchState.STAGING to BatchState.FAILED_RETRYABLE,
-            BatchState.STAGING to BatchState.FAILED_TERMINAL,
-            BatchState.FAILED_RETRYABLE to BatchState.STAGING,
-            BatchState.FAILED_RETRYABLE to BatchState.REVOKING,
-            BatchState.FAILED_TERMINAL to BatchState.REVOKING,
-            BatchState.ACTIVE to BatchState.PAUSED,
-            BatchState.ACTIVE to BatchState.EXPIRING,
-            BatchState.ACTIVE to BatchState.REVOKING,
-            BatchState.PAUSED to BatchState.ACTIVE,
-            BatchState.PAUSED to BatchState.EXPIRING,
-            BatchState.PAUSED to BatchState.REVOKING,
-            BatchState.EXPIRING to BatchState.EXPIRED,
-            BatchState.REVOKING to BatchState.REVOKED,
-        )
+    private val transitions = setOf(
+        BatchState.STAGING to BatchState.ACTIVE,
+        BatchState.STAGING to BatchState.FAILED_RETRYABLE,
+        BatchState.STAGING to BatchState.FAILED_TERMINAL,
+        BatchState.FAILED_RETRYABLE to BatchState.STAGING,
+        BatchState.FAILED_RETRYABLE to BatchState.REVOKING,
+        BatchState.FAILED_TERMINAL to BatchState.REVOKING,
+        BatchState.ACTIVE to BatchState.PAUSED,
+        BatchState.ACTIVE to BatchState.EXPIRING,
+        BatchState.ACTIVE to BatchState.REVOKING,
+        BatchState.PAUSED to BatchState.ACTIVE,
+        BatchState.PAUSED to BatchState.EXPIRING,
+        BatchState.PAUSED to BatchState.REVOKING,
+        BatchState.EXPIRING to BatchState.EXPIRED,
+        BatchState.REVOKING to BatchState.REVOKED,
+    )
 
     /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: BatchState,
         to: BatchState,
-    ): Boolean = from to to in transitions
+    ): Boolean =
+        (from to to) in transitions
 }
 
 /** voucher non-reuse를 보존하는 허용된 entry transition입니다. */
 object EntryPolicy {
-    private val transitions =
-        setOf(
-            EntryState.AVAILABLE to EntryState.RESERVED,
-            EntryState.AVAILABLE to EntryState.REVOKED,
-            EntryState.AVAILABLE to EntryState.EXPIRED,
-            EntryState.RESERVED to EntryState.AVAILABLE,
-            EntryState.RESERVED to EntryState.ALLOCATED,
-            EntryState.RESERVED to EntryState.EXPIRED,
-            EntryState.RESERVED to EntryState.REVOKED,
-            EntryState.ALLOCATED to EntryState.REDEEMED,
-            EntryState.ALLOCATED to EntryState.RELEASED,
-            EntryState.ALLOCATED to EntryState.EXPIRED,
-            EntryState.ALLOCATED to EntryState.REVOKED,
-        )
+    private val transitions = setOf(
+        EntryState.AVAILABLE to EntryState.RESERVED,
+        EntryState.AVAILABLE to EntryState.REVOKED,
+        EntryState.AVAILABLE to EntryState.EXPIRED,
+        EntryState.RESERVED to EntryState.AVAILABLE,
+        EntryState.RESERVED to EntryState.ALLOCATED,
+        EntryState.RESERVED to EntryState.EXPIRED,
+        EntryState.RESERVED to EntryState.REVOKED,
+        EntryState.ALLOCATED to EntryState.REDEEMED,
+        EntryState.ALLOCATED to EntryState.RELEASED,
+        EntryState.ALLOCATED to EntryState.EXPIRED,
+        EntryState.ALLOCATED to EntryState.REVOKED,
+    )
 
     /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: EntryState,
         to: EntryState,
-    ): Boolean = from to to in transitions
+    ): Boolean =
+        (from to to) in transitions
 }
 
 /** 허용된 reservation transition입니다. 모든 target state는 terminal입니다. */
 object ReservationPolicy {
-    private val transitions =
-        setOf(
-            ReservationState.ACTIVE to ReservationState.ALLOCATED,
-            ReservationState.ACTIVE to ReservationState.EXPIRED,
-            ReservationState.ACTIVE to ReservationState.RELEASED,
-            ReservationState.ACTIVE to ReservationState.REVOKED,
-        )
+    private val transitions = setOf(
+        ReservationState.ACTIVE to ReservationState.ALLOCATED,
+        ReservationState.ACTIVE to ReservationState.EXPIRED,
+        ReservationState.ACTIVE to ReservationState.RELEASED,
+        ReservationState.ACTIVE to ReservationState.REVOKED,
+    )
 
     /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: ReservationState,
         to: ReservationState,
-    ): Boolean = from to to in transitions
+    ): Boolean =
+        (from to to) in transitions
 }
 
 /** full safe response descriptor를 위한 persistence action입니다. */
@@ -128,7 +129,7 @@ data class VoucherPoolErrorSemantics(
     val descriptorAction: DescriptorAction,
     val tombstoneAction: TombstoneAction,
     val callerRecovery: CallerRecovery,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -243,12 +244,11 @@ object VoucherPoolErrorCatalog {
             )
             register(
                 code = VoucherPoolErrorCode.ALREADY_REVEALED,
-                semantics =
-                    semantics(
-                        status = HTTP_OK,
-                        descriptor = DescriptorAction.STORE_SAFE,
-                        recovery = CallerRecovery.USE_REPLACEMENT_FLOW,
-                    ),
+                semantics = semantics(
+                    status = HTTP_OK,
+                    descriptor = DescriptorAction.STORE_SAFE,
+                    recovery = CallerRecovery.USE_REPLACEMENT_FLOW,
+                ),
             )
         }.also { catalog ->
             check(catalog.keys == VoucherPoolErrorCode.entries.toSet()) {
@@ -272,13 +272,12 @@ object VoucherPoolErrorCatalog {
         codes.forEach { code ->
             register(
                 code = code,
-                semantics =
-                    semantics(
-                        status = status,
-                        retryable = true,
-                        descriptor = DescriptorAction.RELEASE,
-                        recovery = recovery,
-                    ),
+                semantics = semantics(
+                    status = status,
+                    retryable = true,
+                    descriptor = DescriptorAction.RELEASE,
+                    recovery = recovery,
+                ),
             )
         }
     }
@@ -290,13 +289,12 @@ object VoucherPoolErrorCatalog {
         codes.forEach { code ->
             register(
                 code = code,
-                semantics =
-                    semantics(
-                        status = HTTP_CONFLICT,
-                        descriptor = DescriptorAction.STORE,
-                        tombstone = TombstoneAction.STORE,
-                        recovery = recovery,
-                    ),
+                semantics = semantics(
+                    status = HTTP_CONFLICT,
+                    descriptor = DescriptorAction.STORE,
+                    tombstone = TombstoneAction.STORE,
+                    recovery = recovery,
+                ),
             )
         }
     }
@@ -308,13 +306,12 @@ object VoucherPoolErrorCatalog {
     ) {
         register(
             code = code,
-            semantics =
-                semantics(
-                    status = status,
-                    descriptor = DescriptorAction.NONE,
-                    tombstone = TombstoneAction.RETAIN,
-                    recovery = recovery,
-                ),
+            semantics = semantics(
+                status = status,
+                descriptor = DescriptorAction.NONE,
+                tombstone = TombstoneAction.RETAIN,
+                recovery = recovery,
+            ),
         )
     }
 
@@ -322,9 +319,7 @@ object VoucherPoolErrorCatalog {
         code: VoucherPoolErrorCode,
         semantics: VoucherPoolErrorSemantics,
     ) {
-        check(put(code, semantics) == null) {
-            "Duplicate voucher pool error semantics for $code."
-        }
+        put(code, semantics).checkNull { "Duplicate voucher pool error semantics for $code." }
     }
 
     private fun semantics(

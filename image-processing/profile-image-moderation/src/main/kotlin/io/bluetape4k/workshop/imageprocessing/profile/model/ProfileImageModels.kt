@@ -5,7 +5,6 @@ import io.bluetape4k.images.privacy.PrivacyDerivativeReport
 import io.bluetape4k.images.spring.ImageObjectKey
 import java.io.Serializable
 import java.time.Instant
-import kotlin.jvm.Transient
 
 /**
  * 예제 API가 반환하는 유효 프로필 이미지 URL의 생명주기 상태입니다.
@@ -39,7 +38,7 @@ data class ProfileImageView(
     val defaultImageUrl: String,
     val reason: String?,
     val updatedAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -52,7 +51,7 @@ data class ProfileImageKeys(
     val original: ImageObjectKey,
     val pending: ImageObjectKey,
     val approved: ImageObjectKey,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -78,7 +77,7 @@ data class ProcessedProfileImage(
     val pendingPrivacyPayload: PrivacyDerivativePayload? = null,
     /** approved public 산출물과 bounded privacy report를 함께 보존하는 영속화 payload입니다. */
     val approvedPrivacyPayload: PrivacyDerivativePayload? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -98,7 +97,7 @@ data class ProfileImageState(
     val reason: String? = null,
     val originalFilename: String? = null,
     val updatedAt: Instant = Instant.now(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -109,7 +108,8 @@ data class ProfileImageState(
             ProfileImageStatus.APPROVED -> approvedUrl
             ProfileImageStatus.REJECTED,
             ProfileImageStatus.MODERATION_FAILED,
-            ProfileImageStatus.NO_IMAGE -> defaultImageUrl
+            ProfileImageStatus.NO_IMAGE,
+                                        -> defaultImageUrl
         }
         return ProfileImageView(
             userId = userId,
@@ -133,7 +133,7 @@ data class ModerationRequest(
     val uploadId: String,
     val originalFilename: String?,
     val originalKey: ImageObjectKey,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -145,7 +145,7 @@ data class ModerationRequest(
 data class ModerationResult(
     val decision: ModerationDecision,
     val reason: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

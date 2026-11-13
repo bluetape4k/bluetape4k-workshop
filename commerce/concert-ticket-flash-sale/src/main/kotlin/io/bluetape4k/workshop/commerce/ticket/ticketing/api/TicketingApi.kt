@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.ticket.ticketing.api
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketState
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** operations-safe ticket effect projection입니다. */
 data class TicketEffectSnapshot(
@@ -11,7 +11,7 @@ data class TicketEffectSnapshot(
     val state: TicketState,
     val revision: Long,
     val updatedAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

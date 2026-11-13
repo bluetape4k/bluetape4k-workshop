@@ -3,20 +3,21 @@ package io.bluetape4k.workshop.mongodb.coroutine
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
 import com.mongodb.reactivestreams.client.MongoClient
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.Process
 import io.bluetape4k.workshop.mongodb.State
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,7 +37,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @ContextConfiguration(classes = [CoroutineManagedTransitionServiceTest.TestConfig::class])
 class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-coroutines-demo"
     }
 
@@ -87,6 +88,9 @@ class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
             try {
                 managedTransitionService.run(process.id)
                 stateInDb(process) shouldBeEqualTo State.DONE
+            } catch (cancellation: CancellationException) {
+                ensureActive()
+                throw cancellation
             } catch (e: IllegalStateException) {
                 log.warn(e) { "작업 중 예외가 발생했습니다. process=$process" }
                 stateInDb(process) shouldBeEqualTo State.CREATED
@@ -96,14 +100,13 @@ class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
         client.getDatabase(DATABASE_NAME).getCollection("processes")
             .find(Document())
             .asFlow()
-            .onEach {
-                log.debug { "process=$it" }
-            }
+            .log("Process")
             .collect()
     }
 
     private suspend fun stateInDb(process: Process): State {
-        val stateAsString = client.getDatabase(DATABASE_NAME).getCollection("processes")
+        val stateAsString = client.getDatabase(DATABASE_NAME)
+            .getCollection("processes")
             .find(Filters.eq("_id", process.id))
             .projection(Projections.include("state"))
             .awaitFirst()

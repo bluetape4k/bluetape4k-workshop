@@ -15,7 +15,7 @@ class AsyncTaskService {
     fun delay(seconds: Int) {
         val delaySeconds = seconds.requireValidDelaySeconds()
         log.debug { "Async Task started..." }
-        Thread.sleep(delaySeconds * 1000L)
+        Thread.sleep(delaySeconds * 1_000L)
         log.debug { "Async Task completed!" }
     }
 }

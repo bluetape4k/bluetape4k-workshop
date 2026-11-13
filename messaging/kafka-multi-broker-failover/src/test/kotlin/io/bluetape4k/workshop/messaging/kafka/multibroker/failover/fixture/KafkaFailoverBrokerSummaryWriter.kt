@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.support.toUtf8Bytes
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.nio.charset.StandardCharsets
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -18,6 +19,7 @@ object KafkaFailoverBrokerSummaryWriter {
         require(RUN_ID_PATTERN.matches(runId)) { "runId contains unsafe path characters" }
         val runDirectory = root.resolve(runId).normalize()
         require(runDirectory.parent == root.normalize()) { "runId must remain within artifact root" }
+
         Files.createDirectories(runDirectory)
         brokers.sortedBy(KafkaFailoverBrokerSnapshot::nodeId).forEach { broker ->
             val target = runDirectory.resolve("broker-${broker.nodeId}.log")
@@ -30,7 +32,8 @@ object KafkaFailoverBrokerSummaryWriter {
                 append(" imageDigest=sha256:").append(KafkaFailoverClusterFixture.APPROVED_IMAGE_DIGEST)
                 append(" running=").append(broker.isRunning)
                 append('\n')
-            }.toByteArray(StandardCharsets.UTF_8)
+            }.toUtf8Bytes()
+
             try {
                 FileChannel.open(
                     temporary,
@@ -38,7 +41,7 @@ object KafkaFailoverBrokerSummaryWriter {
                     StandardOpenOption.TRUNCATE_EXISTING,
                     StandardOpenOption.WRITE,
                 ).use { channel ->
-                    channel.write(java.nio.ByteBuffer.wrap(summary))
+                    channel.write(ByteBuffer.wrap(summary))
                     channel.force(true)
                 }
                 try {

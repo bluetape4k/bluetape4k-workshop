@@ -1,12 +1,16 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.join
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 import kotlin.math.max
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * T4 - 동시 경합 상황에서 ZooKeeper 그룹 리더 elector가 동시에 정확히 [maxLeaders]개 holder만
@@ -22,7 +26,7 @@ import kotlin.math.max
  */
 class GroupLeaderTest: AbstractLeaderZookeeperTest() {
 
-    companion object: io.bluetape4k.logging.KLogging() {
+    companion object: KLogging() {
         private const val MAX_LEADERS = 2
         private const val WORKERS = 4
     }
@@ -38,13 +42,12 @@ class GroupLeaderTest: AbstractLeaderZookeeperTest() {
 
         // 중요: orchestrator는 블로킹 호출인 MultithreadingTester.run() 전에 반드시 시작해야 한다.
         // 그렇지 않으면 worker가 releaseLatch.await에서 영원히 막혀 deadlock이 발생한다.
-        val orchestrator = Thread {
-            check(enteredLatch.await(5, TimeUnit.SECONDS)) {
+        val orchestrator = thread {
+            check(enteredLatch.await(5.seconds)) {
                 "Not enough workers entered — CI too slow or maxLeaders not reached"
             }
             releaseLatch.countDown()
         }
-        orchestrator.start()
 
         MultithreadingTester()
             .workers(WORKERS)
@@ -55,7 +58,7 @@ class GroupLeaderTest: AbstractLeaderZookeeperTest() {
                     peakConcurrent.updateAndGet { max(it, c) }
                     try {
                         enteredLatch.countDown()
-                        check(releaseLatch.await(3, TimeUnit.SECONDS)) { "releaseLatch timeout" }
+                        check(releaseLatch.await(3.seconds)) { "releaseLatch timeout" }
                     } finally {
                         current.decrementAndGet()
                     }
@@ -63,7 +66,7 @@ class GroupLeaderTest: AbstractLeaderZookeeperTest() {
             }
             .run()
 
-        orchestrator.join(6_000)
+        orchestrator.join(6.seconds)
         peakConcurrent.get() shouldBeEqualTo MAX_LEADERS
     }
 }

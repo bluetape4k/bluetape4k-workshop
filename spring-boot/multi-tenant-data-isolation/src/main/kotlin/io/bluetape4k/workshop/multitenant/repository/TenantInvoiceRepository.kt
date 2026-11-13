@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.multitenant.repository
 
 import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.multitenant.domain.InvoiceRecord
 import io.bluetape4k.workshop.multitenant.domain.InvoiceStatus
 import io.bluetape4k.workshop.multitenant.domain.InvoiceTable
@@ -23,9 +25,9 @@ import org.springframework.stereotype.Repository
  * caller 는 Spring-managed transaction 안에서 repository 작업을 실행합니다.
  */
 @Repository
-class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
+class TenantInvoiceRepository: LongJdbcRepository<InvoiceRecord> {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override val table = InvoiceTable
 
@@ -43,7 +45,8 @@ class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
             it[amount] = invoice.amount
             it[status] = invoice.status
         }.value
-        return requireNotNull(findByTenantAndId(invoice.tenantId, id)) {
+
+        return findByTenantAndId(invoice.tenantId, id).requireNotNull {
             "Inserted invoice $id was not found for tenant ${invoice.tenantId}"
         }
     }
@@ -73,17 +76,20 @@ class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
     /**
      * tenant predicate 도 일치할 때만 invoice status 를 갱신합니다.
      */
-    fun updateStatus(tenantId: TenantId, invoiceId: Long, status: InvoiceStatus): Boolean =
-        InvoiceTable.update({
-            (InvoiceTable.tenantId eq tenantId.value) and (InvoiceTable.id eq invoiceId)
-        }) {
+    fun updateStatus(tenantId: TenantId, invoiceId: Long, status: InvoiceStatus): Boolean {
+        log.debug { "Updating Invoice status for tenantId=$tenantId, invoiceId=$invoiceId, status=$status" }
+        val whereOp = (InvoiceTable.tenantId eq tenantId.value) and (InvoiceTable.id eq invoiceId)
+
+        return InvoiceTable.update({ whereOp }) {
             it[InvoiceTable.status] = status
         } == 1
+    }
 
     /**
      * 모든 workshop data 를 제거합니다.
      */
     fun deleteAllInvoices() {
+        log.debug { "Delete all Invoices ..." }
         InvoiceTable.deleteAll()
     }
 }

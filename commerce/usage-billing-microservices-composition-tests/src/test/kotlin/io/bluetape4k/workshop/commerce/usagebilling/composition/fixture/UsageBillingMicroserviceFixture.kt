@@ -7,6 +7,7 @@ import eu.rekawek.toxiproxy.Proxy
 import eu.rekawek.toxiproxy.model.ToxicDirection
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.infra.ToxiproxyServer
 import io.bluetape4k.workshop.commerce.usagebilling.billing.BillingServiceApplication
@@ -471,6 +472,6 @@ class UsageBillingMicroserviceFixture(
         const val BILLING_TOPIC = "billing.events.v1"
 
         fun digestOf(value: String): String =
-            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
+            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
     }
 }

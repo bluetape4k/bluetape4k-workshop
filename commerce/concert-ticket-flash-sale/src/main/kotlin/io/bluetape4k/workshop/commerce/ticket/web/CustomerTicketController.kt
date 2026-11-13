@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import java.util.*
 
 /** owner-safe purchase recovery endpoint입니다. 다른 owner의 ID는 없는 ID와 동일하게 404를 반환합니다. */
 @RestController
@@ -31,6 +31,7 @@ class CustomerTicketController(
     fun cancel(@PathVariable attemptId: UUID, authentication: Authentication): ResponseEntity<PurchaseSnapshot> {
         val buyerId = buyers.resolve(authentication)
         if (queries.owned(attemptId, buyerId) == null) throw PurchaseNotFound()
+
         return ResponseEntity.accepted()
             .cacheControl(CacheControl.noStore())
             .body(commands.cancel(CancelPurchase(attemptId, buyerId)))
@@ -40,5 +41,7 @@ class CustomerTicketController(
         queries.owned(attemptId, buyers.resolve(authentication)) ?: throw PurchaseNotFound()
 
     private fun PurchaseSnapshot.noStore(): ResponseEntity<PurchaseSnapshot> =
-        ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(this)
+        ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(this)
 }

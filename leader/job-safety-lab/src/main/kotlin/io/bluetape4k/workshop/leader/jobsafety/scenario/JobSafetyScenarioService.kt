@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.leader.jobsafety.scenario
 
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
+import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobExecutionState
-import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobName
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobRejectionReason
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
@@ -15,23 +16,33 @@ import java.time.YearMonth
 class JobSafetyScenarioService(
     private val timelineLimit: Int = 128,
 ) {
+
+    companion object: KLogging() {
+        private val CONFLICT_KEY = ConflictKey.summary(
+            tenantId = TenantId("tenant-a"),
+            period = YearMonth.of(2026, 7)
+        )
+    }
+
     private val unsafe = UnsafeScenarioAdapter()
 
     init {
-        timelineLimit.requireGt(0, "timelineLimit")
+        timelineLimit.requirePositiveNumber("timelineLimit")
     }
 
     fun run(scenario: JobSafetyScenario, mode: ScenarioMode): JobSafetyScenarioSnapshot {
         val draft =
             when (scenario) {
-                JobSafetyScenario.CROSS_JOB_COLLISION -> crossJobCollision(mode)
-                JobSafetyScenario.LEASE_OVERRUN -> leaseOverrun(mode)
-                JobSafetyScenario.DYNAMIC_TENANT -> dynamicTenant(mode)
-                JobSafetyScenario.REGION_PARTITION -> regionPartition(mode)
+                JobSafetyScenario.CROSS_JOB_COLLISION  -> crossJobCollision(mode)
+                JobSafetyScenario.LEASE_OVERRUN        -> leaseOverrun(mode)
+                JobSafetyScenario.DYNAMIC_TENANT       -> dynamicTenant(mode)
+                JobSafetyScenario.REGION_PARTITION     -> regionPartition(mode)
                 JobSafetyScenario.MIXED_VERSION_ROLLOUT -> mixedVersionRollout(mode)
                 JobSafetyScenario.NON_FENCEABLE_EFFECT -> nonFenceableEffect(mode)
             }
-        val numbered = draft.events.mapIndexed { index, event -> event.copy(sequence = index + 1) }
+        val numbered = draft.events.mapIndexed { index, event ->
+            event.copy(sequence = index + 1)
+        }
         return JobSafetyScenarioSnapshot(
             scenario = scenario,
             mode = mode,
@@ -72,7 +83,11 @@ class JobSafetyScenarioService(
                     event("DAILY_FENCE_41", JobExecutionState.FENCE_ACQUIRED, "daily acquires resource fence 41"),
                     event("DAILY_COMMIT_10", JobExecutionState.COMMITTED, "database accepts generation 41"),
                     event("BACKFILL_FENCE_42", JobExecutionState.FENCE_ACQUIRED, "backfill acquires generation 42"),
-                    event("BACKFILL_COMMIT_30", JobExecutionState.COMMITTED, "database applies the accumulated summary"),
+                    event(
+                        "BACKFILL_COMMIT_30",
+                        JobExecutionState.COMMITTED,
+                        "database applies the accumulated summary"
+                    ),
                 ),
         )
     }
@@ -114,7 +129,11 @@ class JobSafetyScenarioService(
             reason = JobRejectionReason.STALE_MEMBERSHIP,
             events =
                 listOf(
-                    event("TRIGGER_REVISION_7", JobExecutionState.REQUESTED, "scheduler captures membership revision 7"),
+                    event(
+                        "TRIGGER_REVISION_7",
+                        JobExecutionState.REQUESTED,
+                        "scheduler captures membership revision 7"
+                    ),
                     event("TENANT_REMOVED_REVISION_8", JobExecutionState.RUNNING, "tenant is removed before commit"),
                     event("RELOAD_ASSIGNMENT", JobExecutionState.RUNNING, "transaction reads active revision 8"),
                     event("STALE_MEMBERSHIP_REJECTED", JobExecutionState.REJECTED, "revision 7 cannot commit"),
@@ -134,7 +153,11 @@ class JobSafetyScenarioService(
                 listOf(
                     event("REGION_PARTITION", JobExecutionState.REQUESTED, "region-b elects a local leader"),
                     event("LOCAL_FENCE_100", JobExecutionState.FENCE_ACQUIRED, "local Redis issues fence 100"),
-                    event("READ_WRITE_HOME", JobExecutionState.RUNNING, "PostgreSQL says region-a epoch 3 is authoritative"),
+                    event(
+                        "READ_WRITE_HOME",
+                        JobExecutionState.RUNNING,
+                        "PostgreSQL says region-a epoch 3 is authoritative"
+                    ),
                     event("WRONG_REGION_REJECTED", JobExecutionState.REJECTED, "region-b fails closed"),
                 ),
         )
@@ -150,7 +173,11 @@ class JobSafetyScenarioService(
             reason = JobRejectionReason.INCOMPATIBLE_VERSION,
             events =
                 listOf(
-                    event("EXPAND_COMPATIBLE_DEPLOY", JobExecutionState.REQUESTED, "new readers understand old checkpoints"),
+                    event(
+                        "EXPAND_COMPATIBLE_DEPLOY",
+                        JobExecutionState.REQUESTED,
+                        "new readers understand old checkpoints"
+                    ),
                     event("CHECKPOINT_SCHEMA_2", JobExecutionState.RUNNING, "checkpoint schema advances after readers"),
                     event("MIN_WRITER_2", JobExecutionState.RUNNING, "minimum writer advances last"),
                     event("OLD_WRITER_REJECTED", JobExecutionState.REJECTED, "contract v1 can no longer commit"),
@@ -176,8 +203,16 @@ class JobSafetyScenarioService(
                 ),
             events =
                 listOf(
-                    event("OUTBOX_COMMIT", JobExecutionState.COMMITTED, "business state and stable operation id commit together"),
-                    event("PROVIDER_APPLIED_TIMEOUT", JobExecutionState.EFFECT_PENDING, "provider applies but response is lost"),
+                    event(
+                        "OUTBOX_COMMIT",
+                        JobExecutionState.COMMITTED,
+                        "business state and stable operation id commit together"
+                    ),
+                    event(
+                        "PROVIDER_APPLIED_TIMEOUT",
+                        JobExecutionState.EFFECT_PENDING,
+                        "provider applies but response is lost"
+                    ),
                     event(
                         "RECONCILIATION_REQUIRED",
                         JobExecutionState.RECONCILIATION_REQUIRED,
@@ -188,7 +223,11 @@ class JobSafetyScenarioService(
                         JobExecutionState.RECONCILIATION_REQUIRED,
                         "worker queries the same operation id",
                     ),
-                    event("RECEIPT_CONFIRMED", JobExecutionState.COMPLETED, "one provider receipt closes the operation"),
+                    event(
+                        "RECEIPT_CONFIRMED",
+                        JobExecutionState.COMPLETED,
+                        "one provider receipt closes the operation"
+                    ),
                 ),
         )
     }
@@ -215,10 +254,6 @@ class JobSafetyScenarioService(
                 ),
             events = events,
         )
-
-    companion object {
-        private val CONFLICT_KEY = ConflictKey.summary(TenantId("tenant-a"), YearMonth.of(2026, 7))
-    }
 }
 
 internal class RolloutProtocol {

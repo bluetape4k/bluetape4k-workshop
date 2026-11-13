@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.worker
 
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.DomainEventJsonCodec
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.config.EventSourcingMetrics
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -16,11 +18,9 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.security.MessageDigest
-import java.util.Locale
 import java.time.Clock
 import java.time.Duration
-import java.util.UUID
-import kotlin.text.Charsets.UTF_8
+import java.util.*
 
 data class ProjectionBatchResult(val acquired: Boolean, val applied: Int, val checkpoint: Long, val lag: Long = 0)
 
@@ -123,13 +123,13 @@ class ProjectionBatchProcessor(
     private fun failureDigest(failure: Throwable): String {
         val material = "${failure::class.qualifiedName}:${failure.message.orEmpty()}"
         return MessageDigest.getInstance("SHA-256")
-            .digest(material.toByteArray(UTF_8))
+            .digest(material.toUtf8Bytes())
             .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
     }
 
     private companion object {
         const val FAILURE_LOOKAHEAD = 1
-        val LEASE_DURATION: Duration = Duration.ofSeconds(30)
+        val LEASE_DURATION: Duration = 30.seconds()
     }
 }
 

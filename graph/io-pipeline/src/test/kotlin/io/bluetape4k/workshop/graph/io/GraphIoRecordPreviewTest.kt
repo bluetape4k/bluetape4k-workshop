@@ -3,12 +3,16 @@ package io.bluetape4k.workshop.graph.io
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.graph.io.jackson3.Jackson3NdJsonRecordFlowReader
 import io.bluetape4k.graph.io.report.GraphIoReadException
 import io.bluetape4k.graph.io.source.GraphImportSource
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Test
@@ -20,10 +24,17 @@ import kotlin.io.path.writeText
 
 class GraphIoRecordPreviewTest {
 
+    companion object: KLoggingChannel()
+
     @Test
     fun `previews CSV records in input order without resolving edge endpoints`() {
         runSuspendIO {
-            val preview = GraphIoRecordPreview().csv(fixture("vertices.csv"), fixture("edges.csv"), limit = 2)
+            val preview = GraphIoRecordPreview()
+                .csv(
+                    vertices = fixture("vertices.csv"),
+                    edges = fixture("edges.csv"),
+                    limit = 2
+                )
 
             preview.vertices.map { it.externalId } shouldBeEqualTo listOf("person-alice", "person-bob")
             preview.edges.map { it.externalId } shouldBeEqualTo listOf("edge-alice-project", "edge-bob-project")
@@ -37,6 +48,7 @@ class GraphIoRecordPreviewTest {
         runSuspendIO {
             val ndjson = tempDir.resolve("graph.ndjson")
             val graphml = tempDir.resolve("graph.graphml")
+
             TinkerGraphOperations().use { operations ->
                 val pipeline = GraphIoPipeline(operations)
                 pipeline.importCsv(fixture("vertices.csv"), fixture("edges.csv"))
@@ -45,14 +57,17 @@ class GraphIoRecordPreviewTest {
             }
 
             val previewer = GraphIoRecordPreview()
-            val ndjsonPreview = previewer.jackson3NdJson(ndjson, limit = 2)
-            val graphMlPreview = previewer.graphMl(graphml, limit = 2)
 
+            val ndjsonPreview = previewer.jackson3NdJson(ndjson, limit = 2)
+            log.debug { "ndjsonPreview=$ndjsonPreview" }
             ndjsonPreview.vertices.map { it.properties["code"] } shouldBeEqualTo listOf("alice", "bob")
-            graphMlPreview.vertices.map { it.properties["code"] } shouldBeEqualTo listOf("alice", "bob")
             ndjsonPreview.edges.map { it.properties["code"] } shouldBeEqualTo listOf("alice-project", "bob-project")
-            graphMlPreview.edges.map { it.properties["code"] } shouldBeEqualTo listOf("alice-project", "bob-project")
             ndjsonPreview.edges.all { it.fromExternalId.isNotBlank() && it.toExternalId.isNotBlank() }.shouldBeTrue()
+
+            val graphMlPreview = previewer.graphMl(graphml, limit = 2)
+            log.debug { "graphMlPreview=$graphMlPreview" }
+            graphMlPreview.vertices.map { it.properties["code"] } shouldBeEqualTo listOf("alice", "bob")
+            graphMlPreview.edges.map { it.properties["code"] } shouldBeEqualTo listOf("alice-project", "bob-project")
             graphMlPreview.edges.all { it.fromExternalId.isNotBlank() && it.toExternalId.isNotBlank() }.shouldBeTrue()
         }
     }
@@ -69,17 +84,23 @@ class GraphIoRecordPreviewTest {
             val bytes = ndjson.readBytes()
             val ownedInput = TrackingInputStream(bytes)
             val callerOwnedInput = TrackingInputStream(bytes)
-            val ownedFlow = Jackson3NdJsonRecordFlowReader().readVertices(
-                GraphImportSource.InputStreamSource(ownedInput, closeInput = true),
-            )
-            val callerOwnedFlow = Jackson3NdJsonRecordFlowReader().readVertices(
-                GraphImportSource.InputStreamSource(callerOwnedInput, closeInput = false),
-            )
+            val ownedFlow = Jackson3NdJsonRecordFlowReader()
+                .readVertices(
+                    GraphImportSource.InputStreamSource(ownedInput, closeInput = true),
+                )
+                .log("Owned")
+            val callerOwnedFlow = Jackson3NdJsonRecordFlowReader()
+                .readVertices(
+                    GraphImportSource.InputStreamSource(callerOwnedInput, closeInput = false),
+                )
+                .log("CallerOwned")
 
             ownedInput.wasRead.shouldBeFalse()
             callerOwnedInput.wasRead.shouldBeFalse()
+
             ownedFlow.take(1).toList().size shouldBeEqualTo 1
             callerOwnedFlow.take(1).toList().size shouldBeEqualTo 1
+
             ownedInput.wasRead.shouldBeTrue()
             callerOwnedInput.wasRead.shouldBeTrue()
             ownedInput.wasClosed.shouldBeTrue()
@@ -102,7 +123,7 @@ class GraphIoRecordPreviewTest {
             error.message.orEmpty().contains(secret).shouldBeFalse()
             error.failure.message.contains(secret).shouldBeFalse()
             error.failure.location shouldBeEqualTo "line:1"
-            (error.failure.sourceName == null).shouldBeTrue()
+            error.failure.sourceName.shouldBeNull()
         }
     }
 
@@ -118,7 +139,7 @@ class GraphIoRecordPreviewTest {
     private fun fixture(name: String): Path =
         Path.of("src/test/resources/graph-io-pipeline/$name").toAbsolutePath().normalize()
 
-    private class TrackingInputStream(bytes: ByteArray) : ByteArrayInputStream(bytes) {
+    private class TrackingInputStream(bytes: ByteArray): ByteArrayInputStream(bytes) {
         var wasRead: Boolean = false
             private set
         var wasClosed: Boolean = false

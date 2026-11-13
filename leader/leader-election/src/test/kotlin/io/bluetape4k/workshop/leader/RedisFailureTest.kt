@@ -5,12 +5,13 @@ import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
-import io.bluetape4k.logging.*
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.info
 import io.bluetape4k.support.closeSafe
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import io.lettuce.core.codec.StringCodec
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -26,14 +27,16 @@ import kotlin.time.Duration.Companion.seconds
  *
  * `junit.jupiter.execution.exclude.tags=smoke`로 기본 `test` task에서 제외됩니다.
  */
-@Tag("smoke")
 class RedisFailureTest {
+
+    companion object: KLoggingChannel() 
 
     @Test
     fun `runIfLeader throws exception when Redis is unavailable`() = runSuspendIO(timeout = 10.seconds) {
         // 공유 singleton이 아니라 dedicated container를 사용합니다.
-        val redisContainer = RedisServer(image = RedisServer.IMAGE, tag = "7-alpine").apply { start() }
-        val client = RedisClient.create(redisContainer.url)
+        val redisContainer = RedisServer(reuse = false).apply { start() }
+        val client =
+            RedisClient.create(RedisURI.builder().withHost(redisContainer.host).withPort(redisContainer.port).build())
 
         try {
             val connection = client.connect(StringCodec.UTF8)
@@ -59,6 +62,4 @@ class RedisFailureTest {
             runCatching { redisContainer.stop() }
         }
     }
-
-    companion object : KLogging()
 }

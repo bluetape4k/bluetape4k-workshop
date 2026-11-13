@@ -15,7 +15,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractResilienceTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val BACKEND_A = "backendA"
         const val BACKEND_B = "backendB"
         const val BACKEND_C = "backendC"
@@ -60,10 +60,10 @@ abstract class AbstractResilienceTest {
     protected fun transitionCircuitBreakerState(name: String, state: CircuitBreaker.State) {
         circuitBreakerRegistry.circuitBreaker(name).apply {
             when (state) {
-                CircuitBreaker.State.OPEN -> this.transitionToOpenState()
+                CircuitBreaker.State.OPEN   -> this.transitionToOpenState()
                 CircuitBreaker.State.CLOSED -> this.transitionToClosedState()
                 CircuitBreaker.State.HALF_OPEN -> this.transitionToHalfOpenState()
-                else -> throw NotSupportedException("Not supported state: $state")
+                else                        -> throw NotSupportedException("Not supported state: $state")
             }
         }
     }

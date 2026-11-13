@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.web
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.commerce.reservation.application.ForceReleaseHoldCommand
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.io.Serializable
-import java.time.Duration
 
 /**
  * force release와 bounded manual sweep command를 위한 authenticated operator boundary입니다.
@@ -70,14 +70,14 @@ internal class OperatorController(
     fun sweep(
         @Valid @RequestBody request: ManualSweepRequest,
     ): SweepBatchSummary =
-        sweepWork.sweep(request.maxResources, Duration.ofSeconds(5)).also { summary ->
+        sweepWork.sweep(request.maxResources, 5.seconds()).also { summary ->
             log.info {
                 "reservation_operator_sweep_completed scanned=${summary.scannedResources} " +
-                    "expired=${summary.expiredHolds} promoted=${summary.promotedEntries}"
+                        "expired=${summary.expiredHolds} promoted=${summary.promotedEntries}"
             }
         }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val FORCE_RELEASE = "OPERATOR_FORCE_RELEASE"
     }
 }
@@ -85,7 +85,7 @@ internal class OperatorController(
 internal data class ForceReleaseRequest(
     @field:Min(0) val expectedRevision: Long,
     @field:Pattern(regexp = "[A-Z0-9_]{3,40}") val reasonCode: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -93,7 +93,7 @@ internal data class ForceReleaseRequest(
 
 internal data class ManualSweepRequest(
     @field:Min(1) @field:Max(32) val maxResources: Int = 32,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -104,7 +104,7 @@ internal data class OperatorReleaseResponse(
     val resourceId: Long,
     val state: String,
     val revision: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

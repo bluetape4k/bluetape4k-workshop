@@ -3,9 +3,13 @@ package io.bluetape4k.workshop.commerce.ticket.web
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 internal class TicketEventStreamCapacityIntegrationTest {
+
+    companion object: KLogging()
+    
     @Test
     fun `slow consumer is disconnected and releases its connection permit`() {
         val stream = TicketEventStream(queueSize = 1, maxConnections = 1)
@@ -24,6 +28,7 @@ internal class TicketEventStreamCapacityIntegrationTest {
     @Test
     fun `public stream rejects owner and payment fields`() {
         val stream = TicketEventStream(2, 1)
+
         assertFailsWith<IllegalArgumentException> {
             stream.publish(
                 StreamScope.PublicSale(Uuid.V7.nextId()),

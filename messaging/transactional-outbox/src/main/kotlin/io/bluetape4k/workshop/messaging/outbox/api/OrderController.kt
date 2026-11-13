@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController
 class OrderController(
     private val orderService: OrderService,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     /** 새 order 를 place 하고 생성된 [OrderResponse] 와 함께 HTTP 201 을 반환합니다. */
     @PostMapping
@@ -69,9 +69,7 @@ class OrderController(
     @Transactional(readOnly = true)
     fun getPendingOutboxEvents(): List<OutboxEvent> =
         OutboxEventTable.selectAll()
-            .where {
-                (OutboxEventTable.status eq OutboxStatus.PENDING)
-            }
+            .where { OutboxEventTable.status eq OutboxStatus.PENDING }
             .orderBy(OutboxEventTable.createdAt to SortOrder.ASC)
             .map { row ->
                 OutboxEvent(

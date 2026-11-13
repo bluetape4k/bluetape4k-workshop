@@ -1,19 +1,19 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import org.junit.jupiter.api.Test
 
-class Example1_PlatformAndVirtualThread : AbstractVirtualThreadTest() {
+class Example1_PlatformAndVirtualThread: AbstractVirtualThreadTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val THREAD_SIZE = 100_000
     }
 

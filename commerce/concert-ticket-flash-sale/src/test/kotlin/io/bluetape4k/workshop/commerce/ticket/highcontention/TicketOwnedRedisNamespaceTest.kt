@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.JsonNode
@@ -15,14 +19,20 @@ import java.security.MessageDigest
 
 class TicketOwnedRedisNamespaceTest {
 
+    private companion object: KLogging() {
+        const val CANONICAL_VECTOR_DIGEST = "406278bff9c644546cadea9ffc9919a36f1066d5958043fc196269faa6c8a774"
+        val JSON_MAPPER = Jackson.defaultJsonMapper
+    }
+
     @Test
     fun `ticket owner parser consumes every golden vector case and canonical digest`() {
         val document = redisVectorDocument()
-        canonicalDigest(document.get("vectors"))
-            .shouldBeEqualTo(document.get("vectorsSha256").stringValue())
+        log.debug { "document: $document" }
+        canonicalDigest(document.get("vectors")) shouldBeEqualTo document.get("vectorsSha256").stringValue()
         document.get("vectorsSha256").stringValue().shouldBeEqualTo(CANONICAL_VECTOR_DIGEST)
-        val vector = document.get("vectors")
-            .first { it.get("name").stringValue() == "ticket-owned-namespace" }
+
+        val vector = document.get("vectors").first { it.get("name").stringValue() == "ticket-owned-namespace" }
+
         val namespace = TicketOwnedRedisNamespace.parse(
             namespace = vector.get("namespace").stringValue(),
             deleteUpperBound = vector.get("deleteUpperBound").asInt(),
@@ -30,8 +40,8 @@ class TicketOwnedRedisNamespaceTest {
         )
 
         vector.get("cases").forEach { case ->
-            namespace.owns(case.get("key").stringValue())
-                .shouldBeEqualTo(case.get("expectedOwned").asBoolean())
+            log.debug { "case: $case" }
+            namespace.owns(case.get("key").stringValue()) shouldBeEqualTo case.get("expectedOwned").asBoolean()
         }
     }
 
@@ -94,7 +104,7 @@ class TicketOwnedRedisNamespaceTest {
             assertFailsWith<IllegalStateException> {
                 namespace.deleteOwnedKeys(TicketOwnedRedisWriterBarrier.NONE)
             }
-            commands.unlinked shouldBeEqualTo emptyList()
+            commands.unlinked.shouldBeEmpty()
         }
     }
 
@@ -130,7 +140,8 @@ class TicketOwnedRedisNamespaceTest {
             ),
         )
         assertFailsWith<IllegalStateException> {
-            TicketOwnedRedisNamespace.parse(namespaceValue, 8, nonConverging)
+            TicketOwnedRedisNamespace
+                .parse(namespaceValue, 8, nonConverging)
                 .deleteOwnedKeys(TicketOwnedRedisWriterBarrier.NONE)
         }
         nonConverging.unlinked shouldBeEqualTo listOf(listOf(ownedKey))
@@ -149,7 +160,8 @@ class TicketOwnedRedisNamespaceTest {
 
         try {
             (ownedKeys + foreignKey).forEach { commands.set(it, "1") }
-            val result = TicketOwnedRedisNamespace.parse(namespaceValue, 8, commands)
+            val result = TicketOwnedRedisNamespace
+                .parse(namespaceValue, 8, commands)
                 .deleteOwnedKeys(TicketOwnedRedisWriterBarrier.NONE)
 
             result.deletedKeys shouldBeEqualTo ownedKeys
@@ -166,37 +178,38 @@ class TicketOwnedRedisNamespaceTest {
         val contractRoot = Path.of(
             System.getProperty("highContentionContractRoot").requireNotNull("highContentionContractRoot"),
         )
-        return Files.newInputStream(contractRoot.resolve("redis-key-vectors.json")).use {
-            JSON_MAPPER.readTree(it)
-        }
+        return Files.newInputStream(contractRoot.resolve("redis-key-vectors.json"))
+            .use {
+                JSON_MAPPER.readTree(it)
+            }
     }
 
     private fun canonicalDigest(node: JsonNode): String =
         MessageDigest.getInstance("SHA-256")
-            .digest(canonicalJson(node).toByteArray(Charsets.UTF_8))
+            .digest(canonicalJson(node).toUtf8Bytes())
             .joinToString("") { "%02x".format(it) }
 
     private fun canonicalJson(node: JsonNode): String =
         when {
-            node.isArray -> node.joinToString(separator = ",", prefix = "[", postfix = "]", transform = ::canonicalJson)
+            node.isArray -> node.joinToString(
+                separator = ",",
+                prefix = "[",
+                postfix = "]",
+                transform = ::canonicalJson
+            )
             node.isObject -> node.properties()
                 .sortedBy { it.key }
                 .joinToString(separator = ",", prefix = "{", postfix = "}") { (key, value) ->
                     "${JSON_MAPPER.writeValueAsString(key)}:${canonicalJson(value)}"
                 }
-            else -> node.toString()
+            else         -> node.toString()
         }
-
-    private companion object {
-        const val CANONICAL_VECTOR_DIGEST = "406278bff9c644546cadea9ffc9919a36f1066d5958043fc196269faa6c8a774"
-        val JSON_MAPPER = Jackson.createDefaultJsonMapper()
-    }
 }
 
 private class RecordingTicketRedisKeyCommands(
     private val pages: ArrayDeque<TicketOwnedRedisScanPage> = ArrayDeque(),
     private val repeatLastPage: Boolean = false,
-) : TicketOwnedRedisKeyCommands {
+): TicketOwnedRedisKeyCommands {
     val unlinked = mutableListOf<List<String>>()
     private var lastPage = TicketOwnedRedisScanPage("0", emptyList())
 

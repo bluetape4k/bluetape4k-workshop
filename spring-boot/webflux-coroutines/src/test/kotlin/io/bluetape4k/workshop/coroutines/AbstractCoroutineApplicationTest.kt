@@ -13,7 +13,7 @@ abstract class AbstractCoroutineApplicationTest(
     protected val context: ApplicationContext,
 ) {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val REPEAT_SIZE = 3
         val expectedBanner = Banner.TEST_BANNER
     }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionGenerations
@@ -9,11 +10,14 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
-internal val CANCELLABLE_STATES = setOf(ProjectionGenerationState.BUILDING, ProjectionGenerationState.VALIDATING)
+internal val CANCELLABLE_STATES = setOf(
+    ProjectionGenerationState.BUILDING,
+    ProjectionGenerationState.VALIDATING
+)
 
 internal fun generationPredicate(key: ProjectionKey) =
     (ProjectionGenerations.projection eq key.projection) and
-        (ProjectionGenerations.generation eq key.generation)
+            (ProjectionGenerations.generation eq key.generation)
 
 internal fun findActive(projection: String): ActiveProjectionGeneration? =
     ActiveProjectionGenerations
@@ -23,14 +27,13 @@ internal fun findActive(projection: String): ActiveProjectionGeneration? =
         ?.let(::toActiveGeneration)
 
 internal fun requireLockedActive(projection: String): ActiveProjectionGeneration =
-    checkNotNull(
-        ActiveProjectionGenerations
-            .selectAll()
-            .where { ActiveProjectionGenerations.projection eq projection }
-            .forUpdate()
-            .singleOrNull()
-            ?.let(::toActiveGeneration),
-    ) { "active projection must be initialized" }
+    ActiveProjectionGenerations
+        .selectAll()
+        .where { ActiveProjectionGenerations.projection eq projection }
+        .forUpdate()
+        .singleOrNull()
+        ?.let(::toActiveGeneration)
+        .checkNotNull { "active projection must be initialized" }
 
 internal fun findGeneration(key: ProjectionKey): ProjectionGeneration? =
     ProjectionGenerations
@@ -54,8 +57,8 @@ internal fun lockBuildingGeneration(
 ): ProjectionGeneration? =
     lockProjectionGeneration(key)?.takeIf { generation ->
         generation.state == ProjectionGenerationState.BUILDING &&
-            generation.fencingToken == fencingToken &&
-            generation.cancellationRevision == cancellationRevision
+                generation.fencingToken == fencingToken &&
+                generation.cancellationRevision == cancellationRevision
     }
 
 internal fun findBuildingGeneration(projection: String): ProjectionGeneration? =
@@ -63,7 +66,7 @@ internal fun findBuildingGeneration(projection: String): ProjectionGeneration? =
         .selectAll()
         .where {
             (ProjectionGenerations.projection eq projection) and
-                (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING)
+                    (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING)
         }.singleOrNull()
         ?.let(::toGeneration)
 
@@ -86,13 +89,12 @@ private fun toGeneration(row: ResultRow): ProjectionGeneration =
     ProjectionGeneration(
         key = ProjectionKey(row[ProjectionGenerations.projection], row[ProjectionGenerations.generation]),
         state = row[ProjectionGenerations.state],
-        progress =
-            ProjectionGenerationProgress(
-                targetPosition = row[ProjectionGenerations.targetPosition],
-                currentPosition = row[ProjectionGenerations.currentPosition],
-                fencingToken = row[ProjectionGenerations.fencingToken],
-                cancellationRevision = row[ProjectionGenerations.cancellationRevision],
-            ),
+        progress = ProjectionGenerationProgress(
+            targetPosition = row[ProjectionGenerations.targetPosition],
+            currentPosition = row[ProjectionGenerations.currentPosition],
+            fencingToken = row[ProjectionGenerations.fencingToken],
+            cancellationRevision = row[ProjectionGenerations.cancellationRevision],
+        ),
         canonicalDigest = row[ProjectionGenerations.canonicalDigest]?.let(ReceiptDigest::of),
         retryableFailure = row[ProjectionGenerations.retryableFailure],
     )

@@ -1,16 +1,21 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
+import io.bluetape4k.concurrent.awaitTermination
 import io.bluetape4k.logging.KLogging
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.seconds
 
 /** demo worker의 admission 종료, quiescence, executor drain lifecycle입니다. */
 class FieldServiceExecutorLifecycle(
     private val executor: ExecutorService,
     private val shutdownTimeoutSeconds: Long = 30L,
-) : AutoCloseable {
+): AutoCloseable {
+
+    companion object: KLogging()
+
     private val admissionOpen = AtomicBoolean(true)
+
     @Volatile
     var shutdownTimedOut: Boolean = false
         private set
@@ -29,11 +34,9 @@ class FieldServiceExecutorLifecycle(
     override fun close() {
         if (!admissionOpen.compareAndSet(true, false)) return
         executor.shutdown()
-        if (!executor.awaitTermination(shutdownTimeoutSeconds, TimeUnit.SECONDS)) {
+        if (!executor.awaitTermination(shutdownTimeoutSeconds.seconds)) {
             shutdownTimedOut = true
             executor.shutdownNow()
         }
     }
-
-    companion object : KLogging()
 }

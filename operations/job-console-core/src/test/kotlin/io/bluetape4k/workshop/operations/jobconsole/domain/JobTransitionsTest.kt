@@ -2,9 +2,12 @@ package io.bluetape4k.workshop.operations.jobconsole.domain
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class JobTransitionsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `claim starts the oldest queued job`() {

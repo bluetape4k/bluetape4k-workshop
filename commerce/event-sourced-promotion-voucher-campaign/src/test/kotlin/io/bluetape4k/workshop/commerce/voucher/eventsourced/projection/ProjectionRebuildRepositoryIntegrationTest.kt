@@ -2,9 +2,13 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
@@ -17,18 +21,29 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CyclicBarrier
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
-@Tag("integration")
+// @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ProjectionRebuildRepositoryIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    private companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+
+        private const val PROJECTION = "voucher-lifecycle"
+        private const val FIRST_POSITION = 1L
+        private const val TARGET_POSITION = 2L
+        private const val AWAIT_TIMEOUT_SECONDS = 5L
+        private val CANONICAL_DIGEST = ReceiptDigest.sha256("voucher-projection-generation-v1")
+        private val CORRUPT_DIGEST = ReceiptDigest.sha256("voucher-projection-generation-corrupt-v1")
+        private val NOW = Instant.parse("2026-07-23T13:00:00Z")
+    }
+
     private val repository = ProjectionRebuildRepository()
     private val maintenance = ProjectionRebuildMaintenance()
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
@@ -41,15 +56,23 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @AfterAll
-    fun closeDataSource() = postgresDatabase.close()
+    fun closeDataSource() {
+        postgresDatabase.close()
+    }
 
     @BeforeEach
-    fun createSchema() =
-        transaction(database) { SchemaUtils.create(ProjectionGenerations, ActiveProjectionGenerations) }
+    fun createSchema() {
+        transaction(database) {
+            SchemaUtils.create(ProjectionGenerations, ActiveProjectionGenerations)
+        }
+    }
 
     @AfterEach
-    fun dropSchema() =
-        transaction(database) { SchemaUtils.drop(ActiveProjectionGenerations, ProjectionGenerations) }
+    fun dropSchema() {
+        transaction(database) {
+            SchemaUtils.drop(ActiveProjectionGenerations, ProjectionGenerations)
+        }
+    }
 
     @Test
     fun `validated candidate activates only when the expected active pointer revision still matches`() {
@@ -63,15 +86,13 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
                 cursor = cursor(candidate, expectedPosition = 0L, position = FIRST_POSITION),
                 now = NOW,
             ).shouldBeTrue()
-        }
-        transaction(database) {
+
             repository.advance(
                 key = candidateKey,
                 cursor = cursor(candidate, expectedPosition = FIRST_POSITION, position = TARGET_POSITION),
                 now = NOW,
             ).shouldBeTrue()
-        }
-        transaction(database) {
+
             repository.beginValidation(
                 key = candidateKey,
                 fencingToken = candidate.fencingToken,
@@ -80,27 +101,35 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
                 now = NOW,
             ).shouldBeTrue()
         }
-        val result =
-            transaction(database) {
-                repository.activate(
-                    key = candidateKey,
-                    expectedPointerRevision = active.revision,
-                    targetHead = TARGET_POSITION,
-                    canonicalDigest = CANONICAL_DIGEST,
-                    now = NOW,
-                )
-            }
+
+        val result = transaction(database) {
+            repository.activate(
+                key = candidateKey,
+                expectedPointerRevision = active.revision,
+                targetHead = TARGET_POSITION,
+                canonicalDigest = CANONICAL_DIGEST,
+                now = NOW,
+            )
+        }
 
         result shouldBeEqualTo ProjectionActivationResult.Activated
-        transaction(database) { findActive(PROJECTION) }?.generation shouldBeEqualTo candidateKey.generation
-        transaction(database) { findGeneration(ProjectionKey(PROJECTION, active.generation)) }?.state shouldBeEqualTo
-            ProjectionGenerationState.RETIRED
+        transaction(database) {
+            findActive(PROJECTION)
+        }?.generation shouldBeEqualTo candidateKey.generation
+
+        transaction(database) {
+            findGeneration(ProjectionKey(PROJECTION, active.generation))
+        }?.state shouldBeEqualTo ProjectionGenerationState.RETIRED
     }
 
     @Test
     fun `corrupt validation digest cannot activate a completed candidate`() {
-        val active = transaction(database) { repository.initializeActive(PROJECTION, NOW) }
-        val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
+        val active = transaction(database) {
+            repository.initializeActive(PROJECTION, NOW)
+        }
+        val candidate = transaction(database) {
+            repository.start(PROJECTION, TARGET_POSITION, NOW)
+        }
 
         transaction(database) {
             repository.advance(
@@ -108,11 +137,13 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
                 cursor = cursor(candidate, expectedPosition = 0L, position = FIRST_POSITION),
                 now = NOW,
             ).shouldBeTrue()
+
             repository.advance(
                 key = candidate.key,
                 cursor = cursor(candidate, expectedPosition = FIRST_POSITION, position = TARGET_POSITION),
                 now = NOW,
             ).shouldBeTrue()
+
             repository.beginValidation(
                 key = candidate.key,
                 fencingToken = candidate.fencingToken,
@@ -131,7 +162,10 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
                 now = NOW,
             )
         } shouldBeEqualTo ProjectionActivationResult.CandidateNotReady
-        transaction(database) { findActive(PROJECTION) }?.generation shouldBeEqualTo active.generation
+
+        transaction(database) {
+            findActive(PROJECTION)
+        }?.generation shouldBeEqualTo active.generation
     }
 
     @Test
@@ -146,7 +180,7 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
             .workers(2)
             .rounds(1)
             .add {
-                barrier.await(AWAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                barrier.await(AWAIT_TIMEOUT_SECONDS.seconds)
                 results.add(
                     transaction(database) {
                         repository.activate(
@@ -162,64 +196,80 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
 
         results.count { it == ProjectionActivationResult.Activated } shouldBeEqualTo 1
         results.count { it == ProjectionActivationResult.StalePointer } shouldBeEqualTo 1
-        transaction(database) { findActive(PROJECTION) }?.generation shouldBeEqualTo candidate.key.generation
+
+        transaction(database) {
+            findActive(PROJECTION)
+        }?.generation shouldBeEqualTo candidate.key.generation
     }
 
     @Test
     fun `cancellation increments the token and stale completion cannot change the candidate`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
-        val cancelling = transaction(database) { repository.requestCancellation(candidate.key, NOW) }
+        val cancelling = transaction(database) {
+            repository.requestCancellation(candidate.key, NOW)
+        }.shouldNotBeNull()
 
-        cancelling.shouldNotBeNull().fencingToken shouldBeEqualTo candidate.fencingToken + 1
+        cancelling.fencingToken shouldBeEqualTo candidate.fencingToken + 1
         transaction(database) {
             repository.completeCancellation(candidate.key, candidate.fencingToken, NOW).shouldBeFalse()
-        }
-        transaction(database) {
             repository.completeCancellation(candidate.key, cancelling.fencingToken, NOW).shouldBeTrue()
         }
-        transaction(database) { findGeneration(candidate.key) }?.state shouldBeEqualTo
-            ProjectionGenerationState.CANCELLED
+        transaction(database) {
+            findGeneration(candidate.key)
+        }?.state shouldBeEqualTo ProjectionGenerationState.CANCELLED
     }
 
     @Test
     fun `stale cancellation revision cannot advance an otherwise current candidate`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
-        val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
+        val candidate = transaction(database) {
+            repository.start(PROJECTION, TARGET_POSITION, NOW)
+        }
 
         transaction(database) {
             repository.advance(
                 key = candidate.key,
-                cursor =
-                    cursor(
-                        candidate,
-                        cancellationRevision = candidate.cancellationRevision + 1,
-                        expectedPosition = 0L,
-                        position = FIRST_POSITION,
-                    ),
+                cursor = cursor(
+                    candidate,
+                    cancellationRevision = candidate.cancellationRevision + 1,
+                    expectedPosition = 0L,
+                    position = FIRST_POSITION,
+                ),
                 now = NOW,
             ).shouldBeFalse()
         }
-        transaction(database) { findGeneration(candidate.key) }?.currentPosition shouldBeEqualTo 0L
+        transaction(database) {
+            findGeneration(candidate.key)
+        }?.currentPosition shouldBeEqualTo 0L
     }
 
     @Test
     fun `restart recovery converges a cancelling candidate to cancelled`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
-        val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
-        transaction(database) { repository.requestCancellation(candidate.key, NOW) }
+        val candidate = transaction(database) {
+            repository.start(PROJECTION, TARGET_POSITION, NOW)
+        }
+        transaction(database) {
+            repository.requestCancellation(candidate.key, NOW)
+        }
+
         val restartedMaintenance = ProjectionRebuildMaintenance()
 
-        val recovered = transaction(database) { restartedMaintenance.recover(candidate.key, NOW.plusSeconds(1)) }
+        val recovered = transaction(database) {
+            restartedMaintenance.recover(candidate.key, NOW + 1.seconds()).shouldNotBeNull()
+        }
 
-        recovered.shouldNotBeNull().state shouldBeEqualTo ProjectionGenerationState.CANCELLED
+        recovered.state shouldBeEqualTo ProjectionGenerationState.CANCELLED
         recovered.fencingToken shouldBeEqualTo candidate.fencingToken + 1
     }
 
     @Test
     fun `only retryable failure resumes the same candidate with a new fencing token`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
-        val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
+        val candidate = transaction(database) {
+            repository.start(PROJECTION, TARGET_POSITION, NOW)
+        }
 
         transaction(database) {
             repository.fail(
@@ -229,9 +279,11 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
                 now = NOW,
             ).shouldBeTrue()
         }
-        val resumed = transaction(database) { repository.resume(candidate.key, NOW) }
+        val resumed = transaction(database) {
+            repository.resume(candidate.key, NOW).shouldNotBeNull()
+        }
 
-        resumed.shouldNotBeNull().state shouldBeEqualTo ProjectionGenerationState.BUILDING
+        resumed.state shouldBeEqualTo ProjectionGenerationState.BUILDING
         resumed.fencingToken shouldBeEqualTo candidate.fencingToken + 1
     }
 
@@ -268,9 +320,9 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
         }
 
         transaction(database) {
-            maintenance.purgeRetired(PROJECTION, NOW.plusSeconds(1), batchSize = 1)
+            maintenance.purgeRetired(PROJECTION, NOW + 1.seconds(), batchSize = 1)
         } shouldBeEqualTo 1
-        transaction(database) { (findGeneration(activeAsKey(active)) == null).shouldBeTrue() }
+        transaction(database) { findGeneration(activeAsKey(active)).shouldBeNull() }
         transaction(database) { findActive(PROJECTION) }?.generation shouldBeEqualTo candidate.key.generation
     }
 
@@ -311,14 +363,4 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
             expectedPosition = expectedPosition,
             position = position,
         )
-
-    private companion object {
-        private const val PROJECTION = "voucher-lifecycle"
-        private const val FIRST_POSITION = 1L
-        private const val TARGET_POSITION = 2L
-        private const val AWAIT_TIMEOUT_SECONDS = 5L
-        private val CANONICAL_DIGEST = ReceiptDigest.sha256("voucher-projection-generation-v1")
-        private val CORRUPT_DIGEST = ReceiptDigest.sha256("voucher-projection-generation-corrupt-v1")
-        private val NOW = Instant.parse("2026-07-23T13:00:00Z")
-    }
 }

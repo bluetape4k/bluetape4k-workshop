@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.multitenant.domain
 
+import io.bluetape4k.support.requireMatches
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
@@ -7,11 +8,11 @@ import java.io.Serializable
  * 모든 isolation boundary 에서 사용하는 normalized tenant identifier 입니다.
  */
 @JvmInline
-value class TenantId(val value: String) : Serializable {
+value class TenantId(val value: String): Serializable {
 
     init {
         value.requireNotBlank("tenantId")
-        require(value.matches(TENANT_ID_PATTERN)) {
+        value.requireMatches(TENANT_ID_PATTERN, "tenantId") {
             "tenantId must use lowercase letters, digits, or hyphens"
         }
     }

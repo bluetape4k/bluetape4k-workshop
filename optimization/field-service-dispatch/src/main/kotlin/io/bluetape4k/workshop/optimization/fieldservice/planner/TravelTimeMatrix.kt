@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.fieldservice.planner
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import io.bluetape4k.workshop.optimization.fieldservice.domain.InvalidFieldServiceInput
@@ -9,7 +11,7 @@ import java.io.Serializable
 data class CoordinatePair(
     val from: CoordinateId,
     val to: CoordinateId,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -20,12 +22,17 @@ class TravelTimeMatrix(
     val revision: Long,
     coordinateIds: Set<CoordinateId>,
     edges: Map<CoordinatePair, Long>,
-) : Serializable {
+): Serializable {
+
+    companion object: KLogging() {
+        private const val serialVersionUID = 1L
+    }
+
     val coordinateIds: Set<CoordinateId> = coordinateIds.toSet()
     private val edgeMap: Map<CoordinatePair, Long> = edges.toMap()
 
     init {
-        require(revision >= 0L) { "matrix revision must be non-negative" }
+        revision.requireZeroOrPositiveNumber("revision")
         if (this.coordinateIds.size > FieldServiceLimits.MAX_COORDINATES) {
             throw InvalidFieldServiceInput("matrix coordinates exceed configured limit")
         }
@@ -42,14 +49,11 @@ class TravelTimeMatrix(
         }
     }
 
-    fun lookup(from: CoordinateId, to: CoordinateId): Long? = edgeMap[CoordinatePair(from, to)]
+    fun lookup(from: CoordinateId, to: CoordinateId): Long? =
+        edgeMap[CoordinatePair(from, to)]
 
     fun updated(nextRevision: Long, nextEdges: Map<CoordinatePair, Long>): TravelTimeMatrix =
         TravelTimeMatrix(nextRevision, coordinateIds, nextEdges)
 
     fun edgeCount(): Int = edgeMap.size
-
-    companion object {
-        private const val serialVersionUID = 1L
-    }
 }

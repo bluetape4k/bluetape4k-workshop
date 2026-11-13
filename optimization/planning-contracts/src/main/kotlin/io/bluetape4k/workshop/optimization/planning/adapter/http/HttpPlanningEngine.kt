@@ -4,6 +4,7 @@ import io.bluetape4k.http.hc5.classic.productionVirtualThreadHttpClientOf
 import io.bluetape4k.http.hc5.entity.readBodyBytes
 import io.bluetape4k.http.hc5.entity.readBodyString
 import io.bluetape4k.io.ByteLimitExceededException
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningEngine
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningResult
@@ -19,7 +20,7 @@ import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.HttpEntity
 import org.apache.hc.core5.http.io.entity.StringEntity
 import tools.jackson.databind.ObjectMapper
-import java.util.UUID
+import java.util.*
 
 internal class PlanningProviderException(message: String): RuntimeException(message)
 
@@ -33,6 +34,13 @@ internal abstract class HttpPlanningEngine(
         builder = { disableAutomaticRetries() },
     ),
 ): PlanningEngine, AutoCloseable {
+
+    companion object: KLogging() {
+        private const val MAX_RESPONSE_BYTES = 64 * 1024
+        private const val RESPONSE_LIMIT_MESSAGE = "provider response exceeded the configured limit"
+        private const val MAX_EXPLANATIONS = 20
+        private const val MAX_EXPLANATION_LENGTH = 240
+    }
 
     private val normalizedBaseUrl = baseUrl.trimEnd('/')
 
@@ -127,13 +135,6 @@ internal abstract class HttpPlanningEngine(
         val scoreSummary: String,
         val constraintExplanations: List<String> = emptyList(),
     )
-
-    companion object {
-        private const val MAX_RESPONSE_BYTES = 64 * 1024
-        private const val RESPONSE_LIMIT_MESSAGE = "provider response exceeded the configured limit"
-        private const val MAX_EXPLANATIONS = 20
-        private const val MAX_EXPLANATION_LENGTH = 240
-    }
 }
 
 internal class TimefoldPlatformPlanningEngine(

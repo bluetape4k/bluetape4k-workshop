@@ -3,25 +3,40 @@ package io.bluetape4k.workshop.commerce.voucherpool.query
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKey
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKeyRing
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class VoucherPoolQueryServiceTest {
+
+    private companion object: KLogging() {
+        const val TENANT = "tenant-query"
+        const val PRINCIPAL = "principal-query"
+        val OBSERVED_AT: Instant = Instant.parse("2026-07-21T00:00:00Z")
+    }
+
     private val executor = mockk<VoucherPoolJdbcExecutor>()
     private val store = mockk<VoucherPoolQueryStore>()
     private val digests = testDigests()
     private val service = JdbcVoucherPoolQueryService(executor, store, digests)
+
+    @BeforeEach
+    fun beforeEach() {
+        clearMocks(executor, store)
+    }
 
     @Test
     fun `customer reservation uses foreground lane and final owner digest predicate`() {
@@ -30,18 +45,24 @@ internal class VoucherPoolQueryServiceTest {
         val expected = reservation(reservationId, campaignId)
         var ownerDigest: ByteArray? = null
         foregroundTransactionsExecuteInline()
-        every { store.resolveReservationCampaign(TENANT, reservationId) } returns campaignId
-        every { store.findUserIdentityKeyVersion(TENANT, campaignId) } returns digests.currentUserIdentityKeyVersion
-        every { store.findOwnedReservation(TENANT, reservationId, any()) } answers {
+
+        every {
+            store.resolveReservationCampaign(TENANT, reservationId)
+        } returns campaignId
+        every {
+            store.findUserIdentityKeyVersion(TENANT, campaignId)
+        } returns digests.currentUserIdentityKeyVersion
+        every {
+            store.findOwnedReservation(TENANT, reservationId, any())
+        } answers {
             ownerDigest = thirdArg<ByteArray>().copyOf()
             expected
         }
 
         service.reservation(TENANT, PRINCIPAL, reservationId) shouldBeEqualTo expected
 
-        checkNotNull(ownerDigest).contentEquals(
-            digests.userIdentity(TENANT, campaignId, PRINCIPAL).copyBytes(),
-        ).shouldBeTrue()
+        ownerDigest shouldContentEqual digests.userIdentity(TENANT, campaignId, PRINCIPAL).copyBytes()
+
         verify(exactly = 1) { executor.foregroundTransaction<ReservationReadModel?>(any()) }
         verify(exactly = 0) { executor.operatorTransaction<Any?>(any()) }
     }
@@ -51,9 +72,16 @@ internal class VoucherPoolQueryServiceTest {
         val reservationId = UUID.randomUUID()
         val campaignId = UUID.randomUUID()
         foregroundTransactionsExecuteInline()
-        every { store.resolveReservationCampaign(TENANT, reservationId) } returns campaignId
-        every { store.findUserIdentityKeyVersion(TENANT, campaignId) } returns digests.currentUserIdentityKeyVersion
-        every { store.findOwnedReservation(TENANT, reservationId, any()) } returns null
+
+        every {
+            store.resolveReservationCampaign(TENANT, reservationId)
+        } returns campaignId
+        every {
+            store.findUserIdentityKeyVersion(TENANT, campaignId)
+        } returns digests.currentUserIdentityKeyVersion
+        every {
+            store.findOwnedReservation(TENANT, reservationId, any())
+        } returns null
 
         service.reservation(TENANT, "wrong-principal", reservationId).shouldBeNull()
 
@@ -67,6 +95,7 @@ internal class VoucherPoolQueryServiceTest {
         val campaignId = UUID.randomUUID()
         val page = StuckReservationPage(emptyList(), null, OBSERVED_AT)
         operatorTransactionsExecuteInline()
+
         every { store.findCampaign(TENANT, campaignId) } returns null
         every { store.findBatch(TENANT, batchId) } returns null
         every { store.scopeExists(TENANT, null, null) } returns true
@@ -85,6 +114,7 @@ internal class VoucherPoolQueryServiceTest {
         val campaignId = UUID.randomUUID()
         val batchId = UUID.randomUUID()
         operatorTransactionsExecuteInline()
+
         every { store.scopeExists(TENANT, campaignId, batchId) } returns false
         every { store.scopeExists(TENANT, campaignId, null) } returns false
 
@@ -108,7 +138,9 @@ internal class VoucherPoolQueryServiceTest {
     }
 
     private fun foregroundTransactionsExecuteInline() {
-        every { executor.foregroundTransaction<ReservationReadModel?>(any()) } answers {
+        every {
+            executor.foregroundTransaction<ReservationReadModel?>(any())
+        } answers {
             firstArg<() -> ReservationReadModel?>().invoke()
         }
     }
@@ -117,7 +149,7 @@ internal class VoucherPoolQueryServiceTest {
         every { executor.operatorTransaction<Any?>(any()) } answers { firstArg<() -> Any?>().invoke() }
     }
 
-    private fun reservation(reservationId: UUID, campaignId: UUID) =
+    private fun reservation(reservationId: UUID, campaignId: UUID): ReservationReadModel =
         ReservationReadModel(
             reservationId = reservationId,
             campaignId = campaignId,
@@ -136,23 +168,17 @@ internal class VoucherPoolQueryServiceTest {
         VoucherDigestService(
             stableDedupKey = DigestKey.of(1, material(1)),
             commandTombstoneKey = DigestKey.of(2, material(2)),
-            rotatingKeys =
-                setOf(
-                    DigestPurpose.VERIFICATION,
-                    DigestPurpose.USER_IDENTITY,
-                    DigestPurpose.REDIS_SIGNAL,
-                    DigestPurpose.AUDIT,
-                ).associateWith { purpose ->
-                    val seed = 10 + purpose.ordinal
-                    DigestKeyRing.of(DigestKey.of(seed, material(seed)))
-                },
+            rotatingKeys = setOf(
+                DigestPurpose.VERIFICATION,
+                DigestPurpose.USER_IDENTITY,
+                DigestPurpose.REDIS_SIGNAL,
+                DigestPurpose.AUDIT,
+            ).associateWith { purpose ->
+                val seed = 10 + purpose.ordinal
+                DigestKeyRing(DigestKey(seed, material(seed)))
+            },
         )
 
-    private fun material(seed: Int): ByteArray = ByteArray(32) { index -> (seed + index).toByte() }
-
-    private companion object {
-        const val TENANT = "tenant-query"
-        const val PRINCIPAL = "principal-query"
-        val OBSERVED_AT: Instant = Instant.parse("2026-07-21T00:00:00Z")
-    }
+    private fun material(seed: Int): ByteArray =
+        ByteArray(32) { index -> (seed + index).toByte() }
 }

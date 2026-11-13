@@ -27,7 +27,7 @@ import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class OrderLifecycleSnapshot(
     val order: OrderSnapshot,
@@ -39,7 +39,7 @@ internal data class OrderLifecycleSnapshot(
     val refunds: List<RefundSnapshot>,
     val audit: List<AuditSnapshot>,
     val operations: OperationsSnapshot,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -50,7 +50,7 @@ internal data class OrderSnapshot(
     val status: OrderStatus,
     val revision: Long,
     val cancelReason: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -61,7 +61,7 @@ internal data class OrderLineSnapshot(
     val sku: String,
     val quantity: Int,
     val cancelledQuantity: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -71,7 +71,7 @@ internal data class PaymentSnapshot(
     val id: UUID,
     val status: PaymentStatus,
     val revision: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -82,7 +82,7 @@ internal data class ReservationSnapshot(
     val status: ReservationStatus,
     val revision: Long,
     val reasonCode: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -95,7 +95,7 @@ internal data class FulfillmentSnapshot(
     val revision: Long,
     val cancelReason: String?,
     val lines: List<FulfillmentLineSnapshot>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -104,7 +104,7 @@ internal data class FulfillmentSnapshot(
 internal data class FulfillmentLineSnapshot(
     val lineId: UUID,
     val quantity: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -117,7 +117,7 @@ internal data class CancellationSnapshot(
     val status: CancellationStatus,
     val revision: Long,
     val reasonCode: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -128,7 +128,7 @@ internal data class RefundSnapshot(
     val status: RefundStatus,
     val revision: Long,
     val reasonCode: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -144,7 +144,7 @@ internal data class AuditSnapshot(
     val reasonCode: String?,
     val actorType: String,
     val occurredAt: Instant?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -153,7 +153,7 @@ internal data class AuditSnapshot(
 internal data class OperationsSnapshot(
     val publications: PublicationSnapshot,
     val unresolvedProviderEvents: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -166,7 +166,7 @@ internal data class PublicationSnapshot(
     val resubmitted: Int,
     val completed: Int,
     val oldestIncompleteLagSeconds: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -187,59 +187,57 @@ internal class OrderLifecycleQueryService(
     private val publications: PublicationSnapshotRepository,
     private val clock: Clock,
 ) {
+    companion object: KLogging()
+
     @Transactional(readOnly = true)
     fun snapshot(orderId: UUID): OrderLifecycleSnapshot {
         val order = orders.findById(orderId)
         val payment = payments.findByOrderId(orderId) ?: error("payment attempt missing")
         val reservation = reservations.findByOrderId(orderId) ?: error("inventory reservation missing")
         val links = fulfillmentLines.findByOrderId(orderId).groupBy { it.fulfillmentGroupId }
+
         return OrderLifecycleSnapshot(
             order = OrderSnapshot(order.id, order.status, order.revision, order.cancelReason),
-            lines =
-                lines.findByOrderId(orderId).map {
-                    OrderLineSnapshot(it.lineId, it.sku, it.quantity, it.cancelledQuantity)
-                },
+            lines = lines.findByOrderId(orderId).map {
+                OrderLineSnapshot(it.lineId, it.sku, it.quantity, it.cancelledQuantity)
+            },
             payment = PaymentSnapshot(payment.id, payment.status, payment.revision),
-            reservation =
-                ReservationSnapshot(
-                    reservation.id,
-                    reservation.status,
-                    reservation.revision,
-                    reservation.reasonCode
-                ),
-            fulfillments =
-                fulfillments.findByOrderId(orderId).map {
-                    FulfillmentSnapshot(
-                        it.id,
-                        it.groupReference,
-                        it.status,
-                        it.revision,
-                        it.cancelReason,
-                        links[it.id].orEmpty().map { link -> FulfillmentLineSnapshot(link.lineId, link.quantity) }
-                    )
-                },
-            cancellations =
-                cancellations.findByOrderId(orderId).map {
-                    CancellationSnapshot(
-                        it.id,
-                        it.lineId,
-                        it.quantity,
-                        it.status,
-                        it.revision,
-                        it.reasonCode
-                    )
-                },
-            refunds =
-                refunds.findByOrderId(orderId).map {
-                    RefundSnapshot(it.id, it.status, it.revision, it.reasonCode)
-                },
+            reservation = ReservationSnapshot(
+                reservation.id,
+                reservation.status,
+                reservation.revision,
+                reservation.reasonCode
+            ),
+            fulfillments = fulfillments.findByOrderId(orderId).map {
+                FulfillmentSnapshot(
+                    it.id,
+                    it.groupReference,
+                    it.status,
+                    it.revision,
+                    it.cancelReason,
+                    links[it.id].orEmpty().map { link -> FulfillmentLineSnapshot(link.lineId, link.quantity) }
+                )
+            },
+            cancellations = cancellations.findByOrderId(orderId).map {
+                CancellationSnapshot(
+                    it.id,
+                    it.lineId,
+                    it.quantity,
+                    it.status,
+                    it.revision,
+                    it.reasonCode
+                )
+            },
+            refunds = refunds.findByOrderId(orderId).map {
+                RefundSnapshot(it.id, it.status, it.revision, it.reasonCode)
+            },
             audit = audits.findByOrderId(orderId).map(::toSnapshot),
             operations = OperationsSnapshot(publicationSnapshot(), providerEvents.countUnresolved())
         ).also { snapshot ->
             log.debug {
                 "order_snapshot_read orderId=$orderId orderRevision=${snapshot.order.revision} " +
-                    "fulfillmentCount=${snapshot.fulfillments.size} auditCount=${snapshot.audit.size} " +
-                    "unresolvedProviderEvents=${snapshot.operations.unresolvedProviderEvents}"
+                        "fulfillmentCount=${snapshot.fulfillments.size} auditCount=${snapshot.audit.size} " +
+                        "unresolvedProviderEvents=${snapshot.operations.unresolvedProviderEvents}"
             }
         }
     }
@@ -248,24 +246,26 @@ internal class OrderLifecycleQueryService(
     fun auditAfter(
         orderId: UUID,
         afterId: Long,
-    ): List<AuditSnapshot> = audits.findByOrderId(orderId, afterId).map(::toSnapshot)
+    ): List<AuditSnapshot> =
+        audits.findByOrderId(orderId, afterId)
+            .map(::toSnapshot)
 
     private fun publicationSnapshot(): PublicationSnapshot {
         val summary = publications.snapshot()
+
         return PublicationSnapshot(
             published = summary.published,
             processing = summary.processing,
             failed = summary.failed,
             resubmitted = summary.resubmitted,
             completed = summary.completed,
-            oldestIncompleteLagSeconds =
-                summary.oldestIncomplete
-                    ?.let { Duration.between(it, Instant.now(clock)).seconds.coerceAtLeast(0) }
-                    ?: 0
+            oldestIncompleteLagSeconds = summary.oldestIncomplete
+                ?.let { Duration.between(it, Instant.now(clock)).seconds.coerceAtLeast(0) }
+                ?: 0
         )
     }
 
-    private fun toSnapshot(record: LifecycleAuditRecord) =
+    private fun toSnapshot(record: LifecycleAuditRecord): AuditSnapshot =
         AuditSnapshot(
             id = record.id,
             aggregateType = record.aggregateType,
@@ -277,6 +277,4 @@ internal class OrderLifecycleQueryService(
             actorType = record.actorType,
             occurredAt = record.occurredAt
         )
-
-    companion object : KLogging()
 }

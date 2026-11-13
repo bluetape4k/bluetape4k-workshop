@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence.repository
 
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectInput
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.mapper.toImageObjectDTO
@@ -21,7 +23,9 @@ import org.springframework.stereotype.Repository
  *   [io.bluetape4k.workshop.imageprocessing.advanced.persistence.config.ImagePersistenceDatabaseInitializer]가 만든 `(image_asset_id, kind, variant_name)` unique 인덱스입니다.
  */
 @Repository
-class ImageObjectRepository : LongAuditableJdbcRepository<ImageObjectDTO, ImageObjectTable> {
+class ImageObjectRepository: LongAuditableJdbcRepository<ImageObjectDTO, ImageObjectTable> {
+
+    private companion object: KLogging()
 
     override val table = ImageObjectTable
 
@@ -41,6 +45,7 @@ class ImageObjectRepository : LongAuditableJdbcRepository<ImageObjectDTO, ImageO
      */
     fun batchUpsertObjects(assetId: Long, objects: List<ImageObjectInput>) {
         if (objects.isEmpty()) return
+        log.debug { "Batch upsert objects. assetId=$assetId, objects=$objects" }
         table.batchUpsert(
             objects,
             ImageObjectTable.imageAssetId,
@@ -66,4 +71,5 @@ class ImageObjectRepository : LongAuditableJdbcRepository<ImageObjectDTO, ImageO
         table.selectAll()
             .where { ImageObjectTable.imageAssetId eq assetId }
             .map { it.toImageObjectDTO() }
+            .onEach { log.debug { "assetId=$assetId, image object=$it" } }
 }

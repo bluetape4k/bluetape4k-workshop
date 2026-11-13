@@ -26,7 +26,7 @@ import kotlin.concurrent.withLock
  */
 class LanguageDetectionService {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val detector: LanguageDetector = allLanguageDetector {
         withMinimumRelativeDistance(0.0)

@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     // alias(libs.plugins.graalvm.native)
     alias(libs.plugins.exposed)
+    kotlin("kapt")
 }
 
 exposed {

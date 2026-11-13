@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.application
 
+import io.bluetape4k.workshop.commerce.usagebilling.query.config.QueryMetrics
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryApplyResult
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
-import io.bluetape4k.workshop.commerce.usagebilling.query.config.QueryMetrics
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

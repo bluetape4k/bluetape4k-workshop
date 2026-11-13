@@ -132,7 +132,7 @@ fenced execution을 관찰한다. 그러나 `LettuceLeaderElector`의 history re
 3. **`JobSafetyAuditPayloadEncoder`**
    - `LeaderAuditPayloadEncoder`를 구현하고 `bluetape4k-jackson3`의
      `Jackson.defaultJsonMapper`로 deterministic JSON을 만든다. 문자열 경유
-     `writeValueAsString(...).toByteArray()` 대신 `writeValueAsBytes(...)`를
+     `writeValueAsString(...).toUtf8Bytes()` 대신 `writeValueAsBytes(...)`를
      사용하고, configured `maxPayloadBytes`를 넘으면 `LeaderAuditHttpPayload`
      생성 전에 명시적 terminal encoding failure로 거부한다.
    - `History`에는 occurredAt/kind/status/duration/error type과 정제된

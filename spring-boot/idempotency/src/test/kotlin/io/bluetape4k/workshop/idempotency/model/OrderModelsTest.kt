@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.idempotency.model
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class OrderModelsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `order request rejects blank product id`() {

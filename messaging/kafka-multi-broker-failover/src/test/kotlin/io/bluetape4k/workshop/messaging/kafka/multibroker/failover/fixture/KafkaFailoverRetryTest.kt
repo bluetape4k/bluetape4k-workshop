@@ -2,10 +2,13 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.apache.kafka.common.errors.TimeoutException
 import org.junit.jupiter.api.Test
 
 class KafkaFailoverRetryTest {
+
+    companion object: KLogging()
 
     @Test
     fun `retry count excludes the first admin attempt and caps at five`() {

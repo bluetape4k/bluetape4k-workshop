@@ -1,21 +1,22 @@
 package io.bluetape4k.okio
 
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8String
 import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.EOFException
 import okio.IOException
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.*
-import io.bluetape4k.assertions.assertFailsWith
 
 class BufferTest: AbstractOkioTest() {
 
@@ -181,7 +182,7 @@ class BufferTest: AbstractOkioTest() {
         val buffer = bufferOf(expected)
         val out = ByteArrayOutputStream()
         buffer.copyTo(out)
-        val outString = out.toByteArray().toString(Charsets.UTF_8)
+        val outString = out.toByteArray().toUtf8String()
         outString shouldBeEqualTo expected
         buffer.readUtf8() shouldBeEqualTo expected
     }
@@ -206,7 +207,7 @@ class BufferTest: AbstractOkioTest() {
         val buffer = bufferOf(expected)
         val out = ByteArrayOutputStream()
         buffer.writeTo(out)
-        val outString = out.toByteArray().toString(Charsets.UTF_8)
+        val outString = out.toByteArray().toUtf8String()
         outString shouldBeEqualTo expected
         buffer.size shouldBeEqualTo 0L
     }

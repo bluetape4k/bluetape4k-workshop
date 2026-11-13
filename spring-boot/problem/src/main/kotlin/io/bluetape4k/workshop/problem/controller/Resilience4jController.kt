@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/resilience4j")
 class Resilience4jController {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val circuitBreaker = CircuitBreaker.ofDefaults("default")
     private val retry = Retry.ofDefaults("default")

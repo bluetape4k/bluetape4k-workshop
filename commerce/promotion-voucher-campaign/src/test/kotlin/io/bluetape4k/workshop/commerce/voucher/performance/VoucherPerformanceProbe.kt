@@ -2,13 +2,13 @@ package io.bluetape4k.workshop.commerce.voucher.performance
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import jdk.jfr.Recording
 import jdk.jfr.consumer.RecordingFile
-import java.lang.management.ManagementFactory
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -41,7 +41,7 @@ internal data class VoucherStressEvidence(
 /** repository code를 바꾸지 않고 JDBC connection과 statement execution boundary를 계산합니다. */
 internal class VoucherJdbcProbeDataSource(
     private val delegate: DataSource,
-) : DataSource by delegate {
+): DataSource by delegate {
     private val connectionAcquisitions = AtomicLong()
     private val statementExecutions = AtomicLong()
 
@@ -73,7 +73,7 @@ internal class VoucherJdbcProbeDataSource(
         }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T : Any> proxy(
+    private fun <T: Any> proxy(
         target: T,
         contract: Class<*>,
         afterInvocation: (Method, Any?) -> Any?,
@@ -126,7 +126,7 @@ internal class VoucherPerformanceProbe(
     private val jdbc: VoucherJdbcProbeDataSource,
     private val pgStatDataSource: DataSource,
     private val applicationName: String,
-) : AutoCloseable {
+): AutoCloseable {
     private val running = AtomicBoolean(true)
     private val finished = AtomicBoolean()
     private val samples = ConcurrentLinkedQueue<OperationSample>()
@@ -221,83 +221,83 @@ internal class VoucherPerformanceProbe(
                 "schemaVersion" to "1.0",
                 "gitSha" to gitSha(),
                 "environment" to
-                    mapOf(
-                        "javaVersion" to System.getProperty("java.version"),
-                        "os" to "${System.getProperty("os.name")} ${System.getProperty("os.version")}",
-                        "cpuCount" to Runtime.getRuntime().availableProcessors(),
-                        "containerImage" to containerImage,
-                    ),
+                        mapOf(
+                            "javaVersion" to System.getProperty("java.version"),
+                            "os" to "${System.getProperty("os.name")} ${System.getProperty("os.version")}",
+                            "cpuCount" to Runtime.getRuntime().availableProcessors(),
+                            "containerImage" to containerImage,
+                        ),
                 "seed" to seed,
                 "profile" to profile,
                 "configuration" to
-                    mapOf(
-                        "concurrency" to concurrency,
-                        "redisMode" to redisMode,
-                        "hotspot" to true,
-                        "sampleIntervalMillis" to SAMPLE_INTERVAL,
-                    ),
+                        mapOf(
+                            "concurrency" to concurrency,
+                            "redisMode" to redisMode,
+                            "hotspot" to true,
+                            "sampleIntervalMillis" to SAMPLE_INTERVAL,
+                        ),
                 "operationCounts" to operationCounts,
                 "statusCounts" to statusCounts,
                 "latencyNanos" to
-                    mapOf(
-                        "p50" to percentile(latencies, 0.50),
-                        "p95" to percentile(latencies, 0.95),
-                        "p99" to percentile(latencies, 0.99),
-                    ),
+                        mapOf(
+                            "p50" to percentile(latencies, 0.50),
+                            "p95" to percentile(latencies, 0.95),
+                            "p99" to percentile(latencies, 0.99),
+                        ),
                 "throughputPerSecond" to samples.size * TimeUnit.SECONDS.toNanos(1).toDouble() / elapsedNanos,
                 "maxGauges" to
-                    mapOf(
-                        "hikariActive" to hikariActiveMax.get(),
-                        "hikariIdle" to hikariIdleMax.get(),
-                        "hikariPending" to hikariPendingMax.get(),
-                        "databasePermits" to permitMax.get(),
-                        "laneInUse" to laneActiveMax.mapKeys { it.key.name }.mapValues { it.value.get() },
-                        "laneWaiting" to laneWaitMax.mapKeys { it.key.name }.mapValues { it.value.get() },
-                    ),
+                        mapOf(
+                            "hikariActive" to hikariActiveMax.get(),
+                            "hikariIdle" to hikariIdleMax.get(),
+                            "hikariPending" to hikariPendingMax.get(),
+                            "databasePermits" to permitMax.get(),
+                            "laneInUse" to laneActiveMax.mapKeys { it.key.name }.mapValues { it.value.get() },
+                            "laneWaiting" to laneWaitMax.mapKeys { it.key.name }.mapValues { it.value.get() },
+                        ),
                 "roundTrips" to
-                    mapOf(
-                        "postgresTransactions" to jdbc.connectionAcquisitions(),
-                        "postgresStatements" to jdbc.statementExecutions(),
-                        "redisCommands" to redisCommands.get(),
-                        "redisSucceeded" to redisSucceeded.get(),
-                        "redisFailed" to redisFailed.get(),
-                        "redisLatencyNanos" to redisLatencyNanos.get(),
-                    ),
+                        mapOf(
+                            "postgresTransactions" to jdbc.connectionAcquisitions(),
+                            "postgresStatements" to jdbc.statementExecutions(),
+                            "redisCommands" to redisCommands.get(),
+                            "redisSucceeded" to redisSucceeded.get(),
+                            "redisFailed" to redisFailed.get(),
+                            "redisLatencyNanos" to redisLatencyNanos.get(),
+                        ),
                 "allocation" to
-                    mapOf(
-                        "sampledBytes" to jfr.allocationBytes,
-                        "bytesPerOperation" to jfr.allocationBytes.toDouble() / samples.size.coerceAtLeast(1),
-                    ),
+                        mapOf(
+                            "sampledBytes" to jfr.allocationBytes,
+                            "bytesPerOperation" to jfr.allocationBytes.toDouble() / samples.size.coerceAtLeast(1),
+                        ),
                 "gc" to mapOf("pauseCount" to jfr.gcPauseCount, "pauseNanos" to jfr.gcPauseNanos),
                 "jfrEvents" to mapOf("threadPark" to jfr.threadParks, "monitorEnter" to jfr.monitorEnters),
                 "pgStatActivity" to
-                    mapOf(
-                        "sampleCount" to pgSamples.size,
-                        "maxConsecutiveWaitSamples" to maxConsecutiveWaitSamples,
-                        "samples" to pgSamples.toList(),
-                    ),
+                        mapOf(
+                            "sampleCount" to pgSamples.size,
+                            "maxConsecutiveWaitSamples" to maxConsecutiveWaitSamples,
+                            "samples" to pgSamples.toList(),
+                        ),
                 "correctness" to
-                    mapOf(
-                        "capacityInvariant" to capacityInvariant,
-                        "deterministicLockTimeoutContractPassed" to deterministicLockTimeoutContractPassed,
-                        "resourceLeaks" to resourceLeaks,
-                    ),
+                        mapOf(
+                            "capacityInvariant" to capacityInvariant,
+                            "deterministicLockTimeoutContractPassed" to deterministicLockTimeoutContractPassed,
+                            "resourceLeaks" to resourceLeaks,
+                        ),
                 "artifacts" to mapOf("json" to jsonPath.fileName.toString(), "jfr" to jfrPath.fileName.toString()),
                 "probeSources" to
-                    listOf(
-                        "HikariPoolMXBean",
-                        "DatabasePermitGate fair semaphore lane probes",
-                        "VoucherJdbcProbeDataSource JDBC statement interceptor",
-                        "Instrumented Lettuce-backed RateLimiter command boundary",
-                        "PostgreSQL pg_stat_activity 10ms samples",
-                        "JDK Flight Recorder allocation, park, monitor, and GC events",
-                        "VoucherConcurrencyIntegrationTest deterministic SET LOCAL lock_timeout contract",
-                    ),
+                        listOf(
+                            "HikariPoolMXBean",
+                            "DatabasePermitGate fair semaphore lane probes",
+                            "VoucherJdbcProbeDataSource JDBC statement interceptor",
+                            "Instrumented Lettuce-backed RateLimiter command boundary",
+                            "PostgreSQL pg_stat_activity 10ms samples",
+                            "JDK Flight Recorder allocation, park, monitor, and GC events",
+                            "VoucherConcurrencyIntegrationTest deterministic SET LOCAL lock_timeout contract",
+                        ),
             )
         Jackson.defaultJsonMapper.writeValue(jsonPath.toFile(), document)
         log.info {
             "voucher_stress_evidence_written profile=$profile operations=${samples.size} " +
-                "hikariActiveMax=${evidence.hikariActiveMax} permitMax=${evidence.databasePermitMax}"
+                    "hikariActiveMax=${evidence.hikariActiveMax} permitMax=${evidence.databasePermitMax}"
         }
         return evidence
     }
@@ -352,7 +352,7 @@ internal class VoucherPerformanceProbe(
     private fun stopSampling() {
         running.set(false)
         sampler.interrupt()
-        sampler.join(Duration.ofSeconds(5))
+        sampler.join(5.seconds())
         sampleRuntime()
     }
 
@@ -415,7 +415,7 @@ internal class VoucherPerformanceProbe(
                 .redirectErrorStream(true)
                 .start()
                 .run {
-                    check(waitFor(5, TimeUnit.SECONDS) && exitValue() == 0)
+                    check(waitFor(5.seconds()) && exitValue() == 0)
                     inputStream.bufferedReader().use { it.readText().trim() }
                 }
         }.getOrElse { "unknown" }
@@ -432,7 +432,7 @@ internal class VoucherPerformanceProbe(
         val monitorEnters: Long,
     )
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val SAMPLE_INTERVAL = 10L
         private val EXPECTED_STATUSES = listOf(200, 201, 409, 429, 503)
     }

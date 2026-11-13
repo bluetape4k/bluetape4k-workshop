@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.snapshot
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStorePort
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStoreRead
@@ -9,7 +10,7 @@ import java.time.Instant
 
 internal const val MAX_FOREGROUND_REPLAY_EVENTS = 10_000
 private const val MAX_FOREGROUND_REPLAY_SECONDS = 2L
-private val MAX_FOREGROUND_REPLAY_DURATION: Duration = Duration.ofSeconds(MAX_FOREGROUND_REPLAY_SECONDS)
+private val MAX_FOREGROUND_REPLAY_DURATION: Duration = MAX_FOREGROUND_REPLAY_SECONDS.seconds()
 
 internal class RehydrationLimitExceeded(message: String) : IllegalStateException(message)
 
@@ -47,11 +48,16 @@ internal class BoundedRehydrator(
         var afterVersion = snapshot?.metadata?.streamVersion ?: 0L
         val snapshotVersion = afterVersion
         var replayed = 0
+
         while (true) {
             requireWithinBudget(startedAt, replayed)
             val page = eventStore.load(EventStoreRead(request.stream, afterVersion))
-            if (page.committedHead < afterVersion) return rehydrateFrom(request, null, startedAt)
-            if (page.events.isEmpty()) return RehydratedState(state, snapshotVersion, replayed)
+            if (page.committedHead < afterVersion) {
+                return rehydrateFrom(request, null, startedAt)
+            }
+            if (page.events.isEmpty()) {
+                return RehydratedState(state, snapshotVersion, replayed)
+            }
             replayed += page.events.size
             requireWithinBudget(startedAt, replayed)
             state = request.apply(state, page.events)
@@ -68,6 +74,7 @@ internal class BoundedRehydrator(
 
     private fun requireWithinBudget(startedAt: Instant, replayed: Int) {
         if (replayed > maxEvents) throw RehydrationLimitExceeded("event replay exceeds $maxEvents events")
+
         if (Duration.between(startedAt, now()) > maxDuration) {
             throw RehydrationLimitExceeded("event replay exceeds $maxDuration")
         }

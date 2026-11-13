@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.optimization.planning.adapter.fake
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningEngine
-import io.bluetape4k.workshop.optimization.planning.domain.PlanningResult
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
+import io.bluetape4k.workshop.optimization.planning.domain.PlanningResult
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningRevision
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningSubmission
@@ -15,12 +17,15 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal class DeterministicPlanningEngine: PlanningEngine {
 
+    companion object: KLogging()
+
     override val provider: PlanningProvider = PlanningProvider.FAKE
 
     private val results = ConcurrentHashMap<ProviderRequestId, PlanningResult>()
 
     override fun submit(request: PlanningSubmission): PlanningSubmissionResult {
         val providerRequestId = ProviderRequestId("fake-${request.requestId}")
+
         results.computeIfAbsent(providerRequestId) {
             PlanningResult(
                 requestId = request.requestId,
@@ -29,10 +34,13 @@ internal class DeterministicPlanningEngine: PlanningEngine {
                 status = PlanningStatus.SUCCEEDED,
                 scoreSummary = "0hard/0medium/-1soft",
                 constraintExplanations = listOf("workload balanced within configured limits"),
-            )
+            ).also {
+                log.debug { "add planning result. $it" }
+            }
         }
         return PlanningSubmissionResult(providerRequestId, PlanningStatus.SUBMITTED)
     }
 
-    override fun status(providerRequestId: ProviderRequestId): PlanningResult? = results[providerRequestId]
+    override fun status(providerRequestId: ProviderRequestId): PlanningResult? =
+        results[providerRequestId]
 }

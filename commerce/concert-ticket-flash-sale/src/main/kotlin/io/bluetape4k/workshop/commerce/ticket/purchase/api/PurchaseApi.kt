@@ -8,7 +8,7 @@ import io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.api.SalePolicySnapshot
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** 참조한 sale policy 아래에서 owner-scoped purchase 하나를 시작합니다. */
 data class StartPurchase(
@@ -21,7 +21,7 @@ data class StartPurchase(
     val quantity: Int,
     val grant: ConsumeGrant,
     val policy: SalePolicySnapshot,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -31,7 +31,7 @@ data class StartPurchase(
 data class CancelPurchase(
     val attemptId: UUID,
     val buyerSubjectId: UUID,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -44,7 +44,7 @@ data class ApplyPaymentOutcome(
     val claimToken: UUID,
     val claimRevision: Long,
     val outcome: PaymentOutcome,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -58,7 +58,7 @@ data class ApplyTicketOutcome(
     val expectedRevision: Long,
     val outcome: TicketEffectOutcome,
     val disposition: TicketDisposition,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -70,7 +70,7 @@ data class PurchaseSnapshot(
     val state: PurchaseState,
     val revision: Long,
     val updatedAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -90,7 +90,10 @@ fun interface PurchaseQueries {
     fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot?
 }
 
-enum class ApplyResult { APPLIED, STALE }
+enum class ApplyResult {
+    APPLIED,
+    STALE
+}
 
 /** payment module에서만 사용하는 fenced payment-result boundary입니다. */
 fun interface PaymentOutcomeCommands {
@@ -102,7 +105,7 @@ data class AuthorizationRequested(
     val eventId: UUID,
     val attemptId: UUID,
     val operationId: UUID,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -114,7 +117,7 @@ data class TicketEffectRequested(
     val orderId: UUID,
     val operationId: UUID,
     val disposition: TicketDisposition,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

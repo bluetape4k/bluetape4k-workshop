@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.admission
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requirePositiveNumber
@@ -38,7 +40,7 @@ internal class DatabasePermitGate(
     foregroundPermits: Int = 12,
     workerPermits: Int = 1,
     sseMaintenancePermits: Int = 3,
-    private val acquireTimeout: Duration = Duration.ofMillis(250),
+    private val acquireTimeout: Duration = 250.millis(),
     private val metrics: DatabasePermitMetrics = DatabasePermitMetrics.NONE,
 ) {
     private val permitCapacities =
@@ -145,6 +147,6 @@ internal class DatabasePermitGate(
     fun waitingThreads(lane: DatabaseLane): Int = semaphores.getValue(lane).queueLength
 
     companion object : KLogging() {
-        private val RETRY_AFTER: Duration = Duration.ofSeconds(1)
+        private val RETRY_AFTER: Duration = 1.seconds()
     }
 }

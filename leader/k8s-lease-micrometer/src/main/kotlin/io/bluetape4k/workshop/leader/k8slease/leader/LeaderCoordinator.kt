@@ -17,13 +17,13 @@ interface LeaderCoordinator {
 /**
  * 실제 Kubernetes Lease backend가 비활성화됐을 때 사용하는 smoke-safe coordinator입니다.
  */
-class DisabledLeaderCoordinator : LeaderCoordinator {
+class DisabledLeaderCoordinator: LeaderCoordinator {
     override suspend fun <T> runIfLeader(lockName: String, action: suspend () -> T): T? {
         log.debug { "Kubernetes Lease coordinator disabled. lockName=$lockName" }
         return null
     }
 
-    private companion object : KLogging()
+    private companion object: KLogging()
 }
 
 /**
@@ -31,7 +31,7 @@ class DisabledLeaderCoordinator : LeaderCoordinator {
  */
 class ElectorLeaderCoordinator(
     private val elector: SuspendLeaderElector,
-) : LeaderCoordinator {
+): LeaderCoordinator {
     override suspend fun <T> runIfLeader(lockName: String, action: suspend () -> T): T? =
         elector.runIfLeader(lockName, action)
 }

@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.problem.controller
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.problem.AbstractProblemTest
@@ -17,9 +17,9 @@ import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 
-class TaskControllerTest(context: ApplicationContext) : AbstractProblemTest(context) {
+class TaskControllerTest(context: ApplicationContext): AbstractProblemTest(context) {
 
-    companion object : KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {
@@ -37,10 +37,7 @@ class TaskControllerTest(context: ApplicationContext) : AbstractProblemTest(cont
             .asFlow()
             .toList()
 
-        tasks.shouldNotBeEmpty()
-        tasks.forEach {
-            log.debug { it }
-        }
+        tasks.shouldNotBeEmpty().forEach { log.debug { "task=$it" } }
     }
 
     @Test
@@ -53,6 +50,7 @@ class TaskControllerTest(context: ApplicationContext) : AbstractProblemTest(cont
             .returnResult<Task>().responseBody
             .awaitSingle()
 
+        log.debug { "task=$task" }
         task.id shouldBeEqualTo 1L
     }
 

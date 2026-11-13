@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Warmup(iterations = 2, time = 1)
 @Measurement(iterations = 5, time = 1)
-class NoCacheBenchmark : AbstractCacheBenchmark() {
+class NoCacheBenchmark: AbstractCacheBenchmark() {
     private lateinit var service: NoCacheService
 
     @Param("1", "100", "500")

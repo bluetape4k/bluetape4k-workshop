@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 class StudentController(
     private val service: StudentService,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     @GetMapping("/students")
     fun findAll() = service.findAll()

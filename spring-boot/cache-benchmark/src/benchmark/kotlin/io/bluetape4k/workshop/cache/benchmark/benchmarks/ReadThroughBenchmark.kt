@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Warmup(iterations = 2, time = 1)
 @Measurement(iterations = 5, time = 1)
-class ReadThroughBenchmark : AbstractCacheBenchmark() {
+class ReadThroughBenchmark: AbstractCacheBenchmark() {
     private lateinit var service: ReadThroughService
 
     @Param("1", "100", "500")

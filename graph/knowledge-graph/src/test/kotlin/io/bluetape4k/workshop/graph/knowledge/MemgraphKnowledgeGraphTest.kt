@@ -19,11 +19,11 @@ import org.neo4j.driver.GraphDatabase
  *
  * Docker가 필요합니다. 실행: `./gradlew :graph-knowledge-graph:integrationTest`
  */
-@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MemgraphKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
-    companion object : KLogging() {
-        private val memgraph = MemgraphServer.Launcher.memgraph
+class MemgraphKnowledgeGraphTest: AbstractKnowledgeGraphTest() {
+
+    companion object: KLogging() {
+        private val memgraph by lazy { MemgraphServer.Launcher.memgraph }
     }
 
     override val graphName: String = "memgraph_knowledge"
@@ -39,8 +39,11 @@ class MemgraphKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown" }
+        }
     }
 }
 
@@ -51,9 +54,10 @@ class MemgraphKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MemgraphKnowledgeGraphSuspendTest : AbstractKnowledgeGraphSuspendTest() {
-    companion object : KLogging() {
-        private val memgraph = MemgraphServer.Launcher.memgraph
+class MemgraphKnowledgeGraphSuspendTest: AbstractKnowledgeGraphSuspendTest() {
+
+    companion object: KLogging() {
+        private val memgraph by lazy { MemgraphServer.Launcher.memgraph }
     }
 
     override val graphName: String = "memgraph_knowledge_suspend"
@@ -69,7 +73,10 @@ class MemgraphKnowledgeGraphSuspendTest : AbstractKnowledgeGraphSuspendTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown" }
+        }
     }
 }

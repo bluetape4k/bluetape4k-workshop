@@ -11,13 +11,14 @@ import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import kotlin.time.Duration.Companion.milliseconds
 
 @OutputCapture
 @SpringBootTest(classes = [EventApplication::class])
 class AspectFlowEventEmitterTest(
     @param:Autowired private val myEventService: MyEventService,
 ) {
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         val faker = Fakers.faker
     }
 
@@ -28,7 +29,7 @@ class AspectFlowEventEmitterTest(
         val params = OperationParams(id, faker.company().name())
         myEventService.someOperation(params)
 
-        delay(100L)
+        delay(100.milliseconds)
 
         output.capture() shouldContain "Handle aspect event"
 

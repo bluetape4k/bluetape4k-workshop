@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.service
 
-import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.coroutines.suspendToBytes
 import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 import io.bluetape4k.images.vips.java25.suspendFfmVipsImageOf
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireLe
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageVariantProperties
@@ -30,32 +31,40 @@ interface DerivativeProcessor {
 class FfmVipsDerivativeProcessor(
     private val properties: ImageProcessingAdvancedProperties,
     private val keyFactory: ImageKeyFactory,
-) : DerivativeProcessor {
+): DerivativeProcessor {
+
+    companion object: KLogging() {
+        private const val WEBP_QUALITY = 82
+        private const val WEBP_EFFORT = 4
+    }
 
     private val initLock = ReentrantLock()
     private val variantSemaphore = Semaphore(properties.variantConcurrency)
     private val webpOptions = VipsEncodeOptions(quality = WEBP_QUALITY, effort = WEBP_EFFORT)
 
-    override suspend fun process(bytes: ByteArray, imageId: String): ProcessedImageSet = coroutineScope {
-        ensureRuntime()
+    override suspend fun process(bytes: ByteArray, imageId: String): ProcessedImageSet =
+        coroutineScope {
+            ensureRuntime()
 
-        val originalInfo = suspendFfmVipsImageOf(bytes).use { image ->
-            OriginalImageInfo(width = image.width, height = image.height)
-        }
-        validatePixelBudget(originalInfo)
-
-        val variants = properties.variants.map { variant ->
-            async(Dispatchers.IO) {
-                variantSemaphore.withPermit {
-                    processVariant(bytes, imageId, variant)
-                }
+            val originalInfo = suspendFfmVipsImageOf(bytes).use { image ->
+                OriginalImageInfo(width = image.width, height = image.height)
             }
-        }.awaitAll()
+            log.debug { "original image info=$originalInfo" }
+            validatePixelBudget(originalInfo)
 
-        ProcessedImageSet(original = originalInfo, variants = variants)
-    }
+            val variants = properties.variants.map { variant ->
+                async(Dispatchers.IO) {
+                    variantSemaphore.withPermit {
+                        processVariant(bytes, imageId, variant)
+                    }
+                }
+            }.awaitAll()
+                .onEach { log.debug { "processing variant=$it" } }
 
-    private suspend fun processVariant(
+            ProcessedImageSet(original = originalInfo, variants = variants)
+        }
+
+    private suspend inline fun processVariant(
         bytes: ByteArray,
         imageId: String,
         variant: ImageVariantProperties,
@@ -89,10 +98,5 @@ class FfmVipsDerivativeProcessor(
     private fun validatePixelBudget(originalInfo: OriginalImageInfo) {
         val pixels = originalInfo.width.toLong() * originalInfo.height.toLong()
         pixels.requireLe(properties.maxPixels, "pixels")
-    }
-
-    companion object {
-        private const val WEBP_QUALITY = 82
-        private const val WEBP_EFFORT = 4
     }
 }

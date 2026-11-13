@@ -21,11 +21,14 @@
     </appender>
     <!-- formatter:on -->
 
-    <logger name="io.bluetape4k.workshop.bucket4j" level="TRACE"/>
+    <logger name="io.bluetape4k.workshop.bucket4j" level="DEBUG"/>
     <logger name="io.bluetape4k.bucket4j" level="DEBUG"/>
+    <logger name="bluetape4k" level="DEBUG"/>
 
-    <logger name="org.springframework.http.server.reactive" level="DEBUG"/>
-    <logger name="org.springframework.web.reactive" level="DEBUG"/>
+    <logger name="io.github.bucket4j" level="DEBUG"/>
+
+<!--    <logger name="org.springframework.http.server.reactive" level="DEBUG"/>-->
+<!--    <logger name="org.springframework.web.reactive" level="DEBUG"/>-->
 
     <root level="INFO">
         <appender-ref ref="console"/>

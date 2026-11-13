@@ -1,15 +1,16 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import org.redisson.api.RLocalCachedMap
 import org.redisson.api.RedissonClient
 import org.redisson.api.options.LocalCachedMapOptions
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 /**
  * Profile 4 — Redisson Near Cache(RLocalCachedMap) 입니다.
@@ -26,8 +27,8 @@ class NearCacheService(
     private val productRepository: ProductRepository,
     redissonClient: RedissonClient,
     @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
-) : ProductCacheService {
-    companion object : KLoggingChannel() {
+): ProductCacheService {
+    companion object: KLoggingChannel() {
         const val CACHE_NAME = "products-near-cache"
     }
 
@@ -35,9 +36,10 @@ class NearCacheService(
         val options = LocalCachedMapOptions.name<Long, Product>(qualifiedCacheName(namespace, CACHE_NAME))
             .cacheSize(10_000)
             .evictionPolicy(LocalCachedMapOptions.EvictionPolicy.LRU)
-            .maxIdle(Duration.ofSeconds(60))
-            .timeToLive(Duration.ofSeconds(300))
+            .maxIdle(60.seconds())
+            .timeToLive(300.seconds())
             .syncStrategy(LocalCachedMapOptions.SyncStrategy.INVALIDATE)
+
         redissonClient.getLocalCachedMap(options)
     }
 
@@ -46,7 +48,7 @@ class NearCacheService(
         return nearCache.getOrDefault(id, null)
             ?: run {
                 // 2. Cache miss: DB 에서 읽고 near cache 를 채웁니다.
-                productRepository.findById(id).orElse(null)?.also { product ->
+                productRepository.findByIdOrNull(id)?.also { product ->
                     nearCache[id] = product
                 }
             }

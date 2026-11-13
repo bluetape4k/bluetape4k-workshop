@@ -8,11 +8,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactor.mono
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
+import kotlin.time.Duration.Companion.milliseconds
 
 @Component
 class AnnotatedCoroutineCustomEventListener {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * coroutine 친화적인 Reactor bridge 에서 [CustomEvent] 를 처리합니다.
@@ -28,6 +29,6 @@ class AnnotatedCoroutineCustomEventListener {
 
     private suspend fun doHandleEvent(event: CustomEvent) {
         log.debug { "Handle custom event by @EventListener with coroutines. $event" }
-        delay(100)
+        delay(100.milliseconds)
     }
 }

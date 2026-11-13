@@ -3,10 +3,14 @@ package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 
 internal class FieldServiceBrowserContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `console keeps CSP safe DOM only polling and hidden tab contracts`() {
         val html = resource("static/field-service/index.html")

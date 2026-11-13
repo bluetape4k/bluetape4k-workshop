@@ -2,17 +2,18 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditAction
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedRuntimeWorkers
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.AppendFences
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.CampaignProjectionReadModels
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditAction
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventLog
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStoreRepository
@@ -21,16 +22,10 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Expected
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExposedEventStoreTransactionRunner
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.IdempotencyReceipts
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.OperatorAudits
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionCheckpoints
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionGenerations
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionLeases
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionPoisonEvents
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionProcessedEvents
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionReadModels
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamHeads
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ExposedProjectionEventReader
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.EventSourcedProjectionRuntime
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ExposedProjectionEventReader
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionKey
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionLeaseRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonState
@@ -38,22 +33,20 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.Projectio
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityMappings
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityService
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.http.MediaType
+import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -62,25 +55,52 @@ import java.net.http.HttpClient
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
-@Tag("integration")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = ["voucher.projection.worker.enabled=false"],
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class EventSourcedCampaignHttpIntegrationTest
-    @Autowired
-    constructor(
-        private val registration: EventSourcedExposedDatabaseRegistration,
-        dataSource: DataSource,
-        private val clock: Clock,
-        private val sseProperties: EventSourcedSseProperties,
-        private val identities: SubjectIdentityService,
-        @LocalServerPort port: Int,
-    ) {
+internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
+    private val registration: EventSourcedExposedDatabaseRegistration,
+    dataSource: DataSource,
+    private val clock: Clock,
+    private val sseProperties: EventSourcedSseProperties,
+    private val identities: SubjectIdentityService,
+    @LocalServerPort port: Int,
+) {
+
+    companion object: KLogging() {
+        private val POSTGRES by lazy { PostgreSQLServer.Launcher.postgres }
+        private val HTTP_TIMEOUT: Duration = 60.seconds()
+        private val SSE_EVENT_TIMEOUT: Duration = 5.seconds()
+        private const val TENANT = "tenant-a"
+        private const val PROJECTION = "voucher-lifecycle"
+        private const val GENERATION = 1L
+        private const val EVENT_CREATED_ID = "0198a1b2-c3d4-7e5f-8123-456789abc301"
+        private const val EVENT_ACTIVATED_ID = "0198a1b2-c3d4-7e5f-8123-456789abc302"
+        private const val POISON_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc303"
+        private const val POISON_READY_AGE_SECONDS = 20L
+        private const val OPERATOR_SECRET = "workshop-operator-secret"
+        private const val OPERATOR_GUARD = "workshop-operator-guard"
+        private val CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc300")
+        private val CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc399")
+        private val SECOND_CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc398")
+        private val NOW = Instant.parse("2026-07-23T00:00:00Z")
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { POSTGRES.jdbcUrl }
+            registry.add("spring.datasource.username") { POSTGRES.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { POSTGRES.password.shouldNotBeNull() }
+            registry.add("management.datadog.metrics.export.enabled") { "false" }
+            registry.add("voucher.sse.heartbeat-interval") { "100ms" }
+        }
+    }
+
     private val database get() = registration.database
     private val client: WebTestClient
     private val operatorOrigin: String
@@ -90,12 +110,12 @@ internal class EventSourcedCampaignHttpIntegrationTest
         check(dataSource is HikariDataSource) { "live HTTP integration must use Spring's Hikari DataSource" }
         operatorOrigin = "http://127.0.0.1:$port"
         val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
-        client =
-            WebTestClient
-                .bindToServer(JdkClientHttpConnector(httpClient))
-                .baseUrl("http://127.0.0.1:$port")
-                .responseTimeout(HTTP_TIMEOUT)
-                .build()
+
+        client = WebTestClient
+            .bindToServer(JdkClientHttpConnector(httpClient))
+            .baseUrl("http://127.0.0.1:$port")
+            .responseTimeout(HTTP_TIMEOUT)
+            .build()
     }
 
     @BeforeEach
@@ -111,37 +131,46 @@ internal class EventSourcedCampaignHttpIntegrationTest
                     ExpectedAppend(
                         stream = StreamKey(TenantId(TENANT), "campaign", CAMPAIGN_ID),
                         expectedVersion = 0,
-                        events =
-                            listOf(
-                                event(
-                                    EVENT_CREATED_ID,
-                                    "campaign.created",
-                                    """
-                                    {
-                                      "startsAt": "2026-07-24T00:00:00Z",
-                                      "endsAt": "2026-07-31T00:00:00Z",
-                                      "capacity": 100,
-                                      "perUserLimit": 2,
-                                      "redemptionTtlSeconds": 3600
-                                    }
-                                    """.trimIndent(),
-                                ),
-                                event(EVENT_ACTIVATED_ID, "campaign.activated", "{}"),
+                        events = listOf(
+                            event(
+                                eventId = EVENT_CREATED_ID,
+                                eventType = "campaign.created",
+                                payload = """
+                                          {
+                                            "startsAt": "2026-07-24T00:00:00Z",
+                                            "endsAt": "2026-07-31T00:00:00Z",
+                                            "capacity": 100,
+                                            "perUserLimit": 2,
+                                            "redemptionTtlSeconds": 3600
+                                          }
+                                          """.trimIndent(),
                             ),
+                            event(EVENT_ACTIVATED_ID, "campaign.activated", "{}"),
                         ),
                     ),
+                ),
             )
         }
         transaction(database) {
             val leases = ProjectionLeaseRepository()
             val lease = leases.acquire(PROJECTION, GENERATION, "http-test", NOW).shouldNotBeNull()
             val batch = ExposedProjectionEventReader().loadAfter(0)
-            ProjectionRepository(leases).applyBatch(ProjectionKey(PROJECTION, GENERATION), lease, batch.events, NOW)
+            ProjectionRepository(leases)
+                .applyBatch(
+                    key = ProjectionKey(projection = PROJECTION, generation = GENERATION),
+                    lease = lease,
+                    events = batch.events,
+                    now = NOW
+                )
         }
     }
 
     @AfterEach
-    fun dropProjection() = transaction(database) { SchemaUtils.drop(*EVENT_SOURCED_HTTP_TABLES) }
+    fun dropProjection() {
+        transaction(database) {
+            SchemaUtils.drop(*EVENT_SOURCED_HTTP_TABLES)
+        }
+    }
 
     @Test
     fun `live campaign GET preserves the compatible body and adds projection headers`() {
@@ -199,15 +228,17 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .expectHeader().valueEquals("Idempotency-Replayed", "true")
 
         transaction(database) {
-            val event =
-                EventLog.selectAll()
+            val event = EventLog.selectAll()
                 .where { EventLog.streamId eq CREATE_CAMPAIGN_ID }
                 .single()
+
             event[EventLog.actorSurrogate] shouldNotBeEqualTo "operator-a"
             event[EventLog.actorHmacKeyVersion] shouldBeEqualTo 1
+
             SubjectIdentityMappings.selectAll().count() shouldBeEqualTo 1L
-            SubjectIdentityMappings.selectAll().single()[SubjectIdentityMappings.identityDigest] shouldNotBeEqualTo
-                "operator-a"
+            SubjectIdentityMappings.selectAll()
+                .single()[SubjectIdentityMappings.identityDigest] shouldNotBeEqualTo "operator-a"
+
             IdempotencyReceipts.selectAll().single()[IdempotencyReceipts.hmacKeyVersion] shouldBeEqualTo 1
         }
     }
@@ -233,14 +264,14 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .exchange()
             .expectStatus().isCreated
 
-        val firstSurrogate =
-            transaction(database) {
-                EventLog.selectAll()
-                    .where { EventLog.streamId eq CREATE_CAMPAIGN_ID }
-                    .single()[EventLog.actorSurrogate]
-            }
+        val firstSurrogate = transaction(database) {
+            EventLog.selectAll()
+                .where { EventLog.streamId eq CREATE_CAMPAIGN_ID }
+                .single()[EventLog.actorSurrogate]
+        }
 
         identities.erase(TenantId(TENANT), "campaign-principal", "operator-a") shouldBeEqualTo 1
+
         transaction(database) {
             SubjectIdentityMappings.selectAll().count() shouldBeEqualTo 0L
             EventLog.selectAll()
@@ -252,12 +283,11 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .exchange()
             .expectStatus().isCreated
 
-        val secondSurrogate =
-            transaction(database) {
-                EventLog.selectAll()
-                    .where { EventLog.streamId eq SECOND_CREATE_CAMPAIGN_ID }
-                    .single()[EventLog.actorSurrogate]
-            }
+        val secondSurrogate = transaction(database) {
+            EventLog.selectAll()
+                .where { EventLog.streamId eq SECOND_CREATE_CAMPAIGN_ID }
+                .single()[EventLog.actorSurrogate]
+        }
         secondSurrogate shouldNotBeEqualTo firstSurrogate
     }
 
@@ -369,7 +399,9 @@ internal class EventSourcedCampaignHttpIntegrationTest
 
     @Test
     fun `live rebuild status and cancel enforce the latest generation token`() {
-        startRebuild("rebuild-start-002", expectedToken = 1).exchange().expectStatus().isAccepted
+        startRebuild("rebuild-start-002", expectedToken = 1)
+            .exchange()
+            .expectStatus().isAccepted
 
         getRebuild(generation = 2, idempotencyKey = "rebuild-status-001", expectedToken = 1)
             .exchange()
@@ -456,6 +488,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
                 .where { ProjectionPoisonEvents.eventId eq UUID.fromString(POISON_EVENT_ID) }
                 .single()[ProjectionPoisonEvents.state]
                 .shouldBeEqualTo(ProjectionPoisonState.RESOLVED)
+
             OperatorAudits
                 .selectAll()
                 .where { OperatorAudits.action eq OperatorAuditAction.POISON_RETRIED }
@@ -533,7 +566,8 @@ internal class EventSourcedCampaignHttpIntegrationTest
 
     @Test
     fun `live SSE starts with snapshot and reconnects with separate position cursor`() {
-        sseProperties.heartbeatInterval shouldBeEqualTo Duration.ofMillis(100)
+        sseProperties.heartbeatInterval shouldBeEqualTo 100.millis()
+
         val first = firstSseEvent()
         val cursor = first.single { line -> line.startsWith("id:") }.substringAfter("id:")
 
@@ -543,6 +577,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
 
         val resumed = firstSseEvent(cursor)
 
+        log.debug { "resumed: $resumed" }
         resumed.any { line -> line == "event:snapshot" }.shouldBeTrue()
         resumed.single { line -> line.startsWith("id:") }.substringAfter("id:") shouldBeEqualTo cursor
     }
@@ -643,7 +678,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .post()
             .uri(
                 "/operator/api/v1/projections/$PROJECTION/generations/$GENERATION/" +
-                    "poison-events/$POISON_EVENT_ID/retry",
+                        "poison-events/$POISON_EVENT_ID/retry",
             )
             .contentType(MediaType.APPLICATION_JSON)
             .rebuildHeaders(idempotencyKey, expectedToken)
@@ -720,32 +755,4 @@ internal class EventSourcedCampaignHttpIntegrationTest
             correlationId = eventId,
             actorSurrogate = "http-test",
         )
-
-    companion object {
-        private val POSTGRES = PostgreSQLServer.Launcher.postgres
-        private val HTTP_TIMEOUT: Duration = Duration.ofSeconds(60)
-        private val SSE_EVENT_TIMEOUT: Duration = Duration.ofSeconds(5)
-        private const val TENANT = "tenant-a"
-        private const val PROJECTION = "voucher-lifecycle"
-        private const val GENERATION = 1L
-        private const val EVENT_CREATED_ID = "0198a1b2-c3d4-7e5f-8123-456789abc301"
-        private const val EVENT_ACTIVATED_ID = "0198a1b2-c3d4-7e5f-8123-456789abc302"
-        private const val POISON_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc303"
-        private const val POISON_READY_AGE_SECONDS = 20L
-        private const val OPERATOR_SECRET = "workshop-operator-secret"
-        private const val OPERATOR_GUARD = "workshop-operator-guard"
-        private val CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc300")
-        private val CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc399")
-        private val SECOND_CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc398")
-        private val NOW = Instant.parse("2026-07-23T00:00:00Z")
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { POSTGRES.jdbcUrl }
-            registry.add("spring.datasource.username") { POSTGRES.username.shouldNotBeNull() }
-            registry.add("spring.datasource.password") { POSTGRES.password.shouldNotBeNull() }
-            registry.add("management.datadog.metrics.export.enabled") { "false" }
-            registry.add("voucher.sse.heartbeat-interval") { "100ms" }
-        }
-    }
 }

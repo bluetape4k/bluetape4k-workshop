@@ -3,19 +3,26 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.domain
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import java.time.Duration
-import java.time.Instant
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 class ShiftCoverageModelsTest {
+
+    companion object: KLogging()
+
     @Test
     fun `ids reject blank and byte oversized values`() {
-        assertFailsWith<InvalidShiftCoverageInput> { WorkerId(" ") }
+        assertFailsWith<InvalidShiftCoverageInput> {
+            WorkerId(" ")
+        }
         assertFailsWith<InvalidShiftCoverageInput> {
             IdempotencyKey("a".repeat(ShiftCoverageLimits.MAX_KEY_BYTES + 1))
         }
-        IdempotencyKey("a".repeat(ShiftCoverageLimits.MAX_KEY_BYTES)).value.length shouldBeEqualTo
-            ShiftCoverageLimits.MAX_KEY_BYTES
+
+        IdempotencyKey("a".repeat(ShiftCoverageLimits.MAX_KEY_BYTES))
+            .value.length shouldBeEqualTo ShiftCoverageLimits.MAX_KEY_BYTES
     }
 
     @Test
@@ -33,14 +40,17 @@ class ShiftCoverageModelsTest {
     @Test
     fun `signed score arithmetic rejects overflow`() {
         val first = CoverageScore(costMinor = Long.MAX_VALUE, fairnessMinor = 1)
-        assertFailsWith<ShiftCoverageArithmeticError> { first + CoverageScore(costMinor = 1) }
+        assertFailsWith<ShiftCoverageArithmeticError> {
+            first + CoverageScore(costMinor = 1)
+        }
         CoverageScore(costMinor = -5, fairnessMinor = 3).totalMinor shouldBeEqualTo -2L
     }
 
     @Test
     fun `shift and worker models keep closed invariants`() {
         val start = Instant.parse("2026-08-24T09:00:00Z")
-        val end = start.plus(Duration.ofHours(8))
+        val end = start + 8.hours()
+        
         val worker = ShiftWorker(
             workerId = WorkerId("worker-a"),
             siteId = SiteId("site-a"),

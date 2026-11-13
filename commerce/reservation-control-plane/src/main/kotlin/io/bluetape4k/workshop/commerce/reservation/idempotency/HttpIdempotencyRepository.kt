@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.reservation.idempotency
 import io.bluetape4k.exposed.core.auditable.Auditable
 import io.bluetape4k.exposed.core.auditable.UserContext
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -244,8 +246,8 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
     }
 
     companion object : KLogging() {
-        val LEASE_DURATION: Duration = Duration.ofSeconds(90)
-        val DEFAULT_RETENTION: Duration = Duration.ofHours(24)
+        val LEASE_DURATION: Duration = 90.seconds()
+        val DEFAULT_RETENTION: Duration = 24.hours()
         const val MAX_RESPONSE_BODY: Int = 64 * 1024
         private const val SHA256_HEX_LENGTH: Int = 64
         private const val LOG_DIGEST_PREFIX: Int = 12

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    kotlin("kapt")
 }
 
 configurations {
@@ -41,7 +42,7 @@ dependencies {
     compileOnly(libs.bluetape4k.graph.memgraph)
 
     // Bluetape4k
-    implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
 
     // Coroutines

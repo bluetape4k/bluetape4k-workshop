@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.meter.persistence
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.meter.application.MeterCommandService
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.ActivatePriceCommand
@@ -79,7 +80,7 @@ class MeterOutboxPostgresIntegrationTest {
         val result = service.activatePrice(activation("lease-${UUID.randomUUID()}", "lease-meter", Instant.EPOCH))
         val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
 
-        outboxJournal.claim("worker-a", claimedAt, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo true
+        outboxJournal.claim("worker-a", claimedAt, 100).map { it.eventId }.contains(result.eventId).shouldBeTrue()
         outboxJournal.claim("worker-b", claimedAt.plusSeconds(31), 100)
             .first { it.eventId == result.eventId }
             .claimOwner shouldBeEqualTo "worker-b"

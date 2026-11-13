@@ -8,16 +8,15 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignAggre
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignCommands
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignEvent
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.DomainTransitionException
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptScope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalDescriptor
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalKeyVersions
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventToAppend
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStorePort
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStoreRead
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventToAppend
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExpectedAppend
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
@@ -28,7 +27,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.serialization.CAMPAI
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.serialization.CampaignEventCodec
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 private const val CAMPAIGN_CREATED_STATUS = 201
 private const val CAMPAIGN_TRANSITION_STATUS = 200
@@ -58,13 +57,13 @@ internal sealed interface CampaignCommandExecution {
     data class Completed(
         val descriptor: TerminalDescriptor,
         val replayed: Boolean,
-    ) : CampaignCommandExecution
+    ): CampaignCommandExecution
 
-    data object InProgress : CampaignCommandExecution
+    data object InProgress: CampaignCommandExecution
 
-    data object FingerprintConflict : CampaignCommandExecution
+    data object FingerprintConflict: CampaignCommandExecution
 
-    data object KeyUnavailable : CampaignCommandExecution
+    data object KeyUnavailable: CampaignCommandExecution
 }
 
 private data class CampaignActivationContext(
@@ -93,7 +92,7 @@ internal class DefaultEventSourcedCampaignCommands(
     private val identities: SubjectIdentityService,
     private val keyRing: EventSourcedHmacKeyRing,
     private val clock: Clock = Clock.systemUTC(),
-) : EventSourcedCampaignCommands {
+): EventSourcedCampaignCommands {
     private val mapper = jsonMapper { }
     private val campaignEvents = CampaignEventCodec()
 
@@ -102,30 +101,29 @@ internal class DefaultEventSourcedCampaignCommands(
         val now = clock.instant()
         val tenantId = TenantId(command.tenant)
         val subject = identities.resolve(tenantId, "campaign-principal", command.principal)
-        val principalDigest =
-            keyRing.digest(
-                purpose = HmacPurpose.PRINCIPAL_SCOPE,
-                tenantId = tenantId,
-                domain = "campaign-create",
-                value = command.principal,
-            )
-        val idempotencyDigest =
-            keyRing.digest(
-                purpose = HmacPurpose.IDEMPOTENCY_KEY,
-                tenantId = tenantId,
-                domain = "campaign-create:${command.campaignId}:${principalDigest.value}",
-                value = command.idempotencyKey,
-            )
-        val scope =
-            ReceiptScope(
-                tenantId = tenantId,
-                principalDigest = ReceiptDigest.of(principalDigest.value),
-                operation = "CAMPAIGN_CREATE",
-                resourceId = command.campaignId.toString(),
-                keyDigest = ReceiptDigest.of(idempotencyDigest.value),
-            )
+
+        val principalDigest = keyRing.digest(
+            purpose = HmacPurpose.PRINCIPAL_SCOPE,
+            tenantId = tenantId,
+            domain = "campaign-create",
+            value = command.principal,
+        )
+        val idempotencyDigest = keyRing.digest(
+            purpose = HmacPurpose.IDEMPOTENCY_KEY,
+            tenantId = tenantId,
+            domain = "campaign-create:${command.campaignId}:${principalDigest.value}",
+            value = command.idempotencyKey,
+        )
+        val scope = ReceiptScope(
+            tenantId = tenantId,
+            principalDigest = ReceiptDigest.of(principalDigest.value),
+            operation = "CAMPAIGN_CREATE",
+            resourceId = command.campaignId.toString(),
+            keyDigest = ReceiptDigest.of(idempotencyDigest.value),
+        )
         val fingerprint = fingerprint(command)
         val created = command.toEvent(tenantId)
+
         return commands.execute(
             EventSourcedCommand(
                 scope = scope,
@@ -133,20 +131,18 @@ internal class DefaultEventSourcedCampaignCommands(
                 acquiredAt = now,
                 decideAfterRehydrate = {
                     EventSourcedCommandDecision(
-                        appends =
-                            listOf(
-                                ExpectedAppend(
-                                    stream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, command.campaignId),
-                                    expectedVersion = 0,
-                                    events = listOf(created.toAppend(subject, now)),
-                                ),
+                        appends = listOf(
+                            ExpectedAppend(
+                                stream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, command.campaignId),
+                                expectedVersion = 0,
+                                events = listOf(created.toAppend(subject, now)),
                             ),
-                        descriptor =
-                            TerminalDescriptor(
-                                outcome = ReceiptOutcome.CAMPAIGN_CREATED,
-                                status = CAMPAIGN_CREATED_STATUS,
-                                keyVersions = TerminalKeyVersions(hmac = principalDigest.keyVersion),
-                            ).withObservedAt(now),
+                        ),
+                        descriptor = TerminalDescriptor(
+                            outcome = ReceiptOutcome.CAMPAIGN_CREATED,
+                            status = CAMPAIGN_CREATED_STATUS,
+                            keyVersions = TerminalKeyVersions(hmac = principalDigest.keyVersion),
+                        ).withObservedAt(now),
                     )
                 },
             ),
@@ -158,28 +154,26 @@ internal class DefaultEventSourcedCampaignCommands(
         val now = clock.instant()
         val tenantId = TenantId(command.tenant)
         val subject = identities.resolve(tenantId, "campaign-principal", command.principal)
-        val principalDigest =
-            keyRing.digest(
-                purpose = HmacPurpose.PRINCIPAL_SCOPE,
-                tenantId = tenantId,
-                domain = "campaign-activate",
-                value = command.principal,
-            )
-        val idempotencyDigest =
-            keyRing.digest(
-                purpose = HmacPurpose.IDEMPOTENCY_KEY,
-                tenantId = tenantId,
-                domain = "campaign-activate:${command.campaignId}:${principalDigest.value}",
-                value = command.idempotencyKey,
-            )
-        val scope =
-            ReceiptScope(
-                tenantId = tenantId,
-                principalDigest = ReceiptDigest.of(principalDigest.value),
-                operation = "CAMPAIGN_ACTIVATE",
-                resourceId = command.campaignId.toString(),
-                keyDigest = ReceiptDigest.of(idempotencyDigest.value),
-            )
+
+        val principalDigest = keyRing.digest(
+            purpose = HmacPurpose.PRINCIPAL_SCOPE,
+            tenantId = tenantId,
+            domain = "campaign-activate",
+            value = command.principal,
+        )
+        val idempotencyDigest = keyRing.digest(
+            purpose = HmacPurpose.IDEMPOTENCY_KEY,
+            tenantId = tenantId,
+            domain = "campaign-activate:${command.campaignId}:${principalDigest.value}",
+            value = command.idempotencyKey,
+        )
+        val scope = ReceiptScope(
+            tenantId = tenantId,
+            principalDigest = ReceiptDigest.of(principalDigest.value),
+            operation = "CAMPAIGN_ACTIVATE",
+            resourceId = command.campaignId.toString(),
+            keyDigest = ReceiptDigest.of(idempotencyDigest.value),
+        )
         return commands.execute(
             EventSourcedCommand(
                 scope = scope,
@@ -199,6 +193,7 @@ internal class DefaultEventSourcedCampaignCommands(
         val tenantId = TenantId(tenant.requireNotBlank("tenant"))
         val stream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, campaignId)
         val page = events.load(EventStoreRead(stream, afterVersion = 0))
+
         return page.events
             .mapNotNull(campaignEvents::decode)
             .takeIf(List<CampaignEvent>::isNotEmpty)
@@ -214,22 +209,22 @@ internal class DefaultEventSourcedCampaignCommands(
     ): EventSourcedCommandDecision {
         val stream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, command.campaignId)
         val page = events.loadInCurrentTransaction(EventStoreRead(stream, afterVersion = 0))
+
         return when {
             page.committedHead == 0L ->
                 rejectedDecision(ReceiptOutcome.CAMPAIGN_NOT_FOUND, hmacKeyVersion, now)
             page.committedHead != command.expectedRevision + 1 ->
                 rejectedDecision(ReceiptOutcome.STALE_REVISION, hmacKeyVersion, now)
-            else ->
+            else                     ->
                 decideActivation(
                     campaign = CampaignAggregate.replay(page.events.mapNotNull(campaignEvents::decode)),
-                    context =
-                        CampaignActivationContext(
-                            stream = stream,
-                            expectedVersion = page.committedHead,
-                            subject = subject,
-                            hmacKeyVersion = hmacKeyVersion,
-                            now = now,
-                        ),
+                    context = CampaignActivationContext(
+                        stream = stream,
+                        expectedVersion = page.committedHead,
+                        subject = subject,
+                        hmacKeyVersion = hmacKeyVersion,
+                        now = now,
+                    ),
                 )
         }
     }
@@ -252,20 +247,18 @@ internal class DefaultEventSourcedCampaignCommands(
         context: CampaignActivationContext,
     ): EventSourcedCommandDecision =
         EventSourcedCommandDecision(
-            appends =
-                listOf(
-                    ExpectedAppend(
-                        stream = context.stream,
-                        expectedVersion = context.expectedVersion,
-                        events = listOf(event.toAppend(context.subject, context.now)),
-                    ),
+            appends = listOf(
+                ExpectedAppend(
+                    stream = context.stream,
+                    expectedVersion = context.expectedVersion,
+                    events = listOf(event.toAppend(context.subject, context.now)),
                 ),
-            descriptor =
-                TerminalDescriptor(
-                    outcome = ReceiptOutcome.CAMPAIGN_ACTIVATED,
-                    status = CAMPAIGN_TRANSITION_STATUS,
-                    keyVersions = TerminalKeyVersions(hmac = context.hmacKeyVersion),
-                ).withObservedAt(context.now),
+            ),
+            descriptor = TerminalDescriptor(
+                outcome = ReceiptOutcome.CAMPAIGN_ACTIVATED,
+                status = CAMPAIGN_TRANSITION_STATUS,
+                keyVersions = TerminalKeyVersions(hmac = context.hmacKeyVersion),
+            ).withObservedAt(context.now),
         )
 
     private fun rejectedDecision(
@@ -286,15 +279,15 @@ internal class DefaultEventSourcedCampaignCommands(
     private fun fingerprint(input: CreateCampaignCommandInput): ReceiptDigest =
         ReceiptDigest.sha256(
             "voucher-campaign-create-v1\u0000" +
-                mapper.writeValueAsString(
-                    CampaignCreatedPayload(
-                        input.startsAt,
-                        input.endsAt,
-                        input.capacity,
-                        input.perUserLimit,
-                        input.redemptionTtlSeconds,
+                    mapper.writeValueAsString(
+                        CampaignCreatedPayload(
+                            input.startsAt,
+                            input.endsAt,
+                            input.capacity,
+                            input.perUserLimit,
+                            input.redemptionTtlSeconds,
+                        ),
                     ),
-                ),
         )
 
     private fun CampaignEvent.toAppend(
@@ -303,6 +296,7 @@ internal class DefaultEventSourcedCampaignCommands(
     ): EventToAppend {
         val eventId = Uuid.V7.nextUUID()
         val serialized = campaignEvents.encode(this)
+
         return EventToAppend(
             eventId = eventId,
             eventType = serialized.eventType,
@@ -337,9 +331,12 @@ private fun CreateCampaignCommandInput.toEvent(tenantId: TenantId): CampaignEven
 
 private fun CommandExecutionResult.toCampaignExecution(): CampaignCommandExecution =
     when (this) {
-        is CommandExecutionResult.Executed -> CampaignCommandExecution.Completed(descriptor, replayed = false)
-        is CommandExecutionResult.Replayed -> CampaignCommandExecution.Completed(descriptor, replayed = true)
-        is CommandExecutionResult.InProgress -> CampaignCommandExecution.InProgress
+        is CommandExecutionResult.Executed       -> CampaignCommandExecution.Completed(
+            descriptor,
+            replayed = false
+        )
+        is CommandExecutionResult.Replayed       -> CampaignCommandExecution.Completed(descriptor, replayed = true)
+        is CommandExecutionResult.InProgress     -> CampaignCommandExecution.InProgress
         is CommandExecutionResult.FingerprintConflict -> CampaignCommandExecution.FingerprintConflict
         is CommandExecutionResult.KeyUnavailable -> CampaignCommandExecution.KeyUnavailable
     }

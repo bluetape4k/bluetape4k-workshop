@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.imageprocessing.profile.service
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 
 class ProfileImageMetricsTest {
+
+    companion object: KLogging()
 
     @Test
     fun metrics_use_low_cardinality_tags() {
@@ -16,7 +19,14 @@ class ProfileImageMetricsTest {
         metrics.cleanup("deleted")
         metrics.moderation(1_000_000, "approved")
 
-        registry.meters.flatMap { it.id.tags }.map { it.key }.toSet() shouldBeEqualTo setOf("contentType", "status", "result")
-        registry.counter(ProfileImageMetrics.UPLOAD_ACCEPTED, "contentType", "image/jpeg").count() shouldBeEqualTo 1.0
+        registry.meters
+            .flatMap { it.id.tags }
+            .map { it.key }
+            .toSet() shouldBeEqualTo setOf("contentType", "status", "result")
+
+        registry.counter(
+            ProfileImageMetrics.UPLOAD_ACCEPTED,
+            "contentType", "image/jpeg"
+        ).count() shouldBeEqualTo 1.0
     }
 }

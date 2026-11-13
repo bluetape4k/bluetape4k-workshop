@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignAggregate
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
@@ -15,7 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class CampaignProjectionReadModel(
     val tenantId: TenantId,
@@ -48,12 +49,12 @@ internal class CampaignProjectionStore(
     ) {
         val event = events.decode(envelope) ?: return
         val current = findRow(key, envelope.tenantId, envelope.stream.id)
-        val aggregate =
-            current
-                ?.let(::toReadModel)
-                ?.toAggregate()
-                ?.evolve(event)
-                ?: CampaignAggregate.replay(listOf(event))
+        val aggregate = current
+            ?.let(::toReadModel)
+            ?.toAggregate()
+            ?.evolve(event)
+            ?: CampaignAggregate.replay(listOf(event))
+
         if (current == null) insert(key, lease, envelope, aggregate, now)
         else update(key, lease, envelope, aggregate, now)
     }
@@ -87,16 +88,14 @@ internal class CampaignProjectionStore(
         aggregate: CampaignAggregate,
         now: Instant,
     ) {
-        val updated =
-            CampaignProjectionReadModels.update(
-                where = {
-                    campaignKeyPredicate(key, envelope.tenantId, envelope.stream.id) and
-                        (CampaignProjectionReadModels.streamVersion less envelope.stream.version) and
-                        (CampaignProjectionReadModels.fencingToken lessEq lease.fencingToken)
-                },
-            ) { row ->
-                write(row, envelope, aggregate, lease, now)
-            }
+        val whereOp = {
+            campaignKeyPredicate(key, envelope.tenantId, envelope.stream.id) and
+                    (CampaignProjectionReadModels.streamVersion less envelope.stream.version) and
+                    (CampaignProjectionReadModels.fencingToken lessEq lease.fencingToken)
+        }
+        val updated = CampaignProjectionReadModels.update(whereOp) { row ->
+            write(row, envelope, aggregate, lease, now)
+        }
         check(updated == 1) { "campaign projection update was rejected" }
     }
 
@@ -117,9 +116,9 @@ private fun campaignKeyPredicate(
     campaignId: UUID,
 ) =
     (CampaignProjectionReadModels.projection eq key.projection) and
-        (CampaignProjectionReadModels.generation eq key.generation) and
-        (CampaignProjectionReadModels.tenantId eq tenantId.value) and
-        (CampaignProjectionReadModels.campaignId eq campaignId)
+            (CampaignProjectionReadModels.generation eq key.generation) and
+            (CampaignProjectionReadModels.tenantId eq tenantId.value) and
+            (CampaignProjectionReadModels.campaignId eq campaignId)
 
 private fun toReadModel(row: ResultRow): CampaignProjectionReadModel =
     CampaignProjectionReadModel(
@@ -168,8 +167,8 @@ private fun write(
     row[CampaignProjectionReadModels.allocatedCount] = aggregate.allocatedCount
     row[CampaignProjectionReadModels.perUserLimit] = aggregate.perUserLimit
     row[CampaignProjectionReadModels.redemptionTtlSeconds] = aggregate.redemptionTtlSeconds
-    row[CampaignProjectionReadModels.startsAt] = checkNotNull(aggregate.startsAt)
-    row[CampaignProjectionReadModels.endsAt] = checkNotNull(aggregate.endsAt)
+    row[CampaignProjectionReadModels.startsAt] = aggregate.startsAt.checkNotNull { "startsAt is null" }
+    row[CampaignProjectionReadModels.endsAt] = aggregate.endsAt.checkNotNull { "endsAt is null" }
     row[CampaignProjectionReadModels.fencingToken] = lease.fencingToken
     row[CampaignProjectionReadModels.updatedAt] = now
 }

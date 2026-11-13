@@ -6,9 +6,11 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldNotBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
@@ -19,23 +21,24 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 
-@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SubjectIdentityRepositoryIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
-    private val keyRing =
-        EventSourcedHmacKeyRing(
-            active = EventSourcedHmacKey(2, "active-key-material-with-at-least-32-bytes".toByteArray()),
-            retired =
-                listOf(
-                    EventSourcedHmacKey(1, "retired-key-material-with-at-least-32-bytes".toByteArray()),
-                ),
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+
+        private val keyRing = EventSourcedHmacKeyRing(
+            active = EventSourcedHmacKey(2, "active-key-material-with-at-least-32-bytes".toUtf8Bytes()),
+            retired = listOf(
+                EventSourcedHmacKey(1, "retired-key-material-with-at-least-32-bytes".toUtf8Bytes()),
+            ),
         )
+    }
+
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private lateinit var repository: SubjectIdentityRepository
@@ -48,35 +51,41 @@ internal class SubjectIdentityRepositoryIntegrationTest {
     }
 
     @AfterAll
-    fun closeDataSource() = postgresDatabase.close()
+    fun closeDataSource() {
+        postgresDatabase.close()
+    }
 
     @BeforeEach
-    fun createSchema() =
+    fun createSchema() {
         transaction(database) {
             SchemaUtils.drop(SubjectIdentityMappings)
             SchemaUtils.create(SubjectIdentityMappings)
         }
+    }
 
     @AfterEach
-    fun dropSchema() = transaction(database) { SchemaUtils.drop(SubjectIdentityMappings) }
+    fun dropSchema() {
+        transaction(database) { SchemaUtils.drop(SubjectIdentityMappings) }
+    }
 
     @Test
     fun `erasure removes reverse lookup and registering the same identity creates a new surrogate`() {
         val tenantId = TenantId("tenant-a")
-        val first =
-            transaction(database) {
-                repository.resolve(tenantId, "campaign-principal", "user-42")
-            }
+        val first = transaction(database) {
+            repository.resolve(tenantId, "campaign-principal", "user-42")
+        }
+        log.debug { "first: $first" }
 
         transaction(database) {
-            repository.findBySurrogate(tenantId, first.surrogate)
-        }.shouldNotBeNull() shouldBeEqualTo first
+            repository.findBySurrogate(tenantId, first.surrogate) shouldBeEqualTo first
+        }
 
         val logger = LoggerFactory.getLogger(SubjectIdentityRepository::class.java) as Logger
         val previousLevel = logger.level
         val appender = ListAppender<ILoggingEvent>().apply { start() }
         logger.level = Level.INFO
         logger.addAppender(appender)
+
         try {
             transaction(database) {
                 repository.erase(tenantId, "campaign-principal", "user-42")
@@ -87,15 +96,16 @@ internal class SubjectIdentityRepositoryIntegrationTest {
             appender.stop()
         }
         appender.list.joinToString("\n", transform = ILoggingEvent::getFormattedMessage) shouldNotContain "user-42"
+
         transaction(database) {
             repository.findBySurrogate(tenantId, first.surrogate)
         }.shouldBeNull()
 
-        val second =
-            transaction(database) {
-                repository.resolve(tenantId, "campaign-principal", "user-42")
-            }
+        val second = transaction(database) {
+            repository.resolve(tenantId, "campaign-principal", "user-42")
+        }
 
+        log.debug { "second: $second" }
         second.surrogate shouldNotBeEqualTo first.surrogate
         second.identityDigest shouldBeEqualTo first.identityDigest
         second.hmacKeyVersion shouldBeEqualTo 2
@@ -104,25 +114,25 @@ internal class SubjectIdentityRepositoryIntegrationTest {
     @Test
     fun `retired key mapping remains resolvable without creating a duplicate surrogate`() {
         val tenantId = TenantId("tenant-a")
-        val retiredDigest =
-            keyRing.digestWithVersion(
-                keyVersion = 1,
-                purpose = HmacPurpose.SUBJECT_IDENTITY,
-                tenantId = tenantId,
-                domain = "campaign-principal",
-                value = "user-42",
-            )
-        val existing =
-            transaction(database) {
-                repository.insert(retiredDigest, tenantId)
-            }
+        val retiredDigest = keyRing.digestWithVersion(
+            keyVersion = 1,
+            purpose = HmacPurpose.SUBJECT_IDENTITY,
+            tenantId = tenantId,
+            domain = "campaign-principal",
+            value = "user-42",
+        )
+        val existing = transaction(database) {
+            repository.insert(retiredDigest, tenantId)
+        }
+        log.debug { "existing: $existing" }
 
-        val resolved =
-            transaction(database) {
-                repository.resolve(tenantId, "campaign-principal", "user-42")
-            }
+        val resolved = transaction(database) {
+            repository.resolve(tenantId, "campaign-principal", "user-42")
+        }
 
+        log.debug { "resolved: $resolved" }
         resolved shouldBeEqualTo existing
+
         transaction(database) {
             repository.countFor(tenantId, "campaign-principal", "user-42")
         } shouldBeEqualTo 1L

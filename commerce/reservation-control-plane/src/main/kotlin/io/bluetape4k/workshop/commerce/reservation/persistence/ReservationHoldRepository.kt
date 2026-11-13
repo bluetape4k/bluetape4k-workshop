@@ -16,7 +16,7 @@ import java.time.Instant
 
 /** owner, state, revision을 확인하는 hold mutation을 Exposed JDBC CAS update로 적용합니다. */
 @Repository
-internal class ReservationHoldRepository : LongAuditableJdbcRepository<ReservationHoldRecord, ReservationHoldTable> {
+internal class ReservationHoldRepository: LongAuditableJdbcRepository<ReservationHoldRecord, ReservationHoldTable> {
     override val table = ReservationHoldTable
 
     override fun extractId(entity: ReservationHoldRecord): Long = entity.id
@@ -64,9 +64,9 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
     ): Boolean =
         auditedUpdateAll({
             (table.id eq id) and
-                (table.ownerDigest eq ownerDigest) and
-                (table.revision eq expectedRevision) and
-                (table.state eq from)
+                    (table.ownerDigest eq ownerDigest) and
+                    (table.revision eq expectedRevision) and
+                    (table.state eq from)
         }) {
             it[state] = to
             it[revision] = expectedRevision + 1
@@ -81,10 +81,10 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
     ): Boolean =
         auditedUpdateAll({
             (table.id eq id) and
-                (table.ownerDigest eq ownerDigest) and
-                (table.revision eq expectedRevision) and
-                (table.state eq HoldState.HELD) and
-                (table.expiresAt eq expectedExpiresAt)
+                    (table.ownerDigest eq ownerDigest) and
+                    (table.revision eq expectedRevision) and
+                    (table.state eq HoldState.HELD) and
+                    (table.expiresAt eq expectedExpiresAt)
         }) {
             it[expiresAt] = newExpiresAt
             it[revision] = expectedRevision + 1
@@ -116,10 +116,10 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
             .selectAll()
             .where {
                 (table.resourceId eq resourceId) and
-                    (table.state eq HoldState.HELD) and
-                    (table.expiresAt lessEq now)
+                        (table.state eq HoldState.HELD) and
+                        (table.expiresAt lessEq now)
             }.orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
             .map { with(this) { it.toEntity() } }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

@@ -29,18 +29,18 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.ReservationRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
+import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigest
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import java.sql.Connection
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class VoucherPoolLifecycleException(
     val code: VoucherPoolErrorCode,
     val safeEffectId: UUID? = null,
     val safeRevision: Long? = null,
-) : IllegalStateException(code.name)
+): IllegalStateException(code.name)
 
 internal data class ReserveVoucherCommand(
     val tenantId: String,
@@ -83,62 +83,71 @@ internal class JdbcReservationService(
     private val repository: VoucherPoolRepository,
     idempotency: VoucherPoolIdempotencyRepository,
     private val digests: VoucherDigestService,
-) : ReservationService {
+): ReservationService {
     private val mutations = LifecycleMutationExecutor(executor, idempotency)
 
     override fun reserve(command: ReserveVoucherCommand): MutationResult<ReservationSnapshot> =
         mutations.execute(
-            command.tenantId,
-            "voucher-reserve",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-reserve",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-reserve",
                 "campaignId" to command.campaignId,
                 "canonicalUser" to command.canonicalUser,
             ),
-            command.reservationId,
-            LIFECYCLE_HTTP_CREATED,
-            LifecycleLane.FOREGROUND,
+            effectId = command.reservationId,
+            successStatus = LIFECYCLE_HTTP_CREATED,
+            lane = LifecycleLane.FOREGROUND,
         ) { connection, owner ->
             val keyVersion = repository.userIdentityKeyVersion(command.tenantId, command.campaignId)
                 ?: fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
-            val userDigest = digests.userIdentity(
-                command.tenantId, command.campaignId, command.canonicalUser, keyVersion,
+
+            val userDigest: VoucherDigest = digests.userIdentity(
+                command.tenantId,
+                command.campaignId,
+                command.canonicalUser,
+                keyVersion
             )
             val guards = repository.lockReservationGuards(
-                command.tenantId, command.campaignId, userDigest.copyBytes(),
+                command.tenantId,
+                command.campaignId,
+                userDigest.copyBytes()
             ) ?: fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
             requireActive(guards.campaign.state)
+
             val transactionTime = repository.transactionTime()
             if (transactionTime < guards.campaign.startsAt || transactionTime >= guards.campaign.endsAt) {
                 fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
             }
             val lockedEligibleBatchIds = eligibleBatchIds(guards.batches, transactionTime)
             if (lockedEligibleBatchIds.isEmpty()) failForUnavailableBatches(guards.batches, transactionTime)
+
             val used = guards.userLimit.activeReservations + guards.userLimit.activeAllocations
             if (used >= guards.campaign.perUserLimit || guards.userLimit.lifetimeConsumed >= guards.campaign.perUserLimit) {
                 fail(VoucherPoolErrorCode.USER_LIMIT_REACHED)
             }
+
             val entry = repository.selectAvailableEntrySkipLocked(
                 command.tenantId,
                 command.campaignId,
                 lockedEligibleBatchIds,
-            )
-                ?: fail(
-                    if (repository.hasAvailableEligibleEntry(
-                            command.tenantId,
-                            command.campaignId,
-                            lockedEligibleBatchIds,
-                        )
-                    ) {
-                        VoucherPoolErrorCode.POOL_BUSY
-                    } else {
-                        VoucherPoolErrorCode.POOL_EXHAUSTED
-                    },
+            ) ?: run {
+                val eligibleEntry = repository.hasAvailableEligibleEntry(
+                    tenantId = command.tenantId,
+                    campaignId = command.campaignId,
+                    lockedBatchIds = lockedEligibleBatchIds,
                 )
+                val code = if (eligibleEntry) {
+                    VoucherPoolErrorCode.POOL_BUSY
+                } else {
+                    VoucherPoolErrorCode.POOL_EXHAUSTED
+                }
+                fail(code)
+            }
             val expiresAt = transactionTime.plusSeconds(guards.campaign.reservationTtlSeconds)
             val saved = repository.createReservation(
-                ReservationRecord(
+                reservation = ReservationRecord(
                     command.tenantId,
                     command.reservationId,
                     command.campaignId,
@@ -151,31 +160,34 @@ internal class JdbcReservationService(
                     policyVersion = guards.campaign.policyVersion,
                     revision = 0,
                 ),
-                entry,
-                guards.userLimit,
+                entry = entry,
+                userLimit = guards.userLimit,
             )
             repository.appendLifecycleAudit(
-                saved.tenantId,
-                saved.campaignId,
-                "RESERVATION",
-                saved.reservationId,
-                saved.revision,
-                saved.policyVersion,
-                "RESERVED",
-                "CUSTOMER",
+                tenantId = saved.tenantId,
+                campaignId = saved.campaignId,
+                aggregateType = "RESERVATION",
+                aggregateId = saved.reservationId,
+                revision = saved.revision,
+                policyVersion = saved.policyVersion,
+                reasonCode = "RESERVED",
+                actorType = "CUSTOMER",
             )
             saved.snapshot()
         }
 
     private fun eligibleBatchIds(batches: List<BatchRecord>, transactionTime: Instant): List<UUID> =
-        batches.filter { batch ->
-            batch.state == BatchState.ACTIVE &&
-                batch.activatesAt <= transactionTime &&
-                (batch.expiresAt == null || batch.expiresAt > transactionTime)
-        }.map { it.batchId }
+        batches
+            .filter { batch ->
+                batch.state == BatchState.ACTIVE &&
+                        batch.activatesAt <= transactionTime &&
+                        (batch.expiresAt == null || batch.expiresAt > transactionTime)
+            }
+            .map { it.batchId }
 
     private fun failForUnavailableBatches(batches: List<BatchRecord>, transactionTime: Instant): Nothing {
         batches.firstOrNull { it.state != BatchState.ACTIVE }?.let { requireBatchUsable(it.state) }
+
         if (batches.any { it.expiresAt?.let { expiry -> expiry <= transactionTime } == true }) {
             fail(VoucherPoolErrorCode.BATCH_EXPIRED)
         }
@@ -184,19 +196,19 @@ internal class JdbcReservationService(
 
     override fun release(command: ReleaseReservationCommand): MutationResult<ReservationSnapshot> =
         mutations.execute(
-            command.tenantId,
-            "voucher-reservation-release",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-reservation-release",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-reservation-release",
                 "campaignId" to command.campaignId,
                 "reservationId" to command.reservationId,
                 "canonicalUser" to command.canonicalUser,
                 "expectedRevision" to command.expectedRevision,
             ),
-            command.reservationId,
-            LIFECYCLE_HTTP_OK,
-            LifecycleLane.FOREGROUND,
+            effectId = command.reservationId,
+            successStatus = LIFECYCLE_HTTP_OK,
+            lane = LifecycleLane.FOREGROUND,
         ) { connection, _ ->
             val keyVersion = repository.userIdentityKeyVersion(command.tenantId, command.campaignId)
                 ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
@@ -204,27 +216,33 @@ internal class JdbcReservationService(
             val chain = repository.lockReservationChain(
                 command.tenantId, command.reservationId, digest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
+
             requireCampaignUsable(chain.campaign.state)
             requireBatchUsable(chain.batch.state)
+
             if (chain.reservation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             if (chain.reservation.state != ReservationState.ACTIVE.name) fail(VoucherPoolErrorCode.STALE_REVISION)
             if (chain.reservation.expiresAt <= repository.transactionTime()) fail(VoucherPoolErrorCode.RESERVATION_EXPIRED)
+
             val released = repository.releaseReservation(chain)
             repository.appendLifecycleAudit(
-                released.tenantId,
-                released.campaignId,
-                "RESERVATION",
-                released.reservationId,
-                released.revision,
-                released.policyVersion,
-                "RELEASED",
-                "CUSTOMER",
+                tenantId = released.tenantId,
+                campaignId = released.campaignId,
+                aggregateType = "RESERVATION",
+                aggregateId = released.reservationId,
+                revision = released.revision,
+                policyVersion = released.policyVersion,
+                reasonCode = "RELEASED",
+                actorType = "CUSTOMER",
             )
             released.snapshot()
         }
 }
 
-internal enum class LifecycleLane { FOREGROUND, OPERATOR }
+internal enum class LifecycleLane {
+    FOREGROUND,
+    OPERATOR
+}
 
 internal class LifecycleMutationExecutor(
     private val executor: VoucherPoolJdbcExecutor,
@@ -241,10 +259,18 @@ internal class LifecycleMutationExecutor(
         effect: (Connection, IdempotencyOwner) -> T,
     ): MutationResult<T> {
         val scope = CommandScope(tenantId, operation)
+
         return when (val decision = transaction(lane) { idempotency.acquire(scope, rawKey, fingerprint) }) {
-            is IdempotencyDecision.Execute -> executeOwned(decision.owner, effectId, successStatus, lane, effect)
-            is IdempotencyDecision.Replay -> MutationResult.Replay(decision.descriptor)
-            is IdempotencyDecision.Expired -> MutationResult.Expired(decision.effectId, decision.terminalCode)
+            is IdempotencyDecision.Execute    ->
+                executeOwned(
+                    owner = decision.owner,
+                    effectId = effectId,
+                    successStatus = successStatus,
+                    lane = lane,
+                    effect = effect
+                )
+            is IdempotencyDecision.Replay     -> MutationResult.Replay(decision.descriptor)
+            is IdempotencyDecision.Expired    -> MutationResult.Expired(decision.effectId, decision.terminalCode)
             is IdempotencyDecision.InProgress -> fail(VoucherPoolErrorCode.COMMAND_IN_PROGRESS)
             IdempotencyDecision.FingerprintConflict -> fail(VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT)
         }
@@ -257,7 +283,7 @@ internal class LifecycleMutationExecutor(
         lane: LifecycleLane,
         effect: (Connection, IdempotencyOwner) -> T,
     ): MutationResult<T> {
-        val outcome = try {
+        val outcome: OwnedLifecycleOutcome<T> = try {
             transaction(lane) {
                 idempotency.lockOwnerForExecution(owner)
                 try {
@@ -276,6 +302,7 @@ internal class LifecycleMutationExecutor(
             releaseRetryable(owner, lane)
             throw failure
         }
+
         return when (outcome) {
             is OwnedLifecycleOutcome.Applied -> MutationResult.Applied(outcome.value)
             is OwnedLifecycleOutcome.Failed -> throw outcome.failure
@@ -289,14 +316,15 @@ internal class LifecycleMutationExecutor(
     ): MutationResult<T> {
         val semantics = VoucherPoolErrorCatalog[failure.code]
         when (semantics.descriptorAction) {
-            DescriptorAction.STORE -> transaction(lane) {
-                idempotency.lockOwnerForExecution(owner)
-                idempotency.finalize(
-                    owner,
-                    SafeResponseDescriptor.terminal(semantics.httpStatus, failure.code),
-                    EffectReference.terminal(failure.code),
-                )
-            }
+            DescriptorAction.STORE      ->
+                transaction(lane) {
+                    idempotency.lockOwnerForExecution(owner)
+                    idempotency.finalize(
+                        owner,
+                        SafeResponseDescriptor.terminal(semantics.httpStatus, failure.code),
+                        EffectReference.terminal(failure.code),
+                    )
+                }
             DescriptorAction.RELEASE, DescriptorAction.NONE -> releaseRetryable(owner, lane)
             DescriptorAction.STORE_SAFE -> {
                 val descriptor = SafeResponseDescriptor.success(
@@ -319,12 +347,25 @@ internal class LifecycleMutationExecutor(
         throw failure
     }
 
-    private fun descriptor(value: Any?, effectId: UUID, status: Int): SafeResponseDescriptor = when (value) {
-        is ReservationSnapshot -> SafeResponseDescriptor.success(status, "RESERVATION_${value.state.name}", effectId, value.revision)
-        is AllocationSnapshot -> SafeResponseDescriptor.success(status, "ALLOCATION_${value.state.name}", effectId, value.revision)
-        is RevealResult -> SafeResponseDescriptor.success(status, value.outcome, effectId, value.revision)
-        else -> error("unsupported lifecycle mutation result")
-    }
+    private fun descriptor(value: Any?, effectId: UUID, status: Int): SafeResponseDescriptor =
+        when (value) {
+            is ReservationSnapshot ->
+                SafeResponseDescriptor.success(
+                    status = status,
+                    outcome = "RESERVATION_${value.state.name}",
+                    effectId = effectId,
+                    revision = value.revision
+                )
+            is AllocationSnapshot  ->
+                SafeResponseDescriptor.success(
+                    status = status,
+                    outcome = "ALLOCATION_${value.state.name}",
+                    effectId = effectId,
+                    revision = value.revision
+                )
+            is RevealResult        -> SafeResponseDescriptor.success(status, value.outcome, effectId, value.revision)
+            else                   -> error("unsupported lifecycle mutation result")
+        }
 
     private fun releaseRetryable(owner: IdempotencyOwner, lane: LifecycleLane) {
         releaseRetryableOwner {
@@ -332,43 +373,45 @@ internal class LifecycleMutationExecutor(
         }
     }
 
-    private fun <T> transaction(lane: LifecycleLane, block: () -> T): T = when (lane) {
-        LifecycleLane.FOREGROUND -> executor.foregroundTransaction(block)
-        LifecycleLane.OPERATOR -> executor.operatorTransaction(block)
-    }
+    private fun <T> transaction(lane: LifecycleLane, block: () -> T): T =
+        when (lane) {
+            LifecycleLane.FOREGROUND -> executor.foregroundTransaction(block)
+            LifecycleLane.OPERATOR   -> executor.operatorTransaction(block)
+        }
 
 }
 
 private sealed interface OwnedLifecycleOutcome<out T> {
-    data class Applied<T>(val value: T) : OwnedLifecycleOutcome<T>
-    data class Failed(val failure: VoucherPoolLifecycleException) : OwnedLifecycleOutcome<Nothing>
+    data class Applied<T>(val value: T): OwnedLifecycleOutcome<T>
+    data class Failed(val failure: VoucherPoolLifecycleException): OwnedLifecycleOutcome<Nothing>
 }
 
 private class CommitLifecycleFailure(
     val lifecycleFailure: VoucherPoolLifecycleException,
-) : RuntimeException(lifecycleFailure)
+): RuntimeException(lifecycleFailure)
 
-internal fun ReservationRecord.snapshot() = ReservationSnapshot(
-    tenantId,
-    reservationId,
-    campaignId,
-    batchId,
-    entryId,
-    ReservationState.valueOf(state),
-    expiresAt,
-    entitlementRootId,
-    replacementOrdinal,
-    policyVersion,
-    revision,
-)
+internal fun ReservationRecord.snapshot(): ReservationSnapshot =
+    ReservationSnapshot(
+        tenantId = tenantId,
+        reservationId = reservationId,
+        campaignId = campaignId,
+        batchId = batchId,
+        entryId = entryId,
+        state = ReservationState.valueOf(state),
+        expiresAt = expiresAt,
+        entitlementRootId = entitlementRootId,
+        replacementOrdinal = replacementOrdinal,
+        policyVersion = policyVersion,
+        revision = revision,
+    )
 
 internal fun requireActive(state: CampaignState) {
     when (state) {
-        CampaignState.ACTIVE -> Unit
-        CampaignState.PAUSED -> fail(VoucherPoolErrorCode.CAMPAIGN_PAUSED)
+        CampaignState.ACTIVE  -> Unit
+        CampaignState.PAUSED  -> fail(VoucherPoolErrorCode.CAMPAIGN_PAUSED)
         CampaignState.REVOKING -> fail(VoucherPoolErrorCode.CAMPAIGN_REVOKING)
         CampaignState.REVOKED -> fail(VoucherPoolErrorCode.CAMPAIGN_REVOKED)
-        CampaignState.DRAFT -> fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
+        CampaignState.DRAFT   -> fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
     }
 }
 
@@ -376,14 +419,14 @@ internal fun requireCampaignUsable(state: CampaignState) = requireActive(state)
 
 internal fun requireBatchUsable(state: BatchState) {
     when (state) {
-        BatchState.ACTIVE -> Unit
-        BatchState.PAUSED -> fail(VoucherPoolErrorCode.BATCH_PAUSED)
-        BatchState.EXPIRING -> fail(VoucherPoolErrorCode.BATCH_EXPIRING)
+        BatchState.ACTIVE           -> Unit
+        BatchState.PAUSED           -> fail(VoucherPoolErrorCode.BATCH_PAUSED)
+        BatchState.EXPIRING         -> fail(VoucherPoolErrorCode.BATCH_EXPIRING)
         BatchState.REVOKED, BatchState.REVOKING -> fail(VoucherPoolErrorCode.BATCH_REVOKED)
-        BatchState.EXPIRED -> fail(VoucherPoolErrorCode.BATCH_EXPIRED)
+        BatchState.EXPIRED          -> fail(VoucherPoolErrorCode.BATCH_EXPIRED)
         BatchState.FAILED_RETRYABLE -> fail(VoucherPoolErrorCode.BATCH_FAILED_RETRYABLE)
-        BatchState.FAILED_TERMINAL -> fail(VoucherPoolErrorCode.BATCH_FAILED_TERMINAL)
-        BatchState.STAGING -> fail(VoucherPoolErrorCode.SCOPE_NOT_FOUND)
+        BatchState.FAILED_TERMINAL  -> fail(VoucherPoolErrorCode.BATCH_FAILED_TERMINAL)
+        BatchState.STAGING          -> fail(VoucherPoolErrorCode.SCOPE_NOT_FOUND)
     }
 }
 
@@ -412,8 +455,8 @@ internal fun VoucherPoolRepository.appendLifecycleAudit(
     policyVersion: Long,
     reasonCode: String,
     actorType: String,
-) = appendAudit(
-    VoucherPoolAuditRecord(
+) {
+    val auditRecord = VoucherPoolAuditRecord(
         tenantId = tenantId,
         campaignId = campaignId,
         aggregateType = aggregateType,
@@ -422,8 +465,9 @@ internal fun VoucherPoolRepository.appendLifecycleAudit(
         policyVersion = policyVersion,
         actorType = actorType,
         reasonCode = reasonCode,
-    ),
-)
+    )
+    appendAudit(auditRecord)
+}
 
 internal const val LIFECYCLE_HTTP_OK = 200
 internal const val LIFECYCLE_HTTP_CREATED = 201

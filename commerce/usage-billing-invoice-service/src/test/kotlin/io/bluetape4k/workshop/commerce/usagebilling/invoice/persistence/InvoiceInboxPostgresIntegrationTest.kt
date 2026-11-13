@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.application.InvoiceInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
@@ -41,10 +43,10 @@ class InvoiceInboxPostgresIntegrationTest {
         val chargeEventId = UUID.randomUUID()
         val charge = InvoiceInboxEvent(chargeEventId, "ChargeRated", null, BigDecimal("0.10"))
 
-        inbox.handle(charge).created shouldBeEqualTo true
-        inbox.handle(charge).created shouldBeEqualTo false
+        inbox.handle(charge).created.shouldBeTrue()
+        inbox.handle(charge).created.shouldBeFalse()
         inbox.handle(InvoiceInboxEvent(UUID.randomUUID(), "AdjustmentPosted", chargeEventId, BigDecimal("-0.10")))
-            .created shouldBeEqualTo true
+            .created.shouldBeTrue()
 
         transaction { lines.findAll().count() } shouldBeEqualTo initialCount + 2
         transaction { requireNotNull(lines.findAll().last().correctionOf) } shouldBeEqualTo chargeEventId
@@ -60,8 +62,8 @@ class InvoiceInboxPostgresIntegrationTest {
 
         val lease = outboxJournal.claim("owner-a", now, 1).single()
 
-        outboxJournal.markPublished(lease.eventId, "owner-b", now) shouldBeEqualTo false
-        outboxJournal.markPublished(lease.eventId, "owner-a", now) shouldBeEqualTo true
+        outboxJournal.markPublished(lease.eventId, "owner-b", now).shouldBeFalse()
+        outboxJournal.markPublished(lease.eventId, "owner-a", now).shouldBeTrue()
     }
 
     private fun <T : Any> transaction(block: () -> T): T =

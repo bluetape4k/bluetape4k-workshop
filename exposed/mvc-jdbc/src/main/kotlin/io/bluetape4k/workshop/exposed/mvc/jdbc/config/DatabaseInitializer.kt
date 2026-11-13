@@ -18,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 @Component
-class DatabaseInitializer : ApplicationRunner {
+class DatabaseInitializer: ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Transactional
     override fun run(args: ApplicationArguments) {

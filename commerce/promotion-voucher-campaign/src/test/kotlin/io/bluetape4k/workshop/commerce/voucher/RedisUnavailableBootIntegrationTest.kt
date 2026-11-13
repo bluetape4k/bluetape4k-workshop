@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionDecision
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionState
 import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionGate
@@ -9,6 +10,7 @@ import io.bluetape4k.workshop.commerce.voucher.config.VoucherAdmissionConfigurat
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherRedisConfiguration
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherRedisResources
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -30,10 +32,10 @@ internal class RedisUnavailableBootIntegrationTest {
                 "workshop.voucher.keys.redis-slot=${"r".repeat(32)}",
                 "workshop.voucher.keys.risk=${"k".repeat(32)}",
             ).run { context ->
-                context.startupFailure shouldBeEqualTo null
-                context.getBean(VoucherRedisResources::class.java).bloomFilter shouldBeEqualTo null
-                val keys = context.getBean(VoucherAdmissionKeyFactory::class.java)
-                val gate = context.getBean(VoucherAdmissionGate::class.java)
+                context.startupFailure.shouldBeNull()
+                context.getBean(VoucherRedisResources::class.java).bloomFilter.shouldBeNull()
+                val keys = context.getBean<VoucherAdmissionKeyFactory>()
+                val gate = context.getBean<VoucherAdmissionGate>()
                 repeat(3) {
                     gate.decide(keys.rateKey("tenant-a", "principal-a", "allocate")) shouldBeEqualTo
                         AdmissionDecision.Proceed

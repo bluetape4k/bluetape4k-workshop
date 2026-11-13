@@ -15,20 +15,19 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Projecti
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamHeads
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityMappings
 
-internal val EVENT_SOURCED_HTTP_TABLES =
-    arrayOf(
-        EventLog,
-        SubjectIdentityMappings,
-        StreamHeads,
-        AppendFences,
-        IdempotencyReceipts,
-        OperatorAudits,
-        ProjectionGenerations,
-        ActiveProjectionGenerations,
-        ProjectionLeases,
-        ProjectionProcessedEvents,
-        ProjectionPoisonEvents,
-        ProjectionReadModels,
-        CampaignProjectionReadModels,
-        ProjectionCheckpoints,
-    )
+internal val EVENT_SOURCED_HTTP_TABLES = arrayOf(
+    EventLog,
+    SubjectIdentityMappings,
+    StreamHeads,
+    AppendFences,
+    IdempotencyReceipts,
+    OperatorAudits,
+    ProjectionGenerations,
+    ActiveProjectionGenerations,
+    ProjectionLeases,
+    ProjectionProcessedEvents,
+    ProjectionPoisonEvents,
+    ProjectionReadModels,
+    CampaignProjectionReadModels,
+    ProjectionCheckpoints,
+)

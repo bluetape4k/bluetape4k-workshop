@@ -2,14 +2,23 @@ package io.bluetape4k.workshop.commerce.voucherpool.security
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 internal class VoucherDigestServiceTest {
+
+    companion object: KLogging() {
+        private const val TENANT = "tenant-a"
+        private val CAMPAIGN: UUID = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        private val ALLOCATION: UUID = UUID.fromString("22222222-2222-2222-2222-222222222222")
+    }
+
     @Test
     fun `stable dedup ignores campaign and verification key rotation`() {
         val code = CanonicalVoucherCode.of("POOL-001")
@@ -20,14 +29,21 @@ internal class VoucherDigestServiceTest {
         stableBefore shouldBeEqualTo after.stableDedup(TENANT, code)
         stableBefore.keyVersion shouldBeEqualTo 7
         before.commandTombstone(TENANT, "reserve", "request-1") shouldBeEqualTo
-            after.commandTombstone(TENANT, "reserve", "request-1")
+                after.commandTombstone(TENANT, "reserve", "request-1")
         before.commandTombstoneKeyVersion shouldBeEqualTo 4
         after.commandTombstoneKeyVersion shouldBeEqualTo 4
 
         val oldVerification = before.verification(TENANT, CAMPAIGN, ALLOCATION, code)
         val currentVerification = after.verification(TENANT, CAMPAIGN, ALLOCATION, code)
-        (oldVerification == currentVerification).shouldBeFalse()
-        after.matchesVerification(TENANT, CAMPAIGN, ALLOCATION, code, oldVerification).shouldBeTrue()
+        oldVerification shouldNotBeEqualTo currentVerification
+
+        after.matchesVerification(
+            tenantId = TENANT,
+            campaignId = CAMPAIGN,
+            allocationId = ALLOCATION,
+            code = code,
+            expected = oldVerification
+        ).shouldBeTrue()
     }
 
     @Test
@@ -40,7 +56,8 @@ internal class VoucherDigestServiceTest {
         )
 
         val original = before.userIdentity(TENANT, CAMPAIGN, "customer-a")
-        (original == after.userIdentity(TENANT, CAMPAIGN, "customer-a")).shouldBeFalse()
+        log.debug { "original: $original" }
+        original shouldNotBeEqualTo after.userIdentity(TENANT, CAMPAIGN, "customer-a")
         original shouldBeEqualTo after.userIdentity(TENANT, CAMPAIGN, "customer-a", original.keyVersion)
     }
 
@@ -49,32 +66,39 @@ internal class VoucherDigestServiceTest {
         val service = digestService(verificationVersion = 1)
         val code = CanonicalVoucherCode.of("same-material")
 
-        (service.stableDedup(TENANT, code) == service.stableDedup("other-tenant", code)).shouldBeFalse()
-        (
-            service.userIdentity(TENANT, CAMPAIGN, "same-material") ==
-                service.commandTombstone(TENANT, "reserve", "same-material")
-        ).shouldBeFalse()
-        (
-            service.verification(TENANT, CAMPAIGN, ALLOCATION, code) ==
-                service.verification(TENANT, UUID.randomUUID(), ALLOCATION, code)
-        ).shouldBeFalse()
+        service.stableDedup(TENANT, code) shouldNotBeEqualTo service.stableDedup("other-tenant", code)
+        service.userIdentity(
+            tenantId = TENANT,
+            campaignId = CAMPAIGN,
+            canonicalUser = "same-material"
+        ) shouldNotBeEqualTo service.commandTombstone(TENANT, "reserve", "same-material")
+
+
+        service.verification(
+            tenantId = TENANT,
+            campaignId = CAMPAIGN,
+            allocationId = ALLOCATION,
+            code = code
+        ) shouldNotBeEqualTo service.verification(TENANT, UUID.randomUUID(), ALLOCATION, code)
+
     }
 
     @Test
     fun `unknown digest key version fails closed without exposing material`() {
         val service = digestService(verificationVersion = 2, retainVerificationVersion = 1)
-        val unknown = VoucherDigest.of(DigestPurpose.VERIFICATION, 99, ByteArray(32) { 9 })
+        val unknown = VoucherDigest(DigestPurpose.VERIFICATION, 99, ByteArray(32) { 9 })
 
         val failure = assertFailsWith<VoucherKeyMaterialUnavailableException> {
             service.matchesVerification(
-                TENANT,
-                CAMPAIGN,
-                ALLOCATION,
-                CanonicalVoucherCode.of("TOP-SECRET"),
-                unknown,
+                tenantId = TENANT,
+                campaignId = CAMPAIGN,
+                allocationId = ALLOCATION,
+                code = CanonicalVoucherCode.of("TOP-SECRET"),
+                expected = unknown,
             )
         }
-        failure.message.orEmpty() shouldNotContain "TOP-SECRET"
+        log.debug { "failure: $failure" }
+        failure.message shouldNotContain "TOP-SECRET"
         unknown.toString() shouldNotContain "09"
     }
 
@@ -85,29 +109,24 @@ internal class VoucherDigestServiceTest {
         retainUserIdentityVersion: Int? = null,
     ): VoucherDigestService {
         val verificationKeys = buildList {
-            add(DigestKey.of(verificationVersion, keyBytes(verificationVersion)))
-            retainVerificationVersion?.let { add(DigestKey.of(it, keyBytes(it))) }
+            add(DigestKey(verificationVersion, keyBytes(verificationVersion)))
+            retainVerificationVersion?.let { add(DigestKey(it, keyBytes(it))) }
         }
         return VoucherDigestService(
             stableDedupKey = DigestKey.of(7, keyBytes(7)),
             commandTombstoneKey = DigestKey.of(4, keyBytes(4)),
             rotatingKeys = mapOf(
-                DigestPurpose.VERIFICATION to DigestKeyRing.of(verificationKeys.first(), verificationKeys.drop(1)),
-                DigestPurpose.USER_IDENTITY to DigestKeyRing.of(
+                DigestPurpose.VERIFICATION to DigestKeyRing(verificationKeys.first(), verificationKeys.drop(1)),
+                DigestPurpose.USER_IDENTITY to DigestKeyRing(
                     DigestKey.of(userIdentityVersion, keyBytes(userIdentityVersion)),
                     retainUserIdentityVersion?.let { listOf(DigestKey.of(it, keyBytes(it))) }.orEmpty(),
                 ),
-                DigestPurpose.REDIS_SIGNAL to DigestKeyRing.of(DigestKey.of(5, keyBytes(5))),
-                DigestPurpose.AUDIT to DigestKeyRing.of(DigestKey.of(6, keyBytes(6))),
+                DigestPurpose.REDIS_SIGNAL to DigestKeyRing(DigestKey.of(5, keyBytes(5))),
+                DigestPurpose.AUDIT to DigestKeyRing(DigestKey.of(6, keyBytes(6))),
             ),
         )
     }
 
-    private fun keyBytes(seed: Int) = ByteArray(32) { (seed + it).toByte() }
-
-    companion object {
-        private const val TENANT = "tenant-a"
-        private val CAMPAIGN: UUID = UUID.fromString("11111111-1111-1111-1111-111111111111")
-        private val ALLOCATION: UUID = UUID.fromString("22222222-2222-2222-2222-222222222222")
-    }
+    private fun keyBytes(seed: Int) =
+        ByteArray(32) { (seed + it).toByte() }
 }

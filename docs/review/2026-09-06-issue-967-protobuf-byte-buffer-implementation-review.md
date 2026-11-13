@@ -19,7 +19,7 @@
 - capacity 부족과 read-only target 실패는 원래 예외를 보존하고 호출 전 position을
   복원한다.
 - README는 caller가 `flip`/`clear`와 buffer lifecycle을 소유함을 명시하고 raw
-  `Message.toByteArray()`와 wire format이 다름을 경고한다.
+  `Message.toUtf8Bytes()`와 wire format이 다름을 경고한다.
 - root `bluetape4k-dependencies:2.0.0` BOM이 versionless
   `bluetape4k-protobuf` alias를 해석하며 개별 module version/BOM은 추가하지 않았다.
 

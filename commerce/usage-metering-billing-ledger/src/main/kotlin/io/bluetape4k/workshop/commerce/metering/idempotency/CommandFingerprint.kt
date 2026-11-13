@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.commerce.metering.idempotency
 
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.toUtf8Bytes
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
 
@@ -14,7 +14,7 @@ value class Sha256Digest private constructor(val value: String) {
         fun of(canonicalValue: String): Sha256Digest =
             Sha256Digest(
                 MessageDigest.getInstance("SHA-256")
-                    .digest(canonicalValue.toByteArray(UTF_8))
+                    .digest(canonicalValue.toUtf8Bytes())
                     .toHexString(),
             )
     }

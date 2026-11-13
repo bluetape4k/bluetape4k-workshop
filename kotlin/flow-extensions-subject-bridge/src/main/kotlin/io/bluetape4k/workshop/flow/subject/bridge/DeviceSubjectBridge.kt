@@ -7,6 +7,7 @@ import io.bluetape4k.coroutines.flow.extensions.subject.ReplaySubject
 import io.bluetape4k.coroutines.flow.extensions.subject.UnicastWorkSubject
 import io.bluetape4k.coroutines.flow.extensions.subject.awaitCollector
 import io.bluetape4k.coroutines.flow.extensions.subject.awaitCollectors
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
@@ -22,6 +23,9 @@ class DeviceSubjectBridge(
     replayHistorySize: Int = 8,
     private val multicastSubscribers: Int = 2,
 ) {
+
+    companion object: KLoggingChannel()
+
     init {
         replayHistorySize.requirePositiveNumber("replayHistorySize")
         multicastSubscribers.requirePositiveNumber("multicastSubscribers")
@@ -55,7 +59,10 @@ class DeviceSubjectBridge(
         eventSubject.awaitCollectors(minCollectorCount, timeout)
     }
 
-    suspend fun awaitMulticastSubscribers(minCollectorCount: Int = multicastSubscribers, timeout: Duration = 5.seconds) {
+    suspend fun awaitMulticastSubscribers(
+        minCollectorCount: Int = multicastSubscribers,
+        timeout: Duration = 5.seconds,
+    ) {
         multicastSubject.awaitCollectors(minCollectorCount, timeout)
     }
 

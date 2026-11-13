@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import org.junit.jupiter.api.Test
 import java.time.Clock
@@ -20,7 +21,7 @@ internal class ReviewCommandServiceTest : VoucherCommandTestSupport() {
             )
 
         approved.claim.state shouldBeEqualTo ClaimState.ALLOCATED
-        approved.oneTimeCode?.startsWith("V7-") shouldBeEqualTo true
+        approved.oneTimeCode?.startsWith("V7-").shouldBeTrue()
         campaignSnapshot().allocatedCount shouldBeEqualTo 1
     }
 

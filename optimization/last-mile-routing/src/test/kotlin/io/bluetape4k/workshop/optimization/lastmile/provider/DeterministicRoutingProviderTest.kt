@@ -45,8 +45,14 @@ private object LastMilePlannerInputFixture {
                     pickupCoordinateId = pickup,
                     deliveryCoordinateId = delivery,
                     demand = 1,
-                    pickupWindow = TimeWindow(Instant.parse("2026-08-24T08:00:00Z"), Instant.parse("2026-08-24T12:00:00Z")),
-                    deliveryWindow = TimeWindow(Instant.parse("2026-08-24T08:00:00Z"), Instant.parse("2026-08-24T18:00:00Z")),
+                    pickupWindow = TimeWindow(
+                        Instant.parse("2026-08-24T08:00:00Z"),
+                        Instant.parse("2026-08-24T12:00:00Z")
+                    ),
+                    deliveryWindow = TimeWindow(
+                        Instant.parse("2026-08-24T08:00:00Z"),
+                        Instant.parse("2026-08-24T18:00:00Z")
+                    ),
                     priority = Priority.NORMAL,
                     carrierVersion = CarrierVersion(1),
                 ),

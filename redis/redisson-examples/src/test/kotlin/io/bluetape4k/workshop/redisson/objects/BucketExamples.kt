@@ -1,5 +1,14 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.codec.RedissonCodecs
@@ -9,13 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeInRange
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldContainSame
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
 import org.junit.jupiter.api.Test
@@ -24,8 +26,7 @@ import org.redisson.api.RBucket
 import org.redisson.api.listener.SetObjectListener
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * [RBucket] 예제
@@ -44,8 +45,8 @@ class BucketExamples: AbstractRedissonTest() {
         val bucket: RBucket<String> = redisson.getBucket(randomName(), RedissonCodecs.String)
 
         // bucket에 object를 설정한다
-        bucket.setAsync("000", 60.seconds.toJavaDuration()).await()
-        delay(100)
+        bucket.setAsync("000", 60.seconds()).await()
+        delay(100.milliseconds)
 
         // 기존 TTL을 유지하면서 신규 value로 변경한다
         bucket.setAndKeepTTLAsync("123").await()
@@ -60,7 +61,7 @@ class BucketExamples: AbstractRedissonTest() {
         bucket.getAndSetAsync("5081").await() shouldBeEqualTo "2032"
 
         // bucket에 object가 없을 때에 set을 수행한다 (이미 있으므로 실패)
-        bucket.setIfAbsentAsync("7777", 60.seconds.toJavaDuration()).await().shouldBeFalse()
+        bucket.setIfAbsentAsync("7777", 60.seconds()).await().shouldBeFalse()
 
         // 기존 값이 있을 때에만 새로 설정한다
         bucket.setIfExistsAsync("9999").await().shouldBeTrue()
@@ -81,11 +82,11 @@ class BucketExamples: AbstractRedissonTest() {
         bucket.setAsync("000", 60, TimeUnit.SECONDS).await()
 
         val job = launch(Dispatchers.IO) {
-            delay(10)
+            delay(10.milliseconds)
             bucket.compareAndSetAsync("000", "111").await().shouldBeTrue()
-        }
+        }.log("Job")
 
-        delay(100)
+        delay(100.milliseconds)
         job.join()
 
         bucket.getAndDeleteAsync().await() shouldBeEqualTo "111"
@@ -192,14 +193,14 @@ class BucketExamples: AbstractRedissonTest() {
         })
 
         bucket.setAsync("123").await()
-        delay(10)
+        delay(10.milliseconds)
         await until { added.get() > 0 }
 
         added.get() shouldBeGreaterThan 0
         deleted.get() shouldBeEqualTo 0
 
         bucket.andDeleteAsync.await() shouldBeEqualTo "123"
-        delay(10)
+        delay(10.milliseconds)
         await until { deleted.get() > 0 }
 
         deleted.get() shouldBeGreaterThan 0

@@ -1,18 +1,20 @@
 package io.bluetape4k.workshop.r2dbc.basics
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.reactor.awaitSingle
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.reactor.awaitSingle
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
-import io.bluetape4k.assertions.assertFailsWith
 
 @SpringBootTest(classes = [InfrastructureConfiguration::class])
 class TransactionalServiceIntegrationTest @Autowired constructor(
@@ -36,7 +38,8 @@ class TransactionalServiceIntegrationTest @Autowired constructor(
         )
 
         statements.forEach {
-            database.sql(it)
+            log.debug { "statement=\n$it" }
+            database.sql(it.requireNotBlank("statement"))
                 .fetch()
                 .rowsUpdated()
                 .awaitSingle()

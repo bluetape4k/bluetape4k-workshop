@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.EventSourcedIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedMetrics
@@ -10,12 +11,16 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSource
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityService
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.CampaignCommandHttpService
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.CampaignProjectionSnapshotReader
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.VoucherCommandHttpService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
 
 @Configuration(proxyBeanMethods = false)
 internal class EventSourcedCommandConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun eventSourcedIdempotencyRepository(): EventSourcedIdempotencyRepository =
         EventSourcedIdempotencyRepository()
@@ -85,8 +90,8 @@ internal class EventSourcedCommandConfiguration {
         commands: EventSourcedVoucherCommands,
         lifecycle: EventSourcedVoucherLifecycleCommands,
         snapshots: CampaignProjectionSnapshotReader,
-    ): io.bluetape4k.workshop.commerce.voucher.eventsourced.web.VoucherCommandHttpService =
-        io.bluetape4k.workshop.commerce.voucher.eventsourced.web.VoucherCommandHttpService(
+    ): VoucherCommandHttpService =
+        VoucherCommandHttpService(
             commands,
             lifecycle,
             snapshots,

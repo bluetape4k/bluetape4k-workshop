@@ -1,6 +1,11 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventLog
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
@@ -12,18 +17,19 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
-@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSourcedStartupProbeIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private lateinit var probe: EventSourcedStartupProbe
@@ -32,12 +38,10 @@ internal class EventSourcedStartupProbeIntegrationTest {
     fun connectPostgres() {
         postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-startup-probe", maximumPoolSize = 1)
         database = postgresDatabase.database
-        probe =
-            EventSourcedOperationsConfiguration()
-                .eventSourcedStartupProbe(
-                    EventSourcedExposedDatabaseRegistration(database),
-                    EventSourcedDatabasePermitGate(),
-                )
+        probe = EventSourcedOperationsConfiguration().eventSourcedStartupProbe(
+            EventSourcedExposedDatabaseRegistration(database),
+            EventSourcedDatabasePermitGate(),
+        )
     }
 
     @BeforeEach
@@ -64,33 +68,32 @@ internal class EventSourcedStartupProbeIntegrationTest {
 
     @Test
     fun `probe reserves the readiness permit before requesting a Hikari connection`() {
-        val permits =
-            EventSourcedDatabasePermitGate(
-                acquireTimeout = Duration.ofMillis(50),
+        val permits = EventSourcedDatabasePermitGate(
+            acquireTimeout = 50.millis(),
+        )
+        val contestedProbe = EventSourcedOperationsConfiguration()
+            .eventSourcedStartupProbe(
+                EventSourcedExposedDatabaseRegistration(database),
+                permits,
             )
-        val contestedProbe =
-            EventSourcedOperationsConfiguration()
-                .eventSourcedStartupProbe(
-                    EventSourcedExposedDatabaseRegistration(database),
-                    permits,
-                )
         val permitHeld = CountDownLatch(1)
         val releasePermit = CountDownLatch(1)
 
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-            val owner =
-                executor.submit {
-                    permits.withPermit(EventSourcedDatabaseLane.READINESS) {
-                        permitHeld.countDown()
-                        check(releasePermit.await(5, TimeUnit.SECONDS)) { "readiness permit was not released" }
-                    }
+            val owner = executor.submit {
+                permits.withPermit(EventSourcedDatabaseLane.READINESS) {
+                    permitHeld.countDown()
+                    releasePermit.await(5.seconds).shouldBeTrue()
                 }
-            check(permitHeld.await(5, TimeUnit.SECONDS)) { "readiness permit was not acquired" }
+            }
+            permitHeld.await(5.seconds).shouldBeTrue()
 
-            assertFailsWith<DatabaseBulkheadRejected> { contestedProbe.verify() }
+            assertFailsWith<DatabaseBulkheadRejected> {
+                contestedProbe.verify()
+            }
 
             releasePermit.countDown()
-            owner.get(5, TimeUnit.SECONDS)
+            owner.get(5.seconds)
         }
     }
 }

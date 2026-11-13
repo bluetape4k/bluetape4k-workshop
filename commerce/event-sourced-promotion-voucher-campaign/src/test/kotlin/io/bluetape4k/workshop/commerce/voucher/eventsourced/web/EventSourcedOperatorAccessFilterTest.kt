@@ -2,11 +2,15 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKey
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
 import org.junit.jupiter.api.Test
@@ -16,24 +20,33 @@ import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 
 internal class EventSourcedOperatorAccessFilterTest {
-    private val filter =
-        EventSourcedOperatorAccessFilter(
-            EventSourcedOperatorProperties(SECRET, GUARD),
-            Jackson.defaultJsonMapper,
-            EventSourcedHmacKeyRing(
-                EventSourcedHmacKey(1, "operator-test-key-material-at-least-32-bytes".toByteArray()),
-            ),
+
+    private companion object: KLogging() {
+        const val PORT = 8080
+        const val SHA_256_HEX_LENGTH = 64
+        const val SECRET = "operator-secret"
+        const val GUARD = "operator-guard"
+        const val PRINCIPAL = "operator-principal"
+        const val ORIGIN = "http://127.0.0.1:$PORT"
+    }
+
+    private val filter = EventSourcedOperatorAccessFilter(
+        properties = EventSourcedOperatorProperties(SECRET, GUARD),
+        mapper = Jackson.defaultJsonMapper,
+        hmacKeyRing = EventSourcedHmacKeyRing(
+            EventSourcedHmacKey(1, "operator-test-key-material-at-least-32-bytes".toUtf8Bytes()),
+        ),
     )
 
     @Test
     fun `operator properties retain only validated normalized values`() {
-        val properties =
-            EventSourcedOperatorProperties(
-                secret = SECRET,
-                guard = GUARD,
-                allowedHosts = setOf("LOCALHOST", "127.0.0.1"),
-            )
+        val properties = EventSourcedOperatorProperties(
+            secret = SECRET,
+            guard = GUARD,
+            allowedHosts = setOf("LOCALHOST", "127.0.0.1"),
+        )
 
+        log.debug { "properties: $properties" }
         properties.secret shouldBeEqualTo SECRET
         properties.guard shouldBeEqualTo GUARD
         properties.allowedHosts shouldBeEqualTo setOf("localhost", "127.0.0.1")
@@ -62,7 +75,11 @@ internal class EventSourcedOperatorAccessFilterTest {
 
         response.status shouldBeEqualTo 200
         chain.request.shouldNotBeNull()
-        val surrogate = request.getAttribute(OPERATOR_ACTOR_SURROGATE_ATTRIBUTE).shouldNotBeNull() as String
+
+        val surrogate = request.getAttribute(OPERATOR_ACTOR_SURROGATE_ATTRIBUTE).shouldNotBeNull()
+
+        log.debug { "surrogate: $surrogate" }
+        surrogate.shouldBeInstanceOf<String>()
         surrogate.length shouldBeEqualTo SHA_256_HEX_LENGTH
         surrogate shouldNotBeEqualTo PRINCIPAL
         surrogate.all { character -> character.isDigit() || character in 'a'..'f' }.shouldBeTrue()
@@ -77,29 +94,28 @@ internal class EventSourcedOperatorAccessFilterTest {
         filter.doFilter(tenantB, MockHttpServletResponse(), MockFilterChain())
 
         tenantA.getAttribute(OPERATOR_ACTOR_SURROGATE_ATTRIBUTE) shouldNotBeEqualTo
-            tenantB.getAttribute(OPERATOR_ACTOR_SURROGATE_ATTRIBUTE)
+                tenantB.getAttribute(OPERATOR_ACTOR_SURROGATE_ATTRIBUTE)
     }
 
     @Test
     fun `operator trust boundary rejects each unsafe request before dispatch without reflecting credentials`() {
-        val unsafeMutations: List<(MockHttpServletRequest) -> Unit> =
-            listOf(
-                { request -> request.remoteAddr = "192.0.2.10" },
-                { request -> request.serverName = "untrusted.example" },
-                { request -> request.method = "OPTIONS" },
-                { request -> request.contentType = MediaType.TEXT_PLAIN_VALUE },
-                { request -> request.removeHeader("Origin") },
-                { request -> request.replaceHeader("Origin", "https://untrusted.example") },
-                { request -> request.removeHeader(OPERATOR_ROLE_HEADER) },
-                { request -> request.replaceHeader(OPERATOR_ROLE_HEADER, "VIEWER") },
-                { request -> request.removeHeader(OPERATOR_SECRET_HEADER) },
-                { request -> request.replaceHeader(OPERATOR_SECRET_HEADER, "wrong-secret") },
-                { request -> request.removeHeader(OPERATOR_GUARD_HEADER) },
-                { request -> request.replaceHeader(OPERATOR_GUARD_HEADER, "wrong-guard") },
-                { request -> request.addHeader(OPERATOR_SECRET_HEADER, "duplicate-secret") },
-                { request -> request.removeHeader(TENANT_HEADER) },
-                { request -> request.removeHeader(PRINCIPAL_HEADER) },
-            )
+        val unsafeMutations: List<(MockHttpServletRequest) -> Unit> = listOf(
+            { request -> request.remoteAddr = "192.0.2.10" },
+            { request -> request.serverName = "untrusted.example" },
+            { request -> request.method = "OPTIONS" },
+            { request -> request.contentType = MediaType.TEXT_PLAIN_VALUE },
+            { request -> request.removeHeader("Origin") },
+            { request -> request.replaceHeader("Origin", "https://untrusted.example") },
+            { request -> request.removeHeader(OPERATOR_ROLE_HEADER) },
+            { request -> request.replaceHeader(OPERATOR_ROLE_HEADER, "VIEWER") },
+            { request -> request.removeHeader(OPERATOR_SECRET_HEADER) },
+            { request -> request.replaceHeader(OPERATOR_SECRET_HEADER, "wrong-secret") },
+            { request -> request.removeHeader(OPERATOR_GUARD_HEADER) },
+            { request -> request.replaceHeader(OPERATOR_GUARD_HEADER, "wrong-guard") },
+            { request -> request.addHeader(OPERATOR_SECRET_HEADER, "duplicate-secret") },
+            { request -> request.removeHeader(TENANT_HEADER) },
+            { request -> request.removeHeader(PRINCIPAL_HEADER) },
+        )
 
         unsafeMutations.forEach { mutate ->
             val request = validRequest().also(mutate)
@@ -107,6 +123,7 @@ internal class EventSourcedOperatorAccessFilterTest {
 
             filter.doFilter(request, response, MockFilterChain())
 
+            log.debug { "response: $response" }
             response.status shouldBeEqualTo 403
             response.contentAsString shouldNotContain SECRET
             response.contentAsString shouldNotContain GUARD
@@ -116,16 +133,16 @@ internal class EventSourcedOperatorAccessFilterTest {
 
     @Test
     fun `safe operator GET accepts the explicit workshop origin fallback`() {
-        val request =
-            validRequest(method = "GET").apply {
-                removeHeader("Origin")
-                addHeader("X-Workshop-Origin", ORIGIN)
-                contentType = null
-            }
+        val request = validRequest(method = "GET").apply {
+            removeHeader("Origin")
+            addHeader("X-Workshop-Origin", ORIGIN)
+            contentType = null
+        }
         val chain = MockFilterChain()
 
         filter.doFilter(request, MockHttpServletResponse(), chain)
 
+        log.debug { "chain request: ${chain.request}" }
         chain.request.shouldNotBeNull()
     }
 
@@ -152,14 +169,5 @@ internal class EventSourcedOperatorAccessFilterTest {
     ) {
         removeHeader(name)
         addHeader(name, value)
-    }
-
-    private companion object {
-        const val PORT = 8080
-        const val SHA_256_HEX_LENGTH = 64
-        const val SECRET = "operator-secret"
-        const val GUARD = "operator-guard"
-        const val PRINCIPAL = "operator-principal"
-        const val ORIGIN = "http://127.0.0.1:$PORT"
     }
 }

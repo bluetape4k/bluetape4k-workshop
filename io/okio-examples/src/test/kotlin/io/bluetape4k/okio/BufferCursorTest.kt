@@ -1,20 +1,20 @@
 package io.bluetape4k.okio
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.asByte
 import okio.Buffer
 import okio.ByteString
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
-import io.bluetape4k.assertions.assertFailsWith
 
 class BufferCursorTest: AbstractOkioTest() {
 
@@ -244,7 +244,7 @@ class BufferCursorTest: AbstractOkioTest() {
             cursor.resizeBuffer(originalSize + 1_000_000L)
             cursor.seek(originalSize)
             do {
-                Arrays.fill(cursor.data, cursor.start, cursor.end, 'x'.asByte())
+                Arrays.fill(cursor.data!!, cursor.start, cursor.end, 'x'.asByte())
             } while (cursor.next() != -1)
         }
         buffer shouldBeEqualTo expected

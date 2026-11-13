@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.reservation.sweeper
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.reservation.application.JoinWaitlistCommand
 import io.bluetape4k.workshop.commerce.reservation.application.ReservationCapacityHandoffService
 import io.bluetape4k.workshop.commerce.reservation.application.ReservationCredentialService
@@ -12,22 +13,16 @@ import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
 import io.bluetape4k.workshop.commerce.reservation.domain.WaitlistState
 import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryRepository
 import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryStatus
-import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditRepository
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationHoldRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationHoldTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Test
 import java.time.Clock
-import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 
@@ -59,7 +54,7 @@ internal class ReservationResourceTransactionServiceTest {
                     offers,
                     credential,
                     Clock.fixed(now, ZoneOffset.UTC),
-                    Duration.ofSeconds(20),
+                    20.seconds(),
                     resources,
                     holds,
                     audits
@@ -81,7 +76,7 @@ internal class ReservationResourceTransactionServiceTest {
             resources.findById(resource.id).occupiedCount shouldBeEqualTo 1
             val offer = offers.snapshots(resource.id).single()
             notifications.findByDeliveryId("offer-created:${offer.id}:0:in-app")?.delivery?.status shouldBeEqualTo
-                NotificationDeliveryStatus.PENDING
+                    NotificationDeliveryStatus.PENDING
             ReservationAuditTable.selectAll().count() shouldBeEqualTo 4L
         }
     }
@@ -104,7 +99,7 @@ internal class ReservationResourceTransactionServiceTest {
                     offers,
                     credential,
                     Clock.fixed(now.minusSeconds(30), ZoneOffset.UTC),
-                    Duration.ofSeconds(20),
+                    20.seconds(),
                     resources,
                     holds,
                     audits
@@ -124,7 +119,7 @@ internal class ReservationResourceTransactionServiceTest {
             waitlists.findById(secondEntry.id).state shouldBeEqualTo WaitlistState.OFFERED
             resources.findById(resource.id).occupiedCount shouldBeEqualTo 1
             offers.snapshots(resource.id).map { it.state } shouldBeEqualTo
-                listOf(OfferState.EXPIRED, OfferState.ACTIVE)
+                    listOf(OfferState.EXPIRED, OfferState.ACTIVE)
         }
     }
 
@@ -146,7 +141,7 @@ internal class ReservationResourceTransactionServiceTest {
                     offers,
                     credential,
                     Clock.fixed(now.minusSeconds(30), ZoneOffset.UTC),
-                    Duration.ofSeconds(20),
+                    20.seconds(),
                     resources,
                     holds,
                     audits
@@ -182,7 +177,7 @@ internal class ReservationResourceTransactionServiceTest {
                     offers,
                     credential,
                     Clock.fixed(now.minusSeconds(60), ZoneOffset.UTC),
-                    Duration.ofSeconds(20),
+                    20.seconds(),
                     resources,
                     holds,
                     audits

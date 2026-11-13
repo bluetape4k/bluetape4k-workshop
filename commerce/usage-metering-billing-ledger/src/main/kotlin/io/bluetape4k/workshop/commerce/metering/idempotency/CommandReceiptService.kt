@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.idempotency
 
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.CommandReceiptStatus
 import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptRepository
@@ -131,7 +132,7 @@ class CommandReceiptService(
         httpStatus: Int,
         response: String,
     ): Boolean {
-        response.toByteArray(UTF_8).size.requireInRange(
+        response.toUtf8Bytes().size.requireInRange(
             0,
             properties.commandReceipt.terminalResponseBytes,
             "terminalResponse.bytes",

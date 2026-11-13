@@ -3,10 +3,14 @@ package io.bluetape4k.workshop.commerce.ticket.web
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 
 internal class TicketBrowserContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `demo exposes accessible recovery status and bounded fallback`() {
         val html = staticText("index.html")

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.backendcomparison.observability
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
@@ -8,13 +9,17 @@ import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.micrometer.LeaderMetricTagOptions
 import io.bluetape4k.leader.spring.observability.LeaderBackendDiagnosticsEndpoint
 import io.bluetape4k.leader.spring.observability.LeaderBackendHealthIndicator
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.backendcomparison.BackendComparisonLabApp
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeansOfType
+import org.springframework.boot.health.contributor.Status
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner
-import org.springframework.boot.health.contributor.Status
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -25,6 +30,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 class LeaderBackendDiagnosticsContextTest {
+
+    companion object: KLogging()
 
     private val contextRunner = ApplicationContextRunner()
         .withUserConfiguration(TestConfiguration::class.java)
@@ -53,20 +60,23 @@ class LeaderBackendDiagnosticsContextTest {
     @Test
     fun `default context exposes passive selected profile diagnostics`() {
         contextRunner.run { context ->
-            val endpoint = context.getBean(LeaderBackendDiagnosticsEndpoint::class.java)
+            val endpoint = context.getBean<LeaderBackendDiagnosticsEndpoint>()
             val diagnostics = endpoint.leaderBackendDiagnostics()
 
-            context.getBean(BackendComparisonLabApp::class.java).shouldNotBeNull()
-            context.getBean(LeaderElector::class.java)::class.simpleName shouldBeEqualTo
-                "InstrumentedLeaderElector"
+            context.getBean<BackendComparisonLabApp>().shouldNotBeNull()
+            context.getBean<LeaderElector>()::class.simpleName shouldBeEqualTo
+                    "InstrumentedLeaderElector"
+
+            log.debug { "diagnostics=$diagnostics" }
             diagnostics.descriptor.backendId shouldBeEqualTo "redis-lettuce"
             diagnostics.connectivity.status.name shouldBeEqualTo "NOT_CHECKED"
             diagnostics.connectivity.reason.name shouldBeEqualTo "NOT_CHECKED"
+
             context.containsBean("leaderBackendHealthIndicator").shouldBeFalse()
             context.containsBean("localLeaderElector").shouldBeFalse()
             context.containsBean("localSuspendLeaderElector").shouldBeTrue()
 
-            context.getBean(MeterRegistry::class.java)
+            context.getBean<MeterRegistry>()
                 .find("leader.backend.connectivity")
                 .meters()
                 .isEmpty()
@@ -91,7 +101,7 @@ class LeaderBackendDiagnosticsContextTest {
         contextRunner
             .withPropertyValues("management.endpoint.leaderBackendDiagnostics.enabled=false")
             .run { context ->
-                context.getBeansOfType(LeaderBackendDiagnosticsEndpoint::class.java).isEmpty().shouldBeTrue()
+                context.getBeansOfType<LeaderBackendDiagnosticsEndpoint>().shouldBeEmpty()
             }
     }
 
@@ -133,15 +143,15 @@ class LeaderBackendDiagnosticsContextTest {
                 health.details["reason"] shouldBeEqualTo "CONNECTED"
                 health.details.keys.none { key ->
                     key.contains("credential", ignoreCase = true) ||
-                        key.contains("exception", ignoreCase = true) ||
-                        key.contains("endpoint", ignoreCase = true)
+                            key.contains("exception", ignoreCase = true) ||
+                            key.contains("endpoint", ignoreCase = true)
                 }.shouldBeTrue()
 
-                val registry = context.getBean(MeterRegistry::class.java)
+                val registry = context.getBean<MeterRegistry>()
                 val meters = registry.find("leader.backend.connectivity").meters()
                 meters.size shouldBeEqualTo 1
                 meters.single().id.tags.map { it.key }.toSet() shouldBeEqualTo
-                    setOf(LeaderMetricTagOptions.TAG_BACKEND_NAME, "status", "reason")
+                        setOf(LeaderMetricTagOptions.TAG_BACKEND_NAME, "status", "reason")
 
                 val counter = registry
                     .find("leader.backend.connectivity")
@@ -150,6 +160,7 @@ class LeaderBackendDiagnosticsContextTest {
                     .tag("reason", "CONNECTED")
                     .counter()
                     .shouldNotBeNull()
+
                 counter.count() shouldBeEqualTo 1.0
             }
     }
@@ -170,9 +181,8 @@ class LeaderBackendDiagnosticsContextTest {
                     "workshop.leader.probe-outcome=$outcome",
                 )
                 .run { context ->
-                    val health = context.getBean(
+                    val health = context.getBean<LeaderBackendHealthIndicator>(
                         "leaderBackendHealthIndicator",
-                        LeaderBackendHealthIndicator::class.java,
                     ).health()
 
                     health.status shouldBeEqualTo mapping.first
@@ -198,12 +208,12 @@ class LeaderBackendDiagnosticsContextTest {
                 health.status shouldBeEqualTo Status.UNKNOWN
                 health.details.isEmpty().shouldBeTrue()
 
-                context.getBean(MeterRegistry::class.java)
+                context.getBean<MeterRegistry>()
                     .find("leader.backend.connectivity")
                     .meters()
                     .isEmpty()
                     .shouldBeTrue()
-        }
+            }
     }
 
     @Configuration(proxyBeanMethods = false)

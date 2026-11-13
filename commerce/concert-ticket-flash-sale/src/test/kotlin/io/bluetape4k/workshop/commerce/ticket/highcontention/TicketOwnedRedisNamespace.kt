@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireEndsWith
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.lettuce.core.ScanArgs
 import io.lettuce.core.ScanCursor
 import io.lettuce.core.api.sync.RedisCommands
-import java.util.TreeSet
+import java.util.*
 
 data class TicketOwnedRedisScanPage(
     val nextCursor: String,
@@ -99,7 +101,7 @@ class TicketOwnedRedisNamespace private constructor(
         return candidates.toList()
     }
 
-    companion object {
+    companion object: KLogging() {
         private const val INITIAL_CURSOR = "0"
         private const val NAMESPACE_COMPONENT_COUNT = 5
         private const val OWNED_KEY_COMPONENT_COUNT = 2
@@ -125,13 +127,14 @@ class TicketOwnedRedisNamespace private constructor(
             maximumScanIterations: Int = 1_024,
         ): TicketOwnedRedisNamespace {
             val validatedNamespace = namespace.requireNotBlank("namespace")
-            require(validatedNamespace.endsWith(':')) {
+            validatedNamespace.requireEndsWith(":") {
                 "namespace[$validatedNamespace] must end with a terminal delimiter."
             }
             val components = validatedNamespace.dropLast(1).split(':')
             components.size.requireEquals(NAMESPACE_COMPONENT_COUNT, "namespaceComponentCount")
             components[0].requireEquals("hc", "namespaceRoot")
             components[1].requireEquals("v1", "namespaceVersion")
+
             require(OWNER_COMPONENT_PATTERN.matches(components[2])) {
                 "runId[${components[2]}] must be a valid namespace component."
             }
@@ -150,7 +153,7 @@ class TicketOwnedRedisNamespace private constructor(
 
 private class LettuceTicketOwnedRedisKeyCommands(
     private val commands: RedisCommands<String, String>,
-) : TicketOwnedRedisKeyCommands {
+): TicketOwnedRedisKeyCommands {
 
     override fun scan(
         cursor: String,

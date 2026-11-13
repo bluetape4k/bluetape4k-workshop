@@ -21,8 +21,8 @@ internal data class CapacityResourceRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -41,8 +41,8 @@ internal data class ReservationHoldRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

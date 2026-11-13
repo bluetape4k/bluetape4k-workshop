@@ -2,6 +2,10 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.collections.intRangeOf
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -9,10 +13,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class HighContentionWorkloadEngineTest {
 
+    companion object: KLogging()
+
     @Test
     fun `warm-up runs before the baseline and is absent from measured conservation`() {
         val events = mutableListOf<String>()
-        val adapter = object : HighContentionWorkloadAdapter {
+        val adapter = object: HighContentionWorkloadAdapter {
             override fun warmUp(identity: WorkloadIdentity) {
                 events += "warmup:${identity.namespace}:${identity.ordinal}"
             }
@@ -29,16 +35,17 @@ class HighContentionWorkloadEngineTest {
         }
         val schedule = burstSchedule(operationCount = 3)
 
-        val result = HighContentionWorkloadEngine().run(
-            schedule = schedule,
-            warmupOperationCount = 2,
-            warmupNamespace = "run:warmup:",
-            measuredNamespace = "run:measured:",
-            concurrency = 1,
-            dispatcherBacklogCapacity = 3,
-            maxScheduleDelayNanos = Long.MAX_VALUE,
-            adapter = adapter,
-        )
+        val result = HighContentionWorkloadEngine()
+            .run(
+                schedule = schedule,
+                warmupOperationCount = 2,
+                warmupNamespace = "run:warmup:",
+                measuredNamespace = "run:measured:",
+                concurrency = 1,
+                dispatcherBacklogCapacity = 3,
+                maxScheduleDelayNanos = Long.MAX_VALUE,
+                adapter = adapter,
+            )
 
         events.take(3) shouldBeEqualTo listOf(
             "warmup:run:warmup::0",
@@ -50,6 +57,8 @@ class HighContentionWorkloadEngineTest {
             "measured:run:measured::1",
             "measured:run:measured::2",
         )
+
+        log.debug { "result=$result" }
         result.baseline shouldBeEqualTo "baseline-1"
         result.expectedTokenCount shouldBeEqualTo 3
         result.scheduledCount shouldBeEqualTo 3
@@ -63,7 +72,7 @@ class HighContentionWorkloadEngineTest {
     fun `bounded dispatch records local rejection and the reserved observer still executes`() {
         val release = CountDownLatch(1)
         val observerRan = AtomicBoolean()
-        val adapter = object : HighContentionWorkloadAdapter {
+        val adapter = object: HighContentionWorkloadAdapter {
             override fun warmUp(identity: WorkloadIdentity) = Unit
 
             override fun snapshotBaseline(): String = "baseline"
@@ -90,13 +99,11 @@ class HighContentionWorkloadEngineTest {
             },
         )
 
-        observerRan.get() shouldBeEqualTo true
+        observerRan.get().shouldBeTrue()
         result.scheduledCount shouldBeEqualTo 6
         result.scheduledCount shouldBeEqualTo result.dispatchedCount + result.locallyRejectedCount
-        result.dispatchedCount shouldBeEqualTo result.completedCount +
-            result.cancelledCount +
-            result.timedOutCount
-        result.realizedRecords.map { it.token.stableOrdinal }.sorted() shouldBeEqualTo (0 until 6).toList()
+        result.dispatchedCount shouldBeEqualTo result.completedCount + result.cancelledCount + result.timedOutCount
+        result.realizedRecords.map { it.token.stableOrdinal }.sorted() shouldBeEqualTo intRangeOf(0, 6)
     }
 
     @Test
@@ -110,7 +117,7 @@ class HighContentionWorkloadEngineTest {
                 concurrency = 1,
                 dispatcherBacklogCapacity = 1,
                 maxScheduleDelayNanos = Long.MAX_VALUE,
-                adapter = object : HighContentionWorkloadAdapter {
+                adapter = object: HighContentionWorkloadAdapter {
                     override fun warmUp(identity: WorkloadIdentity) = Unit
                     override fun snapshotBaseline(): String = "baseline"
                     override fun execute(

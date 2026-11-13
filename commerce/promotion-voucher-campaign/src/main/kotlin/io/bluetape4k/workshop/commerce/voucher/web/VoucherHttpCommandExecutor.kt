@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionDecision
 import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionGate
 import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionKeyFactory
@@ -99,7 +100,7 @@ internal class VoucherHttpCommandExecutor(
             outcome = executed.response.responseKind.name
             return executed
         } finally {
-            metrics?.recordCommand(operation, outcome, Duration.ofNanos(System.nanoTime() - startedAt))
+            metrics?.recordCommand(operation, outcome, (System.nanoTime() - startedAt).nanos())
         }
     }
 

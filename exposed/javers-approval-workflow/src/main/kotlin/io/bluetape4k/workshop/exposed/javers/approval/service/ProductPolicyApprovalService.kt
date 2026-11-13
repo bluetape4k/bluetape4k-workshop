@@ -5,7 +5,9 @@ import io.bluetape4k.javers.codecs.JaversCodecs
 import io.bluetape4k.javers.diff.changesByType
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.exposed.javers.approval.model.ChangedField
 import io.bluetape4k.workshop.exposed.javers.approval.model.PolicyProposal
@@ -127,26 +129,24 @@ class ProductPolicyApprovalService(
     /**
      * 현재 승인된 policy row를 찾는다.
      */
-    fun findCurrentPolicy(policyId: Long): ProductPolicy? =
-        transaction {
-            val validPolicyId = policyId.requirePositiveNumber("policyId")
-            ProductPolicyTable.selectAll()
-                .where { ProductPolicyTable.id eq validPolicyId }
-                .singleOrNull()
-                ?.toProductPolicy()
-        }
+    fun findCurrentPolicy(policyId: Long): ProductPolicy? = transaction {
+        val validPolicyId = policyId.requirePositiveNumber("policyId")
+        ProductPolicyTable.selectAll()
+            .where { ProductPolicyTable.id eq validPolicyId }
+            .singleOrNull()
+            ?.toProductPolicy()
+    }
 
     /**
      * 저장된 제안과 결정 정보를 찾는다.
      */
-    fun findProposal(proposalId: Long): PolicyProposal? =
-        transaction {
-            val validProposalId = proposalId.requirePositiveNumber("proposalId")
-            PolicyProposalTable.selectAll()
-                .where { PolicyProposalTable.id eq validProposalId }
-                .singleOrNull()
-                ?.toPolicyProposal()
-        }
+    fun findProposal(proposalId: Long): PolicyProposal? = transaction {
+        val validProposalId = proposalId.requirePositiveNumber("proposalId")
+        PolicyProposalTable.selectAll()
+            .where { PolicyProposalTable.id eq validProposalId }
+            .singleOrNull()
+            ?.toPolicyProposal()
+    }
 
     /**
      * 승인된 JaVers snapshot을 [limit]개까지 newest-first 순서로 반환한다.
@@ -160,9 +160,8 @@ class ProductPolicyApprovalService(
         limit: Int = DEFAULT_HISTORY_LIMIT,
     ): List<CdoSnapshot> {
         val validPolicyId = policyId.requirePositiveNumber("policyId")
-        require(limit in 1..MAX_HISTORY_LIMIT) {
-            "limit must be between 1 and $MAX_HISTORY_LIMIT."
-        }
+        limit.requireInRange(1, MAX_HISTORY_LIMIT, "limit")
+
         val query = QueryBuilder.byInstanceId(validPolicyId, ProductPolicy::class.java)
             .limit(limit)
             .build()
@@ -185,7 +184,7 @@ class ProductPolicyApprovalService(
 
     private fun requirePendingProposal(proposalId: Long): PolicyProposal {
         val validProposalId = proposalId.requirePositiveNumber("proposalId")
-        val proposal = requireNotNull(findProposal(validProposalId)) {
+        val proposal = findProposal(validProposalId).requireNotNull {
             "Policy proposal $proposalId does not exist"
         }
         require(proposal.status == ProposalStatus.PENDING) {
@@ -197,10 +196,11 @@ class ProductPolicyApprovalService(
     private fun transitionPendingDecision(proposalId: Long, status: ProposalStatus, reviewer: String, reason: String) {
         val validProposalId = proposalId.requirePositiveNumber("proposalId")
         val updatedRows = transaction {
-            PolicyProposalTable.update({
+            val whereClause = {
                 (PolicyProposalTable.id eq validProposalId) and
-                    (PolicyProposalTable.proposalStatus eq ProposalStatus.PENDING)
-            }) {
+                        (PolicyProposalTable.proposalStatus eq ProposalStatus.PENDING)
+            }
+            PolicyProposalTable.update(whereClause) {
                 it[proposalStatus] = status
                 it[PolicyProposalTable.reviewer] = reviewer
                 it[PolicyProposalTable.reason] = reason

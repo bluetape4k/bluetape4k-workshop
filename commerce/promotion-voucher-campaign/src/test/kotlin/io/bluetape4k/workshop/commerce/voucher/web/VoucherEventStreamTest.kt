@@ -1,13 +1,19 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
-import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherProperties
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherSseProperties
 import org.awaitility.kotlin.atMost
@@ -18,10 +24,10 @@ import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 internal class VoucherEventStreamTest {
     @Test
@@ -46,23 +52,26 @@ internal class VoucherEventStreamTest {
         val source =
             FakeEventSource { campaignId, afterId ->
                 if (afterId < 2L) {
-                    VoucherStreamBatch(snapshot(campaignId, revision = 2), listOf(EventCursor(2, 2) to audit(campaignId, 2)))
+                    VoucherStreamBatch(
+                        snapshot(campaignId, revision = 2),
+                        listOf(EventCursor(2, 2) to audit(campaignId, 2))
+                    )
                 } else {
                     VoucherStreamBatch(snapshot(campaignId, revision = 2), emptyList())
                 }
             }
-        val properties = testProperties(queueSize = 1, pollInterval = Duration.ofMillis(1))
+        val properties = testProperties(queueSize = 1, pollInterval = 1.millis())
 
         withStream(source, properties) { stream ->
             val subscription = stream.open("tenant", Uuid.V7.nextId(), null)
-            await atMost Duration.ofSeconds(2) untilAsserted {
+            await atMost 2.seconds() untilAsserted {
                 (source.pollCount.get() > 0).shouldBeTrue()
             }
 
             val output = ByteArrayOutputStream()
             stream.write(subscription, output)
 
-            val encoded = output.toString(Charsets.UTF_8)
+            val encoded = output.toUtf8String()
             encoded shouldContain "event: reset"
             encoded shouldContain "id: 2:2"
             encoded shouldNotContain "event: snapshot"
@@ -95,15 +104,15 @@ internal class VoucherEventStreamTest {
 
     @Test
     fun `blocked write times out and invokes cleanup once`() {
-        val properties = testProperties(writeTimeout = Duration.ofMillis(25))
+        val properties = testProperties(writeTimeout = 25.millis())
         withStream(FakeEventSource(), properties) { stream ->
             val subscription = stream.open("tenant", Uuid.V7.nextId(), null)
             val started = System.nanoTime()
 
             stream.write(subscription, BlockingOutputStream())
 
-            val elapsed = Duration.ofNanos(System.nanoTime() - started)
-            (elapsed < Duration.ofSeconds(5)).shouldBeTrue()
+            val elapsed = (System.nanoTime() - started).nanos()
+            elapsed shouldBeLessThan 5.seconds()
             subscription.cleanupInvocationCount() shouldBeEqualTo 1L
             subscription.queueDepth() shouldBeEqualTo 0
             stream.activePollers() shouldBeEqualTo 0
@@ -118,7 +127,7 @@ internal class VoucherEventStreamTest {
             FakeEventSource { campaignId, _ ->
                 val current = sequence.incrementAndGet()
                 if (current >= 3) {
-                    if (current == 3) releaseActivity.await(2, TimeUnit.SECONDS)
+                    if (current == 3) releaseActivity.await(2.seconds)
                     VoucherStreamBatch(
                         snapshot(campaignId, revision = current.toLong()),
                         listOf(EventCursor(current.toLong(), current.toLong()) to audit(campaignId, current.toLong())),
@@ -129,21 +138,21 @@ internal class VoucherEventStreamTest {
             }
         val properties =
             testProperties(
-                pollInterval = Duration.ofMillis(10),
-                maxIdleInterval = Duration.ofMillis(40),
+                pollInterval = 10.millis(),
+                maxIdleInterval = 40.millis(),
             )
 
         withStream(source, properties) { stream ->
             val campaignId = Uuid.V7.nextId()
             val subscription = stream.open("tenant", campaignId, null)
-            await atMost Duration.ofSeconds(2) untilAsserted {
-                (source.pollCount.get() >= 2).shouldBeTrue()
-                stream.pollDelay("tenant", campaignId) shouldBeEqualTo Duration.ofMillis(40)
+            await atMost 2.seconds() untilAsserted {
+                source.pollCount.get() shouldBeGreaterOrEqualTo 2
+                stream.pollDelay("tenant", campaignId) shouldBeEqualTo 40.millis()
             }
             releaseActivity.countDown()
-            await atMost Duration.ofSeconds(2) untilAsserted {
+            await atMost 2.seconds() untilAsserted {
                 (source.pollCount.get() >= 3).shouldBeTrue()
-                stream.pollDelay("tenant", campaignId) shouldBeEqualTo Duration.ofMillis(10)
+                stream.pollDelay("tenant", campaignId) shouldBeEqualTo 10.millis()
             }
             subscription.close()
         }
@@ -162,9 +171,9 @@ internal class VoucherEventStreamTest {
     private fun testProperties(
         maxCampaigns: Int = 32,
         queueSize: Int = 32,
-        pollInterval: Duration = Duration.ofSeconds(1),
-        maxIdleInterval: Duration = Duration.ofSeconds(2),
-        writeTimeout: Duration = Duration.ofSeconds(1),
+        pollInterval: Duration = 1.seconds(),
+        maxIdleInterval: Duration = 2.seconds(),
+        writeTimeout: Duration = 1.seconds(),
     ): VoucherProperties =
         VoucherProperties(
             sse =
@@ -173,7 +182,7 @@ internal class VoucherEventStreamTest {
                     queueSize = queueSize,
                     pollInterval = pollInterval,
                     maxIdleInterval = maxIdleInterval,
-                    heartbeatInterval = Duration.ofMillis(100),
+                    heartbeatInterval = 100.millis(),
                     writeTimeout = writeTimeout,
                 ),
         )
@@ -182,7 +191,7 @@ internal class VoucherEventStreamTest {
         private val nextBatch: (UUID, Long) -> VoucherStreamBatch = { campaignId, _ ->
             VoucherStreamBatch(snapshot(campaignId), emptyList())
         },
-    ) : VoucherEventSource {
+    ): VoucherEventSource {
         val pollCount = AtomicInteger()
 
         override fun initial(
@@ -201,11 +210,11 @@ internal class VoucherEventStreamTest {
         }
     }
 
-    private class BlockingOutputStream : OutputStream() {
+    private class BlockingOutputStream: OutputStream() {
         private val release = CountDownLatch(1)
 
         override fun write(value: Int) {
-            release.await(30, TimeUnit.SECONDS)
+            release.await(30.seconds)
         }
 
         override fun write(
@@ -213,7 +222,7 @@ internal class VoucherEventStreamTest {
             offset: Int,
             length: Int,
         ) {
-            release.await(30, TimeUnit.SECONDS)
+            release.await(30.seconds)
         }
     }
 

@@ -1,6 +1,7 @@
 package io.bluetape4k.okio
 
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
@@ -9,7 +10,6 @@ import io.bluetape4k.support.toUtf8Bytes
 import okio.Buffer
 import okio.sink
 import okio.source
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
@@ -20,9 +20,7 @@ import java.nio.file.StandardOpenOption
 @TempFolderTest
 class OkioKotlinTest: AbstractOkioTest() {
 
-    companion object: KLogging() {
-        val faker = Fakers.faker
-    }
+    companion object: KLogging()
 
     private lateinit var temp: TempFolder
 

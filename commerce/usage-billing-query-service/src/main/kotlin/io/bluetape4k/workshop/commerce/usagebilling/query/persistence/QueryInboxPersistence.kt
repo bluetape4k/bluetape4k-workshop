@@ -2,14 +2,14 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.query.persistence
 
+import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoveryJournal
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoverySnapshot
-import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
@@ -19,9 +19,9 @@ import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
-object QueryInboxEvents : UUIDTable("query_inbox_event", "inbox_event_id") {
+object QueryInboxEvents: UUIDTable("query_inbox_event", "inbox_event_id") {
     val eventId = javaUUID("event_id")
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
@@ -45,7 +45,7 @@ object QueryInboxEvents : UUIDTable("query_inbox_event", "inbox_event_id") {
     }
 }
 
-object QueryReadModels : UUIDTable("query_read_model", "read_model_id") {
+object QueryReadModels: UUIDTable("query_read_model", "read_model_id") {
     val sourceEventId = javaUUID("source_event_id")
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
@@ -55,7 +55,7 @@ object QueryReadModels : UUIDTable("query_read_model", "read_model_id") {
     }
 }
 
-object QueryCheckpoints : UUIDTable("query_checkpoint", "checkpoint_id") {
+object QueryCheckpoints: UUIDTable("query_checkpoint", "checkpoint_id") {
     val name = varchar("name", 64)
     val position = long("position")
 
@@ -64,7 +64,7 @@ object QueryCheckpoints : UUIDTable("query_checkpoint", "checkpoint_id") {
     }
 }
 
-object QueryQuarantineEvents : UUIDTable("query_quarantine_event", "quarantine_id") {
+object QueryQuarantineEvents: UUIDTable("query_quarantine_event", "quarantine_id") {
     val eventId = javaUUID("event_id")
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
@@ -79,7 +79,7 @@ object QueryQuarantineEvents : UUIDTable("query_quarantine_event", "quarantine_i
     }
 }
 
-object QueryRedriveAudits : UUIDTable("query_redrive_audit", "redrive_audit_id") {
+object QueryRedriveAudits: UUIDTable("query_redrive_audit", "redrive_audit_id") {
     val eventId = javaUUID("event_id")
     val actor = varchar("actor", 128)
     val correlationId = varchar("correlation_id", 128)
@@ -88,8 +88,8 @@ object QueryRedriveAudits : UUIDTable("query_redrive_audit", "redrive_audit_id")
     val requestedAt = timestamp("requested_at")
 }
 
-class QueryInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryInboxEventEntity>(QueryInboxEvents)
+class QueryInboxEventEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<QueryInboxEventEntity>(QueryInboxEvents)
 
     var eventId by QueryInboxEvents.eventId
     var tenantId by QueryInboxEvents.tenantId
@@ -109,23 +109,23 @@ class QueryInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by QueryInboxEvents.updatedAt
 }
 
-class QueryReadModelEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryReadModelEntity>(QueryReadModels)
+class QueryReadModelEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<QueryReadModelEntity>(QueryReadModels)
 
     var sourceEventId by QueryReadModels.sourceEventId
     var tenantId by QueryReadModels.tenantId
     var eventType by QueryReadModels.eventType
 }
 
-class QueryCheckpointEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryCheckpointEntity>(QueryCheckpoints)
+class QueryCheckpointEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<QueryCheckpointEntity>(QueryCheckpoints)
 
     var name by QueryCheckpoints.name
     var position by QueryCheckpoints.position
 }
 
-class QueryQuarantineEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryQuarantineEventEntity>(QueryQuarantineEvents)
+class QueryQuarantineEventEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<QueryQuarantineEventEntity>(QueryQuarantineEvents)
 
     var eventId by QueryQuarantineEvents.eventId
     var tenantId by QueryQuarantineEvents.tenantId
@@ -136,8 +136,8 @@ class QueryQuarantineEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by QueryQuarantineEvents.updatedAt
 }
 
-class QueryRedriveAuditEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryRedriveAuditEntity>(QueryRedriveAudits)
+class QueryRedriveAuditEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<QueryRedriveAuditEntity>(QueryRedriveAudits)
 
     var eventId by QueryRedriveAudits.eventId
     var actor by QueryRedriveAudits.actor
@@ -148,16 +148,16 @@ class QueryRedriveAuditEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 }
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class QueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
+abstract class QueryExposedJdbcRepository<E: Entity<ID>, ID: Any>(
     domainClass: Class<E>,
-) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
+): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class AppendOnlyQueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
+abstract class AppendOnlyQueryExposedJdbcRepository<E: Entity<ID>, ID: Any>(
     domainClass: Class<E>,
-) : QueryExposedJdbcRepository<E, ID>(domainClass) {
-    final override fun <S : E> save(entity: S): S = immutableMutation()
-    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+): QueryExposedJdbcRepository<E, ID>(domainClass) {
+    final override fun <S: E> save(entity: S): S = immutableMutation()
+    final override fun <S: E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
     final override fun deleteById(id: ID): Unit = immutableMutation()
     final override fun delete(entity: E): Unit = immutableMutation()
     final override fun deleteAllById(ids: Iterable<ID>): Unit = immutableMutation()
@@ -168,27 +168,27 @@ abstract class AppendOnlyQueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
 }
 
 @Repository
-class QueryInboxRepository :
+class QueryInboxRepository:
     AppendOnlyQueryExposedJdbcRepository<QueryInboxEventEntity, UUID>(QueryInboxEventEntity::class.java)
 
 @Repository
-class QueryReadModelRepository :
+class QueryReadModelRepository:
     AppendOnlyQueryExposedJdbcRepository<QueryReadModelEntity, UUID>(QueryReadModelEntity::class.java)
 
 @Repository
-class QueryCheckpointRepository :
+class QueryCheckpointRepository:
     AppendOnlyQueryExposedJdbcRepository<QueryCheckpointEntity, UUID>(QueryCheckpointEntity::class.java)
 
 @Repository
-class QueryQuarantineRepository :
+class QueryQuarantineRepository:
     AppendOnlyQueryExposedJdbcRepository<QueryQuarantineEventEntity, UUID>(QueryQuarantineEventEntity::class.java)
 
 @Repository
-class QueryRedriveAuditRepository :
+class QueryRedriveAuditRepository:
     AppendOnlyQueryExposedJdbcRepository<QueryRedriveAuditEntity, UUID>(QueryRedriveAuditEntity::class.java)
 
 @Repository
-class ExposedQueryProjectionJournal : QueryProjectionJournal {
+class ExposedQueryProjectionJournal: QueryProjectionJournal {
     override val readModelEventIds: Set<UUID>
         get() = QueryReadModelEntity.all().map { it.sourceEventId }.toSet()
 
@@ -234,7 +234,7 @@ class ExposedQueryProjectionJournal : QueryProjectionJournal {
 }
 
 @Repository
-class ExposedQueryRecoveryJournal : QueryRecoveryJournal {
+class ExposedQueryRecoveryJournal: QueryRecoveryJournal {
     override fun snapshot(): QueryRecoverySnapshot {
         val quarantines = QueryQuarantineEventEntity.all().filter { it.state == QUARANTINED }
         return QueryRecoverySnapshot(

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.r2dbc
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.domain.User
@@ -12,7 +13,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractWebfluxR2dbcApplicationTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
     }
@@ -21,7 +22,7 @@ abstract class AbstractWebfluxR2dbcApplicationTest {
     private var applicationContext: ApplicationContext? = null
 
     protected val context: ApplicationContext
-        get() = checkNotNull(applicationContext) { "applicationContext is not injected." }
+        get() = applicationContext.shouldNotBeNull()
 
     protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()

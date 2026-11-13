@@ -1,15 +1,15 @@
 package io.bluetape4k.workshop.resilience.retry.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.resilience.retry.AbstractRetryTest
 import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.workshop.resilience.retry.AbstractRetryTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class CoroutineRetryTest: AbstractRetryTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     // Coroutine/suspend paths do not update Resilience4j registry metrics synchronously.
     override fun metricsAssertionEnabled(): Boolean = false

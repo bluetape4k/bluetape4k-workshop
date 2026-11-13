@@ -6,9 +6,15 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.tokenizer.korean.utils.KoreanPos
 import io.bluetape4k.tokenizer.utils.DictionarySnapshot
 import io.bluetape4k.tokenizer.utils.DictionaryVersion
@@ -17,11 +23,13 @@ import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /** 완성된 검색 index generation의 reload, rollback, concurrent read 계약을 검증합니다. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class VersionedMultilingualSearchIndexTest {
+
+    companion object: KLogging()
 
     @Test
     fun `완성된 index generation을 reload하고 bounded history로 rollback한다`() {
@@ -37,7 +45,10 @@ class VersionedMultilingualSearchIndexTest {
         }
         index.rollback() shouldBeEqualTo version(3)
         index.rollback() shouldBeEqualTo version(2)
-        assertFailsWith<IllegalStateException> { index.rollback() }
+
+        assertFailsWith<IllegalStateException> {
+            index.rollback()
+        }
     }
 
     @Test
@@ -77,28 +88,28 @@ class VersionedMultilingualSearchIndexTest {
                 runCatching {
                     index.reload {
                         lowBuildStarted.countDown()
-                        releaseLowBuild.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseLowBuild.await(5.seconds).shouldBeTrue()
                         source(2, listOf(document("v2", "beta document")))
                     }
                 }.exceptionOrNull()
             }
 
-            lowBuildStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            lowBuildStarted.await(5.seconds).shouldBeTrue()
             index.search("alpha").hits.single().document.id shouldBeEqualTo "v1"
             val highReload = executor.submit<DictionaryVersion> {
                 index.reload(source(3, listOf(document("v3", "gamma document"))))
             }
 
-            highReload.get(2, TimeUnit.SECONDS) shouldBeEqualTo version(3)
+            highReload.get(2.seconds) shouldBeEqualTo version(3)
             index.search("gamma").hits.single().document.id shouldBeEqualTo "v3"
 
             releaseLowBuild.countDown()
-            (lowReload.get(2, TimeUnit.SECONDS) is IllegalArgumentException).shouldBeTrue()
+            lowReload.get(2.seconds).shouldBeInstanceOf<IllegalArgumentException>()
             index.currentVersion() shouldBeEqualTo version(3)
         } finally {
             releaseLowBuild.countDown()
             executor.shutdownNow()
-            executor.awaitTermination(5, TimeUnit.SECONDS)
+            executor.awaitTermination(5.seconds)
         }
     }
 
@@ -111,7 +122,7 @@ class VersionedMultilingualSearchIndexTest {
         try {
             val readers = List(4) {
                 executor.submit<List<Pair<Long, String?>>> {
-                    start.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    start.await(5.seconds).shouldBeTrue()
                     List(100) {
                         val result = index.search("shared")
                         result.version.revision to result.hits.singleOrNull()?.document?.id
@@ -119,13 +130,13 @@ class VersionedMultilingualSearchIndexTest {
                 }
             }
             val writer = executor.submit {
-                start.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                start.await(5.seconds).shouldBeTrue()
                 index.reload(source(2, listOf(document("v2", "shared beta"))))
             }
 
             start.countDown()
-            writer.get(5, TimeUnit.SECONDS)
-            readers.flatMap { it.get(10, TimeUnit.SECONDS) }.forEach { (revision, id) ->
+            writer.get(5.seconds)
+            readers.flatMap { it.get(10.seconds) }.forEach { (revision, id) ->
                 when (revision) {
                     1L -> id shouldBeEqualTo "v1"
                     2L -> id shouldBeEqualTo "v2"
@@ -134,7 +145,7 @@ class VersionedMultilingualSearchIndexTest {
             }
         } finally {
             executor.shutdownNow()
-            executor.awaitTermination(5, TimeUnit.SECONDS)
+            executor.awaitTermination(5.seconds)
         }
     }
 
@@ -211,6 +222,7 @@ class VersionedMultilingualSearchIndexTest {
             )
         }.joinToString("\n")
 
+        log.debug { "logs=$logs" }
         logs shouldContain "operation=reload"
         logs shouldContain "previousRevision=1"
         logs shouldContain "revision=2"

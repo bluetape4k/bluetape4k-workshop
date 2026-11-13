@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpClient
 import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpResponse
@@ -124,7 +125,7 @@ class MeteringHttpIntegrationTest {
     }
 
     companion object {
-        private val HTTP_TIMEOUT: Duration = Duration.ofSeconds(30)
+        private val HTTP_TIMEOUT: Duration = 30.seconds()
         private const val TENANT_A = "tenant-a"
         private const val PASSWORD = "test-secret"
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }

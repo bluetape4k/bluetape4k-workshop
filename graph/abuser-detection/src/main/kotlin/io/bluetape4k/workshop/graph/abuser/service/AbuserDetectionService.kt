@@ -21,8 +21,8 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.graph.abuser.model.AbuseCluster
-import io.bluetape4k.workshop.graph.abuser.model.AbuserAlgorithmExecution
 import io.bluetape4k.workshop.graph.abuser.model.AbusePath
+import io.bluetape4k.workshop.graph.abuser.model.AbuserAlgorithmExecution
 import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserRanking
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
@@ -72,7 +72,7 @@ class AbuserDetectionService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         /**
          * 역방향 순회를 위해 식별자 정점 레이블을 [IdentifierEdgeLabel]로 매핑합니다.
          *
@@ -80,9 +80,9 @@ class AbuserDetectionService(
          * 찾는 데 사용합니다.
          */
         private val VERTEX_LABEL_TO_EDGE_LABEL: Map<String, IdentifierEdgeLabel> = mapOf(
-            DeviceLabel.label        to IdentifierEdgeLabel.USES_DEVICE,
-            IpAddressLabel.label     to IdentifierEdgeLabel.USES_IP,
-            PhoneNumberLabel.label   to IdentifierEdgeLabel.HAS_PHONE,
+            DeviceLabel.label to IdentifierEdgeLabel.USES_DEVICE,
+            IpAddressLabel.label to IdentifierEdgeLabel.USES_IP,
+            PhoneNumberLabel.label to IdentifierEdgeLabel.HAS_PHONE,
             PaymentMethodLabel.label to IdentifierEdgeLabel.USES_PAYMENT,
         )
     }
@@ -178,7 +178,7 @@ class AbuserDetectionService(
         paymentToken.requireNotBlank("paymentToken")
         return ops.findVerticesByLabel(
             PaymentMethodLabel.label,
-            mapOf(PaymentMethodLabel.paymentToken.name to paymentToken)
+            PaymentMethodLabel.paymentToken.name to paymentToken
         )
             .firstOrNull()
             ?: ops.createVertex(
@@ -202,11 +202,12 @@ class AbuserDetectionService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(deviceVertexId, DeviceLabel.label, "deviceVertexId")
+
         return ops.createEdge(
             userVertexId,
             deviceVertexId,
             UsesDeviceLabel.label,
-            mapOf(UsesDeviceLabel.occurredAt.name to occurredAt),
+            UsesDeviceLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -221,11 +222,12 @@ class AbuserDetectionService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(ipVertexId, IpAddressLabel.label, "ipVertexId")
+
         return ops.createEdge(
             userVertexId,
             ipVertexId,
             UsesIpLabel.label,
-            mapOf(UsesIpLabel.occurredAt.name to occurredAt),
+            UsesIpLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -240,11 +242,12 @@ class AbuserDetectionService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(phoneVertexId, PhoneNumberLabel.label, "phoneVertexId")
+
         return ops.createEdge(
             userVertexId,
             phoneVertexId,
             HasPhoneLabel.label,
-            mapOf(HasPhoneLabel.occurredAt.name to occurredAt),
+            HasPhoneLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -259,11 +262,12 @@ class AbuserDetectionService(
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(paymentVertexId, PaymentMethodLabel.label, "paymentVertexId")
+
         return ops.createEdge(
             userVertexId,
             paymentVertexId,
             UsesPaymentLabel.label,
-            mapOf(UsesPaymentLabel.occurredAt.name to occurredAt),
+            UsesPaymentLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -274,15 +278,20 @@ class AbuserDetectionService(
      * @param referredVertexId 추천받은 User 정점의 그래프 ID입니다.
      * @param occurredAt 추천 이벤트의 ISO-8601 타임스탬프입니다.
      */
-    fun linkReferral(referrerVertexId: GraphElementId, referredVertexId: GraphElementId, occurredAt: String): GraphEdge {
+    fun linkReferral(
+        referrerVertexId: GraphElementId,
+        referredVertexId: GraphElementId,
+        occurredAt: String,
+    ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
         ops.requireEndpoint(referrerVertexId, UserLabel.label, "referrerVertexId")
         ops.requireEndpoint(referredVertexId, UserLabel.label, "referredVertexId")
+
         return ops.createEdge(
             referrerVertexId,
             referredVertexId,
             ReferredByLabel.label,
-            mapOf(ReferredByLabel.occurredAt.name to occurredAt),
+            ReferredByLabel.occurredAt.name to occurredAt,
         )
     }
 
@@ -327,10 +336,12 @@ class AbuserDetectionService(
                 log.warn { "findAbuseCluster: unknown identifier vertex label '${identifierVertex.label}' — skipping reverse traversal" }
                 continue
             }
-            ops.neighbors(
-                identifierVertex.id,
-                NeighborOptions(reverseLabel.value, Direction.INCOMING, 1)
-            ).filterTo(clusterUsers) { it.id != seedUserId }
+            ops
+                .neighbors(
+                    identifierVertex.id,
+                    NeighborOptions(reverseLabel.value, Direction.INCOMING, 1)
+                )
+                .filterTo(clusterUsers) { it.id != seedUserId }
         }
 
         return AbuseCluster(
@@ -349,17 +360,28 @@ class AbuserDetectionService(
      * @return outgoing [AbusePath] 항목 목록입니다. 사용자에게 식별자 간선이 없으면 비어 있습니다.
      */
     fun explainSuspicion(userId: GraphElementId): List<AbusePath> {
-        val paths = mutableListOf<AbusePath>()
-        for (edgeLabel in IdentifierEdgeLabel.all) {
+//        val paths = mutableListOf<AbusePath>()
+//
+//        IdentifierEdgeLabel.all.forEach { edgeLabel ->
+//            ops.findEdgesByStartId(userId, edgeLabel.value)
+//                .mapTo(paths) { edge ->
+//                    AbusePath(
+//                        identifierVertexId = edge.endId,
+//                        edgeLabel = edgeLabel,
+//                    )
+//                }
+//        }
+//        return paths
+
+        return IdentifierEdgeLabel.all.flatMap { edgeLabel ->
             ops.findEdgesByStartId(userId, edgeLabel.value)
-                .mapTo(paths) { edge ->
+                .map { edge ->
                     AbusePath(
                         identifierVertexId = edge.endId,
                         edgeLabel = edgeLabel,
                     )
                 }
         }
-        return paths
     }
 
     /**
@@ -372,12 +394,13 @@ class AbuserDetectionService(
     fun detectReferralLoops(maxDepth: Int = 6, maxCycles: Int = 100): List<GraphCycle> {
         maxDepth.requirePositiveNumber("maxDepth")
         maxCycles.requirePositiveNumber("maxCycles")
+
         return ops.detectCycles(
             CycleOptions(
                 vertexLabel = UserLabel.label,
-                edgeLabel   = ReferredByLabel.label,
-                maxDepth    = maxDepth,
-                maxCycles   = maxCycles,
+                edgeLabel = ReferredByLabel.label,
+                maxDepth = maxDepth,
+                maxCycles = maxCycles,
             )
         )
     }
@@ -400,9 +423,9 @@ class AbuserDetectionService(
             .withIndex()
             .map { (index, pageRankScore) ->
                 SuspiciousUserScore(
-                    user  = pageRankScore.vertex,
+                    user = pageRankScore.vertex,
                     score = pageRankScore.score,
-                    rank  = index + 1,
+                    rank = index + 1,
                 )
             }
     }

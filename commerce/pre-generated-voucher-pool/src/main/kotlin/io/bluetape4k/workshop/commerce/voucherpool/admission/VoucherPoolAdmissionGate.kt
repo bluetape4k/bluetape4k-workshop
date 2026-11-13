@@ -3,9 +3,11 @@
 package io.bluetape4k.workshop.commerce.voucherpool.admission
 
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.hashOf
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -65,7 +67,7 @@ internal class AdmissionLimits private constructor(
 internal class AdmissionRecoveryPolicy(
     val failureThreshold: Int = 1,
     val recoverySuccessThreshold: Int = 3,
-    val probeInterval: Duration = Duration.ofSeconds(1),
+    val probeInterval: Duration = 1.seconds(),
     val maxInFlightProbes: Int = 1,
 ) {
     init {
@@ -91,6 +93,9 @@ internal class VoucherPoolAdmissionGate(
     private val keyFactory: VoucherPoolRedisSignalKeyFactory = VoucherPoolRedisSignalKeyFactory(),
     private val stateObserver: (AdmissionState) -> Unit = {},
 ) {
+
+    companion object: KLogging()
+
     private val localLimiter = NodeLocalAdmissionLimiter(limits, clock)
     private val stateLock = ReentrantLock()
     private var currentState = if (backend == null) AdmissionState.DEGRADED else AdmissionState.HEALTHY
@@ -109,6 +114,7 @@ internal class VoucherPoolAdmissionGate(
         val now = Instant.now(clock)
         val backendCall = reserveBackendCall(now) ?: return localDecision(namespace, principalDigest)
         val key = keyFactory.admissionKey(namespace, principalDigest)
+
         return try {
             val result = redis.consume(namespace, key)
             when {
@@ -156,33 +162,32 @@ internal class VoucherPoolAdmissionGate(
             AdmissionDecision.RATE_LIMITED
         }
 
-    private fun reserveBackendCall(now: Instant): BackendCall? =
-        stateLock.withLock {
-            when (currentState) {
-                AdmissionState.HEALTHY -> BackendCall(probe = false)
-                AdmissionState.DEGRADED -> {
-                    if (now.isBefore(nextProbeAt) || probesInFlight >= recoveryPolicy.maxInFlightProbes) {
-                        null
-                    } else {
-                        probesInFlight++
-                        BackendCall(probe = true)
-                    }
+    private fun reserveBackendCall(now: Instant): BackendCall? = stateLock.withLock {
+        when (currentState) {
+            AdmissionState.HEALTHY    -> BackendCall(probe = false)
+            AdmissionState.DEGRADED   -> {
+                if (now.isBefore(nextProbeAt) || probesInFlight >= recoveryPolicy.maxInFlightProbes) {
+                    null
+                } else {
+                    probesInFlight++
+                    BackendCall(probe = true)
                 }
-                AdmissionState.RECOVERING -> {
-                    if (probesInFlight >= recoveryPolicy.maxInFlightProbes) {
-                        null
-                    } else {
-                        probesInFlight++
-                        BackendCall(probe = true)
-                    }
+            }
+            AdmissionState.RECOVERING -> {
+                if (probesInFlight >= recoveryPolicy.maxInFlightProbes) {
+                    null
+                } else {
+                    probesInFlight++
+                    BackendCall(probe = true)
                 }
             }
         }
+    }
 
     private fun recordSuccess() {
         stateLock.withLock {
             when (currentState) {
-                AdmissionState.HEALTHY -> consecutiveFailures = 0
+                AdmissionState.HEALTHY  -> consecutiveFailures = 0
                 AdmissionState.DEGRADED -> transitionToRecovering()
                 AdmissionState.RECOVERING -> {
                     recoverySuccesses++
@@ -213,7 +218,7 @@ internal class VoucherPoolAdmissionGate(
     private fun recordFailure(now: Instant, failure: Exception? = null) {
         stateLock.withLock {
             when (currentState) {
-                AdmissionState.HEALTHY -> {
+                AdmissionState.HEALTHY  -> {
                     consecutiveFailures++
                     if (consecutiveFailures >= recoveryPolicy.failureThreshold) degrade(now)
                 }
@@ -223,7 +228,7 @@ internal class VoucherPoolAdmissionGate(
         }
         log.warn {
             "voucher_pool_admission_redis_failed fallback=NODE_LOCAL failure=" +
-                (failure?.javaClass?.simpleName ?: "RESULT_ERROR")
+                    (failure?.javaClass?.simpleName ?: "RESULT_ERROR")
         }
     }
 
@@ -246,13 +251,18 @@ internal class VoucherPoolAdmissionGate(
 
     private class BackendCall(val probe: Boolean)
 
-    companion object : KLogging()
 }
 
 private class NodeLocalAdmissionLimiter(
     private val limits: AdmissionLimits,
     private val clock: Clock,
 ) {
+
+    private companion object {
+        const val SECONDS_PER_MINUTE = 60L
+        const val MAX_LOCAL_KEYS = 10_000
+    }
+
     private val counters = ConcurrentHashMap<LocalKey, WindowCounter>()
     private val keyLock = ReentrantLock()
 
@@ -263,46 +273,47 @@ private class NodeLocalAdmissionLimiter(
         return counter.tryAcquire(minute, limits[namespace])
     }
 
-    private fun register(localKey: LocalKey, minute: Long): WindowCounter? =
-        keyLock.withLock {
-            counters[localKey] ?: run {
+    private fun register(localKey: LocalKey, minute: Long): WindowCounter? = keyLock.withLock {
+        counters[localKey]
+            ?: run {
                 if (counters.size >= MAX_LOCAL_KEYS) {
                     counters.entries.removeIf { !it.value.belongsTo(minute) }
                 }
                 if (counters.size >= MAX_LOCAL_KEYS) null
                 else WindowCounter(minute).also { counters[localKey] = it }
             }
-        }
+    }
 
     private class WindowCounter(initialMinute: Long) {
         private val lock = ReentrantLock()
+
         @Volatile
         private var minute = initialMinute
         private var consumed = 0
 
-        fun tryAcquire(currentMinute: Long, limit: Int): Boolean =
-            lock.withLock {
-                if (minute != currentMinute) {
-                    minute = currentMinute
-                    consumed = 0
-                }
-                if (consumed >= limit) return false
-                consumed++
-                true
+        fun tryAcquire(currentMinute: Long, limit: Int): Boolean = lock.withLock {
+            if (minute != currentMinute) {
+                minute = currentMinute
+                consumed = 0
             }
+            if (consumed >= limit) return false
+            consumed++
+            true
+        }
 
         fun belongsTo(currentMinute: Long): Boolean = minute == currentMinute
     }
 
-    private class LocalKey(val namespace: AdmissionNamespace, val key: String) {
+    private class LocalKey(
+        val namespace: AdmissionNamespace,
+        val key: String,
+    ) {
         override fun equals(other: Any?): Boolean =
             other is LocalKey && namespace == other.namespace && key == other.key
 
-        override fun hashCode(): Int = 31 * namespace.hashCode() + key.hashCode()
+        override fun hashCode(): Int = hashOf(namespace, key)
+
+        override fun toString(): String = "LocalKey(namespace=$namespace,key=$key)"
     }
 
-    private companion object {
-        const val SECONDS_PER_MINUTE = 60L
-        const val MAX_LOCAL_KEYS = 10_000
-    }
 }

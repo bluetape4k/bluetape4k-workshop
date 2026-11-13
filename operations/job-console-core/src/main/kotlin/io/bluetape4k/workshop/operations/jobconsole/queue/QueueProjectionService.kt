@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.operations.jobconsole.queue
 
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.operations.jobconsole.api.EtaConfidence
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.QueueProjection
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 data class QueueRow(
     val jobId: UUID,
@@ -30,7 +30,8 @@ object QueueProjectionService {
     fun project(rows: List<QueueRow>, targetJobId: UUID, now: Instant): QueueProjection {
         val active = rows.filterNot { it.state.terminal }.sortedBy { it.enqueueSequence }
         val targetIndex = active.indexOfFirst { it.jobId == targetJobId }
-        require(targetIndex >= 0) { "target job is not in the active tenant queue" }
+        targetIndex.requireZeroOrPositiveNumber { "target job is not in the active tenant queue" }
+
         val target = active[targetIndex]
         return QueueProjection(
             position = targetIndex + 1,
@@ -47,7 +48,10 @@ object QueueProjectionService {
     fun page(rows: List<QueueRow>, cursor: String?, requestedSize: Int): QueuePage {
         val size = requestedSize.coerceIn(1, MAX_PAGE_SIZE)
         val after = cursorSequence(cursor)
-        val candidates = rows.asSequence().filter { after == null || it.enqueueSequence > after }.sortedBy { it.enqueueSequence }.toList()
+        val candidates = rows.asSequence()
+            .filter { after == null || it.enqueueSequence > after }
+            .sortedBy { it.enqueueSequence }
+            .toList()
         val items = candidates.take(size)
         val next = if (candidates.size > size) encodeCursor(items.last().enqueueSequence) else null
         return QueuePage(items, next)
@@ -56,9 +60,13 @@ object QueueProjectionService {
     fun cursorSequence(cursor: String?): Long? = cursor?.let(::decodeCursor)
 
     private fun encodeCursor(sequence: Long): String =
-        Base64.getUrlEncoder().withoutPadding().encodeToString(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(sequence).array())
+        Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(sequence).array())
 
     private fun decodeCursor(cursor: String): Long =
-        runCatching { ByteBuffer.wrap(Base64.getUrlDecoder().decode(cursor)).long }
-            .getOrElse { throw IllegalArgumentException("invalid queue cursor") }
+        runCatching {
+            ByteBuffer.wrap(Base64.getUrlDecoder().decode(cursor)).long
+        }.getOrElse {
+            throw IllegalArgumentException("invalid queue cursor")
+        }
 }

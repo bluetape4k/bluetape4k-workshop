@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.snapshot
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSnapshots
@@ -15,16 +17,19 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSnapshotRepositoryIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+        private val NOW = Instant.parse("2026-07-23T12:00:00Z")
+    }
+
     private val repository = EventSnapshotRepository()
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
@@ -36,13 +41,19 @@ internal class EventSnapshotRepositoryIntegrationTest {
     }
 
     @AfterAll
-    fun closeDataSource() = postgresDatabase.close()
+    fun closeDataSource() {
+        postgresDatabase.close()
+    }
 
     @BeforeEach
-    fun createSchema() = transaction(database) { SchemaUtils.create(EventSnapshots) }
+    fun createSchema() {
+        transaction(database) { SchemaUtils.create(EventSnapshots) }
+    }
 
     @AfterEach
-    fun dropSchema() = transaction(database) { SchemaUtils.drop(EventSnapshots) }
+    fun dropSchema() {
+        transaction(database) { SchemaUtils.drop(EventSnapshots) }
+    }
 
     @Test
     fun `latest returns no snapshot until a stream checkpoint is persisted`() {
@@ -50,9 +61,11 @@ internal class EventSnapshotRepositoryIntegrationTest {
 
         transaction(database) { repository.latest(stream) }.shouldBeNull()
         transaction(database) { repository.save(snapshot(stream, 250, "state-250")) }
-        val latest = transaction(database) { repository.latest(stream) }
 
-        latest.shouldNotBeNull().metadata.streamVersion shouldBeEqualTo 250L
+        val latest = transaction(database) { repository.latest(stream).shouldNotBeNull() }
+
+        log.debug { "latest: $latest" }
+        latest.metadata.streamVersion shouldBeEqualTo 250L
         latest.canonicalState shouldBeEqualTo "state-250"
     }
 
@@ -64,18 +77,20 @@ internal class EventSnapshotRepositoryIntegrationTest {
             repository.save(snapshot(stream, 500, "state-500"))
         }
 
-        transaction(database) { repository.latest(stream) }?.metadata?.streamVersion shouldBeEqualTo 500L
+        transaction(database) {
+            repository.latest(stream)
+        }?.metadata?.streamVersion shouldBeEqualTo 500L
     }
 
     @Test
     fun `same client UUID and version remain isolated across tenant and stream type`() {
         val streamId = UUID.randomUUID()
-        val streams =
-            listOf(
-                StreamKey(TenantId("tenant-a"), "campaign", streamId) to "tenant-a-campaign",
-                StreamKey(TenantId("tenant-b"), "campaign", streamId) to "tenant-b-campaign",
-                StreamKey(TenantId("tenant-a"), "voucher", streamId) to "tenant-a-voucher",
-            )
+        val streams = listOf(
+            StreamKey(TenantId("tenant-a"), "campaign", streamId) to "tenant-a-campaign",
+            StreamKey(TenantId("tenant-b"), "campaign", streamId) to "tenant-b-campaign",
+            StreamKey(TenantId("tenant-a"), "voucher", streamId) to "tenant-a-voucher",
+        )
+
         transaction(database) {
             streams.forEach { (stream, state) ->
                 repository.save(snapshot(stream, 250, state))
@@ -83,21 +98,20 @@ internal class EventSnapshotRepositoryIntegrationTest {
         }
 
         streams.forEach { (stream, state) ->
-            transaction(database) { repository.latest(stream) }?.canonicalState shouldBeEqualTo state
+            transaction(database) {
+                repository.latest(stream)?.canonicalState shouldBeEqualTo state
+            }
         }
     }
 
-    private fun stream() = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
+    private fun stream(): StreamKey =
+        StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
 
-    private fun snapshot(stream: StreamKey, version: Long, state: String) =
+    private fun snapshot(stream: StreamKey, version: Long, state: String): EventSnapshot =
         EventSnapshot(
             stream = stream,
             metadata = SnapshotMetadata(version, schemaVersion = 1, keyVersion = 1),
             canonicalState = state,
             createdAt = NOW,
         )
-
-    companion object {
-        private val NOW = Instant.parse("2026-07-23T12:00:00Z")
-    }
 }

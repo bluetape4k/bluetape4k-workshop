@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.service
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantLeaseState
@@ -22,6 +24,8 @@ class TenantSchedulerLab(
     private val lockNamePlanner: TenantLockNamePlanner = TenantLockNamePlanner(),
 ) {
 
+    companion object: KLogging()
+
     /**
      * 전달된 유한 scenario를 실행하고 새로운 불변 report를 반환한다.
      */
@@ -41,15 +45,11 @@ class TenantSchedulerLab(
                 lease.tenantId.requireKnownTenant(knownTenants, "initialLeases.tenantId")
                 (lease.lockName == lockNamePlanner.lockName(lease.tenantId, policy.jobName))
                     .toMissingCount()
-                    .requireInRange(0, 0, "initialLeases.lockName")
+                    .requireEquals(0, "initialLeases.lockName")
                 leases[lease.tenantId] = lease
             }
 
-            val dueTenants = if (tick.dueTenants.isEmpty()) {
-                policy.tenants
-            } else {
-                tick.dueTenants
-            }
+            val dueTenants = tick.dueTenants.ifEmpty { policy.tenants }
             dueTenants.requireKnownTenants(knownTenants, "dueTenants")
             tick.actionFailures.requireKnownTenants(knownTenants, "actionFailures")
 
@@ -90,10 +90,17 @@ class TenantSchedulerLab(
         val actionFails = tenantId in tick.actionFailures
 
         val outcomeAndLease = when {
-            activeLease == null -> acquireLease(policy, tick, tenantId, firstCandidate, actionFails, currentLease != null)
+            activeLease == null                            -> acquireLease(
+                policy,
+                tick,
+                tenantId,
+                firstCandidate,
+                actionFails,
+                currentLease != null
+            )
             activeLease.ownerNodeId in tick.candidateNodes && actionFails -> TenantRunOutcome.FAILED to activeLease
             activeLease.ownerNodeId in tick.candidateNodes -> renewLease(policy, tick.tick, activeLease)
-            else -> TenantRunOutcome.SKIPPED to activeLease
+            else                                           -> TenantRunOutcome.SKIPPED to activeLease
         }
 
         val (outcome, nextLease) = outcomeAndLease
@@ -119,7 +126,7 @@ class TenantSchedulerLab(
         val outcome = when {
             actionFails -> TenantRunOutcome.FAILED
             wasExpired -> TenantRunOutcome.STALE_HANDOFF
-            else -> TenantRunOutcome.EXECUTED
+            else       -> TenantRunOutcome.EXECUTED
         }
 
         return outcome to TenantLeaseState(

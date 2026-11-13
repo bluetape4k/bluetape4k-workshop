@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.persistence
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
@@ -17,7 +18,7 @@ internal interface VoucherTransactionRunner {
 internal class VoucherJdbcExecutor(
     private val gate: DatabasePermitGate,
     private val transactionManager: PlatformTransactionManager,
-    private val lockTimeout: Duration = Duration.ofSeconds(5),
+    private val lockTimeout: Duration = 5.seconds(),
 ) : VoucherTransactionRunner {
     private val transactions = TransactionTemplate(transactionManager)
 

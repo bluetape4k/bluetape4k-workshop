@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.observability.advanced.config
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.error
 import io.bluetape4k.logging.info
-import io.bluetape4k.workshop.observability.advanced.model.Users
+import io.bluetape4k.workshop.observability.advanced.model.UserTable
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.boot.ApplicationArguments
@@ -18,14 +18,14 @@ import org.springframework.stereotype.Component
  * - error 발생 시 fail-fast 하며 silent swallowing 은 금지합니다.
  */
 @Component
-class SchemaInitializer : ApplicationRunner {
+class SchemaInitializer: ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override fun run(args: ApplicationArguments) {
         try {
             transaction {
-                SchemaUtils.create(Users)
+                SchemaUtils.create(UserTable)
             }
             log.info { "Database schema initialized successfully" }
         } catch (e: Exception) {

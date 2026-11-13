@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import jakarta.annotation.PreDestroy
-import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -13,12 +14,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 class JobConsoleSpringLifecycle(
     private val service: JobConsoleService,
 ) {
+
+    companion object: KLogging()
+
     private val stopped = AtomicBoolean()
 
     @PreDestroy
     fun stop() {
         if (!stopped.compareAndSet(false, true)) return
         service.closeAdmission()
-        service.awaitSubmissionQuiescence(Duration.ofSeconds(5))
+        service.awaitSubmissionQuiescence(5.seconds())
     }
 }

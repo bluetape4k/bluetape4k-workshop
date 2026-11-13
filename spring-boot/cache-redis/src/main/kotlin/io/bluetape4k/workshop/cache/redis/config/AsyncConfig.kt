@@ -28,9 +28,11 @@ class AsyncConfig {
     }
 
     @Bean(name = [CACHE_REDIS_EXECUTOR_BEAN_NAME], destroyMethod = "shutdown")
-    fun cacheRedisVirtualThreadExecutor(): ExecutorService = VirtualThreads.executorService().also {
-        log.info { "Managed async executor created by VirtualThreads runtime=${VirtualThreads.runtimeName()}." }
-    }
+    fun cacheRedisVirtualThreadExecutor(): ExecutorService =
+        VirtualThreads.executorService()
+            .also {
+                log.info { "Managed async executor created by VirtualThreads runtime=${VirtualThreads.runtimeName()}." }
+            }
 
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     @Primary

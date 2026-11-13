@@ -53,5 +53,5 @@ class ClinicSchedule(
 ) {
     /** Timefold의 reflection 기반 domain discovery를 위한 no-arg 생성자다. */
     @Suppress("unused")
-    constructor() : this(clinic = ClinicFact("", emptyList()))
+    constructor(): this(clinic = ClinicFact("", emptyList()))
 }

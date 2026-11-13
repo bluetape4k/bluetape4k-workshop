@@ -1,6 +1,10 @@
 package io.bluetape4k.okio
 
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.fail
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.concurrency.TestingExecutors
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.system.assumeNotWindows
@@ -16,17 +20,14 @@ import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.HashingSink
 import okio.Pipe
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import io.bluetape4k.assertions.fail
 import java.io.InterruptedIOException
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 
 class PipeTest: AbstractOkioTest() {
 
@@ -257,19 +258,19 @@ class PipeTest: AbstractOkioTest() {
         val pipe = Pipe(3L)
         val job = launch {
             val buffer = Buffer()
-            delay(1000L)
+            delay(1000.milliseconds)
             pipe.source.read(buffer, Long.MAX_VALUE) shouldBeEqualTo 3L
             buffer.readUtf8() shouldBeEqualTo "abc"
 
-            delay(1000L)
+            delay(1000.milliseconds)
             pipe.source.read(buffer, Long.MAX_VALUE) shouldBeEqualTo 3L
             buffer.readUtf8() shouldBeEqualTo "def"
 
-            delay(1000L)
+            delay(1000.milliseconds)
             pipe.source.read(buffer, Long.MAX_VALUE) shouldBeEqualTo 3L
             buffer.readUtf8() shouldBeEqualTo "ghi"
 
-            Thread.sleep(1000L)
+            delay(1000.milliseconds)
             pipe.source.read(buffer, Long.MAX_VALUE) shouldBeEqualTo 3L
             buffer.readUtf8() shouldBeEqualTo "jkl"
         }
@@ -434,7 +435,6 @@ class PipeTest: AbstractOkioTest() {
         assertElapsed(4000.0, start)
     }
 
-
     /**
      * The writer has 12 bytes to write. It alternates sleeping 1000 ms, then writing 3 bytes. The
      * reader is reading as fast as it can. That should make for an approximate timeline like this:
@@ -457,19 +457,19 @@ class PipeTest: AbstractOkioTest() {
         val pipe = Pipe(100L)
 
         val job = launch {
-            delay(1000L)
+            delay(1000.milliseconds)
             log.debug { "Write abc" }
             pipe.sink.write(bufferOf("abc"), 3L)
 
-            delay(1000L)
+            delay(1000.milliseconds)
             log.debug { "Write def" }
             pipe.sink.write(bufferOf("def"), 3L)
 
-            delay(1000L)
+            delay(1000.milliseconds)
             log.debug { "Write ghi" }
             pipe.sink.write(bufferOf("ghi"), 3L)
 
-            delay(1000L)
+            delay(1000.milliseconds)
             log.debug { "Write jkl" }
             pipe.sink.write(bufferOf("jkl"), 3L)
         }

@@ -2,17 +2,13 @@
 
 [한국어](README.ko.md) | English
 
-This package demonstrates Redis Streams through Spring Data Redis sync and
-reactive APIs. The examples use a single stream key, `my-stream`, and sensor
-records built by `SensorData`.
+This package demonstrates Redis Streams through Spring Data Redis sync and reactive APIs. The examples use a single stream key, `my-stream`, and sensor records built by `SensorData`.
 
 ## Architecture
 
 ![Redis stream architecture](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-architecture-01.png)
 
-`RedisStreamConfiguration` creates both a `StreamMessageListenerContainer` for
-the imperative API and a `StreamReceiver` for the reactive API. Both connect to
-the same Redis Testcontainer.
+`RedisStreamConfiguration` creates both a `StreamMessageListenerContainer` for the imperative API and a `StreamReceiver` for the reactive API. Both connect to the same Redis Testcontainer.
 
 ## Stream Flow
 
@@ -29,13 +25,13 @@ The tests cover the same stream behavior from two API styles:
 
 ## Key Classes
 
-| Class | Role |
-|---|---|
-| `SensorData` | Creates `StringRecord` values with `sensor-id`, `temperature`, and optional `checksum`. |
-| `RedisStreamConfiguration` | Provides sync and reactive stream listener infrastructure. |
-| `CapturingStreamListener` | Collects sync listener records for assertions. |
-| `SyncStreamApiTest` | Exercises `StringRedisTemplate.opsForStream()`. |
-| `ReactiveStreamApiTest` | Exercises `ReactiveStringRedisTemplate.opsForStream()` and `StreamReceiver`. |
+| Class                      | Role                                                                                    |
+|----------------------------|-----------------------------------------------------------------------------------------|
+| `SensorData`               | Creates `StringRecord` values with `sensor-id`, `temperature`, and optional `checksum`. |
+| `RedisStreamConfiguration` | Provides sync and reactive stream listener infrastructure.                              |
+| `CapturingStreamListener`  | Collects sync listener records for assertions.                                          |
+| `SyncStreamApiTest`        | Exercises `StringRedisTemplate.opsForStream()`.                                         |
+| `ReactiveStreamApiTest`    | Exercises `ReactiveStringRedisTemplate.opsForStream()` and `StreamReceiver`.            |
 
 ## Build and Test
 

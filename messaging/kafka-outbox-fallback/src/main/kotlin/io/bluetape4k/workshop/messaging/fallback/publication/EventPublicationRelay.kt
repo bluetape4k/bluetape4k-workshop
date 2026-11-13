@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.messaging.fallback.publication
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
@@ -10,8 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import kotlin.time.toKotlinDuration
 
 /**
  * claim 기반 duplicate protection 으로 durable fallback row 를 Kafka 로 relay 합니다.
@@ -23,7 +24,7 @@ class EventPublicationRelay(
     private val eventPublicationRepository: EventPublicationRepository,
     private val outboxMetrics: OutboxMetrics,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Scheduled(fixedDelayString = "\${workshop.kafka-outbox-fallback.relay-fixed-delay}")
     fun scheduledRelay() {
@@ -55,10 +56,10 @@ class EventPublicationRelay(
     }
 
     private fun publishClaimed(publication: EventPublicationRecord, workerId: String): RelayResult {
-        var future: CompletableFuture<*>? = null
+        var promise: CompletableFuture<*>? = null
         return try {
-            future = kafkaTemplate.send(properties.topic, publication.eventId, publication.payload)
-            future.get(properties.directPublishTimeout.toMillis(), TimeUnit.MILLISECONDS)
+            promise = kafkaTemplate.send(properties.topic, publication.eventId, publication.payload)
+            promise.get(properties.directPublishTimeout.toKotlinDuration())
             if (eventPublicationRepository.markPublished(publication.eventId, workerId)) {
                 outboxMetrics.recordRelay("published")
                 RelayResult(claimed = 1, published = 1)
@@ -68,7 +69,7 @@ class EventPublicationRelay(
                 RelayResult(claimed = 1, failed = 1)
             }
         } catch (e: TimeoutException) {
-            future?.cancel(true)
+            promise?.cancel(true)
             markFailure(publication, workerId, e)
         } catch (e: Exception) {
             markFailure(publication, workerId, e)
@@ -108,7 +109,7 @@ data class RelayResult(
     val published: Int = 0,
     val failed: Int = 0,
     val deadLettered: Int = 0,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

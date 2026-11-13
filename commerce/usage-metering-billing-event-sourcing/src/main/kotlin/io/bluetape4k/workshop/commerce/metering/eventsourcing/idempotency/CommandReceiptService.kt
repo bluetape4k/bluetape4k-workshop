@@ -1,24 +1,24 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptCompletion
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptInsert
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptStatus
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptCompletion
-import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class CommandScope(val tenantId: String, val operation: String, val keyDigest: CommandDigest)
 
 sealed interface CommandAcquireResult {
-    data class Owned(val receiptId: UUID, val ownerToken: UUID) : CommandAcquireResult
-    data class Replay(val httpStatus: Int, val response: String) : CommandAcquireResult
-    data class InProgress(val retryAfter: Duration) : CommandAcquireResult
-    data object Conflict : CommandAcquireResult
+    data class Owned(val receiptId: UUID, val ownerToken: UUID): CommandAcquireResult
+    data class Replay(val httpStatus: Int, val response: String): CommandAcquireResult
+    data class InProgress(val retryAfter: Duration): CommandAcquireResult
+    data object Conflict: CommandAcquireResult
 }
 
-class CommandOwnerLostException : IllegalStateException("command_receipt_owner_lost")
+class CommandOwnerLostException: IllegalStateException("command_receipt_owner_lost")
 
 class CommandReceiptService(
     private val repository: CommandReceiptRepository,
@@ -41,8 +41,8 @@ class CommandReceiptService(
             current.fingerprint != fingerprint -> CommandAcquireResult.Conflict
             current.status == CommandReceiptStatus.SUCCEEDED ->
                 CommandAcquireResult.Replay(checkNotNull(current.httpStatus), checkNotNull(current.response))
-            current.leaseUntil.isAfter(now) -> activeLeaseResult(current, ownerToken, now)
-            else -> takeoverResult(current, now)
+            current.leaseUntil.isAfter(now)    -> activeLeaseResult(current, ownerToken, now)
+            else                               -> takeoverResult(current, now)
         }
     }
 
@@ -70,7 +70,7 @@ class CommandReceiptService(
     }
 
     fun succeed(owned: CommandAcquireResult.Owned, httpStatus: Int, response: String, now: Instant): Boolean {
-        require(response.toByteArray(UTF_8).size <= MAX_RESPONSE_BYTES) { "command_response_too_large" }
+        require(response.toUtf8Bytes().size <= MAX_RESPONSE_BYTES) { "command_response_too_large" }
         return repository.complete(
             CommandReceiptCompletion(owned.receiptId, owned.ownerToken, httpStatus, response, now.plus(retention), now),
         )

@@ -6,7 +6,7 @@ import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class ActivatePriceCommand(
     val idempotencyKey: String,
@@ -15,7 +15,7 @@ data class ActivatePriceCommand(
     val currency: String,
     val unitPrice: BigDecimal,
     val effectiveAt: Instant,
-) : Serializable {
+): Serializable {
     init {
         idempotencyKey.requireNotBlank("idempotencyKey")
         tenantId.requireNotBlank("tenantId")
@@ -41,7 +41,7 @@ data class MeterPriceVersion(
     val unitPrice: BigDecimal,
     val effectiveAt: Instant,
     val createdAt: Instant,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -54,7 +54,7 @@ data class MeterOutboxRecord(
     val payload: String,
     val payloadDigest: String,
     val createdAt: Instant,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -64,7 +64,7 @@ data class MeterActivationResult(
     val priceVersionId: UUID,
     val eventId: UUID,
     val replayed: Boolean,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -74,7 +74,7 @@ data class MeterCommandReceipt(
     val idempotencyKey: String,
     val fingerprint: String,
     val result: MeterActivationResult,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -90,4 +90,4 @@ interface MeterCommandJournal {
     )
 }
 
-class MeterIdempotencyConflict : IllegalArgumentException("meter_idempotency_conflict")
+class MeterIdempotencyConflict: IllegalArgumentException("meter_idempotency_conflict")

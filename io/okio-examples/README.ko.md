@@ -95,7 +95,7 @@ buffer.writeIntLe(-0x543210ff) // little endian
 buffer.writeLong(-0x543210fe789abcdfL)
 
 // Write in NIO ByteBuffer
-val nioBuffer = ByteBuffer.wrap("hello".toByteArray())
+val nioBuffer = ByteBuffer.wrap("hello".toUtf8Bytes())
 buffer.write(nioBuffer)
 ```
 

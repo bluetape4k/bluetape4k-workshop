@@ -8,12 +8,14 @@ import java.util.UUID
 
 /** content equality와 defensive ingress/egress copy를 가진 immutable binary value입니다. */
 internal class DigestValue private constructor(private val value: ByteArray) {
+
     fun copyBytes(): ByteArray = value.copyOf()
     override fun equals(other: Any?): Boolean = other is DigestValue && value.contentEquals(other.value)
     override fun hashCode(): Int = value.contentHashCode()
     override fun toString(): String = "DigestValue([REDACTED])"
 
     companion object {
+        operator fun invoke(value: ByteArray): DigestValue = DigestValue(value.copyOf())
         fun of(value: ByteArray): DigestValue = DigestValue(value.copyOf())
     }
 }

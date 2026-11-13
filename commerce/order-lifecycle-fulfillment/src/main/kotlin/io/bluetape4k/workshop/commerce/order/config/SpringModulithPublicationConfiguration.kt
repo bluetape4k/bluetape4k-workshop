@@ -15,6 +15,9 @@ import javax.sql.DataSource
 
 @Configuration(proxyBeanMethods = false)
 internal class SpringModulithPublicationConfiguration {
+
+    companion object: KLogging()
+
     @Bean("springTransactionManager")
     fun springTransactionManager(dataSource: DataSource): PlatformTransactionManager =
         SpringTransactionManager(dataSource, DatabaseConfig {}, false)
@@ -32,8 +35,8 @@ internal class SpringModulithPublicationConfiguration {
             serializer = serializer,
             completionMode = properties.completionMode
         ).also {
-            log.info { "exposed_event_publication_repository_configured completionMode=${properties.completionMode}" }
+            log.info {
+                "exposed_event_publication_repository_configured completionMode=${properties.completionMode}"
+            }
         }
-
-    companion object : KLogging()
 }

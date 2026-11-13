@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.web
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import jakarta.servlet.FilterChain
@@ -32,7 +33,7 @@ internal class RequestLoggingFilter : OncePerRequestFilter() {
         try {
             chain.doFilter(request, response)
         } finally {
-            val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt)
+            val elapsedMillis = (System.nanoTime() - startedAt).millis()
             log.info {
                 "reservation_http_completed requestId=$requestId method=${request.method} " +
                     "path=${request.requestURI} status=${response.status} elapsedMillis=$elapsedMillis"

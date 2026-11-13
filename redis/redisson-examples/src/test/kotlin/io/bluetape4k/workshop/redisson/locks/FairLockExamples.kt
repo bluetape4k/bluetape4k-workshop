@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -9,12 +10,12 @@ import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  *
@@ -48,7 +49,7 @@ class FairLockExamples: AbstractRedissonTest() {
 
                 if (locked) {
                     lockCounter.incrementAndGet()
-                    delay(10)
+                    delay(10.milliseconds)
                     // Coroutine 환경에서는 unlock 시에도 lock 소유자를 지정해줘야 합니다.
                     lock.unlockAsync(lockId).await()
                 }
@@ -81,7 +82,7 @@ class FairLockExamples: AbstractRedissonTest() {
         lockCounter.get() shouldBeEqualTo 16 * 2
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @Test
     fun `Virtual Threads 환경에서 Fair 락 획득하기`() {
         val lock = redisson.getFairLock(randomName())

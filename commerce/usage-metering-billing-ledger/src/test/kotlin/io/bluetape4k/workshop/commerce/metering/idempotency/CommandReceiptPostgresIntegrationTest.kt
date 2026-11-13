@@ -4,8 +4,13 @@ package io.bluetape4k.workshop.commerce.metering.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.MeteringDatabaseFixture
@@ -18,7 +23,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.UUID
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
@@ -38,11 +42,19 @@ class CommandReceiptPostgresIntegrationTest {
         fixture.resetAndSeed()
         val scope = scope("replay")
         val fingerprint = CommandFingerprint.request("usage", mapOf("quantity" to "1"))
-        val acquired = transaction { service.acquire(scope, fingerprint) }.shouldBeInstanceOf<CommandAcquireResult.Acquired>()
+        val acquired =
+            transaction { service.acquire(scope, fingerprint) }.shouldBeInstanceOf<CommandAcquireResult.Acquired>()
 
-        transaction { service.succeed(acquired.receipt.id, acquired.receipt.ownerToken, 201, "accepted") }.shouldBeTrue()
+        transaction {
+            service.succeed(
+                acquired.receipt.id,
+                acquired.receipt.ownerToken,
+                201,
+                "accepted"
+            )
+        }.shouldBeTrue()
         transaction { service.acquire(scope, fingerprint) } shouldBeEqualTo
-            CommandAcquireResult.Replay(201, "accepted", failed = false)
+                CommandAcquireResult.Replay(201, "accepted", failed = false)
         transaction {
             service.acquire(scope, CommandFingerprint.request("usage", mapOf("quantity" to "2")))
         } shouldBeEqualTo CommandAcquireResult.Conflict
@@ -53,14 +65,16 @@ class CommandReceiptPostgresIntegrationTest {
         fixture.resetAndSeed()
         val scope = scope("takeover")
         val fingerprint = CommandFingerprint.request("usage", mapOf("quantity" to "1"))
-        val first = transaction { service.acquire(scope, fingerprint) }.shouldBeInstanceOf<CommandAcquireResult.Acquired>()
+        val first =
+            transaction { service.acquire(scope, fingerprint) }.shouldBeInstanceOf<CommandAcquireResult.Acquired>()
 
         transaction { service.acquire(scope, fingerprint) }.shouldBeInstanceOf<CommandAcquireResult.InProgress>()
-        clock.advance(Duration.ofSeconds(31))
-        val second = transaction { service.acquire(scope, fingerprint) }.shouldBeInstanceOf<CommandAcquireResult.Acquired>()
+        clock.advance(31.seconds())
+        val second =
+            transaction { service.acquire(scope, fingerprint) }.shouldBeInstanceOf<CommandAcquireResult.Acquired>()
 
         second.takeover.shouldBeTrue()
-        transaction { service.succeed(first.receipt.id, first.receipt.ownerToken, 201, "stale") } shouldBeEqualTo false
+        transaction { service.succeed(first.receipt.id, first.receipt.ownerToken, 201, "stale") }.shouldBeFalse()
         transaction { service.succeed(second.receipt.id, second.receipt.ownerToken, 201, "winner") }.shouldBeTrue()
     }
 
@@ -83,11 +97,11 @@ class CommandReceiptPostgresIntegrationTest {
             }
         }
         transaction { service.succeed(terminal.receipt.id, terminal.receipt.ownerToken, 200, "ok") }.shouldBeTrue()
-        clock.advance(Duration.ofHours(25))
+        clock.advance(25.hours())
 
         transaction { service.cleanupExpiredTerminal() } shouldBeEqualTo 1
-        transaction { repository.find(scope("terminal")) } shouldBeEqualTo null
-        (transaction { repository.find(scope("live")) } != null).shouldBeTrue()
+        transaction { repository.find(scope("terminal")) }.shouldBeNull()
+        transaction { repository.find(scope("live")) }.shouldNotBeNull()
         live.receipt.status.name shouldBeEqualTo "IN_PROGRESS"
     }
 
@@ -117,7 +131,7 @@ class CommandReceiptPostgresIntegrationTest {
 private class MutableClock(
     private var current: Instant,
     private val zone: ZoneId = ZoneOffset.UTC,
-) : Clock() {
+): Clock() {
     override fun getZone(): ZoneId = zone
 
     override fun withZone(zone: ZoneId): Clock = MutableClock(current, zone)

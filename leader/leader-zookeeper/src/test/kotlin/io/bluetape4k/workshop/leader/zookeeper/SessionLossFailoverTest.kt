@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.await
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.zookeeper.ZooKeeperLeaderElector
 import io.bluetape4k.logging.KLogging
@@ -13,11 +15,10 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Duration
-import io.bluetape4k.codec.Base58
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * T8 - ZooKeeper 세션 만료가 ephemeral node 제거와 재선출을 유발한다는 R16을 보여준다.
@@ -47,7 +48,7 @@ class SessionLossFailoverTest {
     private lateinit var clientA: CuratorFramework
     private lateinit var clientB: CuratorFramework
 
-    fun randomLockName(prefix: String = "t8") = "$prefix:${Base58.randomString(8)}"
+    fun randomLockName(prefix: String = "t8") = "$prefix:${Base58.randomString(12)}"
 
     @BeforeAll
     fun startIsolatedZk() {
@@ -96,7 +97,7 @@ class SessionLossFailoverTest {
         workerAThread.start()
 
         // 세션 손실을 유발하기 전에 workerA가 lock을 보유할 때까지 기다린다.
-        check(workerAHoldingLatch.await(10, TimeUnit.SECONDS)) {
+        check(workerAHoldingLatch.await(10.seconds)) {
             "workerA did not acquire leadership within 10s"
         }
 
@@ -110,12 +111,12 @@ class SessionLossFailoverTest {
             basePath = BASE_PATH,
             options = LeaderElectionOptions(waitTime = WAIT_TIME_LONG)
         )
-        await atMost Duration.ofSeconds(30) untilAsserted {
+        await atMost 30.seconds untilAsserted {
             val workerBResult = electorB.runIfLeader(lockName) { "B-acquired" }
             workerBResult shouldBeEqualTo "B-acquired"
         }
 
         workerAThread.interrupt()
-        workerADoneLatch.await(5, TimeUnit.SECONDS)
+        workerADoneLatch.await(5.seconds)
     }
 }

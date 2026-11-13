@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.spring.modulith.ddd.audit.orders
 
 import io.bluetape4k.codec.Base58
-import io.bluetape4k.money.bigDecimalValue
 import io.bluetape4k.money.currencyUnitOf
 import io.bluetape4k.money.moneyOf
 import io.bluetape4k.support.requireNotBlank
@@ -21,7 +20,7 @@ import java.time.Instant
  * - [value] 는 비어 있지 않아야 합니다.
  * - 이 식별자는 PostgreSQL row, Spring Modulith event, JaVers snapshot 에 사용됩니다.
  */
-data class OrderId(val value: String) : Serializable {
+data class OrderId(val value: String): Serializable {
     init {
         value.requireNotBlank("value")
     }
@@ -43,7 +42,7 @@ data class OrderId(val value: String) : Serializable {
  * - [value] 는 비어 있지 않아야 합니다.
  * - 이 workshop 은 이 값을 synthetic identifier 로만 다루며 PII 로 취급하지 않습니다.
  */
-data class CustomerId(val value: String) : Serializable {
+data class CustomerId(val value: String): Serializable {
     init {
         value.requireNotBlank("value")
     }
@@ -63,7 +62,7 @@ data class CustomerId(val value: String) : Serializable {
 data class Money(
     val amount: BigDecimal,
     val currency: String = "USD",
-) : Serializable {
+): Serializable {
     init {
         amount.requireZeroOrPositiveNumber("amount")
         currency.requireNotBlank("currency")
@@ -87,7 +86,7 @@ data class OrderLine(
     val sku: String,
     val quantity: Int,
     val unitPrice: Money,
-) : Serializable {
+): Serializable {
     init {
         sku.requireNotBlank("sku")
         quantity.requirePositiveNumber("quantity")
@@ -118,7 +117,7 @@ enum class OrderStatus {
 data class PlaceOrderCommand(
     val customerId: CustomerId,
     val lines: List<OrderLine>,
-) : Serializable {
+): Serializable {
     init {
         lines.requireNotEmpty("lines")
     }
@@ -138,7 +137,7 @@ data class PlaceOrderCommand(
 data class ApproveOrderCommand(
     val orderId: OrderId,
     val approvedBy: String,
-) : Serializable {
+): Serializable {
     init {
         approvedBy.requireNotBlank("approvedBy")
     }
@@ -151,7 +150,7 @@ data class ApproveOrderCommand(
 /**
  * Spring Modulith 와 JaVers audit metadata 가 공유하는 최소 event 계약입니다.
  */
-interface DomainEvent : Serializable {
+interface DomainEvent: Serializable {
     val aggregateId: String
     val occurredOn: Instant
 }
@@ -162,7 +161,7 @@ interface DomainEvent : Serializable {
 data class OrderPlaced(
     override val aggregateId: String,
     override val occurredOn: Instant = Instant.now(),
-) : DomainEvent {
+): DomainEvent {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -175,7 +174,7 @@ data class OrderApproved(
     override val aggregateId: String,
     val approvedBy: String,
     override val occurredOn: Instant = Instant.now(),
-) : DomainEvent {
+): DomainEvent {
     init {
         approvedBy.requireNotBlank("approvedBy")
     }
@@ -203,7 +202,7 @@ data class Order(
     val status: OrderStatus,
     val version: Long = 0,
     val events: List<DomainEvent> = emptyList(),
-) : Serializable {
+): Serializable {
     init {
         lines.requireNotEmpty("lines")
     }
@@ -270,5 +269,5 @@ data class Order(
 
 private fun List<OrderLine>.totalAmount(): BigDecimal =
     fold(BigDecimal.ZERO) { total, line ->
-        total + line.unitPrice.amount.multiply(BigDecimal(line.quantity))
+        total + line.unitPrice.amount.multiply(line.quantity.toBigDecimal())
     }

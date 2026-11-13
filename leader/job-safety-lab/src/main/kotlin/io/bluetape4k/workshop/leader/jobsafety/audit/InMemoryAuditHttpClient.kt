@@ -1,5 +1,13 @@
 package io.bluetape4k.workshop.leader.jobsafety.audit
 
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.completableFutureOf
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireZeroOrPositiveDuration
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.net.Authenticator
 import java.net.CookieHandler
 import java.net.ProxySelector
@@ -8,16 +16,17 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
-import java.util.Optional
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 import java.util.concurrent.Executor
+import java.util.concurrent.TimeoutException
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLParameters
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.toJavaDuration
 
 /**
  * 기본 `MEMORY` audit transport에서 사용하는 DNS/socket 없는 `HttpClient` fake입니다.
@@ -33,15 +42,41 @@ import javax.net.ssl.SSLParameters
  */
 internal class InMemoryAuditHttpClient(
     responses: Iterable<*> = emptyList<Any?>(),
-) : HttpClient() {
+): HttpClient() {
+
+    private companion object: KLogging() {
+        val SENTINEL_URI: URI = URI("https://audit.invalid/in-memory")
+
+        private fun <T> completedResponse(status: Int): CompletableFuture<HttpResponse<T>> =
+            completableFutureOf(object: HttpResponse<T> {
+                override fun statusCode(): Int = status
+
+                override fun request(): HttpRequest = HttpRequest
+                    .newBuilder(SENTINEL_URI)
+                    .build()
+
+                override fun previousResponse(): Optional<HttpResponse<T>> = Optional.empty()
+
+                override fun headers(): java.net.http.HttpHeaders =
+                    java.net.http.HttpHeaders.of(emptyMap()) { _, _ -> true }
+
+                override fun body(): T? = null
+
+                override fun sslSession(): Optional<javax.net.ssl.SSLSession> = Optional.empty()
+
+                override fun uri(): URI = SENTINEL_URI
+
+                override fun version(): Version = Version.HTTP_1_1
+            })
+    }
 
     private val scriptedResponses = ConcurrentLinkedQueue<CompletableFuture<*>>().apply {
         responses.forEach { response ->
             add(
                 when (response) {
                     is CompletableFuture<*> -> response
-                    is HttpResponse<*> -> CompletableFuture.completedFuture(response)
-                    else -> throw IllegalArgumentException(
+                    is HttpResponse<*> -> completableFutureOf(response)
+                    else               -> throw IllegalArgumentException(
                         "responses must contain HttpResponse or CompletableFuture values",
                     )
                 },
@@ -66,7 +101,7 @@ internal class InMemoryAuditHttpClient(
 
     override fun cookieHandler(): Optional<CookieHandler> = Optional.empty()
 
-    override fun connectTimeout(): Optional<Duration> = Optional.of(Duration.ofSeconds(1))
+    override fun connectTimeout(): Optional<Duration> = Optional.of(1.seconds())
 
     override fun followRedirects(): Redirect = Redirect.NEVER
 
@@ -138,7 +173,7 @@ internal class InMemoryAuditHttpClient(
         } catch (e: ArithmeticException) {
             Long.MAX_VALUE
         }
-        return termination.await(nanos, TimeUnit.NANOSECONDS)
+        return termination.await(nanos.nanoseconds)
     }
 
     override fun isTerminated(): Boolean = terminated.get()
@@ -156,8 +191,9 @@ internal class InMemoryAuditHttpClient(
      * 않습니다.
      */
     fun awaitRequestCount(expected: Int, timeout: Duration) {
-        require(expected >= 0) { "expected must not be negative" }
-        require(!timeout.isNegative) { "timeout must not be negative" }
+        expected.requireZeroOrPositiveNumber("expected")
+        timeout.requireZeroOrPositiveDuration("timeout")
+
         val deadline = boundedDeadline(timeout)
         while (requestCount < expected) {
             if (System.nanoTime() >= deadline) {
@@ -169,11 +205,11 @@ internal class InMemoryAuditHttpClient(
 
     /** Kotlin duration overload for tests using `5.seconds` style timeouts. */
     fun awaitRequestCount(expected: Int, timeout: kotlin.time.Duration) {
-        require(!timeout.isNegative()) { "timeout must not be negative" }
+        timeout.requireZeroOrPositiveDuration("timeout")
         val javaTimeout = if (timeout.isInfinite()) {
-            Duration.ofNanos(Long.MAX_VALUE)
+            Long.MAX_VALUE.nanos()
         } else {
-            Duration.ofNanos(timeout.inWholeNanoseconds)
+            timeout.toJavaDuration()
         }
         awaitRequestCount(expected, javaTimeout)
     }
@@ -198,31 +234,5 @@ internal class InMemoryAuditHttpClient(
             Long.MAX_VALUE
         }
         return if (nanos >= Long.MAX_VALUE - now) Long.MAX_VALUE else now + nanos
-    }
-
-    private companion object {
-        val SENTINEL_URI: URI = URI("https://audit.invalid/in-memory")
-
-        private fun <T> completedResponse(status: Int): CompletableFuture<HttpResponse<T>> =
-            CompletableFuture.completedFuture(object : HttpResponse<T> {
-                override fun statusCode(): Int = status
-
-                override fun request(): HttpRequest = HttpRequest
-                    .newBuilder(SENTINEL_URI)
-                    .build()
-
-                override fun previousResponse(): Optional<HttpResponse<T>> = Optional.empty()
-
-                override fun headers(): java.net.http.HttpHeaders =
-                    java.net.http.HttpHeaders.of(emptyMap()) { _, _ -> true }
-
-                override fun body(): T? = null
-
-                override fun sslSession(): Optional<javax.net.ssl.SSLSession> = Optional.empty()
-
-                override fun uri(): URI = SENTINEL_URI
-
-                override fun version(): Version = Version.HTTP_1_1
-            })
     }
 }

@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.observability.advanced.repository
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.workshop.observability.advanced.model.User
-import io.bluetape4k.workshop.observability.advanced.model.Users
+import io.bluetape4k.workshop.observability.advanced.model.UserRecord
+import io.bluetape4k.workshop.observability.advanced.model.UserTable
 import io.bluetape4k.workshop.observability.advanced.model.toUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,7 +15,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Repository
 
 /**
- * Exposed JDBC 를 사용해 [User] 를 persist 하는 repository 입니다.
+ * Exposed JDBC 를 사용해 [UserRecord] 를 persist 하는 repository 입니다.
  *
  * ## Behavior / Contract
  * - 모든 method 는 Exposed 호출을 `withContext(Dispatchers.IO) { transaction { ... } }` 으로 감쌉니다.
@@ -26,21 +26,21 @@ import org.springframework.stereotype.Repository
 @Repository
 class UserRepository {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
-    suspend fun findById(id: Long): User? = withContext(Dispatchers.IO) {
+    suspend fun findById(id: Long): UserRecord? = withContext(Dispatchers.IO) {
         val validId = id.requirePositiveNumber("id")
         transaction {
-            Users.selectAll()
-                .where { Users.id eq validId }
+            UserTable.selectAll()
+                .where { UserTable.id eq validId }
                 .singleOrNull()
                 ?.toUser()
         }
     }
 
-    suspend fun save(user: User): Unit = withContext(Dispatchers.IO) {
+    suspend fun save(user: UserRecord): Unit = withContext(Dispatchers.IO) {
         transaction {
-            Users.insert {
+            UserTable.insert {
                 it[id] = user.id
                 it[name] = user.name
                 it[email] = user.email
@@ -50,7 +50,7 @@ class UserRepository {
 
     suspend fun deleteAll(): Unit = withContext(Dispatchers.IO) {
         transaction {
-            Users.deleteAll()
+            UserTable.deleteAll()
         }
     }
 }

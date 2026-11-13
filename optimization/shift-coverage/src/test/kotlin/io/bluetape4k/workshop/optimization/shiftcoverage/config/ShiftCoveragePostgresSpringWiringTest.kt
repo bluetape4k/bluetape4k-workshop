@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.config
 
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.shiftcoverage.ShiftCoverageApplication
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageDemoService
@@ -21,6 +23,20 @@ import org.springframework.test.context.DynamicPropertySource
 @SpringBootTest(classes = [ShiftCoverageApplication::class], webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("postgres")
 class ShiftCoveragePostgresSpringWiringTest {
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { postgres.password.shouldNotBeNull() }
+            registry.add("spring.datasource.driver-class-name") { "org.postgresql.Driver" }
+        }
+    }
+
     @Autowired
     private lateinit var assignmentStore: ShiftCoverageAssignmentStore
 
@@ -35,21 +51,17 @@ class ShiftCoveragePostgresSpringWiringTest {
         assignmentStore.shouldBeInstanceOf<ShiftCoveragePostgresAssignmentRepository>()
         idempotencyStore.shouldBeInstanceOf<ShiftCoveragePostgresIdempotencyRepository>()
 
-        service.replan(IdempotencyKey("postgres-replan"), "manager-demo", "postgres-request")
-        service.approve(1L, IdempotencyKey("postgres-approve"), "manager-demo").shouldBeTrue()
-        assignmentStore.listAssignments().size shouldBeEqualTo 1
-    }
+        service.replan(
+            idempotencyKey = IdempotencyKey("postgres-replan"),
+            principal = "manager-demo",
+            requestId = "postgres-request"
+        )
+        service.approve(
+            1L,
+            IdempotencyKey("postgres-approve"),
+            "manager-demo"
+        ).shouldBeTrue()
 
-    companion object {
-        private val postgres = PostgreSQLServer.Launcher.postgres
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
-            registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
-            registry.add("spring.datasource.driver-class-name") { "org.postgresql.Driver" }
-        }
+        assignmentStore.listAssignments() shouldHaveSize 1
     }
 }

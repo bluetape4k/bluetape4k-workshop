@@ -1,10 +1,11 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.config
 
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageDeliveryQueue
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageExecutorLifecycle
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageIdempotencyPort
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageIdempotencyStore
-import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageDeliveryQueue
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageOutboxStore
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageOutboxWorker
 import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.ShiftCoverageAssignmentStore
@@ -17,6 +18,8 @@ import java.util.concurrent.ExecutorService
 
 @Configuration(proxyBeanMethods = false)
 internal class ShiftCoverageConfiguration {
+
+    companion object: KLogging()
 
     @Bean(destroyMethod = "")
     @Profile("demo")
@@ -35,11 +38,13 @@ internal class ShiftCoverageConfiguration {
 
     @Bean
     @Profile("demo")
-    fun shiftCoverageAssignmentStore(): ShiftCoverageAssignmentStore = ShiftCoverageRepository()
+    fun shiftCoverageAssignmentStore(): ShiftCoverageAssignmentStore =
+        ShiftCoverageRepository()
 
     @Bean
     @Profile("demo")
-    fun shiftCoverageIdempotencyStore(): ShiftCoverageIdempotencyPort = ShiftCoverageIdempotencyStore()
+    fun shiftCoverageIdempotencyStore(): ShiftCoverageIdempotencyPort =
+        ShiftCoverageIdempotencyStore()
 
     @Bean
     @Profile("demo")
@@ -52,12 +57,14 @@ internal class ShiftCoverageConfiguration {
         store: ShiftCoverageOutboxStore,
         queue: ShiftCoverageDeliveryQueue,
         properties: ShiftCoverageProperties,
-    ): ShiftCoverageOutboxWorker = ShiftCoverageOutboxWorker(store, queue, properties.outboxBatchSize)
+    ): ShiftCoverageOutboxWorker =
+        ShiftCoverageOutboxWorker(store, queue, properties.outboxBatchSize)
 
     @Bean
     @Profile("demo")
     fun shiftCoverageExecutorShutdown(
         executor: ExecutorService,
         properties: ShiftCoverageProperties,
-    ): ShiftCoverageExecutorShutdown = ShiftCoverageExecutorShutdown(executor, properties.shutdownDrain)
+    ): ShiftCoverageExecutorShutdown =
+        ShiftCoverageExecutorShutdown(executor, properties.shutdownDrain)
 }

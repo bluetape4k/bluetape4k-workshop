@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order
 
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order.Order.OrderCompleted
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order.Order.OrderCompleted
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.modulith.test.ApplicationModuleTest
@@ -13,7 +14,7 @@ class OrderModuleTest(
     @param:Autowired private val orders: OrderManagement,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `publish OrderCompletedEvent`(events: PublishedEvents) {
@@ -23,6 +24,7 @@ class OrderModuleTest(
         val fired = events.ofType(OrderCompleted::class.java)
             .matching { it.order == order }
 
+        log.debug { "fired=$fired" }
         fired.shouldNotBeEmpty()
     }
 }

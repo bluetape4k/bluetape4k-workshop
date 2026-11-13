@@ -3,17 +3,24 @@ package io.bluetape4k.workshop.commerce.voucherpool.admission
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 internal class DatabasePermitGateTest {
+
+    companion object: KLogging()
+
     @Test
     fun `foreground timeout releases only the waiting acquisition`() {
         val gate = gate()
@@ -21,57 +28,63 @@ internal class DatabasePermitGateTest {
         val holderRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { executor ->
-            val holder =
-                executor.submit {
-                    gate.withForegroundPermit {
-                        holderEntered.countDown()
-                        holderRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
-                    }
+            val holder = executor.submit {
+                gate.withForegroundPermit {
+                    holderEntered.countDown()
+                    holderRelease.await(5.seconds).shouldBeTrue()
                 }
-            holderEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            }
+            holderEntered.await(5.seconds).shouldBeTrue()
 
-            val failure =
-                assertFailsWith<PoolBusyException> {
-                    val result = gate.withForegroundPermit { "unexpected" }
-                    error("foreground permit was acquired unexpectedly: $result")
-                }
+            val failure = assertFailsWith<PoolBusyException> {
+                val result = gate.withForegroundPermit { "unexpected" }
+                error("foreground permit was acquired unexpectedly: $result")
+            }
+            log.debug { "failure=$failure" }
             failure.lane shouldBeEqualTo PermitLane.FOREGROUND
-            gate.snapshot().foregroundInUse shouldBeEqualTo 1
-            gate.snapshot().workerInUse shouldBeEqualTo 0
-            gate.snapshot().sseInUse shouldBeEqualTo 0
+
+            gate.snapshot().let {
+                it.foregroundInUse shouldBeEqualTo 1
+                it.workerInUse shouldBeEqualTo 0
+                it.sseInUse shouldBeEqualTo 0
+            }
 
             holderRelease.countDown()
-            holder.get(5, TimeUnit.SECONDS)
+            holder.get(5.seconds)
         }
 
+        log.debug { "PermitSnapshot=${gate.snapshot()}" }
         gate.snapshot().foregroundInUse shouldBeEqualTo 0
     }
 
     @Test
     fun `default lane budgets fit Hikari and nested acquisition fails immediately`() {
+
         val gate = DatabasePermitGate.default(hikariMaximumPoolSize = 16)
 
-        gate.snapshot().capacities shouldBeEqualTo
-            mapOf(
+        gate.snapshot().let {
+            it.capacities shouldBeEqualTo mapOf(
                 PermitLane.FOREGROUND to 11,
                 PermitLane.WORKER to 1,
                 PermitLane.SSE to 3,
             )
-        gate.snapshot().waits shouldBeEqualTo
-            mapOf(
+            it.waits shouldBeEqualTo mapOf(
                 PermitLane.FOREGROUND to 200.milliseconds,
                 PermitLane.WORKER to 1.seconds,
                 PermitLane.SSE to 1.seconds,
             )
+        }
 
         gate.withForegroundPermit {
-            val failure =
-                assertFailsWith<NestedPermitException> {
-                    val result = gate.withSsePermit { "unexpected" }
-                    error("nested permit was acquired unexpectedly: $result")
-                }
+            val failure = assertFailsWith<NestedPermitException> {
+                val result = gate.withSsePermit { "unexpected" }
+                error("nested permit was acquired unexpectedly: $result")
+            }
+            log.debug { "failure=$failure" }
             failure.activeLane shouldBeEqualTo PermitLane.FOREGROUND
             failure.requestedLane shouldBeEqualTo PermitLane.SSE
+
+            log.debug { "PermitSnapshot=${gate.snapshot()}" }
             gate.snapshot().sseInUse shouldBeEqualTo 0
         }
     }
@@ -82,8 +95,10 @@ internal class DatabasePermitGateTest {
 
         gate.withForegroundPermit { "acquired" } shouldBeEqualTo "acquired"
 
-        (gate.snapshot().observedWaitMax.getValue(PermitLane.FOREGROUND) < 25.milliseconds).shouldBeTrue()
-        gate.snapshot().observedWaitSamples.getValue(PermitLane.FOREGROUND) shouldBeEqualTo 1L
+        gate.snapshot().let {
+            it.observedWaitMax.getValue(PermitLane.FOREGROUND) shouldBeLessThan 25.milliseconds
+            it.observedWaitSamples.getValue(PermitLane.FOREGROUND) shouldBeEqualTo 1L
+        }
     }
 
     @Test
@@ -97,23 +112,21 @@ internal class DatabasePermitGateTest {
         assertFailsWith<IllegalArgumentException> {
             DatabasePermitGate(
                 hikariMaximumPoolSize = 3,
-                configs =
-                    mapOf(
-                        PermitLane.FOREGROUND to PermitLaneConfig(0, 25.milliseconds),
-                        PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
-                        PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
-                    ),
+                configs = mapOf(
+                    PermitLane.FOREGROUND to PermitLaneConfig(0, 25.milliseconds),
+                    PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
+                    PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
+                ),
             )
         }
         assertFailsWith<IllegalArgumentException> {
             DatabasePermitGate(
                 hikariMaximumPoolSize = 2,
-                configs =
-                    mapOf(
-                        PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
-                        PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
-                        PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
-                    ),
+                configs = mapOf(
+                    PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
+                    PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
+                    PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
+                ),
             )
         }
     }
@@ -127,9 +140,11 @@ internal class DatabasePermitGateTest {
             assertFailsWith<IllegalStateException> {
                 gate.withForegroundPermit { error("permit entered with an active transaction") }
             }
-            gate.snapshot().foregroundInUse shouldBeEqualTo 0
-            gate.snapshot().workerInUse shouldBeEqualTo 0
-            gate.snapshot().sseInUse shouldBeEqualTo 0
+            gate.snapshot().let {
+                it.foregroundInUse shouldBeEqualTo 0
+                it.workerInUse shouldBeEqualTo 0
+                it.sseInUse shouldBeEqualTo 0
+            }
         } finally {
             TransactionSynchronizationManager.clear()
         }
@@ -145,10 +160,11 @@ internal class DatabasePermitGateTest {
         assertFailsWith<IllegalStateException> {
             gate.withWorkerPermit { throw IllegalStateException("worker failed") }
         }
-
-        gate.snapshot().workerInUse shouldBeEqualTo 0
-        gate.snapshot().foregroundInUse shouldBeEqualTo 0
-        gate.snapshot().sseInUse shouldBeEqualTo 0
+        gate.snapshot().let {
+            it.workerInUse shouldBeEqualTo 0
+            it.foregroundInUse shouldBeEqualTo 0
+            it.sseInUse shouldBeEqualTo 0
+        }
     }
 
     @Test
@@ -158,31 +174,29 @@ internal class DatabasePermitGateTest {
         val holderRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { executor ->
-            val holder =
-                executor.submit {
-                    gate.withWorkerPermit {
-                        holderEntered.countDown()
-                        holderRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
-                    }
+            val holder = executor.submit {
+                gate.withWorkerPermit {
+                    holderEntered.countDown()
+                    holderRelease.await(5.seconds).shouldBeTrue()
                 }
-            holderEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            }
+            holderEntered.await(5.seconds).shouldBeTrue()
 
-            val interrupted =
-                executor.submit<Boolean> {
-                    Thread.currentThread().interrupt()
-                    val failure =
-                        assertFailsWith<PoolBusyException> {
-                            val result = gate.withWorkerPermit { "unexpected" }
-                            error("interrupted permit was acquired unexpectedly: $result")
-                        }
-                    failure.interrupted.shouldBeTrue()
-                    Thread.currentThread().isInterrupted
-                }
-            interrupted.get(5, TimeUnit.SECONDS).shouldBeTrue()
+            val interrupted = executor.submit<Boolean> {
+                Thread.currentThread().interrupt()
+                val failure =
+                    assertFailsWith<PoolBusyException> {
+                        val result = gate.withWorkerPermit { "unexpected" }
+                        error("interrupted permit was acquired unexpectedly: $result")
+                    }
+                failure.interrupted.shouldBeTrue()
+                Thread.currentThread().isInterrupted
+            }
+            interrupted.get(5.seconds).shouldBeTrue()
             gate.snapshot().workerInUse shouldBeEqualTo 1
 
             holderRelease.countDown()
-            holder.get(5, TimeUnit.SECONDS)
+            holder.get(5.seconds)
         }
 
         gate.snapshot().workerInUse shouldBeEqualTo 0
@@ -196,14 +210,13 @@ internal class DatabasePermitGateTest {
         val foregroundRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { executor ->
-            val foregroundHolder =
-                executor.submit {
-                    gate.withForegroundPermit {
-                        foregroundEntered.countDown()
-                        foregroundRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
-                    }
+            val foregroundHolder = executor.submit {
+                gate.withForegroundPermit {
+                    foregroundEntered.countDown()
+                    foregroundRelease.await(5.seconds).shouldBeTrue()
                 }
-            foregroundEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            }
+            foregroundEntered.await(5.seconds).shouldBeTrue()
             try {
                 assertFailsWith<CancellationException> {
                     gate.withWorkerPermit {
@@ -212,13 +225,14 @@ internal class DatabasePermitGateTest {
                         throw CancellationException("worker cancelled")
                     }
                 }
-
-                gate.snapshot().foregroundInUse shouldBeEqualTo 1
-                gate.snapshot().workerInUse shouldBeEqualTo 0
-                gate.snapshot().sseInUse shouldBeEqualTo 0
+                gate.snapshot().let {
+                    it.foregroundInUse shouldBeEqualTo 1
+                    it.workerInUse shouldBeEqualTo 0
+                    it.sseInUse shouldBeEqualTo 0
+                }
             } finally {
                 foregroundRelease.countDown()
-                foregroundHolder.get(5, TimeUnit.SECONDS)
+                foregroundHolder.get(5.seconds)
             }
         }
 
@@ -228,11 +242,10 @@ internal class DatabasePermitGateTest {
     private fun gate(workerWaitSeconds: Int = 1): DatabasePermitGate =
         DatabasePermitGate(
             hikariMaximumPoolSize = 4,
-            configs =
-                mapOf(
-                    PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
-                    PermitLane.WORKER to PermitLaneConfig(1, workerWaitSeconds.seconds),
-                    PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
-                ),
+            configs = mapOf(
+                PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
+                PermitLane.WORKER to PermitLaneConfig(1, workerWaitSeconds.seconds),
+                PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
+            ),
         )
 }

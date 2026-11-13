@@ -2,62 +2,84 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.javatimes.days
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventLog
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
 import io.bluetape4k.workshop.commerce.shared.voucher.NormalizedVoucherLifecycleResult
-import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignBlackBoxContract
-import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignActivationRequest
-import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignBlackBoxRequest
 import io.bluetape4k.workshop.commerce.shared.voucher.VoucherAllocationBlackBoxRequest
 import io.bluetape4k.workshop.commerce.shared.voucher.VoucherAllocationBlackBoxScenario
+import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignActivationRequest
+import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignBlackBoxContract
+import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignBlackBoxRequest
 import io.bluetape4k.workshop.commerce.shared.voucher.VoucherLifecycleAction
 import io.bluetape4k.workshop.commerce.shared.voucher.VoucherLifecycleBlackBoxScenario
 import io.bluetape4k.workshop.commerce.shared.voucher.VoucherLifecycleFailureKind
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventLog
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.http.MediaType
+import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 import java.net.http.HttpClient
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CyclicBarrier
-import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
-@Tag("integration")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = ["voucher.projection.worker.enabled=false"],
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class EventSourcedVoucherCompatibilityIntegrationTest
-    @Autowired
-    constructor(
-        registration: EventSourcedExposedDatabaseRegistration,
-        dataSource: DataSource,
-        @LocalServerPort port: Int,
-    ) {
+internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constructor(
+    registration: EventSourcedExposedDatabaseRegistration,
+    dataSource: DataSource,
+    @LocalServerPort port: Int,
+) {
+
+    companion object: KLogging() {
+        private val POSTGRES by lazy { PostgreSQLServer.Launcher.postgres }
+        private val HTTP_TIMEOUT: Duration = 60.seconds()
+        private val NOW = Instant.parse("2026-07-23T00:00:00Z")
+        private const val PROJECTION = "voucher-lifecycle"
+        private const val OPERATOR_SECRET = "workshop-operator-secret"
+        private const val OPERATOR_GUARD = "workshop-operator-guard"
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { POSTGRES.jdbcUrl }
+            registry.add("spring.datasource.username") { POSTGRES.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { POSTGRES.password.shouldNotBeNull() }
+            registry.add("management.datadog.metrics.export.enabled") { "false" }
+        }
+    }
+
     private val database = registration.database
     private val origin = "http://127.0.0.1:$port"
     private val client: WebTestClient
@@ -78,7 +100,9 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
     }
 
     @AfterEach
-    fun dropSchema() = transaction(database) { SchemaUtils.drop(*EVENT_SOURCED_HTTP_TABLES) }
+    fun dropSchema() {
+        transaction(database) { SchemaUtils.drop(*EVENT_SOURCED_HTTP_TABLES) }
+    }
 
     @Test
     fun `event sourced adapter satisfies the shared normalized campaign contract`() {
@@ -86,6 +110,7 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
             client
                 .postCampaignContract(scenario.first, operatorAccess())
                 .assertNormalizedCampaign(scenario.expectedFirst, scenario.first.campaignId)
+
             scenario.replay?.let { replay ->
                 client
                     .postCampaignContract(replay, operatorAccess())
@@ -97,12 +122,15 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
     @Test
     fun `event sourced adapter satisfies the shared campaign activation contract`() {
         val scenario = VoucherCampaignBlackBoxContract.activateAndReplay
+
         client
             .postCampaignContract(scenario.create, operatorAccess())
             .assertNormalizedCampaign(scenario.expectedCreate, scenario.create.campaignId)
+
         client
             .postCampaignActivationContract(scenario.first, operatorAccess())
             .assertNormalizedCampaign(scenario.expectedFirst, scenario.first.campaignId)
+
         client
             .postCampaignActivationContract(scenario.replay, operatorAccess())
             .assertNormalizedCampaign(scenario.expectedReplay, scenario.replay.campaignId)
@@ -111,15 +139,19 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
     @Test
     fun `event sourced adapter satisfies the shared voucher allocation contract`() {
         val scenario = VoucherCampaignBlackBoxContract.allocateAndReplay
+
         client
             .postCampaignContract(scenario.campaign.create, operatorAccess())
             .assertNormalizedCampaign(scenario.campaign.expectedCreate, scenario.campaign.create.campaignId)
+
         client
             .postCampaignActivationContract(scenario.campaign.first, operatorAccess())
             .assertNormalizedCampaign(scenario.campaign.expectedFirst, scenario.campaign.first.campaignId)
+
         client
             .postVoucherAllocationContract(scenario.first)
             .assertNormalizedAllocation(scenario.expectedFirst)
+
         client
             .postVoucherAllocationContract(scenario.replay)
             .assertNormalizedAllocation(scenario.expectedReplay)
@@ -129,10 +161,9 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
     fun `event sourced adapter satisfies the shared voucher lifecycle contract`() {
         VoucherCampaignBlackBoxContract.lifecycleScenarios.forEach { scenario ->
             val allocation = createAllocation(scenario)
-            postLifecycle(scenario, allocation)
-                .assertNormalizedLifecycle(scenario.expectedFirst)
-            postLifecycle(scenario, allocation)
-                .assertNormalizedLifecycle(scenario.expectedReplay)
+
+            postLifecycle(scenario, allocation).assertNormalizedLifecycle(scenario.expectedFirst)
+            postLifecycle(scenario, allocation).assertNormalizedLifecycle(scenario.expectedReplay)
         }
     }
 
@@ -140,8 +171,8 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
     fun `allocation replay preserves the terminal outcome while rendering current voucher state`() {
         val scenario = VoucherCampaignBlackBoxContract.lifecycleScenarios.first()
         val allocation = createAllocation(scenario)
-        postLifecycle(scenario, allocation)
-            .assertNormalizedLifecycle(scenario.expectedFirst)
+
+        postLifecycle(scenario, allocation).assertNormalizedLifecycle(scenario.expectedFirst)
 
         client
             .postVoucherAllocationContract(scenario.allocation.replay)
@@ -161,6 +192,7 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
                 client
                     .postCampaignContract(campaign.create, operatorAccess())
                     .assertNormalizedCampaign(campaign.expectedCreate, campaign.create.campaignId)
+
                 if (scenario.activateCampaign) {
                     client
                         .postCampaignActivationContract(campaign.first, operatorAccess())
@@ -186,69 +218,68 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
 
         val barrier = CyclicBarrier(2)
         val responses = ConcurrentLinkedQueue<Pair<Int, String>>()
+
         MultithreadingTester()
             .workers(2)
             .rounds(1)
             .add {
-                val worker = barrier.await(5, TimeUnit.SECONDS)
+                val worker = barrier.await(5.seconds)
                 val principal = "capacity-customer-$worker"
-                val response =
-                    testClient()
-                        .postVoucherAllocationContract(
-                            VoucherAllocationBlackBoxRequest(
-                                tenant = create.tenant,
-                                principal = principal,
-                                idempotencyKey = "capacity-allocate-00$worker",
-                                campaignId = campaignId,
-                                userRef = principal,
-                            ),
-                        ).exchange()
-                        .expectBody()
-                        .returnResult()
+                val response = testClient()
+                    .postVoucherAllocationContract(
+                        VoucherAllocationBlackBoxRequest(
+                            tenant = create.tenant,
+                            principal = principal,
+                            idempotencyKey = "capacity-allocate-00$worker",
+                            campaignId = campaignId,
+                            userRef = principal,
+                        ),
+                    )
+                    .exchange()
+                    .expectBody()
+                    .returnResult()
+
                 responses.add(
-                    response.status.value() to
-                        String(response.responseBodyContent.shouldNotBeNull()),
+                    response.status.value() to response.responseBodyContent.shouldNotBeNull().toUtf8String(),
                 )
             }.run()
 
         responses.map(Pair<Int, String>::first).sorted() shouldBeEqualTo listOf(201, 409)
+
         val rejectedBody = responses.single { it.first == 409 }.second
-        (
-            "CONCURRENT_MODIFICATION" in rejectedBody ||
-                "CAPACITY_EXHAUSTED" in rejectedBody
-        ).shouldBeTrue()
+        assertTrue { "CONCURRENT_MODIFICATION" in rejectedBody || "CAPACITY_EXHAUSTED" in rejectedBody }
+
         transaction(database) {
             EventLog
                 .selectAll()
                 .where {
                     (EventLog.streamId eq campaignId) and
-                        (EventLog.eventType eq "campaign.voucher-capacity-reserved")
-                }.count()
-        } shouldBeEqualTo 1L
+                            (EventLog.eventType eq "campaign.voucher-capacity-reserved")
+                }.count() shouldBeEqualTo 1L
+        }
     }
 
     private fun createCapacityRaceCampaign(): VoucherCampaignBlackBoxRequest {
         val now = Instant.now()
-        val create =
-            VoucherCampaignBlackBoxRequest(
-                tenant = "capacity-race",
-                principal = "capacity-operator",
-                idempotencyKey = "capacity-create-001",
-                campaignId = UUID.randomUUID(),
-                startsAt = now.minus(Duration.ofMinutes(1)),
-                endsAt = now.plus(Duration.ofDays(2)),
-                capacity = 1,
-                perUserLimit = 1,
-                redemptionTtlSeconds = 3_600,
-            )
-        val activate =
-            VoucherCampaignActivationRequest(
-                tenant = create.tenant,
-                principal = create.principal,
-                idempotencyKey = "capacity-activate-001",
-                campaignId = create.campaignId,
-                expectedRevision = 0,
-            )
+        val create = VoucherCampaignBlackBoxRequest(
+            tenant = "capacity-race",
+            principal = "capacity-operator",
+            idempotencyKey = "capacity-create-001",
+            campaignId = UUID.randomUUID(),
+            startsAt = now - 1.minutes(),
+            endsAt = now + 2.days(),
+            capacity = 1,
+            perUserLimit = 1,
+            redemptionTtlSeconds = 3_600,
+        )
+
+        val activate = VoucherCampaignActivationRequest(
+            tenant = create.tenant,
+            principal = create.principal,
+            idempotencyKey = "capacity-activate-001",
+            campaignId = create.campaignId,
+            expectedRevision = 0,
+        )
         client.postCampaignContract(create, operatorAccess()).exchange().expectStatus().isCreated
         client.postCampaignActivationContract(activate, operatorAccess()).exchange().expectStatus().isOk
         return create
@@ -271,8 +302,8 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
                 } else {
                     allocation.code.shouldNotBeNull()
                 }
-            val expectedRevision =
-                if (scenario.kind == VoucherLifecycleFailureKind.STALE_REVISION) 1 else 0
+            val expectedRevision = if (scenario.kind == VoucherLifecycleFailureKind.STALE_REVISION) 1 else 0
+
             client
                 .post()
                 .uri("/api/v1/claims/${allocation.claimId}/redeem")
@@ -298,17 +329,20 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
         allocation: VoucherAllocationBlackBoxScenario,
     ): VoucherAllocationHttpResponse {
         val campaign = allocation.campaign
+
         client
             .postCampaignContract(campaign.create, operatorAccess())
             .assertNormalizedCampaign(campaign.expectedCreate, campaign.create.campaignId)
+
         client
             .postCampaignActivationContract(campaign.first, operatorAccess())
             .assertNormalizedCampaign(campaign.expectedFirst, campaign.first.campaignId)
+
         return client
             .postVoucherAllocationContract(allocation.first)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(VoucherAllocationHttpResponse::class.java)
+            .expectBody<VoucherAllocationHttpResponse>()
             .returnResult().responseBody.shouldNotBeNull()
     }
 
@@ -317,21 +351,21 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
         allocation: VoucherAllocationHttpResponse,
     ): WebTestClient.RequestHeadersSpec<*> {
         val request = scenario.allocation.first
-        val path =
-            when (scenario.action) {
-                VoucherLifecycleAction.REDEEM -> "/api/v1/claims/${allocation.claimId}/redeem"
-                VoucherLifecycleAction.RELEASE -> "/api/v1/claims/${allocation.claimId}/release"
-            }
-        val body =
-            when (scenario.action) {
-                VoucherLifecycleAction.REDEEM ->
-                    mapOf(
-                        "code" to allocation.code.shouldNotBeNull(),
-                        "expectedRevision" to 0,
-                        "redemptionReference" to scenario.redemptionReference.shouldNotBeNull(),
-                    )
-                VoucherLifecycleAction.RELEASE -> mapOf("expectedRevision" to 0)
-            }
+        val path = when (scenario.action) {
+            VoucherLifecycleAction.REDEEM  -> "/api/v1/claims/${allocation.claimId}/redeem"
+            VoucherLifecycleAction.RELEASE -> "/api/v1/claims/${allocation.claimId}/release"
+        }
+
+        val body = when (scenario.action) {
+            VoucherLifecycleAction.REDEEM  ->
+                mapOf(
+                    "code" to allocation.code.shouldNotBeNull(),
+                    "expectedRevision" to 0,
+                    "redemptionReference" to scenario.redemptionReference.shouldNotBeNull(),
+                )
+            VoucherLifecycleAction.RELEASE -> mapOf("expectedRevision" to 0)
+        }
+
         return client
             .post()
             .uri(path)
@@ -344,6 +378,7 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
 
     private fun testClient(): WebTestClient {
         val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
+
         return WebTestClient
             .bindToServer(JdkClientHttpConnector(httpClient))
             .baseUrl(origin)
@@ -358,6 +393,7 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
         expected.replayed?.let {
             response.expectHeader().valueEquals("Idempotency-Replayed", it.toString())
         }
+
         val body = response.expectBody()
         expected.code?.let { body.jsonPath("$.code").isEqualTo(it) }
         expected.state?.let { body.jsonPath("$.state").isEqualTo(it) }
@@ -368,21 +404,4 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
     private fun operatorAccess(): OperatorContractAccess =
         OperatorContractAccess(origin, OPERATOR_SECRET, OPERATOR_GUARD)
 
-    companion object {
-        private val POSTGRES = PostgreSQLServer.Launcher.postgres
-        private val HTTP_TIMEOUT: Duration = Duration.ofSeconds(60)
-        private val NOW = Instant.parse("2026-07-23T00:00:00Z")
-        private const val PROJECTION = "voucher-lifecycle"
-        private const val OPERATOR_SECRET = "workshop-operator-secret"
-        private const val OPERATOR_GUARD = "workshop-operator-guard"
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { POSTGRES.jdbcUrl }
-            registry.add("spring.datasource.username") { POSTGRES.username.shouldNotBeNull() }
-            registry.add("spring.datasource.password") { POSTGRES.password.shouldNotBeNull() }
-            registry.add("management.datadog.metrics.export.enabled") { "false" }
-        }
-    }
 }

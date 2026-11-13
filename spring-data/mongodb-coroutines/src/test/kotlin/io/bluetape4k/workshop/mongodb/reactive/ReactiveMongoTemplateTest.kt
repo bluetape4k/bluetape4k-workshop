@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.mongodb.reactive
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -8,8 +10,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
@@ -22,12 +22,11 @@ class ReactiveMongoTemplateTest(
     @param:Autowired private val operations: ReactiveMongoTemplate,
 ): AbstractReactiveMongoTest(operations) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `insert and count data`() = runSuspendIO {
-        val prevCount = operations.count<Person>(Query())
-            .awaitSingle()
+        val prevCount = operations.count<Person>(Query()).awaitSingle()
 
         prevCount shouldBeEqualTo 4L
 

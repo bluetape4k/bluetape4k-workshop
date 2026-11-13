@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.admission.api
 
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction
 import java.io.Serializable
-import java.util.UUID
+import java.util.*
 
 /** purchase transaction 안에서 소비되는 1회용 waiting-room grant입니다. */
 data class ConsumeGrant(
@@ -11,7 +11,7 @@ data class ConsumeGrant(
     val buyerSubjectId: UUID,
     val policyVersion: Long,
     val attemptId: UUID,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

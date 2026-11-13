@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.application.PlanningCallbackService
 import io.bluetape4k.workshop.optimization.planning.application.PlanningCommandResult
 import io.bluetape4k.workshop.optimization.planning.application.PlanningCommandService
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import tools.jackson.databind.ObjectMapper
-import java.util.UUID
+import java.util.*
 
 @RestController
 @RequestMapping("/api/planning")
@@ -30,6 +31,11 @@ internal class PlanningController(
     private val queryService: PlanningQueryService,
     private val objectMapper: ObjectMapper,
 ) {
+
+    companion object: KLogging() {
+        private const val MAX_CALLBACK_BYTES = 256 * 1024
+    }
+
 
     @PostMapping("/requests")
     fun create(@Valid @RequestBody request: CreatePlanningRequestDto): ResponseEntity<PlanningCreatedResponse> {
@@ -53,6 +59,7 @@ internal class PlanningController(
         val normalizedProvider = PlanningProvider.valueOf(provider.replace('-', '_').uppercase())
         val rawBody = request.inputStream.use { input -> input.readNBytes(MAX_CALLBACK_BYTES + 1) }
         require(rawBody.size <= MAX_CALLBACK_BYTES) { "callback body is too large" }
+
         val callback = objectMapper.readValue(rawBody, PlanningCallbackDto::class.java)
         val decision = callbackService.handle(callback.toCommand(normalizedProvider), rawBody, signature)
         return CallbackDecisionResponse(decision.name)
@@ -68,7 +75,4 @@ internal class PlanningController(
             is PlanningCommandResult.Conflict -> ResponseEntity.status(409).body(result)
         }
 
-    companion object {
-        private const val MAX_CALLBACK_BYTES = 256 * 1024
-    }
 }

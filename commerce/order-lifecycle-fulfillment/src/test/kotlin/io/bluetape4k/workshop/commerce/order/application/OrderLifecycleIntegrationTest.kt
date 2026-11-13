@@ -3,12 +3,16 @@ package io.bluetape4k.workshop.commerce.order.application
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.order.AbstractOrderLifecycleIntegrationTest
 import io.bluetape4k.workshop.commerce.order.domain.AggregateType
+import io.bluetape4k.workshop.commerce.order.domain.CancellationStatus
 import io.bluetape4k.workshop.commerce.order.domain.FulfillmentStatus
 import io.bluetape4k.workshop.commerce.order.domain.OrderStatus
 import io.bluetape4k.workshop.commerce.order.domain.PaymentProviderEvent
 import io.bluetape4k.workshop.commerce.order.domain.PaymentStatus
+import io.bluetape4k.workshop.commerce.order.domain.ProviderEventDisposition
 import io.bluetape4k.workshop.commerce.order.domain.ProviderEventKind
 import io.bluetape4k.workshop.commerce.order.domain.ProviderMode
 import io.bluetape4k.workshop.commerce.order.domain.RefundStatus
@@ -28,6 +32,7 @@ import io.bluetape4k.workshop.commerce.order.persistence.RefundCaseRepository
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.aop.support.AopUtils
@@ -36,8 +41,9 @@ import org.springframework.modulith.events.core.EventPublicationRepository
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
-import java.time.Duration
 import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 internal class OrderLifecycleIntegrationTest(
     private val commands: OrderCommandService,
@@ -56,7 +62,10 @@ internal class OrderLifecycleIntegrationTest(
     private val reconciliation: PublicationReconciliationService,
     private val publicationRepository: EventPublicationRepository,
     transactionManager: PlatformTransactionManager,
-) : AbstractOrderLifecycleIntegrationTest() {
+): AbstractOrderLifecycleIntegrationTest() {
+
+    companion object: KLogging()
+
     private val transactions = TransactionTemplate(transactionManager)
 
     @AfterEach
@@ -65,10 +74,11 @@ internal class OrderLifecycleIntegrationTest(
     @Test
     fun `payment success commits inventory and creates split fulfillment without completing order`() {
         AopUtils.getTargetClass(publicationRepository).name shouldBeEqualTo
-            "io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository"
+                "io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository"
+
         val submitted = commands.submit(validOrder(ProviderMode.SUCCESS))
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 orders.findById(submitted.orderId).status shouldBeEqualTo OrderStatus.FULFILLMENT_IN_PROGRESS
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.SUCCEEDED
@@ -87,7 +97,7 @@ internal class OrderLifecycleIntegrationTest(
     fun `duplicate and out of order provider events do not reapply terminal payment`() {
         val submitted = commands.submit(validOrder(ProviderMode.OUT_OF_ORDER))
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.SUCCEEDED
             }
@@ -96,6 +106,7 @@ internal class OrderLifecycleIntegrationTest(
         readState {
             val payment = payments.findById(submitted.paymentAttemptId)
             payment.revision shouldBeEqualTo 2L
+
             audits
                 .findByOrderId(submitted.orderId)
                 .count { it.aggregateType == AggregateType.PAYMENT_ATTEMPT } shouldBeEqualTo 3
@@ -105,7 +116,7 @@ internal class OrderLifecycleIntegrationTest(
     @Test
     fun `conflicting provider payload remains visible as unresolved evidence`() {
         val submitted = commands.submit(validOrder(ProviderMode.DELAYED_SUCCESS))
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.AUTHORIZING
             }
@@ -119,7 +130,7 @@ internal class OrderLifecycleIntegrationTest(
                 ProviderEventKind.SUCCEEDED,
                 Instant.parse("2026-07-18T00:00:10Z")
             )
-        ) shouldBeEqualTo io.bluetape4k.workshop.commerce.order.domain.ProviderEventDisposition.APPLIED
+        ) shouldBeEqualTo ProviderEventDisposition.APPLIED
         paymentEvents.ingest(
             PaymentProviderEvent(
                 providerEventId,
@@ -127,19 +138,19 @@ internal class OrderLifecycleIntegrationTest(
                 ProviderEventKind.FAILED,
                 Instant.parse("2026-07-18T00:00:11Z")
             )
-        ) shouldBeEqualTo io.bluetape4k.workshop.commerce.order.domain.ProviderEventDisposition.CONFLICT
+        ) shouldBeEqualTo ProviderEventDisposition.CONFLICT
 
         readState {
             providerEvents.countUnresolved() shouldBeEqualTo 1L
             providerEvents.find("FAKE", providerEventId)!!.disposition shouldBeEqualTo
-                io.bluetape4k.workshop.commerce.order.domain.ProviderEventDisposition.CONFLICT
+                    ProviderEventDisposition.CONFLICT
         }
     }
 
     @Test
     fun `failed publication remains visible and replay completes inventory exactly once`() {
         val submitted = commands.submit(validOrder(ProviderMode.DELAYED_SUCCESS))
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.AUTHORIZING
             }
@@ -155,7 +166,7 @@ internal class OrderLifecycleIntegrationTest(
             )
         )
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 publicationRepository.countByStatus(EventPublication.Status.FAILED) shouldBeGreaterThan 0
                 reservations.findByOrderId(submitted.orderId)!!.status shouldBeEqualTo ReservationStatus.HELD
@@ -164,7 +175,7 @@ internal class OrderLifecycleIntegrationTest(
 
         reconciliation.replayFailed(1)
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 reservations.findByOrderId(submitted.orderId)!!.status shouldBeEqualTo ReservationStatus.COMMITTED
                 fulfillments.findByOrderId(submitted.orderId).size shouldBeEqualTo 2
@@ -176,16 +187,15 @@ internal class OrderLifecycleIntegrationTest(
     fun `delayed payment success is reconciled through a deterministic provider event`() {
         val submitted = commands.submit(validOrder(ProviderMode.DELAYED_SUCCESS))
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.AUTHORIZING
             }
         }
 
-        paymentEvents.reconcileDelayedSuccess(submitted.paymentAttemptId) shouldBeEqualTo
-            io.bluetape4k.workshop.commerce.order.domain.ProviderEventDisposition.APPLIED
+        paymentEvents.reconcileDelayedSuccess(submitted.paymentAttemptId) shouldBeEqualTo ProviderEventDisposition.APPLIED
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.SUCCEEDED
                 fulfillments.findByOrderId(submitted.orderId).size shouldBeEqualTo 2
@@ -197,7 +207,7 @@ internal class OrderLifecycleIntegrationTest(
     fun `one line split across shipped and unshipped groups can cancel only its remaining quantity`() {
         val submitted = commands.submit(validOrder(ProviderMode.SUCCESS))
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 fulfillments.findByOrderId(submitted.orderId).size shouldBeEqualTo 2
                 fulfillmentLines.findByOrderId(submitted.orderId).size shouldBeEqualTo 3
@@ -211,11 +221,10 @@ internal class OrderLifecycleIntegrationTest(
                 val splitLine = orderLines.single { it.sku == "sku-b" }
                 fulfillmentLines.findByLineId(splitLine.lineId).size shouldBeEqualTo 2
                 fulfillmentLines.findByLineId(splitLine.lineId).sumOf { it.quantity } shouldBeEqualTo 2
-                val shippedGroupId =
-                    fulfillmentLines
-                        .findByLineId(singleUnitLine.lineId)
-                        .single()
-                        .fulfillmentGroupId
+                val shippedGroupId = fulfillmentLines
+                    .findByLineId(singleUnitLine.lineId)
+                    .single()
+                    .fulfillmentGroupId
                 Triple(singleUnitLine, splitLine, shippedGroupId)
             }
         commands.advanceFulfillment(shippedGroupId, FulfillmentStatus.ALLOCATED)
@@ -226,25 +235,25 @@ internal class OrderLifecycleIntegrationTest(
             commands.cancelUnshippedLine(submitted.orderId, singleUnitLine.lineId, 1, "CUSTOMER_REQUEST")
         }
 
-        val cancellation =
-            commands.cancelUnshippedLine(
-                submitted.orderId,
-                splitLine.lineId,
-                1,
-                "CUSTOMER_REQUEST"
-            )
+        val cancellation = commands.cancelUnshippedLine(
+            submitted.orderId,
+            splitLine.lineId,
+            1,
+            "CUSTOMER_REQUEST"
+        )
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
-                cancellations.findById(cancellation.cancellationCaseId).status shouldBeEqualTo
-                    io.bluetape4k.workshop.commerce.order.domain.CancellationStatus.APPROVED
+                cancellations.findById(cancellation.cancellationCaseId).status shouldBeEqualTo CancellationStatus.APPROVED
                 refunds.findById(cancellation.refundCaseId).status shouldBeEqualTo RefundStatus.SUCCEEDED
                 lines.findByLineId(splitLine.lineId)!!.cancelledQuantity shouldBeEqualTo 1
+
                 val splitLinks = fulfillmentLines.findByLineId(splitLine.lineId)
                 splitLinks.size shouldBeEqualTo 2
                 splitLinks.sumOf { it.quantity } shouldBeEqualTo 1
                 splitLinks.single { it.fulfillmentGroupId == shippedGroupId }.quantity shouldBeEqualTo 1
                 splitLinks.single { it.fulfillmentGroupId != shippedGroupId }.quantity shouldBeEqualTo 0
+
                 fulfillments.findById(shippedGroupId).status shouldBeEqualTo FulfillmentStatus.SHIPPED
                 fulfillments
                     .findById(splitLinks.single { it.fulfillmentGroupId != shippedGroupId }.fulfillmentGroupId)
@@ -259,6 +268,7 @@ internal class OrderLifecycleIntegrationTest(
         }
 
         commands.advanceFulfillment(shippedGroupId, FulfillmentStatus.DELIVERED)
+
         readState {
             orders.findById(submitted.orderId).status shouldBeEqualTo OrderStatus.COMPLETED
         }
@@ -276,7 +286,7 @@ internal class OrderLifecycleIntegrationTest(
                 )
             )
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 fulfillments.findByOrderId(submitted.orderId).size shouldBeEqualTo 1
                 fulfillmentLines.findByOrderId(submitted.orderId).size shouldBeEqualTo 1
@@ -286,26 +296,27 @@ internal class OrderLifecycleIntegrationTest(
 
         commands.cancelUnshippedLine(submitted.orderId, lineId, 1, "CUSTOMER_REQUEST")
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
             readState {
                 orders.findById(submitted.orderId).status shouldBeEqualTo OrderStatus.CANCELLED
-                fulfillments.findByOrderId(submitted.orderId).single().status shouldBeEqualTo
-                    FulfillmentStatus.CANCELLED
+                fulfillments.findByOrderId(submitted.orderId)
+                    .single().status shouldBeEqualTo FulfillmentStatus.CANCELLED
             }
         }
     }
 
-    private fun <T : Any> readState(block: () -> T): T = requireNotNull(transactions.execute { block() })
+    private inline fun <T: Any> readState(
+        crossinline block: () -> T,
+    ): T = transactions.execute { block() }.shouldNotBeNull()
 
-    private fun validOrder(mode: ProviderMode) =
+    private fun validOrder(mode: ProviderMode): SubmitOrder =
         SubmitOrder(
             tenantId = "tenant-a",
             customerReference = "customer-ref-${mode.name.lowercase()}",
             providerMode = mode,
-            lines =
-                listOf(
-                    SubmitOrderLine("sku-a", 1, BigDecimal("10.00")),
-                    SubmitOrderLine("sku-b", 2, BigDecimal("20.00"))
-                )
+            lines = listOf(
+                SubmitOrderLine("sku-a", 1, BigDecimal("10.00")),
+                SubmitOrderLine("sku-b", 2, BigDecimal("20.00"))
+            )
         )
 }

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.profile.web
 
 import io.bluetape4k.images.spring.ImageStorageException
+import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.TimeoutCancellationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -15,6 +16,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
  */
 class ProfileImageExceptionHandler {
 
+    private companion object: KLogging()
+
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(exception: IllegalArgumentException): ProblemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.message ?: "Invalid profile image request")
@@ -25,9 +28,15 @@ class ProfileImageExceptionHandler {
 
     @ExceptionHandler(TimeoutCancellationException::class)
     fun handleTimeout(exception: TimeoutCancellationException): ProblemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.message ?: "Profile image processing timed out")
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            exception.message ?: "Profile image processing timed out"
+        )
 
     @ExceptionHandler(ImageStorageException::class)
     fun handleStorage(exception: ImageStorageException): ProblemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.message ?: "Profile image storage failed")
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            exception.message ?: "Profile image storage failed"
+        )
 }

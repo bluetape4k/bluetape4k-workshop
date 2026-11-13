@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.config.ExposedSpringDataAutoConfiguration
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionLeaseRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonStore
@@ -28,6 +30,8 @@ internal data class EventSourcedExposedDatabaseRegistration(
 @Configuration(proxyBeanMethods = false)
 internal class EventSourcedPersistenceConfiguration {
 
+    companion object: KLogging()
+
     /**
      * bluetape4k Exposed factory를 유지하면서 Boot의 DataSource ordering gap을 메웁니다.
      *
@@ -49,14 +53,13 @@ internal class EventSourcedPersistenceConfiguration {
         check(transactionManager is SpringTransactionManager) {
             "bluetape4k Exposed springTransactionManager is required"
         }
+
         return EventSourcedExposedDatabaseRegistration(
-            checkNotNull(
-                TransactionTemplate(transactionManager).execute {
+            TransactionTemplate(transactionManager)
+                .execute {
                     TransactionManager.current().db
-                },
-            ) {
-                "bluetape4k Exposed transaction did not expose its database"
-            },
+                }
+                .checkNotNull { "bluetape4k Exposed transaction did not expose its database" },
         )
     }
 
@@ -73,7 +76,8 @@ internal class EventSourcedPersistenceConfiguration {
     fun projectionRepository(
         leases: ProjectionLeaseRepository,
         poisons: ProjectionPoisonStore,
-    ): ProjectionRepository = ProjectionRepository(leases = leases, poisons = poisons)
+    ): ProjectionRepository =
+        ProjectionRepository(leases = leases, poisons = poisons)
 
     @Bean
     fun campaignProjectionSnapshotReader(
@@ -91,6 +95,7 @@ internal class EventSourcedPersistenceConfiguration {
     fun campaignProjectionQuery(
         snapshots: CampaignProjectionSnapshotReader,
         clock: Clock,
-    ): CampaignProjectionQuery = WaitingCampaignProjectionQuery(snapshots, clock)
+    ): CampaignProjectionQuery =
+        WaitingCampaignProjectionQuery(snapshots, clock)
 
 }

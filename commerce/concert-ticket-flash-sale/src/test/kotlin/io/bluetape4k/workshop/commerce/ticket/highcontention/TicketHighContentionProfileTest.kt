@@ -1,12 +1,23 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.commerce.ticket.domain.PaymentOutcome
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.ApplyResult
+import io.bluetape4k.workshop.commerce.ticket.purchase.api.CancelPurchase
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.StartPurchase
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.ActivePurchaseExists
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.InventoryUnavailable
@@ -20,37 +31,47 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration.Companion.seconds
 
 @Tag("high-contention")
 internal class TicketHighContentionProfileTest {
+
+    private companion object: KLogging() {
+        const val IMPLEMENTATION = "ticket-spring"
+    }
+
     @Test
     fun `run selected Ticket high contention profile`() {
         TicketHighContentionWorkerPid.publishIfConfigured()
         Runtime.version().feature() shouldBeEqualTo requiredProperty("highContentionExpectedJavaVersion").toInt()
+
         val runId = requiredProperty("highContentionRunId")
         val profileId = requiredProperty("highContentionProfileId")
         val workflowRunAndAttempt = requiredProperty("highContentionWorkflowRunAndAttempt")
         requiredProperty("highContentionImplementation") shouldBeEqualTo IMPLEMENTATION
+
         val mode = TicketHighContentionMode.entries.single {
             it.wireValue == requiredProperty("highContentionMode")
         }
-        val contract = TicketHighContentionContractLoader().load(
-            contractRoot = Path.of(requiredProperty("highContentionContractRoot")),
-            mode = mode,
-            profileId = profileId,
-            implementation = IMPLEMENTATION,
-        )
+        val contract = TicketHighContentionContractLoader()
+            .load(
+                contractRoot = Path.of(requiredProperty("highContentionContractRoot")),
+                mode = mode,
+                profileId = profileId,
+                implementation = IMPLEMENTATION,
+            )
         val profile = contract.selections.single().profile
-        val artifacts = TicketHighContentionArtifactStore.create(
-            Path.of(requiredProperty("highContentionOutputRoot")),
-            runId,
-            requiredProperty("highContentionParentOwnedRun").toBooleanStrict(),
-        )
+        val artifacts = TicketHighContentionArtifactStore
+            .create(
+                outputRoot = Path.of(requiredProperty("highContentionOutputRoot")),
+                runId = runId,
+                parentOwnedRun = requiredProperty("highContentionParentOwnedRun").toBooleanStrict(),
+            )
         val startedAt = Instant.now()
         val startedNanos = System.nanoTime()
 
@@ -62,12 +83,12 @@ internal class TicketHighContentionProfileTest {
                     val injectAfter = when (profile.failure.kind) {
                         TicketFailureKind.REDIS_PATH_OUTAGE,
                         TicketFailureKind.REDIS_KEY_LOSS,
-                        -> profile.failure.triggerAcceptedCount
+                            -> profile.failure.triggerAcceptedCount
 
                         else -> schedule.size
                     }
                     val workload = TicketHighContentionWorkloadEngine(
-                        Duration.ofMillis(profile.workloadJoinDeadlineMs),
+                        profile.workloadJoinDeadlineMs.millis(),
                     ).run(
                         schedule = schedule,
                         warmupOperationCount = profile.warmupOperationCount,
@@ -75,7 +96,7 @@ internal class TicketHighContentionProfileTest {
                         measuredNamespace = "hc:measured:$runId:$IMPLEMENTATION:",
                         concurrency = profile.concurrency,
                         dispatcherBacklogCapacity = profile.dispatcherBacklogCapacity,
-                        maxScheduleDelayNanos = TimeUnit.MILLISECONDS.toNanos(profile.maxScheduleDelayMs),
+                        maxScheduleDelayNanos = profile.maxScheduleDelayMs.millis().toNanos(),
                         adapter = adapter,
                         faultObserverStartAfterScheduledCount = injectAfter,
                         faultObserverTiming =
@@ -87,14 +108,13 @@ internal class TicketHighContentionProfileTest {
                         faultObserver = adapter::injectDeclaredFailure,
                     )
                     adapter.assertProfileInvariants()
-                    check(workload.scheduledCount == profile.operationCount)
-                    check(workload.dispatchedCount >= profile.expectedSubmissionOutcomes.minimumDispatched)
-                    check(workload.completedCount >= profile.expectedSubmissionOutcomes.minimumCompleted)
-                    check(
-                        workload.locallyRejectedCount <=
-                            profile.expectedSubmissionOutcomes.maximumLocalRejected,
-                    )
-                    check(workload.expectedScheduleDigest == workload.realizedScheduleDigest)
+                    log.debug { "workload=$workload" }
+                    workload.scheduledCount shouldBeEqualTo profile.operationCount
+                    workload.dispatchedCount shouldBeGreaterOrEqualTo profile.expectedSubmissionOutcomes.minimumDispatched
+                    workload.completedCount shouldBeGreaterOrEqualTo profile.expectedSubmissionOutcomes.minimumCompleted
+                    workload.locallyRejectedCount shouldBeLessOrEqualTo profile.expectedSubmissionOutcomes.maximumLocalRejected
+                    workload.expectedScheduleDigest shouldBeEqualTo workload.realizedScheduleDigest
+
                     profile.report(
                         contract = contract,
                         runId = runId,
@@ -111,7 +131,7 @@ internal class TicketHighContentionProfileTest {
         val finalizedReport = finalizeAfterSuccessfulCleanup(
             report = report,
             startedNanos = startedNanos,
-            profileDeadline = Duration.ofMillis(profile.profileDeadlineMs),
+            profileDeadline = profile.profileDeadlineMs.millis(),
         )
         val reportPath = artifacts.writeTerminalReport(
             implementation = IMPLEMENTATION,
@@ -120,15 +140,12 @@ internal class TicketHighContentionProfileTest {
             requiredFields = contract.requiredReportFields,
             forbiddenPatterns = contract.forbiddenEvidencePatterns,
         )
-        check(Files.isRegularFile(reportPath))
+        Files.isRegularFile(reportPath).shouldBeTrue()
     }
 
     private fun requiredProperty(name: String): String =
         System.getProperty(name).requireNotNull(name)
 
-    private companion object {
-        const val IMPLEMENTATION = "ticket-spring"
-    }
 }
 
 private fun finalizeAfterSuccessfulCleanup(
@@ -139,14 +156,15 @@ private fun finalizeAfterSuccessfulCleanup(
 ): Map<String, Any?> {
     val actualDurationNanos = (completedNanos - startedNanos).coerceAtLeast(0L)
     val expired = actualDurationNanos > profileDeadline.toNanos()
+
     return report + mapOf(
         "endedAt" to Instant.now().toString(),
         "deadlines" to mapOf(
             "profileBudgetMs" to profileDeadline.toMillis(),
             "workloadJoinBudgetMs" to (
-                (report["deadlines"] as? Map<*, *>)?.get("workloadJoinBudgetMs")
-                    ?: error("Ticket report workload deadline is missing")
-                ),
+                    (report["deadlines"] as? Map<*, *>)?.get("workloadJoinBudgetMs")
+                        ?: error("Ticket report workload deadline is missing")
+                    ),
             "expired" to expired,
         ),
         "result" to if (expired) {
@@ -171,10 +189,10 @@ private class TicketLiveProfileAdapter(
     private val runId: String,
     private val profile: TicketHighContentionProfile,
     private val topology: TicketProxiedTopology,
-) : TicketHighContentionWorkloadAdapter, AutoCloseable {
+): TicketHighContentionWorkloadAdapter, AutoCloseable {
     private val application = TicketHighContentionProfileApplication.start(
         redisUri = topology.redisUri,
-        databasePermitTimeout = Duration.ofMillis(profile.operationTimeoutMs),
+        databasePermitTimeout = profile.operationTimeoutMs.millis(),
     )
     private val measuredSale = application.createSale(
         namespace = "hc:$runId:${profile.profileId}:measured",
@@ -201,7 +219,7 @@ private class TicketLiveProfileAdapter(
         val command = application.command(sale, identity.ordinal)
         application.purchases.start(command)
         application.purchases.cancel(
-            io.bluetape4k.workshop.commerce.ticket.purchase.api.CancelPurchase(
+            CancelPurchase(
                 command.attemptId,
                 command.buyerSubjectId,
             ),
@@ -242,13 +260,12 @@ private class TicketLiveProfileAdapter(
         identity: TicketWorkloadIdentity,
     ): TicketWorkloadDisposition {
         val command = if (profile.failure.kind == TicketFailureKind.DUPLICATE_SUBMISSION) {
-            duplicateCommands[identity.ordinal]
-                ?: error("prepared duplicate Ticket command is missing")
+            duplicateCommands[identity.ordinal] ?: error("prepared duplicate Ticket command is missing")
         } else {
-            commands[token.stableOrdinal]
-                ?: error("prepared Ticket command is missing")
+            commands[token.stableOrdinal] ?: error("prepared Ticket command is missing")
         }
         commands.putIfAbsent(token.stableOrdinal, command)
+
         return try {
             application.purchases.start(command)
             startedCommands[token.stableOrdinal] = command
@@ -274,12 +291,12 @@ private class TicketLiveProfileAdapter(
         when (profile.failure.kind) {
             TicketFailureKind.NONE,
             TicketFailureKind.DUPLICATE_SUBMISSION,
-            -> evidence = mapOf("failure" to "none")
+                                                -> evidence = mapOf("failure" to "none")
 
             TicketFailureKind.REDIS_PATH_OUTAGE -> injectRedisPathOutage()
-            TicketFailureKind.REDIS_KEY_LOSS -> injectRedisKeyLoss()
-            TicketFailureKind.SLOW_PROVIDER -> injectSlowProvider()
-            TicketFailureKind.WORKER_RESTART -> injectWorkerRestart()
+            TicketFailureKind.REDIS_KEY_LOSS    -> injectRedisKeyLoss()
+            TicketFailureKind.SLOW_PROVIDER     -> injectSlowProvider()
+            TicketFailureKind.WORKER_RESTART    -> injectWorkerRestart()
             TicketFailureKind.DUPLICATE_DELIVERY -> injectDuplicateDelivery()
         }
     }
@@ -307,13 +324,13 @@ private class TicketLiveProfileAdapter(
                 }
             }
 
-            TicketFailureKind.SLOW_PROVIDER -> {
+            TicketFailureKind.SLOW_PROVIDER      -> {
                 check(evidence["lateResponseDisposition"] == "IGNORED_FENCED")
                 check(evidence["lateEffects"] == 0L)
                 check(evidence["lateReceipts"] == 0L)
             }
 
-            TicketFailureKind.WORKER_RESTART -> {
+            TicketFailureKind.WORKER_RESTART     -> {
                 check(evidence["staleDisposition"] == "IGNORED_FENCED")
                 check(evidence["oldPoolClosed"] == true)
             }
@@ -323,13 +340,14 @@ private class TicketLiveProfileAdapter(
                 check(evidence["receiptCount"] == 1L)
             }
 
-            else -> Unit
+            else                                 -> Unit
         }
     }
 
     fun authorityDelta(): TicketAuthoritySnapshot {
-        val before = requireNotNull(baseline) { "Ticket baseline was not captured" }
+        val before = baseline.requireNotNull { "Ticket baseline was not captured" }
         val current = authoritySnapshot()
+
         return TicketAuthoritySnapshot(
             attempts = current.attempts - before.attempts,
             effects = current.effects - before.effects,
@@ -357,8 +375,9 @@ private class TicketLiveProfileAdapter(
                     "ticket:{${measuredSale.saleId}}:inflight:user:profile",
                 ),
                 ownerCandidates = listOf(LeaseOwner(1, "profile-owner".padEnd(43, 'x'))),
-                ttl = Duration.ofSeconds(5),
+                ttl = 5.seconds(),
             )
+
             val failedClosed = try {
                 application.foregroundLeaseGate.acquire(request)
                 false
@@ -388,10 +407,14 @@ private class TicketLiveProfileAdapter(
         val commands = application.redisResources.commands()
         val ownedKeys = listOf("${prefix}lease:one", "${prefix}rate:two")
         ownedKeys.forEach { commands.set(it, "owned") }
+
         val unrelatedKey = "ticket:unrelated:$runId"
         commands.set(unrelatedKey, "retained")
-        val deleted = TicketOwnedRedisNamespace.parse(prefix, 8, commands)
+
+        val deleted = TicketOwnedRedisNamespace
+            .parse(prefix, 8, commands)
             .deleteOwnedKeys(TicketOwnedRedisWriterBarrier.NONE)
+
         check(deleted.deletedKeys == ownedKeys.sorted())
         check(commands.get(unrelatedKey) == "retained")
 
@@ -426,24 +449,25 @@ private class TicketLiveProfileAdapter(
             ) == "reconciliation_required",
         )
         val worker = PaymentWorker(
-            application.jdbc,
-            application.purchases,
-            application.paymentProvider,
-            CLAIM_TTL,
+            jdbc = application.jdbc,
+            outcomes = application.purchases,
+            provider = application.paymentProvider,
+            claimTtl = CLAIM_TTL,
         )
         val stale = awaitPaymentClaim(
-            worker,
-            command.authorizationOperationId,
-            "initial reconciliation claim did not become eligible",
+            worker = worker,
+            operationId = command.authorizationOperationId,
+            description = "initial reconciliation claim did not become eligible",
         )
         val takeover = awaitPaymentClaim(
-            worker,
-            command.authorizationOperationId,
-            "reconciliation claim did not expire for takeover",
+            worker = worker,
+            operationId = command.authorizationOperationId,
+            description = "reconciliation claim did not expire for takeover",
         )
         val effectsBefore = effectCount()
         val receiptsBefore = receiptCount()
         check(worker.apply(takeover, PaymentOutcome.APPROVED) == ApplyResult.APPLIED)
+
         val late = worker.apply(stale, PaymentOutcome.APPROVED)
         check(late == ApplyResult.STALE)
         evidence = mapOf(
@@ -463,36 +487,37 @@ private class TicketLiveProfileAdapter(
             application.paymentProvider,
             CLAIM_TTL,
         )
-        val stale = requireNotNull(oldWorker.claim(command.authorizationOperationId))
+        val stale = oldWorker.claim(command.authorizationOperationId).requireNotNull("stale")
         val ready = CountDownLatch(1)
         val release = CountDownLatch(1)
-        val replacementReady = java.util.concurrent.atomic.AtomicReference<PaymentWorker>()
+        val replacementReady = AtomicReference<PaymentWorker>()
         val oldPool = application.dataSource
 
         VirtualThreads.executorService().use { executor ->
             val staleAttempt = executor.submit<ApplyResult> {
                 ready.countDown()
-                check(release.await(5, TimeUnit.SECONDS))
-                requireNotNull(replacementReady.get()).apply(stale, PaymentOutcome.APPROVED)
+                release.await(5.seconds).shouldBeTrue()
+                replacementReady.get()!!.apply(stale, PaymentOutcome.APPROVED)
             }
-            check(ready.await(5, TimeUnit.SECONDS))
+            ready.await(5.seconds).shouldBeTrue()
+
             application.restart()
-            check(oldPool.isClosed)
+            oldPool.isClosed.shouldBeTrue()
             val replacement = PaymentWorker(
-                application.jdbc,
-                application.purchases,
-                application.paymentProvider,
-                CLAIM_TTL,
+                jdbc = application.jdbc,
+                outcomes = application.purchases,
+                provider = application.paymentProvider,
+                claimTtl = CLAIM_TTL,
             )
             replacementReady.set(replacement)
             val takeover = awaitPaymentClaim(
-                replacement,
-                command.authorizationOperationId,
-                "restarted worker did not reclaim the expired payment lease",
+                worker = replacement,
+                operationId = command.authorizationOperationId,
+                description = "restarted worker did not reclaim the expired payment lease",
             )
-            check(replacement.apply(takeover, PaymentOutcome.APPROVED) == ApplyResult.APPLIED)
+            replacement.apply(takeover, PaymentOutcome.APPROVED) shouldBeEqualTo ApplyResult.APPLIED
             release.countDown()
-            check(staleAttempt.get(5, TimeUnit.SECONDS) == ApplyResult.STALE)
+            staleAttempt.get(5.seconds) shouldBeEqualTo ApplyResult.STALE
         }
         evidence = mapOf(
             "stableOperationResumed" to true,
@@ -508,14 +533,17 @@ private class TicketLiveProfileAdapter(
         application.purchases.start(command)
         application.paymentProvider.complete(command.authorizationOperationId, PaymentOutcome.APPROVED)
         check(application.paymentWorker.run(command.authorizationOperationId) == ApplyResult.APPLIED)
+
         val operationId = application.queryUuid(
             "SELECT operation_id FROM ticket_effect_operations WHERE effect_kind = 'issue' " +
-                "AND order_id = (SELECT order_id FROM ticket_orders WHERE attempt_id = '${command.attemptId}')",
+                    "AND order_id = (SELECT order_id FROM ticket_orders WHERE attempt_id = '${command.attemptId}')",
         )
         application.ticketProvider.succeedButLoseResponse(operationId)
-        check(application.ticketWorker.run(operationId))
-        check(application.ticketWorker.run(operationId))
-        check(!application.ticketWorker.run(operationId))
+
+        application.ticketWorker.run(operationId).shouldBeTrue()
+        application.ticketWorker.run(operationId).shouldBeTrue()
+        application.ticketWorker.run(operationId).shouldBeFalse()
+        
         evidence = mapOf(
             "providerIssueCount" to application.ticketProvider.issueCount(operationId),
             "receiptCount" to application.queryLong(
@@ -530,8 +558,8 @@ private class TicketLiveProfileAdapter(
 
     private fun firstStartedCommand(): StartPurchase =
         TicketHighContentionAwait.value(
-            timeout = Duration.ofSeconds(5),
-            pollInterval = Duration.ofMillis(10),
+            timeout = 5.seconds(),
+            pollInterval = 10.millis(),
             description = "Ticket measured purchase did not start before failure injection",
         ) {
             startedCommands.values.firstOrNull()
@@ -541,7 +569,7 @@ private class TicketLiveProfileAdapter(
         when (profile.failure.kind) {
             TicketFailureKind.NONE -> profile.contentionShape.authorityCount
             TicketFailureKind.DUPLICATE_SUBMISSION -> profile.contentionShape.identityCount
-            else -> profile.operationCount + 8
+            else                   -> profile.operationCount + 8
         }
 
     private fun authoritySnapshot(): TicketAuthoritySnapshot =
@@ -559,8 +587,8 @@ private class TicketLiveProfileAdapter(
 
     private fun awaitFailure(block: () -> Unit) {
         TicketHighContentionAwait.failure(
-            timeout = Duration.ofSeconds(5),
-            pollInterval = Duration.ofMillis(25),
+            timeout = 5.seconds(),
+            pollInterval = 25.millis(),
             description = "expected proxied Redis path failure was not observed",
             block = block,
         )
@@ -572,8 +600,8 @@ private class TicketLiveProfileAdapter(
         description: String,
     ) =
         TicketHighContentionAwait.value(
-            timeout = Duration.ofSeconds(5),
-            pollInterval = Duration.ofMillis(10),
+            timeout = 5.seconds(),
+            pollInterval = 10.millis(),
             description = description,
         ) {
             worker.claim(operationId)
@@ -584,7 +612,7 @@ private class TicketLiveProfileAdapter(
     }
 
     private companion object {
-        val CLAIM_TTL: Duration = Duration.ofMillis(25)
+        val CLAIM_TTL: Duration = 25.millis()
     }
 }
 
@@ -595,10 +623,10 @@ private fun TicketHighContentionProfile.scheduleVector(): TicketScheduleVector =
         seed = seed,
         curve = arrivalCurve,
         operationCount = operationCount,
-        durationNanos = TimeUnit.MILLISECONDS.toNanos(workloadDurationMs),
+        durationNanos = workloadDurationMs.millis().toNanos(),
         authorityWeights = List(contentionShape.authorityCount) { 1 },
         epochs = epochs.map {
-            TicketScheduleEpoch(TimeUnit.MILLISECONDS.toNanos(it.durationMs), it.operationCount)
+            TicketScheduleEpoch(it.durationMs.millis().toNanos(), it.operationCount)
         },
         retryShape = retryShape?.let {
             TicketScheduleRetryShape(it.identityCount, it.attemptsPerIdentity)
@@ -658,12 +686,12 @@ private fun TicketHighContentionProfile.report(
             mapOf("invariantId" to it, "status" to "PASS", "authority" to "postgresql")
         },
         "observations" to (
-            mapOf(
-                "attemptDelta" to delta.attempts,
-                "effectDelta" to delta.effects,
-                "receiptDelta" to delta.receipts,
-            ) + profileEvidence + measuredObservations(workload, delta, profileEvidence)
-        ),
+                mapOf(
+                    "attemptDelta" to delta.attempts,
+                    "effectDelta" to delta.effects,
+                    "receiptDelta" to delta.receipts,
+                ) + profileEvidence + measuredObservations(workload, delta, profileEvidence)
+                ),
         "deadlines" to mapOf(
             "profileBudgetMs" to profileDeadlineMs,
             "workloadJoinBudgetMs" to workloadJoinDeadlineMs,
@@ -691,25 +719,25 @@ private fun TicketHighContentionProfile.measuredObservations(
     return observationFields.associateWith { field ->
         when (field) {
             "throughputOpsPerSecond" ->
-                workload.completedCount.toDouble() * TimeUnit.SECONDS.toNanos(1) / durationNanos
+                workload.completedCount.toDouble() * 1.seconds().toNanos() / durationNanos
 
-            "latencyP50Nanos" -> sortedLatencies.ticketPercentile(0.50)
-            "latencyP95Nanos" -> sortedLatencies.ticketPercentile(0.95)
-            "latencyP99Nanos" -> sortedLatencies.ticketPercentile(0.99)
-            "workloadDurationNanos" -> durationNanos
+            "latencyP50Nanos"        -> sortedLatencies.ticketPercentile(0.50)
+            "latencyP95Nanos"        -> sortedLatencies.ticketPercentile(0.95)
+            "latencyP99Nanos"        -> sortedLatencies.ticketPercentile(0.99)
+            "workloadDurationNanos"  -> durationNanos
 
-            "deletedOwnedKeyCount" -> (profileEvidence["deletedOwnedKeys"] as? Number)?.toInt() ?: 0
-            "scanIterationCount" -> 2
+            "deletedOwnedKeyCount"   -> (profileEvidence["deletedOwnedKeys"] as? Number)?.toInt() ?: 0
+            "scanIterationCount"     -> 2
             "lateResponseDisposition" ->
                 profileEvidence["lateResponseDisposition"] ?: "IGNORED_FENCED"
 
-            "staleDisposition" ->
+            "staleDisposition"       ->
                 profileEvidence["staleDisposition"] ?: "IGNORED_FENCED"
 
-            "deliveryAttemptCount" -> 2
-            "effectCount" -> delta.effects
-            "receiptCount" -> delta.receipts
-            else -> error("unsupported Ticket observation field[$field]")
+            "deliveryAttemptCount"   -> 2
+            "effectCount"            -> delta.effects
+            "receiptCount"           -> delta.receipts
+            else                     -> error("unsupported Ticket observation field[$field]")
         }
     }
 }

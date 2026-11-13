@@ -8,7 +8,7 @@ import java.time.Instant
 @RestController
 class CoroutineController {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * `/api/v1/coroutines/...`에 rate limiting을 적용합니다.

@@ -1,18 +1,18 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker
 
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldStartWith
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
-import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.assertions.shouldStartWith
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 
 class CircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class BackendA {

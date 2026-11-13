@@ -2,8 +2,12 @@ package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -18,6 +22,7 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
@@ -119,7 +124,7 @@ internal class VoucherMigrationRunnerTest {
                 assertFailsWith<VoucherMigrationException> {
                     runner(
                         resource = "db/migration/test/V001__voucher_probe.sql",
-                        lockTimeout = Duration.ofMillis(25),
+                        lockTimeout = 25.millis(),
                     ).migrate()
                 }
 
@@ -140,14 +145,14 @@ internal class VoucherMigrationRunnerTest {
                     executor.submit<VoucherMigrationResult> {
                         runner(
                             resource = "db/migration/test/V001__voucher_probe.sql",
-                            lockTimeout = Duration.ofSeconds(2),
+                            lockTimeout = 2.seconds(),
                         ).migrate()
                     }
                 TimeUnit.MILLISECONDS.sleep(50)
-                migration.isDone shouldBeEqualTo false
+                migration.isDone.shouldBeFalse()
                 blocker.rollback()
 
-                migration.get(2, TimeUnit.SECONDS) shouldBeEqualTo VoucherMigrationResult.APPLIED
+                migration.get(2.seconds) shouldBeEqualTo VoucherMigrationResult.APPLIED
             }
         }
     }
@@ -155,7 +160,7 @@ internal class VoucherMigrationRunnerTest {
     private fun runner(
         resource: String,
         version: String = "001",
-        lockTimeout: Duration = Duration.ofSeconds(1),
+        lockTimeout: Duration = 1.seconds(),
     ): VoucherMigrationRunner =
         VoucherMigrationRunner(
             dataSource = dataSource,
@@ -193,6 +198,6 @@ internal class VoucherMigrationRunnerTest {
 
     companion object {
         private const val MIGRATION_LOCK_KEY = 534001L
-        private val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
+        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
     }
 }

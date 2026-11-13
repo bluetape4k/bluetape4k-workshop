@@ -9,7 +9,7 @@ data class Process(
     @Id val id: Int,
     val state: State = State.UNKNOWN,
     val transitionCount: Int = 0,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

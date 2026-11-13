@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.messaging.fallback.publication
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
 import io.bluetape4k.workshop.messaging.fallback.observability.OutboxMetrics
 import org.springframework.scheduling.annotation.Scheduled
@@ -21,6 +23,8 @@ class PublicationReconciler(
     private val clock: Clock,
 ) {
 
+    companion object: KLogging()
+
     @Scheduled(fixedDelayString = "\${workshop.kafka-outbox-fallback.relay-fixed-delay}")
     fun scheduledReconcile() {
         if (properties.reconcilerEnabled) {
@@ -29,11 +33,12 @@ class PublicationReconciler(
     }
 
     fun reconcileOnce(): ReconcileResult {
-        val cutoff = LocalDateTime.now(clock).minus(properties.reconcilerGrace)
+        val cutoff = LocalDateTime.now(clock) - properties.reconcilerGrace
         val candidates = eventPublicationRepository.findOrdersWithoutPublicationsCreatedOnOrBefore(cutoff)
 
         val reconstructed = candidates.count { event ->
             val payload = objectMapper.writeValueAsString(event)
+            log.debug { "reconstructed. event=$event payload=$payload" }
             eventPublicationRepository.upsertReconstructed(event, payload)
         }
 
@@ -56,7 +61,7 @@ data class ReconcileResult(
     val scanned: Int,
     val reconstructed: Int,
     val duplicateRiskDocumented: Boolean,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

@@ -14,9 +14,9 @@ import org.junit.jupiter.api.TestInstance
  * instance에서 실행됩니다. 그래프는 base [cleanGraph] setup을 통해 매 테스트 전에 비우고 다시 초기화합니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SocialNetworkSuspendTinkerGraphTest : AbstractSocialNetworkSuspendTest() {
+class SocialNetworkSuspendTinkerGraphTest: AbstractSocialNetworkSuspendTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override val graphName = "test_social_suspend"
     override val ops: GraphSuspendOperations = TinkerGraphSuspendOperations()

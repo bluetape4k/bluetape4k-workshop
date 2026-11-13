@@ -3,7 +3,8 @@ package io.bluetape4k.workshop.leader.jobsafety.audit
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.leader.audit.LeaderAuditExportSnapshot
 import io.bluetape4k.leader.audit.LeaderAuditExporter
-import org.slf4j.LoggerFactory
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
 import tools.jackson.databind.JsonNode
 
 /**
@@ -20,9 +21,9 @@ class JobSafetyAuditReportService(
     private val payloadStore: BoundedAuditPayloadStore,
     private val exporter: LeaderAuditExporter,
     private val meterNames: List<String> = JobSafetyAuditMeterCatalog.names,
-) : JobSafetyAuditReportPort {
+): JobSafetyAuditReportPort {
 
-    private val logger = LoggerFactory.getLogger(JobSafetyAuditReportService::class.java)
+    companion object: KLogging()
 
     override fun report(): JobSafetyAuditReport {
         val payloads = payloadStore.snapshot()
@@ -47,12 +48,9 @@ class JobSafetyAuditReportService(
     private fun decodeSafely(payload: ByteArray, index: Int): JsonNode? = try {
         Jackson.defaultJsonMapper.readTree(payload)
     } catch (error: Exception) {
-        logger.warn(
-            "job_safety_audit_report_decode_failed payload_index={} payload_bytes={} error_type={}",
-            index,
-            payload.size,
-            error::class.qualifiedName ?: "unknown",
-        )
+        log.warn {
+            "job_safety_audit_report_decode_failed payload_index=$index payload_bytes=${payload.size} error_type=${error::class.qualifiedName ?: "unknown"}"
+        }
         null
     }
 }

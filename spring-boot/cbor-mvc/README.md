@@ -20,13 +20,13 @@ This example shows how to use CBOR (Concise Binary Object Representation), a bin
 
 **CBOR (Concise Binary Object Representation)** is a binary JSON format standardized by RFC 7049.
 
-| Feature | JSON | CBOR |
-|------|------|------|
-| Format | Text (UTF-8) | Binary |
-| Payload size | Relatively large | 20-50% smaller |
-| Parsing speed | Moderate | Fast (direct binary parsing) |
-| Content-Type | `application/json` | `application/cbor` |
-| Human-readable | Yes | No (requires a decoder) |
+| Feature        | JSON               | CBOR                         |
+|----------------|--------------------|------------------------------|
+| Format         | Text (UTF-8)       | Binary                       |
+| Payload size   | Relatively large   | 20-50% smaller               |
+| Parsing speed  | Moderate           | Fast (direct binary parsing) |
+| Content-Type   | `application/json` | `application/cbor`           |
+| Human-readable | Yes                | No (requires a decoder)      |
 
 It uses Jackson's `CBORMapper`. Registering `JacksonCborHttpMessageConverter` in Spring MVC's `HttpMessageConverter` system enables CBOR support with the same controller code used for JSON.
 
@@ -47,17 +47,17 @@ Course
 
 ## Key Features
 
-| Feature | Implementation Location | Description |
-|------|----------|------|
-| CBOR converter registration | `CborConfig` | Registers the `JacksonCborHttpMessageConverter` bean + `WebMvcConfigurer` |
-| Course lookup | `CourseController.course()` | `GET /courses/{id}` — CBOR-serialized response |
-| In-memory repository | `CourseRepository` | Simple repository based on `Map<Int, Course>` |
+| Feature                     | Implementation Location     | Description                                                               |
+|-----------------------------|-----------------------------|---------------------------------------------------------------------------|
+| CBOR converter registration | `CborConfig`                | Registers the `JacksonCborHttpMessageConverter` bean + `WebMvcConfigurer` |
+| Course lookup               | `CourseController.course()` | `GET /courses/{id}` — CBOR-serialized response                            |
+| In-memory repository        | `CourseRepository`          | Simple repository based on `Map<Int, Course>`                             |
 
 ## API Endpoints
 
-| Method | Path | Description | Content-Type |
-|--------|------|------|-------------|
-| `GET` | `/courses/{id}` | Retrieves a specific course | `application/cbor` |
+| Method | Path            | Description                 | Content-Type       |
+|--------|-----------------|-----------------------------|--------------------|
+| `GET`  | `/courses/{id}` | Retrieves a specific course | `application/cbor` |
 
 ## Usage Examples
 

@@ -2,19 +2,23 @@ package io.bluetape4k.workshop.leader.jobsafety.domain
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
 
 internal class JobSafetyTypesTest {
+
+    companion object: KLogging()
+
     @Test
     fun `fencing token is positive and orderable`() {
         assertFailsWith<IllegalArgumentException> { FencingToken(0L) }
         assertFailsWith<IllegalArgumentException> { FencingToken(-1L) }
 
-        (FencingToken(42L) > FencingToken(41L)).shouldBeTrue()
-        (FencingToken(41L) > FencingToken(42L)).shouldBeFalse()
+        FencingToken(42L) shouldBeGreaterThan FencingToken(41L)
+        FencingToken(41L) shouldBeLessThan FencingToken(42L)
     }
 
     @Test
@@ -31,10 +35,11 @@ internal class JobSafetyTypesTest {
     fun `summary conflict key is stable across retries`() {
         val tenantId = TenantId("tenant-a")
 
-        ConflictKey.summary(tenantId, YearMonth.of(2026, 7)).value shouldBeEqualTo
-            "summary:tenant-a:2026-07"
+        ConflictKey.summary(tenantId, YearMonth.of(2026, 7))
+            .value shouldBeEqualTo "summary:tenant-a:2026-07"
+
         ConflictKey.summary(tenantId, YearMonth.of(2026, 7)) shouldBeEqualTo
-            ConflictKey.summary(tenantId, YearMonth.of(2026, 7))
+                ConflictKey.summary(tenantId, YearMonth.of(2026, 7))
     }
 
     @Test

@@ -8,8 +8,8 @@ import io.bluetape4k.workshop.commerce.voucher.idempotency.HttpIdempotencyTable
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.javatime.timestamp
 
@@ -29,7 +29,7 @@ internal enum class InboxStatus {
 }
 
 /** in-row capacity invariant를 가진 tenant-scoped campaign capacity authority입니다. */
-internal object CampaignTable : AuditableLongIdTable("voucher_campaigns") {
+internal object CampaignTable: AuditableLongIdTable("voucher_campaigns") {
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
     val state = enumerationByName<CampaignState>("state", 24)
@@ -52,7 +52,7 @@ internal object CampaignTable : AuditableLongIdTable("voucher_campaigns") {
 }
 
 /** opaque-code verifier와 version reference만 저장합니다. plaintext code column은 없습니다. */
-internal object ClaimTable : AuditableLongIdTable("voucher_claims") {
+internal object ClaimTable: AuditableLongIdTable("voucher_claims") {
     val tenantId = varchar("tenant_id", 64)
     val campaignRowId = reference("campaign_row_id", CampaignTable, onDelete = ReferenceOption.RESTRICT)
     val campaignId = javaUUID("campaign_id")
@@ -81,7 +81,7 @@ internal object ClaimTable : AuditableLongIdTable("voucher_claims") {
     }
 }
 
-internal object ReviewTable : AuditableLongIdTable("voucher_reviews") {
+internal object ReviewTable: AuditableLongIdTable("voucher_reviews") {
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
     val claimRowId = reference("claim_row_id", ClaimTable, onDelete = ReferenceOption.RESTRICT)
@@ -100,7 +100,7 @@ internal object ReviewTable : AuditableLongIdTable("voucher_reviews") {
     }
 }
 
-internal object AuditTable : AuditableLongIdTable("voucher_audits") {
+internal object AuditTable: AuditableLongIdTable("voucher_audits") {
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
     val aggregateType = varchar("aggregate_type", 32)
@@ -117,7 +117,7 @@ internal object AuditTable : AuditableLongIdTable("voucher_audits") {
     }
 }
 
-internal object EventInboxTable : AuditableLongIdTable("campaign_event_inbox") {
+internal object EventInboxTable: AuditableLongIdTable("campaign_event_inbox") {
     val tenantId = varchar("tenant_id", 64)
     val eventId = javaUUID("event_id")
     val aggregateType = varchar("aggregate_type", 32)
@@ -136,7 +136,7 @@ internal object EventInboxTable : AuditableLongIdTable("campaign_event_inbox") {
     }
 }
 
-internal object VoucherSchemaHistoryTable : Table("voucher_schema_history") {
+internal object VoucherSchemaHistoryTable: Table("voucher_schema_history") {
     val version = varchar("version", 64)
     val checksum = varchar("checksum", 64)
     val appliedAt = timestamp("applied_at")

@@ -19,7 +19,7 @@ class RedisStreamConfiguration(
     private val reactiveFactory: ReactiveRedisConnectionFactory,
 ) {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
     }

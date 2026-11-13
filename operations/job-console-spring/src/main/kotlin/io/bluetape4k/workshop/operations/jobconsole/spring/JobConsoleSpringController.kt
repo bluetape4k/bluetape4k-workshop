@@ -1,20 +1,22 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.api.JobEvent
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionHttpResponse
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
-import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleUi
+import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
 import io.bluetape4k.workshop.operations.jobconsole.application.JobSubmissionHttpMapper
+import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.observability.JobConsoleReadiness
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
-import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueuePage
 import io.bluetape4k.workshop.operations.jobconsole.worker.JobWorkerEngine
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -27,8 +29,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
-import jakarta.servlet.http.HttpServletRequest
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -39,10 +40,11 @@ class JobConsoleSpringController(
     private val service: JobConsoleService,
     private val fanout: BoundedJobEventFanout,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping
-    fun submit(
-        request: HttpServletRequest,
-    ): ResponseEntity<ByteArray> {
+    fun submit(request: HttpServletRequest): ResponseEntity<ByteArray> {
         // Scope is resolved before the idempotency key and body so authorization
         // failures cannot consume a potentially unbounded request stream.
         val scope = JobConsoleSpringSubmissionHttp.scope(request)
@@ -56,7 +58,8 @@ class JobConsoleSpringController(
         @PathVariable jobId: UUID,
         @RequestHeader("X-Demo-Tenant") tenant: String,
         @RequestHeader("X-Demo-Submitter") submitter: String,
-    ): JobSnapshot = service.snapshot(DemoCallerScope(tenant, submitter), jobId)
+    ): JobSnapshot =
+        service.snapshot(DemoCallerScope(tenant, submitter), jobId)
 
     @PostMapping("/{jobId}/cancel")
     fun cancel(
@@ -77,10 +80,9 @@ class JobConsoleSpringController(
     ): SseEmitter {
         service.snapshot(DemoCallerScope(tenant, submitter), jobId)
         val emitter = SseEmitter(30_000)
-        val subscription =
-            fanout.subscribe("spring-${Uuid.V7.nextId().toString()}") { event ->
-                if (event.jobId == jobId) send(emitter, event)
-            }
+        val subscription = fanout.subscribe("spring-${Uuid.V7.nextId()}") { event ->
+            if (event.jobId == jobId) send(emitter, event)
+        }
         emitter.onCompletion(subscription::close)
         emitter.onTimeout { subscription.close(); emitter.complete() }
         emitter.onError { subscription.close() }
@@ -89,13 +91,22 @@ class JobConsoleSpringController(
     }
 
     private fun send(emitter: SseEmitter, event: JobEvent) {
-        emitter.send(SseEmitter.event().id(event.eventId.toString()).name(event.eventType.wireValue).data(event))
+        emitter.send(
+            SseEmitter.event()
+                .id(event.eventId.toString())
+                .name(event.eventType.wireValue)
+                .data(event)
+        )
     }
 
     private fun response(result: JobSubmissionHttpResponse): ResponseEntity<ByteArray> {
         val headers = HttpHeaders()
         headers.contentType = MediaType.parseMediaType(result.contentType)
-        result.headers.forEach { (name, values) -> values.forEach { headers.add(name, it) } }
+        result.headers.forEach { (name, values) ->
+            values.forEach {
+                headers.add(name, it)
+            }
+        }
         return ResponseEntity.status(result.status).headers(headers).body(result.body)
     }
 }
@@ -122,6 +133,7 @@ class JobConsoleWorkerSchedule(
     @Scheduled(fixedDelayString = "\${job-console.worker-delay-ms:50}")
     fun processNextJob() {
         if (!running.compareAndSet(false, true)) return
+
         jobWorkerExecutor.submit {
             try {
                 workerEngine.runOnce()
@@ -143,7 +155,8 @@ class JobConsoleSpringQueueController(
         @RequestHeader("X-Demo-Submitter") submitter: String,
         @RequestHeader("X-Queue-Cursor", required = false) cursor: String?,
         @RequestHeader("X-Queue-Page-Size", defaultValue = "25") pageSize: Int,
-    ): QueuePage = service.myQueue(DemoCallerScope(tenant, submitter), cursor, pageSize)
+    ): QueuePage =
+        service.myQueue(DemoCallerScope(tenant, submitter), cursor, pageSize)
 
     @GetMapping("/v1/tenants/{tenantId}/queue")
     fun tenantQueue(
@@ -170,8 +183,8 @@ class JobConsoleSpringOperationsController(
     fun health(): Map<String, String> = mapOf("status" to "up")
 
     @GetMapping("/readyz")
-    fun readiness(): org.springframework.http.ResponseEntity<JobConsoleReadiness> {
+    fun readiness(): ResponseEntity<JobConsoleReadiness> {
         val readiness = service.readiness()
-        return org.springframework.http.ResponseEntity.status(if (readiness.ready) 200 else 503).body(readiness)
+        return ResponseEntity.status(if (readiness.ready) 200 else 503).body(readiness)
     }
 }

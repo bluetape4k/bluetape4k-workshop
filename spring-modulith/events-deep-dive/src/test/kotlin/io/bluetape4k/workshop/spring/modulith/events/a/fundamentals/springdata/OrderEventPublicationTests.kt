@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.spring.modulith.events.a.fundamentals.springdata
 
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.modulith.events.util.IntegrationTest
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.event.ApplicationEvents
@@ -14,7 +14,7 @@ class OrderEventPublicationTests(
     @param:Autowired private val orders: OrderManagement,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `publish event on order completed`(events: ApplicationEvents) {

@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.vertx.sqlclient
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -15,12 +14,13 @@ import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.coAwait
 import io.vertx.sqlclient.SqlConnection
 import io.vertx.sqlclient.Tuple
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
-class JDBCPoolExamples : AbstractSqlClientTest() {
+class JDBCPoolExamples: AbstractSqlClientTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeAll
     fun setup(vertx: Vertx) = runSuspendTest {
@@ -48,13 +48,13 @@ class JDBCPoolExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `connect to mysql`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `connect to mysql`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
         vertx.testWithSuspendTransaction(testContext, pool) {
             val rows = pool.query("SELECT * from test").execute().coAwait()
 
-            val records = rows.map { it.toJson() }
-            records shouldHaveSize 2
+            val records = rows.map { it.toJson() }.onEach { log.debug { "json=$it" } }
+
             records[0] shouldBeEqualTo json { obj("id" to 1, "name" to "Hello") }
             records[1] shouldBeEqualTo json { obj("id" to 2, "name" to "World") }
             records.forEach { log.debug { it } }
@@ -63,14 +63,14 @@ class JDBCPoolExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `connect to mysql in coroutines`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `connect to mysql in coroutines`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
 
         vertx.testWithSuspendTransaction(testContext, pool) {
             val rows = pool.query("SELECT * from test").execute().coAwait()
-            val records = rows.map { it.toJson() }
 
-            records.forEach { log.debug { it } }
+            val records = rows.map { it.toJson() }.onEach { log.debug { "json=$it" } }
+
             records shouldHaveSize 2
             records[0] shouldBeEqualTo json { obj("id" to 1, "name" to "Hello") }
             records[1] shouldBeEqualTo json { obj("id" to 2, "name" to "World") }
@@ -79,7 +79,7 @@ class JDBCPoolExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `query with parameters`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `query with parameters`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
 
         vertx.testWithSuspendTransaction(testContext, pool) {
@@ -87,9 +87,8 @@ class JDBCPoolExamples : AbstractSqlClientTest() {
                 .execute(Tuple.of(1))
                 .coAwait()
 
-            val records = rows.map { it.toJson() }
+            val records = rows.map { it.toJson() }.onEach { log.debug { "json=$it" } }
 
-            records.forEach { log.debug { it } }
             records shouldHaveSize 1
             records.first() shouldBeEqualTo json { obj("id" to 1, "name" to "Hello") }
         }
@@ -99,7 +98,7 @@ class JDBCPoolExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `with transaction`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `with transaction`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
 
         vertx.testWithSuspendTransaction(testContext, pool) {
@@ -107,8 +106,7 @@ class JDBCPoolExamples : AbstractSqlClientTest() {
                 conn.query("SELECT COUNT(*) FROM test").execute().coAwait()
             }
 
-            val records = rows.map { it.toJson() }
-            records.forEach { log.debug { it } }
+            val records = rows.map { it.toJson() }.onEach { log.debug { "json=$it" } }
             records shouldHaveSize 1
             records.first() shouldBeEqualTo json { obj("COUNT(*)" to 2) }
         }

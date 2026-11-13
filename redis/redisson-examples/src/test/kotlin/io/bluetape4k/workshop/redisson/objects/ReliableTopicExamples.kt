@@ -1,16 +1,18 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.junit5.awaitility.untilSuspending
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.yield
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
-import org.awaitility.kotlin.until
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Reliable topic examples
@@ -50,6 +52,8 @@ class ReliableTopicExamples: AbstractRedissonTest() {
         yield()
         job.join()
 
-        await until { listenCounter.get() >= 1 }
+        await atMost 3.seconds untilSuspending {
+            listenCounter.get() >= 1
+        }
     }
 }

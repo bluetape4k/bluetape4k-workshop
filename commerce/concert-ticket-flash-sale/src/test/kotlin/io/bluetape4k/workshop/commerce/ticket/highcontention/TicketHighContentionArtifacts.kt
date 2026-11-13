@@ -3,7 +3,10 @@ package io.bluetape4k.workshop.commerce.ticket.highcontention
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotContains
 import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.support.toUtf8String
 import tools.jackson.core.ObjectReadContext
 import tools.jackson.core.StreamReadFeature
 import tools.jackson.core.json.JsonFactory
@@ -56,7 +59,7 @@ internal class TicketHighContentionArtifactStore private constructor(
             "terminal report is missing required fields"
         }
         val bytes = mapper.writeValueAsBytes(report)
-        verifyRedaction(bytes.toString(Charsets.UTF_8), forbiddenPatterns)
+        verifyRedaction(bytes.toUtf8String(), forbiddenPatterns)
 
         val target = runRoot.resolve("$safeImplementation-$safeProfile-report.json")
         val temporary = runRoot.resolve(".${target.fileName}.${Base58.randomString(16)}.tmp")
@@ -228,7 +231,7 @@ internal class TicketHighContentionJournal private constructor(
                 .toSortedMap(),
         )
         val payloadBytes = mapper.writeValueAsBytes(payload)
-        verifyRedaction(payloadBytes.toString(Charsets.UTF_8))
+        verifyRedaction(payloadBytes.toUtf8String())
         val payloadSha256 = sha256(payloadBytes)
         val persisted = PersistedTicketHighContentionJournalRecord(
             sequence = nextSequence,
@@ -335,7 +338,7 @@ internal class TicketHighContentionJournal private constructor(
             }
             val lines = bytes
                 .copyOfRange(0, completeLength + 1)
-                .toString(Charsets.UTF_8)
+                .toUtf8String()
                 .split('\n')
                 .dropLast(1)
             if (lines.any(String::isEmpty)) {
@@ -350,7 +353,7 @@ internal class TicketHighContentionJournal private constructor(
 
             return lines.mapIndexed { index, line ->
                 try {
-                    val recordBytes = line.toByteArray(Charsets.UTF_8)
+                    val recordBytes = line.toUtf8Bytes()
                     val persisted = strictJsonFactory
                         .createParser(ObjectReadContext.empty(), recordBytes)
                         .use { parser ->
@@ -398,7 +401,7 @@ internal class TicketHighContentionJournal private constructor(
 
         private fun isCompleteJsonDocument(bytes: ByteArray): Boolean =
             try {
-                Jackson.createDefaultJsonMapper()
+                Jackson.defaultJsonMapper
                     .reader()
                     .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
                     .readTree(bytes)
@@ -410,7 +413,7 @@ internal class TicketHighContentionJournal private constructor(
         private fun verifyRedaction(evidence: String) {
             val normalized = evidence.lowercase()
             REDACTION_SENTINELS.forEach { sentinel ->
-                require(!normalized.contains(sentinel)) {
+                normalized.requireNotContains(sentinel) {
                     "journal contains raw sensitive evidence"
                 }
             }

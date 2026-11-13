@@ -16,7 +16,7 @@ data class OrderRequest(
     @field:NotBlank val customerId: String,
     @field:NotBlank val product: String,
     @field:Min(1) val quantity: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -29,7 +29,7 @@ data class OrderRequest(
  */
 data class UpdateStatusRequest(
     val status: OrderStatus,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

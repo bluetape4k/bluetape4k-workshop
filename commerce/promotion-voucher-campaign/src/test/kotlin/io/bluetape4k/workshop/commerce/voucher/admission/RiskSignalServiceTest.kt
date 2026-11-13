@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.admission
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
 import org.junit.jupiter.api.Test
 
@@ -13,9 +15,9 @@ internal class RiskSignalServiceTest {
         val second = keys.rateKey("tenant-a", "user@example.com", "allocate")
 
         first shouldBeEqualTo second
-        first.startsWith("v7:") shouldBeEqualTo true
-        first.contains("tenant-a") shouldBeEqualTo false
-        first.contains("user@example.com") shouldBeEqualTo false
+        first.startsWith("v7:").shouldBeTrue()
+        first.contains("tenant-a").shouldBeFalse()
+        first.contains("user@example.com").shouldBeFalse()
     }
 
     @Test
@@ -24,14 +26,14 @@ internal class RiskSignalServiceTest {
         val service = RiskSignalService(keys(), backend)
 
         service.assess("tenant-a", "subject-1") shouldBeEqualTo RiskSignal.CLEAR
-        service.remember("tenant-a", "subject-1") shouldBeEqualTo true
+        service.remember("tenant-a", "subject-1").shouldBeTrue()
         service.assess("tenant-a", "subject-1") shouldBeEqualTo RiskSignal.REVIEW
 
         backend.failure = IllegalStateException("redis unavailable")
         service.assess("tenant-a", "subject-1") shouldBeEqualTo RiskSignal.UNKNOWN
     }
 
-    private class RecordingRiskBackend : VoucherRiskBackend {
+    private class RecordingRiskBackend: VoucherRiskBackend {
         private val values = mutableSetOf<String>()
         var failure: RuntimeException? = null
 

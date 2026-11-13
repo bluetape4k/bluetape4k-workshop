@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
@@ -23,9 +24,21 @@ import java.util.concurrent.atomic.AtomicLong
 @Suppress("TooManyFunctions") // Metrics facade keeps one bounded vocabulary for all runtime lanes.
 internal class EventSourcedMetrics(
     private val registry: MeterRegistry,
-) : EventSourcedDatabasePermitMetrics,
-    EventSourcedCommandMetrics,
-    EventStoreAppendMetrics {
+): EventSourcedDatabasePermitMetrics,
+   EventSourcedCommandMetrics,
+   EventStoreAppendMetrics {
+
+    private companion object: KLogging() {
+        private const val PROGRESS_SCALE = 1_000_000L
+        private const val MIN_HTTP_STATUS = 100
+        private const val MAX_HTTP_STATUS = 599
+        private const val HTTP_STATUS_CLASS_DIVISOR = 100
+        private val KNOWN_REASON_CLASSES = setOf("HANDLER_REJECTED", "DATABASE_UNAVAILABLE", "UNKNOWN")
+
+        private fun String.boundedReasonClass(): String =
+            takeIf(KNOWN_REASON_CLASSES::contains) ?: "UNKNOWN"
+    }
+
     private val lagEvents = AtomicLong()
     private val lagAgeSeconds = AtomicLong()
     private val checkpointStalledSeconds = AtomicLong()
@@ -50,25 +63,33 @@ internal class EventSourcedMetrics(
     private val terminalTimers = ConcurrentHashMap<String, Timer>()
 
     init {
-        Gauge.builder("voucher_projection_lag_events", lagEvents) { it.get().toDouble() }.register(registry)
+        Gauge.builder("voucher_projection_lag_events", lagEvents) { it.get().toDouble() }
+            .register(registry)
+
         Gauge.builder("voucher_projection_lag_age_seconds", lagAgeSeconds) { it.get().toDouble() }
             .baseUnit("seconds")
             .register(registry)
+
         Gauge.builder("voucher_projection_checkpoint_stalled_seconds", checkpointStalledSeconds) { it.get().toDouble() }
             .baseUnit("seconds")
             .register(registry)
+
         Gauge.builder("voucher_rebuild_progress_ratio", rebuildProgressMicros) { it.get() / PROGRESS_SCALE.toDouble() }
             .register(registry)
+
         Gauge.builder("voucher_maintenance_queue_depth", maintenanceQueueDepth) { it.get().toDouble() }
             .register(registry)
+
         Gauge.builder("voucher_rebuild_eta_seconds", rebuildEtaSeconds) { it.get().toDouble() }
             .baseUnit("seconds")
             .register(registry)
+
         rebuildStates.forEach { (state, value) ->
             Gauge.builder("voucher_rebuild_state", value) { it.get().toDouble() }
                 .tag("state", state.name)
                 .register(registry)
         }
+
         KNOWN_REASON_CLASSES.forEach { reasonClass ->
             val value = AtomicLong()
             failedPoisonGauges[reasonClass] = value
@@ -82,9 +103,11 @@ internal class EventSourcedMetrics(
         Gauge.builder("voucher_db_bulkhead_active", gate) {
             EventSourcedDatabaseLane.entries.sumOf { lane -> it.snapshot(lane).active }.toDouble()
         }.register(registry)
+
         Gauge.builder("voucher_db_bulkhead_queued", gate) {
             EventSourcedDatabaseLane.entries.sumOf { lane -> it.snapshot(lane).queued }.toDouble()
         }.register(registry)
+
         Gauge.builder("voucher_db_permit_utilization", gate) {
             val snapshots = EventSourcedDatabaseLane.entries.map(it::snapshot)
             val active = snapshots.sumOf(EventSourcedDatabasePermitSnapshot::active)
@@ -97,6 +120,7 @@ internal class EventSourcedMetrics(
         Gauge.builder("voucher_hikari_active", dataSource) {
             it.hikariPoolMXBean.activeConnections.toDouble()
         }.register(registry)
+
         Gauge.builder("voucher_hikari_waiting", dataSource) {
             it.hikariPoolMXBean.threadsAwaitingConnection.toDouble()
         }.register(registry)
@@ -113,13 +137,14 @@ internal class EventSourcedMetrics(
     }
 
     fun failedPoisons(countsByReasonClass: Map<String, Long>) {
-        val boundedCounts =
-            countsByReasonClass.entries
-                .groupingBy { (reasonClass) -> reasonClass.boundedReasonClass() }
-                .fold(0L) { count, (_, value) ->
-                    count + value.requireZeroOrPositiveNumber("failed poison count")
-                }
+        val boundedCounts = countsByReasonClass.entries
+            .groupingBy { (reasonClass) -> reasonClass.boundedReasonClass() }
+            .fold(0L) { count, (_, value) ->
+                count + value.requireZeroOrPositiveNumber("failed poison count")
+            }
+
         failedPoisonGauges.values.forEach { it.set(0) }
+
         boundedCounts.forEach { (reasonClass, count) ->
             failedPoisonGauges.getValue(reasonClass).set(count)
         }
@@ -142,11 +167,13 @@ internal class EventSourcedMetrics(
         duration: Duration,
         outcome: OperatorAuditOutcome,
     ) {
-        rebuildTimers.computeIfAbsent(outcome) {
-            Timer.builder("voucher_rebuild_duration_seconds")
-                .tag("outcome", it.name)
-                .register(registry)
-        }.record(duration)
+        rebuildTimers
+            .computeIfAbsent(outcome) {
+                Timer.builder("voucher_rebuild_duration_seconds")
+                    .tag("outcome", it.name)
+                    .register(registry)
+            }
+            .record(duration)
     }
 
     override fun commandTerminal(
@@ -155,11 +182,13 @@ internal class EventSourcedMetrics(
     ) {
         val validStatus = status.requireInRange(MIN_HTTP_STATUS, MAX_HTTP_STATUS, "status")
         val statusClass = "${validStatus / HTTP_STATUS_CLASS_DIVISOR}xx"
-        terminalTimers.computeIfAbsent(statusClass) {
-            Timer.builder("voucher_command_terminal")
-                .tag("status", it)
-                .register(registry)
-        }.record(duration)
+        terminalTimers
+            .computeIfAbsent(statusClass) {
+                Timer.builder("voucher_command_terminal")
+                    .tag("status", it)
+                    .register(registry)
+            }
+            .record(duration)
     }
 
     override fun appendCommitted(
@@ -210,13 +239,4 @@ internal class EventSourcedMetrics(
         bulkheadRejections.increment()
     }
 
-    private companion object {
-        private const val PROGRESS_SCALE = 1_000_000L
-        private const val MIN_HTTP_STATUS = 100
-        private const val MAX_HTTP_STATUS = 599
-        private const val HTTP_STATUS_CLASS_DIVISOR = 100
-        private val KNOWN_REASON_CLASSES = setOf("HANDLER_REJECTED", "DATABASE_UNAVAILABLE", "UNKNOWN")
-
-        private fun String.boundedReasonClass(): String = takeIf(KNOWN_REASON_CLASSES::contains) ?: "UNKNOWN"
-    }
 }

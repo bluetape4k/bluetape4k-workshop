@@ -20,7 +20,7 @@ import java.util.concurrent.Executors
 @EnableAsync
 class AsyncConfig {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     fun asyncTaskExecutor(): AsyncTaskExecutor {

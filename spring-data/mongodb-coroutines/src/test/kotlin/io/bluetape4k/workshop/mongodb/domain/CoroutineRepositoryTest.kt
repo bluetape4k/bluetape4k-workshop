@@ -1,16 +1,18 @@
 package io.bluetape4k.workshop.mongodb.domain
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +24,7 @@ class CoroutineRepositoryTest @Autowired constructor(
     private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {
@@ -34,7 +36,9 @@ class CoroutineRepositoryTest @Autowired constructor(
         val person = repository.save(newPerson())
 
         val loaded = repository.findPersonByFirstname(person.firstname.shouldNotBeNull())
-        loaded.shouldNotBeNull() shouldBeEqualTo person
+
+        log.debug { "loaded=$loaded" }
+        loaded shouldBeEqualTo person
     }
 
     @Test
@@ -42,7 +46,7 @@ class CoroutineRepositoryTest @Autowired constructor(
         List(10) {
             launch {
                 repository.save(newPerson())
-            }
+            }.log("Save #$it")
         }.joinAll()
 
         val person1 = repository.save(Person("Sunghyouk", "Bae"))
@@ -51,7 +55,7 @@ class CoroutineRepositoryTest @Autowired constructor(
         List(10) {
             launch {
                 repository.save(newPerson())
-            }
+            }.log("Save #$it")
         }.joinAll()
 
         val persons = repository.findByLastname("Bae").log("Bae").toList()

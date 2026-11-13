@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.messaging
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryApplyResult
@@ -117,7 +118,7 @@ class QueryKafkaConsumerTest {
         )
 
     private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 
     private companion object {
         const val PAYLOAD = "{\"invoiceNumber\":\"INV-1\"}"

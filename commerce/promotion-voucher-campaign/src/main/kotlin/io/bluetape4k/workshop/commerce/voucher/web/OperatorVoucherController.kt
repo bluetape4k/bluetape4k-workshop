@@ -1,14 +1,15 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.application.CampaignCommandService
 import io.bluetape4k.workshop.commerce.voucher.application.CampaignPolicyCommand
 import io.bluetape4k.workshop.commerce.voucher.application.CampaignTransitionCommand
 import io.bluetape4k.workshop.commerce.voucher.application.ClaimCommandService
 import io.bluetape4k.workshop.commerce.voucher.application.ClaimTransitionCommand
 import io.bluetape4k.workshop.commerce.voucher.application.CreateCampaignCommand
+import io.bluetape4k.workshop.commerce.voucher.application.RetryableVoucherCommand
 import io.bluetape4k.workshop.commerce.voucher.application.ReviewCommandService
 import io.bluetape4k.workshop.commerce.voucher.application.ReviewDecisionCommand
-import io.bluetape4k.workshop.commerce.voucher.application.RetryableVoucherCommand
 import io.bluetape4k.workshop.commerce.voucher.application.digestHex
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignSnapshot
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
@@ -34,8 +35,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 internal data class CreateCampaignRequest(
     val campaignId: UUID,
@@ -172,7 +172,14 @@ internal class OperatorVoucherController(
                 idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
                 "CAMPAIGN_CREATE",
                 body.campaignId,
-                listOf(body.campaignId, body.startsAt, body.endsAt, body.capacity, body.perUserLimit, body.redemptionTtlSeconds)
+                listOf(
+                    body.campaignId,
+                    body.startsAt,
+                    body.endsAt,
+                    body.capacity,
+                    body.perUserLimit,
+                    body.redemptionTtlSeconds
+                )
                     .joinToString("\u0000"),
             ) {
                 val created =
@@ -344,7 +351,7 @@ internal class OperatorVoucherController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
-        val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000reconciliation".toByteArray(UTF_8))
+        val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000reconciliation".toUtf8Bytes())
         val executed =
             executor.executeExternal(
                 tenant,
@@ -447,7 +454,7 @@ internal class OperatorVoucherController(
         private const val OPERATOR_PRINCIPAL = "workshop-operator"
 
         private fun encodeCursor(id: Long): String =
-            Base64.getUrlEncoder().withoutPadding().encodeToString("v1:$id".toByteArray(UTF_8))
+            Base64.getUrlEncoder().withoutPadding().encodeToString("v1:$id".toUtf8Bytes())
 
         private fun decodeCursor(cursor: String?): Long? {
             if (cursor == null) return null

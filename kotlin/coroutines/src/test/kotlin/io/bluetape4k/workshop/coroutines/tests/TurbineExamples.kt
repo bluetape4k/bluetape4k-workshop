@@ -47,7 +47,7 @@ class TurbineExamples {
     @Test
     fun `비동기 flow 의 emit 작업을 지연시킨다`() = runTest {
         channelFlow {
-            delay(10)
+            delay(10.milliseconds)
             send("item")
         }
             .log("channel")
@@ -60,7 +60,7 @@ class TurbineExamples {
     @Test
     fun `비동기 flow 내부에서 emit을 지연시키기`() = runTest {
         channelFlow {
-            delay(10)
+            delay(10.milliseconds)
             send("item")
         }
             .log("channel")
@@ -73,7 +73,7 @@ class TurbineExamples {
     @Test
     fun `turbine의 최대 대기시간은 1초이다`() = runTest(timeout = 500.milliseconds) {
         channelFlow {
-            delay(10)
+            delay(10.milliseconds)
             send("item")
         }
             .log("channel")
@@ -87,7 +87,7 @@ class TurbineExamples {
     fun `비동기 flow 처리를 취소할 수 있다`() = runTest {
         channelFlow {
             repeat(10) {
-                delay(10)
+                delay(10.milliseconds)
                 log.debug { "Sending item $it" }
                 send("item $it")
             }
@@ -107,7 +107,7 @@ class TurbineExamples {
         channelFlow {
             // 3개만 send하고, 더 이상 send 하지 않습니다.
             repeat(10) {
-                delay(10)
+                delay(10.milliseconds)
                 log.debug { "Sending item $it" }
                 send("item $it")
             }

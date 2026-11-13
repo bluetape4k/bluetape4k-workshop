@@ -1,16 +1,20 @@
 package io.bluetape4k.workshop.commerce.order.persistence
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationTable
+import org.jetbrains.exposed.v1.core.Count
+import org.jetbrains.exposed.v1.core.Min
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.min
 import org.jetbrains.exposed.v1.jdbc.select
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.modulith.events.EventPublication
+import org.springframework.modulith.events.EventPublication.Status
 import org.springframework.stereotype.Repository
 import java.io.Serializable
 import java.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
 
 internal data class PublicationStatusSummary(
     val published: Int,
@@ -19,7 +23,7 @@ internal data class PublicationStatusSummary(
     val resubmitted: Int,
     val completed: Int,
     val oldestIncomplete: Instant?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -32,31 +36,34 @@ internal data class PublicationStatusSummary(
  * incomplete-publication predicate를 보존하면서 결과를 status별 최대 두 row로 제한합니다.
  */
 @Repository
-@OptIn(ExperimentalUuidApi::class)
 internal class PublicationSnapshotRepository(
     @param:Qualifier("eventPublicationTable")
     private val table: ExposedEventPublicationTable,
 ) {
+
+    companion object: KLogging()
+
     fun snapshot(): PublicationStatusSummary {
-        val publicationCount = table.id.count()
-        val oldestPublication = table.publicationDate.min()
-        val completionMissing = table.completionDate.isNull()
-        val counts =
-            EventPublication.Status.entries
-                .associateWith { 0L }
-                .toMutableMap()
+        val publicationCount: Count = table.id.count()
+        val oldestPublication: Min<Instant, Instant> = table.publicationDate.min()
+        val completionMissing: Op<Boolean> = table.completionDate.isNull()
+        val counts: MutableMap<Status, Long> = EventPublication.Status.entries
+            .associateWith { 0L }
+            .toMutableMap()
         var oldestIncomplete: Instant? = null
 
         table
             .select(table.status, completionMissing, publicationCount, oldestPublication)
             .groupBy(table.status, completionMissing)
             .forEach { row ->
-                val status = row[table.status]?.let(EventPublication.Status::valueOf)
+                val status = row[table.status]
                 if (status != null) counts[status] = counts.getValue(status) + row[publicationCount]
 
                 if (row[completionMissing] || status != EventPublication.Status.COMPLETED) {
                     row[oldestPublication]?.let { candidate ->
-                        if (oldestIncomplete == null || candidate < oldestIncomplete) oldestIncomplete = candidate
+                        if (oldestIncomplete == null || candidate < oldestIncomplete) {
+                            oldestIncomplete = candidate
+                        }
                     }
                 }
             }

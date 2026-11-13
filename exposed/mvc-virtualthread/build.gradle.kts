@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.exposed)
+    kotlin("kapt")
 }
 
 exposed {
@@ -31,7 +32,6 @@ dependencies {
 
     // bluetape4k core: virtualFuture, ShutdownQueue, KLogging을 제공한다.
     implementation(libs.bluetape4k.core)
-    implementation(libs.bluetape4k.logging)
 
     // Virtual Thread runtime: JVM 21 테스트 환경에서는 jdk21 구현을 사용한다.
     implementation(libs.bluetape4k.virtualthread.api)

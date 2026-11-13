@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleContainerFixture
 import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleV1LiveContract
 import org.junit.jupiter.api.AfterAll
@@ -16,6 +17,7 @@ import java.net.URI
 @ActiveProfiles("demo")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SpringJobConsoleHttpTest {
+
     @LocalServerPort
     private var port: Int = 0
 
@@ -29,7 +31,7 @@ class SpringJobConsoleHttpTest {
         JobConsoleV1LiveContract(URI("http://127.0.0.1:$port")).verifyProblemRequestIdUsesUuidV7()
     }
 
-    companion object {
+    companion object: KLogging() {
         private val fixture = JobConsoleContainerFixture.shared().also { it.createSchema() }
 
         @JvmStatic

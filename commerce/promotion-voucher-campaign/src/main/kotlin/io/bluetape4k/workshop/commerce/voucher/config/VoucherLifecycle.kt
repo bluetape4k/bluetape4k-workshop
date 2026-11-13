@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -42,7 +44,7 @@ internal class VoucherLifecycleCoordinator(
     private val releaseLeader: () -> Unit,
     private val closeRedis: () -> Unit,
     private val closeExecutor: () -> Unit,
-    private val graceDeadline: Duration = Duration.ofSeconds(30),
+    private val graceDeadline: Duration = 30.seconds(),
 ) {
     private val shutdown = AtomicBoolean()
     private val eventLock = ReentrantLock()
@@ -107,9 +109,9 @@ internal class VoucherLifecycleCoordinator(
     }
 
     private fun remaining(deadline: Long): Duration =
-        Duration.ofNanos((deadline - System.nanoTime()).coerceAtLeast(0))
+        (deadline - System.nanoTime()).coerceAtLeast(0).nanos()
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 /** Spring이 infrastructure bean을 destroy하기 전에 application-owned shutdown sequence를 실행합니다. */
@@ -121,7 +123,7 @@ internal class VoucherLifecycle(
     streams: VoucherEventStream,
     redis: ObjectProvider<VoucherRedisResources>,
     executorShutdown: VoucherExecutorShutdown,
-) : SmartLifecycle {
+): SmartLifecycle {
     private val running = AtomicBoolean()
     private val coordinator =
         VoucherLifecycleCoordinator(
@@ -155,5 +157,5 @@ internal class VoucherLifecycle(
 
     internal fun events(): List<VoucherShutdownEvent> = coordinator.events()
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

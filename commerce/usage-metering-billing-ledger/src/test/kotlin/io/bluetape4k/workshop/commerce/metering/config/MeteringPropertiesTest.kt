@@ -2,25 +2,33 @@ package io.bluetape4k.workshop.commerce.metering.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class MeteringPropertiesTest {
 
+    companion object: KLogging()
+
     @Test
     fun `defaults keep work bounded and retryable`() {
         val properties = MeteringProperties()
 
-        properties.commandReceipt.lease shouldBeEqualTo Duration.ofSeconds(30)
-        properties.commandReceipt.retention shouldBeEqualTo Duration.ofHours(24)
+        log.debug { "properties=$properties" }
+        properties.commandReceipt.lease shouldBeEqualTo 30.seconds()
+        properties.commandReceipt.retention shouldBeEqualTo 24.hours()
         properties.commandReceipt.terminalResponseBytes shouldBeEqualTo 16 * 1024
-        properties.allowedLateness shouldBeEqualTo Duration.ofHours(48)
-        properties.occurredAtRetention shouldBeEqualTo Duration.ofDays(400)
-        properties.occurredAtFutureSkew shouldBeEqualTo Duration.ofMinutes(5)
+        properties.allowedLateness shouldBeEqualTo 48.hours()
+        properties.occurredAtRetention shouldBeEqualTo 400.hours()
+        properties.occurredAtFutureSkew shouldBeEqualTo 5.minutes()
         properties.close.batchSize shouldBeEqualTo 200
         properties.close.maxBatchSize shouldBeEqualTo 1_000
         properties.close.maxBatchesPerTick shouldBeEqualTo 5
-        properties.close.schedulerDelay shouldBeEqualTo Duration.ofSeconds(5)
+        properties.close.schedulerDelay shouldBeEqualTo 5.seconds()
         properties.reconciliation.pageSize shouldBeEqualTo 200
         properties.reconciliation.maxPageSize shouldBeEqualTo 500
     }
@@ -28,15 +36,15 @@ class MeteringPropertiesTest {
     @Test
     fun `receipt limits reject unsafe durations and response sizes`() {
         assertFailsWith<IllegalArgumentException> {
-            MeteringProperties.CommandReceipt(lease = Duration.ofSeconds(4))
+            MeteringProperties.CommandReceipt(lease = 4.seconds())
         }
         assertFailsWith<IllegalArgumentException> {
-            MeteringProperties.CommandReceipt(lease = Duration.ofMinutes(6))
+            MeteringProperties.CommandReceipt(lease = 6.seconds())
         }
         assertFailsWith<IllegalArgumentException> {
             MeteringProperties.CommandReceipt(
-                lease = Duration.ofMinutes(1),
-                retention = Duration.ofSeconds(30),
+                lease = 1.minutes(),
+                retention = 30.seconds(),
             )
         }
         assertFailsWith<IllegalArgumentException> {
@@ -83,7 +91,7 @@ class MeteringPropertiesTest {
             MeteringProperties(occurredAtRetention = Duration.ZERO)
         }
         assertFailsWith<IllegalArgumentException> {
-            MeteringProperties(occurredAtFutureSkew = Duration.ofSeconds(-1))
+            MeteringProperties(occurredAtFutureSkew = (-1).seconds())
         }
     }
 }

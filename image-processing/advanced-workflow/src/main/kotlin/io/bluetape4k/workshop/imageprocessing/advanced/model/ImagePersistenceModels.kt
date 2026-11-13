@@ -27,7 +27,7 @@ data class AssetMetadataInput(
     val contentType: String?,
     val byteSize: Long?,
     val dimensions: ImageDimensions?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -41,7 +41,7 @@ data class AssetMetadataInput(
 data class ImageDimensions(
     val width: Int,
     val height: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -56,7 +56,7 @@ data class ImageDimensions(
 data class JobIdentity(
     val jobId: Long,
     val assetId: Long,
-) : Serializable {
+): Serializable {
     init {
         jobId.requirePositiveNumber("jobId")
         assetId.requirePositiveNumber("assetId")
@@ -77,7 +77,7 @@ data class JobIdentity(
 data class JobFailureReason(
     val errorCode: String,
     val errorMessage: String,
-) : Serializable {
+): Serializable {
     init {
         errorCode.requireNotBlank("errorCode")
         errorCode.length.requireInRange(1, 100, "errorCode.length")
@@ -105,7 +105,7 @@ data class ImageObjectInput(
     val height: Int?,
     val byteSize: Long?,
     val format: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -129,7 +129,7 @@ data class ImageObjectInput(
  * - [externalId]는 POST 응답의 `imageId`로 사용하는 UUID v4 문자열입니다.
  * - [AlreadyReady]는 이벤트를 발행하지 않는 순수 단축 경로입니다.
  */
-sealed interface JobStartResult : Serializable {
+sealed interface JobStartResult: Serializable {
     val assetId: Long
     val jobId: Long
 
@@ -141,7 +141,7 @@ sealed interface JobStartResult : Serializable {
         override val assetId: Long,
         override val jobId: Long,
         override val externalId: String,
-    ) : JobStartResult {
+    ): JobStartResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -156,7 +156,7 @@ sealed interface JobStartResult : Serializable {
         override val assetId: Long,
         override val jobId: Long = -1L,
         override val externalId: String,
-    ) : JobStartResult {
+    ): JobStartResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -167,7 +167,7 @@ sealed interface JobStartResult : Serializable {
         override val assetId: Long,
         override val jobId: Long,
         override val externalId: String,
-    ) : JobStartResult {
+    ): JobStartResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -181,7 +181,7 @@ sealed interface JobStartResult : Serializable {
         override val assetId: Long,
         override val jobId: Long,
         override val externalId: String,
-    ) : JobStartResult {
+    ): JobStartResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -209,7 +209,7 @@ data class ImageAssetDTO(
     val status: ImageAssetStatus,
     val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -227,7 +227,7 @@ data class ImageObjectDTO(
     val height: Int?,
     val byteSize: Long?,
     val format: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -244,7 +244,7 @@ data class ImageProcessingJobDTO(
     val durationMs: Long?,
     val errorCode: String?,
     val errorMessage: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -259,7 +259,7 @@ data class ImageProcessingEventDTO(
     val message: String?,
     val payloadJson: Map<String, Any?>?,
     val createdAt: LocalDateTime,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -279,7 +279,7 @@ data class ImageAssetDetailResponse(
     val status: ImageAssetStatus,
     val original: ImageObjectDTO?,
     val variants: List<ImageObjectDTO>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -289,7 +289,7 @@ data class ImageAssetDetailResponse(
 data class ImageJobWithEventsDTO(
     val job: ImageProcessingJobDTO,
     val events: List<ImageProcessingEventDTO>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -303,7 +303,7 @@ data class ImageJobWithEventsDTO(
 data class ImageAssetHistoryResponse(
     val imageId: String,
     val jobs: List<ImageJobWithEventsDTO>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -314,5 +314,5 @@ data class ImageAssetHistoryResponse(
 // ---------------------------------------------------------------------------
 
 /** 지정한 [checksum]에 해당하는 [ImageAssetTable] 행을 찾지 못했을 때 던집니다. */
-class ImageAssetNotFoundException(val checksum: String) :
+class ImageAssetNotFoundException(val checksum: String):
     NoSuchElementException("ImageAsset not found for checksum: $checksum")

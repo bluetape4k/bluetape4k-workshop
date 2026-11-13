@@ -17,9 +17,9 @@ import org.springframework.stereotype.Component
  */
 @Component
 @Aspect
-class AspectEventPublisherAspect : ApplicationEventPublisherAware {
+class AspectEventPublisherAspect: ApplicationEventPublisherAware {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
 
         private val spelRegex = "^#\\{(.*)}$".toRegex()
 
@@ -69,8 +69,10 @@ class AspectEventPublisherAspect : ApplicationEventPublisherAware {
                 // params 를 parse 하고 평가된 값을 event constructor argument 로 제공합니다.
                 val spel = aspectEventEmitter.params.replace(spelRegex, "$1")
                 log.debug { "spel=$spel" }
+
                 val arg = expressionParser.parseExpression(spel).getValue(result)
                 log.debug { "build event[${aspectEventEmitter.eventType.simpleName}] with arg=$arg, result=$result" }
+
                 aspectEventEmitter.eventType.constructors.first().call(joinPoint.target, arg)
             }
 

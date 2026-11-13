@@ -2,21 +2,23 @@ package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleContainerFixture
 import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleV1LiveContract
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.net.ServerSocket
 import java.net.URI
 
-@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KtorJobConsoleHttpTest {
+
+    companion object: KLogging()
+
     private val fixture = JobConsoleContainerFixture.shared()
     private var port: Int = 0
     private var stopServer: (() -> Unit)? = null
@@ -25,15 +27,14 @@ class KtorJobConsoleHttpTest {
     fun startServer() {
         fixture.createSchema()
         port = ServerSocket(0).use { it.localPort }
-        val dataSource =
-            HikariDataSource(
-                HikariConfig().apply {
-                    jdbcUrl = fixture.jdbcUrl
-                    username = fixture.databaseUsername
-                    password = fixture.databasePassword
-                    schema = fixture.schema
-                },
-            )
+        val dataSource = HikariDataSource(
+            HikariConfig().apply {
+                jdbcUrl = fixture.jdbcUrl
+                username = fixture.databaseUsername
+                password = fixture.databasePassword
+                schema = fixture.schema
+            },
+        )
         val server = embeddedServer(Netty, port = port) {
             jobConsoleModule(dataSource, demoEnabled = true, boundedWaitEnabled = true)
         }

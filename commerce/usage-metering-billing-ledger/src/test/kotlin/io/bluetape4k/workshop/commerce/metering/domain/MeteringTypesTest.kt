@@ -4,7 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.util.Currency
+import java.util.*
 
 class MeteringTypesTest {
 
@@ -38,9 +38,9 @@ class MeteringTypesTest {
     @Test
     fun `money normalizes using currency fraction digits and half up rounding`() {
         Money(BigDecimal("12.345"), Currency.getInstance("USD")).normalized() shouldBeEqualTo
-            Money(BigDecimal("12.35"), Currency.getInstance("USD"))
+                Money(BigDecimal("12.35"), Currency.getInstance("USD"))
         Money(BigDecimal("12.5"), Currency.getInstance("KRW")).normalized() shouldBeEqualTo
-            Money(BigDecimal("13"), Currency.getInstance("KRW"))
+                Money(BigDecimal("13"), Currency.getInstance("KRW"))
     }
 
     @Test

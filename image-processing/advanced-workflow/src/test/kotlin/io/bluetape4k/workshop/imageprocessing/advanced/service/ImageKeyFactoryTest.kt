@@ -2,9 +2,13 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class ImageKeyFactoryTest {
+
+    private companion object: KLogging()
 
     private val keyFactory = ImageKeyFactory()
 
@@ -12,6 +16,7 @@ class ImageKeyFactoryTest {
     fun `original key uses deterministic image prefix and sanitized filename`() {
         val key = keyFactory.originalKey("image-1", "../summer photo!!.jpg")
 
+        log.debug { "key=$key" }
         key.fullKey shouldBeEqualTo "images/image-1/original/summer_photo__.jpg"
     }
 
@@ -19,6 +24,7 @@ class ImageKeyFactoryTest {
     fun `variant key uses configured derivative name`() {
         val key = keyFactory.variantKey("image-1", "thumb-128", "webp")
 
+        log.debug { "key=$key" }
         key.fullKey shouldBeEqualTo "images/image-1/variants/thumb-128.webp"
     }
 
@@ -28,6 +34,7 @@ class ImageKeyFactoryTest {
 
         val sanitized = keyFactory.sanitizeFilename(filename)
 
+        log.debug { "sanitized=$sanitized" }
         sanitized.length shouldBeLessOrEqualTo 120
         sanitized.takeLast(4) shouldBeEqualTo ".jpg"
     }
@@ -38,6 +45,7 @@ class ImageKeyFactoryTest {
 
         val sanitized = keyFactory.sanitizeFilename(filename)
 
+        log.debug { "sanitized=$sanitized" }
         sanitized.length shouldBeLessOrEqualTo 120
     }
 }

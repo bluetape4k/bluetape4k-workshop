@@ -4,18 +4,15 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
 import io.bluetape4k.workshop.commerce.reservation.domain.WaitlistState
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import org.junit.jupiter.api.Test
 import java.time.Clock
-import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 
@@ -83,7 +80,7 @@ class WaitlistCommandServiceTest {
             val offer = joinService.promote(resource.id)!!
             val expiredClock = Clock.fixed(now.plusSeconds(21), ZoneOffset.UTC)
             val acceptService =
-                WaitlistCommandService(waitlists, offers, credentialService, expiredClock, Duration.ofSeconds(20))
+                WaitlistCommandService(waitlists, offers, credentialService, expiredClock, 20.seconds())
 
             val error = assertFailsWith<WaitlistCommandException> {
                 acceptService.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner"))
@@ -103,6 +100,6 @@ class WaitlistCommandServiceTest {
         offers = offers,
         credentials = credentialService,
         clock = Clock.fixed(now, ZoneOffset.UTC),
-        offerTtl = Duration.ofSeconds(20)
+        offerTtl = 20.seconds()
     )
 }

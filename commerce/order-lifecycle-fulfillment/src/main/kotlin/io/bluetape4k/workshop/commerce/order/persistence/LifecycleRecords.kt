@@ -15,7 +15,7 @@ import io.bluetape4k.workshop.commerce.order.domain.ReservationStatus
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class OrderRecord(
     val id: UUID,
@@ -29,8 +29,8 @@ internal data class OrderRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -46,8 +46,8 @@ internal data class PaymentAttemptRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -63,8 +63,8 @@ internal data class InventoryReservationRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -81,8 +81,8 @@ internal data class FulfillmentGroupRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -100,8 +100,8 @@ internal data class CancellationCaseRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -117,8 +117,8 @@ internal data class RefundCaseRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -136,8 +136,8 @@ internal data class OrderLineRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -147,7 +147,7 @@ internal data class FulfillmentLineRecord(
     val fulfillmentGroupId: UUID,
     val lineId: UUID,
     val quantity: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -165,7 +165,7 @@ internal data class LifecycleAuditRecord(
     val reasonCode: String?,
     val actorType: String,
     val occurredAt: Instant? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -184,8 +184,8 @@ internal data class ProviderEventRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

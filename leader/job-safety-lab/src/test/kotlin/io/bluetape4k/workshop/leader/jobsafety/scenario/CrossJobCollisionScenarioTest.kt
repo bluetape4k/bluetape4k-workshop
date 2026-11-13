@@ -2,10 +2,15 @@ package io.bluetape4k.workshop.leader.jobsafety.scenario
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobName
 import org.junit.jupiter.api.Test
 
 internal class CrossJobCollisionScenarioTest {
+
+    companion object: KLogging()
+
     @Test
     fun `different jobs collide when job names guard one shared business resource`() {
         val scenarios = JobSafetyScenarioService()
@@ -13,10 +18,13 @@ internal class CrossJobCollisionScenarioTest {
         val unsafe = scenarios.run(JobSafetyScenario.CROSS_JOB_COLLISION, ScenarioMode.UNSAFE)
         val safe = scenarios.run(JobSafetyScenario.CROSS_JOB_COLLISION, ScenarioMode.SAFE)
 
+        log.debug { "unsafe=$unsafe" }
+        log.debug { "safe=$safe" }
+        
         unsafe.finalSummary shouldNotBeEqualTo unsafe.expectedSummary
         safe.finalSummary shouldBeEqualTo safe.expectedSummary
-        safe.executions.map { it.jobName } shouldBeEqualTo
-            listOf(JobName("daily-summary"), JobName("backfill-summary"))
+
+        safe.executions.map { it.jobName } shouldBeEqualTo listOf(JobName("daily-summary"), JobName("backfill-summary"))
         safe.executions.map { it.conflictKey }.distinct().size shouldBeEqualTo 1
     }
 
@@ -25,6 +33,7 @@ internal class CrossJobCollisionScenarioTest {
         val snapshot = JobSafetyScenarioService(timelineLimit = 3)
             .run(JobSafetyScenario.CROSS_JOB_COLLISION, ScenarioMode.SAFE)
 
+        log.debug { "snapshot=$snapshot" }
         snapshot.timeline.size shouldBeEqualTo 3
         snapshot.droppedTimelineEvents shouldBeEqualTo 2
     }

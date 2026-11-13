@@ -5,16 +5,19 @@ import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.coAwait
+import java.util.concurrent.CancellationException
 
-private object Main: KLogging()
+private object MainLogger: KLogging()
 
 suspend fun main() {
     val vertx = Vertx.vertx()
 
     try {
         val result = vertx.deployVerticle(MovieRatingVerticle()).coAwait()
-        Main.log.info { "Application started. $result" }
+        MainLogger.log.info { "Application started. $result" }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Throwable) {
-        Main.log.warn(e) { "Could not start application." }
+        MainLogger.log.warn(e) { "Could not start application." }
     }
 }

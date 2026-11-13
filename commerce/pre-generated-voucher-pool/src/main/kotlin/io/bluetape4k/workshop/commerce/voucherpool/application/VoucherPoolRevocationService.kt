@@ -3,11 +3,19 @@
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.jdbc.sql.singleInt
+import io.bluetape4k.jdbc.sql.singleLong
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
+import io.bluetape4k.workshop.commerce.voucherpool.idempotency.CommandFingerprint
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.CommandScope
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.EffectReference
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.IdempotencyDecision
@@ -23,9 +31,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import io.bluetape4k.workshop.commerce.voucherpool.worker.JdbcVoucherPoolWorkerRepository
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerKind
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import java.io.Serializable
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.sql.Connection
@@ -33,11 +39,12 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
-import java.util.Base64
-import java.util.Locale
-import java.util.UUID
+import java.util.*
 
-internal enum class RevokeAggregateType { CAMPAIGN, BATCH }
+internal enum class RevokeAggregateType {
+    CAMPAIGN,
+    BATCH
+}
 
 internal enum class RevocationCommandFailure {
     SCOPE_NOT_FOUND,
@@ -49,7 +56,7 @@ internal enum class RevocationCommandFailure {
     REPLAY_WINDOW_EXPIRED,
 }
 
-internal class RevocationCommandException(val reason: RevocationCommandFailure) : IllegalStateException(reason.name)
+internal class RevocationCommandException(val reason: RevocationCommandFailure): IllegalStateException(reason.name)
 
 internal data class RevokePreviewSnapshot(
     val aggregateType: RevokeAggregateType,
@@ -64,14 +71,17 @@ internal data class RevokePreviewSnapshot(
     val previewToken: String,
     val expiresAt: Instant,
     val observedAt: Instant,
-) : Serializable {
+): Serializable {
+
     override fun toString(): String =
         "RevokePreviewSnapshot(aggregateType=$aggregateType,aggregateId=$aggregateId,revision=$revision," +
-            "counts=$counts,eligibleDepth=$eligibleDepth,activeReservations=$activeReservations," +
-            "activeAllocations=$activeAllocations,alreadyTerminalCount=$alreadyTerminalCount," +
-            "affectedCount=$affectedCount,previewToken=[REDACTED],expiresAt=$expiresAt,observedAt=$observedAt)"
+                "counts=$counts,eligibleDepth=$eligibleDepth,activeReservations=$activeReservations," +
+                "activeAllocations=$activeAllocations,alreadyTerminalCount=$alreadyTerminalCount," +
+                "affectedCount=$affectedCount,previewToken=[REDACTED],expiresAt=$expiresAt,observedAt=$observedAt)"
 
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class RevokeProgressSnapshot(
@@ -81,8 +91,10 @@ internal data class RevokeProgressSnapshot(
     val revision: Long,
     val workerCount: Int,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal class RevokeCommand(
@@ -103,11 +115,12 @@ internal class RevokeCommand(
 
     override fun toString(): String =
         "RevokeCommand(tenantId=$tenantId,aggregateType=$aggregateType,aggregateId=$aggregateId," +
-            "confirmedAggregateId=$confirmedAggregateId,expectedRevision=$expectedRevision," +
-            "previewToken=[REDACTED],idempotencyKey=[REDACTED])"
+                "confirmedAggregateId=$confirmedAggregateId,expectedRevision=$expectedRevision," +
+                "previewToken=[REDACTED],idempotencyKey=[REDACTED])"
 }
 
 internal interface VoucherPoolRevocationService {
+
     fun preview(
         tenantId: String,
         aggregateType: RevokeAggregateType,
@@ -117,10 +130,15 @@ internal interface VoucherPoolRevocationService {
 
     fun revoke(command: RevokeCommand): MutationResult<RevokeProgressSnapshot>
 
-    fun progress(tenantId: String, aggregateType: RevokeAggregateType, aggregateId: UUID): RevokeProgressSnapshot?
+    fun progress(
+        tenantId: String,
+        aggregateType: RevokeAggregateType,
+        aggregateId: UUID,
+    ): RevokeProgressSnapshot?
 }
 
 /** single-use signed preview grant를 발급하고, accepted revocation을 durable worker에 atomic하게 넘깁니다. */
+@Suppress("SqlResolve")
 internal class JdbcVoucherPoolRevocationService(
     private val executor: VoucherPoolJdbcExecutor,
     private val repository: VoucherPoolRepository,
@@ -128,10 +146,13 @@ internal class JdbcVoucherPoolRevocationService(
     private val digests: VoucherDigestService,
     private val claims: JdbcVoucherPoolWorkerRepository,
     private val random: SecureRandom = SecureRandom(),
-    private val previewLifetime: Duration = Duration.ofMinutes(5),
-) : VoucherPoolRevocationService {
+    private val previewLifetime: Duration = 5.seconds(),
+): VoucherPoolRevocationService {
+
+    companion object: KLogging()
+
     init {
-        require(!previewLifetime.isZero && !previewLifetime.isNegative)
+        previewLifetime.requirePositiveDuration("previewLifetimeDuration")
     }
 
     override fun preview(
@@ -142,11 +163,14 @@ internal class JdbcVoucherPoolRevocationService(
     ): RevokePreviewSnapshot {
         require(tenantId.isNotBlank() && tenantId.length <= MAX_TENANT_LENGTH)
         require(expectedRevision >= 0)
+
         return executor.operatorTransaction {
             val connection = currentConnection()
             val authority = lockAggregate(connection, tenantId, aggregateType, aggregateId)
+
             requireRevision(authority.revision, expectedRevision)
             requireRevocable(aggregateType, authority.state)
+
             val impact = readImpact(connection, tenantId, aggregateType, aggregateId, authority.revision)
             issueGrant(connection, tenantId, impact)
         }
@@ -155,13 +179,14 @@ internal class JdbcVoucherPoolRevocationService(
     override fun revoke(command: RevokeCommand): MutationResult<RevokeProgressSnapshot> {
         val operation = command.aggregateType.operation()
         val scope = CommandScope(command.tenantId, operation)
+
         val decision = executor.operatorTransaction {
             idempotency.acquire(scope, command.idempotencyKey, command.fingerprint(operation))
         }
         return when (decision) {
-            is IdempotencyDecision.Execute -> executeOwned(decision.owner, command)
-            is IdempotencyDecision.Replay -> MutationResult.Replay(decision.descriptor)
-            is IdempotencyDecision.Expired -> MutationResult.Expired(decision.effectId, decision.terminalCode)
+            is IdempotencyDecision.Execute    -> executeOwned(decision.owner, command)
+            is IdempotencyDecision.Replay     -> MutationResult.Replay(decision.descriptor)
+            is IdempotencyDecision.Expired    -> MutationResult.Expired(decision.effectId, decision.terminalCode)
             is IdempotencyDecision.InProgress -> fail(RevocationCommandFailure.COMMAND_IN_PROGRESS)
             IdempotencyDecision.FingerprintConflict -> fail(RevocationCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT)
         }
@@ -174,40 +199,43 @@ internal class JdbcVoucherPoolRevocationService(
     ): RevokeProgressSnapshot? = executor.operatorTransaction {
         val connection = currentConnection()
         when (aggregateType) {
-            RevokeAggregateType.CAMPAIGN -> connection.prepareStatement(
-                "SELECT state,revision,transaction_timestamp() FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
-            ).use { statement ->
-                statement.setString(1, tenantId)
-                statement.setObject(2, aggregateId)
-                statement.executeQuery().use { result ->
-                    if (!result.next()) return@operatorTransaction null
-                    RevokeProgressSnapshot(
-                        aggregateType,
-                        aggregateId,
-                        result.getString(1),
-                        result.getLong(2),
-                        campaignWorkerCount(connection, tenantId, aggregateId),
-                        result.getTimestamp(3).toInstant(),
-                    )
+            RevokeAggregateType.CAMPAIGN ->
+                connection.prepareStatement(
+                    "SELECT state,revision,transaction_timestamp() FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
+                ).use { statement ->
+                    statement.setString(1, tenantId)
+                    statement.setObject(2, aggregateId)
+                    statement.executeQuery().use { result ->
+                        if (!result.next()) return@operatorTransaction null
+                        RevokeProgressSnapshot(
+                            aggregateType = aggregateType,
+                            aggregateId = aggregateId,
+                            state = result.getString(1),
+                            revision = result.getLong(2),
+                            workerCount = campaignWorkerCount(connection, tenantId, aggregateId),
+                            observedAt = result.getTimestamp(3).toInstant(),
+                        )
+                    }
                 }
-            }
-            RevokeAggregateType.BATCH -> connection.prepareStatement(
-                "SELECT state,revision,transaction_timestamp() FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
-            ).use { statement ->
-                statement.setString(1, tenantId)
-                statement.setObject(2, aggregateId)
-                statement.executeQuery().use { result ->
-                    if (!result.next()) return@operatorTransaction null
-                    RevokeProgressSnapshot(
-                        aggregateType,
-                        aggregateId,
-                        result.getString(1),
-                        result.getLong(2),
-                        batchWorkerCount(connection, tenantId, aggregateId),
-                        result.getTimestamp(3).toInstant(),
-                    )
+
+            RevokeAggregateType.BATCH    ->
+                connection.prepareStatement(
+                    "SELECT state,revision,transaction_timestamp() FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
+                ).use { statement ->
+                    statement.setString(1, tenantId)
+                    statement.setObject(2, aggregateId)
+                    statement.executeQuery().use { result ->
+                        if (!result.next()) return@operatorTransaction null
+                        RevokeProgressSnapshot(
+                            aggregateType = aggregateType,
+                            aggregateId = aggregateId,
+                            state = result.getString(1),
+                            revision = result.getLong(2),
+                            workerCount = batchWorkerCount(connection, tenantId, aggregateId),
+                            observedAt = result.getTimestamp(3).toInstant(),
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -224,21 +252,27 @@ internal class JdbcVoucherPoolRevocationService(
             val token = parseToken(command.previewToken)
             val grant = lockGrant(connection, command.tenantId, token.grantId)
                 ?: fail(RevocationCommandFailure.INVALID_PREVIEW)
+
             val impact = readImpact(
-                connection,
-                command.tenantId,
-                command.aggregateType,
-                command.aggregateId,
-                authority.revision,
+                connection = connection,
+                tenantId = command.tenantId,
+                aggregateType = command.aggregateType,
+                aggregateId = command.aggregateId,
+                revision = authority.revision,
             )
             validateGrant(command, token, grant, impact)
             requireRevocable(command.aggregateType, authority.state)
             consumeGrant(connection, grant)
             val updated = transitionAndHandoff(connection, command)
             idempotency.finalize(
-                owner,
-                SafeResponseDescriptor.success(HTTP_ACCEPTED, "REVOCATION_ACCEPTED", command.aggregateId, updated.revision),
-                EffectReference.effect(command.aggregateId),
+                owner = owner,
+                descriptor = SafeResponseDescriptor.success(
+                    status = HTTP_ACCEPTED,
+                    outcome = "REVOCATION_ACCEPTED",
+                    effectId = command.aggregateId,
+                    revision = updated.revision
+                ),
+                effect = EffectReference.effect(command.aggregateId),
             )
             updated
         }
@@ -250,7 +284,9 @@ internal class JdbcVoucherPoolRevocationService(
 
     private fun releaseOwner(owner: IdempotencyOwner) {
         try {
-            executor.operatorTransaction { idempotency.releaseRetryable(owner) }
+            executor.operatorTransaction {
+                idempotency.releaseRetryable(owner)
+            }
         } catch (_: RuntimeException) {
             // 원래 command failure는 authoritative로 남고, ownership expiry는 안전한 fallback입니다.
         }
@@ -263,12 +299,17 @@ internal class JdbcVoucherPoolRevocationService(
         val now = repository.transactionTime()
         return when (command.aggregateType) {
             RevokeAggregateType.CAMPAIGN -> {
-                val campaign = checkNotNull(repository.lockCampaignForUpdate(command.tenantId, command.aggregateId))
+                val campaign = repository.lockCampaignForUpdate(
+                    tenantId = command.tenantId,
+                    campaignId = command.aggregateId
+                ).checkNotNull("campaign")
+
                 val updated = repository.updateCampaign(
-                    campaign.copy(state = CampaignState.REVOKING),
-                    campaign.revision,
+                    campaign = campaign.copy(state = CampaignState.REVOKING),
+                    expectedRevision = campaign.revision
                 )
                 val workerCount = campaignWorkerCount(connection, command.tenantId, command.aggregateId)
+
                 val terminal = if (workerCount == 0) {
                     repository.updateCampaign(
                         updated.copy(state = CampaignState.REVOKED),
@@ -283,25 +324,37 @@ internal class JdbcVoucherPoolRevocationService(
                     )
                     updated
                 }
+
+                RevokeProgressSnapshot(
+                    aggregateType = command.aggregateType,
+                    aggregateId = command.aggregateId,
+                    state = terminal.state.name,
+                    revision = terminal.revision,
+                    workerCount = workerCount,
+                    observedAt = now,
+                )
+            }
+
+            RevokeAggregateType.BATCH    -> {
+                val batch = repository.lockBatchForUpdate(
+                    command.tenantId,
+                    command.aggregateId
+                ).checkNotNull("batch")
+                val updated = repository.updateBatchState(batch, BatchState.REVOKING)
+                claims.ensureClaimInTransaction(
+                    connection = connection,
+                    tenantId = command.tenantId,
+                    kind = WorkerKind.BATCH_REVOKE,
+                    scopeId = command.aggregateId,
+                )
                 RevokeProgressSnapshot(
                     command.aggregateType,
                     command.aggregateId,
-                    terminal.state.name,
-                    terminal.revision,
-                    workerCount,
-                    now,
+                    updated.state.name,
+                    updated.revision,
+                    1,
+                    now
                 )
-            }
-            RevokeAggregateType.BATCH -> {
-                val batch = checkNotNull(repository.lockBatchForUpdate(command.tenantId, command.aggregateId))
-                val updated = repository.updateBatchState(batch, BatchState.REVOKING)
-                claims.ensureClaimInTransaction(
-                    connection,
-                    command.tenantId,
-                    WorkerKind.BATCH_REVOKE,
-                    command.aggregateId,
-                )
-                RevokeProgressSnapshot(command.aggregateType, command.aggregateId, updated.state.name, updated.revision, 1, now)
             }
         }
     }
@@ -318,12 +371,13 @@ internal class JdbcVoucherPoolRevocationService(
         val material = tokenMaterial(grantId, nonce, impact, expiresAt)
         val signature = digests.audit(tenantId, TOKEN_OPERATION, material)
         val signatureBytes = signature.copyBytes()
+
         return try {
             connection.prepareStatement(
                 """INSERT INTO voucher_pool_revoke_preview_grants
                     (tenant_id,grant_id,aggregate_type,aggregate_id,aggregate_revision,impact_digest,affected_count,
                      signature_key_version,signature_digest,expires_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    VALUES (?,?,?,?,?,?,?,?,?,?)""".trimIndent(),
             ).use { statement ->
                 statement.setString(1, tenantId)
                 statement.setObject(2, grantId)
@@ -339,18 +393,18 @@ internal class JdbcVoucherPoolRevocationService(
             }
             val token = encodeToken(grantId, nonce, signature)
             RevokePreviewSnapshot(
-                impact.aggregateType,
-                impact.aggregateId,
-                impact.revision,
-                impact.counts,
-                impact.eligibleDepth,
-                impact.activeReservations,
-                impact.activeAllocations,
-                impact.alreadyTerminalCount,
-                impact.affectedCount,
-                token,
-                expiresAt,
-                impact.observedAt,
+                aggregateType = impact.aggregateType,
+                aggregateId = impact.aggregateId,
+                revision = impact.revision,
+                counts = impact.counts,
+                eligibleDepth = impact.eligibleDepth,
+                activeReservations = impact.activeReservations,
+                activeAllocations = impact.activeAllocations,
+                alreadyTerminalCount = impact.alreadyTerminalCount,
+                affectedCount = impact.affectedCount,
+                previewToken = token,
+                expiresAt = expiresAt,
+                observedAt = impact.observedAt,
             )
         } finally {
             nonce.fill(0)
@@ -379,6 +433,7 @@ internal class JdbcVoucherPoolRevocationService(
         if (!validGrant) {
             fail(RevocationCommandFailure.INVALID_PREVIEW)
         }
+
         val expected = VoucherDigest.of(DigestPurpose.AUDIT, token.keyVersion, token.signature)
         val material = tokenMaterial(token.grantId, token.nonce, impact, grant.expiresAt)
         if (!digests.matchesAudit(command.tenantId, TOKEN_OPERATION, material, expected)) {
@@ -389,7 +444,7 @@ internal class JdbcVoucherPoolRevocationService(
     private fun consumeGrant(connection: Connection, grant: RevokeGrant) {
         connection.prepareStatement(
             """UPDATE voucher_pool_revoke_preview_grants SET consumed_at=transaction_timestamp()
-                WHERE tenant_id=? AND grant_id=? AND consumed_at IS NULL AND expires_at>transaction_timestamp()""",
+                WHERE tenant_id=? AND grant_id=? AND consumed_at IS NULL AND expires_at>transaction_timestamp()""".trimIndent(),
         ).use { statement ->
             statement.setString(1, grant.tenantId)
             statement.setObject(2, grant.grantId)
@@ -417,7 +472,9 @@ internal class JdbcVoucherPoolRevocationService(
                 ?: fail(RevocationCommandFailure.SCOPE_NOT_FOUND)
             LockedAggregate(campaign.state.name, campaign.revision)
         }
-        RevokeAggregateType.BATCH -> lockBatchAggregate(connection, tenantId, aggregateId)
+
+        RevokeAggregateType.BATCH ->
+            lockBatchAggregate(connection, tenantId, aggregateId)
     }
 
     private fun lockBatchAggregate(connection: Connection, tenantId: String, batchId: UUID): LockedAggregate {
@@ -430,9 +487,11 @@ internal class JdbcVoucherPoolRevocationService(
                 if (result.next()) result.getObject(1, UUID::class.java) else null
             }
         } ?: fail(RevocationCommandFailure.SCOPE_NOT_FOUND)
+
         repository.lockCampaignForShare(tenantId, campaignId)
         val batch = repository.lockBatchForUpdate(tenantId, batchId)
             ?: fail(RevocationCommandFailure.SCOPE_NOT_FOUND)
+
         return LockedAggregate(batch.state.name, batch.revision)
     }
 
@@ -448,6 +507,7 @@ internal class JdbcVoucherPoolRevocationService(
             when (aggregateType) {
                 RevokeAggregateType.CAMPAIGN ->
                     "SELECT state,count(*) FROM voucher_pool_entries WHERE tenant_id=? AND campaign_id=? GROUP BY state"
+
                 RevokeAggregateType.BATCH ->
                     "SELECT state,count(*) FROM voucher_pool_entries WHERE tenant_id=? AND batch_id=? GROUP BY state"
             },
@@ -459,43 +519,47 @@ internal class JdbcVoucherPoolRevocationService(
             }
         }
         val activeReservations = countScoped(
-            connection,
-            tenantId,
-            aggregateType,
-            aggregateId,
-            "voucher_pool_reservations",
-            "state='ACTIVE'",
+            connection = connection,
+            tenantId = tenantId,
+            aggregateType = aggregateType,
+            aggregateId = aggregateId,
+            table = "voucher_pool_reservations",
+            predicate = "state='ACTIVE'",
         )
         val eligibleDepth = eligibleDepth(connection, tenantId, aggregateType, aggregateId)
         val activeAllocations = counts.getValue(EntryState.ALLOCATED)
         val affectedCount = counts.getValue(EntryState.AVAILABLE) +
-            counts.getValue(EntryState.RESERVED) + activeAllocations
-        val terminalCount = counts.getValue(EntryState.REDEEMED) + counts.getValue(EntryState.RELEASED) +
-            counts.getValue(EntryState.REVOKED) + counts.getValue(EntryState.EXPIRED)
+                counts.getValue(EntryState.RESERVED) + activeAllocations
+        val terminalCount = counts.getValue(EntryState.REDEEMED) +
+                counts.getValue(EntryState.RELEASED) +
+                counts.getValue(EntryState.REVOKED) +
+                counts.getValue(EntryState.EXPIRED)
+
         val observedAt = repository.transactionTime()
+
         val digest = impactDigest(
-            aggregateType,
-            aggregateId,
-            revision,
-            counts,
-            eligibleDepth,
-            activeReservations,
-            activeAllocations,
-            terminalCount,
-            affectedCount,
+            aggregateType = aggregateType,
+            aggregateId = aggregateId,
+            revision = revision,
+            counts = counts,
+            eligibleDepth = eligibleDepth,
+            activeReservations = activeReservations,
+            activeAllocations = activeAllocations,
+            terminalCount = terminalCount,
+            affectedCount = affectedCount,
         )
         return ImpactSnapshot(
-            aggregateType,
-            aggregateId,
-            revision,
-            counts.toMap(),
-            eligibleDepth,
-            activeReservations,
-            activeAllocations,
-            terminalCount,
-            affectedCount,
-            digest,
-            observedAt,
+            aggregateType = aggregateType,
+            aggregateId = aggregateId,
+            revision = revision,
+            counts = counts.toMap(),
+            eligibleDepth = eligibleDepth,
+            activeReservations = activeReservations,
+            activeAllocations = activeAllocations,
+            alreadyTerminalCount = terminalCount,
+            affectedCount = affectedCount,
+            impactDigest = digest,
+            observedAt = observedAt,
         )
     }
 
@@ -516,7 +580,7 @@ internal class JdbcVoucherPoolRevocationService(
                   AND c.state='ACTIVE' AND c.starts_at<=transaction_timestamp()
                   AND c.ends_at>transaction_timestamp() AND b.state='ACTIVE'
                   AND b.activates_at<=transaction_timestamp()
-                  AND (b.expires_at IS NULL OR b.expires_at>transaction_timestamp())""",
+                  AND (b.expires_at IS NULL OR b.expires_at>transaction_timestamp())""".trimIndent(),
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, aggregateId)
@@ -531,23 +595,28 @@ internal class JdbcVoucherPoolRevocationService(
         aggregateId: UUID,
         table: String,
         predicate: String,
-    ): Long = connection.prepareStatement(
-        "SELECT count(*) FROM $table WHERE tenant_id=? AND " +
-            if (aggregateType == RevokeAggregateType.CAMPAIGN) "campaign_id=? AND $predicate" else "batch_id=? AND $predicate",
-    ).use { statement ->
-        statement.setString(1, tenantId)
-        statement.setObject(2, aggregateId)
-        statement.executeQuery().use { result -> result.next(); result.getLong(1) }
-    }
+    ): Long =
+        connection.prepareStatement(
+            "SELECT count(*) FROM $table WHERE tenant_id=? AND " +
+                    if (aggregateType == RevokeAggregateType.CAMPAIGN) "campaign_id=? AND $predicate" else "batch_id=? AND $predicate",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, aggregateId)
+            statement.executeQuery().use { result ->
+                result.singleLong()
+            }
+        }
 
     private fun campaignWorkerCount(connection: Connection, tenantId: String, campaignId: UUID): Int =
         connection.prepareStatement(
             """SELECT count(*) FROM voucher_pool_batches
-                WHERE tenant_id=? AND campaign_id=? AND state NOT IN ('REVOKED','EXPIRED')""",
+                WHERE tenant_id=? AND campaign_id=? AND state NOT IN ('REVOKED','EXPIRED')""".trimIndent(),
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, campaignId)
-            statement.executeQuery().use { result -> result.next(); result.getInt(1) }
+            statement.executeQuery().use { result ->
+                result.singleInt()
+            }
         }
 
     private fun batchWorkerCount(connection: Connection, tenantId: String, batchId: UUID): Int =
@@ -556,7 +625,9 @@ internal class JdbcVoucherPoolRevocationService(
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, batchId)
-            statement.executeQuery().use { result -> result.next(); result.getInt(1) }
+            statement.executeQuery().use { result ->
+                result.singleInt()
+            }
         }
 
     private fun requireRevision(actual: Long, expected: Long) {
@@ -565,22 +636,28 @@ internal class JdbcVoucherPoolRevocationService(
 
     private fun requireRevocable(aggregateType: RevokeAggregateType, state: String) {
         val allowed = when (aggregateType) {
-            RevokeAggregateType.CAMPAIGN -> CampaignPolicy.canTransition(CampaignState.valueOf(state), CampaignState.REVOKING)
-            RevokeAggregateType.BATCH -> BatchPolicy.canTransition(BatchState.valueOf(state), BatchState.REVOKING)
+            RevokeAggregateType.CAMPAIGN ->
+                CampaignPolicy.canTransition(
+                    CampaignState.valueOf(state),
+                    CampaignState.REVOKING
+                )
+            RevokeAggregateType.BATCH    ->
+                BatchPolicy.canTransition(BatchState.valueOf(state), BatchState.REVOKING)
         }
         if (!allowed) fail(RevocationCommandFailure.INVALID_STATE)
     }
 
-    private fun RevokeCommand.fingerprint(operation: String) = VoucherPoolFingerprint.command(
-        operation,
-        mapOf(
-            "aggregateType" to aggregateType.name,
-            "aggregateId" to aggregateId.toString(),
-            "confirmedAggregateId" to confirmedAggregateId.toString(),
-            "expectedRevision" to expectedRevision.toString(),
-            "previewTokenDigest" to MessageDigest.getInstance("SHA-256").digest(previewToken.toByteArray(UTF_8)).toHex(),
-        ),
-    )
+    private fun RevokeCommand.fingerprint(operation: String): CommandFingerprint =
+        VoucherPoolFingerprint.command(
+            operation = operation,
+            fields = mapOf(
+                "aggregateType" to aggregateType.name,
+                "aggregateId" to aggregateId.toString(),
+                "confirmedAggregateId" to confirmedAggregateId.toString(),
+                "expectedRevision" to expectedRevision.toString(),
+                "previewTokenDigest" to MessageDigest.getInstance("SHA-256").digest(previewToken.toUtf8Bytes()).toHex(),
+            ),
+        )
 
     private fun RevokeAggregateType.operation(): String = "${name.lowercase()}-revoke"
 
@@ -589,20 +666,23 @@ internal class JdbcVoucherPoolRevocationService(
         nonce: ByteArray,
         impact: ImpactSnapshot,
         expiresAt: Instant,
-    ): String = listOf(
-        grantId,
-        Base64.getUrlEncoder().withoutPadding().encodeToString(nonce),
-        impact.aggregateType,
-        impact.aggregateId,
-        impact.revision,
-        Base64.getUrlEncoder().withoutPadding().encodeToString(impact.impactDigest),
-        impact.affectedCount,
-        expiresAt.epochSecond,
-        expiresAt.nano,
-    ).joinToString("|")
+    ): String =
+        listOf(
+            grantId,
+            Base64.getUrlEncoder().withoutPadding().encodeToString(nonce),
+            impact.aggregateType,
+            impact.aggregateId,
+            impact.revision,
+            Base64.getUrlEncoder().withoutPadding().encodeToString(impact.impactDigest),
+            impact.affectedCount,
+            expiresAt.epochSecond,
+            expiresAt.nano,
+        )
+            .joinToString("|")
 
     private fun encodeToken(grantId: UUID, nonce: ByteArray, signature: VoucherDigest): String {
         val signatureBytes = signature.copyBytes()
+
         return try {
             listOf(
                 TOKEN_VERSION,
@@ -616,27 +696,35 @@ internal class JdbcVoucherPoolRevocationService(
         }
     }
 
-    private fun parseToken(raw: String): ParsedToken = try {
-        val parts = raw.split('.')
-        if (parts.size != TOKEN_PARTS || parts[0] != TOKEN_VERSION) fail(RevocationCommandFailure.INVALID_PREVIEW)
-        val nonce = Base64.getUrlDecoder().decode(parts[2])
-        val signature = Base64.getUrlDecoder().decode(parts[4])
-        if (nonce.size != TOKEN_NONCE_BYTES || signature.size != TOKEN_SIGNATURE_BYTES) {
+    private fun parseToken(raw: String): ParsedToken =
+        try {
+            val parts = raw.split('.')
+            if (parts.size != TOKEN_PARTS || parts[0] != TOKEN_VERSION) fail(RevocationCommandFailure.INVALID_PREVIEW)
+            val nonce = Base64.getUrlDecoder().decode(parts[2])
+            val signature = Base64.getUrlDecoder().decode(parts[4])
+            if (nonce.size != TOKEN_NONCE_BYTES || signature.size != TOKEN_SIGNATURE_BYTES) {
+                fail(RevocationCommandFailure.INVALID_PREVIEW)
+            }
+            ParsedToken(UUID.fromString(parts[1]), nonce, parts[3].toInt(), signature)
+        } catch (failure: RevocationCommandException) {
+            throw failure
+        } catch (_: RuntimeException) {
             fail(RevocationCommandFailure.INVALID_PREVIEW)
         }
-        ParsedToken(UUID.fromString(parts[1]), nonce, parts[3].toInt(), signature)
-    } catch (failure: RevocationCommandException) {
-        throw failure
-    } catch (_: RuntimeException) {
-        fail(RevocationCommandFailure.INVALID_PREVIEW)
-    }
 
-    private fun currentConnection(): Connection = checkNotNull(TransactionManager.currentOrNull()) {
-        "voucher pool revocation requires an active JDBC transaction"
-    }.connection.connection as Connection
+    private fun currentConnection(): Connection =
+        TransactionManager.currentOrNull()
+            .checkNotNull { "voucher pool revocation requires an active JDBC transaction" }
+            .connection
+            .connection as Connection
 
-    private data class LockedAggregate(val state: String, val revision: Long) : Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+    private data class LockedAggregate(
+        val state: String,
+        val revision: Long,
+    ): Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     private data class ImpactSnapshot(
@@ -651,8 +739,10 @@ internal class JdbcVoucherPoolRevocationService(
         val affectedCount: Long,
         val impactDigest: ByteArray,
         val observedAt: Instant,
-    ) : Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+    ): Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     private data class ParsedToken(
@@ -660,8 +750,10 @@ internal class JdbcVoucherPoolRevocationService(
         val nonce: ByteArray,
         val keyVersion: Int,
         val signature: ByteArray,
-    ) : Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+    ): Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     private data class RevokeGrant(
@@ -676,23 +768,26 @@ internal class JdbcVoucherPoolRevocationService(
         val signatureDigest: ByteArray,
         val expiresAt: Instant,
         val consumedAt: Instant?,
-    ) : Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+    ): Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
-    private fun ResultSet.revokeGrant() = RevokeGrant(
-        getString("tenant_id"),
-        getObject("grant_id", UUID::class.java),
-        RevokeAggregateType.valueOf(getString("aggregate_type")),
-        getObject("aggregate_id", UUID::class.java),
-        getLong("aggregate_revision"),
-        getBytes("impact_digest"),
-        getLong("affected_count"),
-        getInt("signature_key_version"),
-        getBytes("signature_digest"),
-        getTimestamp("expires_at").toInstant(),
-        getTimestamp("consumed_at")?.toInstant(),
-    )
+    private fun ResultSet.revokeGrant(): RevokeGrant =
+        RevokeGrant(
+            tenantId = getString("tenant_id"),
+            grantId = getObject("grant_id", UUID::class.java),
+            aggregateType = RevokeAggregateType.valueOf(getString("aggregate_type")),
+            aggregateId = getObject("aggregate_id", UUID::class.java),
+            aggregateRevision = getLong("aggregate_revision"),
+            impactDigest = getBytes("impact_digest"),
+            affectedCount = getLong("affected_count"),
+            signatureKeyVersion = getInt("signature_key_version"),
+            signatureDigest = getBytes("signature_digest"),
+            expiresAt = getTimestamp("expires_at").toInstant(),
+            consumedAt = getTimestamp("consumed_at")?.toInstant(),
+        )
 }
 
 private fun impactDigest(
@@ -715,7 +810,7 @@ private fun impactDigest(
         append('|').append(terminalCount)
         append('|').append(affectedCount)
     }
-    return MessageDigest.getInstance("SHA-256").digest(material.toByteArray(UTF_8))
+    return MessageDigest.getInstance("SHA-256").digest(material.toUtf8Bytes())
 }
 
 private fun ByteArray.toHex(): String = joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }

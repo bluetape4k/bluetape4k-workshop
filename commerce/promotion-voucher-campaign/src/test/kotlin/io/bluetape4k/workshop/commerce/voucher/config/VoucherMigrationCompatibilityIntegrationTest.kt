@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.seconds
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
@@ -11,7 +12,7 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 @Tag("migration-compatibility")
-internal class VoucherMigrationCompatibilityIntegrationTest : VoucherCompatibilityTestSupport() {
+internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilityTestSupport() {
     @Test
     fun `previous current previous packaged process sequence remains read write compatible`() {
         val previousJar = Path.of(requiredProperty("voucher.compatibility.previous-jar"))
@@ -67,7 +68,7 @@ internal class VoucherMigrationCompatibilityIntegrationTest : VoucherCompatibili
 
     private fun runProcess(vararg command: String) {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
-        val completed = process.waitFor(PROCESS_TIMEOUT.toSeconds(), TimeUnit.SECONDS)
+        val completed = process.waitFor(PROCESS_TIMEOUT)
         val output = process.inputStream.bufferedReader().use { it.readText() }
         check(completed) {
             process.destroyForcibly()
@@ -87,6 +88,6 @@ internal class VoucherMigrationCompatibilityIntegrationTest : VoucherCompatibili
     private fun javaExecutable(): String = Path.of(System.getProperty("java.home"), "bin", "java").toString()
 
     companion object {
-        private val PROCESS_TIMEOUT: Duration = Duration.ofSeconds(30)
+        private val PROCESS_TIMEOUT: Duration = 30.seconds()
     }
 }

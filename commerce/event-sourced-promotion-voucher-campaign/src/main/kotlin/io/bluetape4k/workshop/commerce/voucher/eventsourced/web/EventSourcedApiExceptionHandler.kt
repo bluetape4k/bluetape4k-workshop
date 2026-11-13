@@ -7,8 +7,8 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
-import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
@@ -21,6 +21,9 @@ internal data class EventSourcedApiError(
 /** database, token, digest, request payload 세부사항을 API client에 절대 serialize하지 않습니다. */
 @RestControllerAdvice
 internal class EventSourcedApiExceptionHandler {
+
+    private companion object: KLogging()
+
     @ExceptionHandler(EventSourcedStreamRejected::class)
     fun eventStreamRejected(failure: EventSourcedStreamRejected): ResponseEntity<EventSourcedApiError> =
         ResponseEntity.status(failure.httpStatus)
@@ -28,7 +31,8 @@ internal class EventSourcedApiExceptionHandler {
 
     @ExceptionHandler(DatabaseBulkheadRejected::class)
     fun databaseBusy(): ResponseEntity<EventSourcedApiError> =
-        ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+        ResponseEntity
+            .status(HttpStatus.SERVICE_UNAVAILABLE)
             .header(HttpHeaders.RETRY_AFTER, "1")
             .body(
                 EventSourcedApiError(
@@ -46,18 +50,20 @@ internal class EventSourcedApiExceptionHandler {
     )
     fun invalidInput(failure: Exception): ResponseEntity<EventSourcedApiError> {
         log.warn { "event_sourced_http_rejected category=INVALID_REQUEST failure=${failure.javaClass.simpleName}" }
-        return ResponseEntity.badRequest().body(
-            EventSourcedApiError("INVALID_REQUEST", "request validation failed"),
-        )
+        return ResponseEntity
+            .badRequest()
+            .body(
+                EventSourcedApiError("INVALID_REQUEST", "request validation failed"),
+            )
     }
 
     @ExceptionHandler(Exception::class)
     fun unexpected(failure: Exception): ResponseEntity<EventSourcedApiError> {
         log.warn { "event_sourced_http_failed category=INTERNAL_ERROR failure=${failure.javaClass.simpleName}" }
-        return ResponseEntity.internalServerError().body(
-            EventSourcedApiError("INTERNAL_ERROR", "request could not be completed"),
-        )
+        return ResponseEntity
+            .internalServerError()
+            .body(
+                EventSourcedApiError("INTERNAL_ERROR", "request could not be completed"),
+            )
     }
-
-    private companion object : KLogging()
 }

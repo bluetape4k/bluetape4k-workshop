@@ -64,7 +64,7 @@ internal abstract class VoucherCompatibilityTestSupport {
 
     private fun applyPreviousSchema() {
         val sql = ClassPathResource("compatibility/V000__previous_voucher_schema.sql").inputStream.use {
-            it.readAllBytes().toString(Charsets.UTF_8)
+            it.readAllBytes().toUtf8String()
         }
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->

@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.chaos.controller
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -7,16 +11,13 @@ import io.bluetape4k.workshop.chaos.AbstractChaosApplicationTest
 import io.bluetape4k.workshop.chaos.model.Student
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.returnResult
 
-class StudentControllerTest : AbstractChaosApplicationTest() {
+class StudentControllerTest: AbstractChaosApplicationTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `find all students`() = runSuspendIO {
@@ -27,12 +28,9 @@ class StudentControllerTest : AbstractChaosApplicationTest() {
             .expectStatus().isOk
             .returnResult<Student>().responseBody
             .asFlow()
+            .log("Student")
             .toList()
 
-        log.debug { "all students" }
-        students.forEach {
-            log.debug { it }
-        }
         students.shouldNotBeEmpty()
     }
 
@@ -47,7 +45,7 @@ class StudentControllerTest : AbstractChaosApplicationTest() {
             .expectBody<Student>()
             .returnResult().responseBody.shouldNotBeNull()
 
+        log.debug { "student=$student" }
         student.id shouldBeEqualTo studentId
-        log.debug { student }
     }
 }

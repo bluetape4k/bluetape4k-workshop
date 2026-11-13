@@ -61,7 +61,7 @@ class KnowledgeGraphSuspendService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         /** neighbor 조회와 path 조회에 허용하는 최대 순회 깊이입니다. */
         const val MAX_TRAVERSAL_DEPTH: Int = 10
     }
@@ -90,11 +90,9 @@ class KnowledgeGraphSuspendService(
         entityType.requireNotBlank("entityType")
         return ops.createVertex(
             EntityLabel.label,
-            mapOf(
-                EntityLabel.entityId.name to entityId,
-                EntityLabel.name.name to name,
-                EntityLabel.entityType.name to entityType,
-            )
+            EntityLabel.entityId.name to entityId,
+            EntityLabel.name.name to name,
+            EntityLabel.entityType.name to entityType,
         )
     }
 
@@ -104,11 +102,9 @@ class KnowledgeGraphSuspendService(
         name.requireNotBlank("name")
         return ops.createVertex(
             ConceptLabel.label,
-            mapOf(
-                ConceptLabel.conceptId.name to conceptId,
-                ConceptLabel.name.name to name,
-                ConceptLabel.domain.name to domain,
-            )
+            ConceptLabel.conceptId.name to conceptId,
+            ConceptLabel.name.name to name,
+            ConceptLabel.domain.name to domain,
         )
     }
 
@@ -118,11 +114,9 @@ class KnowledgeGraphSuspendService(
         title.requireNotBlank("title")
         return ops.createVertex(
             DocumentLabel.label,
-            mapOf(
-                DocumentLabel.documentId.name to documentId,
-                DocumentLabel.title.name to title,
-                DocumentLabel.source.name to source,
-            )
+            DocumentLabel.documentId.name to documentId,
+            DocumentLabel.title.name to title,
+            DocumentLabel.source.name to source,
         )
     }
 
@@ -139,7 +133,7 @@ class KnowledgeGraphSuspendService(
             documentId,
             entityId,
             MentionsLabel.label,
-            mapOf(MentionsLabel.confidence.name to confidence),
+            MentionsLabel.confidence.name to confidence,
         )
     }
 
@@ -160,7 +154,7 @@ class KnowledgeGraphSuspendService(
             fromEntityId,
             toEntityId,
             RelatedToLabel.label,
-            mapOf(RelatedToLabel.relationType.name to relationType),
+            RelatedToLabel.relationType.name to relationType,
         )
     }
 
@@ -172,7 +166,7 @@ class KnowledgeGraphSuspendService(
     suspend fun classify(entityId: GraphElementId, conceptId: GraphElementId) {
         ops.requireEndpoint(entityId, EntityLabel.label, "entityId")
         ops.requireEndpoint(conceptId, ConceptLabel.label, "conceptId")
-        ops.createEdge(entityId, conceptId, IsALabel.label, emptyMap())
+        ops.createEdge(entityId, conceptId, IsALabel.label)
     }
 
     /** [documentId]가 언급한 Entity를 Flow로 반환합니다. */
@@ -216,11 +210,13 @@ class KnowledgeGraphSuspendService(
     ): Flow<GraphPath> {
         maxDepth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "maxDepth")
         maxPaths.requireInRange(1, Int.MAX_VALUE, "maxPaths")
-        return ops.allPaths(
-            fromEntityId,
-            toEntityId,
-            PathOptions(edgeLabel = RelatedToLabel.label, maxDepth = maxDepth),
-        ).take(maxPaths)
+        return ops
+            .allPaths(
+                fromEntityId,
+                toEntityId,
+                PathOptions(edgeLabel = RelatedToLabel.label, maxDepth = maxDepth),
+            )
+            .take(maxPaths)
     }
 
 }

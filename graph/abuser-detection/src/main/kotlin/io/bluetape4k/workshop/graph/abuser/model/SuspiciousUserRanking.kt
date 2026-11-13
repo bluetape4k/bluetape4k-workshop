@@ -13,7 +13,7 @@ data class SuspiciousUserRanking(
     val scores: List<SuspiciousUserScore>,
     /** 이 점수를 계산할 때 선택한 알고리즘 실행 경로입니다. */
     val execution: AbuserAlgorithmExecution,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

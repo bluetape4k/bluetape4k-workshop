@@ -1,5 +1,11 @@
 package io.bluetape4k.okio
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.asByte
@@ -16,12 +22,6 @@ import okio.ForwardingSink
 import okio.ForwardingSource
 import okio.Options
 import okio.blackholeSink
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeInRange
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -543,7 +543,7 @@ class BufferedSourceTest: AbstractOkioTest() {
             }
 
             // 내용 자체는 읽을 수 있어야 함
-            bytes shouldBeEqualTo "Hello".toByteArray() + byteArrayOf(0)
+            bytes shouldBeEqualTo "Hello".toUtf8Bytes() + byteArrayOf(0)
             source.exhausted().shouldBeTrue()  // source is exhausted after reading all bytes
         }
     }

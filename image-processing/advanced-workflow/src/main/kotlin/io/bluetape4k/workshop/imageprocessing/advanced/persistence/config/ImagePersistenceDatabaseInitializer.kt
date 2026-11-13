@@ -25,9 +25,9 @@ import org.springframework.transaction.annotation.Transactional
  * - 여기서는 [run]의 [@Transactional]을 허용합니다(사가 서비스가 아니라 DDL initializer입니다).
  */
 @Component
-class ImagePersistenceDatabaseInitializer : ApplicationRunner {
+class ImagePersistenceDatabaseInitializer: ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Transactional
     override fun run(args: ApplicationArguments) {

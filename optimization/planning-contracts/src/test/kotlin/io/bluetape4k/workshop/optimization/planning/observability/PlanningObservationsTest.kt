@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.optimization.planning.observability
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.application.PlanningCallbackDecision
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningOutboxStatus
@@ -10,6 +11,8 @@ import io.micrometer.observation.ObservationRegistry
 import org.junit.jupiter.api.Test
 
 class PlanningObservationsTest {
+
+    companion object: KLogging()
 
     private val meterRegistry = SimpleMeterRegistry()
     private val observations = PlanningObservations(ObservationRegistry.create(), meterRegistry)
@@ -20,7 +23,13 @@ class PlanningObservationsTest {
         observations.recordOutbox(PlanningOutboxStatus.COMPLETED)
         observations.recordCallback(PlanningCallbackDecision.ACCEPTED)
 
-        counter(PlanningObservations.PROVIDER_SUBMIT_COUNTER, "provider", "fake", "result", "success") shouldBeEqualTo 1.0
+        counter(
+            PlanningObservations.PROVIDER_SUBMIT_COUNTER,
+            "provider",
+            "fake",
+            "result",
+            "success"
+        ) shouldBeEqualTo 1.0
         counter(PlanningObservations.OUTBOX_COUNTER, "result", "completed") shouldBeEqualTo 1.0
         counter(PlanningObservations.CALLBACK_COUNTER, "result", "accepted") shouldBeEqualTo 1.0
     }
@@ -43,5 +52,5 @@ class PlanningObservationsTest {
     }
 
     private fun counter(name: String, vararg tags: String): Double =
-        requireNotNull(meterRegistry.find(name).tags(*tags).counter()).count()
+        meterRegistry.find(name).tags(*tags).counter()!!.count()
 }

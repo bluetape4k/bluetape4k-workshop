@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.persistence
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.AssignmentId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftAssignment
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftId
@@ -11,16 +12,36 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
 import org.junit.jupiter.api.Test
 
 class ShiftCoverageRepositoryTest {
+
+    companion object: KLogging()
+
     @Test
     fun `expected revision CAS changes one row and stale CAS is no-write`() {
         val repository = ShiftCoverageRepository()
-        val assignment = ShiftAssignment(AssignmentId("assignment-a"), SiteId("site-a"), ShiftId("shift-a"), WorkerId("worker-a"))
+        val assignment = ShiftAssignment(
+            AssignmentId("assignment-a"),
+            SiteId("site-a"),
+            ShiftId("shift-a"),
+            WorkerId("worker-a")
+        )
         repository.saveAssignment(assignment)
 
-        repository.compareAndSetAssignment(assignment.assignmentId, 0L, assignment.copy(workerId = WorkerId("worker-b"), revision = 1L)).shouldBeTrue()
-        repository.compareAndSetAssignment(assignment.assignmentId, 0L, assignment.copy(workerId = WorkerId("worker-c"), revision = 2L)).shouldBeFalse()
-        repository.findAssignment(assignment.assignmentId)?.workerId shouldBeEqualTo WorkerId("worker-b")
-        repository.findAssignment(assignment.assignmentId)?.revision shouldBeEqualTo 1L
+        repository.compareAndSetAssignment(
+            assignmentId = assignment.assignmentId,
+            expectedRevision = 0L,
+            replacement = assignment.copy(workerId = WorkerId("worker-b"), revision = 1L)
+        ).shouldBeTrue()
+
+        repository.compareAndSetAssignment(
+            assignmentId = assignment.assignmentId,
+            expectedRevision = 0L,
+            replacement = assignment.copy(workerId = WorkerId("worker-c"), revision = 2L)
+        ).shouldBeFalse()
+
+        repository.findAssignment(assignment.assignmentId).let {
+            it?.workerId shouldBeEqualTo WorkerId("worker-b")
+            it?.revision shouldBeEqualTo 1L
+        }
     }
 
     @Test

@@ -38,7 +38,7 @@ internal class VoucherDegradationState(
 @Component("voucherDatabaseHealthIndicator")
 internal class VoucherDatabaseHealthIndicator(
     private val dataSource: DataSource,
-) : HealthIndicator {
+): HealthIndicator {
     override fun health(): Health =
         try {
             val valid = dataSource.connection.use { it.isValid(VALIDATION_TIMEOUT_SECONDS) }
@@ -56,7 +56,7 @@ internal class VoucherDatabaseHealthIndicator(
 @Component("redisHealthIndicator")
 internal class VoucherRedisHealthIndicator(
     private val state: VoucherDegradationState,
-) : HealthIndicator {
+): HealthIndicator {
     override fun health(): Health = state.health(VoucherDegradedComponent.REDIS)
 }
 
@@ -64,7 +64,7 @@ internal class VoucherRedisHealthIndicator(
 @Component("leaderHealthIndicator")
 internal class VoucherLeaderHealthIndicator(
     private val state: VoucherDegradationState,
-) : HealthIndicator {
+): HealthIndicator {
     override fun health(): Health = state.health(VoucherDegradedComponent.LEADER)
 }
 

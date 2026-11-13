@@ -14,9 +14,9 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractKafkaOutboxFallbackTest {
 
-    companion object : KLogging() {
-        val postgres = PostgreSQLServer.Launcher.postgres
-        val kafka = KafkaServer.Launcher.kafka
+    companion object: KLogging() {
+        val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+        val kafka by lazy { KafkaServer.Launcher.kafka }
         val faker = Fakers.faker
 
         @JvmStatic

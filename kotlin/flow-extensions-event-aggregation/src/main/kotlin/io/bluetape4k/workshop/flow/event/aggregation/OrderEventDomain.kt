@@ -6,7 +6,7 @@ import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.time.Instant
-import java.util.Objects
+import java.util.*
 
 /**
  * in-memory aggregation 예제가 소비하는 order lifecycle event 입니다.
@@ -35,10 +35,10 @@ class OrderCreated private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is OrderCreated &&
-            orderId == other.orderId &&
-            customerId == other.customerId &&
-            occurredAt == other.occurredAt
+                other is OrderCreated &&
+                orderId == other.orderId &&
+                customerId == other.customerId &&
+                occurredAt == other.occurredAt
 
     override fun hashCode(): Int = Objects.hash(orderId, customerId, occurredAt)
 
@@ -71,11 +71,11 @@ class LineAdded private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is LineAdded &&
-            orderId == other.orderId &&
-            sku == other.sku &&
-            quantity == other.quantity &&
-            occurredAt == other.occurredAt
+                other is LineAdded &&
+                orderId == other.orderId &&
+                sku == other.sku &&
+                quantity == other.quantity &&
+                occurredAt == other.occurredAt
 
     override fun hashCode(): Int = Objects.hash(orderId, sku, quantity, occurredAt)
 
@@ -110,10 +110,10 @@ class PaymentAuthorized private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is PaymentAuthorized &&
-            orderId == other.orderId &&
-            amountCents == other.amountCents &&
-            occurredAt == other.occurredAt
+                other is PaymentAuthorized &&
+                orderId == other.orderId &&
+                amountCents == other.amountCents &&
+                occurredAt == other.occurredAt
 
     override fun hashCode(): Int = Objects.hash(orderId, amountCents, occurredAt)
 
@@ -148,11 +148,11 @@ class ShipmentStarted private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is ShipmentStarted &&
-            orderId == other.orderId &&
-            carrier == other.carrier &&
-            trackingNumber == other.trackingNumber &&
-            occurredAt == other.occurredAt
+                other is ShipmentStarted &&
+                orderId == other.orderId &&
+                carrier == other.carrier &&
+                trackingNumber == other.trackingNumber &&
+                occurredAt == other.occurredAt
 
     override fun hashCode(): Int = Objects.hash(orderId, carrier, trackingNumber, occurredAt)
 
@@ -190,10 +190,10 @@ class OrderCancelled private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            other is OrderCancelled &&
-            orderId == other.orderId &&
-            reason == other.reason &&
-            occurredAt == other.occurredAt
+                other is OrderCancelled &&
+                orderId == other.orderId &&
+                reason == other.reason &&
+                occurredAt == other.occurredAt
 
     override fun hashCode(): Int = Objects.hash(orderId, reason, occurredAt)
 

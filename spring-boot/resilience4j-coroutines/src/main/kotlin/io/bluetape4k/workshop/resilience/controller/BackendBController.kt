@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.resilience.controller
 
 import io.bluetape4k.concurrent.NamedThreadFactory
+import io.bluetape4k.concurrent.awaitTermination
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
-import io.bluetape4k.workshop.resilience.simulateBlockingLatency
 import io.bluetape4k.workshop.resilience.service.Service
+import io.bluetape4k.workshop.resilience.simulateBlockingLatency
 import io.github.resilience4j.bulkhead.BulkheadFullException
 import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
@@ -44,7 +45,7 @@ class BackendBController(
     timeLimiterRegistry: TimeLimiterRegistry,
     private val scheduledExecutorService: ScheduledExecutorService = newProgrammaticScheduler(),
 ) {
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_B = "backendB"
         private const val PROGRAMMATIC_SCHEDULER_THREADS = 3
 
@@ -119,15 +120,15 @@ class BackendBController(
         return ""
     }
 
-    private fun <T: Any> execute(supplier: () -> T): T {
-        return Decorators.ofSupplier(supplier)
+    private inline fun <T: Any> execute(crossinline supplier: () -> T): T {
+        return Decorators.ofSupplier { supplier() }
             .withCircuitBreaker(circuitBreaker)
             .withBulkhead(bulkhead)
             .withRetry(retry)
             .get()
     }
 
-    private fun <T: Any> executeMono(publisher: () -> Mono<T>): Mono<T> {
+    private inline fun <T: Any> executeMono(publisher: () -> Mono<T>): Mono<T> {
         return publisher()
             .transform(BulkheadOperator.of(bulkhead))
             .transform(CircuitBreakerOperator.of(circuitBreaker))
@@ -149,7 +150,7 @@ class BackendBController(
             .onErrorResume(BulkheadFullException::class.java, exceptionHandler)
     }
 
-    private fun <T: Any> executeFlux(publisher: () -> Flux<T>): Flux<T> {
+    private inline fun <T: Any> executeFlux(publisher: () -> Flux<T>): Flux<T> {
         return publisher()
             .transform(BulkheadOperator.of(bulkhead))
             .transform(CircuitBreakerOperator.of(circuitBreaker))
@@ -170,8 +171,8 @@ class BackendBController(
             .onErrorResume(BulkheadFullException::class.java, exceptionHandler)
     }
 
-    private fun <T: Any> executeFuture(supplier: () -> T): CompletableFuture<T> {
-        return Decorators.ofSupplier(supplier)
+    private inline fun <T: Any> executeFuture(crossinline supplier: () -> T): CompletableFuture<T> {
+        return Decorators.ofSupplier { supplier() }
             .withThreadPoolBulkhead(threadPoolBulkhead)
             .withTimeLimiter(timeLimiter, scheduledExecutorService)
             .withCircuitBreaker(circuitBreaker)
@@ -209,8 +210,10 @@ class BackendBController(
         runCatching {
             log.info { "Shutting down BackendB programmatic scheduler" }
             scheduledExecutorService.shutdown()
+            scheduledExecutorService.awaitTermination(3.seconds)
         }.onFailure { e ->
             log.warn(e) { "Failed to shut down BackendB programmatic scheduler" }
+            scheduledExecutorService.shutdownNow()
         }
     }
 }

@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
@@ -34,7 +34,7 @@ class SpinLockExamples: AbstractRedissonTest() {
     fun `basic usage of SpinLock`() {
         val lockName = randomName()
         val lock = redisson.getSpinLock(lockName)
-        var locked = false
+        var locked: Boolean
 
         // 방법 1: 기본적인 lock 메서드를 사용하여 잠금을 획득합니다.
         // lock.lock()
@@ -58,7 +58,7 @@ class SpinLockExamples: AbstractRedissonTest() {
     fun `basic async usage of SpinLock`() = runSuspendIO {
         val lockName = randomName()
         val lock = redisson.getSpinLock(lockName)
-        var locked = false
+        var locked: Boolean
 
         // 방법 1: 기본적인 lock 메서드를 사용하여 잠금을 획득합니다.
         // lock.lock()

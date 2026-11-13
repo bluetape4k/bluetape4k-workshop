@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.vertx.sqlclient.templates
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -9,8 +8,8 @@ import io.bluetape4k.vertx.sqlclient.templates.tupleMapperOfRecord
 import io.bluetape4k.vertx.sqlclient.tests.testWithSuspendTransaction
 import io.bluetape4k.vertx.sqlclient.withSuspendTransaction
 import io.bluetape4k.workshop.vertx.sqlclient.AbstractSqlClientTest
-import io.bluetape4k.workshop.vertx.sqlclient.model.User
 import io.bluetape4k.workshop.vertx.sqlclient.model.USER_ROW_MAPPER
+import io.bluetape4k.workshop.vertx.sqlclient.model.User
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -22,13 +21,14 @@ import io.vertx.sqlclient.RowSet
 import io.vertx.sqlclient.SqlResult
 import io.vertx.sqlclient.templates.SqlTemplate
 import io.vertx.sqlclient.templates.TupleMapper
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
-class SqlClientTemplateExamples : AbstractSqlClientTest() {
+class SqlClientTemplateExamples: AbstractSqlClientTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeAll
     fun setup(vertx: Vertx) = runSuspendTest {
@@ -54,7 +54,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `query example`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `query example`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
         vertx.testWithSuspendTransaction(testContext, pool) {
             val parameters = mapOf("ID" to 1)
@@ -75,7 +75,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `insert example`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `insert example`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
         vertx.testWithSuspendTransaction(testContext, pool) {
             val parameters = mapOf(
@@ -93,7 +93,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `query using row mapper`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `query using row mapper`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
         vertx.testWithSuspendTransaction(testContext, pool) {
             val parameters = mapOf("id" to 1)
@@ -108,7 +108,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `binding row with anemic JsonMapperr`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `binding row with anemic JsonMapperr`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
 
         vertx.testWithSuspendTransaction(testContext, pool) {
@@ -126,7 +126,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `binding parameter with custom mapper`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `binding parameter with custom mapper`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
 
         vertx.testWithSuspendTransaction(testContext, pool) {
@@ -147,7 +147,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `binding parameter with anemic json mapper`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `binding parameter with anemic json mapper`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
 
         vertx.testWithSuspendTransaction(testContext, pool) {
@@ -170,7 +170,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     @Disabled("Vertx Jackson Databind 기능에서 kotlin module 을 등록하지 않아 예외가 발생한다.")
     // https://github.com/eclipse-vertx/vertx-sql-client/issues/1196
     @Test
-    fun `binding row with jackson databind`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `binding row with jackson databind`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
         vertx.testWithSuspendTransaction(testContext, pool) {
             val users: RowSet<User> =
@@ -184,7 +184,7 @@ class SqlClientTemplateExamples : AbstractSqlClientTest() {
     }
 
     @Test
-    fun `binding parameter with jackson databind`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    fun `binding parameter with jackson databind`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         val pool = vertx.getH2Pool()
         vertx.testWithSuspendTransaction(testContext, pool) {
             val user = User(6, faker.name().firstName(), faker.name().lastName())

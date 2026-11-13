@@ -4,8 +4,8 @@ import io.bluetape4k.bucket4j.addBandwidth
 import io.bluetape4k.bucket4j.bucketConfiguration
 import io.bluetape4k.bucket4j.distributed.BucketProxyProvider
 import io.bluetape4k.bucket4j.distributed.redis.lettuceBasedProxyManagerOf
-import io.bluetape4k.bucket4j.ratelimit.RateLimiter
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
+import io.bluetape4k.bucket4j.ratelimit.RateLimiter
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.logging.KLogging
@@ -40,7 +40,7 @@ internal class VoucherRedisResources private constructor(
     private val bloomConnection: StatefulRedisConnection<String, String>?,
     val bloomFilter: LettuceBloomFilter?,
     private val degradation: VoucherDegradationState,
-) : AutoCloseable {
+): AutoCloseable {
     private val leaderLock = ReentrantLock()
     private val closed = AtomicBoolean()
 
@@ -82,7 +82,7 @@ internal class VoucherRedisResources private constructor(
         log.info { "voucher_redis_resources_closed" }
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         fun open(
             properties: VoucherRedisProperties,
             degradation: VoucherDegradationState = VoucherDegradationState(),
@@ -143,7 +143,7 @@ internal class RecoverableVoucherRateLimiter(
     private val client: RedisClient,
     private val properties: VoucherRedisProperties,
     private val degradation: VoucherDegradationState = VoucherDegradationState(),
-) : RateLimiter<String> {
+): RateLimiter<String> {
     private val delegateLock = ReentrantLock()
 
     @Volatile
@@ -153,7 +153,8 @@ internal class RecoverableVoucherRateLimiter(
         key: String,
         numToken: Long,
     ): RateLimitResult {
-        val limiter = delegate ?: createDelegate() ?: return RateLimitResult.error(IllegalStateException("redis unavailable"))
+        val limiter =
+            delegate ?: createDelegate() ?: return RateLimitResult.error(IllegalStateException("redis unavailable"))
         return limiter.consume(key, numToken)
     }
 
@@ -173,7 +174,7 @@ internal class RecoverableVoucherRateLimiter(
             }
         }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 @Configuration(proxyBeanMethods = false)
@@ -183,8 +184,8 @@ internal class VoucherAdmissionConfiguration {
     fun voucherAdmissionKeyFactory(properties: VoucherProperties): VoucherAdmissionKeyFactory =
         VoucherAdmissionKeyFactory(
             version = properties.keys.currentVersion,
-            rateKey = properties.keys.redisSlot.toByteArray(),
-            riskKey = properties.keys.risk.toByteArray(),
+            rateKey = properties.keys.redisSlot.toUtf8Bytes(),
+            riskKey = properties.keys.risk.toUtf8Bytes(),
         )
 
     @Bean

@@ -2,12 +2,13 @@ package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
-import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioDefinition
-import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioFixtures
+import io.bluetape4k.workshop.commerce.voucher.fixture.FixtureRiskOperation
 import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherFixtureResetResult
 import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherFixtureResetService
-import io.bluetape4k.workshop.commerce.voucher.fixture.FixtureRiskOperation
+import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioDefinition
+import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioFixtures
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import io.bluetape4k.workshop.commerce.voucher.reconciliation.DelayedVoucherEvent
@@ -25,8 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.UUID
+import java.util.*
 
 /** loopback demo와 integration-test profile에서만 사용하는 server-owned deterministic signal입니다. */
 @Component
@@ -54,8 +54,9 @@ internal class VoucherScenarioFixture(
         val definition = scenarios.configure(scenario, tenantId, principalRef)
         val evidence =
             if (scenario == "delayed-duplicate-out-of-order") {
-                val aggregateId = campaignId ?: throw IllegalArgumentException("campaignId is required for delayed events")
-                val eventId = UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000delayed".toByteArray(UTF_8))
+                val aggregateId =
+                    campaignId ?: throw IllegalArgumentException("campaignId is required for delayed events")
+                val eventId = UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000delayed".toUtf8Bytes())
                 val applied = DelayedVoucherEvent(tenantId, eventId, "CAMPAIGN", aggregateId, "a".repeat(64), 1)
                 listOf(
                     reconciliation.accept(applied).outcome.name,
@@ -63,7 +64,7 @@ internal class VoucherScenarioFixture(
                     reconciliation.accept(
                         DelayedVoucherEvent(
                             tenantId,
-                            UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000stale".toByteArray(UTF_8)),
+                            UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000stale".toUtf8Bytes()),
                             "CAMPAIGN",
                             aggregateId,
                             "b".repeat(64),
@@ -88,7 +89,7 @@ internal class VoucherScenarioFixture(
 
     fun reset(tenantId: String): VoucherFixtureResetResult = resetter.reset(tenantId)
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 internal data class VoucherFixtureExecution(
@@ -132,7 +133,7 @@ internal class VoucherFixtureController(
         val principal = requireAsciiIdentifier(body.principalRef, "principalRef")
         val resourceId =
             UUID.nameUUIDFromBytes(
-                "$tenant\u0000$principal\u0000$scenario\u0000${body.campaignId ?: "-"}".toByteArray(UTF_8),
+                "$tenant\u0000$principal\u0000$scenario\u0000${body.campaignId ?: "-"}".toUtf8Bytes(),
             )
         var configured: VoucherFixtureExecution? = null
         val executed =
@@ -170,7 +171,7 @@ internal class VoucherFixtureController(
                 when {
                     scenario == "delayed-duplicate-out-of-order" -> "SERVER_EVENT"
                     definition.riskOperation != null -> "SERVER_SIGNAL"
-                    else -> "CLIENT_CHOREOGRAPHY"
+                    else                             -> "CLIENT_CHOREOGRAPHY"
                 },
                 definition.riskOperation?.name,
                 evidence,
@@ -186,7 +187,7 @@ internal class VoucherFixtureController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
-        val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000fixture-reset".toByteArray(UTF_8))
+        val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000fixture-reset".toUtf8Bytes())
         var resetResult: VoucherFixtureResetResult? = null
         val executed =
             executor.execute(

@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
@@ -12,6 +15,10 @@ import java.time.Instant
 
 @Tag("integration")
 class JobSubmissionRepositoryTest {
+
+    companion object: KLogging() {
+        private val NOW: Instant = Instant.parse("2026-07-21T00:00:00Z")
+    }
 
     @Test
     fun `same key and request replays the existing job without new rows`() {
@@ -24,8 +31,11 @@ class JobSubmissionRepositoryTest {
             val first = repository.submit(scope, "request-key", request, NOW)
             val replay = repository.submit(scope, "request-key", request, NOW.plusSeconds(1))
 
+            log.debug { "first: $first" }
+            log.debug { "replay: $replay" }
+
             replay.jobId shouldBeEqualTo first.jobId
-            replay.replayed shouldBeEqualTo true
+            replay.replayed.shouldBeTrue()
             replay.enqueueSequence shouldBeEqualTo first.enqueueSequence
             fixture.count("jobs") shouldBeEqualTo 1L
             fixture.count("job_requests") shouldBeEqualTo 1L
@@ -42,17 +52,12 @@ class JobSubmissionRepositoryTest {
             val scope = DemoCallerScope("tenant-a", "submitter-a")
             repository.submit(scope, "request-key", SubmitJobRequest(JobType.DOCUMENT_EXPORT, 10), NOW)
 
-            val failure =
-                assertFailsWith<JobRepositoryException> {
-                    repository.submit(scope, "request-key", SubmitJobRequest(JobType.DOCUMENT_EXPORT, 11), NOW)
-                }
+            val failure = assertFailsWith<JobRepositoryException> {
+                repository.submit(scope, "request-key", SubmitJobRequest(JobType.DOCUMENT_EXPORT, 11), NOW)
+            }
 
             failure.code shouldBeEqualTo JobProblemCode.IDEMPOTENCY_KEY_REUSED
             fixture.count("jobs") shouldBeEqualTo 1L
         }
-    }
-
-    companion object {
-        private val NOW: Instant = Instant.parse("2026-07-21T00:00:00Z")
     }
 }

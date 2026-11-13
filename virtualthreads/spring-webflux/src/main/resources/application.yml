@@ -1,34 +1,34 @@
 spring:
-    aot:
-        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
+  aot:
+    enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
 
-    application:
-        name: webflux-virtual-thread
+  application:
+    name: webflux-virtual-thread
 
-    profiles:
-        default: "dev"
+  profiles:
+    default: "dev"
 
-    jackson:
-        serialization:
-            indent-output: true
-    lifecycle:
-        timeout-per-shutdown-phase: 10s     # Graceful Shutdown 시간
+  jackson:
+    serialization:
+      indent-output: true
+  lifecycle:
+    timeout-per-shutdown-phase: 10s     # Graceful Shutdown 시간
 
-    threads:
-        virtual:
-            enabled: true   # Virtual Thread 사용 여부
+  threads:
+    virtual:
+      enabled: true   # Virtual Thread 사용 여부
 
 server:
-    shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
+  shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
 
 # Build Info
 info:
-    name: ${spring.application.name}
-    description: Async Logging Demo
-    environment: ${spring.profiles.active}
-    version: 0.1.0
+  name: ${spring.application.name}
+  description: Async Logging Demo
+  environment: ${spring.profiles.active}
+  version: 0.1.0
 
 # swagger-ui custom path
 springdoc:
-    swagger-ui:
-        path: /swagger-ui.html
+  swagger-ui:
+    path: /swagger-ui.html

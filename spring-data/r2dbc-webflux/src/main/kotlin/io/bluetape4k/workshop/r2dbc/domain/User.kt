@@ -12,7 +12,7 @@ data class User(
     val avatar: String? = null,
     @Id
     val id: Int? = null,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

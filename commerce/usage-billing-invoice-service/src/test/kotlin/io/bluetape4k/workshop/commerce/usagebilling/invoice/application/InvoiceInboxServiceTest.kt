@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceJournal
@@ -17,9 +20,9 @@ class InvoiceInboxServiceTest {
     fun `ChargeRated creates one immutable invoice line with source event provenance`() {
         val event = chargeRated()
 
-        service.handle(event).created shouldBeEqualTo true
+        service.handle(event).created.shouldBeTrue()
         journal.lines.single().sourceEventId shouldBeEqualTo event.eventId
-        journal.lines.single().correctionOf shouldBeEqualTo null
+        journal.lines.single().correctionOf.shouldBeNull()
     }
 
     @Test
@@ -27,7 +30,7 @@ class InvoiceInboxServiceTest {
         val event = chargeRated()
         service.handle(event)
 
-        service.handle(event).created shouldBeEqualTo false
+        service.handle(event).created.shouldBeFalse()
         journal.lines.size shouldBeEqualTo 1
     }
 
@@ -38,7 +41,7 @@ class InvoiceInboxServiceTest {
 
         val result = service.handle(event.copy(payloadDigest = "conflicting-digest"))
 
-        result.created shouldBeEqualTo false
+        result.created.shouldBeFalse()
         result.outcome shouldBeEqualTo InvoiceInboxOutcome.QUARANTINED
         journal.lines.size shouldBeEqualTo 1
     }
@@ -49,7 +52,7 @@ class InvoiceInboxServiceTest {
         service.handle(original)
         val correction = InvoiceInboxEvent(UUID.randomUUID(), "AdjustmentPosted", original.eventId, BigDecimal("-0.10"))
 
-        service.handle(correction).created shouldBeEqualTo true
+        service.handle(correction).created.shouldBeTrue()
         journal.lines.size shouldBeEqualTo 2
         journal.lines[0].amount shouldBeEqualTo BigDecimal("0.10")
         journal.lines[1].correctionOf shouldBeEqualTo original.eventId

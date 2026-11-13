@@ -10,12 +10,13 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-internal class CommerceSchemaInitializer : ApplicationRunner {
+internal class CommerceSchemaInitializer: ApplicationRunner {
+
+    companion object: KLogging()
+
     @Transactional
     override fun run(args: ApplicationArguments) {
         SchemaUtils.create(*commerceTables)
         log.info { "commerce_schema_initialized tableCount=${commerceTables.size}" }
     }
-
-    companion object : KLogging()
 }

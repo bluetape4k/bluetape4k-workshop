@@ -20,7 +20,7 @@ class ReactiveManagedTransitionService(
     private val operations: ReactiveMongoOperations,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val counter = atomic(0)
 
@@ -53,6 +53,7 @@ class ReactiveManagedTransitionService(
             .apply(update)
             .first()
             .then(Mono.just(process))
+            .log()
     }
 
     fun verify(process: Process): Mono<Process> {
@@ -71,5 +72,6 @@ class ReactiveManagedTransitionService(
             .apply(update)
             .first()
             .then(Mono.just(process))
+            .log()
     }
 }

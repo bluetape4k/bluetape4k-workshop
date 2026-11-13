@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.guide
 
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.junit5.faker.Fakers
@@ -22,7 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeGreaterThan
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(DelicateCoroutinesApi::class)
 class SharedFlowExamples {
@@ -110,9 +111,9 @@ class SharedFlowExamples {
         yield()
 
         await atMost Duration.ofSeconds(5) until { totalConsumed.get() > 0L }
-        delay(10)
+        delay(10.milliseconds)
         producers.forEach { it.cancelAndJoin() }
-        delay(100)
+        delay(100.milliseconds)
         consumers.forEach { it.cancelAndJoin() }
 
         log.debug { "produced=${totalProduced.get()}, consumed=${totalConsumed.get()}" }

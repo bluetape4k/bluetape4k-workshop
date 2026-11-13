@@ -4,7 +4,7 @@ import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
 
-class Command : Serializable {
+class Command: Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -13,7 +13,7 @@ class Command : Serializable {
 data class Event(
     val id: String,
     val data: List<Quote>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -23,7 +23,7 @@ data class Quote(
     val ticker: String,
     val price: BigDecimal,
     val instant: Instant = Instant.now(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

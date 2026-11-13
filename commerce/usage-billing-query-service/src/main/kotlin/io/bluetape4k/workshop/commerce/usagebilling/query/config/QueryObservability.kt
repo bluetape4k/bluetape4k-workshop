@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.config
 
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryRecoveryService
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
@@ -24,7 +25,7 @@ data class QueryProperties(
 
 private const val DEFAULT_MAX_OLDEST_QUARANTINE_AGE_MINUTES = 15L
 private val DEFAULT_MAX_OLDEST_QUARANTINE_AGE: Duration =
-    Duration.ofMinutes(DEFAULT_MAX_OLDEST_QUARANTINE_AGE_MINUTES)
+    DEFAULT_MAX_OLDEST_QUARANTINE_AGE_MINUTES.minutes()
 
 @Component
 class QueryMetrics(

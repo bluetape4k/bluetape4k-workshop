@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class TransactionalOrderWriter {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Transactional
     fun saveOrder(customerId: String, product: String, quantity: Int): OrderRecord {

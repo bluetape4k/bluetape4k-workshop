@@ -3,21 +3,28 @@ package io.bluetape4k.workshop.exposed.javers.persistence
 import com.google.gson.JsonObject
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javers.codecs.JaversCodecs
 import io.bluetape4k.javers.persistence.kafka.projection.KafkaCdoSnapshotProjectionOptions
 import io.bluetape4k.javers.persistence.kafka.projection.KafkaCdoSnapshotProjector
 import io.bluetape4k.javers.persistence.redis.repository.LettuceCdoSnapshotRepository
 import io.bluetape4k.javers.repository.CdoSnapshotRepository
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodecs
 import io.bluetape4k.testcontainers.mq.KafkaServer
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.admin.NewTopic
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.consumer.MockConsumer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -34,12 +41,18 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
-import java.time.Duration
-import java.util.UUID
+import org.testcontainers.utility.Base58
 import java.util.concurrent.atomic.AtomicInteger
 
 class KafkaRedisOrderAuditPipelineTest {
+
+    private companion object: KLogging() {
+        private const val REPOSITORY_PREFIX = "workshop:kafka-order-audit"
+
+        val kafka by lazy { KafkaServer.Launcher.kafka }
+        val lettuceClient by lazy { RedisServer.Launcher.LettuceLib.getRedisClient() }
+        val redissonClient by lazy { RedisServer.Launcher.RedissonLib.getRedisson() }
+    }
 
     private lateinit var database: Database
 
@@ -47,7 +60,7 @@ class KafkaRedisOrderAuditPipelineTest {
     fun setUp() {
         deleteProjectionKeys()
         database = Database.connect(
-            url = "jdbc:h2:mem:kafka-redis-order-audit-${System.nanoTime()};DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+            url = "jdbc:h2:mem:kafka-redis-order-audit-${Base58.randomString(8)};DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
             driver = "org.h2.Driver",
         )
         transaction(database) {
@@ -78,10 +91,12 @@ class KafkaRedisOrderAuditPipelineTest {
 
             val replay = it.replayUntilIdle()
 
+            log.debug { "replay=$replay" }
             replay.projectedSnapshots shouldBeEqualTo 1
             replay.skippedSnapshots shouldBeEqualTo 0
-            it.getHistory(order.id, 2).map { snapshot -> snapshot.type } shouldBeEqualTo
-                listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
+
+            it.getHistory(order.id, 2)
+                .map { snapshot -> snapshot.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
             it.getLatestSnapshot(order.id)
                 .shouldNotBeNull()
                 .getPropertyValue("status") shouldBeEqualTo OrderStatus.PAID
@@ -104,6 +119,7 @@ class KafkaRedisOrderAuditPipelineTest {
             assertFailsWith<IllegalStateException> {
                 it.place("alice", sampleOrder("another-order"))
             }.message shouldBeEqualTo "Kafka snapshot projection must catch up before another mutation."
+
             assertFailsWith<IllegalStateException> {
                 it.markPaid("bob", order.id)
             }.message shouldBeEqualTo "Kafka snapshot projection must catch up before another mutation."
@@ -153,6 +169,7 @@ class KafkaRedisOrderAuditPipelineTest {
 
         pipeline(topic, sourceRepository, uniqueName("duplicate-group")).use {
             val duplicate = it.replayUntilIdle()
+            log.debug { "duplicate=$duplicate" }
             duplicate.projectedSnapshots shouldBeEqualTo 0
             duplicate.skippedSnapshots shouldBeEqualTo 2
             it.getHistory(order.id) shouldHaveSize 2
@@ -160,6 +177,7 @@ class KafkaRedisOrderAuditPipelineTest {
 
         pipeline(topic, repositoryName("rebuilt"), uniqueName("restart-group")).use {
             val rebuilt = it.replayUntilIdle()
+            log.debug { "rebuilt=$rebuilt" }
             rebuilt.projectedSnapshots shouldBeEqualTo 2
             it.getHistory(order.id, 1).single().type shouldBeEqualTo SnapshotType.UPDATE
         }
@@ -182,7 +200,7 @@ class KafkaRedisOrderAuditPipelineTest {
                     producerConfigs = producerConfigs(),
                     consumerConfigs = invalid,
                     redisClient = lettuceClient,
-                    pollTimeout = Duration.ofMillis(250),
+                    pollTimeout = 250.millis(),
                 )
             }
         }
@@ -195,7 +213,7 @@ class KafkaRedisOrderAuditPipelineTest {
         val rawSequence = "customer-secret-sequence-894"
         val sequenceKey = "javers:$repositoryName:sequence:set"
 
-        lettuceClient.connect(LettuceBinaryCodecs.lz4Fory<Any>()).use { connection ->
+        lettuceClient.connect(LettuceBinaryCodecs.lz4FastFory<Any>()).use { connection ->
             connection.sync().hset(sequenceKey, "1.00", rawSequence)
         }
 
@@ -226,7 +244,7 @@ class KafkaRedisOrderAuditPipelineTest {
                 .build()
                 .commit("alice", sampleOrder("order-existing-894"))
         }
-        lettuceClient.connect(LettuceBinaryCodecs.lz4Fory<Any>()).use { connection ->
+        lettuceClient.connect(LettuceBinaryCodecs.lz4FastFory<Any>()).use { connection ->
             connection.sync().del("javers:$repositoryName:sequence:set")
         }
 
@@ -240,10 +258,11 @@ class KafkaRedisOrderAuditPipelineTest {
             )
         }
 
+        log.debug { "failure=$failure" }
         failure.message shouldBeEqualTo
-            "Corrupted Redis audit metadata. persisted Order snapshots exist without head metadata."
-        failure.message.orEmpty().contains(repositoryName) shouldBeEqualTo false
-        failure.message.orEmpty().contains("order-existing-894") shouldBeEqualTo false
+                "Corrupted Redis audit metadata. persisted Order snapshots exist without head metadata."
+        failure.message shouldNotContain repositoryName
+        failure.message shouldNotContain "order-existing-894"
     }
 
     @Test
@@ -268,7 +287,7 @@ class KafkaRedisOrderAuditPipelineTest {
                 projector.projectOnce()
             }
             pollCount.get() shouldBeEqualTo 0
-            repository.getHeadId() shouldBeEqualTo null
+            repository.getHeadId().shouldBeNull()
         } finally {
             consumer.close()
             repository.close()
@@ -286,7 +305,13 @@ class KafkaRedisOrderAuditPipelineTest {
             consumer.rebalance(listOf(topicPartition))
             consumer.updateBeginningOffsets(mapOf(topicPartition to 0L))
             consumer.addRecord(
-                ConsumerRecord(topic, 0, 0L, "order-key", encodedSnapshot("order-empty-poll")),
+                ConsumerRecord(
+                    topic,
+                    0,
+                    0L,
+                    "order-key",
+                    encodedSnapshot("order-empty-poll")
+                ),
             )
         }
         val repository = LettuceCdoSnapshotRepository(repositoryName("initial-empty"), lettuceClient)
@@ -301,6 +326,7 @@ class KafkaRedisOrderAuditPipelineTest {
         try {
             val result = projector.replayUntilIdle(maxIdlePolls = 3)
 
+            log.debug { "result=$result" }
             result.projectedSnapshots shouldBeEqualTo 1
             repository.getHeadId().shouldNotBeNull()
         } finally {
@@ -313,6 +339,7 @@ class KafkaRedisOrderAuditPipelineTest {
     fun `failed batch is replayed by a new consumer in the same group before offsets advance`() {
         val topic = uniqueName("retry")
         val order = sampleOrder("order-retry")
+
         pipeline(topic, repositoryName("retry-source"), uniqueName("source-group")).use {
             it.replayUntilIdle()
             it.place("alice", order)
@@ -348,10 +375,12 @@ class KafkaRedisOrderAuditPipelineTest {
         val retryProjector = projector(topic, groupId, targetJavers, target)
         try {
             val retry = retryProjector.replayUntilIdle(maxIdlePolls = 3)
+
+            log.debug { "retry=$retry" }
             retry.skippedSnapshots shouldBeEqualTo 1
             retry.projectedSnapshots shouldBeEqualTo 1
-            targetService.getHistory(order.id).map { it.type } shouldBeEqualTo
-                listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
+            targetService.getHistory(order.id)
+                .map { it.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
         } finally {
             retryProjector.close()
         }
@@ -371,6 +400,7 @@ class KafkaRedisOrderAuditPipelineTest {
         val service = OrderAuditService(javers)
         val consumer = MockConsumer<String, String>("earliest")
         val repository = LettuceCdoSnapshotRepository(repositoryName("close"), lettuceClient)
+
         val projector = KafkaCdoSnapshotProjector(
             consumer = consumer,
             jsonConverter = javers.jsonConverter,
@@ -392,9 +422,11 @@ class KafkaRedisOrderAuditPipelineTest {
             pipeline.close()
         }
 
+        log.debug { "failure=$failure" }
         failure.message shouldBeEqualTo "first close failure"
         failure.suppressed.single().message shouldBeEqualTo "second close failure"
         closed shouldBeEqualTo listOf("first", "second")
+
         pipeline.close()
         closed shouldBeEqualTo listOf("first", "second")
         consumer.close()
@@ -413,7 +445,7 @@ class KafkaRedisOrderAuditPipelineTest {
             producerConfigs = producerConfigs(),
             consumerConfigs = consumerConfigs(groupId),
             redisClient = lettuceClient,
-            pollTimeout = Duration.ofMillis(250),
+            pollTimeout = 250.millis(),
         )
     }
 
@@ -422,7 +454,9 @@ class KafkaRedisOrderAuditPipelineTest {
             mapOf(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.bootstrapServers),
         ).use { admin ->
             if (topic !in admin.listTopics().names().get()) {
-                admin.createTopics(listOf(NewTopic(topic, 1, 1))).all().get()
+                admin.createTopics(listOf(NewTopic(topic, 1, 1)))
+                    .all()
+                    .get()
             }
         }
     }
@@ -456,22 +490,23 @@ class KafkaRedisOrderAuditPipelineTest {
             projectionRepository = target,
             options = KafkaCdoSnapshotProjectionOptions(
                 topic = topic,
-                pollTimeout = Duration.ofMillis(250),
+                pollTimeout = 250.millis(),
                 closeConsumerOnClose = true,
             ),
         )
 
-    private fun sampleOrder(id: String): Order =
-        Order(
-            id = id,
-            customerId = "customer-$id",
-            status = OrderStatus.PLACED,
-            totalAmount = BigDecimal("19.99"),
-        )
+    private fun sampleOrder(id: String): Order = Order(
+        id = id,
+        customerId = "customer-$id",
+        status = OrderStatus.PLACED,
+        totalAmount = 19.99.toBigDecimal(),
+    )
 
-    private fun repositoryName(scope: String): String = "$REPOSITORY_PREFIX:$scope:${UUID.randomUUID()}"
+    private fun repositoryName(scope: String): String =
+        "$REPOSITORY_PREFIX:$scope:${Base58.randomString(8)}"
 
-    private fun uniqueName(scope: String): String = "workshop-$scope-${UUID.randomUUID()}"
+    private fun uniqueName(scope: String): String =
+        "workshop-$scope-${Base58.randomString(8)}"
 
     private fun encodedSnapshot(orderId: String): String {
         val javers = JaversBuilder.javers().build()
@@ -487,18 +522,20 @@ class KafkaRedisOrderAuditPipelineTest {
         redisKey: String,
     ) {
         val message = failure.message.orEmpty()
-        message.contains("type=$type") shouldBeEqualTo true
-        message.contains(Regex("fingerprint=[0-9a-f]{16}")) shouldBeEqualTo true
-        message.contains("length=${rawValue.length}") shouldBeEqualTo true
-        message.contains(rawValue) shouldBeEqualTo false
-        message.contains(repositoryName) shouldBeEqualTo false
-        message.contains(redisKey) shouldBeEqualTo false
-        message.contains("order-sensitive-894") shouldBeEqualTo false
+
+        message shouldContain "type=$type"
+        message.contains(Regex("fingerprint=[0-9a-f]{16}")).shouldBeTrue()
+        message shouldContain "length=${rawValue.length}"
+        message shouldNotContain rawValue
+        message shouldNotContain repositoryName
+        message shouldNotContain redisKey
+        message shouldNotContain "order-sensitive-894"
     }
 
     private fun partitionInfo(topic: String, partition: Int): PartitionInfo =
         PartitionInfo(topic, partition, Node.noNode(), emptyArray(), emptyArray())
 
+    @Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
     private class FailOnSecondProjectionRepository(
         private val delegate: CdoSnapshotRepository,
     ): CdoSnapshotRepository by delegate {
@@ -513,14 +550,6 @@ class KafkaRedisOrderAuditPipelineTest {
     }
 
     private fun deleteProjectionKeys() {
-        redisson.keys.deleteByPattern("javers:{$REPOSITORY_PREFIX:*}:*")
-    }
-
-    private companion object {
-        private const val REPOSITORY_PREFIX = "workshop:kafka-order-audit"
-
-        val kafka = KafkaServer.Launcher.kafka
-        val lettuceClient = RedisServer.Launcher.LettuceLib.getRedisClient()
-        val redisson = RedisServer.Launcher.RedissonLib.getRedisson()
+        redissonClient.keys.deleteByPattern("javers:{$REPOSITORY_PREFIX:*}:*")
     }
 }

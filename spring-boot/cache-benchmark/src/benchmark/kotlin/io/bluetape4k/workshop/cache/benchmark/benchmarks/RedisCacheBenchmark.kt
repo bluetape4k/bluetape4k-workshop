@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Warmup(iterations = 2, time = 1)
 @Measurement(iterations = 5, time = 1)
-class RedisCacheBenchmark : AbstractCacheBenchmark() {
+class RedisCacheBenchmark: AbstractCacheBenchmark() {
     private lateinit var service: RedisCacheService
 
     @Param("1", "100", "500")

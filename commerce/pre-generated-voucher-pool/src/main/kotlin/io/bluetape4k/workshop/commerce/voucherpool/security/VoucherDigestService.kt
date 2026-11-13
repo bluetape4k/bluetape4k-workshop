@@ -1,10 +1,14 @@
 package io.bluetape4k.workshop.commerce.voucherpool.security
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.util.UUID
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -28,11 +32,13 @@ internal class DigestKey private constructor(
     companion object {
         private const val MINIMUM_KEY_BYTES = 32
 
-        fun of(version: Int, material: ByteArray): DigestKey {
-            require(version > 0) { "digest key version must be positive" }
-            require(material.size >= MINIMUM_KEY_BYTES) { "digest key must contain at least 256 bits" }
+        operator fun invoke(version: Int, material: ByteArray): DigestKey {
+            version.requirePositiveNumber("version")
+            material.size.requireGe(MINIMUM_KEY_BYTES) { "digest key must contain at least 256 bits" }
             return DigestKey(version, material.copyOf())
         }
+
+        fun of(version: Int, material: ByteArray): DigestKey = invoke(version, material)
     }
 }
 
@@ -40,17 +46,22 @@ internal class DigestKeyRing private constructor(
     val current: DigestKey,
     retained: List<DigestKey>,
 ) {
-    private val readable = (listOf(current) + retained).associateBy(DigestKey::version)
+    private val readable: Map<Int, DigestKey> =
+        (listOf(current) + retained).associateBy(DigestKey::version)
 
     init {
         require(readable.size == retained.size + 1) { "digest key versions must be unique" }
     }
 
-    fun require(version: Int): DigestKey = readable[version] ?: throw VoucherKeyMaterialUnavailableException()
+    fun require(version: Int): DigestKey =
+        readable[version] ?: throw VoucherKeyMaterialUnavailableException()
 
     companion object {
-        fun of(current: DigestKey, retained: List<DigestKey> = emptyList()): DigestKeyRing =
+        operator fun invoke(current: DigestKey, retained: List<DigestKey> = emptyList()): DigestKeyRing =
             DigestKeyRing(current, retained.toList())
+
+        fun of(current: DigestKey, retained: List<DigestKey> = emptyList()): DigestKeyRing =
+            invoke(current, retained)
     }
 }
 
@@ -63,24 +74,28 @@ internal class VoucherDigest private constructor(
 
     override fun equals(other: Any?): Boolean =
         other is VoucherDigest &&
-            purpose == other.purpose &&
-            keyVersion == other.keyVersion &&
-            value.contentEquals(other.value)
+                purpose == other.purpose &&
+                keyVersion == other.keyVersion &&
+                value.contentEquals(other.value)
 
-    override fun hashCode(): Int = 31 * (31 * purpose.hashCode() + keyVersion) + value.contentHashCode()
+    override fun hashCode(): Int = hashOf(purpose, keyVersion, value, value.contentHashCode())
 
     override fun toString(): String = "VoucherDigest(purpose=$purpose, keyVersion=$keyVersion, value=[REDACTED])"
 
     companion object {
-        fun of(purpose: DigestPurpose, keyVersion: Int, value: ByteArray): VoucherDigest {
-            require(keyVersion > 0) { "digest key version must be positive" }
+        operator fun invoke(purpose: DigestPurpose, keyVersion: Int, value: ByteArray): VoucherDigest {
+            keyVersion.requirePositiveNumber("version")
             require(value.isNotEmpty()) { "digest value must not be empty" }
+
             return VoucherDigest(purpose, keyVersion, value.copyOf())
         }
+
+        fun of(purpose: DigestPurpose, keyVersion: Int, value: ByteArray): VoucherDigest =
+            invoke(purpose, keyVersion, value)
     }
 }
 
-internal class VoucherKeyMaterialUnavailableException :
+internal class VoucherKeyMaterialUnavailableException:
     IllegalStateException("required voucher key material is unavailable")
 
 /** canonical length-prefixed field 위에서 purpose-separated, versioned HMAC-SHA256 digest를 계산합니다. */
@@ -99,13 +114,15 @@ internal class VoucherDigestService(
 
     /** persisted data가 이 process가 읽을 수 없는 key version을 참조하면 fail-closed합니다. */
     fun requireAvailable(purpose: DigestPurpose, version: Int) {
-        require(version > 0) { "digest key version must be positive" }
+        version.requirePositiveNumber("version")
+
         when (purpose) {
             DigestPurpose.STABLE_DEDUP ->
                 if (stableDedupKey.version != version) throw VoucherKeyMaterialUnavailableException()
             DigestPurpose.COMMAND_TOMBSTONE ->
                 if (commandTombstoneKey.version != version) throw VoucherKeyMaterialUnavailableException()
-            else -> checkNotNull(rotatingKeys[purpose]).require(version)
+            else                       ->
+                checkNotNull(rotatingKeys[purpose]).require(version)
         }
     }
 
@@ -123,13 +140,11 @@ internal class VoucherDigestService(
         campaignId: UUID,
         allocationId: UUID,
         code: CanonicalVoucherCode,
-    ): VoucherDigest = rotatingDigest(
-        DigestPurpose.VERIFICATION,
-        tenantId.bytes(),
-        campaignId.bytes(),
-        allocationId.bytes(),
-        code.rawBytes(),
-    )
+    ): VoucherDigest =
+        rotatingDigest(
+            purpose = DigestPurpose.VERIFICATION,
+            tenantId.bytes(), campaignId.bytes(), allocationId.bytes(), code.rawBytes()
+        )
 
     fun matchesVerification(
         tenantId: String,
@@ -137,14 +152,12 @@ internal class VoucherDigestService(
         allocationId: UUID,
         code: CanonicalVoucherCode,
         expected: VoucherDigest,
-    ): Boolean = matches(
-        DigestPurpose.VERIFICATION,
-        expected,
-        tenantId.bytes(),
-        campaignId.bytes(),
-        allocationId.bytes(),
-        code.rawBytes(),
-    )
+    ): Boolean =
+        matches(
+            purpose = DigestPurpose.VERIFICATION,
+            expected = expected,
+            tenantId.bytes(), campaignId.bytes(), allocationId.bytes(), code.rawBytes()
+        )
 
     fun userIdentity(tenantId: String, campaignId: UUID, canonicalUser: String): VoucherDigest =
         userIdentity(tenantId, campaignId, canonicalUser, currentUserIdentityKeyVersion)
@@ -201,6 +214,7 @@ internal class VoucherDigestService(
         if (expected.purpose != DigestPurpose.STABLE_DEDUP) return false
         if (expected.keyVersion != stableDedupKey.version) throw VoucherKeyMaterialUnavailableException()
         val actual = CanonicalFields.hmac(stableDedupKey, DigestPurpose.STABLE_DEDUP, tenantId.bytes(), code.rawBytes())
+
         return MessageDigest.isEqual(actual, expected.copyBytes())
     }
 
@@ -213,10 +227,11 @@ internal class VoucherDigestService(
         if (expected.purpose != purpose) return false
         val key = checkNotNull(rotatingKeys[purpose]).require(expected.keyVersion)
         val actual = CanonicalFields.hmac(key, purpose, *fields)
+
         return MessageDigest.isEqual(actual, expected.copyBytes())
     }
 
-    companion object {
+    companion object: KLogging() {
         private val ROTATING_PURPOSES = setOf(
             DigestPurpose.VERIFICATION,
             DigestPurpose.USER_IDENTITY,
@@ -227,13 +242,14 @@ internal class VoucherDigestService(
 }
 
 private fun digestWithKey(purpose: DigestPurpose, key: DigestKey, vararg fields: ByteArray): VoucherDigest =
-    VoucherDigest.of(purpose, key.version, CanonicalFields.hmac(key, purpose, *fields))
+    VoucherDigest(purpose, key.version, CanonicalFields.hmac(key, purpose, *fields))
 
 internal object CanonicalFields {
     private val DIGEST_DOMAIN = "voucher-pool-digest-v1".bytes()
 
     fun hmac(key: DigestKey, purpose: DigestPurpose, vararg fields: ByteArray): ByteArray {
         val material = key.copyMaterial()
+
         return try {
             val mac = Mac.getInstance("HmacSHA256")
             mac.init(SecretKeySpec(material, "HmacSHA256"))
@@ -250,6 +266,7 @@ internal object CanonicalFields {
     fun encode(domain: String, vararg fields: ByteArray): ByteArray {
         val domainBytes = domain.bytes()
         val size = Int.SIZE_BYTES + domainBytes.size + fields.sumOf { Int.SIZE_BYTES + it.size }
+
         return ByteBuffer.allocate(size).apply {
             putField(domainBytes)
             fields.forEach { field -> putField(field) }
@@ -269,9 +286,12 @@ internal object CanonicalFields {
 
 private fun String.bytes(): ByteArray = toByteArray(StandardCharsets.UTF_8)
 
-private fun UUID.bytes(): ByteArray = ByteBuffer.allocate(Long.SIZE_BYTES * 2)
-    .putLong(mostSignificantBits)
-    .putLong(leastSignificantBits)
-    .array()
+private fun UUID.bytes(): ByteArray =
+    ByteBuffer
+        .allocate(Long.SIZE_BYTES * 2)
+        .putLong(mostSignificantBits)
+        .putLong(leastSignificantBits)
+        .array()
 
-private fun CanonicalVoucherCode.rawBytes(): ByteArray = withRawValue { it.bytes() }
+private fun CanonicalVoucherCode.rawBytes(): ByteArray =
+    withRawValue { it.bytes() }

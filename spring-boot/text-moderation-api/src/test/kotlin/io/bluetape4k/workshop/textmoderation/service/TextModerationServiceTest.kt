@@ -5,19 +5,26 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.lingua.allLanguageDetector
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.text.search.ahoCorasick
 import io.bluetape4k.tokenizer.utils.DictionaryVersion
 import io.bluetape4k.workshop.textmoderation.config.TextModerationProperties
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TextModerationServiceTest {
+
+    companion object: KLogging()
 
     private val service = TextModerationService(
         properties = TextModerationProperties(maxTextCharacters = 120),
@@ -37,6 +44,7 @@ class TextModerationServiceTest {
     fun `analyze returns masked text and language for valid English text`() {
         val response = service.analyze("Please remove spam from this English sentence.")
 
+        log.debug { "response=$response" }
         response.detectedLanguage shouldBeEqualTo "ENGLISH"
         response.confidence.shouldNotBeNull() shouldBeGreaterThan 0.0
         response.matchedTerms shouldBeEqualTo listOf("spam")
@@ -49,6 +57,9 @@ class TextModerationServiceTest {
         val korean = service.analyze("안녕하세요. 오늘 날씨가 좋고 깨끗한 문장입니다.")
         val japanese = service.analyze("東京は日本の首都です。これは安全な文章です。")
 
+        log.debug { "korean=$korean" }
+        log.debug { "japanese=$japanese" }
+        
         korean.detectedLanguage shouldBeEqualTo "KOREAN"
         japanese.detectedLanguage shouldBeEqualTo "JAPANESE"
     }
@@ -88,20 +99,23 @@ class TextModerationServiceTest {
         try {
             val readers = List(4) {
                 executor.submit<List<VersionedModerationResult>> {
-                    start.await(5, TimeUnit.SECONDS)
+                    start.await(5.seconds)
                     List(100) { versionedService.analyzeWithVersion("spam ham") }
                 }
             }
             val writer = executor.submit {
-                start.await(5, TimeUnit.SECONDS)
+                start.await(5.seconds)
                 versionedService.reloadDictionary(DictionaryVersion("moderation-blockwords", 2)) {
                     listOf("ham")
                 }
             }
 
             start.countDown()
-            writer.get(5, TimeUnit.SECONDS)
-            readers.flatMap { it.get(15, TimeUnit.SECONDS) }.forEach { result ->
+            writer.get(5.seconds)
+
+            readers.flatMap { it.get(5.seconds) }.forEach { result ->
+                log.debug { "result=$result" }
+                
                 when (result.dictionary.version.revision) {
                     1L -> {
                         result.response.matchedTerms shouldBeEqualTo listOf("spam")
@@ -116,7 +130,7 @@ class TextModerationServiceTest {
             }
         } finally {
             executor.shutdownNow()
-            executor.awaitTermination(5, TimeUnit.SECONDS)
+            executor.awaitTermination(5.seconds)
         }
     }
 

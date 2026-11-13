@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.config
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
@@ -27,7 +28,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -42,7 +42,7 @@ internal class ReservationConcurrencyConfiguration {
         NodeLocalDatabaseBulkhead(
             foregroundPermits = 5,
             backgroundPermits = 1,
-            acquireTimeout = Duration.ofMillis(100)
+            acquireTimeout = 100.millis()
         )
 
     @Bean
@@ -78,7 +78,7 @@ internal class ReservationConcurrencyConfiguration {
             )
         }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 /**
@@ -125,5 +125,5 @@ internal class ReservationRedisConfiguration {
             )
         }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

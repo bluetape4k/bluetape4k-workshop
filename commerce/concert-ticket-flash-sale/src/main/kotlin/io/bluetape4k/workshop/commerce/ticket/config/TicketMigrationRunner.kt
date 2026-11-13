@@ -1,10 +1,18 @@
+@file:Suppress("SqlResolve")
+
 package io.bluetape4k.workshop.commerce.ticket.config
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.jdbc.sql.getBooleanOrNull
+import io.bluetape4k.jdbc.sql.getStringOrNull
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
-import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8String
 import org.springframework.core.io.Resource
 import java.io.Serial
 import java.io.Serializable
@@ -20,22 +28,22 @@ import javax.sql.DataSource
 data class TicketMigration(
     val version: String,
     val resource: Resource,
-) : Serializable {
+): Serializable {
     init {
         version.requireNotBlank("version")
     }
 
     fun read(): TicketMigrationScript {
-        val bytes =
-            try {
-                resource.inputStream.use { it.readAllBytes() }
-            } catch (failure: Exception) {
-                throw TicketMigrationException(TicketMigrationFailure.RESOURCE_UNAVAILABLE, failure)
-            }
+        val bytes = try {
+            resource.inputStream.use { it.readAllBytes() }
+        } catch (failure: Exception) {
+            throw TicketMigrationException(TicketMigrationFailure.RESOURCE_UNAVAILABLE, failure)
+        }
+
         return TicketMigrationScript(
             version = version,
             checksum = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString(),
-            sql = bytes.toString(Charsets.UTF_8),
+            sql = bytes.toUtf8String(),
         )
     }
 
@@ -50,7 +58,7 @@ data class TicketMigrationScript(
     val version: String,
     val checksum: String,
     val sql: String,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -75,7 +83,7 @@ enum class TicketMigrationFailure {
 class TicketMigrationException(
     val code: TicketMigrationFailure,
     cause: Throwable? = null,
-) : IllegalStateException(code.name, cause) {
+): IllegalStateException(code.name, cause) {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -98,15 +106,17 @@ class TicketMigrationRunner(
     private val dataSource: DataSource,
     private val migration: TicketMigration,
     private val advisoryLockKey: Long,
-    private val lockTimeout: Duration = Duration.ofSeconds(30),
+    private val lockTimeout: Duration = 30.seconds(),
     private val readiness: TicketMigrationReadiness = TicketMigrationReadiness(),
 ) {
     init {
-        lockTimeout.requireGt(Duration.ZERO, "lockTimeout")
+        lockTimeout.requirePositiveDuration("lockTimeout")
     }
 
     fun migrate(): TicketMigrationResult {
         val script = migration.read()
+
+        // TODO: Exposed 로 전환하자 
         return dataSource.connection.use { connection ->
             connection.autoCommit = false
             try {
@@ -120,7 +130,8 @@ class TicketMigrationRunner(
                         TicketMigrationResult.ALREADY_APPLIED
                     }
 
-                    else -> throw TicketMigrationException(TicketMigrationFailure.CHECKSUM_MISMATCH)
+                    else ->
+                        throw TicketMigrationException(TicketMigrationFailure.CHECKSUM_MISMATCH)
                 }
                 readiness.markReady()
                 result
@@ -129,10 +140,10 @@ class TicketMigrationRunner(
                 log.warn { "ticket_migration_failed version=${script.version} code=${failure.code}" }
                 throw failure
             } catch (failure: SQLException) {
+                log.info { "rollback quietly ..." }
                 connection.rollbackQuietly()
-                log.warn {
-                    "ticket_migration_failed version=${script.version} " +
-                        "code=${TicketMigrationFailure.STATEMENT_FAILED}"
+                log.warn(failure) {
+                    "ticket_migration_failed version=${script.version} code=${TicketMigrationFailure.STATEMENT_FAILED}"
                 }
                 throw TicketMigrationException(TicketMigrationFailure.STATEMENT_FAILED, failure)
             }
@@ -146,7 +157,7 @@ class TicketMigrationRunner(
             while (true) {
                 statement.executeQuery().use { result ->
                     check(result.next()) { "advisory lock query returned no row" }
-                    if (result.getBoolean(1)) return
+                    if (result.getBooleanOrNull(1) == true) return
                 }
                 if (System.nanoTime() >= deadline || Thread.currentThread().isInterrupted) {
                     throw TicketMigrationException(TicketMigrationFailure.LOCK_TIMEOUT)
@@ -170,16 +181,15 @@ class TicketMigrationRunner(
         }
     }
 
-    private fun appliedChecksum(
-        connection: Connection,
-        version: String,
-    ): String? =
-        connection.prepareStatement("SELECT checksum FROM ticket_schema_history WHERE version = ?").use { statement ->
+    private fun appliedChecksum(connection: Connection, version: String): String? {
+        val sql = "SELECT checksum FROM ticket_schema_history WHERE version = ?"
+        return connection.prepareStatement(sql).use { statement ->
             statement.setString(1, version)
             statement.executeQuery().use { result ->
-                if (result.next()) result.getString("checksum") else null
+                if (result.next()) result.getStringOrNull("checksum") else null
             }
         }
+    }
 
     private fun applyMigration(
         connection: Connection,
@@ -190,11 +200,12 @@ class TicketMigrationRunner(
                 .split(';')
                 .map(String::trim)
                 .filter(String::isNotEmpty)
+                .onEach { log.debug { "Execute statement. sql=$it" } }
                 .forEach(statement::execute)
         }
-        connection.prepareStatement(
-            "INSERT INTO ticket_schema_history(version, checksum) VALUES (?, ?)",
-        ).use { statement ->
+
+        val sql = "INSERT INTO ticket_schema_history(version, checksum) VALUES (?, ?)"
+        connection.prepareStatement(sql).use { statement ->
             statement.setString(1, script.version)
             statement.setString(2, script.checksum)
             statement.executeUpdate()
@@ -208,7 +219,7 @@ class TicketMigrationRunner(
         runCatching { rollback() }
     }
 
-    companion object : KLogging() {
-        private val LOCK_RETRY_DELAY: Duration = Duration.ofMillis(10)
+    companion object: KLogging() {
+        private val LOCK_RETRY_DELAY: Duration = 10.millis()
     }
 }

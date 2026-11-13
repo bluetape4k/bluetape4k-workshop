@@ -9,35 +9,46 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.idempotency
 
-import io.bluetape4k.jackson3.jsonMapper
+import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.checkNotNull
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucherpool.domain.DescriptorAction
 import io.bluetape4k.workshop.commerce.voucherpool.domain.TombstoneAction
-import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCatalog
+import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigest
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import java.io.Serializable
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 
 /** idempotent command의 tenant 및 operation boundary입니다. */
 internal data class CommandScope(
     val tenantId: String,
     val operation: String,
-) : Serializable {
+): Serializable {
+
     init {
         tenantId.requireNotBlank("tenantId")
         operation.requireNotBlank("operation")
@@ -60,7 +71,8 @@ internal data class SafeResponseDescriptor private constructor(
     val effectId: UUID?,
     val revision: Long?,
     val terminalCode: VoucherPoolErrorCode?,
-) : Serializable {
+): Serializable {
+
     init {
         require(status in MIN_HTTP_STATUS..MAX_HTTP_STATUS) { "descriptor status must be a valid HTTP status" }
         require(revision == null || revision >= 0) { "descriptor revision must be non-negative" }
@@ -79,8 +91,8 @@ internal data class SafeResponseDescriptor private constructor(
             val semantics = VoucherPoolErrorCatalog[terminalCode]
             require(
                 semantics.httpStatus == status &&
-                    semantics.descriptorAction == DescriptorAction.STORE &&
-                    semantics.tombstoneAction == TombstoneAction.STORE,
+                        semantics.descriptorAction == DescriptorAction.STORE &&
+                        semantics.tombstoneAction == TombstoneAction.STORE,
             ) { "terminal descriptor requires terminal stored error semantics" }
         }
     }
@@ -105,7 +117,8 @@ internal data class SafeResponseDescriptor private constructor(
             effectId: UUID?,
             revision: Long?,
             terminalCode: VoucherPoolErrorCode?,
-        ): SafeResponseDescriptor = SafeResponseDescriptor(status, outcome, effectId, revision, terminalCode)
+        ): SafeResponseDescriptor =
+            SafeResponseDescriptor(status, outcome, effectId, revision, terminalCode)
     }
 }
 
@@ -114,7 +127,7 @@ internal data class SafeResponseDescriptor private constructor(
 internal data class EffectReference private constructor(
     val effectId: UUID?,
     val terminalCode: VoucherPoolErrorCode?,
-) : Serializable {
+): Serializable {
     init {
         require((effectId == null) != (terminalCode == null)) { "effect reference requires exactly one terminal value" }
     }
@@ -122,9 +135,11 @@ internal data class EffectReference private constructor(
     companion object {
         private const val serialVersionUID: Long = 1L
 
-        fun effect(effectId: UUID): EffectReference = EffectReference(effectId, null)
+        fun effect(effectId: UUID): EffectReference =
+            EffectReference(effectId, null)
 
-        fun terminal(code: VoucherPoolErrorCode): EffectReference = EffectReference(null, code)
+        fun terminal(code: VoucherPoolErrorCode): EffectReference =
+            EffectReference(null, code)
     }
 }
 
@@ -136,12 +151,15 @@ internal class IdempotencyOwner internal constructor(
     val fingerprint: CommandFingerprint,
     ownerTokenDigest: ByteArray,
 ) {
+
+    companion object: KLogging()
+
     private val scopedKeyDigest = scopedKeyDigest.copyOf()
     private val ownerTokenDigest = ownerTokenDigest.copyOf()
 
     init {
-        require(keyVersion > 0) { "idempotency key version must be positive" }
-        require(ownerTokenDigest.size == OWNER_DIGEST_BYTES) { "owner capability digest must contain 256 bits" }
+        keyVersion.requirePositiveNumber("keyVersion")
+        ownerTokenDigest.size.requireEquals(OWNER_DIGEST_BYTES) { "owner capability digest must contain 256 bits" }
     }
 
     fun copyScopedKeyDigest(): ByteArray = scopedKeyDigest.copyOf()
@@ -150,40 +168,51 @@ internal class IdempotencyOwner internal constructor(
 
     override fun equals(other: Any?): Boolean =
         other is IdempotencyOwner &&
-            scope == other.scope &&
-            MessageDigest.isEqual(scopedKeyDigest, other.scopedKeyDigest) &&
-            MessageDigest.isEqual(copyTokenDigest(), other.copyTokenDigest())
+                scope == other.scope &&
+                MessageDigest.isEqual(scopedKeyDigest, other.scopedKeyDigest) &&
+                MessageDigest.isEqual(copyTokenDigest(), other.copyTokenDigest())
 
-    override fun hashCode(): Int = 31 * scope.hashCode() + scopedKeyDigest.contentHashCode()
+    override fun hashCode(): Int = hashOf(scope, scopedKeyDigest.contentHashCode())
 
     override fun toString(): String =
         "IdempotencyOwner(operation=${scope.operation}, scopedKeyDigest=[REDACTED], capability=[REDACTED])"
 }
 
-internal sealed interface IdempotencyDecision {
-    data class Execute(val owner: IdempotencyOwner) : IdempotencyDecision, Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+internal sealed interface IdempotencyDecision: Serializable {
+    data class Execute(val owner: IdempotencyOwner): IdempotencyDecision {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
-    data class Replay(val descriptor: SafeResponseDescriptor) : IdempotencyDecision, Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+    data class Replay(val descriptor: SafeResponseDescriptor): IdempotencyDecision {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     data class Expired(
         val effectId: UUID?,
         val terminalCode: VoucherPoolErrorCode?,
-    ) : IdempotencyDecision, Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+    ): IdempotencyDecision {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
-    data class InProgress(val retryAfter: Duration) : IdempotencyDecision, Serializable {
-        companion object { private const val serialVersionUID: Long = 1L }
+    data class InProgress(val retryAfter: Duration): IdempotencyDecision {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
-    data object FingerprintConflict : IdempotencyDecision
+    data object FingerprintConflict: IdempotencyDecision {
+        private fun readResolve(): Any = FingerprintConflict
+    }
 }
 
 internal interface VoucherPoolIdempotencyRepository {
+
     fun acquire(scope: CommandScope, rawKey: String, fingerprint: CommandFingerprint): IdempotencyDecision
 
     fun lockOwnerForExecution(owner: IdempotencyOwner)
@@ -195,16 +224,16 @@ internal interface VoucherPoolIdempotencyRepository {
     fun purgeDescriptors(limit: Int): Int
 }
 
-internal class IdempotencyOwnershipLostException :
+internal class IdempotencyOwnershipLostException:
     IllegalStateException("idempotency command ownership is no longer active")
 
-internal class IdempotencyTombstoneKeyVersionException :
+internal class IdempotencyTombstoneKeyVersionException:
     IllegalStateException("idempotency tombstone key version is unsupported")
 
-internal class IdempotencyDescriptorCorruptedException :
+internal class IdempotencyDescriptorCorruptedException:
     IllegalStateException("stored idempotency descriptor is invalid")
 
-internal class IdempotencyTombstoneIntegrityException :
+internal class IdempotencyTombstoneIntegrityException:
     IllegalStateException("idempotency tombstone integrity check failed")
 
 /**
@@ -213,18 +242,32 @@ internal class IdempotencyTombstoneIntegrityException :
  * raw JDBC는 PostgreSQL lock과 JSONB operation을 caller의 기존 Exposed/Spring transaction 안에 유지합니다.
  * connection, commit, rollback ownership은 이 repository boundary를 넘지 않습니다.
  */
+@Suppress("SqlResolve")
 internal class JdbcVoucherPoolIdempotencyRepository(
     private val digests: VoucherDigestService,
-    private val lease: Duration = Duration.ofSeconds(DEFAULT_LEASE_SECONDS),
-    private val commandTimeout: Duration = Duration.ofMinutes(DEFAULT_COMMAND_TIMEOUT_MINUTES),
-    private val descriptorRetention: Duration = Duration.ofHours(DEFAULT_DESCRIPTOR_RETENTION_HOURS),
+    private val lease: Duration = DEFAULT_LEASE_SECONDS.seconds(),
+    private val commandTimeout: Duration = DEFAULT_COMMAND_TIMEOUT_MINUTES.minutes(),
+    private val descriptorRetention: Duration = DEFAULT_DESCRIPTOR_RETENTION_HOURS.hours(),
     private val random: SecureRandom = SecureRandom(),
-) : VoucherPoolIdempotencyRepository {
+): VoucherPoolIdempotencyRepository {
+
+    companion object: KLogging() {
+        private const val DEFAULT_LEASE_SECONDS = 30L
+        private const val DEFAULT_COMMAND_TIMEOUT_MINUTES = 1L
+        private const val DEFAULT_DESCRIPTOR_RETENTION_HOURS = 24L
+        private const val MIN_RAW_KEY_LENGTH = 8
+        private const val MAX_RAW_KEY_LENGTH = 200
+        private const val MAX_PURGE_LIMIT = 1_000
+        private const val OWNER_TOKEN_BYTES = 32
+        private val SUCCESS_DESCRIPTOR_FIELDS = setOf("status", "outcome", "effectId", "revision")
+        private val TERMINAL_DESCRIPTOR_FIELDS = setOf("status", "terminalCode")
+    }
+
     init {
         requireDuration(lease, "lease")
         requireDuration(commandTimeout, "commandTimeout")
         requireDuration(descriptorRetention, "descriptorRetention")
-        require(lease <= commandTimeout) { "lease must not exceed commandTimeout" }
+        lease.requireLe(commandTimeout) { "lease must not exceed commandTimeout" }
     }
 
     override fun acquire(
@@ -236,15 +279,19 @@ internal class JdbcVoucherPoolIdempotencyRepository(
             "Idempotency-Key must contain $MIN_RAW_KEY_LENGTH..$MAX_RAW_KEY_LENGTH characters"
         }
         require(rawKey.none(Char::isISOControl)) { "Idempotency-Key must not contain control characters" }
+
         val connection = currentConnection()
         val keyDigest = digests.commandTombstone(scope.tenantId, scope.operation, rawKey)
         check(keyDigest.purpose == DigestPurpose.COMMAND_TOMBSTONE)
-        lockRow(connection, scope, keyDigest.copyBytes())?.let { current ->
-            return decideCurrent(connection, scope, keyDigest, fingerprint, current)
-        }
-        findTombstone(connection, scope, keyDigest.copyBytes())?.let { tombstone ->
-            return tombstone.decision(fingerprint)
-        }
+
+        lockRow(connection, scope, keyDigest.copyBytes())
+            ?.let { current ->
+                return decideCurrent(connection, scope, keyDigest, fingerprint, current)
+            }
+        findTombstone(connection, scope, keyDigest.copyBytes())
+            ?.let { tombstone ->
+                return tombstone.decision(fingerprint)
+            }
 
         val owner = newOwner(scope, keyDigest, fingerprint)
         if (insertOwner(connection, owner)) {
@@ -255,6 +302,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         val current = lockRow(connection, scope, keyDigest.copyBytes())
             ?: findTombstone(connection, scope, keyDigest.copyBytes())?.let { return it.decision(fingerprint) }
             ?: error("idempotency row disappeared")
+
         return decideCurrent(connection, scope, keyDigest, fingerprint, current, owner)
     }
 
@@ -271,14 +319,30 @@ internal class JdbcVoucherPoolIdempotencyRepository(
             return IdempotencyDecision.FingerprintConflict
         }
         return when (current.status) {
-            IdempotencyStatus.COMPLETED -> current.completedDecision(connection, scope, keyDigest.copyBytes())
-            IdempotencyStatus.OWNED -> if (current.active) {
-                IdempotencyDecision.InProgress(Duration.ofMillis(current.retryAfterMillis))
-            } else {
-                takeOver(connection, proposedOwner ?: newOwner(scope, keyDigest, fingerprint), current.revision)
-            }
+            IdempotencyStatus.COMPLETED        ->
+                current.completedDecision(
+                    connection = connection,
+                    scope = scope,
+                    scopedKeyDigest = keyDigest.copyBytes()
+                )
+
+            IdempotencyStatus.OWNED            ->
+                if (current.active) {
+                    IdempotencyDecision.InProgress(current.retryAfterMillis.millis())
+                } else {
+                    takeOver(
+                        connection = connection,
+                        owner = proposedOwner ?: newOwner(scope, keyDigest, fingerprint),
+                        expectedRevision = current.revision
+                    )
+                }
+
             IdempotencyStatus.RETRYABLE_FAILED ->
-                takeOver(connection, proposedOwner ?: newOwner(scope, keyDigest, fingerprint), current.revision)
+                takeOver(
+                    connection = connection,
+                    owner = proposedOwner ?: newOwner(scope, keyDigest, fingerprint),
+                    expectedRevision = current.revision
+                )
         }
     }
 
@@ -288,7 +352,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
                   AND status='OWNED' AND owner_token_digest=?
                   AND lease_until>=statement_timestamp() AND command_deadline>=statement_timestamp()
-                FOR UPDATE""",
+                FOR UPDATE""".trimIndent(),
         ).use { statement ->
             owner.bindScope(statement, start = 1)
             statement.setBytes(4, owner.fingerprint.copyBytes())
@@ -312,7 +376,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                     expires_at=statement_timestamp()+(? * interval '1 millisecond'),revision=revision+1
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
                   AND status='OWNED' AND owner_token_digest=?
-                  AND lease_until>=statement_timestamp() AND command_deadline>=statement_timestamp()""",
+                  AND lease_until>=statement_timestamp() AND command_deadline>=statement_timestamp()""".trimIndent(),
         ).use { statement ->
             statement.setString(1, descriptor.toJson())
             statement.setLong(2, descriptorRetention.toMillis())
@@ -334,7 +398,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                 SET status='RETRYABLE_FAILED',owner_token_digest=NULL,lease_until=NULL,completed_at=NULL,
                     revision=revision+1
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
-                  AND status='OWNED' AND owner_token_digest=?""",
+                  AND status='OWNED' AND owner_token_digest=?""".trimIndent(),
         ).use { statement ->
             owner.bindScope(statement, start = 1)
             statement.setBytes(4, owner.fingerprint.copyBytes())
@@ -346,7 +410,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     }
 
     override fun purgeDescriptors(limit: Int): Int {
-        require(limit in 1..MAX_PURGE_LIMIT) { "purge limit must be in 1..$MAX_PURGE_LIMIT" }
+        limit.requireInRange(1, MAX_PURGE_LIMIT, "limit")
         val connection = currentConnection()
         val candidates = connection.prepareStatement(
             """SELECT i.tenant_id,i.operation,i.scoped_key_digest,i.fingerprint,
@@ -357,7 +421,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                  AND t.scoped_key_digest=i.scoped_key_digest AND t.fingerprint=i.fingerprint
                 WHERE i.status='COMPLETED' AND i.descriptor IS NOT NULL
                   AND i.expires_at<=statement_timestamp()
-                ORDER BY i.expires_at,i.tenant_id,i.operation LIMIT ? FOR UPDATE OF i,t SKIP LOCKED""",
+                ORDER BY i.expires_at,i.tenant_id,i.operation LIMIT ? FOR UPDATE OF i,t SKIP LOCKED""".trimIndent(),
         ).use { statement ->
             statement.setInt(1, limit)
             statement.executeQuery().use { result ->
@@ -402,7 +466,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                 VALUES (?,?,?,?,'OWNED',?,statement_timestamp()+(? * interval '1 millisecond'),
                     statement_timestamp()+(? * interval '1 millisecond'),NULL,
                     statement_timestamp()+(? * interval '1 millisecond'),0)
-                ON CONFLICT DO NOTHING""",
+                ON CONFLICT DO NOTHING""".trimIndent(),
         ).use { statement ->
             owner.bindScope(statement, start = 1)
             statement.setBytes(4, owner.fingerprint.copyBytes())
@@ -420,7 +484,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                     command_deadline=statement_timestamp()+(? * interval '1 millisecond'),descriptor=NULL,completed_at=NULL,
                     expires_at=statement_timestamp()+(? * interval '1 millisecond'),revision=revision+1
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=? AND revision=?
-                  AND (status='RETRYABLE_FAILED' OR (status='OWNED' AND lease_until<=statement_timestamp()))""",
+                  AND (status='RETRYABLE_FAILED' OR (status='OWNED' AND lease_until<=statement_timestamp()))""".trimIndent(),
         ).use { statement ->
             statement.setBytes(1, owner.copyTokenDigest())
             statement.setLong(2, lease.toMillis())
@@ -442,7 +506,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                     COALESCE(lease_until>statement_timestamp() AND command_deadline>statement_timestamp(),false) AS active,
                     GREATEST(0,COALESCE(EXTRACT(EPOCH FROM (lease_until-statement_timestamp()))*1000,0))::bigint AS retry_millis
                 FROM voucher_pool_http_idempotency
-                WHERE tenant_id=? AND operation=? AND scoped_key_digest=? FOR UPDATE""",
+                WHERE tenant_id=? AND operation=? AND scoped_key_digest=? FOR UPDATE""".trimIndent(),
         ).use { statement ->
             statement.bindScope(scope, scopedKeyDigest)
             statement.executeQuery().use { result -> if (result.next()) result.idempotencyRow() else null }
@@ -454,7 +518,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         scopedKeyDigest: ByteArray,
     ): TombstoneRow? = connection.prepareStatement(
         """SELECT key_version,fingerprint,effect_id,terminal_code FROM voucher_pool_command_tombstones
-            WHERE tenant_id=? AND operation=? AND scoped_key_digest=?""",
+            WHERE tenant_id=? AND operation=? AND scoped_key_digest=?""".trimIndent(),
     ).use { statement ->
         statement.bindScope(scope, scopedKeyDigest)
         statement.executeQuery().use { result ->
@@ -475,7 +539,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         connection.prepareStatement(
             """INSERT INTO voucher_pool_command_tombstones
                 (tenant_id,operation,key_version,scoped_key_digest,fingerprint,effect_id,terminal_code)
-                VALUES (?,?,?,?,?,?,?) ON CONFLICT DO NOTHING""",
+                VALUES (?,?,?,?,?,?,?) ON CONFLICT DO NOTHING""".trimIndent(),
         ).use { statement ->
             statement.setString(1, owner.scope.tenantId)
             statement.setString(2, owner.scope.operation)
@@ -499,7 +563,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         connection.prepareStatement(
             """UPDATE voucher_pool_http_idempotency SET descriptor=NULL,revision=revision+1
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
-                  AND status='COMPLETED' AND descriptor IS NOT NULL AND expires_at<=statement_timestamp()""",
+                  AND status='COMPLETED' AND descriptor IS NOT NULL AND expires_at<=statement_timestamp()""".trimIndent(),
         ).use { statement ->
             statement.bindScope(candidate.scope, candidate.scopedKeyDigest)
             statement.setBytes(4, candidate.fingerprint)
@@ -511,16 +575,18 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         scope: CommandScope,
         scopedKeyDigest: ByteArray,
     ): IdempotencyDecision {
-        val tombstone = findTombstone(connection, scope, scopedKeyDigest)
-            ?: tombstoneIntegrityFailure()
+        val tombstone = findTombstone(connection, scope, scopedKeyDigest) ?: tombstoneIntegrityFailure()
         if (!MessageDigest.isEqual(tombstone.fingerprint, fingerprint.copyBytes())) {
             tombstoneIntegrityFailure()
         }
-        return descriptor?.also {
-            if (it.effectId != tombstone.effectId || it.terminalCode != tombstone.terminalCode) {
-                tombstoneIntegrityFailure()
+        return descriptor
+            ?.also {
+                if (it.effectId != tombstone.effectId || it.terminalCode != tombstone.terminalCode) {
+                    tombstoneIntegrityFailure()
+                }
             }
-        }?.let(IdempotencyDecision::Replay) ?: tombstone.decision(fingerprint)
+            ?.let(IdempotencyDecision::Replay)
+            ?: tombstone.decision(fingerprint)
     }
 
     private fun TombstoneRow.decision(fingerprint: CommandFingerprint): IdempotencyDecision =
@@ -553,9 +619,10 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     }
 
     private fun currentConnection(): Connection =
-        checkNotNull(TransactionManager.currentOrNull()) {
-            "voucher idempotency repository requires an active VoucherPoolJdbcExecutor transaction"
-        }.connection.connection as Connection
+        TransactionManager.currentOrNull()
+            .checkNotNull { "voucher idempotency repository requires an active VoucherPoolJdbcExecutor transaction" }
+            .connection
+            .connection as Connection
 
     private fun IdempotencyOwner.bindScope(statement: PreparedStatement, start: Int) {
         statement.setString(start, scope.tenantId)
@@ -569,39 +636,45 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         setBytes(3, scopedKeyDigest)
     }
 
-    private fun ResultSet.idempotencyRow(): IdempotencyRow = IdempotencyRow(
-        fingerprint = CommandFingerprint.of(getBytes("fingerprint")),
-        status = IdempotencyStatus.valueOf(getString("status")),
-        descriptor = getString("descriptor")?.toDescriptor(),
-        revision = getLong("revision"),
-        active = getBoolean("active"),
-        retryAfterMillis = getLong("retry_millis"),
-    )
+    private fun ResultSet.idempotencyRow(): IdempotencyRow =
+        IdempotencyRow(
+            fingerprint = CommandFingerprint.of(getBytes("fingerprint")),
+            status = IdempotencyStatus.valueOf(getString("status")),
+            descriptor = getString("descriptor")?.toDescriptor(),
+            revision = getLong("revision"),
+            active = getBoolean("active"),
+            retryAfterMillis = getLong("retry_millis"),
+        )
 
-    private fun SafeResponseDescriptor.toJson(): String = jsonMapper { }.createObjectNode().apply {
-        put("status", status)
-        outcome?.let { put("outcome", it) }
-        effectId?.let { put("effectId", it.toString()) }
-        revision?.let { put("revision", it) }
-        terminalCode?.let { put("terminalCode", it.name) }
-    }.toString()
+    private fun SafeResponseDescriptor.toJson(): String =
+        Jackson.defaultJsonMapper.createObjectNode()
+            .apply {
+                put("status", status)
+                outcome?.let { put("outcome", it) }
+                effectId?.let { put("effectId", it.toString()) }
+                revision?.let { put("revision", it) }
+                terminalCode?.let { put("terminalCode", it.name) }
+            }
+            .toString()
 
     private fun String.toDescriptor(): SafeResponseDescriptor {
         try {
-            val node = jsonMapper { }.readTree(this)
+            val node = Jackson.defaultJsonMapper.readTree(this)
             if (!node.isObject) descriptorCorrupted()
             val fieldNames: Set<String> = node.propertyNames().toSet()
             val statusNode = node.get("status")
             if (statusNode == null || !statusNode.isIntegralNumber || !statusNode.canConvertToInt()) {
                 descriptorCorrupted()
             }
+
             return when (fieldNames) {
-                SUCCESS_DESCRIPTOR_FIELDS -> {
+                SUCCESS_DESCRIPTOR_FIELDS  -> {
                     val outcomeNode = node.get("outcome")
                     val effectIdNode = node.get("effectId")
                     val revisionNode = node.get("revision")
                     if (!outcomeNode.isString || !effectIdNode.isString) descriptorCorrupted()
                     if (!revisionNode.isIntegralNumber || !revisionNode.canConvertToLong()) descriptorCorrupted()
+
                     SafeResponseDescriptor.restore(
                         status = statusNode.intValue(),
                         outcome = outcomeNode.stringValue(),
@@ -613,6 +686,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                 TERMINAL_DESCRIPTOR_FIELDS -> {
                     val terminalCodeNode = node.get("terminalCode")
                     if (!terminalCodeNode.isString) descriptorCorrupted()
+
                     SafeResponseDescriptor.restore(
                         status = statusNode.intValue(),
                         outcome = null,
@@ -621,7 +695,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
                         terminalCode = VoucherPoolErrorCode.valueOf(terminalCodeNode.stringValue()),
                     )
                 }
-                else -> descriptorCorrupted()
+                else                       -> descriptorCorrupted()
             }
         } catch (_: Exception) {
             descriptorCorrupted()
@@ -660,18 +734,10 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         val scope: CommandScope get() = CommandScope(tenantId, operation)
     }
 
-    private enum class IdempotencyStatus { OWNED, COMPLETED, RETRYABLE_FAILED }
-
-    companion object : KLogging() {
-        private const val DEFAULT_LEASE_SECONDS = 30L
-        private const val DEFAULT_COMMAND_TIMEOUT_MINUTES = 1L
-        private const val DEFAULT_DESCRIPTOR_RETENTION_HOURS = 24L
-        private const val MIN_RAW_KEY_LENGTH = 8
-        private const val MAX_RAW_KEY_LENGTH = 200
-        private const val MAX_PURGE_LIMIT = 1_000
-        private const val OWNER_TOKEN_BYTES = 32
-        private val SUCCESS_DESCRIPTOR_FIELDS = setOf("status", "outcome", "effectId", "revision")
-        private val TERMINAL_DESCRIPTOR_FIELDS = setOf("status", "terminalCode")
+    private enum class IdempotencyStatus {
+        OWNED,
+        COMPLETED,
+        RETRYABLE_FAILED
     }
 
     private fun requireCurrentTombstoneVersion(tombstone: TombstoneRow) {
@@ -688,15 +754,16 @@ internal class JdbcVoucherPoolIdempotencyRepository(
 }
 
 private fun requireDuration(duration: Duration, name: String) {
-    require(!duration.isNegative && !duration.isZero) { "$name must be positive" }
-    require(duration.toMillis() > 0) { "$name must be at least one millisecond" }
+    duration.requirePositiveDuration(name)
+    duration.toMillis().requirePositiveNumber { "$name must be at least one millisecond" }
 }
 
-private fun sha256(domain: String, value: ByteArray): ByteArray = MessageDigest.getInstance("SHA-256").run {
-    update(domain.toByteArray(UTF_8))
-    update(0)
-    digest(value)
-}
+private fun sha256(domain: String, value: ByteArray): ByteArray =
+    MessageDigest.getInstance("SHA-256").run {
+        update(domain.toUtf8Bytes())
+        update(0)
+        digest(value)
+    }
 
 private const val OWNER_TOKEN_DOMAIN = "voucher-pool-idempotency-owner-v1"
 private const val OWNER_DIGEST_BYTES = 32

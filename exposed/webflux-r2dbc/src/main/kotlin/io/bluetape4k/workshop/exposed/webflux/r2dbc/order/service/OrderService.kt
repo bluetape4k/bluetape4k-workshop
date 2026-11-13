@@ -17,7 +17,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.springframework.stereotype.Service
 
-class InsufficientStockException(productId: Long) :
+class InsufficientStockException(productId: Long):
     RuntimeException("Insufficient stock for product $productId")
 
 @Service
@@ -27,7 +27,7 @@ class OrderService(
     private val productRepo: ProductRepository,
     private val db: R2dbcDatabase,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     suspend fun findAllProducts(): List<ProductDTO> = suspendTransaction(db = db) {
         productRepo.findAll().toList()
@@ -60,7 +60,10 @@ class OrderService(
         for (line in sortedLines) {
             val product = productRepo.findByIdForUpdate(line.productId)
                 ?: throw NoSuchElementException("Product ${line.productId} not found")
-            if (product.stock < line.quantity) throw InsufficientStockException(line.productId)
+
+            if (product.stock < line.quantity) {
+                throw InsufficientStockException(line.productId)
+            }
             orderLineRepo.insert(order.id, line, product.price)
             productRepo.decrementStock(line.productId, line.quantity)
         }
@@ -72,6 +75,7 @@ class OrderService(
             it[status] = OrderStatus.CANCELLED
         }
         if (rows == 0) throw NoSuchElementException("Order $id not found")
+
         orderRepo.findByIdWithLines(id)
             ?: throw NoSuchElementException("Order $id not found after cancel")
     }

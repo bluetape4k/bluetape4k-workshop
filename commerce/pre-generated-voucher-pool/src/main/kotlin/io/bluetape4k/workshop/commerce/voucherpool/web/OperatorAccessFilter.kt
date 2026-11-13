@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionDecision
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionNamespace
 import io.bluetape4k.workshop.commerce.voucherpool.admission.VoucherPoolAdmissionGate
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import tools.jackson.databind.ObjectMapper
 import java.net.URI
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
 /** operator route가 dispatch되기 전에 local operator trust boundary를 적용합니다. */
@@ -28,7 +28,7 @@ internal class OperatorAccessFilter(
     private val mapper: ObjectMapper,
     private val admissionGate: VoucherPoolAdmissionGate,
     private val environment: Environment,
-) : OncePerRequestFilter() {
+): OncePerRequestFilter() {
     private val credentialVerifier = OperatorCredentialVerifier()
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
@@ -76,7 +76,7 @@ internal class OperatorAccessFilter(
     }
 
     private fun admitted(remoteAddress: String): Boolean {
-        val digest = MessageDigest.getInstance("SHA-256").digest(remoteAddress.toByteArray(UTF_8))
+        val digest = MessageDigest.getInstance("SHA-256").digest(remoteAddress.toUtf8Bytes())
         return admissionGate.admit(AdmissionNamespace.OPERATOR_AUTH, digest) in ADMITTED_DECISIONS
     }
 
@@ -95,11 +95,11 @@ internal class OperatorAccessFilter(
         if (containsNonOriginParts) return false
         val originPort = if (uri.port >= 0) uri.port else if (uri.scheme == "https") HTTPS_PORT else HTTP_PORT
         return uri.scheme.equals(request.scheme, ignoreCase = true) &&
-            uri.host.equals(request.serverName, ignoreCase = true) &&
-            originPort == request.serverPort
+                uri.host.equals(request.serverName, ignoreCase = true) &&
+                originPort == request.serverPort
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private val SAFE_METHODS = setOf("GET", "HEAD")
         private val ORIGIN_PATHS = setOf("", "/")
         private val ADMITTED_DECISIONS = setOf(AdmissionDecision.ALLOW, AdmissionDecision.DEGRADED_ALLOW)
@@ -126,9 +126,10 @@ internal class OperatorCredentialVerifier(
     ): Boolean {
         val secretMatches = comparator.matches(digest(actualSecret), digest(expectedSecret))
         val guardMatches = comparator.matches(digest(actualGuard), digest(expectedGuard))
+
         return secretMatches && guardMatches
     }
 
     private fun digest(value: String?): ByteArray =
-        MessageDigest.getInstance("SHA-256").digest(value.orEmpty().toByteArray(UTF_8))
+        MessageDigest.getInstance("SHA-256").digest(value.orEmpty().toUtf8Bytes())
 }

@@ -3,6 +3,7 @@
 package io.bluetape4k.workshop.commerce.metering.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.CloseRunState
 import io.bluetape4k.workshop.commerce.metering.domain.MeterCode
@@ -26,12 +27,10 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.Currency
-import java.util.UUID
+import java.util.*
 
 @Tag("stress")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -90,7 +89,7 @@ class BillingCloseStressTest {
     private fun insertUsage(tenantId: String, meterId: UUID) {
         val occurredAt = Instant.parse("2026-06-15T00:00:00Z")
         UsageEvents.batchInsert(0 until USAGE_COUNT) { sequence ->
-            val eventId = UUID.nameUUIDFromBytes("usage-$sequence".toByteArray(UTF_8))
+            val eventId = UUID.nameUUIDFromBytes("usage-$sequence".toUtf8Bytes())
             this[UsageEvents.id] = eventId
             this[UsageEvents.tenantId] = tenantId
             this[UsageEvents.sourceSystem] = "stress-producer"

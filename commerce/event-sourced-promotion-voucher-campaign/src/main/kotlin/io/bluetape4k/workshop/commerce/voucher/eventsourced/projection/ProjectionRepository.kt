@@ -1,15 +1,19 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
-import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireLe
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionCheckpoints
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionPoisonEvents
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionProcessedEvents
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionReadModels
+import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -19,9 +23,8 @@ import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.update
-import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal const val MAX_PROJECTION_BATCH_EVENTS = 200
 internal const val MAX_PROJECTION_POISON_ATTEMPTS = 5
@@ -86,6 +89,8 @@ internal class ProjectionRepository(
     private val poisons: ProjectionPoisonStore = ProjectionPoisonStore(),
 ) {
 
+    companion object: KLogging()
+
     fun applyBatch(
         key: ProjectionKey,
         lease: ProjectionLease,
@@ -95,12 +100,15 @@ internal class ProjectionRepository(
         TransactionManager.current()
         validateBatch(events)
         leases.requireActive(key.projection, key.generation, lease, now)
-        val result =
-            events.fold(ProjectionMutationCount()) { count, event ->
-                applyEvent(key, lease, event, now, count)
-            }
+        val result = events.fold(ProjectionMutationCount()) { count, event ->
+            applyEvent(key, lease, event, now, count)
+        }
         val checkpoint = advanceCheckpoint(key, lease, events, now)
-        return ProjectionApplyResult(result.applied, result.duplicates, checkpoint)
+        return ProjectionApplyResult(
+            appliedEventCount = result.applied,
+            duplicateEventCount = result.duplicates,
+            checkpoint = checkpoint
+        )
     }
 
     fun checkpoint(key: ProjectionKey): ProjectionCheckpoint? {
@@ -122,8 +130,8 @@ internal class ProjectionRepository(
             .selectAll()
             .where {
                 keyPredicate(ProjectionReadModels.projection, ProjectionReadModels.generation, key) and
-                    (ProjectionReadModels.streamType eq streamType) and
-                    (ProjectionReadModels.streamId eq streamId)
+                        (ProjectionReadModels.streamType eq streamType) and
+                        (ProjectionReadModels.streamId eq streamId)
             }.singleOrNull()
             ?.let(::toReadModel)
     }
@@ -157,12 +165,14 @@ internal class ProjectionRepository(
         now: Instant,
     ): ProjectionApplyResult {
         TransactionManager.current()
-        val poison = checkNotNull(poisons.find(key, event.eventId)) { "poison event does not exist" }
+        val poison = poisons.find(key, event.eventId).checkNotNull { "poison event does not exist" }
         check(poison.state == ProjectionPoisonState.FAILED) { "poison event is already resolved" }
         check(poison.attempts <= MAX_PROJECTION_POISON_ATTEMPTS) { "poison retry limit is exhausted" }
         check(!now.isBefore(poison.nextRetryAt)) { "poison retry backoff has not elapsed" }
+
         val result = applyBatch(key, lease, listOf(event), now)
         poisons.resolve(key, event.eventId, now)
+        log.debug { "resolve poison. result=$result" }
         return result
     }
 
@@ -211,11 +221,11 @@ internal class ProjectionRepository(
         ProjectionReadModels.update(
             where = {
                 keyPredicate(ProjectionReadModels.projection, ProjectionReadModels.generation, key) and
-                    (ProjectionReadModels.tenantId eq event.tenantId.value) and
-                    (ProjectionReadModels.streamType eq event.stream.type) and
-                    (ProjectionReadModels.streamId eq event.stream.id) and
-                    (ProjectionReadModels.streamVersion less event.stream.version) and
-                    (ProjectionReadModels.fencingToken lessEq lease.fencingToken)
+                        (ProjectionReadModels.tenantId eq event.tenantId.value) and
+                        (ProjectionReadModels.streamType eq event.stream.type) and
+                        (ProjectionReadModels.streamId eq event.stream.id) and
+                        (ProjectionReadModels.streamVersion less event.stream.version) and
+                        (ProjectionReadModels.fencingToken lessEq lease.fencingToken)
             },
         ) { row ->
             row[ProjectionReadModels.streamVersion] = event.stream.version
@@ -234,6 +244,7 @@ internal class ProjectionRepository(
         now: Instant,
     ): ProjectionCheckpoint {
         val position = events.maxOfOrNull(EventEnvelope::globalPosition) ?: return currentCheckpoint(key, lease, now)
+
         ProjectionCheckpoints.insertIgnore { row ->
             row[ProjectionCheckpoints.projection] = key.projection
             row[ProjectionCheckpoints.generation] = key.generation
@@ -244,8 +255,8 @@ internal class ProjectionRepository(
         ProjectionCheckpoints.update(
             where = {
                 checkpointPredicate(key) and
-                    (ProjectionCheckpoints.position less position) and
-                    (ProjectionCheckpoints.fencingToken lessEq lease.fencingToken)
+                        (ProjectionCheckpoints.position less position) and
+                        (ProjectionCheckpoints.fencingToken lessEq lease.fencingToken)
             },
         ) { row ->
             row[ProjectionCheckpoints.position] = position
@@ -281,7 +292,7 @@ private fun validateBatch(events: List<EventEnvelope>) {
         .zipWithNext()
         .all { (current, next) -> current.globalPosition < next.globalPosition }
         .requireEquals(true, "projectionBatch.globallyOrdered")
-    val payloadBytes = events.sumOf { event -> event.payload.canonicalJson.toByteArray(StandardCharsets.UTF_8).size }
+    val payloadBytes = events.sumOf { event -> event.payload.canonicalJson.toUtf8Bytes().size }
     payloadBytes.requireLe(MAX_PROJECTION_BATCH_BYTES, "projection batch payload bytes")
 }
 
@@ -289,8 +300,8 @@ private fun checkpointPredicate(key: ProjectionKey) =
     keyPredicate(ProjectionCheckpoints.projection, ProjectionCheckpoints.generation, key)
 
 private fun keyPredicate(
-    projection: org.jetbrains.exposed.v1.core.Column<String>,
-    generation: org.jetbrains.exposed.v1.core.Column<Long>,
+    projection: Column<String>,
+    generation: Column<Long>,
     key: ProjectionKey,
 ) =
     (projection eq key.projection) and (generation eq key.generation)

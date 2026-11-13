@@ -81,7 +81,7 @@ class VersionedModerationDictionary private constructor(
         initialWords: Collection<String>,
         historyCapacity: Int = 1,
         limits: ModerationDictionaryLimits = ModerationDictionaryLimits(),
-    ) : this(
+    ): this(
         initial = initialSnapshot(initialVersion, initialWords, limits),
         historyCapacity = historyCapacity,
         limits = limits,
@@ -133,7 +133,7 @@ class VersionedModerationDictionary private constructor(
     /** 한 요청이 parse와 mask에 재사용할 내부 immutable snapshot입니다. */
     internal fun snapshot(): DictionarySnapshot<ModerationDictionaryValue> = versions.snapshot()
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val COMPATIBILITY_DICTIONARY_NAME = "moderation-blockwords"
 
         private fun initialSnapshot(

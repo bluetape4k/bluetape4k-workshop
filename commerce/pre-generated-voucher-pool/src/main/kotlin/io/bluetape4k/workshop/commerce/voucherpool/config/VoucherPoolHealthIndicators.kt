@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.boot.health.contributor.Health
 import org.springframework.boot.health.contributor.HealthIndicator
 import org.springframework.boot.health.contributor.Status
@@ -54,6 +55,9 @@ internal class VoucherPoolHealthSnapshot(
 internal class VoucherPoolHealthState(
     private val clock: Clock = Clock.systemUTC(),
 ) {
+
+    companion object: KLogging()
+
     private val states = ConcurrentHashMap<VoucherPoolHealthComponent, ComponentState>()
 
     @Volatile
@@ -82,9 +86,9 @@ internal class VoucherPoolHealthState(
     }
 
     fun snapshot(): VoucherPoolHealthSnapshot {
-        val current = states.values.maxWithOrNull(
-            compareBy<ComponentState> { it.level.ordinal }.thenBy { it.reason.ordinal },
-        )
+        val current = states.values
+            .maxWithOrNull(compareBy<ComponentState> { it.level.ordinal }.thenBy { it.reason.ordinal })
+
         return VoucherPoolHealthSnapshot(
             level = current?.level ?: VoucherPoolHealthLevel.UP,
             reason = current?.reason ?: VoucherPoolHealthReason.HEALTHY,
@@ -115,16 +119,21 @@ internal class VoucherPoolHealthState(
 internal class VoucherPoolReadinessHealthIndicator(
     private val dataSource: DataSource,
     private val state: VoucherPoolHealthState,
-) : HealthIndicator {
+): HealthIndicator {
+
+    private companion object: KLogging() {
+        const val VALIDATION_TIMEOUT_SECONDS = 1
+    }
+
     override fun health(): Health {
         validatePostgres()
         val snapshot = state.snapshot()
         val builder =
             when (snapshot.level) {
-                VoucherPoolHealthLevel.UP -> Health.up()
+                VoucherPoolHealthLevel.UP       -> Health.up()
                 VoucherPoolHealthLevel.RECOVERING -> Health.status(VOUCHER_POOL_RECOVERING_STATUS)
                 VoucherPoolHealthLevel.DEGRADED -> Health.status(VOUCHER_POOL_DEGRADED_STATUS)
-                VoucherPoolHealthLevel.DOWN -> Health.down()
+                VoucherPoolHealthLevel.DOWN     -> Health.down()
             }
         builder.withDetail("reason", snapshot.reason.name)
             .withDetail("lastSuccessAt", snapshot.lastSuccessAt.toString())
@@ -133,26 +142,29 @@ internal class VoucherPoolReadinessHealthIndicator(
     }
 
     private fun validatePostgres() {
-        val valid =
-            try {
-                dataSource.connection.use { it.isValid(VALIDATION_TIMEOUT_SECONDS) }
-            } catch (_: Exception) {
-                false
-            }
+        val valid = try {
+            dataSource.connection.use { it.isValid(VALIDATION_TIMEOUT_SECONDS) }
+        } catch (_: Exception) {
+            false
+        }
+
         if (valid) {
             state.recover(VoucherPoolHealthComponent.POSTGRESQL)
         } else {
-            state.fail(VoucherPoolHealthComponent.POSTGRESQL, VoucherPoolHealthReason.POSTGRESQL_UNAVAILABLE)
+            state.fail(
+                VoucherPoolHealthComponent.POSTGRESQL,
+                VoucherPoolHealthReason.POSTGRESQL_UNAVAILABLE
+            )
         }
-    }
-
-    private companion object {
-        const val VALIDATION_TIMEOUT_SECONDS = 1
     }
 }
 
 /** liveness는 process-only입니다. dependency degradation은 readiness에 속합니다. */
 @Component("voucherPoolLivenessHealthIndicator")
-internal class VoucherPoolLivenessHealthIndicator : HealthIndicator {
-    override fun health(): Health = Health.up().withDetail("reason", "PROCESS_RUNNING").build()
+internal class VoucherPoolLivenessHealthIndicator: HealthIndicator {
+    override fun health(): Health =
+        Health
+            .up()
+            .withDetail("reason", "PROCESS_RUNNING")
+            .build()
 }

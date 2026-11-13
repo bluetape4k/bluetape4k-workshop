@@ -9,6 +9,8 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.javers.codecs.JaversCodecs
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.javers.approval.model.PolicyProposalTable
 import io.bluetape4k.workshop.exposed.javers.approval.model.PolicyStatus
 import io.bluetape4k.workshop.exposed.javers.approval.model.PricingPolicy
@@ -26,14 +28,21 @@ import java.math.BigDecimal
 
 class ProductPolicyApprovalServiceTest {
 
-    private fun withApprovalService(testDB: TestDB, statement: (ProductPolicyApprovalService) -> Unit) {
+    companion object: KLogging()
+
+    private val javers = JaversBuilder.javers().build()
+
+    private inline fun withApprovalService(
+        testDB: TestDB,
+        crossinline statement: (ProductPolicyApprovalService) -> Unit,
+    ) {
         withTables(testDB, ProductPolicyTable, PolicyProposalTable) {
-            statement(ProductPolicyApprovalService(JaversBuilder.javers().build()))
+            statement(ProductPolicyApprovalService(javers))
         }
     }
 
     @Test
-    fun `submit proposal returns scalar and nested value object diff summary`() =
+    fun `submit proposal returns scalar and nested value object diff summary`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 100L)
             service.publishInitial("alice", current)
@@ -45,15 +54,17 @@ class ProductPolicyApprovalServiceTest {
 
             val proposal = service.submitProposal("bob", proposed)
 
+            log.debug { "proposal=$proposal" }
             proposal.status shouldBeEqualTo ProposalStatus.PENDING
             proposal.changedFields.map { it.path } shouldContain "title"
             proposal.changedFields.map { it.path } shouldContain "pricing.amount"
             proposal.changedFields.first { it.path == "pricing.amount" }.left shouldBeEqualTo "99.00"
             proposal.changedFields.first { it.path == "pricing.amount" }.right shouldBeEqualTo "129.00"
         }
+    }
 
     @Test
-    fun `approve proposal updates current row and appends approved JaVers snapshot`() =
+    fun `approve proposal updates current row and appends approved JaVers snapshot`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 110L)
             service.publishInitial("alice", current)
@@ -67,17 +78,22 @@ class ProductPolicyApprovalServiceTest {
 
             val approved = service.approveProposal("carol", proposal.id, "Limit reviewed")
 
+            log.debug { "approved=$approved" }
             approved.status shouldBeEqualTo ProposalStatus.APPROVED
             approved.reviewer shouldBeEqualTo "carol"
-            val stored = service.findCurrentPolicy(110L)
-            stored.shouldNotBeNull()
+
+            val stored = service.findCurrentPolicy(110L).shouldNotBeNull()
+
+            log.debug { "stored=$stored" }
             stored.status shouldBeEqualTo PolicyStatus.RETIRED
             stored.pricing.approvalLimit shouldBeEqualTo BigDecimal("1000.00")
+
             service.getHistory(110L).map { it.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
         }
+    }
 
     @Test
-    fun `reject proposal records decision without changing current row or audit history`() =
+    fun `reject proposal records decision without changing current row or audit history`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 120L)
             service.publishInitial("alice", current)
@@ -88,17 +104,21 @@ class ProductPolicyApprovalServiceTest {
 
             val rejected = service.rejectProposal("carol", proposal.id, "Price increase is too large")
 
+            log.debug { "rejected=$rejected" }
             rejected.status shouldBeEqualTo ProposalStatus.REJECTED
             rejected.reviewer shouldBeEqualTo "carol"
             rejected.reason shouldBeEqualTo "Price increase is too large"
             service.findCurrentPolicy(120L) shouldBeEqualTo current
+
             val history = service.getHistory(120L)
+            log.debug { "history=$history" }
             history shouldHaveSize 1
             history.single().type shouldBeEqualTo SnapshotType.INITIAL
         }
+    }
 
     @Test
-    fun `audit lookup returns approved snapshots only after mixed decisions`() =
+    fun `audit lookup returns approved snapshots only after mixed decisions`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 130L)
             service.publishInitial("alice", current)
@@ -106,6 +126,8 @@ class ProductPolicyApprovalServiceTest {
                 requester = "bob",
                 proposed = current.copy(pricing = current.pricing.copy(amount = BigDecimal("399.00"))),
             )
+            log.debug { "rejected=$rejected" }
+
             service.rejectProposal("carol", rejected.id, "Needs a pricing review")
             val approved = service.submitProposal(
                 requester = "dave",
@@ -115,14 +137,17 @@ class ProductPolicyApprovalServiceTest {
             service.approveProposal("erin", approved.id, "Approved title cleanup")
 
             val history = service.getHistory(130L)
+
+            log.debug { "history=$history" }
             history shouldHaveSize 2
             history.map { it.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
             history.map { it.version } shouldBeEqualTo listOf(2L, 1L)
             service.findProposal(rejected.id).shouldNotBeNull().status shouldBeEqualTo ProposalStatus.REJECTED
         }
+    }
 
     @Test
-    fun `approved proposal transition is single use and does not append duplicate snapshots`() =
+    fun `approved proposal transition is single use and does not append duplicate snapshots`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 135L)
             service.publishInitial("alice", current)
@@ -138,19 +163,24 @@ class ProductPolicyApprovalServiceTest {
             }
             service.getHistory(135L).map { it.type } shouldBeEqualTo listOf(SnapshotType.UPDATE, SnapshotType.INITIAL)
         }
+    }
 
     @Test
-    fun `bounded history returns newest approved snapshots and preserves JVM overloads`() =
+    fun `bounded history returns newest approved snapshots and preserves JVM overloads`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 138L)
             service.publishInitial("alice", current)
+
             val proposal = service.submitProposal("bob", current.copy(title = "Bounded Policy"))
+            log.debug { "proposal=$proposal" }
             service.approveProposal("carol", proposal.id, "Approved")
 
             val latest = service.getHistory(138L, 1)
+            log.debug { "latest=$latest" }
             latest shouldHaveSize 1
             latest.single().type shouldBeEqualTo SnapshotType.UPDATE
             latest.single().version shouldBeEqualTo 2L
+
             service.getHistory(138L, 100) shouldHaveSize 2
             service.getHistory(999_999L).shouldBeEmpty()
 
@@ -163,9 +193,10 @@ class ProductPolicyApprovalServiceTest {
             (oneArgument.invoke(service, 138L) as List<*>) shouldHaveSize 2
             (twoArguments.invoke(service, 138L, 1) as List<*>) shouldHaveSize 1
         }
-
+    }
+    
     @Test
-    fun `history rejects invalid limits before querying JaVers`() =
+    fun `history rejects invalid limits before querying JaVers`() {
         withApprovalService(TestDB.H2) { service ->
             listOf(0, -1, 101).forEach { invalidLimit ->
                 assertFailsWith<IllegalArgumentException> {
@@ -173,9 +204,10 @@ class ProductPolicyApprovalServiceTest {
                 }
             }
         }
+    }
 
     @Test
-    fun `publish rejects invalid policy before JaVers commit`() =
+    fun `publish rejects invalid policy before JaVers commit`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 140L)
             val invalid = current.copy(pricing = current.pricing.copy(amount = BigDecimal("-1.00")))
@@ -186,9 +218,10 @@ class ProductPolicyApprovalServiceTest {
 
             service.getHistory(140L).shouldBeEmpty()
         }
-
+    }
+    
     @Test
-    fun `submit proposal rejects invalid currency before storing proposal`() =
+    fun `submit proposal rejects invalid currency before storing proposal`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 150L)
             service.publishInitial("alice", current)
@@ -200,9 +233,10 @@ class ProductPolicyApprovalServiceTest {
 
             service.getHistory(150L) shouldHaveSize 1
         }
+    }
 
     @Test
-    fun `submit proposal rejects over scale money before diff formatting`() =
+    fun `submit proposal rejects over scale money before diff formatting`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 160L)
             service.publishInitial("alice", current)
@@ -214,9 +248,10 @@ class ProductPolicyApprovalServiceTest {
 
             service.getHistory(160L) shouldHaveSize 1
         }
+    }
 
     @Test
-    fun `lookup methods reject invalid identifiers`() =
+    fun `lookup methods reject invalid identifiers`() {
         withApprovalService(TestDB.H2) { service ->
             assertFailsWith<IllegalArgumentException> {
                 service.findCurrentPolicy(0L)
@@ -228,9 +263,10 @@ class ProductPolicyApprovalServiceTest {
                 service.getHistory(0L)
             }
         }
+    }
 
     @Test
-    fun `stored proposal snapshots are JaVers JSON for special characters`() =
+    fun `stored proposal snapshots are JaVers JSON for special characters`() {
         withApprovalService(TestDB.H2) { service ->
             val current = activePolicy(id = 170L).copy(
                 title = "Standard \"Support\"\nPolicy",
@@ -241,20 +277,24 @@ class ProductPolicyApprovalServiceTest {
                 requester = "bob",
                 proposed = current.copy(title = "Enterprise \"Support\"\nPolicy"),
             )
+            log.debug { "proposal=$proposal" }
 
             val proposedSnapshot = transaction {
                 PolicyProposalTable.selectAll()
                     .where { PolicyProposalTable.id eq proposal.id }
                     .single()[PolicyProposalTable.proposedSnapshot]
             }
+            log.debug { "proposalSnapshot=$proposedSnapshot" }
             val parsed = JaversBuilder.javers().build().jsonConverter.fromJson(
                 JaversCodecs.String.decode(proposedSnapshot),
                 ProductPolicy::class.java,
             )
 
+            log.debug { "parsed=$parsed" }
             parsed.title shouldBeEqualTo "Enterprise \"Support\"\nPolicy"
             parsed.owner shouldBeEqualTo "platform\\team\tcore"
         }
+    }
 
     private fun activePolicy(id: Long): ProductPolicy =
         ProductPolicy(

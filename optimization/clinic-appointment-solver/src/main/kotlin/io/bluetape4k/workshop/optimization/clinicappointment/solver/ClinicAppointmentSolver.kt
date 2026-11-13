@@ -25,7 +25,7 @@ interface ClinicAppointmentSolverPort {
 @Service
 class ClinicAppointmentSolver(
     private val solverFactory: SolverFactory<ClinicSchedule> = createFactory(),
-) : ClinicAppointmentSolverPort {
+): ClinicAppointmentSolverPort {
 
     override fun solve(input: ClinicAppointmentSnapshot): ClinicAppointmentProposal {
         require(input.appointments.isNotEmpty()) { "at least one appointment is required" }

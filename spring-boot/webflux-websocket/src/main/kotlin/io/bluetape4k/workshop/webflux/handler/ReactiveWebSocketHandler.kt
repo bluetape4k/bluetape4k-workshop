@@ -1,19 +1,19 @@
 package io.bluetape4k.workshop.webflux.handler
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.webflux.service.QuoteGenerator
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
-import java.time.Duration
 
 @Component
 class ReactiveWebSocketHandler(
     private val quoteGenerator: QuoteGenerator,
 ): WebSocketHandler {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * 새 WebSocket connection 이 수립될 때 호출되며 session 처리를 허용합니다.
@@ -27,7 +27,7 @@ class ReactiveWebSocketHandler(
      */
     override fun handle(session: WebSocketSession): Mono<Void> {
         val flux = quoteGenerator
-            .fetchQuoteStringAsFlux(Duration.ofSeconds(2))
+            .fetchQuoteStringAsFlux(2.seconds())
             .map { quoteStr -> session.textMessage(quoteStr) }
 
         return session.send(flux)

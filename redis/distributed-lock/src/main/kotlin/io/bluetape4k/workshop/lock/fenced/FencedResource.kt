@@ -24,7 +24,7 @@ import kotlinx.atomicfu.atomic
  */
 class FencedResource(val resourceId: Long) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val lastSeenToken = atomic(0L)
 
@@ -33,7 +33,7 @@ class FencedResource(val resourceId: Long) {
      *
      * @return [work]의 결과. [token]이 지금까지 관측한 token보다 작으면 `null`입니다.
      */
-    fun <T : Any> apply(token: Long, work: () -> T): T? {
+    fun <T: Any> apply(token: Long, work: () -> T): T? {
         while (true) {
             val current = lastSeenToken.value
             if (token < current) return null  // 오래된 토큰: 엄격한 작음 비교

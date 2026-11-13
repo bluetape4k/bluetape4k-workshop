@@ -1,9 +1,14 @@
 package io.bluetape4k.workshop.commerce.ticket.purchase.internal
 
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.ticket.admission.api.TransactionalAdmissionCommands
 import io.bluetape4k.workshop.commerce.ticket.domain.PaymentOutcome
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketDisposition
+import io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketState
 import io.bluetape4k.workshop.commerce.ticket.domain.ticketTransition
 import io.bluetape4k.workshop.commerce.ticket.domain.transition
@@ -44,76 +49,112 @@ import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.transaction.annotation.Transactional
 import java.io.Serial
 import java.io.Serializable
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
-import io.bluetape4k.idgenerators.uuid.Uuid
-import java.util.UUID
+import java.util.*
 
 fun interface PurchaseEventPublisher {
     fun publish(event: AuthorizationRequested)
 }
 
-class ActivePurchaseExists : IllegalStateException("active_purchase_exists") {
-    companion object { @Serial private const val serialVersionUID: Long = 1L }
+class ActivePurchaseExists: IllegalStateException("active_purchase_exists") {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
-class InventoryUnavailable : IllegalStateException("inventory_unavailable") {
-    companion object { @Serial private const val serialVersionUID: Long = 1L }
+class InventoryUnavailable: IllegalStateException("inventory_unavailable") {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
-class PurchaseLimitExceeded : IllegalStateException("purchase_limit_exceeded") {
-    companion object { @Serial private const val serialVersionUID: Long = 1L }
+class PurchaseLimitExceeded: IllegalStateException("purchase_limit_exceeded") {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
-class PurchaseNotFound : IllegalStateException("purchase_not_found") {
-    companion object { @Serial private const val serialVersionUID: Long = 1L }
+class PurchaseNotFound: IllegalStateException("purchase_not_found") {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
-class InvalidPurchaseCommand : IllegalArgumentException("invalid_purchase_command") {
-    companion object { @Serial private const val serialVersionUID: Long = 1L }
+class InvalidPurchaseCommand: IllegalArgumentException("invalid_purchase_command") {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
-class IdempotencyOwnershipLost : IllegalStateException("idempotency_ownership_lost") {
-    companion object { @Serial private const val serialVersionUID: Long = 1L }
+class IdempotencyOwnershipLost: IllegalStateException("idempotency_ownership_lost") {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 /** Bluetape4k [TicketExposedJdbcRepository] 위에 구현한 purchase aggregate persistence입니다. */
 class TicketPurchaseRepository(
-    private val jdbc: TicketJdbcExecutor,
+    private val jdbcExecutor: TicketJdbcExecutor,
     private val sale: SalePurchaseAuthority,
     private val admission: TransactionalAdmissionCommands,
     private val clock: Clock,
-) : TicketExposedJdbcRepository<TicketPurchaseAttemptEntity, UUID>(TicketPurchaseAttemptEntity::class.java) {
-    private val inventories = TicketInventoryRepository(jdbc)
+): TicketExposedJdbcRepository<TicketPurchaseAttemptEntity, UUID>(TicketPurchaseAttemptEntity::class) {
 
-    fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot? = jdbc.transaction {
-        findAll {
-            (TicketPurchaseAttempts.id eq attemptId) and
-                (TicketPurchaseAttempts.userSubjectId eq buyerSubjectId)
-        }.singleOrNull()?.toRecord()?.snapshot()
-    }
+    companion object: KLogging()
 
-    fun start(command: StartPurchase): PurchaseCommit = jdbc.transaction {
+    private val inventories = TicketInventoryRepository(jdbcExecutor)
+
+    fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot? =
+        jdbcExecutor.transaction {
+            TicketPurchaseAttemptEntity.find {
+                (TicketPurchaseAttempts.id eq attemptId) and
+                        (TicketPurchaseAttempts.userSubjectId eq buyerSubjectId)
+            }
+                .singleOrNull()
+                ?.toRecord()
+                ?.snapshot()
+        }
+
+    fun start(command: StartPurchase): PurchaseCommit = jdbcExecutor.transaction {
         val now = clock.instant()
         val policy = sale.requireOpen(this, command.policy, now)
         if (command.quantity !in 1..policy.maxQuantity) throw PurchaseLimitExceeded()
 
-        lockIdempotency(command)?.let { return@transaction PurchaseCommit(loadSnapshot(it), null) }
+        lockIdempotency(command)?.let {
+            return@transaction PurchaseCommit(loadSnapshot(it), null)
+        }
+
         lockGuard(command.policy.saleId, IdentityKind.USER, command.buyerSubjectId, null)
         lockGuard(command.policy.saleId, IdentityKind.IP, command.ipSubjectId, null)
-        lockBuyer(command.policy.saleId, command.buyerSubjectId, policy.policyVersion, command.quantity, policy.perUserLimit)
+
+        lockBuyer(
+            saleId = command.policy.saleId,
+            buyerId = command.buyerSubjectId,
+            policyVersion = policy.policyVersion,
+            quantity = command.quantity,
+            perUserLimit = policy.perUserLimit
+        )
+
         val inventory = inventories.lock(this, command.policy.saleId, command.grade)
         if (inventory.available < command.quantity) throw InventoryUnavailable()
 
-        insertAttempt(command, policy.policyVersion, now.plusSeconds(policy.holdSeconds), now)
+        insertAttempt(command, policy.policyVersion, now + policy.holdSeconds.seconds(), now)
         admission.consume(this, command.grant)
         applyInventoryDelta(inventory, heldDelta = command.quantity)
         insertGuard(command.policy.saleId, IdentityKind.USER, command.buyerSubjectId, command.attemptId, now)
@@ -122,21 +163,24 @@ class TicketPurchaseRepository(
         insertPaymentOperation(command, now)
 
         PurchaseCommit(
-            PurchaseSnapshot(command.attemptId, PurchaseState.INVENTORY_HELD, 0, now),
-            AuthorizationRequested(Uuid.V7.nextId(), command.attemptId, command.authorizationOperationId),
+            snapshot = PurchaseSnapshot(command.attemptId, PurchaseState.INVENTORY_HELD, 0, now),
+            event = AuthorizationRequested(Uuid.V7.nextId(), command.attemptId, command.authorizationOperationId),
         )
     }
 
-    fun cancel(command: CancelPurchase): PurchaseSnapshot = jdbc.transaction {
+    fun cancel(command: CancelPurchase): PurchaseSnapshot = jdbcExecutor.transaction {
         val candidate = findAttempt(command.attemptId) ?: throw PurchaseNotFound()
         if (candidate.buyerSubjectId != command.buyerSubjectId) throw PurchaseNotFound()
+
         lockSale(candidate.saleId)
         lockGuard(candidate.saleId, IdentityKind.USER, candidate.buyerSubjectId, candidate.attemptId)
         lockGuard(candidate.saleId, IdentityKind.IP, candidate.ipSubjectId, candidate.attemptId)
         lockExistingBuyer(candidate.saleId, candidate.buyerSubjectId)
+
         val inventory = inventories.lock(this, candidate.saleId, candidate.grade)
         acquire(TicketLockRank.ATTEMPT_ORDER)
         val attempt = lockAttempt(command.attemptId, command.buyerSubjectId)
+
         when (attempt.state) {
             PurchaseState.INVENTORY_HELD -> {
                 applyInventoryDelta(inventory, heldDelta = -attempt.quantity)
@@ -148,18 +192,22 @@ class TicketPurchaseRepository(
                 updateAttemptState(attempt.attemptId, PurchaseState.CANCELLATION_REQUESTED)
                 attempt.snapshot(PurchaseState.CANCELLATION_REQUESTED, clock.instant())
             }
-            else -> attempt.snapshot(attempt.state, attempt.updatedAt)
+            else                         ->
+                attempt.snapshot(attempt.state, attempt.updatedAt)
         }
     }
 
-    fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult = jdbc.transaction {
+    fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult = jdbcExecutor.transaction {
         val candidate = findAttempt(command.attemptId) ?: return@transaction ApplyResult.STALE
+
         lockSale(candidate.saleId)
         lockGuard(candidate.saleId, IdentityKind.USER, candidate.buyerSubjectId, candidate.attemptId)
         lockGuard(candidate.saleId, IdentityKind.IP, candidate.ipSubjectId, candidate.attemptId)
         lockExistingBuyer(candidate.saleId, candidate.buyerSubjectId)
+
         val inventory = inventories.lock(this, candidate.saleId, candidate.grade)
         acquire(TicketLockRank.ATTEMPT_ORDER)
+
         val attempt = lockAttempt(candidate.attemptId, candidate.buyerSubjectId)
         acquire(TicketLockRank.EFFECT)
         if (!ownsPaymentClaim(command)) return@transaction ApplyResult.STALE
@@ -167,53 +215,70 @@ class TicketPurchaseRepository(
         val change = transition(attempt.state, command.outcome)
         applyInventoryDelta(inventory, change.heldDelta * attempt.quantity, change.soldDelta * attempt.quantity)
         updateAttemptState(attempt.attemptId, change.next)
+
         if (change.releaseGuards) releaseGuards(attempt.attemptId)
         if (change.soldDelta > 0) incrementPurchased(attempt.saleId, attempt.buyerSubjectId, attempt.quantity)
         if (change.next == PurchaseState.APPROVED || change.next == PurchaseState.REFUND_PENDING) {
-            insertOrder(attempt, command.operationId, change.ticketDisposition ?: TicketDisposition.PENDING)
+            insertOrder(
+                attempt = attempt,
+                authorizationOperationId = command.operationId,
+                disposition = change.ticketDisposition ?: TicketDisposition.PENDING
+            )
         }
         completePaymentOperation(command, change.next)
         ApplyResult.APPLIED
     }
 
-    fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot = jdbc.transaction {
+    fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot = jdbcExecutor.transaction {
         acquire(TicketLockRank.ATTEMPT_ORDER)
-        val order = TicketOrders.selectAll().where { TicketOrders.id eq command.orderId }.forUpdate().single()
+        val order = TicketOrders.selectAll()
+            .where { TicketOrders.id eq command.orderId }
+            .forUpdate()
+            .single()
         val attemptId = order[TicketOrders.attemptId]
-        val attempt = findById(attemptId).orElseThrow(::PurchaseNotFound).toRecord()
+        val attempt = findByIdOrNull(attemptId)?.toRecord() ?: throw PurchaseNotFound()
+
         acquire(TicketLockRank.EFFECT)
-        val operation = TicketEffectOperations.selectAll().where {
-            (TicketEffectOperations.operationId eq command.operationId) and
-                (TicketEffectOperations.orderId eq command.orderId) and
-                (TicketEffectOperations.status eq "claimed") and
-                (TicketEffectOperations.claimToken eq command.claimToken) and
-                (TicketEffectOperations.claimRevision eq command.expectedRevision)
-        }.forUpdate().singleOrNull() ?: return@transaction attempt.snapshot()
+        val operation = TicketEffectOperations.selectAll()
+            .where {
+                (TicketEffectOperations.operationId eq command.operationId) and
+                        (TicketEffectOperations.orderId eq command.orderId) and
+                        (TicketEffectOperations.status eq "claimed") and
+                        (TicketEffectOperations.claimToken eq command.claimToken) and
+                        (TicketEffectOperations.claimRevision eq command.expectedRevision)
+            }
+            .forUpdate()
+            .singleOrNull() ?: return@transaction attempt.snapshot()
+
         val ticket = TicketTickets.selectAll()
             .where { TicketTickets.orderId eq command.orderId }
             .forUpdate()
             .single()
+
         val current = TicketState.entries.single { it.code == ticket[TicketTickets.state] }
         val next = ticketTransition(current, command.outcome)
         val now = clock.instant()
+
         TicketTickets.update({ TicketTickets.id eq ticket[TicketTickets.id] }) {
             it[state] = next.code
-            if (next == TicketState.ISSUED) it[externalTicketDigest] = effectDigest(command.operationId, command.disposition)
+            if (next == TicketState.ISSUED) {
+                it[externalTicketDigest] = effectDigest(command.operationId, command.disposition)
+            }
             it[revision] = revision + 1
             it[updatedAt] = now
         }
         TicketEffectOperations.update({ TicketEffectOperations.id eq operation[TicketEffectOperations.id] }) {
             it[status] = when (command.outcome) {
-                io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.SUCCEEDED -> "succeeded"
-                io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.RETRYABLE_FAILURE -> "retry"
-                io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.RETRY_BUDGET_EXHAUSTED -> "quarantined"
+                TicketEffectOutcome.SUCCEEDED              -> "succeeded"
+                TicketEffectOutcome.RETRYABLE_FAILURE      -> "retry"
+                TicketEffectOutcome.RETRY_BUDGET_EXHAUSTED -> "quarantined"
             }
             it[claimToken] = null
             it[claimUntil] = null
             it[revision] = revision + 1
             it[updatedAt] = now
         }
-        if (command.outcome == io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.SUCCEEDED) {
+        if (command.outcome == TicketEffectOutcome.SUCCEEDED) {
             TicketOrders.update({ TicketOrders.id eq command.orderId }) {
                 it[ticketDisposition] = command.disposition.code
                 it[revision] = revision + 1
@@ -234,14 +299,20 @@ class TicketPurchaseRepository(
         val row = TicketHttpIdempotencies.selectAll()
             .where {
                 (TicketHttpIdempotencies.id eq command.idempotencyOwnerId) and
-                    (TicketHttpIdempotencies.principalSubjectId eq command.buyerSubjectId)
+                        (TicketHttpIdempotencies.principalSubjectId eq command.buyerSubjectId)
             }
             .forUpdate()
             .singleOrNull()
             ?: throw IdempotencyOwnershipLost()
-        if (row[TicketHttpIdempotencies.status] != "in_progress") throw IdempotencyOwnershipLost()
+
+        if (row[TicketHttpIdempotencies.status] != "in_progress") {
+            throw IdempotencyOwnershipLost()
+        }
+
         return row[TicketHttpIdempotencies.attemptId]?.also {
-            if (it != command.attemptId) throw IdempotencyOwnershipLost()
+            if (it != command.attemptId) {
+                throw IdempotencyOwnershipLost()
+            }
         }
     }
 
@@ -262,22 +333,25 @@ class TicketPurchaseRepository(
         expectedAttempt: UUID?,
     ) {
         acquire(if (kind == IdentityKind.USER) TicketLockRank.USER_GUARD else TicketLockRank.IP_GUARD)
-        exposed.exec("SELECT pg_advisory_xact_lock(${guardAdvisoryKey(saleId, kind, subjectId)})") {
+        transaction.exec("SELECT pg_advisory_xact_lock(${guardAdvisoryKey(saleId, kind, subjectId)})") {
             check(it.next())
         }
         val subjectKind = TicketIdentitySubjects.selectAll()
             .where { TicketIdentitySubjects.id eq subjectId }
             .singleOrNull()
             ?.get(TicketIdentitySubjects.identityKind)
+
         if (subjectKind != kind.name) throw InvalidPurchaseCommand()
+
         val activeAttempt = TicketActiveIdentityGuards.selectAll()
             .where {
                 (TicketActiveIdentityGuards.saleId eq saleId) and
-                    (TicketActiveIdentityGuards.identityKind eq kind.name) and
-                    (TicketActiveIdentityGuards.identitySubjectId eq subjectId)
+                        (TicketActiveIdentityGuards.identityKind eq kind.name) and
+                        (TicketActiveIdentityGuards.identitySubjectId eq subjectId)
             }
             .singleOrNull()
             ?.get(TicketActiveIdentityGuards.activeAttemptId)
+
         if (activeAttempt != null && activeAttempt != expectedAttempt) throw ActivePurchaseExists()
     }
 
@@ -289,10 +363,11 @@ class TicketPurchaseRepository(
         perUserLimit: Int,
     ) {
         acquire(TicketLockRank.BUYER)
-        if (TicketBuyerSaleStates.selectAll().where {
-                (TicketBuyerSaleStates.saleId eq saleId) and (TicketBuyerSaleStates.userSubjectId eq buyerId)
-            }.empty()
-        ) {
+        val exists = TicketBuyerSaleStates.selectAll()
+            .where { (TicketBuyerSaleStates.saleId eq saleId) and (TicketBuyerSaleStates.userSubjectId eq buyerId) }
+            .empty()
+
+        if (exists) {
             TicketBuyerSaleStates.insert {
                 it[TicketBuyerSaleStates.saleId] = saleId
                 it[userSubjectId] = buyerId
@@ -305,17 +380,19 @@ class TicketPurchaseRepository(
             .where { (TicketBuyerSaleStates.saleId eq saleId) and (TicketBuyerSaleStates.userSubjectId eq buyerId) }
             .forUpdate()
             .single()[TicketBuyerSaleStates.purchasedQuantity]
-        if (purchased + quantity > perUserLimit) throw PurchaseLimitExceeded()
+
+        if (purchased + quantity > perUserLimit) {
+            throw PurchaseLimitExceeded()
+        }
     }
 
     private fun TicketJdbcTransaction.lockExistingBuyer(saleId: UUID, buyerId: UUID) {
         acquire(TicketLockRank.BUYER)
-        check(
-            TicketBuyerSaleStates.selectAll()
-                .where { (TicketBuyerSaleStates.saleId eq saleId) and (TicketBuyerSaleStates.userSubjectId eq buyerId) }
-                .forUpdate()
-                .singleOrNull() != null,
-        ) { "buyer state not found" }
+        val rows = TicketBuyerSaleStates.selectAll()
+            .where { (TicketBuyerSaleStates.saleId eq saleId) and (TicketBuyerSaleStates.userSubjectId eq buyerId) }
+            .forUpdate()
+            .singleOrNull()
+        check(rows != null) { "buyer state not found" }
     }
 
     private fun TicketJdbcTransaction.insertAttempt(
@@ -325,7 +402,7 @@ class TicketPurchaseRepository(
         now: Instant,
     ) {
         acquire(TicketLockRank.ATTEMPT_ORDER)
-        save(TicketPurchaseAttemptEntity.new(command.attemptId) {
+        val purchaseAttempt = TicketPurchaseAttemptEntity.new(id = command.attemptId) {
             saleId = command.policy.saleId
             userSubjectId = command.buyerSubjectId
             ipSubjectId = command.ipSubjectId
@@ -338,23 +415,27 @@ class TicketPurchaseRepository(
             revision = 0
             createdAt = now
             updatedAt = now
-        })
+        }
+        save(purchaseAttempt)
     }
 
+    @Suppress("UnusedReceiverParameter")
     private fun TicketJdbcTransaction.applyInventoryDelta(
         inventory: InventoryRecord,
         heldDelta: Int,
         soldDelta: Int = 0,
     ) {
-        check(TicketInventories.update({
+        val whereOp = {
             (TicketInventories.saleId eq inventory.saleId) and
-                (TicketInventories.grade eq inventory.grade) and
-                (TicketInventories.revision eq inventory.revision)
-        }) {
+                    (TicketInventories.grade eq inventory.grade) and
+                    (TicketInventories.revision eq inventory.revision)
+        }
+        val updatedCount = TicketInventories.update(where = whereOp) {
             it[heldQuantity] = heldQuantity + heldDelta
             it[soldQuantity] = soldQuantity + soldDelta
             it[revision] = revision + 1
-        } == 1) { "inventory revision changed while locked" }
+        }
+        check(updatedCount == 1) { "inventory revision changed while locked" }
     }
 
     private fun TicketJdbcTransaction.insertPaymentOperation(command: StartPurchase, now: Instant) {
@@ -374,49 +455,60 @@ class TicketPurchaseRepository(
     }
 
     private fun ownsPaymentClaim(command: ApplyPaymentOutcome): Boolean =
-        TicketPaymentOperations.selectAll().where {
-            (TicketPaymentOperations.operationId eq command.operationId) and
-                (TicketPaymentOperations.attemptId eq command.attemptId) and
-                (TicketPaymentOperations.status eq "claimed") and
-                (TicketPaymentOperations.claimToken eq command.claimToken) and
-                (TicketPaymentOperations.claimRevision eq command.claimRevision)
-        }.forUpdate().singleOrNull() != null
+        TicketPaymentOperations.select(TicketPaymentOperations.id)
+            .where {
+                (TicketPaymentOperations.operationId eq command.operationId) and
+                        (TicketPaymentOperations.attemptId eq command.attemptId) and
+                        (TicketPaymentOperations.status eq "claimed") and
+                        (TicketPaymentOperations.claimToken eq command.claimToken) and
+                        (TicketPaymentOperations.claimRevision eq command.claimRevision)
+            }
+            .forUpdate()
+            .singleOrNull() != null
 
     private fun completePaymentOperation(command: ApplyPaymentOutcome, nextState: PurchaseState) {
         val status = when (command.outcome) {
             PaymentOutcome.UNKNOWN -> "unknown"
             PaymentOutcome.APPROVED -> "approved"
             PaymentOutcome.DECLINED -> "declined"
-            else -> error("unsupported provider outcome")
+            else                   -> error("unsupported provider outcome")
         }
         val now = clock.instant()
-        check(TicketPaymentOperations.update({
+        val whereOp = {
             (TicketPaymentOperations.operationId eq command.operationId) and
-                (TicketPaymentOperations.claimToken eq command.claimToken) and
-                (TicketPaymentOperations.claimRevision eq command.claimRevision)
-        }) {
+                    (TicketPaymentOperations.claimToken eq command.claimToken) and
+                    (TicketPaymentOperations.claimRevision eq command.claimRevision)
+        }
+        val affected = TicketPaymentOperations.update(whereOp) {
             it[TicketPaymentOperations.status] = status
-            it[nextReconcileAt] = if (status == "unknown") now.plusSeconds(1) else null
+            it[nextReconcileAt] = if (status == "unknown") now + 1.seconds() else null
             it[claimToken] = null
             it[claimUntil] = null
             it[revision] = revision + 1
             it[updatedAt] = now
-        } == 1) { "payment claim changed while locked: $nextState" }
+        }
+        check(affected == 1) { "payment claim changed while locked: $nextState" }
     }
 
     private fun incrementPurchased(saleId: UUID, buyerId: UUID, quantity: Int) {
-        check(TicketBuyerSaleStates.update({
-            (TicketBuyerSaleStates.saleId eq saleId) and (TicketBuyerSaleStates.userSubjectId eq buyerId)
-        }) {
+        val whereOp = {
+            (TicketBuyerSaleStates.saleId eq saleId) and
+                    (TicketBuyerSaleStates.userSubjectId eq buyerId)
+        }
+        val affected = TicketBuyerSaleStates.update(whereOp) {
             it[purchasedQuantity] = purchasedQuantity + quantity
             it[revision] = revision + 1
-        } == 1)
+        }
+        check(affected == 1)
     }
 
     private fun insertOrder(attempt: AttemptRecord, authorizationOperationId: UUID, disposition: TicketDisposition) {
         val now = clock.instant()
         val orderId = Uuid.V7.nextId()
-        val refundOperationId = if (disposition == TicketDisposition.NEVER_ISSUED) stableOperationId("refund", orderId) else null
+        val refundOperationId = when (disposition) {
+            TicketDisposition.NEVER_ISSUED -> stableOperationId("refund", orderId)
+            else                           -> null
+        }
         TicketOrders.insert {
             it[id] = orderId
             it[TicketOrders.attemptId] = attempt.attemptId
@@ -466,7 +558,13 @@ class TicketPurchaseRepository(
         }
     }
 
-    private fun insertGuard(saleId: UUID, kind: IdentityKind, subjectId: UUID, attemptId: UUID, now: Instant) {
+    private fun insertGuard(
+        saleId: UUID,
+        kind: IdentityKind,
+        subjectId: UUID,
+        attemptId: UUID,
+        now: Instant,
+    ) {
         TicketActiveIdentityGuards.insert {
             it[TicketActiveIdentityGuards.saleId] = saleId
             it[identityKind] = kind.name
@@ -477,72 +575,78 @@ class TicketPurchaseRepository(
     }
 
     private fun bindIdempotency(ownerId: Long, attemptId: UUID, now: Instant) {
-        if (TicketHttpIdempotencies.update({
-                (TicketHttpIdempotencies.id eq ownerId) and
+        val whereOp = {
+            (TicketHttpIdempotencies.id eq ownerId) and
                     (TicketHttpIdempotencies.status eq "in_progress") and
                     TicketHttpIdempotencies.attemptId.isNull()
-            }) {
-                it[TicketHttpIdempotencies.attemptId] = attemptId
-                it[updatedAt] = now
-            } != 1
-        ) throw IdempotencyOwnershipLost()
+        }
+        val affected = TicketHttpIdempotencies.update(where = whereOp) {
+            it[TicketHttpIdempotencies.attemptId] = attemptId
+            it[updatedAt] = now
+        }
+
+        if (affected != 1) {
+            throw IdempotencyOwnershipLost()
+        }
     }
 
     private fun findAttempt(attemptId: UUID): AttemptRecord? =
         findById(attemptId).orElse(null)?.toRecord()
 
-    private fun lockAttempt(attemptId: UUID, buyerId: UUID): AttemptRecord =
-        TicketPurchaseAttempts.selectAll()
-            .where { (TicketPurchaseAttempts.id eq attemptId) and (TicketPurchaseAttempts.userSubjectId eq buyerId) }
-            .forUpdate()
-            .singleOrNull()
-            ?.let { row ->
-                findById(row[TicketPurchaseAttempts.id].value).orElse(null)?.toRecord()
+    private fun lockAttempt(attemptId: UUID, buyerId: UUID): AttemptRecord {
+        return TicketPurchaseAttemptEntity
+            .find {
+                (TicketPurchaseAttempts.id eq attemptId) and (TicketPurchaseAttempts.userSubjectId eq buyerId)
             }
+            .singleOrNull()
+            ?.toRecord()
             ?: throw PurchaseNotFound()
+    }
 
     private fun loadSnapshot(attemptId: UUID): PurchaseSnapshot =
         findAttempt(attemptId)?.snapshot() ?: throw IdempotencyOwnershipLost()
 
     private fun updateAttemptState(attemptId: UUID, state: PurchaseState) {
-        check(TicketPurchaseAttempts.update({ TicketPurchaseAttempts.id eq attemptId }) {
+        val affected = TicketPurchaseAttempts.update({ TicketPurchaseAttempts.id eq attemptId }) {
             it[TicketPurchaseAttempts.state] = state.code
             it[revision] = revision + 1
             it[updatedAt] = clock.instant()
-        } == 1)
+        }
+        check(affected == 1)
     }
 
     private fun releaseGuards(attemptId: UUID) {
         TicketActiveIdentityGuards.deleteWhere { activeAttemptId eq attemptId }
     }
 
-    private fun TicketPurchaseAttemptEntity.toRecord() = AttemptRecord(
-        attemptId = id.value,
-        saleId = saleId,
-        buyerSubjectId = userSubjectId,
-        ipSubjectId = ipSubjectId,
-        grade = grade,
-        quantity = quantity,
-        state = PurchaseState.entries.single { it.code == state },
-        revision = revision,
-        updatedAt = updatedAt,
-    )
+    private fun TicketPurchaseAttemptEntity.toRecord(): AttemptRecord =
+        AttemptRecord(
+            attemptId = id.value,
+            saleId = saleId,
+            buyerSubjectId = userSubjectId,
+            ipSubjectId = ipSubjectId,
+            grade = grade,
+            quantity = quantity,
+            state = PurchaseState.entries.single { it.code == state },
+            revision = revision,
+            updatedAt = updatedAt,
+        )
 
     private fun stableOperationId(kind: String, orderId: UUID): UUID =
-        UUID.nameUUIDFromBytes("ticket-$kind-v1:$orderId".toByteArray(UTF_8))
+        UUID.nameUUIDFromBytes("ticket-$kind-v1:$orderId".toUtf8Bytes())
 
     private fun effectDigest(operationId: UUID, disposition: TicketDisposition): ByteArray =
         MessageDigest.getInstance("SHA-256")
-            .digest("ticket-effect-v1:$operationId:${disposition.code}".toByteArray(UTF_8))
+            .digest("ticket-effect-v1:$operationId:${disposition.code}".toUtf8Bytes())
 
     private fun guardAdvisoryKey(saleId: UUID, kind: IdentityKind, subjectId: UUID): Long {
         val digest = MessageDigest.getInstance("SHA-256").digest(
-            "ticket-active-guard-v1\u0000$saleId\u0000${kind.name}\u0000$subjectId".toByteArray(UTF_8),
+            "ticket-active-guard-v1\u0000$saleId\u0000${kind.name}\u0000$subjectId".toUtf8Bytes(),
         )
         return ByteBuffer.wrap(digest, 0, Long.SIZE_BYTES).long
     }
 
-    data class PurchaseCommit(val snapshot: PurchaseSnapshot, val event: AuthorizationRequested?) : Serializable {
+    data class PurchaseCommit(val snapshot: PurchaseSnapshot, val event: AuthorizationRequested?): Serializable {
         companion object {
             @Serial
             private const val serialVersionUID: Long = 1L
@@ -559,13 +663,14 @@ class TicketPurchaseRepository(
         val state: PurchaseState,
         val revision: Long,
         val updatedAt: Instant,
-    ) : Serializable {
-        fun snapshot(nextState: PurchaseState = state, at: Instant = updatedAt) = PurchaseSnapshot(
-            attemptId = attemptId,
-            state = nextState,
-            revision = if (nextState == state) revision else revision + 1,
-            updatedAt = at,
-        )
+    ): Serializable {
+        fun snapshot(nextState: PurchaseState = state, at: Instant = updatedAt): PurchaseSnapshot =
+            PurchaseSnapshot(
+                attemptId = attemptId,
+                state = nextState,
+                revision = if (nextState == state) revision else revision + 1,
+                updatedAt = at,
+            )
 
         companion object {
             @Serial
@@ -579,13 +684,18 @@ class TicketPurchaseRepository(
 /** application service입니다. 모든 database work는 [TicketPurchaseRepository]에 위임합니다. */
 @Transactional
 class PurchaseService(
-    jdbc: TicketJdbcExecutor,
+    jdbcExecutor: TicketJdbcExecutor,
     sale: SalePurchaseAuthority,
     admission: TransactionalAdmissionCommands,
     clock: Clock,
     private val events: PurchaseEventPublisher,
-    private val purchases: TicketPurchaseRepository = TicketPurchaseRepository(jdbc, sale, admission, clock),
-) : PurchaseCommands, PurchaseQueries, PaymentOutcomeCommands {
+    private val purchases: TicketPurchaseRepository = TicketPurchaseRepository(jdbcExecutor, sale, admission, clock),
+): PurchaseCommands,
+   PurchaseQueries,
+   PaymentOutcomeCommands {
+
+    companion object: KLogging()
+
     override fun start(command: StartPurchase): PurchaseSnapshot {
         validate(command)
         val committed = purchases.start(command)
@@ -593,9 +703,11 @@ class PurchaseService(
         return committed.snapshot
     }
 
-    override fun cancel(command: CancelPurchase): PurchaseSnapshot = purchases.cancel(command)
+    override fun cancel(command: CancelPurchase): PurchaseSnapshot =
+        purchases.cancel(command)
 
-    override fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult = purchases.applyPaymentOutcome(command)
+    override fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult =
+        purchases.applyPaymentOutcome(command)
 
     override fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot =
         purchases.applyTicketOutcome(command)
@@ -605,11 +717,16 @@ class PurchaseService(
         purchases.owned(attemptId, buyerSubjectId)
 
     private fun validate(command: StartPurchase) {
-        if (command.idempotencyOwnerId <= 0 || command.grade.isBlank() || command.quantity <= 0 ||
-            command.grant.saleId != command.policy.saleId ||
-            command.grant.buyerSubjectId != command.buyerSubjectId ||
-            command.grant.policyVersion != command.policy.policyVersion ||
-            command.grant.attemptId != command.attemptId
-        ) throw InvalidPurchaseCommand()
+        val isInvalid = command.idempotencyOwnerId <= 0 ||
+                command.grade.isBlank() ||
+                command.quantity <= 0 ||
+                command.grant.saleId != command.policy.saleId ||
+                command.grant.buyerSubjectId != command.buyerSubjectId ||
+                command.grant.policyVersion != command.policy.policyVersion ||
+                command.grant.attemptId != command.attemptId
+
+        if (isInvalid) {
+            throw InvalidPurchaseCommand()
+        }
     }
 }

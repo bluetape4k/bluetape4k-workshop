@@ -9,6 +9,7 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.zookeeper.ZooKeeperLeaderElector
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -66,7 +67,7 @@ class R16AutoExtendIgnoredTest: AbstractLeaderZookeeperTest() {
         // ZooKeeperLeaderElector.kt:111-113에서 확인한 계약이므로 이 부분 문자열을 바꾸면 안 된다.
         val warnEvents = appender.list.filter {
             it.level == Level.WARN && "autoExtend" in it.formattedMessage
-        }
+        }.onEach { log.debug { "event=$it" } }
         warnEvents.shouldNotBeEmpty()
     }
 }

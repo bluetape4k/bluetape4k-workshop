@@ -4,7 +4,9 @@ package io.bluetape4k.workshop.commerce.metering.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.MeterCode
 import io.bluetape4k.workshop.commerce.metering.domain.ReconciliationFindingType
@@ -40,7 +42,7 @@ import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.Currency
+import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -69,7 +71,7 @@ class ReconciliationPostgresIntegrationTest {
             scenario.period.currency = "EUR"
             scenario.invoiceLine.amount += BigDecimal("2")
             newUsage(scenario.seed, "missing-before", scenario.cutoff.minusSeconds(1))
-            newUsage(scenario.seed, "missing-after", scenario.cutoff.plusSeconds(1))
+            newUsage(scenario.seed, "missing-after", scenario.cutoff + 1.seconds())
         }
 
         val result = transaction { reconciliation.inspect(scenario.seed.tenantId) }
@@ -93,13 +95,13 @@ class ReconciliationPostgresIntegrationTest {
                 Instant.parse("2026-07-01T00:00:00Z"),
                 Instant.parse("2026-08-01T00:00:00Z"),
             )
-            newUsage(scenario.seed, "late-repair", scenario.cutoff.plusSeconds(1))
+            newUsage(scenario.seed, "late-repair", scenario.cutoff + 1.seconds())
         }
         val result = transaction { reconciliation.inspect(scenario.seed.tenantId) }
         val finding = transaction {
             ReconciliationFindingEntity.find {
                 (ReconciliationFindings.runId eq result.runId) and
-                    (ReconciliationFindings.findingType eq ReconciliationFindingType.UNLEDGERED_USAGE_AFTER_CUTOFF.name)
+                        (ReconciliationFindings.findingType eq ReconciliationFindingType.UNLEDGERED_USAGE_AFTER_CUTOFF.name)
             }.single()
         }
         val expectedDigest = requireNotNull(finding.expectedDigest)
@@ -136,7 +138,7 @@ class ReconciliationPostgresIntegrationTest {
                     Instant.parse("2025-01-01T00:00:00Z").plusSeconds(index.toLong()),
                 )
             }
-            newUsage(scenario.seed, "finding-after-prefix", scenario.cutoff.plusSeconds(1))
+            newUsage(scenario.seed, "finding-after-prefix", scenario.cutoff + 1.seconds())
         }
 
         val result = transaction { reconciliation.inspect(scenario.seed.tenantId, requestedPageSize = 1) }
@@ -149,7 +151,7 @@ class ReconciliationPostgresIntegrationTest {
                 .single()
                 .id.value.toString()
         }
-        result.hasMore shouldBeEqualTo false
+        result.hasMore.shouldBeFalse()
     }
 
     private fun finalizedScenario(): FinalizedScenario {
@@ -172,7 +174,10 @@ class ReconciliationPostgresIntegrationTest {
             Instant.parse("2026-07-01T00:00:00Z"),
         )
         val run = periodService.startClose(tenant, periodId)
-        BillingCloseService(runs, periods, usageEvents, prices, properties, clock).processNextBatch(seed.tenantId, run.id)
+        BillingCloseService(runs, periods, usageEvents, prices, properties, clock).processNextBatch(
+            seed.tenantId,
+            run.id
+        )
         InvoiceService(InvoiceRepository(), periods, runs, ledger, clock).finalize(seed.tenantId, run.id)
         val period = requireNotNull(periods.findTenant(periodId, seed.tenantId))
         return FinalizedScenario(
@@ -195,7 +200,10 @@ class ReconciliationPostgresIntegrationTest {
             sourceSystem = "reconciliation-test"
             sourceEventId = sourceId
             requestFingerprint = CommandFingerprint.key(sourceId).value
-            meterId = org.jetbrains.exposed.v1.core.dao.id.EntityID(seed.meterId, io.bluetape4k.workshop.commerce.metering.persistence.Meters)
+            meterId = org.jetbrains.exposed.v1.core.dao.id.EntityID(
+                seed.meterId,
+                io.bluetape4k.workshop.commerce.metering.persistence.Meters
+            )
             quantity = BigDecimal.TEN
             this.occurredAt = occurredAt
             this.receivedAt = receivedAt

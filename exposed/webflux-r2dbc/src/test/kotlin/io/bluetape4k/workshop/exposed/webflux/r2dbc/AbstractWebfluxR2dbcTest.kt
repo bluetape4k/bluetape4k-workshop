@@ -14,8 +14,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractWebfluxR2dbcTest {
 
-    companion object : KLoggingChannel() {
-        private val testDB = TestDB.POSTGRESQL
+    companion object: KLoggingChannel() {
+        private val testDB by lazy { TestDB.POSTGRESQL }
 
         @JvmStatic
         @DynamicPropertySource

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.graalvm.native)
+    kotlin("kapt")
 }
 
 springBoot {
@@ -34,7 +35,7 @@ dependencies {
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.aspectj)
     implementation(libs.spring.boot.starter.webflux.lib)
-    testImplementation(libs.spring.boot.starter.webflux.test)    
+    testImplementation(libs.spring.boot.starter.webflux.test)
     testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.usagebilling.query.config.QueryMetrics
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
@@ -15,7 +17,7 @@ class QueryInboxServiceTest {
 
     @Test
     fun `new event mutates its local read model and advances the projection checkpoint together`() {
-        service.apply(event()).applied shouldBeEqualTo true
+        service.apply(event()).applied.shouldBeTrue()
         journal.readModelEventIds.size shouldBeEqualTo 1
         journal.checkpoint shouldBeEqualTo 1L
     }
@@ -25,7 +27,7 @@ class QueryInboxServiceTest {
         val event = event()
         service.apply(event)
 
-        service.apply(event).applied shouldBeEqualTo false
+        service.apply(event).applied.shouldBeFalse()
         journal.readModelEventIds.size shouldBeEqualTo 1
         journal.checkpoint shouldBeEqualTo 1L
     }

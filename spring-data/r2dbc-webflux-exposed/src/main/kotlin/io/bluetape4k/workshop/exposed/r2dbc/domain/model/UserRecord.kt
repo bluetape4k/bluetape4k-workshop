@@ -8,7 +8,7 @@ data class UserRecord(
     val email: String,
     val avatar: String? = null,
     val id: Int = -1,
-) : Serializable {
+): Serializable {
 
     fun withId(newId: Int) = copy(id = newId)
 

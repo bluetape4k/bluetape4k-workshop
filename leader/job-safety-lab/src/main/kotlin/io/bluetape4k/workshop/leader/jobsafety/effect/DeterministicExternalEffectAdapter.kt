@@ -1,16 +1,24 @@
 package io.bluetape4k.workshop.leader.jobsafety.effect
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExternalEffectResult
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
-enum class DeterministicEffect { CONFIRMED, DECLINED, APPLIED_BUT_TIMEOUT }
+enum class DeterministicEffect {
+    CONFIRMED,
+    DECLINED,
+    APPLIED_BUT_TIMEOUT
+}
 
 /** 멱등 provider 실행과 애매한 응답을 모델링하는 thread-safe fake입니다. */
 class DeterministicExternalEffectAdapter(
     private val beforeExecute: () -> Unit = {},
-) : ExternalEffectPort {
+): ExternalEffectPort {
+
+    companion object: KLogging()
+
     override val providerName: String = "deterministic-provider"
     private val scripts = ConcurrentHashMap<OperationId, DeterministicEffect>()
     private val executeCounts = ConcurrentHashMap<OperationId, AtomicInteger>()

@@ -1,9 +1,13 @@
 package io.bluetape4k.workshop.operations.jobconsole.application
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class JobConsoleUiTest {
+
+    companion object: KLogging()
+
     @Test
     fun `shared browser console submits refreshes subscribes and cancels jobs`() {
         val html = JobConsoleUi.indexHtml
@@ -21,6 +25,6 @@ class JobConsoleUiTest {
             "api('/v1/jobs'",
             "response.body.getReader()",
             "refreshSnapshot",
-        ).all(html::contains) shouldBeEqualTo true
+        ).all(html::contains).shouldBeTrue()
     }
 }

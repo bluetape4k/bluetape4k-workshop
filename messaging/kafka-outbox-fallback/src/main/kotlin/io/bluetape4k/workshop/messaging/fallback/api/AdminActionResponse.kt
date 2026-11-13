@@ -13,7 +13,7 @@ data class AdminActionResponse(
     val deadLettered: Int = 0,
     val scanned: Int = 0,
     val reconstructed: Int = 0,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

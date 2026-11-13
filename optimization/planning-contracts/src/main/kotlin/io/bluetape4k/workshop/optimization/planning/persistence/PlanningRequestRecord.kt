@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class PlanningRequestRecord(
     val id: UUID,

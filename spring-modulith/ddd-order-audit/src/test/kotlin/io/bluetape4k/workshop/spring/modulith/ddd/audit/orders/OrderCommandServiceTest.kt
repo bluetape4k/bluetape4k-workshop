@@ -4,23 +4,27 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.spring.modulith.ddd.audit.AbstractDddOrderAuditTest
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.modulith.events.ApplicationModuleListener
 import org.springframework.modulith.events.EventPublication
 import org.springframework.modulith.events.core.EventPublicationRepository
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.time.Duration
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Import(
     OrderCommandServiceTest.TestPublicationConfig::class,
@@ -37,7 +41,9 @@ class OrderCommandServiceTest(
     @AfterEach
     fun cleanup() {
         val publicationIds = EventPublication.Status.entries
-            .flatMap { status -> eventPublicationRepository.findByStatus(status).map { it.identifier } }
+            .flatMap { status ->
+                eventPublicationRepository.findByStatus(status).map { it.identifier }
+            }
         if (publicationIds.isNotEmpty()) {
             eventPublicationRepository.deletePublications(publicationIds)
         }
@@ -49,11 +55,13 @@ class OrderCommandServiceTest(
     fun `place persists order in PostgreSQL`() {
         val placed = commandService.place(validPlaceOrderCommand())
 
-        val saved = orderRepository.findById(placed.id.value).orElseThrow()
-        saved.id shouldBeEqualTo placed.id.value
-        saved.customerId shouldBeEqualTo placed.customerId.value
-        saved.status shouldBeEqualTo OrderStatus.PLACED
-        saved.lines shouldHaveSingleLineMatching placed.lines.single()
+        orderRepository.findByIdOrNull(placed.id.value).shouldNotBeNull()
+            .let { saved ->
+                saved.id shouldBeEqualTo placed.id.value
+                saved.customerId shouldBeEqualTo placed.customerId.value
+                saved.status shouldBeEqualTo OrderStatus.PLACED
+                saved.lines shouldHaveSingleLineMatching placed.lines.single()
+            }
     }
 
     @Test
@@ -61,9 +69,9 @@ class OrderCommandServiceTest(
         val placed = commandService.place(validPlaceOrderCommand())
         val approved = commandService.approve(ApproveOrderCommand(placed.id, approvedBy = "ops-user"))
 
-        orderRepository.findById(approved.id.value).orElseThrow().status shouldBeEqualTo OrderStatus.APPROVED
+        orderRepository.findByIdOrNull(approved.id.value)!!.status shouldBeEqualTo OrderStatus.APPROVED
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             publicationProbe.handledIds.contains(approved.id.value).shouldBeTrue()
             totalPublications() shouldBeGreaterThan 0
         }
@@ -90,7 +98,7 @@ class OrderCommandServiceTest(
             commandService.approve(ApproveOrderCommand(placed.id, approvedBy = "ops-user"))
         }
 
-        orderRepository.findById(placed.id.value).orElseThrow().status shouldBeEqualTo OrderStatus.APPROVED
+        orderRepository.findByIdOrNull(placed.id.value)!!.status shouldBeEqualTo OrderStatus.APPROVED
     }
 
     private fun totalPublications(): Int =
@@ -110,10 +118,12 @@ class OrderCommandServiceTest(
 
     private infix fun List<OrderLineEntity>.shouldHaveSingleLineMatching(line: OrderLine) {
         size shouldBeEqualTo 1
-        single().sku shouldBeEqualTo line.sku
-        single().quantity shouldBeEqualTo line.quantity
-        single().unitPriceAmount shouldBeEqualTo line.unitPrice.amount
-        single().unitPriceCurrency shouldBeEqualTo line.unitPrice.currency
+        single().let {
+            it.sku shouldBeEqualTo line.sku
+            it.quantity shouldBeEqualTo line.quantity
+            it.unitPriceAmount shouldBeEqualTo line.unitPrice.amount
+            it.unitPriceCurrency shouldBeEqualTo line.unitPrice.currency
+        }
     }
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -165,6 +175,6 @@ open class RollbackProbe(
         val order = Order.place(command)
         orderRepository.save(OrderEntity.from(order))
         eventPublisher.publishEvent(order.events.single())
-        throw IllegalStateException("rollback probe failed")
+        error("rollback probe failed")
     }
 }

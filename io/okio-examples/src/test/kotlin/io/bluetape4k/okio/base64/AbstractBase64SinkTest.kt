@@ -1,18 +1,19 @@
 package io.bluetape4k.okio.base64
 
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.okio.AbstractOkioTest
 import io.bluetape4k.okio.bufferOf
 import io.bluetape4k.support.toUtf8Bytes
 import okio.Buffer
 import okio.Sink
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest
 
 abstract class AbstractBase64SinkTest: AbstractOkioTest() {
 
-    companion object {
+    companion object: KLogging() {
         private const val REPEAT_SIZE = 5
     }
 

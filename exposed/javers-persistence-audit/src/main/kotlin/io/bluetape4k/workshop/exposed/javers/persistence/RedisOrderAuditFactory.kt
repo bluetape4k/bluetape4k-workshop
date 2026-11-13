@@ -36,12 +36,15 @@ object RedisOrderAuditFactory {
     ): OrderAuditService {
         repositoryName.requireNotBlank("repositoryName")
         val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redisson, codec)
+
         repository.requireConsistentOrderAuditHead {
             redisson.keys.countExists("javers:$repositoryName:snapshot") > 0L
         }
+
         val javers = JaversBuilder.javers()
             .registerJaversRepository(repository)
             .build()
+
         return OrderAuditService(javers)
     }
 }

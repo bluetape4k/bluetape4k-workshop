@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.vt.order.service
 
-import io.bluetape4k.concurrent.virtualthread.virtualFuture
+import io.bluetape4k.exposed.jdbc.newVirtualThreadJdbcTransaction
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.OrderDTO
@@ -21,7 +21,6 @@ import org.jetbrains.exposed.v1.core.minus
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -35,16 +34,16 @@ class OrderService(
     private val orderLineRepo: OrderLineRepository,
     private val productRepo: ProductRepository,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
-    fun findAll(): List<OrderDTO> = orderRepo.findAll().get()
+    fun findAll(): List<OrderDTO> = orderRepo.findAll().await()
 
     fun findById(id: Long): OrderDTO =
-        orderRepo.findById(id).get() ?: throw NoSuchElementException("Order $id not found")
+        orderRepo.findById(id).await() ?: throw NoSuchElementException("Order $id not found")
 
     fun findWithLines(id: Long): OrderWithLinesDTO {
         val order = findById(id)
-        val lines = orderLineRepo.findByOrderId(id).get()
+        val lines = orderLineRepo.findByOrderId(id).await()
         return OrderWithLinesDTO(order, lines)
     }
 
@@ -55,8 +54,8 @@ class OrderService(
         }
     }
 
-    fun placeOrder(req: PlaceOrderRequest): OrderDTO = virtualFuture(executor) {
-        transaction(db) {
+    fun placeOrder(req: PlaceOrderRequest): OrderDTO =
+        newVirtualThreadJdbcTransaction(executor, db) {
             val orderId = OrderTable.insert {
                 it[customerId] = req.customerId
             }[OrderTable.id]
@@ -90,11 +89,11 @@ class OrderService(
                 .where { OrderTable.id eq orderId }
                 .single()
                 .toOrderDTO()
-        }
-    }.get()
 
-    fun cancelOrder(orderId: Long): OrderDTO = virtualFuture(executor) {
-        transaction(db) {
+        }
+
+    fun cancelOrder(orderId: Long): OrderDTO =
+        newVirtualThreadJdbcTransaction(executor, db) {
             val rows = OrderTable.update({ OrderTable.id eq orderId }) {
                 it[status] = OrderStatus.CANCELLED
             }
@@ -104,12 +103,11 @@ class OrderService(
                 .single()
                 .toOrderDTO()
         }
-    }.get()
 
-    fun createProduct(req: CreateProductRequest): ProductDTO = productRepo.insert(req).get()
+    fun createProduct(req: CreateProductRequest): ProductDTO = productRepo.insert(req).await()
 
-    fun findAllProducts(): List<ProductDTO> = productRepo.findAll().get()
+    fun findAllProducts(): List<ProductDTO> = productRepo.findAll().await()
 
     fun findProductById(id: Long): ProductDTO =
-        productRepo.findById(id).get() ?: throw NoSuchElementException("Product $id not found")
+        productRepo.findById(id).await() ?: throw NoSuchElementException("Product $id not found")
 }

@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.assertCancellationPropagates
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.micrometer.observation.coroutines.currentObservationInContext
 import io.bluetape4k.micrometer.observation.coroutines.withObservationContextSuspending
 import io.micrometer.observation.Observation
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 
 class ObservationLifecycleTest {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `released helper propagates current observation across dispatcher boundary`() = runSuspendIO {
@@ -33,9 +36,10 @@ class ObservationLifecycleTest {
     @Test
     fun `released helper stops observation exactly once on success`() = runSuspendIO {
         val handler = StopCountingHandler()
-        val registry = ObservationRegistry.create().also {
-            it.observationConfig().observationHandler(handler)
-        }
+        val registry = ObservationRegistry.create()
+            .also {
+                it.observationConfig().observationHandler(handler)
+            }
 
         withObservationContextSuspending("order.service.fetch", registry) { "ok" }
 
@@ -46,9 +50,10 @@ class ObservationLifecycleTest {
     @Test
     fun `released helper stops observation exactly once and records failure`() = runSuspendIO {
         val handler = StopCountingHandler()
-        val registry = ObservationRegistry.create().also {
-            it.observationConfig().observationHandler(handler)
-        }
+        val registry = ObservationRegistry.create()
+            .also {
+                it.observationConfig().observationHandler(handler)
+            }
         val expected = IllegalStateException("inventory unavailable")
 
         val actual = assertFailsWith<IllegalStateException> {
@@ -65,9 +70,10 @@ class ObservationLifecycleTest {
     @Test
     fun `released helper rethrows cancellation and stops observation exactly once`() = runSuspendIO {
         val handler = StopCountingHandler()
-        val registry = ObservationRegistry.create().also {
-            it.observationConfig().observationHandler(handler)
-        }
+        val registry = ObservationRegistry.create()
+            .also {
+                it.observationConfig().observationHandler(handler)
+            }
 
         assertCancellationPropagates {
             withObservationContextSuspending<Unit>("order.service.fetch", registry) {
@@ -79,7 +85,7 @@ class ObservationLifecycleTest {
         handler.errorCount.get() shouldBeEqualTo 0
     }
 
-    private class StopCountingHandler : ObservationHandler<Observation.Context> {
+    private class StopCountingHandler: ObservationHandler<Observation.Context> {
         val stopCount = AtomicInteger()
         val errorCount = AtomicInteger()
 

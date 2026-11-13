@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.spring.modulith.events.b.transactions
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.modulith.events.util.IntegrationTest
-import io.bluetape4k.assertions.shouldBeTrue
-import org.springframework.beans.factory.annotation.Autowired
 import org.junit.jupiter.api.Test
-import io.bluetape4k.assertions.assertFailsWith
+import org.springframework.beans.factory.annotation.Autowired
 
 @IntegrationTest
 class OrderEventPublicationTests(
@@ -13,7 +13,7 @@ class OrderEventPublicationTests(
     @param:Autowired private val listener: OrderListeners.ConfigurableEventListener,
     @param:Autowired private val txListener: OrderListeners.ConfigurableTransactionalListener,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `주문 완료 시 주문이 저장된다`() {

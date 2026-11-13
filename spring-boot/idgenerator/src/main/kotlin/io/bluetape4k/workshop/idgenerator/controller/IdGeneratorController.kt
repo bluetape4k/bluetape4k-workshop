@@ -1,15 +1,19 @@
 package io.bluetape4k.workshop.idgenerator.controller
 
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.idgenerators.hashids.Hashids
 import io.bluetape4k.idgenerators.ksuid.KsuidGenerator
 import io.bluetape4k.idgenerators.snowflake.Snowflakers
 import io.bluetape4k.idgenerators.ulid.UlidGenerator
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.idgenerator.model.BatchIdResponse
 import io.bluetape4k.workshop.idgenerator.model.HashidsResponse
 import io.bluetape4k.workshop.idgenerator.model.SnowflakeResponse
 import io.bluetape4k.workshop.idgenerator.model.StringIdResponse
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -28,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/ids")
 class IdGeneratorController {
 
-    companion object : KLogging() {
+    companion object: KLoggingChannel() {
         private val snowflake = Snowflakers.Default
         private val ulidGenerator = UlidGenerator()
         private val ksuidGenerator = KsuidGenerator()
@@ -47,6 +51,7 @@ class IdGeneratorController {
         val id = snowflake.nextId()
         val parsed = snowflake.parse(id)
         log.debug { "Generated Snowflake id=$id, machineId=${parsed.machineId}" }
+
         return SnowflakeResponse(
             id = id,
             idAsString = snowflake.nextIdAsString(),
@@ -63,6 +68,7 @@ class IdGeneratorController {
     suspend fun parseSnowflakeId(@PathVariable id: Long): SnowflakeResponse {
         val parsed = snowflake.parse(id)
         log.debug { "Parsed Snowflake id=$id → $parsed" }
+
         return SnowflakeResponse(
             id = id,
             idAsString = id.toString(36),
@@ -80,8 +86,12 @@ class IdGeneratorController {
         @RequestParam(defaultValue = "10") count: Int,
     ): BatchIdResponse {
         val safeCount = count.coerceIn(1, 1000)
-        val ids = snowflake.nextIds(safeCount).map { it.toString() }.toList()
+        val ids = snowflake.nextIds(safeCount)
+            .asFlow().log("Snowflake")
+            .map { it.toString() }
+            .toList()
         log.debug { "Generated $safeCount Snowflake IDs" }
+
         return BatchIdResponse(type = "snowflake", count = safeCount, ids = ids)
     }
 
@@ -107,7 +117,10 @@ class IdGeneratorController {
         @RequestParam(defaultValue = "10") count: Int,
     ): BatchIdResponse {
         val safeCount = count.coerceIn(1, 1000)
-        val ids = List(safeCount) { ulidGenerator.nextId() }
+        val ids = ulidGenerator.nextIds(safeCount)
+            .asFlow().log("Ulid")
+            .toList()
+        
         return BatchIdResponse(type = "ulid", count = safeCount, ids = ids)
     }
 
@@ -133,7 +146,10 @@ class IdGeneratorController {
         @RequestParam(defaultValue = "10") count: Int,
     ): BatchIdResponse {
         val safeCount = count.coerceIn(1, 1000)
-        val ids = List(safeCount) { ksuidGenerator.nextId() }
+        val ids = ksuidGenerator.nextIds(safeCount)
+            .asFlow().log("Ksuid")
+            .toList()
+        
         return BatchIdResponse(type = "ksuid", count = safeCount, ids = ids)
     }
 
@@ -152,6 +168,7 @@ class IdGeneratorController {
         val encoded = hashids.encode(*numbers.toLongArray())
         val decoded = hashids.decode(encoded).toList()
         log.debug { "Hashids encode $numbers → $encoded" }
+
         return HashidsResponse(numbers = numbers, encoded = encoded, decoded = decoded)
     }
 
@@ -164,6 +181,7 @@ class IdGeneratorController {
     suspend fun hashidsDecode(@PathVariable hash: String): HashidsResponse {
         val decoded = hashids.decode(hash).toList()
         log.debug { "Hashids decode $hash → $decoded" }
+
         return HashidsResponse(numbers = decoded, encoded = hash, decoded = decoded)
     }
 }

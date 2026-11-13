@@ -13,7 +13,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
  * 기존 [UserExposedRepository]의 명시적 Exposed DSL CRUD와 분리하여, Spring Data factory가
  * QBE·FluentQuery·projection 구현을 생성하도록 합니다.
  */
-interface UserQueryByExampleRepository : ExposedR2dbcQueryByExampleRepository<UserRecord, Int> {
+interface UserQueryByExampleRepository: ExposedR2dbcQueryByExampleRepository<UserRecord, Int> {
 
     override val table: UserTable
         get() = UserTable

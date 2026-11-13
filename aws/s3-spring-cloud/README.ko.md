@@ -94,7 +94,7 @@ Spring Cloud AWS가 같은 이름의 `s3ObjectConverter` bean을 소유하므로
 s3Client.createBucket("my-bucket") {}
 
 // Upload file (Spring Cloud AWS S3Template)
-val content = "Hello, S3!".toByteArray()
+val content = "Hello, S3!".toUtf8Bytes()
 s3Template.upload(
     "my-bucket",
     "hello.txt",

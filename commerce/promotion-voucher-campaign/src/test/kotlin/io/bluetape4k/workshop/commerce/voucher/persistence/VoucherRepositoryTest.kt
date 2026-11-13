@@ -7,6 +7,7 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
@@ -14,9 +15,8 @@ import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import io.bluetape4k.workshop.commerce.voucher.domain.ReviewKind
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class VoucherRepositoryTest {
     private val gate =
@@ -24,7 +24,7 @@ internal class VoucherRepositoryTest {
             foregroundPermits = 1,
             workerPermits = 1,
             sseMaintenancePermits = 1,
-            acquireTimeout = Duration.ofSeconds(1),
+            acquireTimeout = 1.seconds(),
         )
 
     @Test

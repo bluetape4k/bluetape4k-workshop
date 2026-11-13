@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety.audit
 
-import java.util.ArrayDeque
+import io.bluetape4k.support.requirePositiveNumber
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -33,8 +34,8 @@ class BoundedAuditPayloadStore(
     private var retainedBytesInternal: Long = 0
 
     init {
-        require(maxEntries > 0) { "maxEntries must be positive: $maxEntries" }
-        require(maxBytes > 0) { "maxBytes must be positive: $maxBytes" }
+        maxEntries.requirePositiveNumber("maxEntries")
+        maxBytes.requirePositiveNumber("maxBytes")
     }
 
     /**

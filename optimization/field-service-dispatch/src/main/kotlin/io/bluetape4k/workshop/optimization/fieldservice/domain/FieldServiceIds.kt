@@ -17,71 +17,79 @@ private fun validateFieldServiceId(value: String, field: String): String {
 
 /** Synthetic worker 식별자입니다. */
 @JvmInline
-value class WorkerId private constructor(val value: String) : Serializable {
+value class WorkerId private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): WorkerId = WorkerId(validateFieldServiceId(value, "workerId"))
+        operator fun invoke(value: String): WorkerId =
+            WorkerId(validateFieldServiceId(value, "workerId"))
     }
 }
 
 /** Synthetic visit 식별자입니다. */
 @JvmInline
-value class VisitId private constructor(val value: String) : Serializable {
+value class VisitId private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): VisitId = VisitId(validateFieldServiceId(value, "visitId"))
+        operator fun invoke(value: String): VisitId =
+            VisitId(validateFieldServiceId(value, "visitId"))
     }
 }
 
 /** Field Service plan stream 식별자입니다. */
 @JvmInline
-value class PlanId private constructor(val value: String) : Serializable {
+value class PlanId private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): PlanId = PlanId(validateFieldServiceId(value, "planId"))
+        operator fun invoke(value: String): PlanId =
+            PlanId(validateFieldServiceId(value, "planId"))
     }
 }
 
 /** 기준 데이터 집계 식별자입니다. */
 @JvmInline
-value class AggregateId private constructor(val value: String) : Serializable {
+value class AggregateId private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): AggregateId = AggregateId(validateFieldServiceId(value, "aggregateId"))
+        operator fun invoke(value: String): AggregateId =
+            AggregateId(validateFieldServiceId(value, "aggregateId"))
     }
 }
 
 /** Synthetic coordinate 식별자입니다. */
 @JvmInline
-value class CoordinateId private constructor(val value: String) : Serializable {
+value class CoordinateId private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): CoordinateId = CoordinateId(validateFieldServiceId(value, "coordinateId"))
+        operator fun invoke(value: String): CoordinateId =
+            CoordinateId(validateFieldServiceId(value, "coordinateId"))
     }
 }
 
 /** Worker가 가진 닫힌 skill 토큰입니다. */
 @JvmInline
-value class Skill private constructor(val value: String) : Serializable {
+value class Skill private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): Skill = Skill(validateFieldServiceId(value, "skill"))
+        operator fun invoke(value: String): Skill =
+            Skill(validateFieldServiceId(value, "skill"))
     }
 }
 
 /** 기준 데이터 식별자입니다. */
 @JvmInline
-value class DatasetId private constructor(val value: String) : Serializable {
+value class DatasetId private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): DatasetId = DatasetId(validateFieldServiceId(value, "datasetId"))
+        operator fun invoke(value: String): DatasetId =
+            DatasetId(validateFieldServiceId(value, "datasetId"))
     }
 }
 
 /** Provider 요청 식별자입니다. */
 @JvmInline
-value class ProviderRequestId private constructor(val value: String) : Serializable {
+value class ProviderRequestId private constructor(val value: String): Serializable {
     companion object {
-        operator fun invoke(value: String): ProviderRequestId = ProviderRequestId(validateFieldServiceId(value, "providerRequestId"))
+        operator fun invoke(value: String): ProviderRequestId =
+            ProviderRequestId(validateFieldServiceId(value, "providerRequestId"))
     }
 }
 
 /** Event idempotency key입니다. */
 @JvmInline
-value class EventKey(val value: String) : Serializable {
+value class EventKey(val value: String): Serializable {
     init {
         val normalized = try {
             value.requireNotBlank("eventKey")
@@ -96,7 +104,7 @@ value class EventKey(val value: String) : Serializable {
 
 /** HTTP mutation 재시도 식별자입니다. */
 @JvmInline
-value class IdempotencyKey(val value: String) : Serializable {
+value class IdempotencyKey(val value: String): Serializable {
     init {
         val normalized = try {
             value.requireNotBlank("idempotencyKey")
@@ -114,7 +122,7 @@ value class IdempotencyKey(val value: String) : Serializable {
 
 /** SHA-256 canonical payload digest의 lowercase hexadecimal 표현입니다. */
 @JvmInline
-value class EventDigest(val value: String) : Serializable {
+value class EventDigest(val value: String): Serializable {
     init {
         if (!value.matches(HEX_256)) {
             throw InvalidFieldServiceInput("event digest must be a 64-character lowercase hexadecimal SHA-256")

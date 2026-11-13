@@ -21,7 +21,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSource
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class PoisonRetryRequest(
     val identity: RebuildRequestIdentity,
@@ -41,26 +41,26 @@ internal sealed interface PoisonRetryResult {
         val poison: ProjectionPoisonRecord,
         val checkpointPosition: Long,
         val replayed: Boolean,
-    ) : PoisonRetryResult
+    ): PoisonRetryResult
 
-    data class RetryLater(val delay: Duration) : PoisonRetryResult
+    data class RetryLater(val delay: Duration): PoisonRetryResult
 
-    data class StaleToken(val currentToken: Long) : PoisonRetryResult
+    data class StaleToken(val currentToken: Long): PoisonRetryResult
 
-    data class Conflict(val reason: String) : PoisonRetryResult
+    data class Conflict(val reason: String): PoisonRetryResult
 
-    data object NotFound : PoisonRetryResult
+    data object NotFound: PoisonRetryResult
 }
 
 internal sealed interface ProjectionReconciliationResult {
     data class Completed(
         val snapshot: ProjectionReconciliationSnapshot,
         val replayed: Boolean,
-    ) : ProjectionReconciliationResult
+    ): ProjectionReconciliationResult
 
-    data class StaleToken(val currentToken: Long) : ProjectionReconciliationResult
+    data class StaleToken(val currentToken: Long): ProjectionReconciliationResult
 
-    data object NotFound : ProjectionReconciliationResult
+    data object NotFound: ProjectionReconciliationResult
 }
 
 internal data class ProjectionRecoveryPersistence(
@@ -83,40 +83,44 @@ internal class ProjectionRecoveryManagementService(
     private val hmacKeyRing: EventSourcedHmacKeyRing,
     private val clock: Clock,
 ) {
-    fun retryPoison(request: PoisonRetryRequest): PoisonRetryResult =
-        transactions.inTransaction {
-            val expectedToken = request.expectedToken.requirePositiveNumber("expectedToken")
-            val auditIdentity =
-                request.identity.toAuditIdentity(
-                    hmacKeyRing,
-                    "POISON_RETRY",
-                    listOf(request.key.projection, request.key.generation, request.eventId, expectedToken)
-                        .joinToString("\u0000"),
-                )
-            replayedPoisonRetry(request, auditIdentity)?.let { return@inTransaction it }
-            val generation = findGeneration(request.key) ?: return@inTransaction PoisonRetryResult.NotFound
-            if (generation.fencingToken != expectedToken) {
-                return@inTransaction PoisonRetryResult.StaleToken(generation.fencingToken)
-            }
-            val poison =
-                persistence.poisons.find(request.key, request.eventId)
-                    ?: return@inTransaction PoisonRetryResult.NotFound
-            val now = clock.instant()
-            poisonRetryBlocker(poison, now)?.let { return@inTransaction it }
-            applyPoisonRetry(request, expectedToken, generation, auditIdentity, now)
+
+    private companion object: KLogging()
+
+    fun retryPoison(request: PoisonRetryRequest): PoisonRetryResult = transactions.inTransaction {
+        val expectedToken = request.expectedToken.requirePositiveNumber("expectedToken")
+        val auditIdentity = request.identity.toAuditIdentity(
+            hmacKeyRing,
+            "POISON_RETRY",
+            listOf(request.key.projection, request.key.generation, request.eventId, expectedToken)
+                .joinToString("\u0000"),
+        )
+        replayedPoisonRetry(request, auditIdentity)?.let { return@inTransaction it }
+
+        val generation = findGeneration(request.key) ?: return@inTransaction PoisonRetryResult.NotFound
+        if (generation.fencingToken != expectedToken) {
+            return@inTransaction PoisonRetryResult.StaleToken(generation.fencingToken)
         }
+
+        val poison = persistence.poisons.find(request.key, request.eventId)
+            ?: return@inTransaction PoisonRetryResult.NotFound
+
+        val now = clock.instant()
+        poisonRetryBlocker(poison, now)?.let { return@inTransaction it }
+        applyPoisonRetry(request, expectedToken, generation, auditIdentity, now)
+    }
 
     private fun replayedPoisonRetry(
         request: PoisonRetryRequest,
         identity: OperatorAuditIdentity,
     ): PoisonRetryResult.Resolved? {
-        val audit =
-            persistence.audits.find(
-                identity.tenant,
-                identity.requestDigest,
-                OperatorAuditAction.POISON_RETRIED,
-            ) ?: return null
+        val audit = persistence.audits.find(
+            identity.tenant,
+            identity.requestDigest,
+            OperatorAuditAction.POISON_RETRIED,
+        ) ?: return null
+
         check(audit.result.outcome == OperatorAuditOutcome.APPLIED)
+
         return persistence.poisons.find(request.key, request.eventId)?.let { poison ->
             PoisonRetryResult.Resolved(
                 poison = poison,
@@ -129,16 +133,18 @@ internal class ProjectionRecoveryManagementService(
     private fun poisonRetryBlocker(
         poison: ProjectionPoisonRecord,
         now: Instant,
-    ): PoisonRetryResult? =
-        when {
-            poison.state != ProjectionPoisonState.FAILED ->
-                PoisonRetryResult.Conflict("POISON_ALREADY_RESOLVED")
-            poison.attempts >= MAX_PROJECTION_POISON_ATTEMPTS ->
-                PoisonRetryResult.Conflict("POISON_RETRY_EXHAUSTED")
-            now.isBefore(poison.nextRetryAt) ->
-                PoisonRetryResult.RetryLater(Duration.between(now, poison.nextRetryAt))
-            else -> null
-        }
+    ): PoisonRetryResult? = when {
+        poison.state != ProjectionPoisonState.FAILED      ->
+            PoisonRetryResult.Conflict("POISON_ALREADY_RESOLVED")
+
+        poison.attempts >= MAX_PROJECTION_POISON_ATTEMPTS ->
+            PoisonRetryResult.Conflict("POISON_RETRY_EXHAUSTED")
+
+        now.isBefore(poison.nextRetryAt)                  ->
+            PoisonRetryResult.RetryLater(Duration.between(now, poison.nextRetryAt))
+
+        else                                              -> null
+    }
 
     private fun applyPoisonRetry(
         request: PoisonRetryRequest,
@@ -147,23 +153,20 @@ internal class ProjectionRecoveryManagementService(
         auditIdentity: OperatorAuditIdentity,
         now: Instant,
     ): PoisonRetryResult {
-        val event =
-            persistence.recovery.event(request.eventId)
-                ?: return PoisonRetryResult.NotFound
-        val lease =
-            persistence.leases.acquire(
-                request.key.projection,
-                request.key.generation,
-                auditIdentity.actorDigest.value,
-                now,
-            )
+        val event = persistence.recovery.event(request.eventId) ?: return PoisonRetryResult.NotFound
+        val lease = persistence.leases.acquire(
+            projection = request.key.projection,
+            generation = request.key.generation,
+            ownerDigest = auditIdentity.actorDigest.value,
+            now = now,
+        )
         return lease?.let {
             resolvePoisonRetry(
-                request,
-                expectedToken,
-                auditIdentity,
-                now,
-                PoisonRetryResources(event, it, generation),
+                request = request,
+                expectedToken = expectedToken,
+                auditIdentity = auditIdentity,
+                now = now,
+                resources = PoisonRetryResources(event, it, generation),
             )
         } ?: PoisonRetryResult.Conflict("PROJECTION_LEASE_UNAVAILABLE")
     }
@@ -175,33 +178,31 @@ internal class ProjectionRecoveryManagementService(
         now: Instant,
         resources: PoisonRetryResources,
     ): PoisonRetryResult.Resolved {
-        val applied =
-            persistence.projections.resolvePoison(
-                request.key,
-                resources.lease,
-                resources.event,
-                now,
-            )
+        val applied = persistence.projections.resolvePoison(
+            key = request.key,
+            lease = resources.lease,
+            event = resources.event,
+            now = now,
+        )
         val resolved = checkNotNull(persistence.poisons.find(request.key, request.eventId))
         persistence.audits.append(
             OperatorAuditEntry(
                 identity = auditIdentity,
                 action = OperatorAuditAction.POISON_RETRIED,
-                    target = OperatorAuditTarget(request.key.projection, request.key.generation, expectedToken),
-                    transition =
-                        OperatorAuditTransition(
-                            beforeState = resources.generation.state,
-                            afterState = resources.generation.state,
-                        checkpointPosition = applied.checkpoint.position,
-                        streamPosition = resources.event.globalPosition,
-                        reasonClass = null,
-                    ),
+                target = OperatorAuditTarget(request.key.projection, request.key.generation, expectedToken),
+                transition = OperatorAuditTransition(
+                    beforeState = resources.generation.state,
+                    afterState = resources.generation.state,
+                    checkpointPosition = applied.checkpoint.position,
+                    streamPosition = resources.event.globalPosition,
+                    reasonClass = null,
+                ),
                 result = OperatorAuditResult(OperatorAuditOutcome.APPLIED, now),
             ),
         )
         log.info {
             "projection_poison_resolved projection=${request.key.projection} " +
-                "generation=${request.key.generation} position=${resources.event.globalPosition}"
+                    "generation=${request.key.generation} position=${resources.event.globalPosition}"
         }
         return PoisonRetryResult.Resolved(resolved, applied.checkpoint.position, replayed = false)
     }
@@ -209,53 +210,48 @@ internal class ProjectionRecoveryManagementService(
     fun reconcile(request: ProjectionReconciliationRequest): ProjectionReconciliationResult =
         transactions.inTransaction {
             val expectedToken = request.expectedToken.requirePositiveNumber("expectedToken")
-            val auditIdentity =
-                request.identity.toAuditIdentity(
-                    hmacKeyRing,
-                    "RECONCILIATION",
-                    listOf(request.key.projection, request.key.generation, expectedToken)
-                        .joinToString("\u0000"),
-                )
+            val auditIdentity = request.identity.toAuditIdentity(
+                hmacKeyRing,
+                "RECONCILIATION",
+                listOf(request.key.projection, request.key.generation, expectedToken)
+                    .joinToString("\u0000"),
+            )
             val generation = findGeneration(request.key) ?: return@inTransaction ProjectionReconciliationResult.NotFound
+
             if (generation.fencingToken != expectedToken) {
                 log.warn {
-                    "projection_reconciliation_stale projection=${request.key.projection} " +
-                        "generation=${request.key.generation}"
+                    "projection_reconciliation_stale projection=${request.key.projection} generation=${request.key.generation}"
                 }
                 return@inTransaction ProjectionReconciliationResult.StaleToken(generation.fencingToken)
             }
-            val replayed =
-                persistence.audits.find(
-                    auditIdentity.tenant,
-                    auditIdentity.requestDigest,
-                    OperatorAuditAction.RECONCILIATION_RUN,
-                ) != null
+            val replayed = persistence.audits.find(
+                auditIdentity.tenant,
+                auditIdentity.requestDigest,
+                OperatorAuditAction.RECONCILIATION_RUN,
+            ) != null
+
             val snapshot = persistence.recovery.reconciliation(request.key)
             if (!replayed) {
                 persistence.audits.append(
                     OperatorAuditEntry(
                         identity = auditIdentity,
                         action = OperatorAuditAction.RECONCILIATION_RUN,
-                        target =
-                            OperatorAuditTarget(
-                                request.key.projection,
-                                request.key.generation,
-                                expectedToken,
-                            ),
-                        transition =
-                            OperatorAuditTransition(
-                                beforeState = generation.state,
-                                afterState = generation.state,
-                                checkpointPosition = snapshot.checkpointPosition,
-                                streamPosition = snapshot.streamPosition,
-                                reasonClass = null,
-                            ),
+                        target = OperatorAuditTarget(
+                            request.key.projection,
+                            request.key.generation,
+                            expectedToken,
+                        ),
+                        transition = OperatorAuditTransition(
+                            beforeState = generation.state,
+                            afterState = generation.state,
+                            checkpointPosition = snapshot.checkpointPosition,
+                            streamPosition = snapshot.streamPosition,
+                            reasonClass = null,
+                        ),
                         result = OperatorAuditResult(OperatorAuditOutcome.APPLIED, clock.instant()),
                     ),
                 )
             }
             ProjectionReconciliationResult.Completed(snapshot, replayed)
         }
-
-    private companion object : KLogging()
 }

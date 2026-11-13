@@ -15,13 +15,13 @@ import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
 /** tenant-scoped campaign repository입니다. 모든 entry point는 미리 획득한 DB permit을 요구합니다. */
 @Repository
 internal class CampaignRepository(
     private val gate: DatabasePermitGate,
-) : LongAuditableJdbcRepository<CampaignRecord, CampaignTable> {
+): LongAuditableJdbcRepository<CampaignRecord, CampaignTable> {
     override val table = CampaignTable
 
     override fun extractId(entity: CampaignRecord): Long = entity.id
@@ -106,10 +106,10 @@ internal class CampaignRepository(
         return auditedUpdateAll(
             predicate = {
                 (table.tenantId eq tenantId) and
-                    (table.id eq id) and
-                    (table.state eq CampaignState.ACTIVE) and
-                    (table.revision eq expectedRevision) and
-                    (table.allocatedCount less table.capacity)
+                        (table.id eq id) and
+                        (table.state eq CampaignState.ACTIVE) and
+                        (table.revision eq expectedRevision) and
+                        (table.allocatedCount less table.capacity)
             },
         ) {
             it[allocatedCount] = allocatedCount + 1
@@ -128,9 +128,9 @@ internal class CampaignRepository(
         return auditedUpdateAll(
             predicate = {
                 (table.tenantId eq tenantId) and
-                    (table.id eq id) and
-                    (table.revision eq expectedRevision) and
-                    (table.allocatedCount greater 0)
+                        (table.id eq id) and
+                        (table.revision eq expectedRevision) and
+                        (table.allocatedCount greater 0)
             },
         ) {
             it[allocatedCount] = allocatedCount - 1
@@ -147,8 +147,8 @@ internal class CampaignRepository(
         return auditedUpdateAll(
             predicate = {
                 (table.tenantId eq record.tenantId) and
-                    (table.id eq record.id) and
-                    (table.revision eq expectedRevision)
+                        (table.id eq record.id) and
+                        (table.revision eq expectedRevision)
             },
         ) {
             it[state] = record.state
@@ -163,5 +163,5 @@ internal class CampaignRepository(
         } == 1
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }

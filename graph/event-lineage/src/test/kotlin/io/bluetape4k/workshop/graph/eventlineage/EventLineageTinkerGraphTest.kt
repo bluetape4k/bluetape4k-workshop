@@ -14,9 +14,9 @@ import org.junit.jupiter.api.TestInstance
  * 학습자는 Docker 없이 lineage와 감사 추적 예제를 실행할 수 있습니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class EventLineageTinkerGraphTest : AbstractEventLineageTest() {
+class EventLineageTinkerGraphTest: AbstractEventLineageTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override val graphName: String = "test_event_lineage"
     override val ops: GraphOperations = TinkerGraphOperations()

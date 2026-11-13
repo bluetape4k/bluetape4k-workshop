@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentReducer
@@ -15,10 +16,9 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.Billin
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.Locale
+import java.util.*
 
 @Service
 class AdjustmentCommandService(
@@ -76,7 +76,7 @@ class ReconciliationService(
                 } else {
                     total + event.amount
                 }
-                else -> total
+                else          -> total
             }
         }
         val actual = readModels.financialTotal(query.projectionName, active.generation, query.tenantId)
@@ -102,8 +102,8 @@ class ReconciliationService(
     fun isStillCurrent(query: ReconciliationQuery, finding: ReconciliationFinding): Boolean =
         inspect(query)?.let { current ->
             current.digest == finding.digest &&
-                current.generation == finding.generation &&
-                current.observedPosition == finding.observedPosition
+                    current.generation == finding.generation &&
+                    current.observedPosition == finding.observedPosition
         } == true
 
     private fun financialEvents(query: ReconciliationQuery): List<PersistedEvent> =
@@ -123,7 +123,7 @@ class ReconciliationService(
     }
 
     private fun sha256(material: String): String = MessageDigest.getInstance("SHA-256")
-        .digest(material.toByteArray(UTF_8))
+        .digest(material.toUtf8Bytes())
         .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 
     private companion object {

@@ -18,6 +18,8 @@ internal class IdempotencyCleanupService(
     @param:Value("\${order-lifecycle.idempotency.cleanup-batch-size:250}")
     private val batchSize: Int,
 ) {
+    companion object: KLogging()
+
     init {
         batchSize.requireInRange(1, HttpIdempotencyRepository.MAX_CLEANUP_BATCH, "batchSize")
     }
@@ -28,9 +30,10 @@ internal class IdempotencyCleanupService(
     )
     @Transactional
     fun deleteExpiredTerminal(): Int =
-        repository.deleteExpiredTerminal(Instant.now(clock), batchSize).also { deleted ->
-            if (deleted > 0) log.info { "idempotency_cleanup_completed deleted=$deleted" }
-        }
-
-    companion object : KLogging()
+        repository.deleteExpiredTerminal(Instant.now(clock), batchSize)
+            .also { deleted ->
+                if (deleted > 0) {
+                    log.info { "idempotency_cleanup_completed deleted=$deleted" }
+                }
+            }
 }

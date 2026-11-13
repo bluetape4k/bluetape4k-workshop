@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool.fixture
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
@@ -29,7 +31,8 @@ internal data class FixtureState(
     val armed: Boolean,
     val consumed: Boolean,
     val claimed: Boolean = false,
-) : Serializable {
+): Serializable {
+
     fun armOnce(): FixtureState =
         if (armed || claimed || consumed) this else copy(armed = true)
 
@@ -39,7 +42,7 @@ internal data class FixtureState(
     fun finalizeClaim(committed: Boolean): FixtureState = when {
         !claimed -> this
         committed -> copy(claimed = false, consumed = true)
-        else -> copy(armed = true, claimed = false, consumed = false)
+        else     -> copy(armed = true, claimed = false, consumed = false)
     }
 
     companion object {
@@ -58,6 +61,11 @@ internal data class FixtureState(
 internal class VoucherPoolFixtures(
     private val jdbcExecutor: VoucherPoolJdbcExecutor,
 ) {
+
+    private companion object: KLogging() {
+        val BY_SLUG = FixtureScenario.entries.associateBy(FixtureScenario::slug)
+    }
+
     private val states = ConcurrentHashMap<String, FixtureSlot>()
     private val claimTokens = AtomicLong()
 
@@ -71,7 +79,7 @@ internal class VoucherPoolFixtures(
 
     fun state(name: String): FixtureState {
         val scenario = requireScenario(name)
-        return checkNotNull(states[scenario.slug]) { "fixture state is missing" }.state
+        return states[scenario.slug].checkNotNull { "fixture state is missing" }.state
     }
 
     fun configureAfterCommit(name: String) {
@@ -104,6 +112,7 @@ internal class VoucherPoolFixtures(
         val claimed = AtomicBoolean(false)
         val identity = AtomicReference<ClaimIdentity?>()
         val claimToken = claimTokens.incrementAndGet()
+
         states.compute(scenario.slug) { _, current ->
             val existing = current ?: FixtureSlot(FixtureState(scenario, armed = false, consumed = false))
             if (existing.state.armed && !existing.state.claimed && !existing.state.consumed) {
@@ -117,7 +126,7 @@ internal class VoucherPoolFixtures(
         if (claimed.get()) {
             val claimedIdentity = checkNotNull(identity.get())
             TransactionSynchronizationManager.registerSynchronization(
-                object : TransactionSynchronization {
+                object: TransactionSynchronization {
                     override fun afterCompletion(status: Int) {
                         val committed = status == TransactionSynchronization.STATUS_COMMITTED
                         states.computeIfPresent(scenario.slug) { _, current ->
@@ -137,9 +146,6 @@ internal class VoucherPoolFixtures(
     private fun requireScenario(name: String): FixtureScenario =
         BY_SLUG[name] ?: throw IllegalArgumentException("unsupported fixture scenario")
 
-    private companion object {
-        val BY_SLUG = FixtureScenario.entries.associateBy(FixtureScenario::slug)
-    }
 }
 
 private data class FixtureSlot(

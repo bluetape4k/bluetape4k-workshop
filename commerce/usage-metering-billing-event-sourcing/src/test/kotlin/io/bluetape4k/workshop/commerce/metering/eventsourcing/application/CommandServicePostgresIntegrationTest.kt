@@ -5,9 +5,9 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

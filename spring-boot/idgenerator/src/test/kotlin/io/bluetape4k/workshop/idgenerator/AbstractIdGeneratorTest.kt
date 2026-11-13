@@ -13,7 +13,7 @@ abstract class AbstractIdGeneratorTest @Autowired constructor(
     protected val context: ApplicationContext,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     protected val client: WebTestClient by lazy {
         WebTestClient

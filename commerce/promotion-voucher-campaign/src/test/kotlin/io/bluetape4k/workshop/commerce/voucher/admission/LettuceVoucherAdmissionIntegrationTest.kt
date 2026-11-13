@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.commerce.voucher.admission
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.commerce.voucher.application.AllocateVoucherCommand
@@ -27,11 +30,11 @@ internal class LettuceVoucherAdmissionIntegrationTest : VoucherCommandTestSuppor
             val rateKey = keys.rateKey(TENANT_ID, "principal-1", "allocate")
             gate.decide(rateKey) shouldBeEqualTo AdmissionDecision.Proceed
             val rejection = gate.decide(rateKey)
-            (rejection is AdmissionDecision.RateLimited) shouldBeEqualTo true
-            ((rejection as AdmissionDecision.RateLimited).retryAfter > Duration.ZERO) shouldBeEqualTo true
+            (rejection is AdmissionDecision.RateLimited).shouldBeTrue()
+            ((rejection as AdmissionDecision.RateLimited).retryAfter > Duration.ZERO).shouldBeTrue()
 
             risk.assess(TENANT_ID, "subject-1") shouldBeEqualTo RiskSignal.CLEAR
-            risk.remember(TENANT_ID, "subject-1") shouldBeEqualTo true
+            risk.remember(TENANT_ID, "subject-1").shouldBeTrue()
             risk.assess(TENANT_ID, "subject-1") shouldBeEqualTo RiskSignal.REVIEW
         }
 
@@ -60,9 +63,9 @@ internal class LettuceVoucherAdmissionIntegrationTest : VoucherCommandTestSuppor
             VoucherRedisProperties(
                 enabled = true,
                 uri = redis.url,
-                commandTimeout = Duration.ofSeconds(1),
+                commandTimeout = 1.seconds(),
                 quotaCapacity = 1,
-                quotaPeriod = Duration.ofMinutes(1),
+                quotaPeriod = 1.minutes(),
                 bloomExpectedInsertions = 1_000,
                 bloomFalseProbability = 0.01,
             )

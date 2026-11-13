@@ -28,14 +28,14 @@ class CoroutineExamples {
         coroutineScope {
             List(ITEM_SIZE) {
                 launch(Dispatchers.IO) {
-                    delay(DELAY_TIME)
+                    delay(timeMillis = DELAY_TIME)
                 }
             }
             yield()
 
             List(ITEM_SIZE) {
                 launch(Dispatchers.IO) {
-                    delay(DELAY_TIME)
+                    delay(timeMillis = DELAY_TIME)
                 }
             }
         }

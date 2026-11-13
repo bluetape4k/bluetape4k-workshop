@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetDetailResponse
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetHistoryResponse
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetNotFoundException
@@ -8,8 +9,8 @@ import io.bluetape4k.workshop.imageprocessing.advanced.persistence.ImagePersiste
 import io.bluetape4k.workshop.imageprocessing.advanced.service.ImageDerivativeWorkflowService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.springframework.http.MediaType
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -25,6 +26,8 @@ class ImageDerivativesController(
     private val service: ImageDerivativeWorkflowService,
     private val persistenceService: ImagePersistenceService,
 ) {
+
+    private companion object: KLogging()
 
     /**
      * `POST /api/images/derivatives` — 이미지를 업로드하고 파생 이미지를 생성합니다.

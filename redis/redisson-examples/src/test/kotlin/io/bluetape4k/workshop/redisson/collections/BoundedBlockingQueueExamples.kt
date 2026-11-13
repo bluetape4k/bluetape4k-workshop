@@ -1,18 +1,19 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.redisson.api.RBoundedBlockingQueue
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 
 /**
@@ -41,7 +42,7 @@ class BoundedBlockingQueueExamples: AbstractRedissonTest() {
 
         val job = scope.launch {
             // 1초후 요소 1개를 가져온다.
-            delay(1000)
+            delay(1000.milliseconds)
             queue.takeAsync().await() shouldBeEqualTo 1
         }
         yield()

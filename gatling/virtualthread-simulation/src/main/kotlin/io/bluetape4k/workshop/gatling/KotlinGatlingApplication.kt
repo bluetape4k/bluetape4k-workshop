@@ -16,5 +16,5 @@ class KotlinGatlingApplication {
 }
 
 fun main(vararg args: String) {
-    runApplication<KotlinGatlingApplication>(*args) 
+    runApplication<KotlinGatlingApplication>(*args)
 }

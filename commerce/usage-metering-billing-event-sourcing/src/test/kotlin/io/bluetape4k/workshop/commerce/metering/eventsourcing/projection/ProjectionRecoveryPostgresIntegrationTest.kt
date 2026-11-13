@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -19,9 +20,8 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -115,7 +115,7 @@ class ProjectionRecoveryPostgresIntegrationTest {
     }
 
     private fun acquire(generation: Int): ProjectionLease = fixture.executor.transaction {
-        checkpoints.acquireLease("billing", generation, UUID.randomUUID(), now, Duration.ofMinutes(1))
+        checkpoints.acquireLease("billing", generation, UUID.randomUUID(), now, 1.minutes())
     } ?: error("lease must be acquired")
 
     private fun usage() = UsageAccepted("gateway", "source-1", "api_calls", BigDecimal.TEN, now)
@@ -127,6 +127,7 @@ class ProjectionRecoveryPostgresIntegrationTest {
         BigDecimal("5.00"),
         "USD",
     )
+
     private fun invoice() = InvoiceIssued("invoice-1", BigDecimal("5.00"), "USD")
     private fun adjustment() = AdjustmentPosted(
         AdjustmentDirection.CREDIT,

@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    kotlin("kapt")
 }
 
 java {
@@ -54,7 +55,7 @@ dependencies {
     testImplementation(project(":shared"))
 
     implementation(libs.bluetape4k.core)
-    implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.micrometer)

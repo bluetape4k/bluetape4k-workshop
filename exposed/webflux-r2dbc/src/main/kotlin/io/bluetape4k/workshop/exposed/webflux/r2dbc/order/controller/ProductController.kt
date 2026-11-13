@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.order.controller
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.ProductDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.service.OrderService
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/products")
 class ProductController(private val orderService: OrderService) {
+
+    companion object: KLoggingChannel()
 
     @GetMapping
     suspend fun findAll(): List<ProductDTO> = orderService.findAllProducts()

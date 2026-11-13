@@ -4,6 +4,9 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingCloseBatchResult
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingCloseService
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingLifecycleCommandService
@@ -77,7 +80,7 @@ class BillingEventSourcingStressTest {
 
         val reconciliation = ReconciliationService(eventStore, codec, generations, readModels)
         val finding = fixture.executor.transaction {
-            reconciliation.inspect(ReconciliationQuery(TENANT, PROJECTION, START.minusSeconds(1), END.plusSeconds(1)))
+            reconciliation.inspect(ReconciliationQuery(TENANT, PROJECTION, START.minusSeconds(1), END + 1.seconds()))
         }
         finding.shouldBeNull()
         fixture.executor.transaction { generations.active(PROJECTION)?.generation }.shouldBeEqualTo(2)
@@ -120,7 +123,7 @@ class BillingEventSourcingStressTest {
         var result: BillingCloseBatchResult
         do {
             result = fixture.executor.transaction {
-                closer.closeNextBatch(TENANT, PERIOD, CLOSE_BATCH_SIZE, END.plusSeconds(1))
+                closer.closeNextBatch(TENANT, PERIOD, CLOSE_BATCH_SIZE, END + 1.seconds())
             }
             if (result == BillingCloseBatchResult.APPLIED) batches += 1
         } while (result == BillingCloseBatchResult.APPLIED || result == BillingCloseBatchResult.RETRY)
@@ -159,8 +162,8 @@ class BillingEventSourcingStressTest {
         }
         val lease = projectGeneration(generation = 2, highWatermark = highWatermark, release = false)
         fixture.executor.transaction {
-            generations.switchActive(lease, expectedActiveGeneration = 1, END.plusSeconds(2)).shouldBeTrue()
-            checkpoints.releaseLease(lease, END.plusSeconds(2))
+            generations.switchActive(lease, expectedActiveGeneration = 1, END + 2.seconds()).shouldBeTrue()
+            checkpoints.releaseLease(lease, END + 2.seconds())
         }
     }
 
@@ -201,7 +204,7 @@ class BillingEventSourcingStressTest {
             }
             if (applied == 0) break
         }
-        if (release) fixture.executor.transaction { checkpoints.releaseLease(lease, END.plusSeconds(2)) }
+        if (release) fixture.executor.transaction { checkpoints.releaseLease(lease, END + 2.seconds()) }
         return lease
     }
 
@@ -211,7 +214,7 @@ class BillingEventSourcingStressTest {
         do {
             val page = fixture.executor.transaction {
                 eventStore.loadByType(
-                    EventTypeQuery(TENANT, eventType, START, END.plusSeconds(2), cursor, QUERY_PAGE_SIZE),
+                    EventTypeQuery(TENANT, eventType, START, END + 2.seconds(), cursor, QUERY_PAGE_SIZE),
                 )
             }
             events += page
@@ -232,7 +235,7 @@ class BillingEventSourcingStressTest {
     }
 
     private fun reportThroughput(startedAt: Long) {
-        val elapsed = Duration.ofNanos(System.nanoTime() - startedAt)
+        val elapsed = (System.nanoTime() - startedAt).nanos()
         val throughput = USAGE_COUNT.toDouble() / elapsed.toMillis().coerceAtLeast(1) * MILLIS_PER_SECOND
         println(
             "stress.usage.count=$USAGE_COUNT stress.elapsed.ms=${elapsed.toMillis()} " +
@@ -259,6 +262,6 @@ class BillingEventSourcingStressTest {
         val END: Instant = START.plusSeconds(3_600)
         val UNIT_PRICE: BigDecimal = BigDecimal("0.10")
         val EXPECTED_TOTAL: BigDecimal = BigDecimal("1000.00")
-        val LEASE_DURATION: Duration = Duration.ofMinutes(30)
+        val LEASE_DURATION: Duration = 30.minutes()
     }
 }

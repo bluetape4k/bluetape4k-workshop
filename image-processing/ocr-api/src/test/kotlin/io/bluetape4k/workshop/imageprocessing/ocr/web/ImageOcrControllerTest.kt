@@ -5,6 +5,8 @@ import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.images.ocr.TiffMultiPageOcrException
 import io.bluetape4k.images.ocr.TiffMultiPageOcrFailureReason
 import io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
@@ -13,6 +15,7 @@ import io.bluetape4k.workshop.imageprocessing.ocr.service.ImageOcrService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import org.hamcrest.Matchers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -31,6 +34,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(controllers = [ImageOcrController::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ImageOcrControllerTest {
+
+    private companion object: KLogging()
 
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -151,7 +156,7 @@ class ImageOcrControllerTest {
     fun `non image content type returns bad request`() {
         val asyncResult = mockMvc.perform(
             multipart("/api/images/ocr")
-                .file(MockMultipartFile("file", "text.txt", "text/plain", "hello".toByteArray())),
+                .file(MockMultipartFile("file", "text.txt", "text/plain", "hello".toUtf8Bytes())),
         )
             .andExpect(request().asyncStarted())
             .andReturn()
@@ -164,7 +169,7 @@ class ImageOcrControllerTest {
     fun `unsupported image subtype returns bad request`() {
         val asyncResult = mockMvc.perform(
             multipart("/api/images/ocr")
-                .file(MockMultipartFile("file", "icon.gif", "image/gif", "gif".toByteArray())),
+                .file(MockMultipartFile("file", "icon.gif", "image/gif", "gif".toUtf8Bytes())),
         )
             .andExpect(request().asyncStarted())
             .andReturn()
@@ -197,7 +202,7 @@ class ImageOcrControllerTest {
 
         val asyncResult = mockMvc.perform(
             multipart("/api/images/ocr")
-                .file(imageFile(bytes = "not an image".toByteArray())),
+                .file(imageFile(bytes = "not an image".toUtf8Bytes())),
         )
             .andExpect(request().asyncStarted())
             .andReturn()
@@ -228,7 +233,7 @@ class ImageOcrControllerTest {
             .andExpect(jsonPath("$.reason").value("PIXELS_PER_PAGE_LIMIT_EXCEEDED"))
             .andExpect(jsonPath("$.phase").value("metadata"))
             .andExpect(jsonPath("$.pageIndex").value(2))
-            .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("internal"))))
+            .andExpect(jsonPath("$.detail").value(Matchers.not(Matchers.containsString("internal"))))
     }
 
     @Test

@@ -10,7 +10,7 @@ import kotlinx.coroutines.isActive
  * `SupervisorJob`과 idempotent `close()` 계약을 그대로 사용하므로 한 context의 종료가
  * 재시작된 다른 context의 collector를 취소하지 않습니다.
  */
-class JobSafetyAuditScope : DefaultCoroutineScope() {
+class JobSafetyAuditScope: DefaultCoroutineScope() {
 
     /** scope의 root job이 아직 실행 중인지 반환합니다. */
     val isActive: Boolean

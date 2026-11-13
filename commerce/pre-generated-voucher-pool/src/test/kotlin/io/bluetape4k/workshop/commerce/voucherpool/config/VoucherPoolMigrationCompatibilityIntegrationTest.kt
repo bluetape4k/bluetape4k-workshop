@@ -6,6 +6,9 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -16,12 +19,14 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
 import java.io.File
 import java.security.MessageDigest
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
+@Suppress("SqlResolve")
 @Tag("migration-compatibility")
 @Execution(ExecutionMode.SAME_THREAD)
 internal class VoucherPoolMigrationCompatibilityIntegrationTest {
+
+    companion object: KLogging()
+
     private val schemas = mutableListOf<String>()
 
     @AfterEach
@@ -33,54 +38,63 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
     @Test
     fun `migration supports clean and warm schema and fails closed on checksum drift`() {
         val schema = newSchema("clean_warm")
-        val dataSource = postgresDataSource(schema)
-        val migration = migrationRunner(dataSource)
+        postgresDataSource(schema).use { dataSource ->
+            val migration = migrationRunner(dataSource)
 
-        migration.migrate() shouldBeEqualTo VoucherPoolMigrationResult.APPLIED
-        migration.migrate() shouldBeEqualTo VoucherPoolMigrationResult.ALREADY_APPLIED
+            migration.migrate() shouldBeEqualTo VoucherPoolMigrationResult.APPLIED
+            migration.migrate() shouldBeEqualTo VoucherPoolMigrationResult.ALREADY_APPLIED
 
-        val drifted = VoucherPoolMigrationRunner(
-            dataSource,
-            VoucherPoolMigration("001", ByteArrayResource("SELECT 1".toByteArray())),
-            537_012L,
-            Duration.ofSeconds(5),
-        )
-        val failure = assertFailsWith<VoucherPoolMigrationException> { drifted.migrate() }
-        failure.code shouldBeEqualTo VoucherPoolMigrationFailureCode.CHECKSUM_DRIFT
+            val drifted = VoucherPoolMigrationRunner(
+                dataSource,
+                VoucherPoolMigration("001", ByteArrayResource("SELECT 1".toUtf8Bytes())),
+                537_012L,
+                5.seconds(),
+            )
+            val failure = assertFailsWith<VoucherPoolMigrationException> { drifted.migrate() }
+            failure.code shouldBeEqualTo VoucherPoolMigrationFailureCode.CHECKSUM_DRIFT
+        }
     }
 
     @Test
     fun `pinned previous binary runs before and after current schema expansion`() {
         val schema = newSchema("previous")
-        val dataSource = postgresDataSource(schema)
-        executeSqlScript(dataSource.connection, ClassPathResource("compatibility/V000__previous_voucher_pool_schema.sql"))
-        val binary = previousBinary()
+        postgresDataSource(schema).use { dataSource ->
+            executeSqlScript(
+                dataSource.connection,
+                ClassPathResource("compatibility/V000__previous_voucher_pool_schema.sql")
+            )
+            val binary = previousBinary()
 
-        runPrevious(binary, schema) shouldBeEqualTo "previous-revision=0"
-        migrationRunner(dataSource).migrate() shouldBeEqualTo VoucherPoolMigrationResult.APPLIED
-        dataSource.connection.use { connection ->
-            connection.createStatement().use {
-                it.executeUpdate(
-                    """UPDATE voucher_pool_campaigns SET state='PAUSED',revision=revision+1
-                        WHERE tenant_id='compat-v000' AND campaign_id='00000000-0000-0000-0000-000000000537'""",
-                ) shouldBeEqualTo 1
+            runPrevious(binary, schema) shouldBeEqualTo "previous-revision=0"
+            migrationRunner(dataSource).migrate() shouldBeEqualTo VoucherPoolMigrationResult.APPLIED
+            dataSource.connection.use { connection ->
+                connection.createStatement().use {
+                    it.executeUpdate(
+                        """
+                             UPDATE voucher_pool_campaigns 
+                             SET state='PAUSED',revision=revision+1
+                             WHERE tenant_id='compat-v000' AND campaign_id='00000000-0000-0000-0000-000000000537'
+                             """.trimIndent(),
+                    ) shouldBeEqualTo 1
+                }
             }
-        }
-        runPrevious(binary, schema) shouldBeEqualTo "previous-revision=2"
+            runPrevious(binary, schema) shouldBeEqualTo "previous-revision=2"
 
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(
-                    """SELECT state,revision,user_identity_key_version,
-                               to_regclass('voucher_pool_backup_inventory') IS NOT NULL AS expanded
-                        FROM voucher_pool_campaigns
-                        WHERE tenant_id='compat-v000' AND campaign_id='00000000-0000-0000-0000-000000000537'""",
-                ).use { result ->
-                    check(result.next())
-                    result.getString("state") shouldBeEqualTo "PAUSED"
-                    result.getLong("revision") shouldBeEqualTo 2L
-                    result.getInt("user_identity_key_version") shouldBeEqualTo 3
-                    result.getBoolean("expanded").shouldBeTrue()
+            dataSource.connection.use { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeQuery(
+                        """
+                             SELECT state,revision,user_identity_key_version,to_regclass('voucher_pool_backup_inventory') IS NOT NULL AS expanded
+                             FROM voucher_pool_campaigns
+                             WHERE tenant_id='compat-v000' AND campaign_id='00000000-0000-0000-0000-000000000537'
+                             """.trimIndent(),
+                    ).use { result ->
+                        check(result.next())
+                        result.getString("state") shouldBeEqualTo "PAUSED"
+                        result.getLong("revision") shouldBeEqualTo 2L
+                        result.getInt("user_identity_key_version") shouldBeEqualTo 3
+                        result.getBoolean("expanded").shouldBeTrue()
+                    }
                 }
             }
         }
@@ -91,7 +105,9 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
         val binary = previousBinary()
         val expected = ClassPathResource("compatibility/previous-binary.sha256").inputStream
             .bufferedReader()
-            .use { it.readLine().substringBefore(' ') }
+            .use {
+                it.readLine().substringBefore(' ')
+            }
         val actual = MessageDigest.getInstance("SHA-256").digest(binary.readBytes()).toHexString()
 
         actual shouldBeEqualTo expected
@@ -119,10 +135,13 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
             jdbcUrl,
             VOUCHER_POOL_TASK_12_POSTGRES.username,
             VOUCHER_POOL_TASK_12_POSTGRES.password,
-        ).redirectErrorStream(true).start()
-        if (!process.waitFor(20, TimeUnit.SECONDS)) {
+        )
+            .redirectErrorStream(true)
+            .start()
+
+        if (!process.waitFor(20.seconds())) {
             process.destroyForcibly()
-            check(process.waitFor(5, TimeUnit.SECONDS)) { "previous binary did not stop after timeout" }
+            check(process.waitFor(5.seconds())) { "previous binary did not stop after timeout" }
             error("previous binary timed out")
         }
         val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
@@ -135,8 +154,8 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
 }
 
 private fun executeSqlScript(connection: java.sql.Connection, resource: ClassPathResource) {
-    connection.use { current ->
-        current.createStatement().use { statement ->
+    connection.use { conn ->
+        conn.createStatement().use { statement ->
             resource.inputStream.bufferedReader().use { it.readText() }
                 .split(';')
                 .map(String::trim)

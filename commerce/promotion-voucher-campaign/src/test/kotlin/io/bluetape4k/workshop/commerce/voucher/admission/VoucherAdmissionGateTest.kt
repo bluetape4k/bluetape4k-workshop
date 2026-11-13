@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.commerce.voucher.admission
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.bucket4j.ratelimit.RateLimitDiagnostics
 import io.bluetape4k.bucket4j.ratelimit.RateLimitRejectionReason
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.seconds
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Duration
@@ -16,6 +20,7 @@ import java.util.ArrayDeque
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 internal class VoucherAdmissionGateTest {
     @Test
@@ -23,7 +28,7 @@ internal class VoucherAdmissionGateTest {
         val limiter = RecordingRateLimiter(rejected())
         val gate = VoucherAdmissionGate(limiter)
 
-        gate.decide("v1:opaque-rate-key") shouldBeEqualTo AdmissionDecision.RateLimited(Duration.ofSeconds(1))
+        gate.decide("v1:opaque-rate-key") shouldBeEqualTo AdmissionDecision.RateLimited(1.seconds())
         limiter.keys shouldBeEqualTo listOf("v1:opaque-rate-key")
         gate.state() shouldBeEqualTo AdmissionState.HEALTHY
     }
@@ -43,7 +48,7 @@ internal class VoucherAdmissionGateTest {
         gate.decide("v1:key") shouldBeEqualTo AdmissionDecision.Proceed
         limiter.keys.size shouldBeEqualTo 3
 
-        clock.advance(Duration.ofSeconds(1))
+        clock.advance(1.seconds())
         gate.decide("v1:key") shouldBeEqualTo AdmissionDecision.Proceed
         gate.state() shouldBeEqualTo AdmissionState.RECOVERING
         repeat(2) { gate.decide("v1:key") shouldBeEqualTo AdmissionDecision.Proceed }
@@ -57,7 +62,7 @@ internal class VoucherAdmissionGateTest {
         val gate = VoucherAdmissionGate(limiter, clock = clock)
 
         repeat(3) { gate.decide("v1:key") }
-        clock.advance(Duration.ofSeconds(1))
+        clock.advance(1.seconds())
         gate.decide("v1:key")
         gate.state() shouldBeEqualTo AdmissionState.RECOVERING
         gate.decide("v1:key")
@@ -70,16 +75,16 @@ internal class VoucherAdmissionGateTest {
         val limiter = BlockingRecoveryRateLimiter()
         val gate = VoucherAdmissionGate(limiter, clock = clock)
         repeat(3) { gate.decide("v1:key") }
-        clock.advance(Duration.ofSeconds(1))
+        clock.advance(1.seconds())
 
         VirtualThreads.executorService().use { executor ->
             val probe = executor.submit<AdmissionDecision> { gate.decide("v1:key") }
-            limiter.probeEntered.await(2, TimeUnit.SECONDS) shouldBeEqualTo true
+            limiter.probeEntered.await(2.seconds).shouldBeTrue()
             val followers = (1..8).map { executor.submit<AdmissionDecision> { gate.decide("v1:key") } }
 
-            followers.forEach { it.get(2, TimeUnit.SECONDS) shouldBeEqualTo AdmissionDecision.Proceed }
+            followers.forEach { it.get(2.seconds) shouldBeEqualTo AdmissionDecision.Proceed }
             limiter.releaseProbe.countDown()
-            probe.get(2, TimeUnit.SECONDS) shouldBeEqualTo AdmissionDecision.Proceed
+            probe.get(2.seconds) shouldBeEqualTo AdmissionDecision.Proceed
         }
 
         limiter.calls.get() shouldBeEqualTo 4
@@ -112,7 +117,7 @@ internal class VoucherAdmissionGateTest {
                 failure()
             } else {
                 probeEntered.countDown()
-                check(releaseProbe.await(2, TimeUnit.SECONDS)) { "recovery probe release timed out" }
+                check(releaseProbe.await(2.seconds)) { "recovery probe release timed out" }
                 consumed()
             }
     }
@@ -138,8 +143,8 @@ internal class VoucherAdmissionGateTest {
             RateLimitResult.rejected(
                 0,
                 RateLimitDiagnostics.rejected(
-                    Duration.ofSeconds(1).toNanos(),
-                    Duration.ofSeconds(10).toNanos(),
+                    1.seconds().toNanos(),
+                    10.seconds().toNanos(),
                     RateLimitRejectionReason.INSUFFICIENT_TOKENS,
                 ),
             )

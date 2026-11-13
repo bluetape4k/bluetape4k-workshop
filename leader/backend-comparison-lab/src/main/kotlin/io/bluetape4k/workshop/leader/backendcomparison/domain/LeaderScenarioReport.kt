@@ -11,7 +11,7 @@ data class LeaderScenarioEvent(
     val actor: String,
     val outcome: String,
     val detail: String,
-) : Serializable {
+): Serializable {
 
     init {
         actor.requireNotBlank("actor")
@@ -34,7 +34,7 @@ data class LeaderScenarioReport(
     val events: List<LeaderScenarioEvent>,
     val metricsToInspect: List<String>,
     val summary: String,
-) : Serializable {
+): Serializable {
 
     init {
         backendId.requireNotBlank("backendId")

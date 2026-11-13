@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.web
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.MeterCommandService
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.MeterRegistration
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.ReconciliationQuery
@@ -73,8 +75,8 @@ class ProjectionConsistencyWaiter(
     }
 
     private companion object {
-        val POLL_INTERVAL: Duration = Duration.ofMillis(5)
-        val MAX_WAIT: Duration = Duration.ofMillis(100)
+        val POLL_INTERVAL: Duration = 5.millis()
+        val MAX_WAIT: Duration = 100.millis()
     }
 }
 
@@ -133,9 +135,9 @@ class EventSourcingCommandController(
                 clock.instant(),
                 EventMetadata(commandId, commandId, commandId, actorId),
             ))
-            metrics.recordAppend(APPEND_SUCCESS, Duration.ofNanos(System.nanoTime() - startedAt))
+            metrics.recordAppend(APPEND_SUCCESS, (System.nanoTime() - startedAt).nanos())
         } catch (failure: OptimisticConcurrencyException) {
-            metrics.recordAppend(APPEND_CONFLICT, Duration.ofNanos(System.nanoTime() - startedAt))
+            metrics.recordAppend(APPEND_CONFLICT, (System.nanoTime() - startedAt).nanos())
             throw failure
         }
         val response = MeterResponse(request.code, request.unit)

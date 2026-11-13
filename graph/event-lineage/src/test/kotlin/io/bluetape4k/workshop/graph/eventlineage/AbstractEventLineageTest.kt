@@ -5,9 +5,12 @@ import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.graph.eventlineage.model.LineageNode
+import io.bluetape4k.workshop.graph.eventlineage.model.LineagePath
 import io.bluetape4k.workshop.graph.eventlineage.schema.ActorLabel
 import io.bluetape4k.workshop.graph.eventlineage.schema.AggregateLabel
 import io.bluetape4k.workshop.graph.eventlineage.schema.ApprovedByLabel
@@ -19,8 +22,6 @@ import io.bluetape4k.workshop.graph.eventlineage.schema.EventLabel
 import io.bluetape4k.workshop.graph.eventlineage.schema.SupersedesLabel
 import io.bluetape4k.workshop.graph.eventlineage.seed.EventLineageSeed
 import io.bluetape4k.workshop.graph.eventlineage.seed.seedEventLineage
-import io.bluetape4k.workshop.graph.eventlineage.model.LineageNode
-import io.bluetape4k.workshop.graph.eventlineage.model.LineagePath
 import io.bluetape4k.workshop.graph.eventlineage.service.EventLineageService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,6 +35,8 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractEventLineageTest {
+
+    companion object: KLogging()
 
     protected abstract val graphName: String
     protected abstract val ops: GraphOperations
@@ -67,6 +70,7 @@ abstract class AbstractEventLineageTest {
     @Test
     fun `eventsForAggregate returns aggregate events in deterministic audit order`() {
         val eventIds = service.eventsForAggregate("order-1001").map { it.nodeId }
+            .onEach { log.debug { "eventId=$it" } }
 
         eventIds shouldBeEqualTo listOf(
             "order-created",
@@ -86,6 +90,7 @@ abstract class AbstractEventLineageTest {
             rootEventId = "order-created",
             maxDepth = 5,
         )
+        log.debug { "path=$path" }
 
         path.nodes.map { it.nodeId } shouldBeEqualTo listOf(
             "order-approved",
@@ -106,6 +111,7 @@ abstract class AbstractEventLineageTest {
     fun `auditTrailForAggregate reconstructs events approvals and deciding actor`() {
         val trail = service.auditTrailForAggregate("order-1001")
 
+        log.debug { "trail=$trail" }
         trail.aggregate.nodeId shouldBeEqualTo "order-1001"
         trail.aggregate.properties["state"] shouldBeEqualTo "APPROVED"
         trail.events.map { it.nodeId } shouldContain "order-approved"
@@ -119,6 +125,7 @@ abstract class AbstractEventLineageTest {
     @Test
     fun `supersededChain follows newest event to previous correction target`() {
         val chain = service.supersededChain("order-approval-corrected")
+            .onEach { log.debug { "node=$it" } }
 
         chain.map { it.nodeId } shouldBeEqualTo listOf("order-approval-corrected", "order-approved")
     }
@@ -126,6 +133,7 @@ abstract class AbstractEventLineageTest {
     @Test
     fun `supersededChain respects max depth`() {
         val chain = service.supersededChain("order-approval-corrected", maxDepth = 1)
+            .onEach { log.debug { "node=$it" } }
 
         chain.map { it.nodeId } shouldBeEqualTo listOf("order-approval-corrected")
     }
@@ -133,6 +141,7 @@ abstract class AbstractEventLineageTest {
     @Test
     fun `missingCausalLinks reports emitted events without root cause or upstream event`() {
         val missing = service.missingCausalLinks("order-1001")
+            .onEach { log.debug { "node=$it" } }
 
         missing.map { it.nodeId } shouldBeEqualTo listOf("manual-note-added")
     }
@@ -198,7 +207,10 @@ abstract class AbstractEventLineageTest {
             LineageNode(nodeId = "event-1", label = " ")
         }
         assertFailsWith<IllegalArgumentException> {
-            LineagePath(nodes = listOf(LineageNode("event-1", EventLabel.label)), edgeLabels = listOf(CausedByLabel.label))
+            LineagePath(
+                nodes = listOf(LineageNode("event-1", EventLabel.label)),
+                edgeLabels = listOf(CausedByLabel.label)
+            )
         }
         assertFailsWith<IllegalArgumentException> {
             LineagePath(

@@ -40,8 +40,8 @@ class LeaderZookeeperContextTest(
     @Autowired val groupLeaderService: GroupLeaderService,
     @Autowired val suspendGroupLeaderService: SuspendGroupLeaderService,
 ) {
-    companion object : KLogging() {
-        val zookeeper: ZooKeeperServer = ZooKeeperServer.Launcher.zookeeper
+    companion object: KLogging() {
+        val zookeeper: ZooKeeperServer by lazy { ZooKeeperServer.Launcher.zookeeper }
 
         @JvmStatic
         @DynamicPropertySource

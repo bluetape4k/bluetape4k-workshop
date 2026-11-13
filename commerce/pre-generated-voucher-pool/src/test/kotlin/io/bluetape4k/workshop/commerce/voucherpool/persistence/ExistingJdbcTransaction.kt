@@ -14,8 +14,12 @@ import java.sql.Connection
  * 조율해야 하지만, 일반 datasource-backed Exposed transaction은 이를 fixture에 노출할 수 없습니다.
  */
 @Suppress("SpreadOperator")
-internal fun <T> withExistingJdbcTransaction(connection: Connection, block: () -> T): T {
+internal inline fun <T> withExistingJdbcTransaction(
+    connection: Connection,
+    crossinline block: () -> T,
+): T {
     check(!connection.autoCommit) { "existing JDBC transaction helper requires auto-commit to be disabled" }
+
     val nonOwningConnection = Proxy.newProxyInstance(
         Connection::class.java.classLoader,
         arrayOf(Connection::class.java),
@@ -23,7 +27,7 @@ internal fun <T> withExistingJdbcTransaction(connection: Connection, block: () -
         when (method.name) {
             "close", "commit", "rollback", "abort", "setAutoCommit", "setReadOnly", "setTransactionIsolation",
             "setCatalog", "setSchema", "setNetworkTimeout",
-            -> null
+                -> null
             else -> try {
                 method.invoke(connection, *arguments.orEmpty())
             } catch (failure: InvocationTargetException) {
@@ -31,7 +35,9 @@ internal fun <T> withExistingJdbcTransaction(connection: Connection, block: () -
             }
         }
     } as Connection
+
     val database = Database.connect(getNewConnection = { nonOwningConnection })
+
     return try {
         transaction(database) { block() }
     } finally {

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotNull
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal const val IDEMPOTENCY_HEADER = "Idempotency-Key"
 private const val MAX_CAMPAIGN_CAPACITY = 1_000_000L
@@ -53,20 +54,19 @@ internal class CampaignCommandHttpService(
         idempotencyKey: String,
         body: CreateCampaignHttpRequest,
     ): CampaignCreateHttpResult {
-        val execution =
-            commands.create(
-                CreateCampaignCommandInput(
-                    tenant = tenant,
-                    principal = principal,
-                    idempotencyKey = idempotencyKey,
-                    campaignId = body.campaignId,
-                    startsAt = body.startsAt,
-                    endsAt = body.endsAt,
-                    capacity = body.capacity,
-                    perUserLimit = body.perUserLimit,
-                    redemptionTtlSeconds = body.redemptionTtlSeconds,
-                ),
-            )
+        val execution: CampaignCommandExecution = commands.create(
+            CreateCampaignCommandInput(
+                tenant = tenant,
+                principal = principal,
+                idempotencyKey = idempotencyKey,
+                campaignId = body.campaignId,
+                startsAt = body.startsAt,
+                endsAt = body.endsAt,
+                capacity = body.capacity,
+                perUserLimit = body.perUserLimit,
+                redemptionTtlSeconds = body.redemptionTtlSeconds,
+            ),
+        )
         return execution.toHttp(tenant, body)
     }
 
@@ -77,16 +77,15 @@ internal class CampaignCommandHttpService(
         campaignId: UUID,
         body: CampaignExpectedRevisionHttpRequest,
     ): CampaignCreateHttpResult {
-        val execution =
-            commands.activate(
-                ActivateCampaignCommandInput(
-                    tenant = tenant,
-                    principal = principal,
-                    idempotencyKey = idempotencyKey,
-                    campaignId = campaignId,
-                    expectedRevision = body.expectedRevision,
-                ),
-            )
+        val execution: CampaignCommandExecution = commands.activate(
+            ActivateCampaignCommandInput(
+                tenant = tenant,
+                principal = principal,
+                idempotencyKey = idempotencyKey,
+                campaignId = campaignId,
+                expectedRevision = body.expectedRevision,
+            ),
+        )
         return execution.toHttp(tenant, campaignId)
     }
 
@@ -95,30 +94,29 @@ internal class CampaignCommandHttpService(
         body: CreateCampaignHttpRequest,
     ): CampaignCreateHttpResult =
         when (this) {
-            is CampaignCommandExecution.Completed -> {
+            is CampaignCommandExecution.Completed   -> {
                 if (descriptor.outcome != ReceiptOutcome.CAMPAIGN_CREATED) {
                     descriptor.toRejected()
                 } else {
                     val streamPosition = checkNotNull(descriptor.streamPosition)
-                    val projectionPosition =
-                        snapshots
-                            .read(TenantId(tenant), body.campaignId)
-                            .positions.projectionPosition
-                            .coerceAtMost(streamPosition)
+                    val projectionPosition = snapshots
+                        .read(TenantId(tenant), body.campaignId)
+                        .positions.projectionPosition
+                        .coerceAtMost(streamPosition)
+
                     CampaignCreateHttpResult.Completed(
-                        campaign =
-                            CampaignHttpResponse(
-                                campaignId = body.campaignId,
-                                state = "DRAFT",
-                                revision = 0,
-                                policyVersion = 0,
-                                capacity = body.capacity,
-                                allocatedCount = 0,
-                                remainingCapacity = body.capacity,
-                                startsAt = body.startsAt,
-                                endsAt = body.endsAt,
-                                observedAt = checkNotNull(descriptor.observedAt),
-                            ),
+                        campaign = CampaignHttpResponse(
+                            campaignId = body.campaignId,
+                            state = "DRAFT",
+                            revision = 0,
+                            policyVersion = 0,
+                            capacity = body.capacity,
+                            allocatedCount = 0,
+                            remainingCapacity = body.capacity,
+                            startsAt = body.startsAt,
+                            endsAt = body.endsAt,
+                            observedAt = checkNotNull(descriptor.observedAt),
+                        ),
                         positions = ProjectionPositions(streamPosition, projectionPosition),
                         replayed = replayed,
                         status = HttpStatus.CREATED,
@@ -128,7 +126,8 @@ internal class CampaignCommandHttpService(
 
             CampaignCommandExecution.FingerprintConflict ->
                 CampaignCreateHttpResult.Rejected(HttpStatus.CONFLICT, "IDEMPOTENCY_FINGERPRINT_CONFLICT")
-            CampaignCommandExecution.InProgress -> CampaignCreateHttpResult.InProgress
+
+            CampaignCommandExecution.InProgress     -> CampaignCreateHttpResult.InProgress
             CampaignCommandExecution.KeyUnavailable -> CampaignCreateHttpResult.KeyUnavailable
         }
 
@@ -137,15 +136,14 @@ internal class CampaignCommandHttpService(
         campaignId: UUID,
     ): CampaignCreateHttpResult =
         when (this) {
-            is CampaignCommandExecution.Completed ->
+            is CampaignCommandExecution.Completed   ->
                 if (descriptor.outcome == ReceiptOutcome.CAMPAIGN_ACTIVATED) {
                     val campaign = checkNotNull(commands.campaign(tenant, campaignId))
                     val streamPosition = checkNotNull(descriptor.streamPosition)
-                    val projectionPosition =
-                        snapshots
-                            .read(TenantId(tenant), campaignId)
-                            .positions.projectionPosition
-                            .coerceAtMost(streamPosition)
+                    val projectionPosition = snapshots
+                        .read(TenantId(tenant), campaignId)
+                        .positions.projectionPosition
+                        .coerceAtMost(streamPosition)
                     CampaignCreateHttpResult.Completed(
                         campaign = campaign.toHttp(checkNotNull(descriptor.observedAt)),
                         positions = ProjectionPositions(streamPosition, projectionPosition),
@@ -158,7 +156,8 @@ internal class CampaignCommandHttpService(
 
             CampaignCommandExecution.FingerprintConflict ->
                 CampaignCreateHttpResult.Rejected(HttpStatus.CONFLICT, "IDEMPOTENCY_FINGERPRINT_CONFLICT")
-            CampaignCommandExecution.InProgress -> CampaignCreateHttpResult.InProgress
+
+            CampaignCommandExecution.InProgress     -> CampaignCreateHttpResult.InProgress
             CampaignCommandExecution.KeyUnavailable -> CampaignCreateHttpResult.KeyUnavailable
         }
 
@@ -166,13 +165,13 @@ internal class CampaignCommandHttpService(
         when (outcome) {
             ReceiptOutcome.CAMPAIGN_NOT_FOUND ->
                 CampaignCreateHttpResult.Rejected(HttpStatus.NOT_FOUND, "CAMPAIGN_NOT_FOUND")
-            ReceiptOutcome.STALE_REVISION ->
+            ReceiptOutcome.STALE_REVISION     ->
                 CampaignCreateHttpResult.Rejected(HttpStatus.CONFLICT, "STALE_REVISION")
             ReceiptOutcome.CONCURRENT_MODIFICATION ->
                 CampaignCreateHttpResult.Rejected(HttpStatus.CONFLICT, "CONCURRENT_MODIFICATION")
-            ReceiptOutcome.DOMAIN_REJECTED ->
+            ReceiptOutcome.DOMAIN_REJECTED    ->
                 CampaignCreateHttpResult.Rejected(HttpStatus.CONFLICT, "CAMPAIGN_NOT_ACTIVE")
-            else ->
+            else                              ->
                 CampaignCreateHttpResult.Rejected(HttpStatus.CONFLICT, "CONCURRENT_MODIFICATION")
         }
 }
@@ -183,16 +182,16 @@ internal sealed interface CampaignCreateHttpResult {
         val positions: ProjectionPositions,
         val replayed: Boolean,
         val status: HttpStatus,
-    ) : CampaignCreateHttpResult
+    ): CampaignCreateHttpResult
 
     data class Rejected(
         val status: HttpStatus,
         val code: String,
-    ) : CampaignCreateHttpResult
+    ): CampaignCreateHttpResult
 
-    data object InProgress : CampaignCreateHttpResult
+    data object InProgress: CampaignCreateHttpResult
 
-    data object KeyUnavailable : CampaignCreateHttpResult
+    data object KeyUnavailable: CampaignCreateHttpResult
 }
 
 @RestController
@@ -200,6 +199,9 @@ internal sealed interface CampaignCreateHttpResult {
 internal class EventSourcedCampaignCommandController(
     private val service: CampaignCommandHttpService,
 ) {
+
+    private companion object: KLogging()
+
     @PostMapping("/campaigns")
     fun create(
         @RequestHeader(TENANT_HEADER, required = false) tenantHeader: String?,
@@ -208,13 +210,20 @@ internal class EventSourcedCampaignCommandController(
         @RequestHeader(HttpHeaders.IF_NONE_MATCH, required = false) ifNoneMatch: String?,
         @Valid @RequestBody body: CreateCampaignHttpRequest,
     ): ResponseEntity<Any> {
-        val tenant = tenantHeader.requireNotNull(TENANT_HEADER).requireNotBlank(TENANT_HEADER)
-        val principal =
-            principalHeader.requireNotNull(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER)
-        val idempotencyKey =
-            idempotencyHeader.requireNotNull(IDEMPOTENCY_HEADER)
-                .requireNotBlank(IDEMPOTENCY_HEADER)
-        ifNoneMatch.requireNotNull(HttpHeaders.IF_NONE_MATCH).requireEquals("*", HttpHeaders.IF_NONE_MATCH)
+
+        val tenant = tenantHeader
+            .requireNotNull(TENANT_HEADER)
+            .requireNotBlank(TENANT_HEADER)
+        val principal = principalHeader
+            .requireNotNull(PRINCIPAL_HEADER)
+            .requireNotBlank(PRINCIPAL_HEADER)
+        val idempotencyKey = idempotencyHeader
+            .requireNotNull(IDEMPOTENCY_HEADER)
+            .requireNotBlank(IDEMPOTENCY_HEADER)
+        ifNoneMatch
+            .requireNotNull(HttpHeaders.IF_NONE_MATCH)
+            .requireEquals("*", HttpHeaders.IF_NONE_MATCH)
+
         return service.create(tenant, principal, idempotencyKey, body).toResponse()
     }
 
@@ -226,12 +235,16 @@ internal class EventSourcedCampaignCommandController(
         @RequestHeader(IDEMPOTENCY_HEADER, required = false) idempotencyHeader: String?,
         @Valid @RequestBody body: CampaignExpectedRevisionHttpRequest,
     ): ResponseEntity<Any> {
-        val tenant = tenantHeader.requireNotNull(TENANT_HEADER).requireNotBlank(TENANT_HEADER)
-        val principal =
-            principalHeader.requireNotNull(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER)
-        val idempotencyKey =
-            idempotencyHeader.requireNotNull(IDEMPOTENCY_HEADER)
-                .requireNotBlank(IDEMPOTENCY_HEADER)
+        val tenant = tenantHeader
+            .requireNotNull(TENANT_HEADER)
+            .requireNotBlank(TENANT_HEADER)
+        val principal = principalHeader
+            .requireNotNull(PRINCIPAL_HEADER)
+            .requireNotBlank(PRINCIPAL_HEADER)
+        val idempotencyKey = idempotencyHeader
+            .requireNotNull(IDEMPOTENCY_HEADER)
+            .requireNotBlank(IDEMPOTENCY_HEADER)
+        
         return service.activate(tenant, principal, idempotencyKey, campaignId, body).toResponse()
     }
 }
@@ -267,11 +280,11 @@ private fun CampaignCreateHttpResult.toResponse(): ResponseEntity<Any> =
                 .header("Idempotency-Replayed", replayed.toString())
                 .body(campaign)
 
-        is CampaignCreateHttpResult.Rejected ->
+        is CampaignCreateHttpResult.Rejected  ->
             ResponseEntity.status(status)
                 .body(EventSourcedApiError(code, "command conflicts with current state"))
 
-        CampaignCreateHttpResult.InProgress ->
+        CampaignCreateHttpResult.InProgress   ->
             ResponseEntity.status(HttpStatus.CONFLICT)
                 .header(HttpHeaders.RETRY_AFTER, "1")
                 .body(EventSourcedApiError("COMMAND_IN_PROGRESS", "command is already in progress"))

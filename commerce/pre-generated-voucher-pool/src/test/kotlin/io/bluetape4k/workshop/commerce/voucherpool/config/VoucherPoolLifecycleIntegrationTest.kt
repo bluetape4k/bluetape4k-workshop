@@ -1,10 +1,15 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
-import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.join
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
 import io.mockk.mockk
 import io.mockk.verifyOrder
@@ -12,12 +17,15 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.support.StaticListableBeanFactory
 import org.springframework.context.ApplicationContext
 import java.time.Duration
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.seconds
 
 internal class VoucherPoolLifecycleIntegrationTest {
+
+    companion object: KLogging()
+
     @Test
     fun `shutdown follows the bounded ownership order and is idempotent`() {
         val actions = RecordingLifecycleActions()
@@ -34,17 +42,15 @@ internal class VoucherPoolLifecycleIntegrationTest {
     @Test
     fun `drain timeout cancels rolls back and releases claims before resources close`() {
         val actions = RecordingLifecycleActions(drainResult = false)
-        val coordinator =
-            VoucherPoolLifecycleCoordinator(
-                actions = actions,
-                deadlines =
-                    VoucherPoolShutdownDeadlines(
-                        transactionDrain = Duration.ofMillis(20),
-                        claimRelease = Duration.ofMillis(20),
-                        phase = Duration.ofMillis(100),
-                        total = Duration.ofSeconds(1),
-                    ),
-            )
+        val coordinator = VoucherPoolLifecycleCoordinator(
+            actions = actions,
+            deadlines = VoucherPoolShutdownDeadlines(
+                transactionDrain = 20.millis(),
+                claimRelease = 20.millis(),
+                phase = 100.millis(),
+                total = 1.seconds(),
+            ),
+        )
 
         coordinator.shutdown()
 
@@ -66,14 +72,14 @@ internal class VoucherPoolLifecycleIntegrationTest {
                 release.await()
             }
         }
-        entered.await(2, TimeUnit.SECONDS).shouldBeTrue()
+        entered.await(2.seconds).shouldBeTrue()
 
         gate.beginShutdown()
         gate.isAccepting().shouldBeFalse()
-        gate.awaitDrained(Duration.ofMillis(20)).shouldBeFalse()
+        gate.awaitDrained(20.millis()).shouldBeFalse()
         release.countDown()
-        gate.awaitDrained(Duration.ofSeconds(2)).shouldBeTrue()
-        thread.join(Duration.ofSeconds(2))
+        gate.awaitDrained(2.seconds()).shouldBeTrue()
+        thread.join(2.seconds)
     }
 
     @Test
@@ -81,20 +87,22 @@ internal class VoucherPoolLifecycleIntegrationTest {
         val runtime = VoucherPoolRuntimeControl()
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
+
         val thread = Thread.ofVirtual().start {
             runtime.withClaim {
                 entered.countDown()
                 release.await()
             }
         }
-        entered.await(2, TimeUnit.SECONDS).shouldBeTrue()
+        entered.await(2.seconds).shouldBeTrue()
 
         runtime.stopClaims()
-        runtime.awaitClaimRelease(Duration.ofMillis(20)).shouldBeFalse()
+        runtime.awaitClaimRelease(20.millis()).shouldBeFalse()
         runtime.withClaim { error("new claim must be rejected") }.shouldBeNull()
         release.countDown()
-        runtime.awaitClaimRelease(Duration.ofSeconds(2)).shouldBeTrue()
-        thread.join(Duration.ofSeconds(2))
+        runtime.awaitClaimRelease(2.seconds()).shouldBeTrue()
+
+        thread.join(2.seconds)
     }
 
     @Test
@@ -102,24 +110,23 @@ internal class VoucherPoolLifecycleIntegrationTest {
         val stream = mockk<VoucherPoolStreamShutdown>(relaxed = true)
         val executor = mockk<ExecutorService>(relaxed = true)
         val dataSource = mockk<HikariDataSource>(relaxed = true)
-        val beans =
-            StaticListableBeanFactory(
-                mapOf(
-                    "voucherPoolStreamShutdown" to stream,
-                    "voucherPoolExecutor" to executor,
-                ),
-            )
-        val lifecycle =
-            VoucherPoolLifecycle(
-                applicationContext = mockk<ApplicationContext>(relaxed = true),
-                gate = DatabasePermitGate.default(16),
-                runtime = VoucherPoolRuntimeControl(),
-                health = VoucherPoolHealthState(),
-                streamShutdown = beans.getBeanProvider(VoucherPoolStreamShutdown::class.java),
-                redis = beans.getBeanProvider(VoucherPoolRedisResources::class.java),
-                executor = beans.getBeanProvider(ExecutorService::class.java),
-                dataSource = dataSource,
-            )
+
+        val beans = StaticListableBeanFactory(
+            mapOf(
+                "voucherPoolStreamShutdown" to stream,
+                "voucherPoolExecutor" to executor,
+            ),
+        )
+        val lifecycle = VoucherPoolLifecycle(
+            applicationContext = mockk<ApplicationContext>(relaxed = true),
+            gate = DatabasePermitGate.default(16),
+            runtime = VoucherPoolRuntimeControl(),
+            health = VoucherPoolHealthState(),
+            streamShutdown = beans.getBeanProvider(VoucherPoolStreamShutdown::class.java),
+            redis = beans.getBeanProvider(VoucherPoolRedisResources::class.java),
+            executor = beans.getBeanProvider(ExecutorService::class.java),
+            dataSource = dataSource,
+        )
 
         lifecycle.start()
         lifecycle.stop()
@@ -133,7 +140,7 @@ internal class VoucherPoolLifecycleIntegrationTest {
 
     private class RecordingLifecycleActions(
         private val drainResult: Boolean = true,
-    ) : VoucherPoolLifecycleActions {
+    ): VoucherPoolLifecycleActions {
         var invocations = 0
         val cancelled = AtomicBoolean()
         val rollbackVerified = AtomicBoolean()

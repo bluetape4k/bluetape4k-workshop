@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.optimization.fieldservice.persistence
 
 import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigestMatch
@@ -9,6 +11,7 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEvent
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanProposal
+import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanState
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VersionVector
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Visit
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VisitId
@@ -16,24 +19,23 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.Worker
 import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerId
 import io.bluetape4k.workshop.optimization.fieldservice.planner.CoordinatePair
 import io.bluetape4k.workshop.optimization.fieldservice.planner.TravelTimeMatrix
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
-import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Clock
-import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * disposable Field Service workshop schema를 위한 Exposed repository입니다.
@@ -45,24 +47,28 @@ import java.util.UUID
 class FieldServiceRepository(
     private val clock: Clock = Clock.systemUTC(),
     private val leaseTokenGenerator: () -> UUID = { Uuid.V4.nextUUID() },
-) : LongJdbcRepository<FieldServicePlanRecord> {
+): LongJdbcRepository<FieldServicePlanRecord> {
+
+    companion object: KLogging()
+
     override val table = FieldServicePlansTable
 
     override fun extractId(entity: FieldServicePlanRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): FieldServicePlanRecord = FieldServicePlanRecord(
-        id = this[FieldServicePlansTable.id].value,
-        planId = this[FieldServicePlansTable.planId],
-        planRevision = this[FieldServicePlansTable.planRevision],
-        parentRevision = this[FieldServicePlansTable.parentRevision],
-        datasetId = this[FieldServicePlansTable.datasetId],
-        state = this[FieldServicePlansTable.state],
-        payload = this[FieldServicePlansTable.payload],
-        providerRequestId = this[FieldServicePlansTable.providerRequestId],
-        providerRevision = this[FieldServicePlansTable.providerRevision],
-        requestGeneration = this[FieldServicePlansTable.requestGeneration],
-        createdAt = this[FieldServicePlansTable.createdAt],
-    )
+    override fun ResultRow.toEntity(): FieldServicePlanRecord =
+        FieldServicePlanRecord(
+            id = this[FieldServicePlansTable.id].value,
+            planId = this[FieldServicePlansTable.planId],
+            planRevision = this[FieldServicePlansTable.planRevision],
+            parentRevision = this[FieldServicePlansTable.parentRevision],
+            datasetId = this[FieldServicePlansTable.datasetId],
+            state = this[FieldServicePlansTable.state],
+            payload = this[FieldServicePlansTable.payload],
+            providerRequestId = this[FieldServicePlansTable.providerRequestId],
+            providerRevision = this[FieldServicePlansTable.providerRevision],
+            requestGeneration = this[FieldServicePlansTable.requestGeneration],
+            createdAt = this[FieldServicePlansTable.createdAt],
+        )
 
     fun saveWorker(worker: Worker): Worker {
         val payload = FieldServiceRecordCodec.encodeWorker(worker)
@@ -103,12 +109,14 @@ class FieldServiceRepository(
     /** sparse edge 하나를 추가하고 matrix revision을 원자적으로 증가시킵니다. */
     fun saveTravelTime(from: CoordinateId, to: CoordinateId, seconds: Long): TravelTimeMatrix {
         require(FieldServiceLimits.isFiniteNonNegativeTravelTime(seconds)) { "travel time must be finite and non-negative" }
+
         val currentRevision = FieldServiceTravelTimesTable.selectAll()
             .orderBy(FieldServiceTravelTimesTable.matrixRevision to SortOrder.DESC)
             .limit(1)
             .firstOrNull()
             ?.get(FieldServiceTravelTimesTable.matrixRevision)
             ?: 0L
+
         val nextRevision = currentRevision + 1L
         FieldServiceTravelTimesTable.insert { statement ->
             statement[matrixRevision] = nextRevision
@@ -125,6 +133,7 @@ class FieldServiceRepository(
         val rows = FieldServiceTravelTimesTable.selectAll()
             .orderBy(FieldServiceTravelTimesTable.matrixRevision to SortOrder.DESC)
             .toList()
+
         val latest = linkedMapOf<CoordinatePair, Long>()
         rows.forEach { row ->
             val pair = CoordinatePair(
@@ -134,6 +143,7 @@ class FieldServiceRepository(
             latest.putIfAbsent(pair, row[FieldServiceTravelTimesTable.travelSeconds])
         }
         val storedCoordinates = latest.keys.flatMapTo(mutableSetOf()) { setOf(it.from, it.to) }
+
         return TravelTimeMatrix(
             revision = rows.firstOrNull()?.get(FieldServiceTravelTimesTable.matrixRevision) ?: 0L,
             coordinateIds = coordinateIds + storedCoordinates,
@@ -160,7 +170,7 @@ class FieldServiceRepository(
         val updated = FieldServiceVisitsTable.update(
             where = {
                 (FieldServiceVisitsTable.visitId eq id.value) and
-                    (FieldServiceVisitsTable.version eq expectedVersion)
+                        (FieldServiceVisitsTable.version eq expectedVersion)
             },
         ) { statement ->
             statement[FieldServiceVisitsTable.payload] = payload
@@ -175,7 +185,7 @@ class FieldServiceRepository(
         val updated = FieldServiceWorkersTable.update(
             where = {
                 (FieldServiceWorkersTable.workerId eq id.value) and
-                    (FieldServiceWorkersTable.version eq expectedVersion)
+                        (FieldServiceWorkersTable.version eq expectedVersion)
             },
         ) { statement ->
             statement[FieldServiceWorkersTable.payload] = payload
@@ -189,6 +199,7 @@ class FieldServiceRepository(
     fun savePlan(plan: PlanProposal): PlanProposal {
         val payload = FieldServiceRecordCodec.encode(plan)
         val now = clock.instant()
+
         FieldServicePlansTable.insert { statement ->
             statement[planId] = plan.planId.value
             statement[planRevision] = plan.planRevision
@@ -252,40 +263,47 @@ class FieldServiceRepository(
         val visitPredicate = vector.visitVersions.entries
             .map { (visitId, expected) ->
                 (FieldServiceVisitsTable.visitId eq visitId.value) and
-                    (FieldServiceVisitsTable.version eq expected)
+                        (FieldServiceVisitsTable.version eq expected)
             }
             .reduceOrNull { left, right -> left or right }
-            ?: org.jetbrains.exposed.v1.core.Op.FALSE
+            ?: Op.FALSE
+
         val visitRows = FieldServiceVisitsTable.selectAll()
             .where { visitPredicate }
             .forUpdate()
             .toList()
+
         if (visitRows.size != vector.visitVersions.size) return false
 
         val workerPredicate = vector.workerVersions.entries
             .mapNotNull { (workerId, expected) ->
                 val expectedSchedule = vector.workerScheduleRevisions[workerId] ?: return@mapNotNull null
                 (FieldServiceWorkersTable.workerId eq workerId.value) and
-                    (FieldServiceWorkersTable.version eq expected) and
-                    (FieldServiceWorkersTable.workerScheduleRevision eq expectedSchedule)
+                        (FieldServiceWorkersTable.version eq expected) and
+                        (FieldServiceWorkersTable.workerScheduleRevision eq expectedSchedule)
             }
             .reduceOrNull { left, right -> left or right }
-            ?: org.jetbrains.exposed.v1.core.Op.FALSE
+            ?: Op.FALSE
+
         val workerRows = FieldServiceWorkersTable.selectAll()
             .where { workerPredicate }
             .forUpdate()
             .toList()
+
         return workerRows.size == vector.workerVersions.size
     }
 
     /** redacted local projection만 다시 쓰는 proposal state CAS입니다. */
-    fun updatePlanStateIfDraft(plan: PlanProposal, nextState: io.bluetape4k.workshop.optimization.fieldservice.domain.PlanState): Boolean {
+    fun updatePlanStateIfDraft(
+        plan: PlanProposal,
+        nextState: PlanState,
+    ): Boolean {
         val next = plan.copy(state = nextState)
         return FieldServicePlansTable.update(
             where = {
                 (FieldServicePlansTable.planId eq plan.planId.value) and
-                    (FieldServicePlansTable.planRevision eq plan.planRevision) and
-                    (FieldServicePlansTable.state eq StoredPlanState.DRAFT)
+                        (FieldServicePlansTable.planRevision eq plan.planRevision) and
+                        (FieldServicePlansTable.state eq StoredPlanState.DRAFT)
             },
         ) { statement ->
             statement[state] = StoredPlanState.valueOf(nextState.name)
@@ -311,7 +329,7 @@ class FieldServiceRepository(
                 .where { FieldServiceWorkersTable.workerId inList vector.workerVersions.keys.map { it.value } }
                 .associate {
                     it[FieldServiceWorkersTable.workerId] to
-                        (it[FieldServiceWorkersTable.version] to it[FieldServiceWorkersTable.workerScheduleRevision])
+                            (it[FieldServiceWorkersTable.version] to it[FieldServiceWorkersTable.workerScheduleRevision])
                 }
         }
         return vector.workerVersions.all { (id, version) ->
@@ -343,7 +361,7 @@ class FieldServiceRepository(
     /** proposal이 아직 draft일 때만 state를 업데이트합니다. */
     fun commitWorkerRoute(workerId: WorkerId, planId: PlanId, revision: Long): RouteCommitResult {
         val plan = loadPlan(planId, revision) ?: return RouteCommitResult.VERSION_CONFLICT
-        if (plan.state != io.bluetape4k.workshop.optimization.fieldservice.domain.PlanState.APPROVED) {
+        if (plan.state != PlanState.APPROVED) {
             return RouteCommitResult.VERSION_CONFLICT
         }
         val route = plan.routes.singleOrNull { it.workerId == workerId } ?: return RouteCommitResult.VERSION_CONFLICT
@@ -351,6 +369,7 @@ class FieldServiceRepository(
 
         val visitIds = route.visits.map { it.visitId }
         if (visitIds.size != visitIds.toSet().size) return RouteCommitResult.VERSION_CONFLICT
+
         val expectedVisitVersions = visitIds.map { visitId ->
             visitId to (plan.versionVector.visitVersions[visitId] ?: return RouteCommitResult.VERSION_CONFLICT)
         }
@@ -363,7 +382,7 @@ class FieldServiceRepository(
                 FieldServiceVisitsTable.update(
                     where = {
                         (FieldServiceVisitsTable.visitId eq visitId.value) and
-                            (FieldServiceVisitsTable.version eq expectedVersion)
+                                (FieldServiceVisitsTable.version eq expectedVersion)
                     },
                 ) { statement -> statement[version] = expectedVersion } == 1
             }
@@ -380,6 +399,7 @@ class FieldServiceRepository(
             ?: return RouteCommitResult.VERSION_CONFLICT
         val expectedScheduleRevision = plan.versionVector.workerScheduleRevisions[workerId]
             ?: return RouteCommitResult.SCHEDULE_CONFLICT
+
         val worker = findWorker(workerId) ?: return RouteCommitResult.VERSION_CONFLICT
         if (worker.version != expectedWorkerVersion ||
             worker.workerScheduleRevision != expectedScheduleRevision ||
@@ -387,16 +407,18 @@ class FieldServiceRepository(
         ) {
             return RouteCommitResult.SCHEDULE_CONFLICT
         }
+
         val workerUpdated = FieldServiceWorkersTable.update(
             where = {
                 (FieldServiceWorkersTable.workerId eq workerId.value) and
-                    (FieldServiceWorkersTable.version eq expectedWorkerVersion) and
-                    (FieldServiceWorkersTable.workerScheduleRevision eq expectedScheduleRevision) and
-                    (FieldServiceWorkersTable.unavailable eq false)
+                        (FieldServiceWorkersTable.version eq expectedWorkerVersion) and
+                        (FieldServiceWorkersTable.workerScheduleRevision eq expectedScheduleRevision) and
+                        (FieldServiceWorkersTable.unavailable eq false)
             },
         ) { statement ->
             statement[workerScheduleRevision] = expectedScheduleRevision + 1
         }
+
         if (workerUpdated != 1) return RouteCommitResult.SCHEDULE_CONFLICT
 
         route.visits.chunked(100).forEach { chunk ->
@@ -412,11 +434,18 @@ class FieldServiceRepository(
         FieldServicePlanAssignmentsTable.update(
             where = {
                 (FieldServicePlanAssignmentsTable.workerId eq workerId.value) and
-                    (FieldServicePlanAssignmentsTable.workerScheduleRevision less expectedScheduleRevision + 1) and
-                    (FieldServicePlanAssignmentsTable.stale eq false)
+                        (FieldServicePlanAssignmentsTable.workerScheduleRevision less expectedScheduleRevision + 1) and
+                        (FieldServicePlanAssignmentsTable.stale eq false)
             },
         ) { statement -> statement[stale] = true }
-        appendAudit("worker", workerId.value, "DISPATCH_COMMITTED", revision, "route_committed:${route.visits.size}")
+
+        appendAudit(
+            aggregateType = "worker",
+            aggregateId = workerId.value,
+            decision = "DISPATCH_COMMITTED",
+            planRevision = revision,
+            summary = "route_committed:${route.visits.size}"
+        )
         return RouteCommitResult.COMMITTED
     }
 
@@ -430,8 +459,8 @@ class FieldServiceRepository(
         FieldServiceDispatchAssignmentsTable.selectAll()
             .where {
                 (FieldServiceDispatchAssignmentsTable.workerId eq workerId.value) and
-                    (FieldServiceDispatchAssignmentsTable.planId eq planId.value) and
-                    (FieldServiceDispatchAssignmentsTable.planRevision eq revision)
+                        (FieldServiceDispatchAssignmentsTable.planId eq planId.value) and
+                        (FieldServiceDispatchAssignmentsTable.planRevision eq revision)
             }
             .limit(1)
             .any()
@@ -440,8 +469,8 @@ class FieldServiceRepository(
         FieldServiceEventsTable.selectAll()
             .where {
                 (FieldServiceEventsTable.aggregateType eq aggregateType) and
-                    (FieldServiceEventsTable.aggregateId eq aggregateId) and
-                    (FieldServiceEventsTable.eventKey eq eventKey)
+                        (FieldServiceEventsTable.aggregateId eq aggregateId) and
+                        (FieldServiceEventsTable.eventKey eq eventKey)
             }
             .singleOrNull()
             ?.let {
@@ -456,7 +485,7 @@ class FieldServiceRepository(
         (FieldServiceEventsTable.selectAll()
             .where {
                 (FieldServiceEventsTable.aggregateType eq aggregateType) and
-                    (FieldServiceEventsTable.aggregateId eq aggregateId)
+                        (FieldServiceEventsTable.aggregateId eq aggregateId)
             }
             .orderBy(FieldServiceEventsTable.sequenceVersion to SortOrder.DESC)
             .limit(1)
@@ -468,8 +497,8 @@ class FieldServiceRepository(
         val existing = FieldServiceEventsTable.selectAll()
             .where {
                 (FieldServiceEventsTable.aggregateType eq command.aggregateType) and
-                    (FieldServiceEventsTable.aggregateId eq command.aggregateId.value) and
-                    (FieldServiceEventsTable.eventKey eq command.eventKey.value)
+                        (FieldServiceEventsTable.aggregateId eq command.aggregateId.value) and
+                        (FieldServiceEventsTable.eventKey eq command.eventKey.value)
             }
             .singleOrNull()
         if (existing != null) {
@@ -495,17 +524,20 @@ class FieldServiceRepository(
             statement[sequenceVersion] = command.expectedVersion
             statement[createdAt] = clock.instant()
         }.insertedCount > 0
+
         if (inserted) return EventAppendResult.APPENDED
 
         val raced = FieldServiceEventsTable.selectAll()
             .where {
                 (FieldServiceEventsTable.aggregateType eq command.aggregateType) and
-                    (FieldServiceEventsTable.aggregateId eq command.aggregateId.value) and
-                    (FieldServiceEventsTable.eventKey eq command.eventKey.value)
+                        (FieldServiceEventsTable.aggregateId eq command.aggregateId.value) and
+                        (FieldServiceEventsTable.eventKey eq command.eventKey.value)
             }
             .singleOrNull()
             ?: return EventAppendResult.VERSION_CONFLICT
+
         val storedDigest = EventDigest(raced[FieldServiceEventsTable.digest])
+
         return when (FieldServiceEvents.compare(storedDigest, command.digest)) {
             EventDigestMatch.DUPLICATE -> EventAppendResult.DUPLICATE
             EventDigestMatch.EVENT_KEY_REUSED -> EventAppendResult.EVENT_KEY_REUSED
@@ -515,7 +547,8 @@ class FieldServiceRepository(
     fun countEvents(): Long = FieldServiceEventsTable.selectAll().count()
 
     fun enqueueOutbox(record: OutboxRecord): OutboxRecord {
-        require(record.maxAttempts in 1..5) { "outbox maxAttempts must be 1..5" }
+        record.maxAttempts.requireInRange(1, 5) { "outbox maxAttempts must be 1..5" }
+
         val id = FieldServiceOutboxTable.insert { statement ->
             statement[payload] = record.payload
             statement[status] = record.status
@@ -527,7 +560,8 @@ class FieldServiceRepository(
             statement[leaseExpiresAt] = record.leaseExpiresAt
             statement[lastError] = record.lastError?.take(240)
             statement[createdAt] = record.createdAt
-        } get FieldServiceOutboxTable.id
+        }[FieldServiceOutboxTable.id]
+
         return record.copy(id = id)
     }
 
@@ -537,23 +571,27 @@ class FieldServiceRepository(
         val rows = FieldServiceOutboxTable.selectAll()
             .where {
                 ((FieldServiceOutboxTable.status inList listOf(OutboxStatus.PENDING, OutboxStatus.RETRYABLE)) or
-                    ((FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
-                        (FieldServiceOutboxTable.leaseExpiresAt lessEq now))) and
-                    (FieldServiceOutboxTable.nextAttemptAt lessEq now)
+                        ((FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
+                                (FieldServiceOutboxTable.leaseExpiresAt lessEq now))) and
+                        (FieldServiceOutboxTable.nextAttemptAt lessEq now)
             }
             .orderBy(FieldServiceOutboxTable.id to SortOrder.ASC)
             .limit(bounded)
             .toList()
+
         return rows.mapNotNull { row ->
             // lease token은 DB 정렬이 필요 없는 opaque 보안 값이므로 UUID v4를 사용합니다.
             val token = leaseTokenGenerator().toString()
             val changed = FieldServiceOutboxTable.update(
                 where = {
                     (FieldServiceOutboxTable.id eq row[FieldServiceOutboxTable.id]) and
-                        (((FieldServiceOutboxTable.status inList listOf(OutboxStatus.PENDING, OutboxStatus.RETRYABLE)) or
-                            ((FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
-                                (FieldServiceOutboxTable.leaseExpiresAt lessEq now)))
-                        )
+                            (((FieldServiceOutboxTable.status inList listOf(
+                                OutboxStatus.PENDING,
+                                OutboxStatus.RETRYABLE
+                            )) or
+                                    ((FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
+                                            (FieldServiceOutboxTable.leaseExpiresAt lessEq now)))
+                                    )
                 },
             ) { statement ->
                 statement[status] = OutboxStatus.CLAIMED
@@ -561,11 +599,13 @@ class FieldServiceRepository(
                 statement[leaseToken] = token
                 statement[leaseExpiresAt] = now.plusSeconds(30)
             }
-            if (changed != 1) null else rowToOutbox(
-                row = FieldServiceOutboxTable.selectAll()
+
+            if (changed == 1) {
+                FieldServiceOutboxTable.selectAll()
                     .where { FieldServiceOutboxTable.id eq row[FieldServiceOutboxTable.id] }
-                    .single(),
-            )
+                    .single()
+                    .toOutbox()
+            } else null
         }
     }
 
@@ -573,10 +613,10 @@ class FieldServiceRepository(
         FieldServiceOutboxTable.update(
             where = {
                 (FieldServiceOutboxTable.id eq id) and
-                    (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
-                    (FieldServiceOutboxTable.leaseOwner eq owner) and
-                    (FieldServiceOutboxTable.leaseToken eq token) and
-                    (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
+                        (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
+                        (FieldServiceOutboxTable.leaseOwner eq owner) and
+                        (FieldServiceOutboxTable.leaseToken eq token) and
+                        (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
             },
         ) { statement ->
             statement[status] = OutboxStatus.COMPLETED
@@ -600,10 +640,10 @@ class FieldServiceRepository(
         return FieldServiceOutboxTable.update(
             where = {
                 (FieldServiceOutboxTable.id eq id) and
-                    (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
-                    (FieldServiceOutboxTable.leaseOwner eq owner) and
-                    (FieldServiceOutboxTable.leaseToken eq token) and
-                    (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
+                        (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
+                        (FieldServiceOutboxTable.leaseOwner eq owner) and
+                        (FieldServiceOutboxTable.leaseToken eq token) and
+                        (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
             },
         ) { statement ->
             statement[status] = if (terminal) OutboxStatus.DEAD_LETTER else OutboxStatus.RETRYABLE
@@ -620,10 +660,10 @@ class FieldServiceRepository(
         FieldServiceOutboxTable.update(
             where = {
                 (FieldServiceOutboxTable.id eq id) and
-                    (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
-                    (FieldServiceOutboxTable.leaseOwner eq owner) and
-                    (FieldServiceOutboxTable.leaseToken eq token) and
-                    (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
+                        (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
+                        (FieldServiceOutboxTable.leaseOwner eq owner) and
+                        (FieldServiceOutboxTable.leaseToken eq token) and
+                        (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
             },
         ) { statement ->
             statement[status] = OutboxStatus.DEAD_LETTER
@@ -637,10 +677,10 @@ class FieldServiceRepository(
         FieldServiceOutboxTable.update(
             where = {
                 (FieldServiceOutboxTable.id eq id) and
-                    (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
-                    (FieldServiceOutboxTable.leaseOwner eq owner) and
-                    (FieldServiceOutboxTable.leaseToken eq token) and
-                    (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
+                        (FieldServiceOutboxTable.status eq OutboxStatus.CLAIMED) and
+                        (FieldServiceOutboxTable.leaseOwner eq owner) and
+                        (FieldServiceOutboxTable.leaseToken eq token) and
+                        (FieldServiceOutboxTable.leaseExpiresAt greater clock.instant())
             },
         ) { statement ->
             statement[leaseExpiresAt] = clock.instant().plusSeconds(leaseSeconds)
@@ -648,18 +688,18 @@ class FieldServiceRepository(
 
     fun countAssignments(): Long = FieldServiceDispatchAssignmentsTable.selectAll().count()
 
-    private fun rowToOutbox(row: org.jetbrains.exposed.v1.core.ResultRow): OutboxRecord = OutboxRecord(
-        id = row[FieldServiceOutboxTable.id],
-        payload = row[FieldServiceOutboxTable.payload],
-        status = row[FieldServiceOutboxTable.status],
-        attempt = row[FieldServiceOutboxTable.attempt],
-        maxAttempts = row[FieldServiceOutboxTable.maxAttempts],
-        nextAttemptAt = row[FieldServiceOutboxTable.nextAttemptAt],
-        leaseOwner = row[FieldServiceOutboxTable.leaseOwner],
-        leaseToken = row[FieldServiceOutboxTable.leaseToken],
-        leaseExpiresAt = row[FieldServiceOutboxTable.leaseExpiresAt],
-        lastError = row[FieldServiceOutboxTable.lastError],
-        createdAt = row[FieldServiceOutboxTable.createdAt],
+    private fun ResultRow.toOutbox(): OutboxRecord = OutboxRecord(
+        id = this[FieldServiceOutboxTable.id],
+        payload = this[FieldServiceOutboxTable.payload],
+        status = this[FieldServiceOutboxTable.status],
+        attempt = this[FieldServiceOutboxTable.attempt],
+        maxAttempts = this[FieldServiceOutboxTable.maxAttempts],
+        nextAttemptAt = this[FieldServiceOutboxTable.nextAttemptAt],
+        leaseOwner = this[FieldServiceOutboxTable.leaseOwner],
+        leaseToken = this[FieldServiceOutboxTable.leaseToken],
+        leaseExpiresAt = this[FieldServiceOutboxTable.leaseExpiresAt],
+        lastError = this[FieldServiceOutboxTable.lastError],
+        createdAt = this[FieldServiceOutboxTable.createdAt],
     )
 }
 

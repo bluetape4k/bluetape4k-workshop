@@ -4,9 +4,13 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class PublicImageUrlResolverTest {
+
+    private companion object: KLogging()
 
     @Test
     fun `resolver composes unsigned public url from object key`() {
@@ -17,6 +21,7 @@ class PublicImageUrlResolverTest {
 
         val url = resolver.resolve(ImageObjectKey.of("images/abc/variants", "thumb-128.webp"))
 
+        log.debug { "url=$url" }
         url shouldBeEqualTo "https://cdn.example.com/images/images/abc/variants/thumb-128.webp"
     }
 

@@ -3,39 +3,39 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.author
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.exposed.core.ExposedCursorPage
 import io.bluetape4k.exposed.r2dbc.repository.LongR2dbcRepository
 import io.bluetape4k.exposed.r2dbc.repository.findCursorPage
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withTimeout
-import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
+import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import org.testcontainers.utility.Base58
+import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
-private object CursorPaginationTable : IdTable<Long>("workshop_cursor_pagination_rows") {
-    override val id: Column<EntityID<Long>> = long("id").entityId()
-    override val primaryKey = PrimaryKey(id)
+private object CursorPaginationTable: LongIdTable("workshop_cursor_pagination_rows") {
     val active = bool("active")
 }
 
 private data class CursorRecord(val id: Long, val active: Boolean)
 
-private object CursorPaginationRepository : LongR2dbcRepository<CursorRecord> {
+private object CursorPaginationRepository: LongR2dbcRepository<CursorRecord> {
     override val table = CursorPaginationTable
 
     override fun extractId(entity: CursorRecord): Long = entity.id
@@ -56,7 +56,7 @@ private object CursorPaginationRepository : LongR2dbcRepository<CursorRecord> {
 private class BlockingCursorPaginationRepository(
     private val mapperEntered: CompletableDeferred<Unit>,
     private val releaseMapper: CompletableDeferred<Unit>,
-) : LongR2dbcRepository<CursorRecord> {
+): LongR2dbcRepository<CursorRecord> {
     override val table = CursorPaginationTable
 
     override fun extractId(entity: CursorRecord): Long = entity.id
@@ -73,6 +73,8 @@ private class BlockingCursorPaginationRepository(
 
 class CursorPaginationRepositoryTest {
 
+    companion object: KLoggingChannel()
+
     // sparse ID 경계를 페이지 요청 사이에서 의도적으로 변경합니다.
     @Test
     fun `suspend cursor page follows sparse IDs across insert and delete boundaries`() = runSuspendIO {
@@ -85,6 +87,7 @@ class CursorPaginationRepositoryTest {
                 commit()
                 page.nextCursor
             }
+            log.debug { "firstCursor=$firstCursor" }
 
             suspendTransaction(db = database) {
                 CursorPaginationTable.deleteWhere { CursorPaginationTable.id eq 3L }
@@ -99,6 +102,7 @@ class CursorPaginationRepositoryTest {
                 page
             }
 
+            log.debug { "nextPage=$nextPage" }
             nextPage.content.map(CursorRecord::id) shouldBeEqualTo listOf(5L, 7L)
             nextPage.nextCursor shouldBeEqualTo 7L
             nextPage.hasNext.shouldBeTrue()
@@ -140,7 +144,7 @@ class CursorPaginationRepositoryTest {
             request.cancel()
             assertFailsWith<CancellationException> { request.await() }
 
-            val idsAfterCancellation = withTimeout(5_000L) {
+            val idsAfterCancellation = withTimeout(5.seconds) {
                 suspendTransaction(db = database) {
                     val ids = CursorPaginationRepository.findCursorPage(pageSize = 100).content
                         .map(CursorRecord::id)
@@ -148,6 +152,7 @@ class CursorPaginationRepositoryTest {
                     ids
                 }
             }
+            log.debug { "ids after cancellation=$idsAfterCancellation" }
             idsAfterCancellation shouldBeEqualTo listOf(1L, 3L)
         } finally {
             releaseMapper.complete(Unit)
@@ -182,14 +187,15 @@ class CursorPaginationRepositoryTest {
         }
     }
 
-    private suspend fun org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction.seed(
+    @Suppress("UnusedReceiverParameter")
+    private suspend fun R2dbcTransaction.seed(
         vararg records: CursorRecord,
     ) {
         records.forEach { CursorPaginationRepository.insert(it) }
     }
 
     private fun database(label: String): R2dbcDatabase = R2dbcDatabase.connect(
-        url = "r2dbc:h2:mem:///workshop-cursor-$label-${UUID.randomUUID()};DB_CLOSE_DELAY=-1;",
+        url = "r2dbc:h2:mem:///workshop-cursor-$label-${Base58.randomString(8)};DB_CLOSE_DELAY=-1;",
         databaseConfig = R2dbcDatabaseConfig.Builder().apply { setUrl("r2dbc:h2:mem:///workshop-cursor-$label") },
     )
 }

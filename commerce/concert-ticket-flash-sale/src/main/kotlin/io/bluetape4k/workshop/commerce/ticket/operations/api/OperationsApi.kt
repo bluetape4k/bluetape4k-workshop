@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.operations.api
 
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** 한계가 정해진 manual reconciliation request입니다. */
 data class OperatorReconcile(
@@ -10,7 +10,7 @@ data class OperatorReconcile(
     val limit: Int,
     val requestedAt: Instant,
     val reason: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -21,7 +21,7 @@ data class ReconcileSummary(
     val processed: Int,
     val converged: Int,
     val quarantined: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -29,5 +29,7 @@ data class ReconcileSummary(
 
 /** operator command boundary입니다. */
 fun interface OperationsCommands {
+
     fun reconcile(command: OperatorReconcile): ReconcileSummary
+
 }

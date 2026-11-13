@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.cache.caffeine.config
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.cache.caffeine.AbstractCaffeineCacheApplicationTest
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.CacheManager

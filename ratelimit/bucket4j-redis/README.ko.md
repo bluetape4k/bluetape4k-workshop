@@ -48,35 +48,35 @@ bucket4j:
 
 통합 테스트 profile은 `buckets_test`를 사용하고 URL을 다음처럼 나눕니다.
 
-| URL pattern | Quota |
-|---|---:|
-| `^(/coroutines/hello).*` | 10초당 5회 |
+| URL pattern              |       Quota |
+|--------------------------|------------:|
+| `^(/coroutines/hello).*` |  10초당 5회 |
 | `^(/coroutines/world).*` | 10초당 10회 |
-| `^(/reactive/hello).*` | 10초당 5회 |
-| `^(/reactive/world).*` | 10초당 10회 |
+| `^(/reactive/hello).*`   |  10초당 5회 |
+| `^(/reactive/world).*`   | 10초당 10회 |
 
 ## 핵심 구성 요소
 
-| Class / file | 역할 |
-|---|---|
-| `Bucket4jRedisApplication.kt` | Spring Boot 진입점 |
-| `LettuceConfiguration.kt` | Testcontainers Redis URL로 `RedisClient` 생성 |
-| `CoroutineController.kt` | `/coroutines/hello`, `/coroutines/world` suspend handler |
-| `ReactiveController.kt` | `/reactive/hello`, `/reactive/world` `Mono` handler |
-| `application.yml` | Redis 연결과 Bucket4j WebFlux filter 설정 |
-| `application-webflux.yml` | Endpoint별 test quota rule |
-| `CoroutineRateLimitTest.kt` | Coroutine endpoint의 정상 요청 수와 마지막 429 응답 검증 |
-| `ReactiveRateLimitTest.kt` | Reactive endpoint의 정상 요청 수와 마지막 429 응답 검증 |
+| Class / file                  | 역할                                                     |
+|-------------------------------|----------------------------------------------------------|
+| `Bucket4jRedisApplication.kt` | Spring Boot 진입점                                       |
+| `LettuceConfiguration.kt`     | Testcontainers Redis URL로 `RedisClient` 생성            |
+| `CoroutineController.kt`      | `/coroutines/hello`, `/coroutines/world` suspend handler |
+| `ReactiveController.kt`       | `/reactive/hello`, `/reactive/world` `Mono` handler      |
+| `application.yml`             | Redis 연결과 Bucket4j WebFlux filter 설정                |
+| `application-webflux.yml`     | Endpoint별 test quota rule                               |
+| `CoroutineRateLimitTest.kt`   | Coroutine endpoint의 정상 요청 수와 마지막 429 응답 검증 |
+| `ReactiveRateLimitTest.kt`    | Reactive endpoint의 정상 요청 수와 마지막 429 응답 검증  |
 
 ## Caffeine vs Redis
 
-| 항목 | Caffeine WebMVC | Redis WebFlux |
-|---|---|---|
-| Store | 로컬 JVM cache | 공유 Redis bucket |
-| Filter method | `servlet` | `webflux` |
-| Cache adapter | `jcache` | `redis-lettuce` |
-| Scale-out behavior | Instance별로 분리 | Instance 간 공유 |
-| Endpoint style | Servlet controller | Coroutine/Reactor controller |
+| 항목               | Caffeine WebMVC    | Redis WebFlux                |
+|--------------------|--------------------|------------------------------|
+| Store              | 로컬 JVM cache     | 공유 Redis bucket            |
+| Filter method      | `servlet`          | `webflux`                    |
+| Cache adapter      | `jcache`           | `redis-lettuce`              |
+| Scale-out behavior | Instance별로 분리  | Instance 간 공유             |
+| Endpoint style     | Servlet controller | Coroutine/Reactor controller |
 
 ## 빌드와 테스트
 

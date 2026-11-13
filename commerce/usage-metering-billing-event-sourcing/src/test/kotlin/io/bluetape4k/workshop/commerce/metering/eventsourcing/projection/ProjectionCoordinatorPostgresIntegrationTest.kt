@@ -5,15 +5,15 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 @Tag("integration")
@@ -51,7 +51,7 @@ class ProjectionCoordinatorPostgresIntegrationTest {
             .shouldNotBeNull()
             .shouldBeEqualTo(ProjectionGenerationState.RETIRED)
 
-        fixture.executor.transaction { generations.rollbackActive("billing", 2, 1, now.plusSeconds(1)) }.shouldBeTrue()
+        fixture.executor.transaction { generations.rollbackActive("billing", 2, 1, now + 1.seconds()) }.shouldBeTrue()
         fixture.executor.transaction { generations.active("billing")?.generation }
             .shouldNotBeNull()
             .shouldBeEqualTo(1)
@@ -67,7 +67,7 @@ class ProjectionCoordinatorPostgresIntegrationTest {
 
         val lease = acquire(1)
         val renewed = fixture.executor.transaction {
-            checkpoints.renewLease(lease, now.plusSeconds(10), Duration.ofSeconds(30))
+            checkpoints.renewLease(lease, now.plusSeconds(10), 30.seconds())
         }
         (renewed.leaseUntil > lease.leaseUntil).shouldBeTrue()
         fixture.executor.transaction { checkpoints.releaseLease(renewed, now.plusSeconds(11)) }
@@ -82,7 +82,7 @@ class ProjectionCoordinatorPostgresIntegrationTest {
         fixture.executor.transaction { generations.createInitialActive("billing", 1, now) }
         val stale = acquire(1)
         val current = fixture.executor.transaction {
-            checkpoints.acquireLease("billing", 1, UUID.randomUUID(), now.plusSeconds(31), Duration.ofSeconds(30))
+            checkpoints.acquireLease("billing", 1, UUID.randomUUID(), now.plusSeconds(31), 30.seconds())
         } ?: error("takeover must succeed")
 
         assertFailsWith<StaleProjectionOwnerException> {
@@ -142,6 +142,6 @@ class ProjectionCoordinatorPostgresIntegrationTest {
     }
 
     private fun acquire(generation: Int): ProjectionLease = fixture.executor.transaction {
-        checkpoints.acquireLease("billing", generation, UUID.randomUUID(), now, Duration.ofSeconds(30))
+        checkpoints.acquireLease("billing", generation, UUID.randomUUID(), now, 30.seconds())
     } ?: error("lease must be acquired")
 }

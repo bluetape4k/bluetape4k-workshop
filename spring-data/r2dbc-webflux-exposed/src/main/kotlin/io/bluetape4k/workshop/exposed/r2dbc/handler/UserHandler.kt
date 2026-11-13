@@ -19,7 +19,7 @@ import org.springframework.web.reactive.function.server.json
 @Component
 class UserHandler(private val service: UserService) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     suspend fun findAll(request: ServerRequest): ServerResponse {
         val users = service.findAll()
@@ -43,14 +43,14 @@ class UserHandler(private val service: UserService) {
                 }
             }
 
-            else ->
+            else               ->
                 errorResponse(HttpStatus.BAD_REQUEST, "Not supported search criteria")
         }
     }
 
     suspend fun queryByExample(request: ServerRequest): ServerResponse {
-        val page = request.queryParam("page").orElse("0").toIntOrNull()
-        val size = request.queryParam("size").orElse("20").toIntOrNull()
+        val page = request.queryParam("page").orElse("0").asIntOrNull()
+        val size = request.queryParam("size").orElse("20").asIntOrNull()
         if (page == null || size == null || page < 0 || size !in 1..100) {
             return errorResponse(
                 HttpStatus.BAD_REQUEST,
@@ -114,9 +114,8 @@ class UserHandler(private val service: UserService) {
     private suspend fun errorResponse(
         status: HttpStatus = HttpStatus.BAD_REQUEST,
         message: String,
-    ): ServerResponse {
-        return ServerResponse.status(status).json().bodyValueAndAwait(ErrorMessage(message))
-    }
+    ): ServerResponse =
+        ServerResponse.status(status).json().bodyValueAndAwait(ErrorMessage(message))
 
     private suspend inline fun <reified T: Any> ServerRequest.decodeBodyOrNull(): T? {
         return try {

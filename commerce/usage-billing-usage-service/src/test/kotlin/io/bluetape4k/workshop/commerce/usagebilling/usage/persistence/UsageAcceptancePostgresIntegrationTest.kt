@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.PriceEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.UsageCommandService
@@ -18,7 +20,7 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 @SpringBootTest
@@ -61,8 +63,8 @@ class UsageAcceptancePostgresIntegrationTest {
             occurredAt = NOW,
         )
 
-        usage.accept(command).replayed shouldBeEqualTo false
-        usage.accept(command).replayed shouldBeEqualTo true
+        usage.accept(command).replayed.shouldBeFalse()
+        usage.accept(command).replayed.shouldBeTrue()
 
         transaction { usageRecords.findAll().count() } shouldBeEqualTo usageCount + 1
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount + 1
@@ -83,7 +85,7 @@ class UsageAcceptancePostgresIntegrationTest {
         priceEvidence.record(event) shouldBeEqualTo PriceEvidenceInboxOutcome.APPLIED
         priceEvidence.record(event) shouldBeEqualTo PriceEvidenceInboxOutcome.DUPLICATE
         priceEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo
-            PriceEvidenceInboxOutcome.QUARANTINED
+                PriceEvidenceInboxOutcome.QUARANTINED
 
         transaction { priceEvidenceInbox.findAll().count() } shouldBeEqualTo 1
     }
@@ -104,14 +106,14 @@ class UsageAcceptancePostgresIntegrationTest {
             ),
         )
 
-        outboxJournal.claim("worker-a", NOW, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo true
-        outboxJournal.claim("worker-b", NOW, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo false
+        outboxJournal.claim("worker-a", NOW, 100).map { it.eventId }.contains(result.eventId).shouldBeTrue()
+        outboxJournal.claim("worker-b", NOW, 100).map { it.eventId }.contains(result.eventId).shouldBeFalse()
         outboxJournal.claim("worker-b", NOW.plusSeconds(31), 100)
             .map { it.eventId }
-            .contains(result.eventId) shouldBeEqualTo true
+            .contains(result.eventId).shouldBeTrue()
     }
 
-    private fun <T : Any> transaction(block: () -> T): T =
+    private fun <T: Any> transaction(block: () -> T): T =
         requireNotNull(TransactionTemplate(transactionManager).execute { block() })
 
     private companion object {

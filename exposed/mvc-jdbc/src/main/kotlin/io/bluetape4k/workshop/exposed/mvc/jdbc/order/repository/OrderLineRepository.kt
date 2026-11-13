@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.order.repository
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.OrderLineDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.OrderLineRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.mapper.toOrderLineDTO
@@ -13,6 +14,8 @@ import java.math.BigDecimal
 @Repository
 class OrderLineRepository {
 
+    companion object: KLogging()
+
     fun findByOrderId(orderId: Long): List<OrderLineDTO> =
         OrderLineTable.selectAll()
             .where { OrderLineTable.orderId eq orderId }
@@ -25,9 +28,12 @@ class OrderLineRepository {
             it[quantity] = line.quantity
             it[this.unitPrice] = unitPrice
         }[OrderLineTable.id]
-        return OrderLineTable.selectAll()
-            .where { OrderLineTable.id eq id }
-            .single()
-            .toOrderLineDTO()
+
+        return OrderLineDTO(
+            id = id,
+            productId = line.productId,
+            quantity = line.quantity,
+            unitPrice = unitPrice
+        )
     }
 }

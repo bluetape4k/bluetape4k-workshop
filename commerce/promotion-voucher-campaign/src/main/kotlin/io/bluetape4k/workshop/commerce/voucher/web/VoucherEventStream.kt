@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.application.toSnapshot
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherProperties
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherSseProperties
-import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
 import io.bluetape4k.workshop.commerce.voucher.persistence.AuditRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.AuditRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.CampaignRepository
@@ -22,16 +24,15 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import tools.jackson.databind.ObjectMapper
-import java.io.OutputStream
 import java.io.IOException
-import java.nio.charset.StandardCharsets.UTF_8
+import java.io.OutputStream
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -40,6 +41,7 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.toKotlinDuration
 
 internal data class EventCursor(
     val revision: Long,
@@ -118,7 +120,7 @@ internal class PostgresVoucherEventSource(
     private val audits: AuditRepository,
     private val mapper: ObjectMapper,
     private val properties: VoucherProperties,
-) : VoucherEventSource {
+): VoucherEventSource {
     override fun initial(
         tenantId: String,
         campaignId: UUID,
@@ -145,7 +147,8 @@ internal class PostgresVoucherEventSource(
             var encodedBytes = 0
             for (audit in audits.findCampaignAfter(tenantId, campaignId, afterId, properties.sse.maxRows)) {
                 val event = audit.toHttpEvent()
-                val encodedEventBytes = mapper.writeValueAsBytes(event).size + audit.toCursor().toString().length + SSE_FRAME_BYTES
+                val encodedEventBytes =
+                    mapper.writeValueAsBytes(event).size + audit.toCursor().toString().length + SSE_FRAME_BYTES
                 if (encodedBytes + encodedEventBytes > properties.sse.maxPayloadBytes) break
                 bounded += audit.toCursor() to event
                 encodedBytes += encodedEventBytes
@@ -194,7 +197,7 @@ internal class VoucherEventStream(
     private val executor: ExecutorService,
     properties: VoucherProperties,
     private val metrics: VoucherMetrics? = null,
-) : AutoCloseable {
+): AutoCloseable {
     private val config: VoucherSseProperties = properties.sse
     private val registryLock = ReentrantLock()
     private val pollers = HashMap<CampaignStreamKey, CampaignPoller>()
@@ -302,7 +305,7 @@ internal class VoucherEventStream(
         val bytes = event.encode()
         val write = executor.submit { output.write(bytes); output.flush() }
         try {
-            write.get(config.writeTimeout.toMillis(), TimeUnit.MILLISECONDS)
+            write.get(config.writeTimeout.toKotlinDuration())
         } catch (timeout: TimeoutException) {
             write.cancel(true)
             throw timeout
@@ -313,7 +316,7 @@ internal class VoucherEventStream(
         queueSize: Int,
         initialCursor: EventCursor,
         private val owner: VoucherEventStream,
-    ) : AutoCloseable {
+    ): AutoCloseable {
         private val queue = ArrayBlockingQueue<VoucherStreamEvent>(queueSize)
         private val closed = AtomicBoolean()
         private val cursor = AtomicReference(initialCursor)
@@ -444,7 +447,7 @@ internal class VoucherEventStream(
             }
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 internal data class CampaignStreamKey(
@@ -454,9 +457,9 @@ internal data class CampaignStreamKey(
 
 internal class SseCapacityRejected(
     val campaignId: UUID,
-) : RuntimeException("SSE_CAPACITY_REJECTED")
+): RuntimeException("SSE_CAPACITY_REJECTED")
 
-internal class VoucherServiceShuttingDown : RuntimeException("SERVICE_SHUTTING_DOWN")
+internal class VoucherServiceShuttingDown: RuntimeException("SERVICE_SHUTTING_DOWN")
 
 /** same-origin browser fetch stream이 사용하는 header-authenticated SSE endpoint입니다. */
 @RestController
@@ -490,7 +493,7 @@ private fun VoucherStreamEvent.encode(): ByteArray =
         append("id: ").append(cursor).append('\n')
         append("event: ").append(event).append('\n')
         append("data: ").append(data.replace("\n", "")).append("\n\n")
-    }.toByteArray(UTF_8)
+    }.toUtf8Bytes()
 
 private fun invalidCursor(): VoucherApiException =
     VoucherApiException("INVALID_EVENT_CURSOR", 400, "event cursor is invalid")

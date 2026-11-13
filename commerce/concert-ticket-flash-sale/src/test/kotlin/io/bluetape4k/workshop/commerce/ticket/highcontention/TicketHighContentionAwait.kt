@@ -1,37 +1,35 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.support.requireNotNull
-import org.awaitility.Awaitility.await
 import org.awaitility.core.ConditionTimeoutException
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.until
+import org.awaitility.kotlin.withAlias
+import org.awaitility.kotlin.withPollInterval
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 
 internal object TicketHighContentionAwait {
 
-    fun condition(
+    inline fun condition(
         timeout: Duration,
         pollInterval: Duration,
         description: String,
-        probe: () -> Boolean,
+        crossinline probe: () -> Boolean,
     ) {
         val lastFailure = AtomicReference<Exception>()
         try {
-            await(description)
-                .pollInterval(pollInterval)
-                .atMost(timeout)
-                .until {
-                    try {
-                        probe()
-                    } catch (error: Exception) {
-                        lastFailure.set(error)
-                        false
-                    }
+            await withAlias description withPollInterval pollInterval atMost timeout until {
+                try {
+                    probe()
+                } catch (error: Exception) {
+                    lastFailure.set(error)
+                    false
                 }
+            }
         } catch (timeoutFailure: ConditionTimeoutException) {
-            throw IllegalStateException(
-                description,
-                lastFailure.get() ?: timeoutFailure,
-            )
+            throw IllegalStateException(description, lastFailure.get() ?: timeoutFailure)
         }
     }
 

@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.operations.jobconsole.idempotency
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.Locale
+import java.util.*
 
 /**
  * Produces the only hashes accepted by the submission coordinator.
@@ -18,16 +20,20 @@ internal class JobSubmissionCanonicalizer(
     private val maxKeyBytes: Int = DEFAULT_MAX_KEY_BYTES,
 ) {
 
+    private companion object: KLogging() {
+        const val DEFAULT_MAX_KEY_BYTES = 255
+        const val MIN_WORK_UNITS = 1
+        const val MAX_WORK_UNITS = 10_000
+        val ASCII_PRINTABLE_RANGE = 0x21..0x7e
+    }
+
     init {
-        require(maxKeyBytes in 1..DEFAULT_MAX_KEY_BYTES) {
-            "maxKeyBytes must be between 1 and $DEFAULT_MAX_KEY_BYTES"
-        }
+        maxKeyBytes.requireInRange(1, DEFAULT_MAX_KEY_BYTES, "maxKeyBytes")
     }
 
     fun fingerprint(request: SubmitJobRequest): String {
-        require(request.workUnits in MIN_WORK_UNITS..MAX_WORK_UNITS) {
-            "workUnits must be between $MIN_WORK_UNITS and $MAX_WORK_UNITS"
-        }
+        request.workUnits.requireInRange(MIN_WORK_UNITS, MAX_WORK_UNITS, "request.workUnits")
+
         return digest(
             domain = "job-console-submit-v1",
             components = listOf(
@@ -43,18 +49,16 @@ internal class JobSubmissionCanonicalizer(
         return digestBytes(
             domain = "job-console-key-v1",
             components = listOf(
-                scope.tenantId.toByteArray(UTF_8),
-                scope.submitterHash.toByteArray(UTF_8),
+                scope.tenantId.toUtf8Bytes(),
+                scope.submitterHash.toUtf8Bytes(),
                 keyBytes,
             ),
         )
     }
 
     fun validateRawKey(rawKey: String): ByteArray {
-        val bytes = rawKey.toByteArray(UTF_8)
-        require(bytes.size in 1..maxKeyBytes) {
-            "Idempotency-Key must be between 1 and $maxKeyBytes bytes"
-        }
+        val bytes = rawKey.toUtf8Bytes()
+        bytes.size.requireInRange(1, maxKeyBytes, "bytes.size")
         require(bytes.all { it.toInt() in ASCII_PRINTABLE_RANGE }) {
             "Idempotency-Key must contain printable ASCII characters only"
         }
@@ -65,11 +69,11 @@ internal class JobSubmissionCanonicalizer(
     }
 
     private fun digest(domain: String, components: List<String>): String =
-        digestBytes(domain, components.map { it.toByteArray(UTF_8) })
+        digestBytes(domain, components.map { it.toUtf8Bytes() })
 
     private fun digestBytes(domain: String, components: List<ByteArray>): String {
         val messageDigest = MessageDigest.getInstance("SHA-256")
-        update(messageDigest, domain.toByteArray(UTF_8))
+        update(messageDigest, domain.toUtf8Bytes())
         components.forEach { update(messageDigest, it) }
         return messageDigest.digest().joinToString(separator = "") { byte ->
             "%02x".format(Locale.ROOT, byte.toInt() and 0xff)
@@ -81,10 +85,4 @@ internal class JobSubmissionCanonicalizer(
         messageDigest.update(bytes)
     }
 
-    private companion object {
-        const val DEFAULT_MAX_KEY_BYTES = 255
-        const val MIN_WORK_UNITS = 1
-        const val MAX_WORK_UNITS = 10_000
-        val ASCII_PRINTABLE_RANGE = 0x21..0x7e
-    }
 }

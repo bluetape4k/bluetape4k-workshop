@@ -21,7 +21,7 @@ import org.springframework.web.reactive.function.server.json
 @Component
 class UserHandler(private val service: UserService) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     suspend fun findAll(request: ServerRequest): ServerResponse {
         val users = service.findAll()
@@ -70,10 +70,8 @@ class UserHandler(private val service: UserService) {
     }
 
     suspend fun updateUser(request: ServerRequest): ServerResponse {
-        val id = request.pathVariable("id").asIntOrNull() ?: return errorResponse(
-            HttpStatus.BAD_REQUEST,
-            "`id` must be numeric"
-        )
+        val id = request.pathVariable("id").asIntOrNull()
+            ?: return errorResponse(HttpStatus.BAD_REQUEST, "`id` must be numeric")
 
         val userToUpdate = request.decodeBodyOrNull<UserDTO>()
             ?: return errorResponse(HttpStatus.BAD_REQUEST, "Invalid body")

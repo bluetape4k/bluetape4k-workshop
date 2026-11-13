@@ -9,7 +9,7 @@ private const val ID_LENGTH = 64
 private const val PAYLOAD_LENGTH = 8_192
 
 /** PostgreSQL 권위 aggregate입니다. 감사 컬럼은 bluetape4k-exposed가 관리합니다. */
-object LastMileJobsTable : AuditableLongIdTable("last_mile_jobs") {
+object LastMileJobsTable: AuditableLongIdTable("last_mile_jobs") {
     val jobId = varchar("job_id", ID_LENGTH).uniqueIndex()
     val pickupCoordinateId = varchar("pickup_coordinate_id", ID_LENGTH)
     val deliveryCoordinateId = varchar("delivery_coordinate_id", ID_LENGTH)
@@ -24,7 +24,7 @@ object LastMileJobsTable : AuditableLongIdTable("last_mile_jobs") {
     val carrierVersion = long("carrier_version")
 }
 
-object LastMileVehiclesTable : AuditableLongIdTable("last_mile_vehicles") {
+object LastMileVehiclesTable: AuditableLongIdTable("last_mile_vehicles") {
     val vehicleId = varchar("vehicle_id", ID_LENGTH).uniqueIndex()
     val driverId = varchar("driver_id", ID_LENGTH)
     val depotCoordinateId = varchar("depot_coordinate_id", ID_LENGTH)
@@ -38,13 +38,13 @@ object LastMileVehiclesTable : AuditableLongIdTable("last_mile_vehicles") {
     val startedAt = timestamp("started_at").nullable()
 }
 
-object LastMileMatrixRevisionsTable : LongIdTable("last_mile_matrix_revisions") {
+object LastMileMatrixRevisionsTable: LongIdTable("last_mile_matrix_revisions") {
     val revision = long("revision").uniqueIndex()
     val coordinateDigest = varchar("coordinate_digest", 64)
     val createdAt = timestamp("created_at")
 }
 
-object LastMileMatrixEdgesTable : LongIdTable("last_mile_matrix_edges") {
+object LastMileMatrixEdgesTable: LongIdTable("last_mile_matrix_edges") {
     val revision = long("revision")
     val fromCoordinateId = varchar("from_coordinate_id", ID_LENGTH)
     val toCoordinateId = varchar("to_coordinate_id", ID_LENGTH)
@@ -55,7 +55,7 @@ object LastMileMatrixEdgesTable : LongIdTable("last_mile_matrix_edges") {
     }
 }
 
-object LastMilePlansTable : AuditableLongIdTable("last_mile_plans") {
+object LastMilePlansTable: AuditableLongIdTable("last_mile_plans") {
     val planId = varchar("plan_id", ID_LENGTH)
     val planRevision = long("plan_revision")
     val parentRevision = long("parent_revision").nullable()
@@ -73,7 +73,7 @@ object LastMilePlansTable : AuditableLongIdTable("last_mile_plans") {
     }
 }
 
-object LastMilePlanCarriersTable : LongIdTable("last_mile_plan_carriers") {
+object LastMilePlanCarriersTable: LongIdTable("last_mile_plan_carriers") {
     val planId = varchar("plan_id", ID_LENGTH)
     val planRevision = long("plan_revision")
     val jobId = varchar("job_id", ID_LENGTH)
@@ -84,7 +84,7 @@ object LastMilePlanCarriersTable : LongIdTable("last_mile_plan_carriers") {
     }
 }
 
-object LastMilePlanStopsTable : LongIdTable("last_mile_plan_stops") {
+object LastMilePlanStopsTable: LongIdTable("last_mile_plan_stops") {
     val planId = varchar("plan_id", ID_LENGTH)
     val planRevision = long("plan_revision")
     val vehicleId = varchar("vehicle_id", ID_LENGTH)
@@ -101,7 +101,7 @@ object LastMilePlanStopsTable : LongIdTable("last_mile_plan_stops") {
     }
 }
 
-object LastMileUnassignedTable : LongIdTable("last_mile_unassigned") {
+object LastMileUnassignedTable: LongIdTable("last_mile_unassigned") {
     val planId = varchar("plan_id", ID_LENGTH)
     val planRevision = long("plan_revision")
     val jobId = varchar("job_id", ID_LENGTH)
@@ -112,7 +112,7 @@ object LastMileUnassignedTable : LongIdTable("last_mile_unassigned") {
     }
 }
 
-object LastMileCommittedStopsTable : LongIdTable("last_mile_committed_stops") {
+object LastMileCommittedStopsTable: LongIdTable("last_mile_committed_stops") {
     val jobId = varchar("job_id", ID_LENGTH)
     val planId = varchar("plan_id", ID_LENGTH)
     val planRevision = long("plan_revision")
@@ -127,7 +127,7 @@ object LastMileCommittedStopsTable : LongIdTable("last_mile_committed_stops") {
     }
 }
 
-object LastMileEventsTable : AuditableLongIdTable("last_mile_events") {
+object LastMileEventsTable: AuditableLongIdTable("last_mile_events") {
     val eventId = varchar("event_id", ID_LENGTH).uniqueIndex()
     val aggregateId = varchar("aggregate_id", ID_LENGTH)
     val eventKey = varchar("event_key", 96)
@@ -141,7 +141,7 @@ object LastMileEventsTable : AuditableLongIdTable("last_mile_events") {
     }
 }
 
-object LastMileCallbackInboxTable : LongIdTable("last_mile_callback_inbox") {
+object LastMileCallbackInboxTable: LongIdTable("last_mile_callback_inbox") {
     val provider = varchar("provider", 32)
     val eventId = varchar("event_id", ID_LENGTH)
     val requestId = varchar("request_id", 96)
@@ -155,7 +155,7 @@ object LastMileCallbackInboxTable : LongIdTable("last_mile_callback_inbox") {
     }
 }
 
-object LastMileOutboxTable : AuditableLongIdTable("last_mile_outbox") {
+object LastMileOutboxTable: AuditableLongIdTable("last_mile_outbox") {
     val eventType = varchar("event_type", 32)
     val payload = varchar("payload", PAYLOAD_LENGTH)
     val status = varchar("status", 16)
@@ -165,7 +165,7 @@ object LastMileOutboxTable : AuditableLongIdTable("last_mile_outbox") {
     val leaseUntil = timestamp("lease_until").nullable()
 }
 
-object LastMileAuditsTable : AuditableLongIdTable("last_mile_audits") {
+object LastMileAuditsTable: AuditableLongIdTable("last_mile_audits") {
     val planId = varchar("plan_id", ID_LENGTH).nullable()
     val planRevision = long("plan_revision").nullable()
     val decision = varchar("decision", 48)

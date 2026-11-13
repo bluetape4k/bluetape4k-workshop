@@ -3,7 +3,9 @@ package io.bluetape4k.workshop.commerce.voucher.domain
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.seconds
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.UUID
@@ -51,7 +53,7 @@ internal class VoucherPoliciesTest {
         val outcome = VoucherPolicies.rejectReview(claim, expectedRevision = claim.revision)
 
         outcome.claim.state shouldBeEqualTo ClaimState.ALLOCATED
-        outcome.claim.reviewKind shouldBeEqualTo null
+        outcome.claim.reviewKind.shouldBeNull()
         outcome.claim.capacityReserved.shouldBeTrue()
         outcome.capacityDelta shouldBeEqualTo 0
     }
@@ -118,7 +120,7 @@ internal class VoucherPoliciesTest {
 
     @Test
     fun `expiry requires the claim deadline to have elapsed`() {
-        val claim = claim(state = ClaimState.ALLOCATED, capacityReserved = true, expiresAt = NOW.plusSeconds(1))
+        val claim = claim(state = ClaimState.ALLOCATED, capacityReserved = true, expiresAt = NOW + 1.seconds())
 
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.expire(claim, claim.revision, NOW)

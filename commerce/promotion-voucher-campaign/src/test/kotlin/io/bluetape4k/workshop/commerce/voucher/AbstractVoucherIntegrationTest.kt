@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher
 
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -112,7 +113,7 @@ internal abstract class AbstractVoucherIntegrationTest {
         const val OPERATOR_GUARD_HEADER = "X-Workshop-Guard"
         const val OPERATOR_SECRET = "local-operator-secret-0000000000000001"
         const val OPERATOR_GUARD = "voucher-workshop-operator"
-        val HTTP_TIMEOUT: Duration = Duration.ofSeconds(60)
+        val HTTP_TIMEOUT: Duration = 60.seconds()
         val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
         val applicationJdbcUrl: String = VoucherTestSchema.create("voucher_web")
 

@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.protobuf.School.Course
 
 class CourseRepository(private val courses: Map<Int, Course>) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     fun getCourse(id: Int): Course {
         val courseId = id.requirePositiveNumber("id")

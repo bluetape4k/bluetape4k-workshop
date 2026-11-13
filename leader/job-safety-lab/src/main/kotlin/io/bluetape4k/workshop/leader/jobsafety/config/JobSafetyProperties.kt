@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
@@ -13,7 +16,7 @@ data class JobSafetyProperties(
     val supportedRegions: Set<String> = setOf("region-a", "region-b"),
     val namespaceEpoch: Long = 1L,
     val timelineLimit: Int = 128,
-    val defaultTimeout: Duration = Duration.ofSeconds(1),
+    val defaultTimeout: Duration = 1.seconds(),
     val fencing: Fencing = Fencing(),
     val redis: Redis = Redis(),
     val outbox: Outbox = Outbox(),
@@ -31,19 +34,19 @@ data class JobSafetyProperties(
     }
 
     data class Fencing(
-        val leaseTtl: Duration = Duration.ofSeconds(5),
-        val renewInterval: Duration = Duration.ofSeconds(2),
+        val leaseTtl: Duration = 5.seconds(),
+        val renewInterval: Duration = 2.seconds(),
     ) {
         init {
-            leaseTtl.requireGt(Duration.ZERO, "leaseTtl")
-            renewInterval.requireGt(Duration.ZERO, "renewInterval")
+            leaseTtl.requirePositiveDuration("leaseTtl")
+            renewInterval.requirePositiveDuration("renewInterval")
             require(renewInterval < leaseTtl) { "renewInterval must be shorter than leaseTtl" }
         }
     }
 
     data class Redis(
         val uri: String = "redis://localhost:6379",
-        val commandTimeout: Duration = Duration.ofMillis(500),
+        val commandTimeout: Duration = 500.millis(),
     ) {
         init {
             uri.requireNotBlank("uri")
@@ -52,7 +55,7 @@ data class JobSafetyProperties(
     }
 
     data class Outbox(
-        val claimTimeout: Duration = Duration.ofSeconds(30),
+        val claimTimeout: Duration = 30.seconds(),
     ) {
         init {
             claimTimeout.requireGt(Duration.ZERO, "claimTimeout")

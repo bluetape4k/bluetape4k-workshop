@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.order.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -17,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Clock
-import java.time.Duration
 import java.time.Instant
 
 internal data class SubmitOrderRequest(
@@ -25,7 +26,7 @@ internal data class SubmitOrderRequest(
     val customerReference: String,
     val lines: List<SubmitOrderLineRequest>,
     val providerMode: ProviderMode = ProviderMode.SUCCESS,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -35,7 +36,7 @@ internal data class SubmitOrderLineRequest(
     val sku: String,
     val quantity: Int,
     val unitPrice: BigDecimal,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -46,7 +47,7 @@ internal data class IdempotentOrderResult(
     val body: String,
     val replayed: Boolean,
     val retryAfterSeconds: Long? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -58,6 +59,13 @@ internal class IdempotentOrderSubmissionService(
     private val commands: OrderCommandService,
     private val clock: Clock,
 ) {
+
+    companion object: KLogging() {
+        private const val SUBMIT_ORDER = "SUBMIT_ORDER"
+        private val LEASE = 30.seconds()
+        private val RETENTION = 24.hours()
+    }
+
     @Transactional
     fun submit(
         rawKey: String,
@@ -65,22 +73,20 @@ internal class IdempotentOrderSubmissionService(
     ): IdempotentOrderResult {
         require(rawKey.length in 8..200) { "Idempotency-Key must contain 8..200 characters" }
         val now = Instant.now(clock)
-        val scope =
-            IdempotencyScope(
-                tenantId = request.tenantId,
-                operation = SUBMIT_ORDER,
-                keyHash = IdempotencyFingerprint.key(rawKey)
-            )
+        val scope = IdempotencyScope(
+            tenantId = request.tenantId,
+            operation = SUBMIT_ORDER,
+            keyHash = IdempotencyFingerprint.key(rawKey)
+        )
         val ownerToken = Uuid.V7.nextId()
-        val acquired =
-            idempotency.acquire(
-                scope = scope,
-                fingerprint = IdempotencyFingerprint.request(request.canonicalPayload()),
-                ownerToken = ownerToken,
-                now = now,
-                lease = LEASE,
-                retention = RETENTION
-            )
+        val acquired = idempotency.acquire(
+            scope = scope,
+            fingerprint = IdempotencyFingerprint.request(request.canonicalPayload()),
+            ownerToken = ownerToken,
+            now = now,
+            lease = LEASE,
+            retention = RETENTION
+        )
 
         return when (acquired) {
             is AcquireResult.Acquired -> {
@@ -91,15 +97,13 @@ internal class IdempotentOrderSubmissionService(
                 }
                 log.info {
                     "idempotency_completed scope=$SUBMIT_ORDER keyHashPrefix=${scope.keyHash.take(12)} " +
-                        "orderId=${submitted.orderId} status=${HttpStatus.CREATED.value()}"
+                            "orderId=${submitted.orderId} status=${HttpStatus.CREATED.value()}"
                 }
                 IdempotentOrderResult(HttpStatus.CREATED, body, replayed = false)
             }
             is AcquireResult.Replay -> {
                 log.info {
-                    "idempotency_replayed scope=$SUBMIT_ORDER keyHashPrefix=${scope.keyHash.take(
-                        12
-                    )} status=${acquired.status}"
+                    "idempotency_replayed scope=$SUBMIT_ORDER keyHashPrefix=${scope.keyHash.take(12)} status=${acquired.status}"
                 }
                 IdempotentOrderResult(
                     status = HttpStatus.valueOf(acquired.status),
@@ -119,7 +123,7 @@ internal class IdempotentOrderSubmissionService(
             is AcquireResult.InProgress -> {
                 log.warn {
                     "idempotency_in_progress scope=$SUBMIT_ORDER keyHashPrefix=${scope.keyHash.take(12)} " +
-                        "retryAfterSeconds=${acquired.retryAfter.seconds.coerceAtLeast(1)}"
+                            "retryAfterSeconds=${acquired.retryAfter.seconds.coerceAtLeast(1)}"
                 }
                 errorResult(
                     HttpStatus.CONFLICT,
@@ -138,32 +142,31 @@ internal class IdempotentOrderSubmissionService(
             lines = lines.map { SubmitOrderLine(it.sku, it.quantity, it.unitPrice) }
         )
 
-    private fun SubmitOrderRequest.canonicalPayload(): String =
-        buildString {
-            append("tenant=")
-                .append(tenantId.length)
+    private fun SubmitOrderRequest.canonicalPayload(): String = buildString {
+        append("tenant=")
+            .append(tenantId.length)
+            .append(':')
+            .appendLine(tenantId)
+
+        append("customer=")
+            .append(customerReference.length)
+            .append(':')
+            .appendLine(customerReference)
+
+        append("provider=").appendLine(providerMode.name)
+
+        lines.forEachIndexed { index, line ->
+            append(index)
+                .append('|')
+                .append(line.sku.length)
                 .append(':')
-                .append(tenantId)
-                .append('\n')
-            append("customer=")
-                .append(customerReference.length)
-                .append(':')
-                .append(customerReference)
-                .append('\n')
-            append("provider=").append(providerMode.name).append('\n')
-            lines.forEachIndexed { index, line ->
-                append(index)
-                    .append('|')
-                    .append(line.sku.length)
-                    .append(':')
-                    .append(line.sku)
-                    .append('|')
-                    .append(line.quantity)
-                    .append('|')
-                    .append(line.unitPrice.stripTrailingZeros().toPlainString())
-                    .append('\n')
-            }
+                .append(line.sku)
+                .append('|')
+                .append(line.quantity)
+                .append('|')
+                .appendLine(line.unitPrice.stripTrailingZeros().toPlainString())
         }
+    }
 
     private fun errorResult(
         status: HttpStatus,
@@ -175,10 +178,4 @@ internal class IdempotentOrderSubmissionService(
         replayed = false,
         retryAfterSeconds = retryAfterSeconds
     )
-
-    companion object : KLogging() {
-        private const val SUBMIT_ORDER = "SUBMIT_ORDER"
-        private val LEASE = Duration.ofSeconds(30)
-        private val RETENTION = Duration.ofHours(24)
-    }
 }

@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.commerce.reservation.notification
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.javatimes.seconds
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.time.Instant
 
 class NotificationOutboxTest {
@@ -14,7 +15,7 @@ class NotificationOutboxTest {
         val request = notification("hold-10-confirmed")
 
         val first = outbox.enqueue(request, now)
-        val duplicate = outbox.enqueue(request, now.plusSeconds(1))
+        val duplicate = outbox.enqueue(request, now + 1.seconds())
 
         duplicate shouldBeEqualTo first
         outbox.size() shouldBeEqualTo 1
@@ -25,17 +26,17 @@ class NotificationOutboxTest {
         val outbox = InMemoryNotificationOutbox()
         outbox.enqueue(notification("offer-20-created"), now)
 
-        val firstClaim = outbox.claim("offer-20-created", "worker-a", now, Duration.ofSeconds(30))
-        val blockedClaim = outbox.claim("offer-20-created", "worker-b", now.plusSeconds(10), Duration.ofSeconds(30))
-        val reclaimed = outbox.claim("offer-20-created", "worker-b", now.plusSeconds(31), Duration.ofSeconds(30))
+        val firstClaim = outbox.claim("offer-20-created", "worker-a", now, 30.seconds())
+        val blockedClaim = outbox.claim("offer-20-created", "worker-b", now.plusSeconds(10), 30.seconds())
+        val reclaimed = outbox.claim("offer-20-created", "worker-b", now.plusSeconds(31), 30.seconds())
 
         firstClaim?.attemptCount shouldBeEqualTo 1
-        blockedClaim shouldBeEqualTo null
+        blockedClaim.shouldBeNull()
         reclaimed?.attemptCount shouldBeEqualTo 2
         outbox.markDelivered("offer-20-created", "worker-a", now.plusSeconds(32)) shouldBeEqualTo
-            FinalizeDisposition.STALE_CLAIM
+                FinalizeDisposition.STALE_CLAIM
         outbox.markDelivered("offer-20-created", "worker-b", now.plusSeconds(32)) shouldBeEqualTo
-            FinalizeDisposition.APPLIED
+                FinalizeDisposition.APPLIED
     }
 
     @Test
@@ -44,8 +45,8 @@ class NotificationOutboxTest {
         val policy =
             NotificationRetryPolicy(
                 maxAttempts = 5,
-                initialDelay = Duration.ofSeconds(2),
-                maxDelay = Duration.ofSeconds(10)
+                initialDelay = 2.seconds(),
+                maxDelay = 10.seconds()
             )
         outbox.enqueue(notification("hold-10-expired"), now)
 
@@ -53,16 +54,16 @@ class NotificationOutboxTest {
         val expectedNextAttemptAt = listOf(3L, 8L, 17L, 28L)
         expectedNextAttemptAt.forEachIndexed { index, secondsFromStart ->
             val owner = "worker-${index + 1}"
-            outbox.claim("hold-10-expired", owner, attemptAt, Duration.ofSeconds(30))?.attemptCount shouldBeEqualTo
-                index + 1
+            outbox.claim("hold-10-expired", owner, attemptAt, 30.seconds())?.attemptCount shouldBeEqualTo
+                    index + 1
             outbox.markFailed(
                 "hold-10-expired",
                 owner,
-                attemptAt.plusSeconds(1),
+                attemptAt + 1.seconds(),
                 NotificationFailureCode.FAKE_TRANSIENT,
                 policy
             ) shouldBeEqualTo
-                FinalizeDisposition.APPLIED
+                    FinalizeDisposition.APPLIED
             val delivery = outbox.find("hold-10-expired") ?: error("retry delivery is required")
             val retryAt = delivery.nextAttemptAt ?: error("retry time is required")
             delivery.status shouldBeEqualTo NotificationDeliveryStatus.RETRYING
@@ -71,25 +72,25 @@ class NotificationOutboxTest {
                 "hold-10-expired",
                 "early-worker",
                 retryAt.minusNanos(1),
-                Duration.ofSeconds(30)
-            ) shouldBeEqualTo null
+                30.seconds()
+            ).shouldBeNull()
             attemptAt = retryAt
         }
 
-        outbox.claim("hold-10-expired", "worker-5", attemptAt, Duration.ofSeconds(30))?.attemptCount shouldBeEqualTo 5
+        outbox.claim("hold-10-expired", "worker-5", attemptAt, 30.seconds())?.attemptCount shouldBeEqualTo 5
         outbox.markFailed(
             "hold-10-expired",
             "worker-5",
-            attemptAt.plusSeconds(1),
+            attemptAt + 1.seconds(),
             NotificationFailureCode.FAKE_TRANSIENT,
             policy
         ) shouldBeEqualTo
-            FinalizeDisposition.APPLIED
+                FinalizeDisposition.APPLIED
 
         val exhausted = outbox.find("hold-10-expired")
         exhausted?.status shouldBeEqualTo NotificationDeliveryStatus.EXHAUSTED
         exhausted?.attemptCount shouldBeEqualTo 5
-        exhausted?.nextAttemptAt shouldBeEqualTo null
+        exhausted?.nextAttemptAt.shouldBeNull()
     }
 
     @Test
@@ -99,13 +100,13 @@ class NotificationOutboxTest {
         val policy = NotificationRetryPolicy()
         outbox.enqueue(notification("waitlist-30-offered"), now)
 
-        val first = outbox.claim("waitlist-30-offered", "worker-a", now, Duration.ofSeconds(30))!!
+        val first = outbox.claim("waitlist-30-offered", "worker-a", now, 30.seconds())!!
         provider.send(first) shouldBeEqualTo
-            ProviderSendResult.RetryableFailure(NotificationFailureCode.FAKE_TRANSIENT)
+                ProviderSendResult.RetryableFailure(NotificationFailureCode.FAKE_TRANSIENT)
         outbox.markFailed(
             "waitlist-30-offered",
             "worker-a",
-            now.plusSeconds(1),
+            now + 1.seconds(),
             NotificationFailureCode.FAKE_TRANSIENT,
             policy
         )
@@ -116,7 +117,7 @@ class NotificationOutboxTest {
                 "waitlist-30-offered",
                 "worker-a",
                 secondAt,
-                Duration.ofSeconds(30)
+                30.seconds()
             )!!
         provider.send(acceptedBeforeCrash) shouldBeEqualTo ProviderSendResult.Accepted
 
@@ -125,11 +126,11 @@ class NotificationOutboxTest {
                 "waitlist-30-offered",
                 "worker-b",
                 secondAt.plusSeconds(31),
-                Duration.ofSeconds(30)
+                30.seconds()
             )!!
         provider.send(recovered) shouldBeEqualTo ProviderSendResult.Duplicate
         outbox.markDelivered("waitlist-30-offered", "worker-b", secondAt.plusSeconds(32)) shouldBeEqualTo
-            FinalizeDisposition.APPLIED
+                FinalizeDisposition.APPLIED
 
         provider.effectCount("waitlist-30-offered") shouldBeEqualTo 1
         outbox.find("waitlist-30-offered")?.status shouldBeEqualTo NotificationDeliveryStatus.DELIVERED
@@ -140,25 +141,25 @@ class NotificationOutboxTest {
         val outbox = InMemoryNotificationOutbox()
         val policy = NotificationRetryPolicy(maxAttempts = 1)
         outbox.enqueue(notification("hold-40-released"), now)
-        outbox.claim("hold-40-released", "worker-a", now, Duration.ofSeconds(30))
+        outbox.claim("hold-40-released", "worker-a", now, 30.seconds())
         outbox.markFailed(
             "hold-40-released",
             "worker-a",
-            now.plusSeconds(1),
+            now + 1.seconds(),
             NotificationFailureCode.FAKE_TRANSIENT,
             policy
         )
 
-        outbox.redrive("hold-40-released", "redrive-command-1", now.plusSeconds(2)) shouldBeEqualTo
-            RedriveDisposition.APPLIED
+        outbox.redrive("hold-40-released", "redrive-command-1", now + 2.seconds()) shouldBeEqualTo
+                RedriveDisposition.APPLIED
         val redriven = outbox.find("hold-40-released")
         outbox.redrive("hold-40-released", "redrive-command-1", now.plusSeconds(3)) shouldBeEqualTo
-            RedriveDisposition.ALREADY_APPLIED
+                RedriveDisposition.ALREADY_APPLIED
 
         outbox.find("hold-40-released") shouldBeEqualTo redriven
         redriven?.status shouldBeEqualTo NotificationDeliveryStatus.PENDING
         redriven?.attemptCount shouldBeEqualTo 0
-        redriven?.nextAttemptAt shouldBeEqualTo now.plusSeconds(2)
+        redriven?.nextAttemptAt shouldBeEqualTo now + 2.seconds()
     }
 
     private fun notification(deliveryId: String) =

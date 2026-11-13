@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceConflict
 import io.bluetape4k.workshop.optimization.fieldservice.domain.InvalidFieldServiceInput
 import org.springframework.http.HttpStatus
@@ -11,8 +12,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 internal class FieldServiceExceptionHandler {
-    @ExceptionHandler(MethodArgumentNotValidException::class, InvalidFieldServiceInput::class, IllegalArgumentException::class)
-    fun badRequest(): ResponseEntity<FieldServiceErrorResponse> = error(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "invalid request")
+
+    companion object: KLogging()
+
+    @ExceptionHandler(
+        MethodArgumentNotValidException::class,
+        InvalidFieldServiceInput::class,
+        IllegalArgumentException::class
+    )
+    fun badRequest(): ResponseEntity<FieldServiceErrorResponse> =
+        error(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "invalid request")
 
     @ExceptionHandler(FieldServiceBodyTooLargeException::class)
     fun bodyTooLarge(): ResponseEntity<FieldServiceErrorResponse> =
@@ -31,7 +40,8 @@ internal class FieldServiceExceptionHandler {
         error(HttpStatus.CONFLICT, exception.code.name, "field service conflict")
 
     @ExceptionHandler(NoSuchElementException::class)
-    fun notFound(): ResponseEntity<FieldServiceErrorResponse> = error(HttpStatus.NOT_FOUND, "NOT_FOUND", "resource not found")
+    fun notFound(): ResponseEntity<FieldServiceErrorResponse> =
+        error(HttpStatus.NOT_FOUND, "NOT_FOUND", "resource not found")
 
     private fun error(status: HttpStatus, code: String, message: String): ResponseEntity<FieldServiceErrorResponse> =
         ResponseEntity.status(status).body(FieldServiceErrorResponse(status.value(), code, message))

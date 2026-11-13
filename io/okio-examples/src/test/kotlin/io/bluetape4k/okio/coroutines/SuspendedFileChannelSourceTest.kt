@@ -1,12 +1,12 @@
 package io.bluetape4k.okio.coroutines
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
 import okio.Buffer
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.nio.channels.AsynchronousFileChannel
@@ -52,7 +52,7 @@ class SuspendedFileChannelSourceTest: AbstractOkioTest() {
 
     private fun createSuspendedSource(): SuspendedFileChannelSource {
         val tempFile = tempFolder.createFile().toPath()
-        Files.write(tempFile, MESSAGE.toByteArray())
+        Files.write(tempFile, MESSAGE.toUtf8Bytes())
 
         val channel = AsynchronousFileChannel.open(tempFile, StandardOpenOption.READ)
         return SuspendedFileChannelSource(channel)

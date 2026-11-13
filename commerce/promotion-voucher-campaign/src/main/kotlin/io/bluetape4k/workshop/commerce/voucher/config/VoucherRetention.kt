@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
+import io.bluetape4k.javatimes.days
 import java.time.Duration
 import java.time.Instant
 import javax.sql.DataSource
 
 internal data class VoucherRetentionProperties(
-    val audit: Duration = Duration.ofDays(90),
-    val terminalExtra: Duration = Duration.ofDays(7),
-    val appliedEvent: Duration = Duration.ofDays(30),
+    val audit: Duration = 90.days(),
+    val terminalExtra: Duration = 7.days(),
+    val appliedEvent: Duration = 30.days(),
     val purgeBatchSize: Int = 200,
 )
 
@@ -22,9 +23,9 @@ internal class VoucherRetentionPolicy(
     private val properties: VoucherRetentionProperties,
 ) {
     init {
-        require(properties.audit >= Duration.ofDays(90)) { "audit retention must be at least 90 days" }
-        require(properties.terminalExtra >= Duration.ofDays(7)) { "terminal extra retention must be at least 7 days" }
-        require(properties.appliedEvent >= Duration.ofDays(30)) { "applied event retention must be at least 30 days" }
+        require(properties.audit >= 90.days()) { "audit retention must be at least 90 days" }
+        require(properties.terminalExtra >= 7.days()) { "terminal extra retention must be at least 7 days" }
+        require(properties.appliedEvent >= 30.days()) { "applied event retention must be at least 30 days" }
         require(properties.purgeBatchSize in 1..200) { "purge batch size must contain 1..200" }
     }
 
@@ -44,7 +45,7 @@ internal class VoucherRetentionPolicy(
 /** startup이 key ring을 수락하기 전에 persisted generation/verification key reference를 모두 읽습니다. */
 internal class PostgresReferencedKeyVersionSource(
     private val dataSource: DataSource,
-) : ReferencedKeyVersionSource {
+): ReferencedKeyVersionSource {
     override fun referencedVersions(): ReferencedKeyVersions {
         val generation = linkedSetOf<Int>()
         val verification = linkedSetOf<Int>()

@@ -1,6 +1,11 @@
 package io.bluetape4k.workshop.optimization.planning.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
@@ -12,12 +17,16 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanningStateRepositoryTest {
 
-    private val postgres = PostgreSQLServer.Launcher.postgres
+    companion object: KLogging() {
+        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private val aggregateRepository = PlanningAggregateRepository()
     private val requestRepository = PlanningRequestRepository()
     private val auditRepository = PlanningAuditRepository()
@@ -27,8 +36,8 @@ class PlanningStateRepositoryTest {
         Database.connect(
             url = postgres.jdbcUrl,
             driver = "org.postgresql.Driver",
-            user = requireNotNull(postgres.username),
-            password = requireNotNull(postgres.password),
+            user = postgres.username.shouldNotBeNull(),
+            password = postgres.password.shouldNotBeNull(),
         )
     }
 
@@ -52,9 +61,10 @@ class PlanningStateRepositoryTest {
         transaction {
             val saved = aggregateRepository.save(PlanningAggregateRecord(aggregateId = "roster-42", version = 7))
 
-            aggregateRepository.existsById(saved.id) shouldBeEqualTo true
-            aggregateRepository.versionMatches("roster-42", 7) shouldBeEqualTo true
-            aggregateRepository.versionMatches("roster-42", 8) shouldBeEqualTo false
+            log.debug { "saved=$saved" }
+            aggregateRepository.existsById(saved.id).shouldBeTrue()
+            aggregateRepository.versionMatches("roster-42", 7).shouldBeTrue()
+            aggregateRepository.versionMatches("roster-42", 8).shouldBeFalse()
         }
     }
 
@@ -68,15 +78,18 @@ class PlanningStateRepositoryTest {
                 providerRevision = 2,
                 scoreSummary = "0hard/-2soft",
                 redactedExplanation = "balanced workload",
-            ) shouldBeEqualTo true
+            ).shouldBeTrue()
+
             requestRepository.acceptIfNewer(
                 requestId = REQUEST_ID,
                 providerRevision = 1,
                 scoreSummary = "stale",
                 redactedExplanation = "stale",
-            ) shouldBeEqualTo false
+            ).shouldBeFalse()
 
             val stored = requestRepository.findById(REQUEST_ID)
+
+            log.debug { "stored=$stored" }
             stored.acceptedRevision shouldBeEqualTo 2L
             stored.scoreSummary shouldBeEqualTo "0hard/-2soft"
         }
@@ -103,17 +116,15 @@ class PlanningStateRepositoryTest {
         }
     }
 
-    private fun requestRecord() = PlanningRequestRecord(
-        id = REQUEST_ID,
-        aggregateId = "roster-42",
-        aggregateVersion = 7,
-        datasetId = "dataset-42",
-        parentRevision = null,
-        status = PlanningStatus.QUEUED,
-        provider = PlanningProvider.FAKE,
-    )
+    private fun requestRecord(): PlanningRequestRecord =
+        PlanningRequestRecord(
+            id = REQUEST_ID,
+            aggregateId = "roster-42",
+            aggregateVersion = 7,
+            datasetId = "dataset-42",
+            parentRevision = null,
+            status = PlanningStatus.QUEUED,
+            provider = PlanningProvider.FAKE,
+        )
 
-    companion object {
-        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
-    }
 }
