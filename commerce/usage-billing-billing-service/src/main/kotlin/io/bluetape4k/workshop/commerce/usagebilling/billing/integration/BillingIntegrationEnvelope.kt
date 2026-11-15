@@ -3,12 +3,13 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.integration
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * local outbox transaction과 함께 저장되는 Versioned Billing event contract입니다.
@@ -19,7 +20,7 @@ class BillingIntegrationEnvelope private constructor(
     val eventId: UUID, val eventType: String, val schemaVersion: Int, val tenantId: String,
     val aggregateType: String, val aggregateId: String, val aggregateVersion: Long,
     val payload: String, val payloadDigest: String, val occurredAt: Instant, val recordedAt: Instant,
-) : Serializable {
+): Serializable {
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -30,43 +31,65 @@ class BillingIntegrationEnvelope private constructor(
     }
 
     fun partitionKey(): String = "$tenantId|$aggregateType|$aggregateId"
-    fun hasValidPayloadDigest(): Boolean = TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
 
-    fun wirePayload(): String = Jackson.defaultJsonMapper.writeValueAsString(
-        linkedMapOf(
-            "eventId" to eventId.toString(),
-            "eventType" to eventType,
-            "schemaVersion" to schemaVersion,
-            "tenantId" to tenantId,
-            "aggregateType" to aggregateType,
-            "aggregateId" to aggregateId,
-            "aggregateVersion" to aggregateVersion,
-            "payload" to payload,
-            "payloadDigest" to payloadDigest,
-            "occurredAt" to occurredAt.toString(),
-            "recordedAt" to recordedAt.toString(),
-        ),
-    )
+    fun hasValidPayloadDigest(): Boolean =
+        TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
+
+    fun wirePayload(): String =
+        Jackson.defaultJsonMapper
+            .writeValueAsString(
+                linkedMapOf(
+                    "eventId" to eventId.toString(),
+                    "eventType" to eventType,
+                    "schemaVersion" to schemaVersion,
+                    "tenantId" to tenantId,
+                    "aggregateType" to aggregateType,
+                    "aggregateId" to aggregateId,
+                    "aggregateVersion" to aggregateVersion,
+                    "payload" to payload,
+                    "payloadDigest" to payloadDigest,
+                    "occurredAt" to occurredAt.toString(),
+                    "recordedAt" to recordedAt.toString(),
+                ),
+            )
 
     fun wirePayloadDigest(): String = digestOf(wirePayload())
 
-    companion object {
+    companion object: KLogging() {
         private const val serialVersionUID: Long = 1L
+
         fun create(
-            eventId: UUID, eventType: String, schemaVersion: Int, tenantId: String, aggregateId: String,
-            aggregateVersion: Long, payload: String, occurredAt: Instant, recordedAt: Instant,
+            eventId: UUID,
+            eventType: String,
+            schemaVersion: Int,
+            tenantId: String,
+            aggregateId: String,
+            aggregateVersion: Long,
+            payload: String,
+            occurredAt: Instant,
+            recordedAt: Instant,
         ): BillingIntegrationEnvelope =
             BillingIntegrationEnvelope(
-                eventId, eventType, schemaVersion, tenantId, "BillingPeriod", aggregateId, aggregateVersion,
-                payload, digestOf(payload), occurredAt, recordedAt,
+                eventId = eventId,
+                eventType = eventType,
+                schemaVersion = schemaVersion,
+                tenantId = tenantId,
+                aggregateType = "BillingPeriod",
+                aggregateId = aggregateId,
+                aggregateVersion = aggregateVersion,
+                payload = payload,
+                payloadDigest = digestOf(payload),
+                occurredAt = occurredAt,
+                recordedAt = recordedAt,
             )
 
-        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
+        private fun digestOf(payload: String): String =
+            TinkDigesters.SHA256.digestHex(payload)
     }
 }
 
 class BillingEnvelopeCodecRegistry {
-    private val supportedSchemas = setOf(
+    private val supportedSchemas: Set<BillingEnvelopeSchema> = setOf(
         BillingEnvelopeSchema("ChargeRated", 1),
         BillingEnvelopeSchema("AdjustmentPosted", 1),
         BillingEnvelopeSchema("BillingPeriodClosed", 1),
@@ -74,6 +97,7 @@ class BillingEnvelopeCodecRegistry {
 
     fun validate(envelope: BillingIntegrationEnvelope): BillingIntegrationEnvelope {
         if (!envelope.hasValidPayloadDigest()) throw InvalidBillingEnvelopeDigest(envelope.eventId)
+
         if (BillingEnvelopeSchema(envelope.eventType, envelope.schemaVersion) !in supportedSchemas) {
             throw UnsupportedBillingEnvelopeVersion(envelope.eventType, envelope.schemaVersion)
         }
@@ -84,7 +108,7 @@ class BillingEnvelopeCodecRegistry {
 data class BillingEnvelopeSchema(
     val eventType: String,
     val schemaVersion: Int,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -93,6 +117,6 @@ data class BillingEnvelopeSchema(
 class UnsupportedBillingEnvelopeVersion(
     eventType: String,
     schemaVersion: Int,
-) : IllegalArgumentException("unsupported_billing_envelope:$eventType:$schemaVersion")
+): IllegalArgumentException("unsupported_billing_envelope:$eventType:$schemaVersion")
 
-class InvalidBillingEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_billing_envelope_digest:$eventId")
+class InvalidBillingEnvelopeDigest(eventId: UUID): IllegalArgumentException("invalid_billing_envelope_digest:$eventId")

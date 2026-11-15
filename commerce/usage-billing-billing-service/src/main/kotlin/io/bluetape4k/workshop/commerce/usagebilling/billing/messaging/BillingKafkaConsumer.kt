@@ -12,20 +12,21 @@ import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceE
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidenceEvent
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
-import java.io.Serializable
-import java.time.Instant
-import java.util.UUID
 import tools.jackson.databind.JsonNode
+import java.io.Serializable
+import java.math.BigDecimal
+import java.time.Instant
+import java.util.*
 
-sealed interface BillingInboundEvent : Serializable {
-    data class PriceActivated(val event: BillingPriceEvidenceEvent) : BillingInboundEvent {
+sealed interface BillingInboundEvent: Serializable {
+
+    data class PriceActivated(val event: BillingPriceEvidenceEvent): BillingInboundEvent {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    data class UsageAccepted(val event: BillingInboxEvent) : BillingInboundEvent {
+    data class UsageAccepted(val event: BillingInboxEvent): BillingInboundEvent {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -35,11 +36,20 @@ sealed interface BillingInboundEvent : Serializable {
 /** Billing이 자체 compatibility decision을 소유하도록 producer JSON을 local에서 parse합니다. */
 @Component
 class BillingInboundEventDecoder {
+
+    private companion object {
+        const val PRICE_ACTIVATED = "PriceActivated"
+        const val USAGE_ACCEPTED = "UsageAccepted"
+        const val SCHEMA_VERSION = 1
+    }
+
     fun decode(wirePayload: String): BillingInboundEvent {
         val envelope = Jackson.defaultJsonMapper.readTree(wirePayload)
         val eventType = envelope.requiredText("eventType")
         val schemaVersion = envelope.requiredInt("schemaVersion")
+
         requireSupportedSchema(eventType, schemaVersion)
+
         val eventId = UUID.fromString(envelope.requiredText("eventId"))
         val tenantId = envelope.requiredText("tenantId")
         val aggregateType = envelope.requiredText("aggregateType")
@@ -47,45 +57,55 @@ class BillingInboundEventDecoder {
         val aggregateVersion = envelope.requiredLong("aggregateVersion")
         val payload = envelope.requiredText("payload")
         val payloadDigest = envelope.requiredText("payloadDigest")
+
         verifyPayloadDigest(eventId, payload, payloadDigest)
+
         val body = Jackson.defaultJsonMapper.readTree(payload)
+
         return when (eventType) {
-            PRICE_ACTIVATED -> BillingInboundEvent.PriceActivated(
-                BillingPriceEvidenceEvent(
-                    eventId = eventId,
-                    payloadDigest = payloadDigest,
-                    evidence = BillingPriceEvidence(
+            PRICE_ACTIVATED ->
+                BillingInboundEvent.PriceActivated(
+                    BillingPriceEvidenceEvent(
+                        eventId = eventId,
+                        payloadDigest = payloadDigest,
+                        evidence = BillingPriceEvidence(
+                            tenantId = tenantId,
+                            meterCode = body.requiredText("meterCode"),
+                            currency = body.requiredText("currency"),
+                            unitPrice = BigDecimal(body.requiredText("unitPrice")),
+                            effectiveAt = Instant.parse(envelope.requiredText("occurredAt")),
+                        ),
+                    ),
+                )
+            USAGE_ACCEPTED  ->
+                BillingInboundEvent.UsageAccepted(
+                    BillingInboxEvent(
+                        eventId = eventId,
                         tenantId = tenantId,
+                        aggregateType = aggregateType,
+                        aggregateId = aggregateId,
+                        aggregateVersion = aggregateVersion,
+                        payloadDigest = payloadDigest,
                         meterCode = body.requiredText("meterCode"),
                         currency = body.requiredText("currency"),
-                        unitPrice = BigDecimal(body.requiredText("unitPrice")),
-                        effectiveAt = Instant.parse(envelope.requiredText("occurredAt")),
+                        quantity = BigDecimal(body.requiredText("quantity")),
                     ),
-                ),
-            )
-            USAGE_ACCEPTED -> BillingInboundEvent.UsageAccepted(
-                BillingInboxEvent(
-                    eventId = eventId,
-                    tenantId = tenantId,
-                    aggregateType = aggregateType,
-                    aggregateId = aggregateId,
-                    aggregateVersion = aggregateVersion,
-                    payloadDigest = payloadDigest,
-                    meterCode = body.requiredText("meterCode"),
-                    currency = body.requiredText("currency"),
-                    quantity = BigDecimal(body.requiredText("quantity")),
-                ),
-            )
-            else -> throw UnsupportedBillingInboundEnvelope(eventType, schemaVersion)
+                )
+            else            ->
+                throw UnsupportedBillingInboundEnvelope(eventType, schemaVersion)
         }
     }
 
     private fun requireSupportedSchema(eventType: String, schemaVersion: Int) {
-        if (schemaVersion != SCHEMA_VERSION) throw UnsupportedBillingInboundEnvelope(eventType, schemaVersion)
+        if (schemaVersion != SCHEMA_VERSION) {
+            throw UnsupportedBillingInboundEnvelope(eventType, schemaVersion)
+        }
     }
 
     private fun verifyPayloadDigest(eventId: UUID, payload: String, payloadDigest: String) {
-        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) throw InvalidBillingInboundEnvelope(eventId)
+        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) {
+            throw InvalidBillingInboundEnvelope(eventId)
+        }
     }
 
     private fun JsonNode.requiredText(name: String): String =
@@ -99,18 +119,12 @@ class BillingInboundEventDecoder {
 
     private fun JsonNode.requiredNode(name: String): JsonNode =
         get(name) ?: throw InvalidBillingInboundEnvelope(UUID(0, 0))
-
-    private companion object {
-        const val PRICE_ACTIVATED = "PriceActivated"
-        const val USAGE_ACCEPTED = "UsageAccepted"
-        const val SCHEMA_VERSION = 1
-    }
 }
 
-class UnsupportedBillingInboundEnvelope(eventType: String, schemaVersion: Int) :
+class UnsupportedBillingInboundEnvelope(eventType: String, schemaVersion: Int):
     IllegalArgumentException("unsupported_billing_inbound_envelope:$eventType:$schemaVersion")
 
-class InvalidBillingInboundEnvelope(eventId: UUID) :
+class InvalidBillingInboundEnvelope(eventId: UUID):
     IllegalArgumentException("invalid_billing_inbound_envelope:$eventId")
 
 @Component
@@ -119,6 +133,11 @@ class KafkaBillingIntegrationListener(
     private val pricingEvidence: BillingPricingEvidenceService,
     private val inbox: BillingInboxService,
 ) {
+    private companion object: KLogging() {
+        const val METER_TOPIC = "meter.events.v1"
+        const val USAGE_TOPIC = "usage.events.v1"
+    }
+
     @KafkaListener(
         topics = [METER_TOPIC, USAGE_TOPIC],
         containerFactory = "billingKafkaListenerContainerFactory",
@@ -136,10 +155,5 @@ class KafkaBillingIntegrationListener(
                 log.debug { "billing.inbound.usage_accepted eventId=${event.event.eventId}" }
             }
         }
-    }
-
-    private companion object : KLogging() {
-        const val METER_TOPIC = "meter.events.v1"
-        const val USAGE_TOPIC = "usage.events.v1"
     }
 }

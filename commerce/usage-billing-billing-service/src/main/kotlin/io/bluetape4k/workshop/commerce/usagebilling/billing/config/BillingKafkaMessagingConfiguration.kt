@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.config
 
+import io.bluetape4k.logging.KLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -23,6 +24,12 @@ import java.time.Clock
 @EnableKafka
 @EnableConfigurationProperties(BillingKafkaProperties::class)
 class BillingKafkaMessagingConfiguration {
+
+    private companion object: KLogging() {
+        const val PRODUCER_FAILURE_TIMEOUT_MS = 5_000
+        const val PRODUCER_REQUEST_TIMEOUT_MS = 3_000
+    }
+
     @Bean
     fun billingClock(): Clock = Clock.systemUTC()
 
@@ -67,11 +74,6 @@ class BillingKafkaMessagingConfiguration {
             factory.setConsumerFactory(billingConsumerFactory)
             factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
         }
-
-    private companion object {
-        const val PRODUCER_FAILURE_TIMEOUT_MS = 5_000
-        const val PRODUCER_REQUEST_TIMEOUT_MS = 3_000
-    }
 }
 
 @ConfigurationProperties("usage-billing.billing.kafka")
@@ -79,7 +81,7 @@ data class BillingKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val consumerGroup: String = "usage-billing-billing-service",
     val producerClientId: String = "usage-billing-billing-service",
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

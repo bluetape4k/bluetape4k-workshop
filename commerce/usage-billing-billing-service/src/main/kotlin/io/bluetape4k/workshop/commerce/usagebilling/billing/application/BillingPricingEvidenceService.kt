@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidenceEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidenceOutcome
@@ -13,6 +14,9 @@ class BillingPricingEvidenceService(
     private val pricingEvidence: BillingPricingEvidenceRepository,
     private val inbox: BillingPriceEvidenceInboxRepository,
 ) {
+
+    companion object: KLogging()
+
     @Transactional
     fun record(meterCode: String) {
         pricingEvidence.append(meterCode)
@@ -24,5 +28,6 @@ class BillingPricingEvidenceService(
     }
 
     @Transactional
-    fun record(event: BillingPriceEvidenceEvent): BillingPriceEvidenceOutcome = inbox.record(event)
+    fun record(event: BillingPriceEvidenceEvent): BillingPriceEvidenceOutcome =
+        inbox.record(event)
 }

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.billing.integration
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.tink.digest.TinkDigesters
 import org.junit.jupiter.api.Test
@@ -10,6 +11,8 @@ import java.security.MessageDigest
 import java.util.*
 
 class TinkDigestCompatibilityTest {
+
+    companion object: KLogging()
 
     @Test
     fun `Tink SHA-256는 기존 UTF-8 lowercase hex wire 계약을 유지한다`() {

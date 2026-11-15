@@ -1,14 +1,18 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentCommand
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentJournal
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentOutcome
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 class BillingAdjustmentServiceTest {
+
+    companion object: KLogging()
+
     @Test
     fun `posts one immutable compensating fact through the Billing journal`() {
         val journal = RecordingAdjustmentJournal()
@@ -25,7 +29,7 @@ class BillingAdjustmentServiceTest {
         journal.commands shouldBeEqualTo listOf(command)
     }
 
-    private class RecordingAdjustmentJournal : BillingAdjustmentJournal {
+    private class RecordingAdjustmentJournal: BillingAdjustmentJournal {
         val commands = mutableListOf<BillingAdjustmentCommand>()
 
         override fun post(command: BillingAdjustmentCommand): BillingAdjustmentOutcome {
