@@ -25,7 +25,7 @@ internal data class NotificationRequest(
     val channel: NotificationChannel,
     val templateCode: String,
     val aggregateId: String,
-) : Serializable {
+): Serializable {
     init {
         deliveryId.requireNotBlank("deliveryId")
         templateCode.requireNotBlank("templateCode")
@@ -48,7 +48,7 @@ internal data class NotificationDelivery(
     val claimOwner: String?,
     val claimUntil: Instant?,
     val failureCode: NotificationFailureCode?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -69,15 +69,19 @@ internal enum class RedriveDisposition {
 }
 
 /** duplicate acceptance와 retryable failure를 구분하는 provider result vocabulary입니다. */
-internal sealed interface ProviderSendResult {
-    data object Accepted : ProviderSendResult
+internal sealed interface ProviderSendResult: Serializable {
 
-    data object Duplicate : ProviderSendResult
+    data object Accepted: ProviderSendResult {
+        private fun readResolve(): Any = Accepted
+    }
+
+    data object Duplicate: ProviderSendResult {
+        private fun readResolve(): Any = Duplicate
+    }
 
     data class RetryableFailure(
         val code: NotificationFailureCode,
-    ) : ProviderSendResult,
-        Serializable {
+    ): ProviderSendResult {
         companion object {
             private const val serialVersionUID = 1L
         }

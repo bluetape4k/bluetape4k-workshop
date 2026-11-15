@@ -37,6 +37,11 @@ internal class OperatorController(
     private val executionGate: ReservationCommandExecutionGate,
     private val idempotency: IdempotentReservationCommandService,
 ) {
+
+    companion object: KLogging() {
+        private const val FORCE_RELEASE = "OPERATOR_FORCE_RELEASE"
+    }
+
     @PostMapping("/holds/{holdId}/force-release")
     fun forceRelease(
         @PathVariable holdId: Long,
@@ -44,22 +49,24 @@ internal class OperatorController(
         @RequestHeader("Idempotency-Key") key: String,
         @Valid @RequestBody request: ForceReleaseRequest,
     ): ResponseEntity<OperatorReleaseResponse> {
-        val result =
-            executionGate.execute(FORCE_RELEASE, key) {
-                idempotency.execute(
-                    FORCE_RELEASE,
-                    key,
-                    operatorKey,
-                    "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\nreasonCode=${request.reasonCode}",
-                    HttpStatus.OK.value(),
-                    OperatorReleaseResponse::class.java
-                ) {
-                    commands
-                        .forceRelease(ForceReleaseHoldCommand(holdId, request.expectedRevision, request.reasonCode))
-                        .let { OperatorReleaseResponse(it.id, it.resourceId, it.state.name, it.revision) }
-                }
+        val result = executionGate.execute(FORCE_RELEASE, key) {
+            idempotency.execute(
+                operation = FORCE_RELEASE,
+                rawKey = key,
+                rawOwner = operatorKey,
+                canonicalPayload = "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\nreasonCode=${request.reasonCode}",
+                successStatus = HttpStatus.OK.value(),
+                bodyType = OperatorReleaseResponse::class.java
+            ) {
+                commands
+                    .forceRelease(ForceReleaseHoldCommand(holdId, request.expectedRevision, request.reasonCode))
+                    .let {
+                        OperatorReleaseResponse(it.id, it.resourceId, it.state.name, it.revision)
+                    }
             }
+        }
         log.info { "reservation_operator_force_release_completed holdId=$holdId replayed=${result.replayed}" }
+
         return ResponseEntity
             .status(result.status)
             .header("Idempotency-Replayed", result.replayed.toString())
@@ -70,16 +77,14 @@ internal class OperatorController(
     fun sweep(
         @Valid @RequestBody request: ManualSweepRequest,
     ): SweepBatchSummary =
-        sweepWork.sweep(request.maxResources, 5.seconds()).also { summary ->
-            log.info {
-                "reservation_operator_sweep_completed scanned=${summary.scannedResources} " +
-                        "expired=${summary.expiredHolds} promoted=${summary.promotedEntries}"
+        sweepWork.sweep(request.maxResources, 5.seconds())
+            .also { summary ->
+                log.info {
+                    "reservation_operator_sweep_completed scanned=${summary.scannedResources} " +
+                            "expired=${summary.expiredHolds} promoted=${summary.promotedEntries}"
+                }
             }
-        }
 
-    companion object: KLogging() {
-        private const val FORCE_RELEASE = "OPERATOR_FORCE_RELEASE"
-    }
 }
 
 internal data class ForceReleaseRequest(

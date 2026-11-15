@@ -3,21 +3,24 @@ package io.bluetape4k.workshop.commerce.reservation.redis
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.javatimes.millis
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class ReservationAdmissionGateTest {
+
+    companion object: KLogging()
+
     @Test
     fun `redis rejection does not enter the authoritative database action`() {
         val backend = RecordingAdmissionBackend(acquireResults = ArrayDeque(listOf(false)))
         val gate = gate(backend)
         var executions = 0
 
-        val outcome =
-            gate.execute {
-                executions++
-                "unexpected"
-            }
+        val outcome = gate.execute {
+            executions++
+            "unexpected"
+        }
 
         outcome shouldBeEqualTo AdmissionOutcome.Rejected(AdmissionRejection.REDIS_CAPACITY)
         executions shouldBeEqualTo 0
@@ -26,10 +29,9 @@ class ReservationAdmissionGateTest {
 
     @Test
     fun `redis outage falls back to the always on local bulkhead and later recovers`() {
-        val backend =
-            RecordingAdmissionBackend(
-                acquireResults = ArrayDeque(listOf(IllegalStateException("redis secret detail"), true))
-            )
+        val backend = RecordingAdmissionBackend(
+            acquireResults = ArrayDeque(listOf(IllegalStateException("redis secret detail"), true))
+        )
         val gate = gate(backend)
 
         val degraded = gate.execute { "postgres-result" }
@@ -46,7 +48,9 @@ class ReservationAdmissionGateTest {
         val gate = gate(backend)
 
         assertFailsWith<IllegalArgumentException> {
-            gate.execute<String> { throw IllegalArgumentException("database failed") }
+            gate.execute<String> {
+                throw IllegalArgumentException("database failed")
+            }
         }
 
         backend.releases shouldBeEqualTo 1
@@ -54,12 +58,11 @@ class ReservationAdmissionGateTest {
 
     private fun gate(backend: AdmissionPermitBackend) =
         ReservationAdmissionGate(
-            localBulkhead =
-                NodeLocalDatabaseBulkhead(
-                    foregroundPermits = 1,
-                    backgroundPermits = 1,
-                    acquireTimeout = Duration.ZERO
-                ),
+            localBulkhead = NodeLocalDatabaseBulkhead(
+                foregroundPermits = 1,
+                backgroundPermits = 1,
+                acquireTimeout = Duration.ZERO
+            ),
             redisBackend = backend,
             redisWaitTime = 100.millis()
         )

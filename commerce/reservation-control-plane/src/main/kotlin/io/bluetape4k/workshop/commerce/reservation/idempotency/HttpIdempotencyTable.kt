@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /** tenant, operation, opaque key digest별로 replay 가능한 command result 하나를 저장합니다. */
-internal object HttpIdempotencyTable : AuditableLongIdTable("reservation_http_idempotency") {
+internal object HttpIdempotencyTable: AuditableLongIdTable("reservation_http_idempotency") {
     val tenantId = varchar("tenant_id", 80)
     val operation = varchar("operation", 80)
     val keyDigest = char("key_digest", 64)

@@ -17,22 +17,28 @@ internal class ReservationCommandExecutionGate(
     private val credentials: ReservationCredentialService,
     private val tenantId: String,
 ) {
+    companion object: KLogging()
+
     fun <T> execute(
         operation: String,
         rawIdempotencyKey: String,
         action: () -> T,
     ): T {
-        val opaqueCommandId = credentials.idempotencyDigest(tenantId, operation, rawIdempotencyKey).take(24)
+        val opaqueCommandId = credentials
+            .idempotencyDigest(tenantId, operation, rawIdempotencyKey)
+            .take(24)
+
         return when (
             val admissionOutcome =
                 admission.execute {
                     when (val suppressionOutcome = suppression.execute(opaqueCommandId, action)) {
                         is SuppressionOutcome.Executed -> suppressionOutcome.value
-                        SuppressionOutcome.Suppressed -> throw ReservationCommandException(
-                            "COMMAND_IN_PROGRESS",
-                            null,
-                            true
-                        )
+                        SuppressionOutcome.Suppressed ->
+                            throw ReservationCommandException(
+                                reason = "COMMAND_IN_PROGRESS",
+                                currentRevision = null,
+                                retryable = true
+                            )
                     }
                 }
         ) {
@@ -49,5 +55,5 @@ internal class ReservationCommandExecutionGate(
         }
     }
 
-    companion object: KLogging()
+
 }

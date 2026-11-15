@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.reservation.redis
 
 import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -59,32 +61,35 @@ class ReservationAdmissionGate(
     companion object: KLogging()
 
     init {
-        require(!redisWaitTime.isNegative) { "redisWaitTime must not be negative" }
+        redisWaitTime.requireZeroOrPositiveDuration("redisWaitTime")
     }
 
-    fun <T> execute(action: () -> T): AdmissionOutcome<T> =
-        when (val local = localBulkhead.execute(DatabaseWorkload.FOREGROUND) { executeAfterLocalAcquire(action) }) {
+    fun <T> execute(action: () -> T): AdmissionOutcome<T> {
+        val local = localBulkhead.execute(DatabaseWorkload.FOREGROUND) {
+            executeAfterLocalAcquire(action)
+        }
+
+        return when (local) {
             is DatabaseBulkheadOutcome.Executed -> local.value
             is DatabaseBulkheadOutcome.Rejected -> AdmissionOutcome.Rejected(AdmissionRejection.LOCAL_CAPACITY)
         }
+    }
 
     private fun <T> executeAfterLocalAcquire(action: () -> T): AdmissionOutcome<T> {
-        val backend =
-            redisBackend
-                ?: return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
+        val backend = redisBackend
+            ?: return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
 
-        val redisAcquired =
-            try {
-                backend.tryAcquire(redisWaitTime)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-                throw e
-            } catch (_: Exception) {
-                log.warn { "reservation_admission_degraded reason=REDIS_UNAVAILABLE fallback=LOCAL" }
-                return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
-            }
+        val redisAcquired = try {
+            backend.tryAcquire(redisWaitTime)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw e
+        } catch (_: Exception) {
+            log.warn { "reservation_admission_degraded reason=REDIS_UNAVAILABLE fallback=LOCAL" }
+            return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
+        }
 
         if (!redisAcquired) {
             log.debug { "reservation_admission_rejected reason=REDIS_CAPACITY" }
@@ -119,22 +124,23 @@ class LettuceSemaphoreAdmissionBackend(
 ): AdmissionPermitBackend {
     companion object: KLogging()
 
-    private val semaphore =
-        LettuceSemaphore(
-            connection = connection,
-            semaphoreKey = semaphoreKey,
-            totalPermits = totalPermits.requirePositiveNumber("totalPermits")
-        )
+    private val semaphore = LettuceSemaphore(
+        connection = connection,
+        semaphoreKey = semaphoreKey,
+        totalPermits = totalPermits.requirePositiveNumber("totalPermits")
+    )
 
     init {
-        require(!retryInterval.isNegative && !retryInterval.isZero) { "retryInterval must be positive" }
+        retryInterval.requirePositiveDuration("interval")
     }
 
     override fun tryAcquire(waitTime: Duration): Boolean {
-        require(!waitTime.isNegative) { "waitTime must not be negative" }
+        waitTime.requireZeroOrPositiveDuration("waitTime")
+
         // SET NX는 idempotent이며 Redis flush/restart 뒤 advisory counter도 복원합니다.
         semaphore.initialize()
         val deadline = System.nanoTime() + waitTime.toNanos()
+
         do {
             if (semaphore.tryAcquire()) {
                 log.debug { "reservation_admission_acquired mode=REDIS_ADVISORY" }
@@ -147,6 +153,7 @@ class LettuceSemaphoreAdmissionBackend(
                 }
             }
         } while (System.nanoTime() < deadline)
+
         return false
     }
 

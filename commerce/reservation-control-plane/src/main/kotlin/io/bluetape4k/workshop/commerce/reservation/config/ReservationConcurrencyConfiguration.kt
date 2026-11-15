@@ -37,6 +37,9 @@ import kotlin.time.Duration.Companion.seconds
  */
 @Configuration(proxyBeanMethods = false)
 internal class ReservationConcurrencyConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun nodeLocalDatabaseBulkhead(): NodeLocalDatabaseBulkhead =
         NodeLocalDatabaseBulkhead(
@@ -49,10 +52,13 @@ internal class ReservationConcurrencyConfiguration {
     fun reservationAdmissionGate(
         localBulkhead: NodeLocalDatabaseBulkhead,
         redisBackend: ObjectProvider<AdmissionPermitBackend>,
-    ): ReservationAdmissionGate = ReservationAdmissionGate(localBulkhead, redisBackend.ifAvailable)
+    ): ReservationAdmissionGate =
+        ReservationAdmissionGate(localBulkhead, redisBackend.ifAvailable)
 
     @Bean
-    fun inFlightCommandSuppressor(redisBackend: ObjectProvider<CommandSuppressionBackend>): InFlightCommandSuppressor =
+    fun inFlightCommandSuppressor(
+        redisBackend: ObjectProvider<CommandSuppressionBackend>,
+    ): InFlightCommandSuppressor =
         InFlightCommandSuppressor(redisBackend.ifAvailable)
 
     @Bean
@@ -61,7 +67,8 @@ internal class ReservationConcurrencyConfiguration {
         suppression: InFlightCommandSuppressor,
         credentials: ReservationCredentialService,
         @Value("\${reservation.tenant-id}") tenantId: String,
-    ): ReservationCommandExecutionGate = ReservationCommandExecutionGate(admission, suppression, credentials, tenantId)
+    ): ReservationCommandExecutionGate =
+        ReservationCommandExecutionGate(admission, suppression, credentials, tenantId)
 
     @Bean
     fun reservationExpirySweeper(
@@ -77,8 +84,6 @@ internal class ReservationConcurrencyConfiguration {
                 instanceId = instanceId
             )
         }
-
-    companion object: KLogging()
 }
 
 /**
@@ -88,10 +93,15 @@ internal class ReservationConcurrencyConfiguration {
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "reservation.redis", name = ["enabled"], havingValue = "true")
 internal class ReservationRedisConfiguration {
+
+    companion object: KLogging()
+
     @Bean(destroyMethod = "shutdown")
     fun reservationRedisClient(
         @Value("\${reservation.redis.uri}") uri: String,
-    ): RedisClient = LettuceClients.clientOf(uri).also { log.info { "reservation_redis_client_created" } }
+    ): RedisClient =
+        LettuceClients.clientOf(uri)
+            .also { log.info { "reservation_redis_client_created" } }
 
     @Bean(destroyMethod = "close")
     fun reservationRedisConnection(client: RedisClient): StatefulRedisConnection<String, String>? =
@@ -105,25 +115,31 @@ internal class ReservationRedisConfiguration {
     @Bean
     fun reservationAdmissionBackend(
         connection: ObjectProvider<StatefulRedisConnection<String, String>>,
-    ): AdmissionPermitBackend? = connection.ifAvailable?.let { LettuceSemaphoreAdmissionBackend(it) }
+    ): AdmissionPermitBackend? =
+        connection.ifAvailable?.let {
+            LettuceSemaphoreAdmissionBackend(it)
+        }
 
     @Bean
     fun reservationSuppressionBackend(
         connection: ObjectProvider<StatefulRedisConnection<String, String>>,
-    ): CommandSuppressionBackend? = connection.ifAvailable?.let { LettuceLockSuppressionBackend(it) }
+    ): CommandSuppressionBackend? =
+        connection.ifAvailable?.let {
+            LettuceLockSuppressionBackend(it)
+        }
 
     @Bean
-    fun reservationLeaderElector(connection: ObjectProvider<StatefulRedisConnection<String, String>>): LeaderElector? =
+    fun reservationLeaderElector(
+        connection: ObjectProvider<StatefulRedisConnection<String, String>>,
+    ): LeaderElector? =
         connection.ifAvailable?.let {
             LettuceLeaderElector(
-                it,
-                LeaderElectionOptions(
+                connection = it,
+                options = LeaderElectionOptions(
                     waitTime = kotlin.time.Duration.ZERO,
                     leaseTime = 15.seconds,
                     autoExtend = true
                 )
             )
         }
-
-    companion object: KLogging()
 }

@@ -27,8 +27,7 @@ internal data class WaitlistEntryRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-): Auditable,
-   Serializable {
+): Auditable, Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -42,11 +41,16 @@ internal data class WaitlistEntryRecord(
  */
 @Repository
 internal class WaitlistEntryRepository: LongAuditableJdbcRepository<WaitlistEntryRecord, WaitlistEntryTable> {
+
+    companion object: KLogging() {
+        private const val OWNER_DIGEST_LENGTH = 64
+    }
+
     override val table = WaitlistEntryTable
 
     override fun extractId(entity: WaitlistEntryRecord): Long = entity.id
 
-    override fun ResultRow.toEntity() =
+    override fun ResultRow.toEntity(): WaitlistEntryRecord =
         WaitlistEntryRecord(
             id = this[table.id].value,
             resourceId = this[table.resourceId].value,
@@ -69,24 +73,25 @@ internal class WaitlistEntryRepository: LongAuditableJdbcRepository<WaitlistEntr
         ownerDigest: String,
     ): WaitlistEntryRecord {
         require(ownerDigest.length == OWNER_DIGEST_LENGTH) { "owner digest must be 64 characters" }
-        val nextSequence =
-            table
-                .selectAll()
-                .where { table.resourceId eq resourceId }
-                .orderBy(table.sequence to SortOrder.DESC, table.id to SortOrder.DESC)
-                .limit(1)
-                .singleOrNull()
-                ?.get(table.sequence)
-                ?.plus(1)
-                ?: 1L
-        val id =
-            table
-                .insertAndGetId {
-                    it[table.resourceId] = resourceId
-                    it[table.ownerDigest] = ownerDigest
-                    it[table.state] = WaitlistState.WAITING
-                    it[table.sequence] = nextSequence
-                }.value
+
+        val nextSequence = table
+            .selectAll()
+            .where { table.resourceId eq resourceId }
+            .orderBy(table.sequence to SortOrder.DESC, table.id to SortOrder.DESC)
+            .limit(1)
+            .singleOrNull()
+            ?.get(table.sequence)
+            ?.plus(1)
+            ?: 1L
+
+        val id = table
+            .insertAndGetId {
+                it[table.resourceId] = resourceId
+                it[table.ownerDigest] = ownerDigest
+                it[table.state] = WaitlistState.WAITING
+                it[table.sequence] = nextSequence
+            }.value
+
         log.debug { "waitlist_entry_joined entryId=$id resourceId=$resourceId sequence=$nextSequence" }
         return findById(id)
     }
@@ -99,14 +104,14 @@ internal class WaitlistEntryRepository: LongAuditableJdbcRepository<WaitlistEntr
             .selectAll()
             .where { (table.id eq id) and (table.ownerDigest eq ownerDigest) }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
 
     fun snapshots(resourceId: Long): List<WaitlistEntryRecord> =
         table
             .selectAll()
             .where { table.resourceId eq resourceId }
             .orderBy(table.sequence to SortOrder.ASC, table.id to SortOrder.ASC)
-            .map { with(this) { it.toEntity() } }
+            .map { it.toEntity() }
 
     /** caller가 resource lock을 보유하는 동안 sequence와 id 기준으로 안정적인 FIFO head를 선택합니다. */
     fun oldestWaiting(resourceId: Long): WaitlistEntryRecord? =
@@ -116,7 +121,7 @@ internal class WaitlistEntryRepository: LongAuditableJdbcRepository<WaitlistEntr
             .orderBy(table.sequence to SortOrder.ASC, table.id to SortOrder.ASC)
             .limit(1)
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
 
     fun transition(
         id: Long,
@@ -125,23 +130,19 @@ internal class WaitlistEntryRepository: LongAuditableJdbcRepository<WaitlistEntr
         from: WaitlistState,
         to: WaitlistState,
     ): Boolean {
-        val applied =
-            auditedUpdateAll({
-                (table.id eq id) and
-                        (table.ownerDigest eq ownerDigest) and
-                        (table.revision eq expectedRevision) and
-                        (table.state eq from)
-            }) {
-                it[state] = to
-                it[revision] = expectedRevision + 1
-            } == 1
+        val applied = auditedUpdateAll({
+            (table.id eq id) and
+                    (table.ownerDigest eq ownerDigest) and
+                    (table.revision eq expectedRevision) and
+                    (table.state eq from)
+        }) {
+            it[state] = to
+            it[revision] = expectedRevision + 1
+        } == 1
+        
         log.debug {
             "waitlist_entry_transition entryId=$id expectedRevision=$expectedRevision from=$from to=$to applied=$applied"
         }
         return applied
-    }
-
-    companion object: KLogging() {
-        private const val OWNER_DIGEST_LENGTH = 64
     }
 }

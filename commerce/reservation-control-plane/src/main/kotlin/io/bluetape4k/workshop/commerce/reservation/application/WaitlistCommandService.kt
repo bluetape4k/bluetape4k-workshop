@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.reservation.application
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkBeTrue
 import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
 import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
 import io.bluetape4k.workshop.commerce.reservation.domain.WaitlistState
@@ -38,24 +39,36 @@ internal class WaitlistCommandService(
     private val holds: ReservationHoldRepository? = null,
     private val audits: ReservationAuditRepository? = null,
 ) {
+
+    companion object: KLogging()
+
     @Transactional
     fun join(command: JoinWaitlistCommand): WaitlistEntryRecord {
-        resources?.findByIdForUpdate(command.resourceId)?.also { resource ->
-            if (resource.policyVersion != command.policyVersion) {
-                throw WaitlistCommandException("POLICY_VERSION_MISMATCH", resource.revision)
+        resources?.findByIdForUpdate(command.resourceId)
+            ?.also { resource ->
+                if (resource.policyVersion != command.policyVersion) {
+                    throw WaitlistCommandException("POLICY_VERSION_MISMATCH", resource.revision)
+                }
+                if (resource.revision != command.expectedResourceRevision) {
+                    throw WaitlistCommandException("STALE_REVISION", resource.revision)
+                }
+                if (resource.occupiedCount < resource.capacity) {
+                    throw WaitlistCommandException("CAPACITY_AVAILABLE", resource.revision)
+                }
             }
-            if (resource.revision != command.expectedResourceRevision) {
-                throw WaitlistCommandException("STALE_REVISION", resource.revision)
-            }
-            if (resource.occupiedCount < resource.capacity) {
-                throw WaitlistCommandException("CAPACITY_AVAILABLE", resource.revision)
-            }
-        }
-        val entry = waitlists.join(command.resourceId, credentials.ownerDigest(command.ownerToken))
+        val entry = waitlists.join(
+            resourceId = command.resourceId,
+            ownerDigest = credentials.ownerDigest(command.ownerToken)
+        )
         log.debug {
             "waitlist_join_applied entryId=${entry.id} resourceId=${entry.resourceId} sequence=${entry.sequence}"
         }
-        audits?.record("WAITLIST_ENTRY", entry.id, entry.revision, entry.state.name)
+        audits?.record(
+            aggregateType = "WAITLIST_ENTRY",
+            aggregateId = entry.id,
+            revision = entry.revision,
+            outcome = entry.state.name
+        )
         return entry
     }
 
@@ -73,12 +86,14 @@ internal class WaitlistCommandService(
     fun cancel(command: CancelWaitlistCommand): WaitlistEntryRecord {
         val entry = waitlists.findById(command.entryId)
         requireOwner(command.ownerToken, entry.ownerDigest, entry.revision)
+
         if (entry.state != WaitlistState.WAITING) {
             throw WaitlistCommandException("INVALID_WAITLIST_STATE", entry.revision)
         }
         if (entry.revision != command.expectedRevision) {
             throw WaitlistCommandException("STALE_REVISION", entry.revision)
         }
+
         if (!waitlists.transition(
                 id = entry.id,
                 ownerDigest = entry.ownerDigest,
@@ -89,9 +104,15 @@ internal class WaitlistCommandService(
         ) {
             throw WaitlistCommandException("STALE_REVISION", entry.revision)
         }
-        return waitlists.findById(entry.id).also { updated ->
-            audits?.record("WAITLIST_ENTRY", updated.id, updated.revision, updated.state.name)
-        }
+        return waitlists.findById(entry.id)
+            .also { updated ->
+                audits?.record(
+                    aggregateType = "WAITLIST_ENTRY",
+                    aggregateId = updated.id,
+                    revision = updated.revision,
+                    outcome = updated.state.name
+                )
+            }
     }
 
     /** caller transaction은 이 operation을 호출하기 전에 resource를 lock해야 합니다. */
@@ -112,16 +133,29 @@ internal class WaitlistCommandService(
             }
             return null
         }
-        val offer =
-            offers.createActive(
-                resourceId = resourceId,
-                entryId = entry.id,
-                ownerDigest = entry.ownerDigest,
-                expiresAt = clock.instant().plus(offerTtl)
+        val offer = offers.createActive(
+            resourceId = resourceId,
+            entryId = entry.id,
+            ownerDigest = entry.ownerDigest,
+            expiresAt = clock.instant().plus(offerTtl)
+        )
+        audits?.let {
+            it.record(
+                aggregateType = "WAITLIST_ENTRY",
+                aggregateId = entry.id,
+                revision = entry.revision + 1,
+                outcome = WaitlistState.OFFERED.name
             )
-        audits?.record("WAITLIST_ENTRY", entry.id, entry.revision + 1, WaitlistState.OFFERED.name)
-        audits?.record("RESERVATION_OFFER", offer.id, offer.revision, offer.state.name)
+            it.record(
+                aggregateType = "RESERVATION_OFFER",
+                aggregateId = offer.id,
+                revision = offer.revision,
+                outcome = offer.state.name
+            )
+        }
+
         log.debug { "waitlist_promotion_applied entryId=${entry.id} offerId=${offer.id} resourceId=$resourceId" }
+
         return offer
     }
 
@@ -131,7 +165,9 @@ internal class WaitlistCommandService(
         // resource lock을 잡은 뒤 offer를 다시 읽습니다. 첫 번째 read는 lock locator 역할만 합니다.
         val resource = resources?.findByIdForUpdate(offerSnapshot.resourceId)
         val offer = offers.findById(command.offerId)
+
         requireOwner(command.ownerToken, offer.ownerDigest, offer.revision)
+
         if (offer.state != OfferState.ACTIVE) {
             throw WaitlistCommandException("INVALID_OFFER_STATE", offer.revision)
         }
@@ -167,36 +203,59 @@ internal class WaitlistCommandService(
         ) {
             throw WaitlistCommandException("STALE_WAITLIST_REVISION", entry.revision)
         }
-        val acceptedHold =
-            if (holds != null && resource != null) {
-                holds
-                    .create(
-                        resourceId = resource.id,
-                        ownerDigest = offer.ownerDigest,
-                        policyVersion = resource.policyVersion,
-                        expiresAt = offer.expiresAt
-                    ).also { created ->
-                        check(
-                            holds.transition(
-                                created.id,
-                                offer.ownerDigest,
-                                created.revision,
-                                HoldState.HELD,
-                                HoldState.CONFIRMED
-                            )
-                        ) {
-                            "accepted offer hold transition failed"
-                        }
-                    }.let { created -> holds.findById(created.id) }
-            } else {
-                null
-            }
+        val acceptedHold = if (holds != null && resource != null) {
+            holds
+                .create(
+                    resourceId = resource.id,
+                    ownerDigest = offer.ownerDigest,
+                    policyVersion = resource.policyVersion,
+                    expiresAt = offer.expiresAt
+                )
+                .also { created ->
+
+                    holds.transition(
+                        created.id,
+                        offer.ownerDigest,
+                        created.revision,
+                        HoldState.HELD,
+                        HoldState.CONFIRMED
+                    ).checkBeTrue { "accepted offer hold transition failed" }
+                }
+                .let { created ->
+                    holds.findById(created.id)
+                }
+        } else {
+            null
+        }
+
         val accepted = AcceptedOffer(offers.findById(offer.id), waitlists.findById(entry.id), acceptedHold)
-        audits?.record("RESERVATION_OFFER", accepted.offer.id, accepted.offer.revision, accepted.offer.state.name)
-        audits?.record("WAITLIST_ENTRY", accepted.entry.id, accepted.entry.revision, accepted.entry.state.name)
+        audits?.let {
+            it.record(
+                aggregateType = "RESERVATION_OFFER",
+                aggregateId = accepted.offer.id,
+                revision = accepted.offer.revision,
+                outcome = accepted.offer.state.name
+            )
+            it.record(
+                aggregateType = "WAITLIST_ENTRY",
+                aggregateId = accepted.entry.id,
+                revision = accepted.entry.revision,
+                outcome = accepted.entry.state.name
+            )
+        }
         accepted.hold?.also { confirmed ->
-            audits?.record("RESERVATION_HOLD", confirmed.id, 0, HoldState.HELD.name)
-            audits?.record("RESERVATION_HOLD", confirmed.id, confirmed.revision, confirmed.state.name)
+            audits?.record(
+                aggregateType = "RESERVATION_HOLD",
+                aggregateId = confirmed.id,
+                revision = 0,
+                outcome = HoldState.HELD.name
+            )
+            audits?.record(
+                aggregateType = "RESERVATION_HOLD",
+                aggregateId = confirmed.id,
+                revision = confirmed.revision,
+                outcome = confirmed.state.name
+            )
         }
         log.debug {
             "reservation_offer_accept_applied offerId=${offer.id} entryId=${entry.id} resourceId=${offer.resourceId}"
@@ -213,8 +272,6 @@ internal class WaitlistCommandService(
             throw WaitlistCommandException("OWNER_MISMATCH", revision)
         }
     }
-
-    companion object : KLogging()
 }
 
 internal data class JoinWaitlistCommand(
@@ -222,7 +279,7 @@ internal data class JoinWaitlistCommand(
     val ownerToken: String,
     val expectedResourceRevision: Long = 0,
     val policyVersion: Long = 1,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -232,7 +289,7 @@ internal data class CancelWaitlistCommand(
     val entryId: Long,
     val expectedRevision: Long,
     val ownerToken: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -242,7 +299,7 @@ internal data class AcceptOfferCommand(
     val offerId: Long,
     val expectedRevision: Long,
     val ownerToken: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -252,7 +309,7 @@ internal data class AcceptedOffer(
     val offer: ReservationOfferRecord,
     val entry: WaitlistEntryRecord,
     val hold: ReservationHoldRecord? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -261,4 +318,4 @@ internal data class AcceptedOffer(
 internal class WaitlistCommandException(
     val reason: String,
     val currentRevision: Long,
-) : RuntimeException(reason)
+): RuntimeException(reason)

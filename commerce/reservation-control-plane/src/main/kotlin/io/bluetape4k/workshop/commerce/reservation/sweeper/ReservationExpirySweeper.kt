@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.sweeper
 
+import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.LeaderRunResult
@@ -7,6 +8,8 @@ import io.bluetape4k.leader.LeaderSlot
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import org.springframework.scheduling.annotation.Scheduled
 import java.io.Serializable
 import java.time.Duration
@@ -21,17 +24,22 @@ data class SweepBatchSummary(
     val staleConflicts: Int,
 ): Serializable {
     init {
-        require(scannedResources >= 0) { "scannedResources must not be negative" }
-        require(expiredHolds >= 0) { "expiredHolds must not be negative" }
-        require(promotedEntries >= 0) { "promotedEntries must not be negative" }
-        require(staleConflicts >= 0) { "staleConflicts must not be negative" }
+        scannedResources.requireZeroOrPositiveNumber("scannedResources")
+        expiredHolds.requireZeroOrPositiveNumber("expiredHolds")
+        promotedEntries.requireZeroOrPositiveNumber("promotedEntries")
+        staleConflicts.requireZeroOrPositiveNumber("staleConflicts")
     }
 
     companion object {
         private const val serialVersionUID = 1L
 
         @JvmField
-        val Empty = SweepBatchSummary(0, 0, 0, 0)
+        val Empty = SweepBatchSummary(
+            scannedResources = 0,
+            expiredHolds = 0,
+            promotedEntries = 0,
+            staleConflicts = 0
+        )
     }
 }
 
@@ -80,9 +88,13 @@ sealed interface SweepTickOutcome: Serializable {
         }
     }
 
-    data object Skipped: SweepTickOutcome
+    data object Skipped: SweepTickOutcome {
+        private fun readResolve(): Any = Skipped
+    }
 
-    data object LocalBusy: SweepTickOutcome
+    data object LocalBusy: SweepTickOutcome {
+        private fun readResolve(): Any = LocalBusy
+    }
 
     data class Failed(
         val code: SweepFailureCode,
@@ -112,8 +124,8 @@ class ReservationExpirySweeper(
     private val slot = LeaderSlot(LOCK_NAME, instanceId)
 
     init {
-        require(maxResources in 1..32) { "maxResources must be between 1 and 32" }
-        require(!tickBudget.isNegative && !tickBudget.isZero) { "tickBudget must be positive" }
+        maxResources.requireInRange(1, 32, "maxResources")
+        tickBudget.requirePositiveDuration("tickBudget")
     }
 
     @Scheduled(
@@ -131,18 +143,17 @@ class ReservationExpirySweeper(
         }
 
         return try {
-            val leaderResult =
-                try {
-                    leaderGate.run(slot) { sweepWork.sweep(maxResources, tickBudget) }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                    throw e
-                } catch (_: Exception) {
-                    log.warn { "reservation_sweep_backend_failed reason=LEADER_BACKEND_UNAVAILABLE" }
-                    return SweepTickOutcome.Failed(SweepFailureCode.LEADER_BACKEND_UNAVAILABLE)
-                }
+            val leaderResult = try {
+                leaderGate.run(slot) { sweepWork.sweep(maxResources, tickBudget) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw e
+            } catch (_: Exception) {
+                log.warn { "reservation_sweep_backend_failed reason=LEADER_BACKEND_UNAVAILABLE" }
+                return SweepTickOutcome.Failed(SweepFailureCode.LEADER_BACKEND_UNAVAILABLE)
+            }
 
             when (leaderResult) {
                 is LeaderRunResult.Elected -> {
@@ -159,7 +170,7 @@ class ReservationExpirySweeper(
                         SweepTickOutcome.Completed(summary)
                     }
                 }
-                LeaderRunResult.Skipped -> {
+                LeaderRunResult.Skipped    -> {
                     log.debug { "reservation_sweep_leader_skipped outcome=SKIPPED" }
                     SweepTickOutcome.Skipped
                 }

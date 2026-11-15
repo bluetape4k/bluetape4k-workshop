@@ -16,22 +16,26 @@ import java.time.Instant
 /** credential을 누출하지 않고 안정적인 command rejection code를 retry-aware HTTP problem response로 매핑합니다. */
 @RestControllerAdvice
 internal class ApiExceptionHandler {
+
+    companion object: KLogging()
+
     @ExceptionHandler(ReservationCommandException::class)
     fun reservation(
         ex: ReservationCommandException,
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> {
-        val status =
-            when (ex.reason) {
-                "OWNER_MISMATCH" -> HttpStatus.FORBIDDEN
-                "HOLD_EXPIRED" -> HttpStatus.GONE
-                "ADMISSION_REJECTED" -> HttpStatus.TOO_MANY_REQUESTS
-                else -> HttpStatus.CONFLICT
-            }
+        val status = when (ex.reason) {
+            "OWNER_MISMATCH"     -> HttpStatus.FORBIDDEN
+            "HOLD_EXPIRED"       -> HttpStatus.GONE
+            "ADMISSION_REJECTED" -> HttpStatus.TOO_MANY_REQUESTS
+            else                 -> HttpStatus.CONFLICT
+        }
         log.debug { "reservation_http_rejected reason=${ex.reason} status=${status.value()}" }
         val response = ResponseEntity.status(status)
         ex.retryAfterSeconds?.let { response.header("Retry-After", it.toString()) }
-        return response.body(error(ex.reason, request, ex.retryable, ex.currentRevision, ex.retryAfterSeconds))
+
+        return response
+            .body(error(ex.reason, request, ex.retryable, ex.currentRevision, ex.retryAfterSeconds))
     }
 
     @ExceptionHandler(WaitlistCommandException::class)
@@ -39,14 +43,16 @@ internal class ApiExceptionHandler {
         ex: WaitlistCommandException,
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> {
-        val status =
-            when (ex.reason) {
-                "OWNER_MISMATCH" -> HttpStatus.FORBIDDEN
-                "OFFER_EXPIRED" -> HttpStatus.GONE
-                else -> HttpStatus.CONFLICT
-            }
+        val status = when (ex.reason) {
+            "OWNER_MISMATCH" -> HttpStatus.FORBIDDEN
+            "OFFER_EXPIRED"  -> HttpStatus.GONE
+            else             -> HttpStatus.CONFLICT
+        }
         log.debug { "reservation_http_rejected reason=${ex.reason} status=${status.value()}" }
-        return ResponseEntity.status(status).body(error(ex.reason, request, false, ex.currentRevision))
+
+        return ResponseEntity
+            .status(status)
+            .body(error(ex.reason, request, false, ex.currentRevision))
     }
 
     @ExceptionHandler(IllegalArgumentException::class, MethodArgumentNotValidException::class)
@@ -55,7 +61,9 @@ internal class ApiExceptionHandler {
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> {
         log.debug { "reservation_http_rejected reason=MALFORMED_REQUEST status=400" }
-        return ResponseEntity.badRequest().body(error("MALFORMED_REQUEST", request, false, null))
+        return ResponseEntity
+            .badRequest()
+            .body(error("MALFORMED_REQUEST", request, false, null))
     }
 
     private fun error(
@@ -64,17 +72,17 @@ internal class ApiExceptionHandler {
         retryable: Boolean,
         revision: Long?,
         retryAfterSeconds: Long? = null,
-    ) = ApiError(
-        code = reason,
-        reason = reason,
-        requestId = request.getAttribute(RequestLoggingFilter.REQUEST_ID_ATTRIBUTE)?.toString() ?: request.requestId,
-        retryable = retryable,
-        currentRevision = revision,
-        observedAt = Instant.now(),
-        retryAfterSeconds = retryAfterSeconds
-    )
-
-    companion object : KLogging()
+    ): ApiError =
+        ApiError(
+            code = reason,
+            reason = reason,
+            requestId = request.getAttribute(RequestLoggingFilter.REQUEST_ID_ATTRIBUTE)?.toString()
+                ?: request.requestId,
+            retryable = retryable,
+            currentRevision = revision,
+            observedAt = Instant.now(),
+            retryAfterSeconds = retryAfterSeconds
+        )
 }
 
 internal data class ApiError(
@@ -86,7 +94,7 @@ internal data class ApiError(
     val observedAt: Instant,
     val expiresAt: Instant? = null,
     val retryAfterSeconds: Long? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

@@ -1,19 +1,42 @@
 package io.bluetape4k.workshop.commerce.reservation.domain
 
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.time.Instant
 
 /** current occupancy와 독립적으로 제어되는 availability lifecycle입니다. */
-enum class ResourceState { OPEN, PAUSED, CLOSED }
+enum class ResourceState {
+    OPEN,
+    PAUSED,
+    CLOSED
+}
 
 /** capacity를 소유하는 reservation hold의 durable lifecycle입니다. */
-enum class HoldState { HELD, CONFIRMED, EXPIRED, CANCELLED, RELEASED_BY_OPERATOR }
+enum class HoldState {
+    HELD,
+    CONFIRMED,
+    EXPIRED,
+    CANCELLED,
+    RELEASED_BY_OPERATOR
+}
 
 /** durable FIFO entry lifecycle입니다. `OFFERED`는 capacity slot이 이 entry에 계속 예약되어 있음을 뜻합니다. */
-enum class WaitlistState { WAITING, OFFERED, ACCEPTED, EXPIRED, CANCELLED }
+enum class WaitlistState {
+    WAITING,
+    OFFERED,
+    ACCEPTED,
+    EXPIRED,
+    CANCELLED
+}
 
 /** `OFFERED` waitlist entry와 짝을 이루는 short-lived offer lifecycle입니다. */
-enum class OfferState { ACTIVE, ACCEPTED, EXPIRED, CANCELLED }
+enum class OfferState {
+    ACTIVE,
+    ACCEPTED,
+    EXPIRED,
+    CANCELLED
+}
 
 /** caller에게 반환하고 audit event에 기록하는 안정적인 rejection vocabulary입니다. */
 enum class TransitionReason {
@@ -35,10 +58,10 @@ data class CapacityResourceSnapshot(
     val occupiedCount: Int,
     val revision: Long,
     val policyVersion: Long = 1,
-) : Serializable {
+): Serializable {
     init {
-        require(capacity > 0) { "capacity must be positive" }
-        require(occupiedCount in 0..capacity) { "occupiedCount must be within capacity" }
+        capacity.requirePositiveNumber("capacity")
+        occupiedCount.requireInRange(0, capacity, "occupiedCount")
     }
 
     val hasCapacity: Boolean get() = occupiedCount < capacity
@@ -57,7 +80,7 @@ data class ReservationHoldSnapshot(
     val revision: Long,
     val policyVersion: Long,
     val expiresAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -67,8 +90,8 @@ data class ReservationHoldSnapshot(
 sealed interface TransitionOutcome {
     data class Applied(
         val hold: ReservationHoldSnapshot,
-    ) : TransitionOutcome,
-        Serializable {
+    ): TransitionOutcome,
+       Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -77,8 +100,8 @@ sealed interface TransitionOutcome {
     data class Rejected(
         val reason: TransitionReason,
         val currentRevision: Long,
-    ) : TransitionOutcome,
-        Serializable {
+    ): TransitionOutcome,
+       Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }

@@ -27,27 +27,35 @@ class NotificationOperationalLoggingTest {
         val commandSecret = "operator-command-secret"
         val outbox = InMemoryNotificationOutbox()
 
-        val messages =
-            captureNotificationLogs {
-                outbox.enqueue(
-                    NotificationRequest(
-                        deliveryId = "safe-delivery-id",
-                        channel = NotificationChannel.IN_APP,
-                        templateCode = "reservation-state-changed",
-                        aggregateId = aggregateSecret
-                    ),
-                    now
-                )
-                outbox.claim("safe-delivery-id", claimSecret, now, 30.seconds())
-                outbox.markFailed(
-                    "safe-delivery-id",
-                    claimSecret,
-                    now + 1.seconds(),
-                    NotificationFailureCode.FAKE_TRANSIENT,
-                    NotificationRetryPolicy(maxAttempts = 1)
-                )
-                outbox.redrive("safe-delivery-id", commandSecret, now + 2.seconds())
-            }.joinToString("\n")
+        val messages = captureNotificationLogs {
+            outbox.enqueue(
+                NotificationRequest(
+                    deliveryId = "safe-delivery-id",
+                    channel = NotificationChannel.IN_APP,
+                    templateCode = "reservation-state-changed",
+                    aggregateId = aggregateSecret
+                ),
+                now
+            )
+            outbox.claim(
+                deliveryId = "safe-delivery-id",
+                owner = claimSecret,
+                now = now,
+                lease = 30.seconds()
+            )
+            outbox.markFailed(
+                deliveryId = "safe-delivery-id",
+                owner = claimSecret,
+                now = now + 1.seconds(),
+                failureCode = NotificationFailureCode.FAKE_TRANSIENT,
+                policy = NotificationRetryPolicy(maxAttempts = 1)
+            )
+            outbox.redrive(
+                deliveryId = "safe-delivery-id",
+                commandId = commandSecret,
+                now = now + 2.seconds()
+            )
+        }.joinToString("\n")
 
 
         log.debug { "messages=$messages" }
@@ -65,6 +73,7 @@ class NotificationOperationalLoggingTest {
         val previousLevel = logger.level
         logger.level = Level.DEBUG
         logger.addAppender(appender)
+
         return try {
             block()
             appender.list.map { it.formattedMessage }

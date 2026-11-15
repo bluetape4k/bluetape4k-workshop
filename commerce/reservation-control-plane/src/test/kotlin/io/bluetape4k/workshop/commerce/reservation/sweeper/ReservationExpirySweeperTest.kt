@@ -4,28 +4,30 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LeaderRunResult
 import io.bluetape4k.leader.LeaderSlot
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class ReservationExpirySweeperTest {
+
+    companion object: KLogging()
+
     @Test
     fun `elected tick runs a bounded batch with the configured leader slot`() {
         val gate = RecordingSweepLeaderGate(LeaderDecision.ELECT)
         var requestedMax = 0
         var requestedBudget = Duration.ZERO
-        val sweeper =
-            sweeper(gate) { maxResources, budget ->
-                requestedMax = maxResources
-                requestedBudget = budget
-                SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0)
-            }
+        val sweeper = sweeper(gate) { maxResources, budget ->
+            requestedMax = maxResources
+            requestedBudget = budget
+            SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0)
+        }
 
         val outcome = sweeper.sweepOnce()
 
-        outcome shouldBeEqualTo
-            SweepTickOutcome.Completed(
-                SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0)
-            )
+        outcome shouldBeEqualTo SweepTickOutcome.Completed(
+            SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0)
+        )
         gate.slot shouldBeEqualTo LeaderSlot("reservation-expiry-sweeper", "node-a")
         requestedMax shouldBeEqualTo 32
         requestedBudget shouldBeEqualTo 5.seconds()
@@ -35,11 +37,10 @@ class ReservationExpirySweeperTest {
     fun `non leader tick is skipped without running database work`() {
         val gate = RecordingSweepLeaderGate(LeaderDecision.SKIP)
         var executions = 0
-        val sweeper =
-            sweeper(gate) { _, _ ->
-                executions++
-                SweepBatchSummary.Empty
-            }
+        val sweeper = sweeper(gate) { _, _ ->
+            executions++
+            SweepBatchSummary.Empty
+        }
 
         sweeper.sweepOnce() shouldBeEqualTo SweepTickOutcome.Skipped
         executions shouldBeEqualTo 0
@@ -56,8 +57,7 @@ class ReservationExpirySweeperTest {
                 SweepBatchSummary.Empty
             }
 
-        backendFailure.sweepOnce() shouldBeEqualTo
-            SweepTickOutcome.Failed(SweepFailureCode.LEADER_BACKEND_UNAVAILABLE)
+        backendFailure.sweepOnce() shouldBeEqualTo SweepTickOutcome.Failed(SweepFailureCode.LEADER_BACKEND_UNAVAILABLE)
         actionFailure.sweepOnce() shouldBeEqualTo SweepTickOutcome.Failed(SweepFailureCode.ACTION_FAILED)
     }
 
@@ -65,11 +65,10 @@ class ReservationExpirySweeperTest {
     fun `local single flight skips reentrant tick`() {
         lateinit var sweeper: ReservationExpirySweeper
         var nested: SweepTickOutcome? = null
-        sweeper =
-            sweeper(RecordingSweepLeaderGate(LeaderDecision.ELECT)) { _, _ ->
-                nested = sweeper.sweepOnce()
-                SweepBatchSummary.Empty
-            }
+        sweeper = sweeper(RecordingSweepLeaderGate(LeaderDecision.ELECT)) { _, _ ->
+            nested = sweeper.sweepOnce()
+            SweepBatchSummary.Empty
+        }
 
         sweeper.sweepOnce() shouldBeEqualTo SweepTickOutcome.Completed(SweepBatchSummary.Empty)
         nested shouldBeEqualTo SweepTickOutcome.LocalBusy
@@ -78,19 +77,25 @@ class ReservationExpirySweeperTest {
     private fun sweeper(
         gate: SweepLeaderGate,
         work: ReservationSweepWork,
-    ) = ReservationExpirySweeper(
-        leaderGate = gate,
-        sweepWork = work,
-        instanceId = "node-a",
-        maxResources = 32,
-        tickBudget = 5.seconds()
-    )
+    ): ReservationExpirySweeper =
+        ReservationExpirySweeper(
+            leaderGate = gate,
+            sweepWork = work,
+            instanceId = "node-a",
+            maxResources = 32,
+            tickBudget = 5.seconds()
+        )
 
-    private enum class LeaderDecision { ELECT, SKIP, ACTION_FAILURE, BACKEND_FAILURE }
+    private enum class LeaderDecision {
+        ELECT,
+        SKIP,
+        ACTION_FAILURE,
+        BACKEND_FAILURE
+    }
 
     private class RecordingSweepLeaderGate(
         private val decision: LeaderDecision,
-    ) : SweepLeaderGate {
+    ): SweepLeaderGate {
         var slot: LeaderSlot? = null
 
         override fun run(
@@ -99,10 +104,10 @@ class ReservationExpirySweeperTest {
         ): LeaderRunResult<SweepBatchSummary> {
             this.slot = slot
             return when (decision) {
-                LeaderDecision.ELECT -> LeaderRunResult.Elected(action(), slot.leaderId)
-                LeaderDecision.SKIP -> LeaderRunResult.Skipped
-                LeaderDecision.ACTION_FAILURE -> LeaderRunResult.ActionFailed(IllegalStateException("secret detail"))
-                LeaderDecision.BACKEND_FAILURE -> throw IllegalStateException("redis secret detail")
+                LeaderDecision.ELECT           -> LeaderRunResult.Elected(action(), slot.leaderId)
+                LeaderDecision.SKIP            -> LeaderRunResult.Skipped
+                LeaderDecision.ACTION_FAILURE  -> LeaderRunResult.ActionFailed(IllegalStateException("secret detail"))
+                LeaderDecision.BACKEND_FAILURE -> error("redis secret detail")
             }
         }
     }

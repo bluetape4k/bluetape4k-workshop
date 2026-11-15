@@ -49,8 +49,11 @@ internal data class NotificationDeliveryRecord(
 
 /** provider effect가 발생하기 전에 caller의 PostgreSQL transaction에 notification intent를 저장합니다. */
 @Repository
-internal class NotificationDeliveryRepository:
-    LongAuditableJdbcRepository<NotificationDeliveryRecord, NotificationDeliveryTable> {
+internal class NotificationDeliveryRepository
+    : LongAuditableJdbcRepository<NotificationDeliveryRecord, NotificationDeliveryTable> {
+
+    companion object: KLogging()
+
     override val table: NotificationDeliveryTable = NotificationDeliveryTable
 
     override fun extractId(entity: NotificationDeliveryRecord): Long = entity.id
@@ -58,19 +61,18 @@ internal class NotificationDeliveryRepository:
     override fun ResultRow.toEntity(): NotificationDeliveryRecord =
         NotificationDeliveryRecord(
             id = this[table.id].value,
-            delivery =
-                NotificationDelivery(
-                    deliveryId = this[table.deliveryId],
-                    channel = this[table.channel],
-                    templateCode = this[table.templateCode],
-                    aggregateId = this[table.aggregateId],
-                    status = this[table.status],
-                    attemptCount = this[table.attemptCount],
-                    nextAttemptAt = this[table.nextAttemptAt],
-                    claimOwner = this[table.claimOwner],
-                    claimUntil = this[table.claimUntil],
-                    failureCode = this[table.failureCode]
-                ),
+            delivery = NotificationDelivery(
+                deliveryId = this[table.deliveryId],
+                channel = this[table.channel],
+                templateCode = this[table.templateCode],
+                aggregateId = this[table.aggregateId],
+                status = this[table.status],
+                attemptCount = this[table.attemptCount],
+                nextAttemptAt = this[table.nextAttemptAt],
+                claimOwner = this[table.claimOwner],
+                claimUntil = this[table.claimUntil],
+                failureCode = this[table.failureCode]
+            ),
             createdBy = this[table.createdBy],
             createdAt = this[table.createdAt],
             updatedBy = this[table.updatedBy],
@@ -81,19 +83,19 @@ internal class NotificationDeliveryRepository:
         request: NotificationRequest,
         now: Instant,
     ): NotificationDeliveryRecord {
-        val inserted =
-            table
-                .insertIgnore {
-                    it[deliveryId] = request.deliveryId
-                    it[channel] = request.channel
-                    it[templateCode] = request.templateCode
-                    it[aggregateId] = request.aggregateId
-                    it[status] = NotificationDeliveryStatus.PENDING
-                    it[nextAttemptAt] = now
-                }.insertedCount == 1
+        val inserted = table
+            .insertIgnore {
+                it[deliveryId] = request.deliveryId
+                it[channel] = request.channel
+                it[templateCode] = request.templateCode
+                it[aggregateId] = request.aggregateId
+                it[status] = NotificationDeliveryStatus.PENDING
+                it[nextAttemptAt] = now
+            }.insertedCount == 1
+
         log.debug { "notification_delivery_persisted inserted=$inserted" }
-        return findByDeliveryId(request.deliveryId)
-            ?: error("notification delivery disappeared after enqueue")
+
+        return findByDeliveryId(request.deliveryId) ?: error("notification delivery disappeared after enqueue")
     }
 
     fun findByDeliveryId(deliveryId: String): NotificationDeliveryRecord? =
@@ -101,10 +103,9 @@ internal class NotificationDeliveryRepository:
             .selectAll()
             .where { table.deliveryId eq deliveryId }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
-
-    companion object: KLogging()
+            ?.toEntity()
 }
 
 /** schema bootstrap과 PostgreSQL fixture에서 사용하는 application-owned table reference입니다. */
-internal val reservationNotificationDeliveryTable = NotificationDeliveryTable
+internal val reservationNotificationDeliveryTable: NotificationDeliveryTable =
+    NotificationDeliveryTable
