@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherCompatibilityTestSupport
@@ -20,6 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
 internal class VoucherJdbcExecutorPermitTest: VoucherCompatibilityTestSupport() {
+
+    companion object: KLogging()
+
     private var exposedDatabase: Database? = null
 
     @BeforeEach
@@ -29,13 +33,12 @@ internal class VoucherJdbcExecutorPermitTest: VoucherCompatibilityTestSupport() 
 
     @Test
     fun `connection opens after permit and closes before the permit is returned`() {
-        val gate =
-            DatabasePermitGate(
-                foregroundPermits = 1,
-                workerPermits = 1,
-                sseMaintenancePermits = 1,
-                acquireTimeout = 1.seconds(),
-            )
+        val gate = DatabasePermitGate(
+            foregroundPermits = 1,
+            workerPermits = 1,
+            sseMaintenancePermits = 1,
+            acquireTimeout = 1.seconds(),
+        )
         val probe = PermitCheckingDataSource(dataSource) { gate.requireHeld() }
         val manager = SpringTransactionManager(probe, DatabaseConfig {}, false)
         val jdbc = VoucherJdbcExecutor(gate, manager)
@@ -57,6 +60,7 @@ internal class VoucherJdbcExecutorPermitTest: VoucherCompatibilityTestSupport() 
         exposedDatabase?.let(TransactionManager::closeAndUnregister)
     }
 
+    @Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
     private class PermitCheckingDataSource(
         private val delegate: DataSource,
         private val requirePermit: () -> Unit,
@@ -69,17 +73,21 @@ internal class VoucherJdbcExecutorPermitTest: VoucherCompatibilityTestSupport() 
         override fun getConnection(
             username: String,
             password: String,
-        ): Connection = checked(delegate.getConnection(username, password))
+        ): Connection =
+            checked(delegate.getConnection(username, password))
 
         private fun checked(connection: Connection): Connection {
             requirePermit()
             openCount.incrementAndGet()
             val closed = AtomicBoolean()
+
             return Proxy.newProxyInstance(
                 Connection::class.java.classLoader,
                 arrayOf(Connection::class.java),
             ) { _, method, arguments ->
-                if (method.name == "close" && closed.compareAndSet(false, true)) closeCount.incrementAndGet()
+                if (method.name == "close" && closed.compareAndSet(false, true)) {
+                    closeCount.incrementAndGet()
+                }
                 method.invoke(connection, *(arguments ?: emptyArray()))
             } as Connection
         }

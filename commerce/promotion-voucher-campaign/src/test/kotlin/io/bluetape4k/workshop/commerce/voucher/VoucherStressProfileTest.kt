@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.bucket4j.ratelimit.RateLimitDiagnostics
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
@@ -14,6 +15,7 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.storage.RedisServer
@@ -54,11 +56,46 @@ internal data class StressProfile(
 }
 
 internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
+
+    companion object: KLogging() {
+        private const val CAPACITY = 100
+        private const val ALLOCATIONS = 500
+        private const val REDEMPTIONS = 500
+        private val redis: RedisServer = RedisServer.Launcher.redis
+        private val expectedProfiles = stressProfiles().mapTo(sortedSetOf(), StressProfile::id)
+        private val executedProfiles = java.util.concurrent.ConcurrentSkipListSet<String>()
+
+        @JvmStatic
+        fun stressProfiles(): List<StressProfile> = listOf(
+            StressProfile(64, RedisMode.HEALTHY),
+            StressProfile(64, RedisMode.TIMEOUT),
+            StressProfile(128, RedisMode.HEALTHY),
+            StressProfile(128, RedisMode.TIMEOUT),
+        )
+    }
+
+    @AfterAll
+    fun writeManifest() {
+        expectedProfiles shouldBeEqualTo executedProfiles
+        val reportRoot = Path.of(System.getProperty("voucher.stress.report-directory")!!)
+        Files.createDirectories(reportRoot)
+
+        Jackson.defaultJsonMapper.writeValue(
+            reportRoot.resolve("manifest.json").toFile(),
+            mapOf(
+                "schemaVersion" to "1.0",
+                "run" to checkNotNull(System.getProperty("voucher.stress.run")),
+                "expectedProfiles" to expectedProfiles,
+                "executedProfiles" to executedProfiles,
+            ),
+        )
+    }
+
     @Tag("stress")
     @ParameterizedTest(name = "{0}")
     @MethodSource("stressProfiles")
     fun `capacity hotspot records bounded evidence without a wall clock CI gate`(profile: StressProfile) {
-        val reportRoot = Path.of(checkNotNull(System.getProperty("voucher.stress.report-directory")))
+        val reportRoot = Path.of(System.getProperty("voucher.stress.report-directory")!!)
         val seed = profile.concurrency.toLong() * 10_000L + profile.redisMode.ordinal
         val campaignId = Uuid.V7.nextId()
         val applicationName = "voucher-stress-${Base58.randomString(8)}"
@@ -86,14 +123,13 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
                     runRedemptions(profile, allocated, probe)
                     val campaign = campaignSnapshot(campaignId)
                     val contributing = contributingClaims(campaignId)
-                    val evidence =
-                        probe.finish(
-                            expectedOperations = mapOf("allocation" to ALLOCATIONS, "redemption" to REDEMPTIONS),
-                            capacityInvariant =
-                                campaign.allocatedCount <= campaign.capacity &&
-                                        campaign.allocatedCount.toLong() == contributing,
-                            deterministicLockTimeoutContractPassed = true,
-                        )
+                    val evidence = probe.finish(
+                        expectedOperations = mapOf("allocation" to ALLOCATIONS, "redemption" to REDEMPTIONS),
+                        capacityInvariant =
+                            campaign.allocatedCount <= campaign.capacity &&
+                                    campaign.allocatedCount.toLong() == contributing,
+                        deterministicLockTimeoutContractPassed = true,
+                    )
 
                     evidence.hikariActiveMax.let { (it <= 16).shouldBeTrue() }
                     evidence.databasePermitMax.let { (it <= 16).shouldBeTrue() }
@@ -122,7 +158,11 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
                         AdmissionDecision.Proceed        -> {
                             successes +=
                                 allocation.allocate(
-                                    AllocateVoucherCommand(TENANT_ID, campaignId, "user-${Base58.randomString(8)}"),
+                                    AllocateVoucherCommand(
+                                        tenantId = TENANT_ID,
+                                        campaignId = campaignId,
+                                        userRef = "user-${Base58.randomString(8)}"
+                                    ),
                                 )
                             201
                         }
@@ -156,30 +196,29 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         runConcurrent(REDEMPTIONS, profile.concurrency) { index ->
             val allocation = allocations[index % allocations.size]
             val started = System.nanoTime()
-            val status =
-                try {
-                    claimCommands.redeem(
-                        RedeemVoucherCommand(
-                            tenantId = TENANT_ID,
-                            code = checkNotNull(allocation.oneTimeCode),
-                            expectedRevision = 0,
-                            redemptionReference = "order-${Base58.randomString(8)}",
-                            claimId = allocation.claim.claimId,
-                        ),
-                    )
-                    200
-                } catch (failure: VoucherCommandException) {
-                    when (failure.code) {
-                        VoucherCommandFailure.ALREADY_REDEEMED,
-                        VoucherCommandFailure.STALE_REVISION,
-                        VoucherCommandFailure.CONCURRENT_MODIFICATION,
-                            -> 409
+            val status = try {
+                claimCommands.redeem(
+                    RedeemVoucherCommand(
+                        tenantId = TENANT_ID,
+                        code = checkNotNull(allocation.oneTimeCode),
+                        expectedRevision = 0,
+                        redemptionReference = "order-${Base58.randomString(8)}",
+                        claimId = allocation.claim.claimId,
+                    ),
+                )
+                200
+            } catch (failure: VoucherCommandException) {
+                when (failure.code) {
+                    VoucherCommandFailure.ALREADY_REDEEMED,
+                    VoucherCommandFailure.STALE_REVISION,
+                    VoucherCommandFailure.CONCURRENT_MODIFICATION,
+                         -> 409
 
-                        else -> throw failure
-                    }
-                } catch (_: DatabasePermitRejected) {
-                    503
+                    else -> throw failure
                 }
+            } catch (_: DatabasePermitRejected) {
+                503
+            }
             probe.recordOperation("redemption", status, System.nanoTime() - started)
         }
     }
@@ -191,17 +230,16 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
     ) {
         val permits = Semaphore(concurrency, true)
         VirtualThreads.executorService().use { executor ->
-            val futures =
-                (0 until operations).map { index ->
-                    executor.submit {
-                        permits.acquire()
-                        try {
-                            action(index)
-                        } finally {
-                            permits.release()
-                        }
+            val futures = List(operations) { index ->
+                executor.submit {
+                    permits.acquire()
+                    try {
+                        action(index)
+                    } finally {
+                        permits.release()
                     }
                 }
+            }
             futures.forEach { it.get(60.seconds) }
         }
     }
@@ -250,12 +288,20 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
                         when (mode) {
                             RedisMode.HEALTHY -> {
                                 connection.sync().ping()
-                                RateLimitResult.consumed(numToken, Long.MAX_VALUE, RateLimitDiagnostics.EMPTY)
+                                RateLimitResult.consumed(
+                                    consumedTokens = numToken,
+                                    availableTokens = Long.MAX_VALUE,
+                                    diagnostics = RateLimitDiagnostics.EMPTY
+                                )
                             }
 
                             RedisMode.TIMEOUT -> {
                                 connection.sync().blpop(1, "voucher:stress:$key")
-                                RateLimitResult.consumed(numToken, Long.MAX_VALUE, RateLimitDiagnostics.EMPTY)
+                                RateLimitResult.consumed(
+                                    consumedTokens = numToken,
+                                    availableTokens = Long.MAX_VALUE,
+                                    diagnostics = RateLimitDiagnostics.EMPTY
+                                )
                             }
                         }
                     } catch (failure: Exception) {
@@ -281,7 +327,8 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         root.path("operationCounts").path("redemption").intValue() shouldBeEqualTo REDEMPTIONS
         root.path("latencyNanos").has("p95").shouldBeTrue()
         root.path("latencyNanos").has("p99").shouldBeTrue()
-        (root.path("roundTrips").path("redisCommands").longValue() > 0L).shouldBeTrue()
+        root.path("roundTrips").path("redisCommands").longValue() shouldBeGreaterThan 0L
+
         listOf("409", "429", "503").all(root.path("statusCounts")::has).shouldBeTrue()
         root.path("artifacts").path("jfr").stringValue().endsWith(".jfr").shouldBeTrue()
         root.path("probeSources").isArray.shouldBeTrue()
@@ -295,41 +342,6 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         override fun close() {
             connection.close()
             LettuceClients.shutdown(client)
-        }
-    }
-
-    companion object {
-        private const val CAPACITY = 100
-        private const val ALLOCATIONS = 500
-        private const val REDEMPTIONS = 500
-        private val redis: RedisServer = RedisServer.Launcher.redis
-        private val expectedProfiles = stressProfiles().mapTo(sortedSetOf(), StressProfile::id)
-        private val executedProfiles = java.util.concurrent.ConcurrentSkipListSet<String>()
-
-        @JvmStatic
-        fun stressProfiles(): List<StressProfile> =
-            listOf(
-                StressProfile(64, RedisMode.HEALTHY),
-                StressProfile(64, RedisMode.TIMEOUT),
-                StressProfile(128, RedisMode.HEALTHY),
-                StressProfile(128, RedisMode.TIMEOUT),
-            )
-
-        @JvmStatic
-        @AfterAll
-        fun writeManifest() {
-            expectedProfiles shouldBeEqualTo executedProfiles
-            val reportRoot = Path.of(checkNotNull(System.getProperty("voucher.stress.report-directory")))
-            Files.createDirectories(reportRoot)
-            Jackson.defaultJsonMapper.writeValue(
-                reportRoot.resolve("manifest.json").toFile(),
-                mapOf(
-                    "schemaVersion" to "1.0",
-                    "run" to checkNotNull(System.getProperty("voucher.stress.run")),
-                    "expectedProfiles" to expectedProfiles,
-                    "executedProfiles" to executedProfiles,
-                ),
-            )
         }
     }
 }

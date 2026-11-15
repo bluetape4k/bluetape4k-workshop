@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.persistence
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -17,51 +18,56 @@ import java.util.*
 internal class ReviewRepository(
     private val gate: DatabasePermitGate,
 ): LongAuditableJdbcRepository<ReviewRecord, ReviewTable> {
+
+    companion object: KLogging()
+
     override val table = ReviewTable
     override fun extractId(entity: ReviewRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): ReviewRecord =
-        ReviewRecord(
-            id = this[table.id].value,
-            tenantId = this[table.tenantId],
-            campaignId = this[table.campaignId],
-            claimRowId = this[table.claimRowId].value,
-            claimId = this[table.claimId],
-            kind = this[table.kind],
-            status = this[table.status],
-            reasonCode = this[table.reasonCode],
-            signalSummary = this[table.signalSummary],
-            reviewerActorDigest = this[table.reviewerActorDigest],
-            expectedClaimRevision = this[table.expectedClaimRevision],
-            revision = this[table.revision],
-            createdBy = this[table.createdBy],
-            createdAt = this[table.createdAt],
-            updatedBy = this[table.updatedBy],
-            updatedAt = this[table.updatedAt],
-        )
+    override fun ResultRow.toEntity(): ReviewRecord = ReviewRecord(
+        id = this[table.id].value,
+        tenantId = this[table.tenantId],
+        campaignId = this[table.campaignId],
+        claimRowId = this[table.claimRowId].value,
+        claimId = this[table.claimId],
+        kind = this[table.kind],
+        status = this[table.status],
+        reasonCode = this[table.reasonCode],
+        signalSummary = this[table.signalSummary],
+        reviewerActorDigest = this[table.reviewerActorDigest],
+        expectedClaimRevision = this[table.expectedClaimRevision],
+        revision = this[table.revision],
+        createdBy = this[table.createdBy],
+        createdAt = this[table.createdAt],
+        updatedBy = this[table.updatedBy],
+        updatedAt = this[table.updatedAt],
+    )
 
     fun insert(record: ReviewRecord): ReviewRecord {
         gate.requireHeld()
-        val id =
-            table.insertAndGetId {
-                it[tenantId] = record.tenantId
-                it[campaignId] = record.campaignId
-                it[claimRowId] = record.claimRowId
-                it[claimId] = record.claimId
-                it[kind] = record.kind
-                it[status] = record.status
-                it[reasonCode] = record.reasonCode
-                it[signalSummary] = record.signalSummary
-                it[reviewerActorDigest] = record.reviewerActorDigest
-                it[expectedClaimRevision] = record.expectedClaimRevision
-                it[revision] = record.revision
-            }.value
+        val id = table.insertAndGetId {
+            it[tenantId] = record.tenantId
+            it[campaignId] = record.campaignId
+            it[claimRowId] = record.claimRowId
+            it[claimId] = record.claimId
+            it[kind] = record.kind
+            it[status] = record.status
+            it[reasonCode] = record.reasonCode
+            it[signalSummary] = record.signalSummary
+            it[reviewerActorDigest] = record.reviewerActorDigest
+            it[expectedClaimRevision] = record.expectedClaimRevision
+            it[revision] = record.revision
+        }.value
         return findById(id)
     }
 
     override fun findById(id: Long): ReviewRecord {
         gate.requireHeld()
-        return table.selectAll().where { table.id eq id }.single().let { with(this) { it.toEntity() } }
+        return table
+            .selectAll()
+            .where { table.id eq id }
+            .single()
+            .toEntity()
     }
 
     fun findOpen(
@@ -75,8 +81,9 @@ internal class ReviewRepository(
                 (table.tenantId eq tenantId) and
                         (table.claimId eq claimId) and
                         (table.status eq ReviewStatus.OPEN)
-            }.singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            }
+            .singleOrNull()
+            ?.toEntity()
     }
 
     fun findOpenForUpdate(
@@ -92,9 +99,10 @@ internal class ReviewRepository(
                         (table.claimId eq claimId) and
                         (table.id eq reviewId) and
                         (table.status eq ReviewStatus.OPEN)
-            }.forUpdate()
+            }
+            .forUpdate()
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
     }
 
     fun findPage(
@@ -104,15 +112,16 @@ internal class ReviewRepository(
         limit: Int,
     ): List<ReviewRecord> {
         gate.requireHeld()
-        val predicate =
-            (table.tenantId eq tenantId) and
-                    (table.status eq status) and
-                    (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
-        return table.selectAll()
+        val predicate = (table.tenantId eq tenantId) and
+                (table.status eq status) and
+                (afterId?.let { table.id greater it } ?: Op.TRUE)
+
+        return table
+            .selectAll()
             .where { predicate }
             .orderBy(table.id to SortOrder.ASC)
             .limit(limit)
-            .map { with(this) { it.toEntity() } }
+            .map { it.toEntity() }
     }
 
     fun decide(
@@ -123,6 +132,7 @@ internal class ReviewRepository(
     ): Boolean {
         gate.requireHeld()
         require(status != ReviewStatus.OPEN) { "review decision must be terminal" }
+
         return auditedUpdateAll(
             predicate = {
                 (table.tenantId eq review.tenantId) and
@@ -136,6 +146,4 @@ internal class ReviewRepository(
             it[revision] = expectedRevision + 1
         } == 1
     }
-
-    companion object: KLogging()
 }

@@ -53,7 +53,7 @@ internal data class EventCursor(
 
     override fun toString(): String = "$revision:$id"
 
-    companion object {
+    companion object: KLogging() {
         fun parse(raw: String?): EventCursor? {
             if (raw == null) return null
             if (raw.length !in 3..MAX_CURSOR_LENGTH || raw.any { it != ':' && !it.isDigit() }) {

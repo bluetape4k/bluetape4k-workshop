@@ -8,6 +8,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
@@ -19,20 +20,31 @@ import java.time.Instant
 import java.util.*
 
 internal class VoucherRepositoryTest {
-    private val gate =
-        DatabasePermitGate(
-            foregroundPermits = 1,
-            workerPermits = 1,
-            sseMaintenancePermits = 1,
-            acquireTimeout = 1.seconds(),
-        )
+
+    companion object: KLogging() {
+        private val NOW = Instant.parse("2026-07-19T00:00:00Z")
+        private val CAMPAIGN_ID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
+        private val CLAIM_ID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890bc")
+        private val CLAIM_ID_2 = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890bd")
+        private val CLAIM_ID_3 = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890be")
+        private val ALLOCATION_ID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890cd")
+    }
+
+    private val gate = DatabasePermitGate(
+        foregroundPermits = 1,
+        workerPermits = 1,
+        sseMaintenancePermits = 1,
+        acquireTimeout = 1.seconds(),
+    )
 
     @Test
     fun `repository access without a database permit fails fast`() {
         withTables(TestDB.POSTGRESQL, CampaignTable) {
             val repository = CampaignRepository(gate)
 
-            assertFailsWith<IllegalStateException> { repository.findPublic("tenant-a", CAMPAIGN_ID) }
+            assertFailsWith<IllegalStateException> {
+                repository.findPublic("tenant-a", CAMPAIGN_ID)
+            }
         }
     }
 
@@ -80,6 +92,7 @@ internal class VoucherRepositoryTest {
                 columns.containsAll(
                     setOf("code_verifier", "generation_key_version", "verification_key_version"),
                 ).shouldBeTrue()
+
                 columns.any { it in setOf("code", "token_material", "generation_digest") }.shouldBeFalse()
                 claims.findByVerifier(record.tenantId, record.codeVerifier)?.claimId shouldBeEqualTo record.claimId
             }
@@ -97,6 +110,7 @@ internal class VoucherRepositoryTest {
 
                 claims.insert(allocatedClaim(tenantA.id, tenantId = "tenant-a"))
                 claims.insert(allocatedClaim(tenantB.id, tenantId = "tenant-b", claimId = CLAIM_ID_2))
+
                 assertFailsWith<Exception> {
                     claims.insert(allocatedClaim(tenantA.id, tenantId = "tenant-a", claimId = CLAIM_ID_3))
                 }
@@ -134,40 +148,38 @@ internal class VoucherRepositoryTest {
                 val campaign = CampaignRepository(gate).create(activeCampaign())
                 val claim = ClaimRepository(gate).insert(allocatedClaim(campaign.id))
                 val reviews = ReviewRepository(gate)
-                val review =
-                    reviews.insert(
-                        ReviewRecord(
-                            id = 0,
-                            tenantId = "tenant-a",
-                            campaignId = CAMPAIGN_ID,
-                            claimRowId = claim.id,
-                            claimId = claim.claimId,
-                            kind = ReviewKind.REDEMPTION,
-                            status = ReviewStatus.OPEN,
-                            reasonCode = "RISK_REVIEW",
-                            signalSummary = "bounded-summary",
-                            reviewerActorDigest = null,
-                            expectedClaimRevision = claim.revision,
-                            revision = 0,
-                        ),
-                    )
+                val review = reviews.insert(
+                    ReviewRecord(
+                        id = 0,
+                        tenantId = "tenant-a",
+                        campaignId = CAMPAIGN_ID,
+                        claimRowId = claim.id,
+                        claimId = claim.claimId,
+                        kind = ReviewKind.REDEMPTION,
+                        status = ReviewStatus.OPEN,
+                        reasonCode = "RISK_REVIEW",
+                        signalSummary = "bounded-summary",
+                        reviewerActorDigest = null,
+                        expectedClaimRevision = claim.revision,
+                        revision = 0,
+                    ),
+                )
                 reviews.findOpen("tenant-a", claim.claimId)?.id shouldBeEqualTo review.id
                 reviews.findOpen("tenant-b", claim.claimId).shouldBeNull()
 
                 val audits = AuditRepository(gate)
-                val audit =
-                    AuditRecord(
-                        id = 0,
-                        tenantId = "tenant-a",
-                        campaignId = CAMPAIGN_ID,
-                        aggregateType = "CLAIM",
-                        aggregateId = claim.claimId,
-                        revision = 1,
-                        actorType = "USER",
-                        reasonCode = "ALLOCATED",
-                        policyVersion = 1,
-                        correlationDigest = "c".repeat(64),
-                    )
+                val audit = AuditRecord(
+                    id = 0,
+                    tenantId = "tenant-a",
+                    campaignId = CAMPAIGN_ID,
+                    aggregateType = "CLAIM",
+                    aggregateId = claim.claimId,
+                    revision = 1,
+                    actorType = "USER",
+                    reasonCode = "ALLOCATED",
+                    policyVersion = 1,
+                    correlationDigest = "c".repeat(64),
+                )
                 audits.append(audit)
 
                 val inbox = EventInboxRepository(gate)
@@ -190,7 +202,10 @@ internal class VoucherRepositoryTest {
                 )
                 inbox.findEvent("tenant-b", eventId).shouldBeNull()
                 inbox.findEvent("tenant-a", eventId)?.eventId shouldBeEqualTo eventId
-                assertFailsWith<Exception> { audits.append(audit) }
+
+                assertFailsWith<Exception> {
+                    audits.append(audit)
+                }
             }
         }
     }
@@ -241,14 +256,6 @@ internal class VoucherRepositoryTest {
             revision = 0,
         )
 
-    private fun <T> withPermit(block: () -> T): T = gate.withPermit(DatabaseLane.FOREGROUND, block)
-
-    companion object {
-        private val NOW = Instant.parse("2026-07-19T00:00:00Z")
-        private val CAMPAIGN_ID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
-        private val CLAIM_ID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890bc")
-        private val CLAIM_ID_2 = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890bd")
-        private val CLAIM_ID_3 = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890be")
-        private val ALLOCATION_ID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890cd")
-    }
+    private fun <T> withPermit(block: () -> T): T =
+        gate.withPermit(DatabaseLane.FOREGROUND, block)
 }

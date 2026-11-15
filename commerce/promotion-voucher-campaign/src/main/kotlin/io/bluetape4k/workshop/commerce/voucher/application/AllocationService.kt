@@ -82,6 +82,8 @@ internal class AllocationService(
     private val codes: VoucherCodeService,
     private val clock: Clock,
 ) {
+    companion object: KLogging()
+
     fun allocate(command: AllocateVoucherCommand): AllocationResult {
         validate(command)
         val claimId = Uuid.V7.nextId()
@@ -107,34 +109,32 @@ internal class AllocationService(
                 fail(VoucherCommandFailure.CONCURRENT_MODIFICATION)
             }
 
-            val claim =
-                claims.insert(
-                    ClaimRecord(
-                        id = 0,
-                        tenantId = command.tenantId,
-                        campaignRowId = campaign.id,
-                        campaignId = campaign.campaignId,
-                        claimId = claimId,
-                        allocationId = allocationId,
-                        userDigest = userDigest,
-                        state = if (reviewRequired) ClaimState.REVIEW_REQUIRED else ClaimState.ALLOCATED,
-                        reviewKind = if (reviewRequired) ReviewKind.ALLOCATION else null,
-                        pendingFromState = if (reviewRequired) ClaimState.ELIGIBLE else null,
-                        capacityReserved = !reviewRequired,
-                        allocationPolicyVersion = campaign.policyVersion,
-                        codeVerifier = issued.verifier.copyOf(),
-                        generationKeyVersion = issued.generationKeyVersion,
-                        verificationKeyVersion = issued.verificationKeyVersion,
-                        expiresAt = now.plusSeconds(campaign.redemptionTtlSeconds),
-                        redemptionReferenceDigest = null,
-                        revision = 0,
-                    ),
-                )
+            val claim: ClaimRecord = claims.insert(
+                ClaimRecord(
+                    id = 0,
+                    tenantId = command.tenantId,
+                    campaignRowId = campaign.id,
+                    campaignId = campaign.campaignId,
+                    claimId = claimId,
+                    allocationId = allocationId,
+                    userDigest = userDigest,
+                    state = if (reviewRequired) ClaimState.REVIEW_REQUIRED else ClaimState.ALLOCATED,
+                    reviewKind = if (reviewRequired) ReviewKind.ALLOCATION else null,
+                    pendingFromState = if (reviewRequired) ClaimState.ELIGIBLE else null,
+                    capacityReserved = !reviewRequired,
+                    allocationPolicyVersion = campaign.policyVersion,
+                    codeVerifier = issued.verifier.copyOf(),
+                    generationKeyVersion = issued.generationKeyVersion,
+                    verificationKeyVersion = issued.verificationKeyVersion,
+                    expiresAt = now.plusSeconds(campaign.redemptionTtlSeconds),
+                    redemptionReferenceDigest = null,
+                    revision = 0,
+                ),
+            )
             val review = if (reviewRequired) openReview(claim) else null
             audits.append(claim.audit(if (reviewRequired) "ALLOCATION_REVIEW_REQUIRED" else "ALLOCATED"))
             log.debug {
-                "voucher_allocation_completed campaignId=${campaign.campaignId} claimId=${claim.claimId} " +
-                        "state=${claim.state}"
+                "voucher_allocation_completed campaignId=${campaign.campaignId} claimId=${claim.claimId} state=${claim.state}"
             }
             AllocationResult(
                 claim = claim.toSnapshot(),
@@ -145,8 +145,10 @@ internal class AllocationService(
         }
     }
 
-    private fun openReview(claim: ClaimRecord): ReviewRecord =
-        reviews.insert(
+    private fun openReview(claim: ClaimRecord): ReviewRecord {
+        log.debug { "Insert review from claim. $claim" }
+
+        return reviews.insert(
             ReviewRecord(
                 id = 0,
                 tenantId = claim.tenantId,
@@ -162,13 +164,13 @@ internal class AllocationService(
                 revision = 0,
             ),
         )
+    }
 
     private fun validate(command: AllocateVoucherCommand) {
         require(command.tenantId.isNotBlank()) { "tenantId must not be blank" }
         require(command.userRef.length in 1..128) { "userRef must contain 1..128 characters" }
     }
 
-    companion object: KLogging()
 }
 
 internal fun voucherUserDigest(
@@ -197,31 +199,31 @@ private fun requireAllocatable(
 
 internal fun CampaignRecord.toSnapshot(): CampaignSnapshot =
     CampaignSnapshot(
-        tenantId,
-        campaignId,
-        state,
-        startsAt,
-        endsAt,
-        capacity,
-        allocatedCount,
-        perUserLimit,
-        redemptionTtlSeconds,
-        policyVersion,
-        revision,
+        tenantId = tenantId,
+        campaignId = campaignId,
+        state = state,
+        startsAt = startsAt,
+        endsAt = endsAt,
+        capacity = capacity,
+        allocatedCount = allocatedCount,
+        perUserLimit = perUserLimit,
+        redemptionTtlSeconds = redemptionTtlSeconds,
+        policyVersion = policyVersion,
+        revision = revision,
     )
 
 internal fun ClaimRecord.toSnapshot(): ClaimSnapshot =
     ClaimSnapshot(
-        tenantId,
-        campaignId,
-        claimId,
-        state,
-        reviewKind,
-        pendingFromState,
-        capacityReserved,
-        allocationPolicyVersion,
-        expiresAt,
-        revision,
+        tenantId = tenantId,
+        campaignId = campaignId,
+        claimId = claimId,
+        state = state,
+        reviewKind = reviewKind,
+        pendingFromState = pendingFromState,
+        capacityReserved = capacityReserved,
+        allocationPolicyVersion = allocationPolicyVersion,
+        expiresAt = expiresAt,
+        revision = revision,
     )
 
 internal fun ClaimRecord.audit(reasonCode: String): AuditRecord =
@@ -247,4 +249,5 @@ internal fun digestHex(
         .digest((sequenceOf(domain) + values.asSequence()).joinToString("\u0000").toUtf8Bytes())
         .joinToString("") { "%02x".format(it) }
 
-internal fun fail(code: VoucherCommandFailure): Nothing = throw VoucherCommandException(code)
+internal fun fail(code: VoucherCommandFailure): Nothing =
+    throw VoucherCommandException(code)

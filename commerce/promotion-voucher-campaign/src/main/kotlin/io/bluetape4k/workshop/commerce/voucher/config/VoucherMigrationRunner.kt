@@ -1,10 +1,15 @@
+@file:Suppress("SqlResolve")
+
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8String
 import org.springframework.core.io.Resource
 import java.security.MessageDigest
 import java.sql.Connection
@@ -18,16 +23,16 @@ internal data class VoucherMigration(
     val resource: Resource,
 ) {
     init {
-        require(version.isNotBlank()) { "migration version must not be blank" }
+        version.requireNotBlank("version")
     }
 
     fun read(): MigrationScript {
-        val bytes =
-            try {
-                resource.inputStream.use { it.readAllBytes() }
-            } catch (failure: Exception) {
-                throw VoucherMigrationException(VoucherMigrationFailureCode.RESOURCE_UNAVAILABLE, failure)
-            }
+        val bytes = try {
+            resource.inputStream.use { it.readAllBytes() }
+        } catch (failure: Exception) {
+            throw VoucherMigrationException(VoucherMigrationFailureCode.RESOURCE_UNAVAILABLE, failure)
+        }
+
         return MigrationScript(
             version = version,
             checksum = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString(),
@@ -66,12 +71,17 @@ internal class VoucherMigrationRunner(
     private val advisoryLockKey: Long,
     private val lockTimeout: Duration = 30.seconds(),
 ) {
+    companion object: KLogging() {
+        private val LOCK_RETRY_DELAY: Duration = 10.millis()
+    }
+
     init {
-        require(!lockTimeout.isNegative && !lockTimeout.isZero) { "lockTimeout must be positive" }
+        lockTimeout.requirePositiveDuration("lockTimeout")
     }
 
     fun migrate(): VoucherMigrationResult {
         val script = migration.read()
+
         return dataSource.connection.use { connection ->
             connection.autoCommit = false
             try {
@@ -84,7 +94,6 @@ internal class VoucherMigrationRunner(
                         log.info { "voucher_migration_already_applied version=${script.version}" }
                         VoucherMigrationResult.ALREADY_APPLIED
                     }
-
                     else -> throw VoucherMigrationException(VoucherMigrationFailureCode.CHECKSUM_DRIFT)
                 }
             } catch (failure: VoucherMigrationException) {
@@ -102,12 +111,15 @@ internal class VoucherMigrationRunner(
         }
     }
 
-    private fun acquireMigrationLock(connection: Connection) {
+    private fun acquireMigrationLock(conn: Connection) {
         val deadline = System.nanoTime() + lockTimeout.toNanos()
-        connection.prepareStatement("SELECT pg_try_advisory_xact_lock(?)").use { statement ->
-            statement.setLong(1, advisoryLockKey)
+        val sql = "SELECT pg_try_advisory_xact_lock(?)"
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setLong(1, advisoryLockKey)
+
             while (true) {
-                statement.executeQuery().use { result ->
+                stmt.executeQuery().use { result ->
                     check(result.next()) { "advisory lock query returned no row" }
                     if (result.getBoolean(1)) return
                 }
@@ -119,61 +131,58 @@ internal class VoucherMigrationRunner(
         }
     }
 
-    private fun createHistoryTable(connection: Connection) {
-        connection.createStatement().use { statement ->
-            statement.execute(
-                """
-                CREATE TABLE IF NOT EXISTS voucher_schema_history (
-                    version VARCHAR(64) PRIMARY KEY,
-                    checksum VARCHAR(64) NOT NULL,
-                    applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-                )
-                """.trimIndent(),
+    private fun createHistoryTable(conn: Connection) {
+        val sql = """
+            CREATE TABLE IF NOT EXISTS voucher_schema_history (
+                version VARCHAR(64) PRIMARY KEY,
+                checksum VARCHAR(64) NOT NULL,
+                applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
+            """.trimIndent()
+
+        conn.createStatement().use { stmt ->
+            stmt.execute(sql)
         }
     }
 
     private fun appliedChecksum(
-        connection: Connection,
+        conn: Connection,
         version: String,
-    ): String? =
-        connection.prepareStatement(
-            "SELECT checksum FROM voucher_schema_history WHERE version = ?",
-        ).use { statement ->
-            statement.setString(1, version)
-            statement.executeQuery().use { result ->
+    ): String? {
+        val sql = "SELECT checksum FROM voucher_schema_history WHERE version = ?"
+
+        return conn.prepareStatement(sql).use { stmt ->
+            stmt.setString(1, version)
+            stmt.executeQuery().use { result ->
                 if (result.next()) result.getString("checksum") else null
             }
         }
+    }
 
     private fun applyMigration(
-        connection: Connection,
+        conn: Connection,
         script: MigrationScript,
     ): VoucherMigrationResult {
-        connection.createStatement().use { statement ->
+        conn.createStatement().use { statement ->
             script.sql
                 .split(';')
                 .map(String::trim)
                 .filter(String::isNotEmpty)
                 .forEach(statement::execute)
         }
-        connection.prepareStatement(
-            "INSERT INTO voucher_schema_history(version, checksum) VALUES (?, ?)",
-        ).use { statement ->
-            statement.setString(1, script.version)
-            statement.setString(2, script.checksum)
-            statement.executeUpdate()
+
+        val insertSql = "INSERT INTO voucher_schema_history(version, checksum) VALUES (?, ?)"
+        conn.prepareStatement(insertSql).use { stmt ->
+            stmt.setString(1, script.version)
+            stmt.setString(2, script.checksum)
+            stmt.executeUpdate()
         }
-        connection.commit()
+        conn.commit()
         log.info { "voucher_migration_applied version=${script.version}" }
         return VoucherMigrationResult.APPLIED
     }
 
     private fun Connection.rollbackQuietly() {
         runCatching { rollback() }
-    }
-
-    companion object: KLogging() {
-        private val LOCK_RETRY_DELAY: Duration = 10.millis()
     }
 }

@@ -2,27 +2,27 @@ package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.checkNotNull
+import io.bluetape4k.workshop.commerce.voucher.admission.RiskSignalService
+import io.bluetape4k.workshop.commerce.voucher.application.AcknowledgeVoucherCodeCommand
 import io.bluetape4k.workshop.commerce.voucher.application.AllocateVoucherCommand
 import io.bluetape4k.workshop.commerce.voucher.application.AllocationService
-import io.bluetape4k.workshop.commerce.voucher.application.AcknowledgeVoucherCodeCommand
 import io.bluetape4k.workshop.commerce.voucher.application.ClaimCommandService
 import io.bluetape4k.workshop.commerce.voucher.application.ClaimTransitionCommand
 import io.bluetape4k.workshop.commerce.voucher.application.RedeemVoucherCommand
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCodeAcknowledgementService
-import io.bluetape4k.workshop.commerce.voucher.admission.RiskSignalService
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignSnapshot
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimSnapshot
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import io.bluetape4k.workshop.commerce.voucher.fixture.FixtureRiskOperation
-import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import io.bluetape4k.workshop.commerce.voucher.query.VoucherQueryService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
-import org.springframework.http.ResponseEntity
 import org.springframework.beans.factory.ObjectProvider
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class AllocateClaimRequest(
     @field:NotBlank
@@ -100,6 +100,9 @@ internal class CustomerVoucherController(
     private val risks: RiskSignalService,
     private val fixtureProvider: ObjectProvider<VoucherScenarioFixture>,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping("/campaigns/{campaignId}/claims")
     fun allocate(
         @PathVariable campaignId: UUID,
@@ -112,38 +115,41 @@ internal class CustomerVoucherController(
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val principal = requireAsciiIdentifier(principalHeader, PRINCIPAL_HEADER)
         if (body.userRef != principal) throw invalidRequest("userRef must match X-Workshop-Principal")
-        val executed =
-            executor.execute(
-                tenantId = tenant,
-                principalRef = principal,
-                rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                operation = "ALLOCATE",
-                resourceId = campaignId,
-                fingerprintMaterial = body.userRef,
-            ) {
-                val riskSignal =
-                    fixtureProvider.ifAvailable?.signalFor(tenant, principal, FixtureRiskOperation.ALLOCATION)
-                        ?: risks.assess(tenant, principal)
-                val result =
-                    allocation.allocate(
-                        AllocateVoucherCommand(tenant, campaignId, body.userRef, riskSignal),
-                    )
-                val descriptor = checkNotNull(queries.descriptor(tenant, result.claim.claimId))
-                result.claim.storedAllocationResponse(
-                    kind =
-                        if (result.reviewId == null) {
-                            VoucherResponseKind.ALLOCATION_ACCEPTED
-                        } else {
-                            VoucherResponseKind.ALLOCATION_REVIEW_REQUIRED
-                        },
-                    status = if (result.reviewId == null) 201 else 202,
-                    allocationId = result.allocationId,
-                    reviewId = result.reviewId,
-                    generationKeyVersion = descriptor.generationKeyVersion,
-                    verificationKeyVersion = descriptor.verificationKeyVersion,
-                )
-            }
-        return executedResponse(executed, request) { allocationResponse(tenant, executed) }
+
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = principal,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "ALLOCATE",
+            resourceId = campaignId,
+            fingerprintMaterial = body.userRef,
+        ) {
+            val riskSignal = fixtureProvider.ifAvailable
+                ?.signalFor(tenant, principal, FixtureRiskOperation.ALLOCATION)
+                ?: risks.assess(tenant, principal)
+            val result = allocation.allocate(
+                AllocateVoucherCommand(tenant, campaignId, body.userRef, riskSignal),
+            )
+            val descriptor = queries.descriptor(tenant, result.claim.claimId)
+                .checkNotNull { "descriptor does not exist" }
+
+            result.claim.storedAllocationResponse(
+                kind = if (result.reviewId == null) {
+                    VoucherResponseKind.ALLOCATION_ACCEPTED
+                } else {
+                    VoucherResponseKind.ALLOCATION_REVIEW_REQUIRED
+                },
+                status = if (result.reviewId == null) 201 else 202,
+                allocationId = result.allocationId,
+                reviewId = result.reviewId,
+                generationKeyVersion = descriptor.generationKeyVersion,
+                verificationKeyVersion = descriptor.verificationKeyVersion,
+            )
+        }
+
+        return executedResponse(executed, request) {
+            allocationResponse(tenant, executed)
+        }
     }
 
     @PostMapping("/claims/{claimId}/redeem")
@@ -158,40 +164,46 @@ internal class CustomerVoucherController(
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val principal = requireAsciiIdentifier(principalHeader, PRINCIPAL_HEADER)
         requireOwnedClaim(tenant, principal, claimId)
-        val executed =
-            executor.execute(
-                tenant,
-                principal,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "REDEEM",
-                claimId,
-                listOf(body.code, body.expectedRevision, body.redemptionReference).joinToString("\u0000"),
-            ) {
-                val riskSignal =
-                    fixtureProvider.ifAvailable?.signalFor(tenant, principal, FixtureRiskOperation.REDEMPTION)
-                        ?: risks.assess(tenant, principal)
-                val result =
-                    claims.redeem(
-                        RedeemVoucherCommand(
-                            tenantId = tenant,
-                            code = body.code,
-                            expectedRevision = body.expectedRevision,
-                            redemptionReference = body.redemptionReference,
-                            riskSignal = riskSignal,
-                            claimId = claimId,
-                        ),
-                    )
-                result.storedClaimResponse(
-                    kind =
-                        if (result.state == ClaimState.REVIEW_REQUIRED) {
-                            VoucherResponseKind.REDEMPTION_REVIEW_REQUIRED
-                        } else {
-                            VoucherResponseKind.REDEMPTION_ACCEPTED
-                        },
-                    status = if (result.state == ClaimState.REVIEW_REQUIRED) 202 else 200,
-                )
-            }
-        return executedResponse(executed, request, executed.response::claimBody)
+
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = principal,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "REDEEM",
+            resourceId = claimId,
+            fingerprintMaterial = listOf(
+                body.code,
+                body.expectedRevision,
+                body.redemptionReference
+            ).joinToString("\u0000"),
+        ) {
+            val riskSignal = fixtureProvider.ifAvailable?.signalFor(tenant, principal, FixtureRiskOperation.REDEMPTION)
+                ?: risks.assess(tenant, principal)
+            val result = claims.redeem(
+                RedeemVoucherCommand(
+                    tenantId = tenant,
+                    code = body.code,
+                    expectedRevision = body.expectedRevision,
+                    redemptionReference = body.redemptionReference,
+                    riskSignal = riskSignal,
+                    claimId = claimId,
+                ),
+            )
+            result.storedClaimResponse(
+                kind = if (result.state == ClaimState.REVIEW_REQUIRED) {
+                    VoucherResponseKind.REDEMPTION_REVIEW_REQUIRED
+                } else {
+                    VoucherResponseKind.REDEMPTION_ACCEPTED
+                },
+                status = if (result.state == ClaimState.REVIEW_REQUIRED) 202 else 200,
+            )
+        }
+
+        return executedResponse(
+            executed = executed,
+            request = request,
+            successBody = executed.response::claimBody
+        )
     }
 
     @PostMapping("/claims/{claimId}/release")
@@ -206,20 +218,30 @@ internal class CustomerVoucherController(
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val principal = requireAsciiIdentifier(principalHeader, PRINCIPAL_HEADER)
         val owned = requireOwnedClaim(tenant, principal, claimId)
-        val executed =
-            executor.execute(
-                tenant,
-                principal,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "RELEASE",
-                claimId,
-                body.expectedRevision.toString(),
-            ) {
-                val result =
-                    claims.release(ClaimTransitionCommand(tenant, owned.campaignId, claimId, body.expectedRevision))
-                result.storedClaimResponse(VoucherResponseKind.CLAIM_RELEASED)
-            }
-        return executedResponse(executed, request, executed.response::claimBody)
+
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = principal,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "RELEASE",
+            resourceId = claimId,
+            fingerprintMaterial = body.expectedRevision.toString(),
+        ) {
+            val result = claims.release(
+                ClaimTransitionCommand(
+                    tenantId = tenant,
+                    campaignId = owned.campaignId,
+                    claimId = claimId,
+                    expectedRevision = body.expectedRevision
+                )
+            )
+            result.storedClaimResponse(VoucherResponseKind.CLAIM_RELEASED)
+        }
+        return executedResponse(
+            executed = executed,
+            request = request,
+            successBody = executed.response::claimBody
+        )
     }
 
     @PostMapping("/claims/{claimId}/code-acknowledgements")
@@ -234,33 +256,31 @@ internal class CustomerVoucherController(
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val principal = requireAsciiIdentifier(principalHeader, PRINCIPAL_HEADER)
         val owned = requireOwnedClaim(tenant, principal, claimId)
-        val executed =
-            executor.execute(
-                tenant,
-                principal,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "CODE_ACKNOWLEDGEMENT",
-                claimId,
-                body.expectedRevision.toString(),
-            ) {
-                val result =
-                    acknowledgements.acknowledge(
-                        AcknowledgeVoucherCodeCommand(tenant, owned.campaignId, claimId, body.expectedRevision),
-                    )
-                val descriptor = checkNotNull(queries.descriptor(tenant, claimId))
-                result.claim.storedClaimResponse(
-                    kind = VoucherResponseKind.CODE_ACKNOWLEDGED,
-                    allocationId = descriptor.allocationId,
-                    generationKeyVersion = descriptor.generationKeyVersion,
-                    verificationKeyVersion = descriptor.verificationKeyVersion,
-                )
-            }
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = principal,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "CODE_ACKNOWLEDGEMENT",
+            resourceId = claimId,
+            fingerprintMaterial = body.expectedRevision.toString(),
+        ) {
+            val result = acknowledgements.acknowledge(
+                AcknowledgeVoucherCodeCommand(tenant, owned.campaignId, claimId, body.expectedRevision),
+            )
+            val descriptor = queries.descriptor(tenant, claimId).checkNotNull { "descriptor does not exist" }
+            result.claim.storedClaimResponse(
+                kind = VoucherResponseKind.CODE_ACKNOWLEDGED,
+                allocationId = descriptor.allocationId,
+                generationKeyVersion = descriptor.generationKeyVersion,
+                verificationKeyVersion = descriptor.verificationKeyVersion,
+            )
+        }
         return executedResponse(executed, request) {
             val code = queries.activeCode(tenant, claimId)
                 ?: throw VoucherApiException(
                     "IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE",
                     503,
-                    "voucher replay material is unavailable",
+                    "voucher replay material is unavailable"
                 )
             val snapshot = executed.response.claimBody()
             VoucherCodeHttpResponse(snapshot.claimId, snapshot.state, snapshot.revision, code)
@@ -275,8 +295,10 @@ internal class CustomerVoucherController(
     ): CampaignHttpResponse {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         requireAsciiIdentifier(principalHeader, PRINCIPAL_HEADER)
+
         val snapshot = queries.campaign(tenant, campaignId)
             ?: throw VoucherApiException("CAMPAIGN_NOT_FOUND", 404, "campaign was not found")
+
         return snapshot.toHttp()
     }
 
@@ -288,8 +310,10 @@ internal class CustomerVoucherController(
     ): ClaimHttpResponse {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val principal = requireAsciiIdentifier(principalHeader, PRINCIPAL_HEADER)
+
         val snapshot = queries.claimOwned(tenant, principal, claimId)
             ?: throw VoucherApiException("CLAIM_NOT_FOUND", 404, "claim was not found")
+
         return snapshot.toHttp()
     }
 
@@ -297,20 +321,19 @@ internal class CustomerVoucherController(
         tenantId: String,
         executed: ExecutedHttpCommand,
     ): AllocationHttpResponse {
-        val code =
-            if (executed.response.responseKind == VoucherResponseKind.ALLOCATION_ACCEPTED) {
-                queries.activeCode(tenantId, executed.response.aggregateId)
-                    ?: throw VoucherApiException(
-                        "IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE",
-                        503,
-                        "voucher replay material is unavailable",
-                    )
-            } else {
-                null
-            }
+        val code = if (executed.response.responseKind == VoucherResponseKind.ALLOCATION_ACCEPTED) {
+            queries.activeCode(tenantId, executed.response.aggregateId)
+                ?: throw VoucherApiException(
+                    "IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE",
+                    503,
+                    "voucher replay material is unavailable",
+                )
+        } else {
+            null
+        }
         log.info {
             "voucher_allocation_http_completed claimId=${executed.response.aggregateId} " +
-                "kind=${executed.response.responseKind} replayed=${executed.replayed}"
+                    "kind=${executed.response.responseKind} replayed=${executed.replayed}"
         }
         return executed.response.allocationBody(code)
     }
@@ -322,8 +345,6 @@ internal class CustomerVoucherController(
     ): ClaimSnapshot =
         queries.claimOwned(tenantId, principalRef, claimId)
             ?: throw VoucherApiException("CLAIM_NOT_FOUND", 404, "claim was not found")
-
-    companion object : KLogging()
 }
 
 internal fun CampaignSnapshot.toHttp(): CampaignHttpResponse =
@@ -341,4 +362,11 @@ internal fun CampaignSnapshot.toHttp(): CampaignHttpResponse =
     )
 
 internal fun ClaimSnapshot.toHttp(): ClaimHttpResponse =
-    ClaimHttpResponse(campaignId, claimId, state.name, revision, allocationPolicyVersion, expiresAt)
+    ClaimHttpResponse(
+        campaignId = campaignId,
+        claimId = claimId,
+        state = state.name,
+        revision = revision,
+        policyVersion = allocationPolicyVersion,
+        expiresAt = expiresAt
+    )

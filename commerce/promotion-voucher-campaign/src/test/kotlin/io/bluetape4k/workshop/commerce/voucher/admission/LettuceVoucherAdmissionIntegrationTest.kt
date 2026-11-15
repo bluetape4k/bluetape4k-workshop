@@ -2,23 +2,30 @@ package io.bluetape4k.workshop.commerce.voucher.admission
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.commerce.voucher.application.AllocateVoucherCommand
+import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandException
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandFailure
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandTestSupport
-import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherRedisProperties
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherRedisResources
 import io.bluetape4k.workshop.commerce.voucher.config.voucherDistributedRateLimiter
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
-internal class LettuceVoucherAdmissionIntegrationTest : VoucherCommandTestSupport() {
+internal class LettuceVoucherAdmissionIntegrationTest: VoucherCommandTestSupport() {
+
+    private companion object {
+        val redis: RedisServer by lazy { RedisServer.Launcher.redis }
+    }
+
     @Test
     fun `Bluetape Bucket4j quota and Bloom filter use opaque versioned keys`() =
         withRedis { resources, properties ->
@@ -29,9 +36,10 @@ internal class LettuceVoucherAdmissionIntegrationTest : VoucherCommandTestSuppor
 
             val rateKey = keys.rateKey(TENANT_ID, "principal-1", "allocate")
             gate.decide(rateKey) shouldBeEqualTo AdmissionDecision.Proceed
+
             val rejection = gate.decide(rateKey)
-            (rejection is AdmissionDecision.RateLimited).shouldBeTrue()
-            ((rejection as AdmissionDecision.RateLimited).retryAfter > Duration.ZERO).shouldBeTrue()
+            rejection.shouldBeInstanceOf<AdmissionDecision.RateLimited>()
+            rejection.retryAfter shouldBeGreaterThan Duration.ZERO
 
             risk.assess(TENANT_ID, "subject-1") shouldBeEqualTo RiskSignal.CLEAR
             risk.remember(TENANT_ID, "subject-1").shouldBeTrue()
@@ -48,33 +56,37 @@ internal class LettuceVoucherAdmissionIntegrationTest : VoucherCommandTestSuppor
             createCampaign(capacity = 1, perUserLimit = 1)
 
             gate.decide(rateKey) shouldBeEqualTo AdmissionDecision.Proceed
-            allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "same-user"))
+            allocation.allocate(
+                AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "same-user")
+            )
             flush(resources)
             gate.decide(rateKey) shouldBeEqualTo AdmissionDecision.Proceed
 
             assertFailsWith<VoucherCommandException> {
-                allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "same-user"))
+                allocation.allocate(
+                    AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "same-user")
+                )
             }.code shouldBeEqualTo VoucherCommandFailure.PER_USER_LIMIT_REACHED
             campaignSnapshot().allocatedCount shouldBeEqualTo 1
         }
 
-    private fun withRedis(block: (VoucherRedisResources, VoucherRedisProperties) -> Unit) {
-        val properties =
-            VoucherRedisProperties(
-                enabled = true,
-                uri = redis.url,
-                commandTimeout = 1.seconds(),
-                quotaCapacity = 1,
-                quotaPeriod = 1.minutes(),
-                bloomExpectedInsertions = 1_000,
-                bloomFalseProbability = 0.01,
-            )
+    private inline fun withRedis(block: (VoucherRedisResources, VoucherRedisProperties) -> Unit) {
+        val properties = VoucherRedisProperties(
+            enabled = true,
+            uri = redis.url,
+            commandTimeout = 1.seconds(),
+            quotaCapacity = 1,
+            quotaPeriod = 1.minutes(),
+            bloomExpectedInsertions = 1_000,
+            bloomFalseProbability = 0.01,
+        )
         val cleanupClient = LettuceClients.clientOf(redis.url)
         try {
             LettuceClients.connect(cleanupClient).sync().flushall()
         } finally {
             LettuceClients.shutdown(cleanupClient)
         }
+
         VoucherRedisResources.open(properties).use { resources ->
             try {
                 block(resources, properties)
@@ -85,17 +97,15 @@ internal class LettuceVoucherAdmissionIntegrationTest : VoucherCommandTestSuppor
     }
 
     private fun flush(resources: VoucherRedisResources) {
-        resources.client.connect().use { it.sync().flushall() }
+        resources.client.connect().use {
+            it.sync().flushall()
+        }
     }
 
-    private fun keyFactory() =
+    private fun keyFactory(): VoucherAdmissionKeyFactory =
         VoucherAdmissionKeyFactory(
             version = 1,
             rateKey = ByteArray(32) { 0x61 },
             riskKey = ByteArray(32) { 0x62 },
         )
-
-    private companion object {
-        val redis: RedisServer = RedisServer.Launcher.redis
-    }
 }

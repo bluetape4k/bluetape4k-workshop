@@ -1,14 +1,20 @@
+@file:Suppress("SqlResolve")
+
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
-internal class PreviousSchemaCompatibilityTest : VoucherCompatibilityTestSupport() {
+internal class PreviousSchemaCompatibilityTest: VoucherCompatibilityTestSupport() {
+
+    companion object: KLogging()
+
     @Test
     fun `previous schema upgrades without losing a readable campaign row`() {
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeUpdate(
+        dataSource.connection.use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.executeUpdate(
                     """
                     INSERT INTO voucher_campaigns (
                         tenant_id, campaign_id, state, starts_at, ends_at, capacity, allocated_count,

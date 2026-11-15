@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.application.CampaignCommandService
 import io.bluetape4k.workshop.commerce.voucher.application.CampaignPolicyCommand
@@ -114,6 +116,27 @@ internal class OperatorVoucherController(
     private val executor: VoucherHttpCommandExecutor,
     private val reconciliation: VoucherReconciliationWorker,
 ) {
+
+    companion object: KLogging() {
+        private const val OPERATOR_PRINCIPAL = "workshop-operator"
+
+        private fun encodeCursor(id: Long): String =
+            Base64.getUrlEncoder().withoutPadding().encodeToString("v1:$id".toUtf8Bytes())
+
+        private fun decodeCursor(cursor: String?): Long? {
+            if (cursor == null) return null
+            val decoded = runCatching {
+                String(Base64.getUrlDecoder().decode(cursor), UTF_8)
+            }.getOrElse {
+                throw invalidRequest("cursor is invalid")
+            }
+
+            return decoded.removePrefix("v1:").takeIf { decoded.startsWith("v1:") }
+                ?.toLongOrNull()
+                ?: throw invalidRequest("cursor is invalid")
+        }
+    }
+
     @GetMapping("/reviews")
     fun listReviews(
         @RequestHeader(TENANT_HEADER, required = false) tenantHeader: String?,
@@ -124,6 +147,7 @@ internal class OperatorVoucherController(
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val rows = queries.reviews(tenant, status, decodeCursor(cursor), limit + 1)
         val page = rows.take(limit)
+
         return OperatorPage(
             page.map {
                 ReviewHttpItem(
@@ -144,6 +168,7 @@ internal class OperatorVoucherController(
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val rows = queries.reconciliationBacklog(tenant, decodeCursor(cursor), limit + 1)
         val page = rows.take(limit)
+
         return OperatorPage(
             page.map {
                 ReconciliationBacklogHttpItem(
@@ -165,42 +190,46 @@ internal class OperatorVoucherController(
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         if (ifNoneMatch != "*") throw invalidRequest("If-None-Match must be *")
-        val executed =
-            executor.execute(
-                tenant,
-                OPERATOR_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "CAMPAIGN_CREATE",
+
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = OPERATOR_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "CAMPAIGN_CREATE",
+            resourceId = body.campaignId,
+            fingerprintMaterial = listOf(
                 body.campaignId,
-                listOf(
+                body.startsAt,
+                body.endsAt,
+                body.capacity,
+                body.perUserLimit,
+                body.redemptionTtlSeconds
+            )
+                .joinToString("\u0000"),
+        ) {
+            val created = campaigns.create(
+                CreateCampaignCommand(
+                    tenant,
                     body.campaignId,
                     body.startsAt,
                     body.endsAt,
                     body.capacity,
                     body.perUserLimit,
-                    body.redemptionTtlSeconds
-                )
-                    .joinToString("\u0000"),
-            ) {
-                val created =
-                    campaigns.create(
-                        CreateCampaignCommand(
-                            tenant,
-                            body.campaignId,
-                            body.startsAt,
-                            body.endsAt,
-                            body.capacity,
-                            body.perUserLimit,
-                            body.redemptionTtlSeconds,
-                        ),
-                    )
-                created.storedCampaignResponse(
-                    kind = VoucherResponseKind.CAMPAIGN_CREATED,
-                    status = 201,
-                    publicHeaders = mapOf("Location" to "/api/v1/campaigns/${created.campaignId}"),
-                )
-            }
-        return executedResponse(executed, request, executed.response::campaignBody)
+                    body.redemptionTtlSeconds,
+                ),
+            )
+            created.storedCampaignResponse(
+                kind = VoucherResponseKind.CAMPAIGN_CREATED,
+                status = 201,
+                publicHeaders = mapOf("Location" to "/api/v1/campaigns/${created.campaignId}"),
+            )
+        }
+
+        return executedResponse(
+            executed = executed,
+            request = request,
+            successBody = executed.response::campaignBody
+        )
     }
 
     @PostMapping("/campaigns/{campaignId}/activate")
@@ -212,14 +241,14 @@ internal class OperatorVoucherController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> {
         return campaignTransition(
-            campaignId,
-            tenantHeader,
-            idempotencyHeader,
-            body.expectedRevision,
-            "CAMPAIGN_ACTIVATE",
-            VoucherResponseKind.CAMPAIGN_ACTIVATED,
-            request,
-            campaigns::activate,
+            campaignId = campaignId,
+            tenantHeader = tenantHeader,
+            idempotencyHeader = idempotencyHeader,
+            expectedRevision = body.expectedRevision,
+            operation = "CAMPAIGN_ACTIVATE",
+            responseKind = VoucherResponseKind.CAMPAIGN_ACTIVATED,
+            request = request,
+            transition = campaigns::activate,
         )
     }
 
@@ -232,14 +261,14 @@ internal class OperatorVoucherController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> =
         campaignTransition(
-            campaignId,
-            tenantHeader,
-            idempotencyHeader,
-            body.expectedRevision,
-            "CAMPAIGN_PAUSE",
-            VoucherResponseKind.CAMPAIGN_PAUSE_ACCEPTED,
-            request,
-            campaigns::pause,
+            campaignId = campaignId,
+            tenantHeader = tenantHeader,
+            idempotencyHeader = idempotencyHeader,
+            expectedRevision = body.expectedRevision,
+            operation = "CAMPAIGN_PAUSE",
+            responseKind = VoucherResponseKind.CAMPAIGN_PAUSE_ACCEPTED,
+            request = request,
+            transition = campaigns::pause,
         )
 
     @PostMapping("/campaigns/{campaignId}/end")
@@ -251,14 +280,14 @@ internal class OperatorVoucherController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> =
         campaignTransition(
-            campaignId,
-            tenantHeader,
-            idempotencyHeader,
-            body.expectedRevision,
-            "CAMPAIGN_END",
-            VoucherResponseKind.CAMPAIGN_END_ACCEPTED,
-            request,
-            campaigns::end,
+            campaignId = campaignId,
+            tenantHeader = tenantHeader,
+            idempotencyHeader = idempotencyHeader,
+            expectedRevision = body.expectedRevision,
+            operation = "CAMPAIGN_END",
+            responseKind = VoucherResponseKind.CAMPAIGN_END_ACCEPTED,
+            request = request,
+            transition = campaigns::end,
         )
 
     @PostMapping("/campaigns/{campaignId}/policy")
@@ -270,34 +299,42 @@ internal class OperatorVoucherController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
-        val executed =
-            executor.execute(
-                tenant,
-                OPERATOR_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "CAMPAIGN_POLICY",
-                campaignId,
-                listOf(body.expectedRevision, body.capacity, body.perUserLimit, body.redemptionTtlSeconds)
-                    .joinToString("\u0000"),
-            ) {
-                val updated =
-                    campaigns.updatePolicy(
-                        CampaignPolicyCommand(
-                            tenant,
-                            campaignId,
-                            body.expectedRevision,
-                            body.capacity,
-                            body.perUserLimit,
-                            body.redemptionTtlSeconds,
-                        ),
-                    )
-                updated.storedCampaignResponse(
-                    kind = VoucherResponseKind.CAMPAIGN_POLICY_UPDATED,
-                    status = 200,
-                    publicHeaders = mapOf("ETag" to "\"${updated.revision}\""),
-                )
-            }
-        return executedResponse(executed, request, executed.response::campaignBody)
+
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = OPERATOR_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "CAMPAIGN_POLICY",
+            resourceId = campaignId,
+            fingerprintMaterial = listOf(
+                body.expectedRevision,
+                body.capacity,
+                body.perUserLimit,
+                body.redemptionTtlSeconds
+            )
+                .joinToString("\u0000"),
+        ) {
+            val updated = campaigns.updatePolicy(
+                CampaignPolicyCommand(
+                    tenantId = tenant,
+                    campaignId = campaignId,
+                    expectedRevision = body.expectedRevision,
+                    capacity = body.capacity,
+                    perUserLimit = body.perUserLimit,
+                    redemptionTtlSeconds = body.redemptionTtlSeconds,
+                ),
+            )
+            updated.storedCampaignResponse(
+                kind = VoucherResponseKind.CAMPAIGN_POLICY_UPDATED,
+                status = 200,
+                publicHeaders = mapOf("ETag" to "\"${updated.revision}\""),
+            )
+        }
+        return executedResponse(
+            executed = executed,
+            request = request,
+            successBody = executed.response::campaignBody
+        )
     }
 
     @PostMapping("/reviews/{reviewId}/approve")
@@ -307,7 +344,15 @@ internal class OperatorVoucherController(
         @RequestHeader(IDEMPOTENCY_HEADER, required = false) idempotencyHeader: String?,
         @Valid @RequestBody body: ReviewDecisionHttpRequest,
         request: HttpServletRequest,
-    ): ResponseEntity<Any> = reviewDecision(reviewId, tenantHeader, idempotencyHeader, body, true, request)
+    ): ResponseEntity<Any> =
+        reviewDecision(
+            reviewId = reviewId,
+            tenantHeader = tenantHeader,
+            idempotencyHeader = idempotencyHeader,
+            body = body,
+            approved = true,
+            request = request
+        )
 
     @PostMapping("/reviews/{reviewId}/reject")
     fun rejectReview(
@@ -316,7 +361,15 @@ internal class OperatorVoucherController(
         @RequestHeader(IDEMPOTENCY_HEADER, required = false) idempotencyHeader: String?,
         @Valid @RequestBody body: ReviewDecisionHttpRequest,
         request: HttpServletRequest,
-    ): ResponseEntity<Any> = reviewDecision(reviewId, tenantHeader, idempotencyHeader, body, false, request)
+    ): ResponseEntity<Any> =
+        reviewDecision(
+            reviewId = reviewId,
+            tenantHeader = tenantHeader,
+            idempotencyHeader = idempotencyHeader,
+            body = body,
+            approved = false,
+            request = request
+        )
 
     @PostMapping("/claims/{claimId}/revoke")
     fun revokeClaim(
@@ -327,20 +380,30 @@ internal class OperatorVoucherController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
-        val executed =
-            executor.execute(
-                tenant,
-                OPERATOR_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "CLAIM_REVOKE",
-                claimId,
-                "${body.campaignId}\u0000${body.expectedRevision}",
-            ) {
-                val updated =
-                    claims.revoke(ClaimTransitionCommand(tenant, body.campaignId, claimId, body.expectedRevision))
-                updated.storedClaimResponse(VoucherResponseKind.CLAIM_REVOCATION_ACCEPTED)
-            }
-        return executedResponse(executed, request, executed.response::claimBody)
+
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = OPERATOR_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "CLAIM_REVOKE",
+            resourceId = claimId,
+            fingerprintMaterial = "${body.campaignId}\u0000${body.expectedRevision}",
+        ) {
+            val updated = claims.revoke(
+                ClaimTransitionCommand(
+                    tenantId = tenant,
+                    campaignId = body.campaignId,
+                    claimId = claimId,
+                    expectedRevision = body.expectedRevision
+                )
+            )
+            updated.storedClaimResponse(VoucherResponseKind.CLAIM_REVOCATION_ACCEPTED)
+        }
+        return executedResponse(
+            executed = executed,
+            request = request,
+            successBody = executed.response::claimBody
+        )
     }
 
     @PostMapping("/reconciliation/run")
@@ -352,34 +415,37 @@ internal class OperatorVoucherController(
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000reconciliation".toUtf8Bytes())
-        val executed =
-            executor.executeExternal(
-                tenant,
-                OPERATOR_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "RECONCILIATION_RUN",
-                resourceId,
-                "manual",
-            ) {
-                when (val result = reconciliation.runManual()) {
-                    is WorkerRunResult.Manual -> result.result.storedReconciliation(resourceId)
-                    WorkerRunResult.LocalRunInProgress ->
-                        throw RetryableVoucherCommand(
-                            StoredHttpResponse(
-                                VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
-                                409,
-                                mapOf("Retry-After" to "1"),
-                                resourceId,
-                                null,
-                                0,
-                                null,
-                                null,
-                            ),
-                        )
-                    else -> error("manual reconciliation returned an unsupported worker result")
-                }
+
+        val executed = executor.executeExternal(
+            tenantId = tenant,
+            principalRef = OPERATOR_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "RECONCILIATION_RUN",
+            resourceId = resourceId,
+            fingerprintMaterial = "manual",
+        ) {
+            when (val result = reconciliation.runManual()) {
+                is WorkerRunResult.Manual          -> result.result.storedReconciliation(resourceId)
+                WorkerRunResult.LocalRunInProgress ->
+                    throw RetryableVoucherCommand(
+                        StoredHttpResponse(
+                            responseKind = VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
+                            status = 409,
+                            headers = mapOf("Retry-After" to "1"),
+                            aggregateId = resourceId,
+                            allocationId = null,
+                            aggregateRevision = 0,
+                            generationKeyVersion = null,
+                            verificationKeyVersion = null,
+                        ),
+                    )
+                else                               ->
+                    error("manual reconciliation returned an unsupported worker result")
             }
-        return executedResponse(executed, request) { executed.response.reconciliationBody() }
+        }
+        return executedResponse(executed, request) {
+            executed.response.reconciliationBody()
+        }
     }
 
     private fun campaignTransition(
@@ -393,23 +459,27 @@ internal class OperatorVoucherController(
         transition: (CampaignTransitionCommand) -> CampaignSnapshot,
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
-        val executed =
-            executor.execute(
-                tenant,
-                OPERATOR_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                operation,
-                campaignId,
-                expectedRevision.toString(),
-            ) {
-                val updated = transition(CampaignTransitionCommand(tenant, campaignId, expectedRevision))
-                updated.storedCampaignResponse(
-                    kind = responseKind,
-                    status = 200,
-                    publicHeaders = mapOf("ETag" to "\"${updated.revision}\""),
-                )
-            }
-        return executedResponse(executed, request, executed.response::campaignBody)
+
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = OPERATOR_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = operation,
+            resourceId = campaignId,
+            fingerprintMaterial = expectedRevision.toString(),
+        ) {
+            val updated = transition(CampaignTransitionCommand(tenant, campaignId, expectedRevision))
+            updated.storedCampaignResponse(
+                kind = responseKind,
+                status = 200,
+                publicHeaders = mapOf("ETag" to "\"${updated.revision}\""),
+            )
+        }
+        return executedResponse(
+            executed = executed,
+            request = request,
+            successBody = executed.response::campaignBody
+        )
     }
 
     private fun reviewDecision(
@@ -422,49 +492,42 @@ internal class OperatorVoucherController(
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val operation = if (approved) "REVIEW_APPROVE" else "REVIEW_REJECT"
-        val executed =
-            executor.execute(
-                tenant,
-                OPERATOR_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                operation,
-                body.claimId,
-                listOf(reviewId, body.campaignId, body.expectedReviewRevision, body.expectedClaimRevision)
-                    .joinToString("\u0000"),
-            ) {
-                val command =
-                    ReviewDecisionCommand(
-                        tenant,
-                        body.campaignId,
-                        body.claimId,
-                        reviewId,
-                        body.expectedReviewRevision,
-                        body.expectedClaimRevision,
-                        digestHex("voucher-operator-actor-v1", tenant, OPERATOR_PRINCIPAL),
-                    )
-                val result = if (approved) reviews.approve(command) else reviews.reject(command)
-                result.claim.storedClaimResponse(
-                    if (approved) VoucherResponseKind.REVIEW_APPROVED else VoucherResponseKind.REVIEW_REJECTED,
-                )
-            }
-        return executedResponse(executed, request, executed.response::claimBody)
-    }
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = OPERATOR_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = operation,
+            resourceId = body.claimId,
+            fingerprintMaterial = listOf(
+                reviewId,
+                body.campaignId,
+                body.expectedReviewRevision,
+                body.expectedClaimRevision
+            )
+                .joinToString("\u0000"),
+        ) {
+            val command = ReviewDecisionCommand(
+                tenantId = tenant,
+                campaignId = body.campaignId,
+                claimId = body.claimId,
+                reviewId = reviewId,
+                expectedReviewRevision = body.expectedReviewRevision,
+                expectedClaimRevision = body.expectedClaimRevision,
+                reviewerActorDigest = digestHex("voucher-operator-actor-v1", tenant, OPERATOR_PRINCIPAL),
+            )
+            val result = if (approved) reviews.approve(command) else reviews.reject(command)
 
-    companion object {
-        private const val OPERATOR_PRINCIPAL = "workshop-operator"
-
-        private fun encodeCursor(id: Long): String =
-            Base64.getUrlEncoder().withoutPadding().encodeToString("v1:$id".toUtf8Bytes())
-
-        private fun decodeCursor(cursor: String?): Long? {
-            if (cursor == null) return null
-            val decoded =
-                runCatching { String(Base64.getUrlDecoder().decode(cursor), UTF_8) }
-                    .getOrElse { throw invalidRequest("cursor is invalid") }
-            return decoded.removePrefix("v1:").takeIf { decoded.startsWith("v1:") }
-                ?.toLongOrNull()
-                ?: throw invalidRequest("cursor is invalid")
+            result.claim.storedClaimResponse(
+                if (approved) VoucherResponseKind.REVIEW_APPROVED
+                else VoucherResponseKind.REVIEW_REJECTED,
+            )
         }
+
+        return executedResponse(
+            executed = executed,
+            request = request,
+            successBody = executed.response::claimBody
+        )
     }
 }
 
@@ -472,22 +535,26 @@ internal class EmptyOperatorRequest
 
 private fun ReconciliationResult.storedReconciliation(resourceId: UUID): StoredHttpResponse =
     StoredHttpResponse(
-        VoucherResponseKind.RECONCILIATION_COMPLETED,
-        200,
-        mapOf(RECONCILIATION_DESCRIPTOR_HEADER to encodeReconciliation()),
-        resourceId,
-        null,
-        0,
-        null,
-        null,
+        responseKind = VoucherResponseKind.RECONCILIATION_COMPLETED,
+        status = 200,
+        headers = mapOf(RECONCILIATION_DESCRIPTOR_HEADER to encodeReconciliation()),
+        aggregateId = resourceId,
+        allocationId = null,
+        aggregateRevision = 0,
+        generationKeyVersion = null,
+        verificationKeyVersion = null,
     )
 
 private fun ReconciliationResult.encodeReconciliation(): String =
-    listOf(processed, skipped, failed, lastCursor ?: "-", if (deadlineReached) 1 else 0).joinToString(":")
+    listOf(processed, skipped, failed, lastCursor ?: "-", if (deadlineReached) 1 else 0)
+        .joinToString(":")
 
 private fun StoredHttpResponse.reconciliationBody(): ReconciliationHttpResponse {
-    val values = requireNotNull(headers[RECONCILIATION_DESCRIPTOR_HEADER]).split(':')
+    val values = headers[RECONCILIATION_DESCRIPTOR_HEADER]
+        .requireNotNull("headers[$RECONCILIATION_DESCRIPTOR_HEADER]")
+        .split(':')
     require(values.size == 5) { "invalid stored reconciliation descriptor" }
+
     return ReconciliationHttpResponse(
         processed = values[0].toInt(),
         skipped = values[1].toInt(),
@@ -500,9 +567,8 @@ private fun StoredHttpResponse.reconciliationBody(): ReconciliationHttpResponse 
 @RestController
 internal class VoucherRuntimeController {
     @GetMapping("/internal/runtime-thread")
-    fun runtime(): Map<String, Any> =
-        mapOf(
-            "virtual" to Thread.currentThread().isVirtual,
-            "javaFeature" to Runtime.version().feature(),
-        )
+    fun runtime(): Map<String, Any> = mapOf(
+        "virtual" to Thread.currentThread().isVirtual,
+        "javaFeature" to Runtime.version().feature(),
+    )
 }

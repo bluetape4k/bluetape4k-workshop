@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -13,6 +14,8 @@ import java.time.Duration
 import java.util.stream.Stream
 
 internal class VoucherStartupValidationTest {
+
+
     @Test
     fun `unknown properties are rejected and sanitized`() {
         val annotation = VoucherProperties::class.java.getAnnotation(ConfigurationProperties::class.java)
@@ -28,10 +31,9 @@ internal class VoucherStartupValidationTest {
     fun `unsafe production configuration fails with a sanitized code`(case: InvalidConfiguration) {
         val validator = VoucherStartupValidator(case.referencedKeyVersions)
 
-        val failure =
-            assertFailsWith<VoucherStartupException> {
-                validator.validate(case.properties, case.environment)
-            }
+        val failure = assertFailsWith<VoucherStartupException> {
+            validator.validate(case.properties, case.environment)
+        }
 
         sanitizedStartupCode(failure) shouldBeEqualTo case.expectedCode
         failure.message shouldBeEqualTo case.expectedCode.name
@@ -47,7 +49,7 @@ internal class VoucherStartupValidationTest {
         override fun toString(): String = name
     }
 
-    companion object {
+    companion object: KLogging() {
         private const val CURRENT_VERSION = 7
 
         @JvmStatic
@@ -83,21 +85,18 @@ internal class VoucherStartupValidationTest {
                 ),
                 InvalidConfiguration(
                     name = "weak key",
-                    properties =
-                        valid.copy(
-                            keys = valid.keys.copy(generation = mapOf(CURRENT_VERSION to "too-short")),
-                        ),
+                    properties = valid.copy(
+                        keys = valid.keys.copy(generation = mapOf(CURRENT_VERSION to "too-short")),
+                    ),
                     expectedCode = StartupFailureCode.WEAK_KEY,
                 ),
                 InvalidConfiguration(
                     name = "known test key",
-                    properties =
-                        valid.copy(
-                            keys =
-                                valid.keys.copy(
-                                    generation = mapOf(CURRENT_VERSION to "test-generation-secret-000000000000000"),
-                                ),
+                    properties = valid.copy(
+                        keys = valid.keys.copy(
+                            generation = mapOf(CURRENT_VERSION to "test-generation-secret-000000000000000"),
                         ),
+                    ),
                     expectedCode = StartupFailureCode.TEST_KEY_FORBIDDEN,
                 ),
                 InvalidConfiguration(
@@ -113,21 +112,19 @@ internal class VoucherStartupValidationTest {
                 InvalidConfiguration(
                     name = "persisted key version missing",
                     properties = valid,
-                    referencedKeyVersions =
-                        ReferencedKeyVersionSource {
-                            ReferencedKeyVersions(generation = setOf(6), verification = setOf(CURRENT_VERSION))
-                        },
+                    referencedKeyVersions = ReferencedKeyVersionSource {
+                        ReferencedKeyVersions(generation = setOf(6), verification = setOf(CURRENT_VERSION))
+                    },
                     expectedCode = StartupFailureCode.REFERENCED_KEY_MISSING,
                 ),
                 InvalidConfiguration(
                     name = "public demo bind",
                     properties = valid,
-                    environment =
-                        VoucherRuntimeEnvironment(
-                            activeProfiles = setOf("prod", "demo"),
-                            serverAddress = "0.0.0.0",
-                            hikariMaximumPoolSize = 16,
-                        ),
+                    environment = VoucherRuntimeEnvironment(
+                        activeProfiles = setOf("prod", "demo"),
+                        serverAddress = "0.0.0.0",
+                        hikariMaximumPoolSize = 16,
+                    ),
                     expectedCode = StartupFailureCode.PUBLIC_DEMO_BIND,
                 ),
             )
@@ -135,25 +132,21 @@ internal class VoucherStartupValidationTest {
 
         private fun validProperties(): VoucherProperties =
             VoucherProperties(
-                db =
-                    VoucherDatabaseProperties(
-                        foregroundPermits = 12,
-                        backgroundPermits = 4,
-                        permitTimeout = 250.millis(),
-                        lockTimeout = 5.seconds(),
-                    ),
-                keys =
-                    VoucherKeyProperties(
-                        currentVersion = CURRENT_VERSION,
-                        activeReadVersions = setOf(CURRENT_VERSION),
-                        generation =
-                            mapOf(CURRENT_VERSION to "production-generation-secret-00000000001"),
-                        verification =
-                            mapOf(CURRENT_VERSION to "production-verification-secret-000000001"),
-                        identity = "production-identity-secret-0000000000001",
-                        risk = "production-risk-secret-00000000000000001",
-                        redisSlot = "production-redis-slot-secret-00000000001",
-                    ),
+                db = VoucherDatabaseProperties(
+                    foregroundPermits = 12,
+                    backgroundPermits = 4,
+                    permitTimeout = 250.millis(),
+                    lockTimeout = 5.seconds(),
+                ),
+                keys = VoucherKeyProperties(
+                    currentVersion = CURRENT_VERSION,
+                    activeReadVersions = setOf(CURRENT_VERSION),
+                    generation = mapOf(CURRENT_VERSION to "production-generation-secret-00000000001"),
+                    verification = mapOf(CURRENT_VERSION to "production-verification-secret-000000001"),
+                    identity = "production-identity-secret-0000000000001",
+                    risk = "production-risk-secret-00000000000000001",
+                    redisSlot = "production-redis-slot-secret-00000000001",
+                ),
             )
 
         private fun productionEnvironment(): VoucherRuntimeEnvironment =

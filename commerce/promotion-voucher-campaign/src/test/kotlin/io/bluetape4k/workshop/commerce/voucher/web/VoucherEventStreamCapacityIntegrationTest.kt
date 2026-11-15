@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucher.persistence.CampaignRecord
@@ -10,8 +12,12 @@ import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherJdbcExecutor
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.Instant
+import java.util.*
 
-internal class VoucherEventStreamCapacityIntegrationTest : AbstractVoucherIntegrationTest() {
+internal class VoucherEventStreamCapacityIntegrationTest: AbstractVoucherIntegrationTest() {
+
+    companion object: KLogging()
+
     @Autowired
     private lateinit var streams: VoucherEventStream
 
@@ -26,26 +32,34 @@ internal class VoucherEventStreamCapacityIntegrationTest : AbstractVoucherIntegr
         val tenant = randomIdentifier()
         val principal = randomIdentifier()
         val campaignIds = seedActiveCampaigns(tenant, 33)
-        val subscriptions = campaignIds.take(32).map { streams.open(tenant, it, null) }.toMutableList()
+        val subscriptions = campaignIds.take(32).map {
+            streams.open(tenant, it, null)
+        }.toMutableList()
         val rejectedCampaign = campaignIds.last()
 
         try {
-            webTestClient.get().uri("/api/v1/campaigns/$rejectedCampaign/events")
+            webTestClient.get()
+                .uri("/api/v1/campaigns/$rejectedCampaign/events")
                 .header(TENANT_HEADER, tenant)
                 .header(PRINCIPAL_HEADER, principal)
-                .exchange().expectStatus().isEqualTo(503)
+                .exchange()
+                .expectStatus().isEqualTo(503)
                 .expectHeader().valueEquals("Retry-After", "2")
                 .expectHeader().valueEquals(
                     "Link",
                     "</api/v1/campaigns/$rejectedCampaign>; rel=\"alternate\"; type=\"application/json\"",
                 )
-                .expectBody().jsonPath("$.code").isEqualTo("SSE_CAPACITY_REJECTED")
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("SSE_CAPACITY_REJECTED")
 
-            webTestClient.get().uri("/api/v1/campaigns/$rejectedCampaign")
+            webTestClient.get()
+                .uri("/api/v1/campaigns/$rejectedCampaign")
                 .header(TENANT_HEADER, tenant)
                 .header(PRINCIPAL_HEADER, principal)
-                .exchange().expectStatus().isOk
-                .expectBody().jsonPath("$.campaignId").isEqualTo(rejectedCampaign.toString())
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$.campaignId").isEqualTo(rejectedCampaign.toString())
 
             subscriptions.removeFirst().close()
             subscriptions += streams.open(tenant, rejectedCampaign, null)
@@ -56,20 +70,21 @@ internal class VoucherEventStreamCapacityIntegrationTest : AbstractVoucherIntegr
         streams.activePollers() shouldBeEqualTo 0
     }
 
+    @Suppress("SameParameterValue")
     private fun seedActiveCampaigns(
         tenant: String,
         count: Int,
-    ) = jdbc.foregroundTransaction {
+    ): List<UUID> = jdbc.foregroundTransaction {
         val now = Instant.now()
-        (1..count).map {
+        List(count) {
             campaigns.create(
                 CampaignRecord(
                     id = 0,
                     tenantId = tenant,
                     campaignId = Uuid.V7.nextId(),
                     state = CampaignState.ACTIVE,
-                    startsAt = now.minusSeconds(60),
-                    endsAt = now.plusSeconds(3600),
+                    startsAt = now - 60.seconds(),
+                    endsAt = now + 3600.seconds(),
                     capacity = 10,
                     allocatedCount = 0,
                     perUserLimit = 1,

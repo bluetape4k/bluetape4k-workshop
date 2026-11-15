@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotNull
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
@@ -9,17 +11,20 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
 import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 @Tag("migration-compatibility")
 internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilityTestSupport() {
+
+    companion object: KLogging() {
+        private val PROCESS_TIMEOUT: Duration = 30.seconds()
+    }
+
     @Test
     fun `previous current previous packaged process sequence remains read write compatible`() {
         val previousJar = Path.of(requiredProperty("voucher.compatibility.previous-jar"))
         val currentBootJar = Path.of(requiredProperty("voucher.compatibility.current-boot-jar"))
         val postgresqlDriver = Path.of(requiredProperty("voucher.compatibility.postgresql-driver"))
-        val expectedChecksum =
-            ClassPathResource("compatibility/previous-binary.sha256")
+        val expectedChecksum = ClassPathResource("compatibility/previous-binary.sha256")
                 .inputStream
                 .bufferedReader()
                 .use { it.readText().trim() }
@@ -70,6 +75,7 @@ internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilit
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
         val completed = process.waitFor(PROCESS_TIMEOUT)
         val output = process.inputStream.bufferedReader().use { it.readText() }
+
         check(completed) {
             process.destroyForcibly()
             "compatibility process timed out"
@@ -83,11 +89,9 @@ internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilit
         MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)).toHexString()
 
     private fun requiredProperty(name: String): String =
-        requireNotNull(System.getProperty(name)) { "missing system property $name" }
+        System.getProperty(name).requireNotNull { "missing system property $name" }
 
-    private fun javaExecutable(): String = Path.of(System.getProperty("java.home"), "bin", "java").toString()
+    private fun javaExecutable(): String =
+        Path.of(System.getProperty("java.home"), "bin", "java").toString()
 
-    companion object {
-        private val PROCESS_TIMEOUT: Duration = 30.seconds()
-    }
 }

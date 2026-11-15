@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.web
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitRejected
+import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -17,17 +18,20 @@ import kotlin.math.ceil
 
 @RestControllerAdvice
 internal class ApiExceptionHandler {
+
+    companion object: KLogging()
+
     @ExceptionHandler(VoucherApiException::class)
     fun voucherFailure(
         failure: VoucherApiException,
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> =
         errorResponse(
-            failure.status,
-            failure.stableCode,
-            failure.safeReason,
-            request.requestId(),
-            failure.retryAfterSeconds,
+            status = failure.status,
+            code = failure.stableCode,
+            reason = failure.safeReason,
+            requestId = request.requestId(),
+            retryAfterSeconds = failure.retryAfterSeconds,
         )
 
     @ExceptionHandler(DatabasePermitRejected::class)
@@ -36,11 +40,11 @@ internal class ApiExceptionHandler {
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> =
         errorResponse(
-            503,
-            "DATABASE_BULKHEAD_REJECTED",
-            "database capacity is temporarily unavailable",
-            request.requestId(),
-            ceil(failure.retryAfter.toMillis() / 1_000.0).toLong().coerceAtLeast(1),
+            status = 503,
+            code = "DATABASE_BULKHEAD_REJECTED",
+            reason = "database capacity is temporarily unavailable",
+            requestId = request.requestId(),
+            retryAfterSeconds = ceil(failure.retryAfter.toMillis() / 1_000.0).toLong().coerceAtLeast(1),
         )
 
     @ExceptionHandler(SseCapacityRejected::class)
@@ -52,21 +56,31 @@ internal class ApiExceptionHandler {
         val headers = HttpHeaders()
         headers.set("Retry-After", "2")
         headers.set(HttpHeaders.LINK, "<$fallback>; rel=\"alternate\"; type=\"application/json\"")
-        return ResponseEntity.status(503).headers(headers).body(
-            ApiError(
-                "SSE_CAPACITY_REJECTED",
-                "event stream capacity is temporarily unavailable",
-                request.requestId(),
-                2,
-            ),
-        )
+
+        return ResponseEntity
+            .status(503)
+            .headers(headers)
+            .body(
+                ApiError(
+                    "SSE_CAPACITY_REJECTED",
+                    "event stream capacity is temporarily unavailable",
+                    request.requestId(),
+                    2,
+                ),
+            )
     }
 
     @ExceptionHandler(VoucherServiceShuttingDown::class)
     fun shuttingDown(
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> =
-        errorResponse(503, "SERVICE_SHUTTING_DOWN", "service is shutting down", request.requestId(), 1)
+        errorResponse(
+            status = 503,
+            code = "SERVICE_SHUTTING_DOWN",
+            reason = "service is shutting down",
+            requestId = request.requestId(),
+            retryAfterSeconds = 1
+        )
 
     @ExceptionHandler(
         MethodArgumentNotValidException::class,
@@ -80,7 +94,14 @@ internal class ApiExceptionHandler {
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> {
         log.warn { "voucher_http_rejected category=INVALID_REQUEST failure=${failure.javaClass.simpleName}" }
-        return errorResponse(400, "INVALID_REQUEST", "request validation failed", request.requestId(), null)
+
+        return errorResponse(
+            status = 400,
+            code = "INVALID_REQUEST",
+            reason = "request validation failed",
+            requestId = request.requestId(),
+            retryAfterSeconds = null
+        )
     }
 
     @ExceptionHandler(NoResourceFoundException::class)
@@ -89,7 +110,14 @@ internal class ApiExceptionHandler {
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> {
         log.warn { "voucher_http_rejected category=NOT_FOUND failure=${failure.javaClass.simpleName}" }
-        return errorResponse(404, "RESOURCE_NOT_FOUND", "resource was not found", request.requestId(), null)
+
+        return errorResponse(
+            status = 404,
+            code = "RESOURCE_NOT_FOUND",
+            reason = "resource was not found",
+            requestId = request.requestId(),
+            retryAfterSeconds = null
+        )
     }
 
     @ExceptionHandler(Exception::class)
@@ -98,10 +126,15 @@ internal class ApiExceptionHandler {
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> {
         log.warn { "voucher_http_failed category=INTERNAL_ERROR failure=${failure.javaClass.simpleName}" }
-        return errorResponse(500, "INTERNAL_ERROR", "request could not be completed", request.requestId(), null)
-    }
 
-    companion object : KLogging()
+        return errorResponse(
+            status = 500,
+            code = "INTERNAL_ERROR",
+            reason = "request could not be completed",
+            requestId = request.requestId(),
+            retryAfterSeconds = null
+        )
+    }
 }
 
 internal fun executedResponse(
@@ -114,22 +147,26 @@ internal fun executedResponse(
     stored.headers
         .filterKeys { !it.isStoredDescriptorHeader() }
         .forEach(headers::set)
+
     headers.set("Idempotency-Replayed", executed.replayed.toString())
-    val body =
-        if (stored.status >= 400) {
-            ApiError(
-                code = stored.responseKind.name,
-                reason = stored.responseKind.safeReason(),
-                requestId = request.requestId(),
-                retryAfterSeconds = stored.headers["Retry-After"]?.toLongOrNull(),
-            )
-        } else {
-            successBody()
-        }
-    return ResponseEntity.status(stored.status).headers(headers).body(body)
+
+    val body = if (stored.status >= 400) {
+        ApiError(
+            code = stored.responseKind.name,
+            reason = stored.responseKind.safeReason(),
+            requestId = request.requestId(),
+            retryAfterSeconds = stored.headers["Retry-After"]?.toLongOrNull(),
+        )
+    } else {
+        successBody()
+    }
+    return ResponseEntity
+        .status(stored.status)
+        .headers(headers)
+        .body(body)
 }
 
-private fun io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind.safeReason(): String =
+private fun VoucherResponseKind.safeReason(): String =
     name.lowercase().replace('_', ' ')
 
 internal fun errorResponse(
@@ -141,7 +178,10 @@ internal fun errorResponse(
 ): ResponseEntity<ApiError> {
     val headers = HttpHeaders()
     retryAfterSeconds?.let { headers.set("Retry-After", it.toString()) }
-    return ResponseEntity.status(status).headers(headers).body(ApiError(code, reason, requestId, retryAfterSeconds))
+    return ResponseEntity
+        .status(status)
+        .headers(headers)
+        .body(ApiError(code, reason, requestId, retryAfterSeconds))
 }
 
 internal fun HttpServletRequest.requestId(): String =

@@ -6,6 +6,7 @@ import java.sql.DriverManager
 
 /** application-context test를 Exposed `withTables` fixture에서 격리하는 PostgreSQL schema를 생성합니다. */
 internal object VoucherTestSchema {
+
     private val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
 
     fun create(prefix: String): String {
@@ -14,10 +15,13 @@ internal object VoucherTestSchema {
             postgres.jdbcUrl,
             requireNotNull(postgres.username),
             requireNotNull(postgres.password),
-        ).use { connection ->
-            connection.createStatement().use { statement -> statement.execute("CREATE SCHEMA $schema") }
+        ).use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.execute("CREATE SCHEMA $schema")
+            }
         }
         val separator = if ('?' in postgres.jdbcUrl) '&' else '?'
+
         return "${postgres.jdbcUrl}${separator}currentSchema=$schema"
     }
 }

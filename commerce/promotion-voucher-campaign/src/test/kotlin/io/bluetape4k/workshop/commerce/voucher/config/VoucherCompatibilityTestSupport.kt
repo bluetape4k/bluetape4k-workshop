@@ -1,15 +1,27 @@
+@file:Suppress("SqlSourceToSinkFlow")
+
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.jdbc.sql.singleLong
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
+import java.sql.Connection
 import java.sql.DriverManager
 import javax.sql.DataSource
 
 internal abstract class VoucherCompatibilityTestSupport {
+
+    companion object: KLogging() {
+        protected val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
+    }
+
     protected lateinit var schema: String
     protected lateinit var dataSource: DataSource
 
@@ -17,22 +29,25 @@ internal abstract class VoucherCompatibilityTestSupport {
     fun createCompatibilitySchema() {
         schema = "voucher_compat_${Base58.randomString(8).lowercase()}"
         adminConnection().use { connection ->
-            connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
-        }
-        dataSource =
-            PGSimpleDataSource().apply {
-                setURL(postgres.jdbcUrl)
-                user = postgres.username ?: PostgreSQLServer.USERNAME
-                password = postgres.password ?: PostgreSQLServer.PASSWORD
-                currentSchema = schema
+            connection.createStatement().use {
+                it.execute("CREATE SCHEMA $schema")
             }
+        }
+        dataSource = PGSimpleDataSource().apply {
+            setURL(postgres.jdbcUrl)
+            user = postgres.username ?: PostgreSQLServer.USERNAME
+            password = postgres.password ?: PostgreSQLServer.PASSWORD
+            currentSchema = schema
+        }
         applyPreviousSchema()
     }
 
     @AfterEach
     fun dropCompatibilitySchema() {
         adminConnection().use { connection ->
-            connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
+            connection.createStatement().use {
+                it.execute("DROP SCHEMA IF EXISTS $schema CASCADE")
+            }
         }
     }
 
@@ -49,11 +64,10 @@ internal abstract class VoucherCompatibilityTestSupport {
     }
 
     protected fun queryLong(sql: String): Long =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result ->
-                    check(result.next())
-                    result.getLong(1)
+        dataSource.connection.use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.executeQuery(sql.requireNotBlank("sql")).use { result ->
+                    result.singleLong()
                 }
             }
         }
@@ -66,21 +80,20 @@ internal abstract class VoucherCompatibilityTestSupport {
         val sql = ClassPathResource("compatibility/V000__previous_voucher_schema.sql").inputStream.use {
             it.readAllBytes().toUtf8String()
         }
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                sql.split(';').map(String::trim).filter(String::isNotEmpty).forEach(statement::execute)
+        dataSource.connection.use { conn ->
+            conn.createStatement().use { stmt ->
+                sql.split(';')
+                    .map(String::trim)
+                    .filter(String::isNotEmpty)
+                    .forEach(stmt::execute)
             }
         }
     }
 
-    private fun adminConnection() =
+    private fun adminConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,
             postgres.username ?: PostgreSQLServer.USERNAME,
             postgres.password ?: PostgreSQLServer.PASSWORD,
         )
-
-    companion object {
-        protected val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
-    }
 }

@@ -3,10 +3,14 @@ package io.bluetape4k.workshop.commerce.voucher.web
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 
 internal class VoucherBrowserContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `static console contains keyboard live status and secret handling contracts`() {
         val html = staticText("index.html")

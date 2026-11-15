@@ -22,53 +22,57 @@ import java.util.*
 internal class CampaignRepository(
     private val gate: DatabasePermitGate,
 ): LongAuditableJdbcRepository<CampaignRecord, CampaignTable> {
+
+    companion object: KLogging()
+
     override val table = CampaignTable
 
     override fun extractId(entity: CampaignRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): CampaignRecord =
-        CampaignRecord(
-            id = this[table.id].value,
-            tenantId = this[table.tenantId],
-            campaignId = this[table.campaignId],
-            state = this[table.state],
-            startsAt = this[table.startsAt],
-            endsAt = this[table.endsAt],
-            capacity = this[table.capacity],
-            allocatedCount = this[table.allocatedCount],
-            perUserLimit = this[table.perUserLimit],
-            redemptionTtlSeconds = this[table.redemptionTtlSeconds],
-            policyVersion = this[table.policyVersion],
-            revision = this[table.revision],
-            createdBy = this[table.createdBy],
-            createdAt = this[table.createdAt],
-            updatedBy = this[table.updatedBy],
-            updatedAt = this[table.updatedAt],
-        )
+    override fun ResultRow.toEntity(): CampaignRecord = CampaignRecord(
+        id = this[table.id].value,
+        tenantId = this[table.tenantId],
+        campaignId = this[table.campaignId],
+        state = this[table.state],
+        startsAt = this[table.startsAt],
+        endsAt = this[table.endsAt],
+        capacity = this[table.capacity],
+        allocatedCount = this[table.allocatedCount],
+        perUserLimit = this[table.perUserLimit],
+        redemptionTtlSeconds = this[table.redemptionTtlSeconds],
+        policyVersion = this[table.policyVersion],
+        revision = this[table.revision],
+        createdBy = this[table.createdBy],
+        createdAt = this[table.createdAt],
+        updatedBy = this[table.updatedBy],
+        updatedAt = this[table.updatedAt],
+    )
 
     fun create(record: CampaignRecord): CampaignRecord {
         gate.requireHeld()
-        val id =
-            table.insertAndGetId {
-                it[tenantId] = record.tenantId
-                it[campaignId] = record.campaignId
-                it[state] = record.state
-                it[startsAt] = record.startsAt
-                it[endsAt] = record.endsAt
-                it[capacity] = record.capacity
-                it[allocatedCount] = record.allocatedCount
-                it[perUserLimit] = record.perUserLimit
-                it[redemptionTtlSeconds] = record.redemptionTtlSeconds
-                it[policyVersion] = record.policyVersion
-                it[revision] = record.revision
-            }.value
+        val id = table.insertAndGetId {
+            it[tenantId] = record.tenantId
+            it[campaignId] = record.campaignId
+            it[state] = record.state
+            it[startsAt] = record.startsAt
+            it[endsAt] = record.endsAt
+            it[capacity] = record.capacity
+            it[allocatedCount] = record.allocatedCount
+            it[perUserLimit] = record.perUserLimit
+            it[redemptionTtlSeconds] = record.redemptionTtlSeconds
+            it[policyVersion] = record.policyVersion
+            it[revision] = record.revision
+        }.value
         log.debug { "voucher_campaign_created campaignId=${record.campaignId}" }
         return findById(id)
     }
 
     override fun findById(id: Long): CampaignRecord {
         gate.requireHeld()
-        return table.selectAll().where { table.id eq id }.single().let { with(this) { it.toEntity() } }
+        return table.selectAll()
+            .where { table.id eq id }
+            .single()
+            .toEntity()
     }
 
     fun findPublic(
@@ -80,7 +84,7 @@ internal class CampaignRepository(
             .selectAll()
             .where { (table.tenantId eq tenantId) and (table.campaignId eq campaignId) }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity() 
     }
 
     /** capacity를 변경하는 모든 command에 대해 canonical first row lock을 획득합니다. */
@@ -94,7 +98,7 @@ internal class CampaignRepository(
             .where { (table.tenantId eq tenantId) and (table.campaignId eq campaignId) }
             .forUpdate()
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
     }
 
     fun tryReserve(
@@ -144,6 +148,7 @@ internal class CampaignRepository(
     ): Boolean {
         gate.requireHeld()
         require(record.revision == expectedRevision + 1) { "campaign transition must advance revision exactly once" }
+
         return auditedUpdateAll(
             predicate = {
                 (table.tenantId eq record.tenantId) and
@@ -162,6 +167,4 @@ internal class CampaignRepository(
             it[revision] = record.revision
         } == 1
     }
-
-    companion object: KLogging()
 }

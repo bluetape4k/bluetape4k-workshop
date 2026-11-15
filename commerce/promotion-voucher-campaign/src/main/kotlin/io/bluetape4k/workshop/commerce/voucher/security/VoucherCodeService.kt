@@ -3,7 +3,11 @@ package io.bluetape4k.workshop.commerce.voucher.security
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import java.nio.charset.StandardCharsets
+import io.bluetape4k.support.checkNotNull
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import java.security.MessageDigest
 import java.util.*
 import javax.crypto.Mac
@@ -16,10 +20,10 @@ internal data class VoucherCodeKeyRing(
     val verificationKeys: Map<Int, ByteArray>,
 ) {
     init {
-        require(currentGenerationVersion in MIN_KEY_VERSION..MAX_KEY_VERSION)
-        require(currentVerificationVersion in MIN_KEY_VERSION..MAX_KEY_VERSION)
-        require(generationKeys[currentGenerationVersion] != null) { "current generation key is missing" }
-        require(verificationKeys[currentVerificationVersion] != null) { "current verification key is missing" }
+        currentGenerationVersion.requireInRange(MIN_KEY_VERSION, MAX_KEY_VERSION, "currentGenerationVersion")
+        currentVerificationVersion.requireInRange(MIN_KEY_VERSION, MAX_KEY_VERSION, "currentVerificationVersion")
+        generationKeys[currentGenerationVersion].requireNotNull("current generation key")
+        verificationKeys[currentVerificationVersion].requireNotNull("current verification key")
     }
 
     companion object {
@@ -34,7 +38,7 @@ internal data class VoucherGenerationInput(
     val allocationId: UUID,
 ) {
     init {
-        require(tenantId.isNotBlank()) { "tenantId must not be blank" }
+        tenantId.requireNotBlank("tenantId")
     }
 
     fun canonicalBytes(): ByteArray =
@@ -62,122 +66,6 @@ internal enum class VerificationResult {
 internal class VoucherCodeService(
     private val keyRing: VoucherCodeKeyRing,
 ) {
-    fun issue(input: VoucherGenerationInput): IssuedVoucherCode =
-        checkNotNull(
-            reconstruct(
-                input,
-                generationKeyVersion = keyRing.currentGenerationVersion,
-                verificationKeyVersion = keyRing.currentVerificationVersion,
-            ),
-        ) { "current voucher keys disappeared after key-ring validation" }
-
-    /** 기록된 key version 둘 다 사용할 수 있을 때만 committed code를 재구성합니다. */
-    fun reconstruct(
-        input: VoucherGenerationInput,
-        generationKeyVersion: Int,
-        verificationKeyVersion: Int,
-    ): IssuedVoucherCode? {
-        val generationKey = keyRing.generationKeys[generationKeyVersion] ?: return null
-        val verificationKey = keyRing.verificationKeys[verificationKeyVersion] ?: return null
-        val tokenMaterial = hmac(generationKey, GENERATION_DOMAIN, input.canonicalBytes()).copyOf(TOKEN_BYTES)
-        val payload = Base58.encode(tokenMaterial).padStart(PAYLOAD_LENGTH, BASE58_ZERO)
-        check(payload.length == PAYLOAD_LENGTH) { "voucher token material exceeded the bounded payload" }
-
-        val prefix = "V$verificationKeyVersion-$payload"
-        val code = prefix + checksum(prefix)
-        val verifier = verifier(code, verificationKey)
-        return IssuedVoucherCode(
-            code = code,
-            verifier = verifier,
-            generationKeyVersion = generationKeyVersion,
-            verificationKeyVersion = verificationKeyVersion,
-        )
-    }
-
-    /** canonical external code를 opaque tenant-scoped lookup material로 변환합니다. */
-    fun lookup(candidate: String): VoucherLookupMaterial? {
-        val parsed = parse(candidate)
-        val key = parsed?.let { keyRing.verificationKeys[it.verificationKeyVersion] } ?: DUMMY_KEY
-        val digest = verifier(candidate.take(MAX_CODE_LENGTH), key)
-        return if (parsed != null && keyRing.verificationKeys.containsKey(parsed.verificationKeyVersion)) {
-            VoucherLookupMaterial(digest, parsed.verificationKeyVersion)
-        } else {
-            log.debug { "voucher_code_rejected reason=INVALID_CODE" }
-            null
-        }
-    }
-
-    fun verify(
-        candidate: String,
-        expectedVerifier: ByteArray,
-        verificationKeyVersion: Int,
-    ): Boolean {
-        val parsed = parse(candidate)
-        val key = keyRing.verificationKeys[verificationKeyVersion] ?: DUMMY_KEY
-        val actualVerifier = verifier(candidate.take(MAX_CODE_LENGTH), key)
-        val matched = MessageDigest.isEqual(actualVerifier, expectedVerifier)
-        val valid =
-            parsed != null &&
-                    parsed.verificationKeyVersion == verificationKeyVersion &&
-                    keyRing.verificationKeys.containsKey(verificationKeyVersion) &&
-                    matched
-        if (!valid) log.debug { "voucher_code_rejected reason=INVALID_CODE" }
-        return valid
-    }
-
-    fun verifyExternal(candidate: String): VerificationResult {
-        val parsed = parse(candidate)
-        val key = parsed?.let { keyRing.verificationKeys[it.verificationKeyVersion] } ?: DUMMY_KEY
-        verifier(candidate.take(MAX_CODE_LENGTH), key)
-        return if (parsed != null && keyRing.verificationKeys.containsKey(parsed.verificationKeyVersion)) {
-            VerificationResult.VALID
-        } else {
-            log.debug { "voucher_code_rejected reason=INVALID_CODE" }
-            VerificationResult.INVALID_CODE
-        }
-    }
-
-    private fun parse(candidate: String): ParsedVoucherCode? {
-        if (candidate.length !in MIN_CODE_LENGTH..MAX_CODE_LENGTH || !candidate.all { it.code in ASCII_RANGE }) return null
-        val match = CODE_PATTERN.matchEntire(candidate) ?: return null
-        val verificationKeyVersion = match.groupValues[1].toIntOrNull() ?: return null
-        val payload = match.groupValues[2]
-        val suppliedChecksum = match.groupValues[3]
-        val prefix = "V$verificationKeyVersion-$payload"
-        if (!MessageDigest.isEqual(checksum(prefix).toUtf8Bytes(), suppliedChecksum.toUtf8Bytes())) return null
-        return ParsedVoucherCode(verificationKeyVersion)
-    }
-
-    private fun verifier(
-        code: String,
-        key: ByteArray,
-    ): ByteArray = hmac(key, VERIFIER_DOMAIN, code.toByteArray(StandardCharsets.US_ASCII))
-
-    private fun checksum(prefix: String): String {
-        val digest = MessageDigest.getInstance(SHA_256).digest(prefix.toByteArray(StandardCharsets.US_ASCII))
-        val checksumValue =
-            (((digest[0].toInt() and 0xff) shl 8) or (digest[1].toInt() and 0xff)) %
-                    (BASE58_ALPHABET.length * BASE58_ALPHABET.length)
-        return buildString(CHECKSUM_LENGTH) {
-            append(BASE58_ALPHABET[checksumValue / BASE58_ALPHABET.length])
-            append(BASE58_ALPHABET[checksumValue % BASE58_ALPHABET.length])
-        }
-    }
-
-    private fun hmac(
-        key: ByteArray,
-        domain: String,
-        input: ByteArray,
-    ): ByteArray {
-        val mac = Mac.getInstance(HMAC_SHA_256)
-        mac.init(SecretKeySpec(key, HMAC_SHA_256))
-        mac.update(domain.toByteArray(StandardCharsets.US_ASCII))
-        mac.update(DOMAIN_SEPARATOR)
-        return mac.doFinal(input)
-    }
-
-    private data class ParsedVoucherCode(val verificationKeyVersion: Int)
-
     companion object: KLogging() {
         private const val GENERATION_DOMAIN = "voucher-generation"
         private const val VERIFIER_DOMAIN = "voucher-verifier"
@@ -196,4 +84,131 @@ internal class VoucherCodeService(
         private val CODE_PATTERN =
             Regex("V([1-9][0-9]?)-([$BASE58_ALPHABET]{$PAYLOAD_LENGTH})([$BASE58_ALPHABET]{$CHECKSUM_LENGTH})")
     }
+
+    fun issue(input: VoucherGenerationInput): IssuedVoucherCode =
+        reconstruct(
+            input,
+            generationKeyVersion = keyRing.currentGenerationVersion,
+            verificationKeyVersion = keyRing.currentVerificationVersion,
+        ).checkNotNull { "current voucher keys disappeared after key-ring validation" }
+
+    /** 기록된 key version 둘 다 사용할 수 있을 때만 committed code를 재구성합니다. */
+    fun reconstruct(
+        input: VoucherGenerationInput,
+        generationKeyVersion: Int,
+        verificationKeyVersion: Int,
+    ): IssuedVoucherCode? {
+        val generationKey = keyRing.generationKeys[generationKeyVersion] ?: return null
+        val verificationKey = keyRing.verificationKeys[verificationKeyVersion] ?: return null
+        val tokenMaterial = hmac(generationKey, GENERATION_DOMAIN, input.canonicalBytes()).copyOf(TOKEN_BYTES)
+        val payload = Base58.encode(tokenMaterial).padStart(PAYLOAD_LENGTH, BASE58_ZERO)
+
+        check(payload.length == PAYLOAD_LENGTH) {
+            "voucher token material exceeded the bounded payload"
+        }
+
+        val prefix = "V$verificationKeyVersion-$payload"
+        val code = prefix + checksum(prefix)
+        val verifier = verifier(code, verificationKey)
+
+        return IssuedVoucherCode(
+            code = code,
+            verifier = verifier,
+            generationKeyVersion = generationKeyVersion,
+            verificationKeyVersion = verificationKeyVersion,
+        )
+    }
+
+    /** canonical external code를 opaque tenant-scoped lookup material로 변환합니다. */
+    fun lookup(candidate: String): VoucherLookupMaterial? {
+        val parsed = parse(candidate)
+        val key = parsed?.let { keyRing.verificationKeys[it.verificationKeyVersion] } ?: DUMMY_KEY
+        val digest = verifier(candidate.take(MAX_CODE_LENGTH), key)
+
+        return if (parsed != null && keyRing.verificationKeys.containsKey(parsed.verificationKeyVersion)) {
+            VoucherLookupMaterial(digest, parsed.verificationKeyVersion)
+        } else {
+            log.debug { "voucher_code_rejected reason=INVALID_CODE" }
+            null
+        }
+    }
+
+    fun verify(
+        candidate: String,
+        expectedVerifier: ByteArray,
+        verificationKeyVersion: Int,
+    ): Boolean {
+        val parsed = parse(candidate)
+        val key = keyRing.verificationKeys[verificationKeyVersion] ?: DUMMY_KEY
+        val actualVerifier = verifier(candidate.take(MAX_CODE_LENGTH), key)
+        val matched = MessageDigest.isEqual(actualVerifier, expectedVerifier)
+
+        val valid = parsed != null &&
+                parsed.verificationKeyVersion == verificationKeyVersion &&
+                keyRing.verificationKeys.containsKey(verificationKeyVersion) &&
+                matched
+
+        if (!valid) {
+            log.debug { "voucher_code_rejected reason=INVALID_CODE" }
+        }
+        return valid
+    }
+
+    fun verifyExternal(candidate: String): VerificationResult {
+        val parsed = parse(candidate)
+        val key = parsed?.let { keyRing.verificationKeys[it.verificationKeyVersion] } ?: DUMMY_KEY
+        verifier(candidate.take(MAX_CODE_LENGTH), key)
+
+        return if (parsed != null && keyRing.verificationKeys.containsKey(parsed.verificationKeyVersion)) {
+            VerificationResult.VALID
+        } else {
+            log.debug { "voucher_code_rejected reason=INVALID_CODE" }
+            VerificationResult.INVALID_CODE
+        }
+    }
+
+    private fun parse(candidate: String): ParsedVoucherCode? {
+        if (candidate.length !in MIN_CODE_LENGTH..MAX_CODE_LENGTH || !candidate.all { it.code in ASCII_RANGE }) return null
+
+        val match = CODE_PATTERN.matchEntire(candidate) ?: return null
+        val verificationKeyVersion = match.groupValues[1].toIntOrNull() ?: return null
+        val payload = match.groupValues[2]
+        val suppliedChecksum = match.groupValues[3]
+        val prefix = "V$verificationKeyVersion-$payload"
+
+        if (!MessageDigest.isEqual(checksum(prefix).toUtf8Bytes(), suppliedChecksum.toUtf8Bytes())) return null
+        return ParsedVoucherCode(verificationKeyVersion)
+    }
+
+    private fun verifier(
+        code: String,
+        key: ByteArray,
+    ): ByteArray =
+        hmac(key, VERIFIER_DOMAIN, code.toUtf8Bytes())
+
+    private fun checksum(prefix: String): String {
+        val digest = MessageDigest.getInstance(SHA_256).digest(prefix.toUtf8Bytes())
+        val checksumValue = (((digest[0].toInt() and 0xff) shl 8) or (digest[1].toInt() and 0xff)) %
+                    (BASE58_ALPHABET.length * BASE58_ALPHABET.length)
+
+        return buildString(CHECKSUM_LENGTH) {
+            append(BASE58_ALPHABET[checksumValue / BASE58_ALPHABET.length])
+            append(BASE58_ALPHABET[checksumValue % BASE58_ALPHABET.length])
+        }
+    }
+
+    private fun hmac(
+        key: ByteArray,
+        domain: String,
+        input: ByteArray,
+    ): ByteArray {
+        val mac = Mac.getInstance(HMAC_SHA_256)
+        mac.init(SecretKeySpec(key, HMAC_SHA_256))
+        mac.update(domain.toUtf8Bytes())
+        mac.update(DOMAIN_SEPARATOR)
+        return mac.doFinal(input)
+    }
+
+    private data class ParsedVoucherCode(val verificationKeyVersion: Int)
+
 }

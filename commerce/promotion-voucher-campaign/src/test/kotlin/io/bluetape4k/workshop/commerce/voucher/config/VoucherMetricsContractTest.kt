@@ -5,11 +5,36 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 internal class VoucherMetricsContractTest {
+
+    private companion object: KLogging() {
+        val REQUIRED_NAMES = setOf(
+            "voucher.command.duration",
+            "voucher.db.bulkhead.rejected",
+            "voucher.redis.degraded",
+            "voucher.review.open",
+            "voucher.backlog.oldest.age",
+            "voucher.worker.last.success",
+            "voucher.worker.attempts",
+            "voucher.sse.active",
+            "voucher.sse.rejected",
+            "voucher.leader.state",
+        )
+        val FORBIDDEN_TAGS = setOf(
+            "tenant",
+            "campaign",
+            "user",
+            "digest",
+            "revision",
+            "secret",
+            "code"
+        )
+    }
+
     @Test
     fun `metric names and tags stay bounded while operational paths update values`() {
         val registry = SimpleMeterRegistry()
@@ -34,20 +59,5 @@ internal class VoucherMetricsContractTest {
         registry.meters.flatMap { it.id.tags }.none { it.key in FORBIDDEN_TAGS }.shouldBeTrue()
     }
 
-    private companion object {
-        val REQUIRED_NAMES =
-            setOf(
-                "voucher.command.duration",
-                "voucher.db.bulkhead.rejected",
-                "voucher.redis.degraded",
-                "voucher.review.open",
-                "voucher.backlog.oldest.age",
-                "voucher.worker.last.success",
-                "voucher.worker.attempts",
-                "voucher.sse.active",
-                "voucher.sse.rejected",
-                "voucher.leader.state",
-            )
-        val FORBIDDEN_TAGS = setOf("tenant", "campaign", "user", "digest", "revision", "secret", "code")
-    }
+
 }

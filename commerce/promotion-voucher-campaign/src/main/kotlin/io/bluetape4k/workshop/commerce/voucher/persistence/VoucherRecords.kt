@@ -26,8 +26,7 @@ internal data class CampaignRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-): Auditable,
-   Serializable
+): Auditable, Serializable
 
 internal data class ClaimRecord(
     val id: Long,
@@ -52,8 +51,7 @@ internal data class ClaimRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-): Auditable,
-   Serializable
+): Auditable, Serializable
 
 internal data class ReviewRecord(
     val id: Long,
@@ -72,8 +70,7 @@ internal data class ReviewRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-): Auditable,
-   Serializable
+): Auditable, Serializable
 
 internal data class AuditRecord(
     val id: Long,
@@ -90,8 +87,7 @@ internal data class AuditRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-): Auditable,
-   Serializable
+): Auditable, Serializable
 
 internal data class EventInboxRecord(
     val id: Long,
@@ -110,5 +106,4 @@ internal data class EventInboxRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-): Auditable,
-   Serializable
+): Auditable, Serializable

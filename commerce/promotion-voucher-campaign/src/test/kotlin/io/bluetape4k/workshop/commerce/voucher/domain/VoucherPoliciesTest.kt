@@ -6,24 +6,33 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class VoucherPoliciesTest {
+
+    companion object: KLogging() {
+        private val NOW: Instant = Instant.parse("2026-07-19T00:00:00Z")
+    }
+
     @Test
     fun `campaign activation requires a valid period and capacity`() {
         val draft = campaign(state = CampaignState.DRAFT)
 
         val active = VoucherPolicies.activateCampaign(draft, draft.revision, NOW)
 
+        log.debug { "active=$active" }
         active.state shouldBeEqualTo CampaignState.ACTIVE
         active.revision shouldBeEqualTo draft.revision + 1
+
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.activateCampaign(
-                draft.copy(capacity = 0),
-                draft.revision,
-                NOW,
+                campaign = draft.copy(capacity = 0),
+                expectedRevision = draft.revision,
+                now = NOW,
             )
         }.code shouldBeEqualTo VoucherPolicyFailure.INVALID_CAMPAIGN_POLICY
     }
@@ -35,9 +44,10 @@ internal class VoucherPoliciesTest {
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.activateCampaign(ended, ended.revision, NOW)
         }.code shouldBeEqualTo VoucherPolicyFailure.INVALID_TRANSITION
+
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.updateCampaignPolicy(
-                campaign(state = CampaignState.ACTIVE, allocatedCount = 4),
+                campaign = campaign(state = CampaignState.ACTIVE, allocatedCount = 4),
                 expectedRevision = 7,
                 capacity = 3,
                 perUserLimit = 1,
@@ -48,10 +58,15 @@ internal class VoucherPoliciesTest {
 
     @Test
     fun `redemption review rejection returns to allocated without changing capacity`() {
-        val claim = claim(state = ClaimState.REVIEW_REQUIRED, reviewKind = ReviewKind.REDEMPTION, capacityReserved = true)
+        val claim = claim(
+            state = ClaimState.REVIEW_REQUIRED,
+            reviewKind = ReviewKind.REDEMPTION,
+            capacityReserved = true
+        )
 
         val outcome = VoucherPolicies.rejectReview(claim, expectedRevision = claim.revision)
 
+        log.debug { "outcome=$outcome" }
         outcome.claim.state shouldBeEqualTo ClaimState.ALLOCATED
         outcome.claim.reviewKind.shouldBeNull()
         outcome.claim.capacityReserved.shouldBeTrue()
@@ -60,10 +75,15 @@ internal class VoucherPoliciesTest {
 
     @Test
     fun `allocation review approval contributes capacity once`() {
-        val claim = claim(state = ClaimState.REVIEW_REQUIRED, reviewKind = ReviewKind.ALLOCATION, capacityReserved = false)
+        val claim = claim(
+            state = ClaimState.REVIEW_REQUIRED,
+            reviewKind = ReviewKind.ALLOCATION,
+            capacityReserved = false
+        )
 
         val outcome = VoucherPolicies.approveReview(claim, expectedRevision = claim.revision)
 
+        log.debug { "outcome=$outcome" }
         outcome.claim.state shouldBeEqualTo ClaimState.ALLOCATED
         outcome.claim.capacityReserved.shouldBeTrue()
         outcome.capacityDelta shouldBeEqualTo 1
@@ -72,10 +92,15 @@ internal class VoucherPoliciesTest {
 
     @Test
     fun `allocation rejection is terminal without consuming capacity`() {
-        val claim = claim(state = ClaimState.REVIEW_REQUIRED, reviewKind = ReviewKind.ALLOCATION, capacityReserved = false)
+        val claim = claim(
+            state = ClaimState.REVIEW_REQUIRED,
+            reviewKind = ReviewKind.ALLOCATION,
+            capacityReserved = false
+        )
 
         val outcome = VoucherPolicies.rejectReview(claim, expectedRevision = claim.revision)
 
+        log.debug { "outcome=$outcome" }
         outcome.claim.state shouldBeEqualTo ClaimState.REJECTED
         outcome.claim.capacityReserved.shouldBeFalse()
         outcome.capacityDelta shouldBeEqualTo 0
@@ -85,9 +110,21 @@ internal class VoucherPoliciesTest {
     fun `release expiry and revoke decrement reserved capacity exactly once`() {
         val allocated = claim(state = ClaimState.ALLOCATED, capacityReserved = true)
 
-        VoucherPolicies.release(allocated, allocated.revision).capacityDelta shouldBeEqualTo -1
-        VoucherPolicies.expire(allocated.copy(expiresAt = NOW), allocated.revision, NOW).capacityDelta shouldBeEqualTo -1
-        VoucherPolicies.revoke(allocated, allocated.revision).capacityDelta shouldBeEqualTo -1
+        VoucherPolicies.release(
+            claim = allocated,
+            expectedRevision = allocated.revision
+        ).capacityDelta shouldBeEqualTo -1
+
+        VoucherPolicies.expire(
+            allocated.copy(expiresAt = NOW),
+            allocated.revision,
+            NOW
+        ).capacityDelta shouldBeEqualTo -1
+
+        VoucherPolicies.revoke(
+            claim = allocated,
+            expectedRevision = allocated.revision
+        ).capacityDelta shouldBeEqualTo -1
 
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.release(
@@ -104,6 +141,7 @@ internal class VoucherPoliciesTest {
 
         redeemed.state shouldBeEqualTo ClaimState.REDEEMED
         VoucherPolicies.capacityContribution(redeemed) shouldBeEqualTo 1
+
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.revoke(redeemed, redeemed.revision)
         }.code shouldBeEqualTo VoucherPolicyFailure.INVALID_TRANSITION
@@ -111,7 +149,11 @@ internal class VoucherPoliciesTest {
 
     @Test
     fun `stale revision fails before transition`() {
-        val claim = claim(state = ClaimState.REVIEW_REQUIRED, reviewKind = ReviewKind.REDEMPTION, capacityReserved = true)
+        val claim = claim(
+            state = ClaimState.REVIEW_REQUIRED,
+            reviewKind = ReviewKind.REDEMPTION,
+            capacityReserved = true
+        )
 
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.approveReview(claim, expectedRevision = claim.revision - 1)
@@ -120,7 +162,11 @@ internal class VoucherPoliciesTest {
 
     @Test
     fun `expiry requires the claim deadline to have elapsed`() {
-        val claim = claim(state = ClaimState.ALLOCATED, capacityReserved = true, expiresAt = NOW + 1.seconds())
+        val claim = claim(
+            state = ClaimState.ALLOCATED,
+            capacityReserved = true,
+            expiresAt = NOW + 1.seconds()
+        )
 
         assertFailsWith<VoucherPolicyException> {
             VoucherPolicies.expire(claim, claim.revision, NOW)
@@ -139,12 +185,11 @@ internal class VoucherPoliciesTest {
             claimId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890bc"),
             state = state,
             reviewKind = reviewKind,
-            pendingFromState =
-                when (reviewKind) {
-                    ReviewKind.ALLOCATION -> ClaimState.ELIGIBLE
-                    ReviewKind.REDEMPTION -> ClaimState.ALLOCATED
-                    null -> null
-                },
+            pendingFromState = when (reviewKind) {
+                ReviewKind.ALLOCATION -> ClaimState.ELIGIBLE
+                ReviewKind.REDEMPTION -> ClaimState.ALLOCATED
+                null                  -> null
+            },
             capacityReserved = capacityReserved,
             allocationPolicyVersion = 3,
             expiresAt = expiresAt,
@@ -168,8 +213,4 @@ internal class VoucherPoliciesTest {
             policyVersion = 3,
             revision = 7,
         )
-
-    companion object {
-        private val NOW: Instant = Instant.parse("2026-07-19T00:00:00Z")
-    }
 }

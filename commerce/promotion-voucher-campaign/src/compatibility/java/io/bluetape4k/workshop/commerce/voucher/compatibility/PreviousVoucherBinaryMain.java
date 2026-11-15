@@ -6,9 +6,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-/** Previous release fixture intentionally compiled against only the JDK JDBC API. */
+/**
+ * Previous release fixture intentionally compiled against only the JDK JDBC API.
+ */
 public final class PreviousVoucherBinaryMain {
-    private PreviousVoucherBinaryMain() {}
+    private PreviousVoucherBinaryMain() {
+    }
 
     public static void main(String[] args) throws Exception {
         if (args.length != 6) {
@@ -28,10 +31,10 @@ public final class PreviousVoucherBinaryMain {
             }
             try (PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO voucher_campaigns (tenant_id, campaign_id, state, starts_at, ends_at, " +
-                    "capacity, allocated_count, per_user_limit, redemption_ttl_seconds, policy_version, revision) " +
-                    "VALUES (?, ?::uuid, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '1 minute', " +
-                    "CURRENT_TIMESTAMP + INTERVAL '1 hour', 10, 0, 1, 3600, 1, 0) " +
-                    "ON CONFLICT (tenant_id, campaign_id) DO NOTHING")) {
+                            "capacity, allocated_count, per_user_limit, redemption_ttl_seconds, policy_version, revision) " +
+                            "VALUES (?, ?::uuid, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '1 minute', " +
+                            "CURRENT_TIMESTAMP + INTERVAL '1 hour', 10, 0, 1, 3600, 1, 0) " +
+                            "ON CONFLICT (tenant_id, campaign_id) DO NOTHING")) {
                 statement.setString(1, args[4]);
                 statement.setString(2, args[5]);
                 statement.executeUpdate();

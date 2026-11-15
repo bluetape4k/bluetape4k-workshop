@@ -1,6 +1,11 @@
+@file:Suppress("SqlResolve")
+
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.javatimes.days
+import io.bluetape4k.jdbc.sql.getIntOrNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requirePositiveNumber
 import java.time.Duration
 import java.time.Instant
 import javax.sql.DataSource
@@ -22,6 +27,9 @@ internal data class VoucherRetentionCutoffs(
 internal class VoucherRetentionPolicy(
     private val properties: VoucherRetentionProperties,
 ) {
+
+    companion object: KLogging()
+
     init {
         require(properties.audit >= 90.days()) { "audit retention must be at least 90 days" }
         require(properties.terminalExtra >= 7.days()) { "terminal extra retention must be at least 7 days" }
@@ -34,6 +42,7 @@ internal class VoucherRetentionPolicy(
         maximumVoucherTtl: Duration,
     ): VoucherRetentionCutoffs {
         require(!maximumVoucherTtl.isNegative) { "maximumVoucherTtl must not be negative" }
+
         return VoucherRetentionCutoffs(
             auditBefore = now.minus(properties.audit),
             terminalBefore = now.minus(maximumVoucherTtl.plus(properties.terminalExtra)),
@@ -46,16 +55,38 @@ internal class VoucherRetentionPolicy(
 internal class PostgresReferencedKeyVersionSource(
     private val dataSource: DataSource,
 ): ReferencedKeyVersionSource {
+
+    private companion object: KLogging() {
+        val REFERENCE_TABLES_SQL =
+            """
+            SELECT to_regclass(current_schema() || '.voucher_claims') IS NOT NULL
+               AND to_regclass(current_schema() || '.voucher_http_idempotency') IS NOT NULL
+            """.trimIndent()
+
+        val REFERENCED_KEY_SQL =
+            """
+            SELECT generation_key_version, verification_key_version
+              FROM voucher_claims
+             WHERE generation_key_version IS NOT NULL OR verification_key_version IS NOT NULL
+            UNION ALL
+            SELECT generation_key_version, verification_key_version
+              FROM voucher_http_idempotency
+             WHERE generation_key_version IS NOT NULL OR verification_key_version IS NOT NULL
+            """.trimIndent()
+    }
+
     override fun referencedVersions(): ReferencedKeyVersions {
         val generation = linkedSetOf<Int>()
         val verification = linkedSetOf<Int>()
-        dataSource.connection.use { connection ->
-            if (!connection.hasReferenceTables()) return ReferencedKeyVersions()
-            connection.prepareStatement(REFERENCED_KEY_SQL).use { statement ->
-                statement.executeQuery().use { rows ->
+
+        dataSource.connection.use { conn ->
+            if (!conn.hasReferenceTables()) return ReferencedKeyVersions()
+
+            conn.prepareStatement(REFERENCED_KEY_SQL).use { stmt ->
+                stmt.executeQuery().use { rows ->
                     while (rows.next()) {
-                        rows.getInt("generation_key_version").takeUnless { rows.wasNull() }?.let(generation::add)
-                        rows.getInt("verification_key_version").takeUnless { rows.wasNull() }?.let(verification::add)
+                        rows.getIntOrNull("generation_key_version")?.let(generation::add)
+                        rows.getIntOrNull("verification_key_version")?.let(verification::add)
                     }
                 }
             }
@@ -71,25 +102,6 @@ internal class PostgresReferencedKeyVersionSource(
                 rows.getBoolean(1)
             }
         }
-
-    private companion object {
-        val REFERENCE_TABLES_SQL =
-            """
-            SELECT to_regclass(current_schema() || '.voucher_claims') IS NOT NULL
-               AND to_regclass(current_schema() || '.voucher_http_idempotency') IS NOT NULL
-            """.trimIndent()
-
-        val REFERENCED_KEY_SQL =
-            """
-            SELECT generation_key_version, verification_key_version
-            FROM voucher_claims
-            WHERE generation_key_version IS NOT NULL OR verification_key_version IS NOT NULL
-            UNION ALL
-            SELECT generation_key_version, verification_key_version
-            FROM voucher_http_idempotency
-            WHERE generation_key_version IS NOT NULL OR verification_key_version IS NOT NULL
-            """.trimIndent()
-    }
 }
 
 /** durable claim이나 replay row가 참조하는 동안 key version 제거를 거부합니다. */
@@ -97,8 +109,9 @@ internal class VoucherKeyRotationPolicy(
     private val references: ReferencedKeyVersionSource,
 ) {
     fun canRetire(version: Int): Boolean {
-        require(version > 0) { "version must be positive" }
+        version.requirePositiveNumber("version")
         val referenced = references.referencedVersions()
+
         return version !in referenced.generation && version !in referenced.verification
     }
 }

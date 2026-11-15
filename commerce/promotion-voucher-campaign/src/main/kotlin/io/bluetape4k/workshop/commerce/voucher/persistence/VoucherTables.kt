@@ -140,15 +140,15 @@ internal object VoucherSchemaHistoryTable: Table("voucher_schema_history") {
     val version = varchar("version", 64)
     val checksum = varchar("checksum", 64)
     val appliedAt = timestamp("applied_at")
+
     override val primaryKey = PrimaryKey(version)
 }
 
-internal val voucherTables =
-    arrayOf(
-        CampaignTable,
-        ClaimTable,
-        ReviewTable,
-        AuditTable,
-        EventInboxTable,
-        HttpIdempotencyTable,
-    )
+internal val voucherTables: Array<AuditableLongIdTable> = arrayOf(
+    CampaignTable,
+    ClaimTable,
+    ReviewTable,
+    AuditTable,
+    EventInboxTable,
+    HttpIdempotencyTable,
+)

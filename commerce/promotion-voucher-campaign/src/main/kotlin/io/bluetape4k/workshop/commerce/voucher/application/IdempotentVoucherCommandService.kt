@@ -13,6 +13,7 @@ import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherIdempotencySto
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherTransactionRunner
 import org.springframework.stereotype.Service
+import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -25,21 +26,24 @@ internal data class IdempotentVoucherCommand(
     val retention: Duration = HttpIdempotencyRepository.DEFAULT_RETENTION,
 )
 
-internal sealed interface IdempotentCommandResult {
+internal sealed interface IdempotentCommandResult: Serializable {
+
     data class Completed(
         val response: StoredHttpResponse,
         val replayed: Boolean,
-    ) : IdempotentCommandResult
+    ): IdempotentCommandResult
 
     data class Retryable(
         val response: StoredHttpResponse,
-    ) : IdempotentCommandResult
+    ): IdempotentCommandResult
 
     data class InProgress(
         val retryAfter: Duration,
-    ) : IdempotentCommandResult
+    ): IdempotentCommandResult
 
-    data object FingerprintConflict : IdempotentCommandResult
+    data object FingerprintConflict: IdempotentCommandResult {
+        private fun readResolve(): Any = FingerprintConflict
+    }
 }
 
 internal enum class IdempotencyCutPoint {
@@ -52,21 +56,21 @@ internal enum class IdempotencyCutPoint {
 /** 감싸는 business transaction이 rollback되도록 retryable command outcome을 신호합니다. */
 internal class RetryableVoucherCommand(
     val response: StoredHttpResponse,
-) : RuntimeException(response.responseKind.name) {
+): RuntimeException(response.responseKind.name) {
+
     init {
         require(response.responseKind in RETRYABLE_KINDS) { "response kind is not retryable with the same key" }
     }
 
-    companion object {
-        private val RETRYABLE_KINDS =
-            setOf(
-                VoucherResponseKind.RATE_LIMITED,
-                VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
-                VoucherResponseKind.AUTHORITATIVE_BACKEND_UNAVAILABLE,
-                VoucherResponseKind.CAMPAIGN_PAUSED,
-                VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE,
-                VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
-            )
+    companion object: KLogging() {
+        private val RETRYABLE_KINDS = setOf(
+            VoucherResponseKind.RATE_LIMITED,
+            VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
+            VoucherResponseKind.AUTHORITATIVE_BACKEND_UNAVAILABLE,
+            VoucherResponseKind.CAMPAIGN_PAUSED,
+            VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE,
+            VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
+        )
     }
 }
 
@@ -82,11 +86,24 @@ internal class IdempotentVoucherCommandService(
     private val ownerTokens: () -> OwnerToken = OwnerToken::random,
     private val cutPoint: (IdempotencyCutPoint) -> Unit = {},
 ) {
+
+    companion object: KLogging() {
+        private val RETRYABLE_WITHOUT_OWNER = setOf(
+            VoucherResponseKind.RATE_LIMITED,
+            VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
+            VoucherResponseKind.AUTHORITATIVE_BACKEND_UNAVAILABLE,
+            VoucherResponseKind.CAMPAIGN_PAUSED,
+            VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE,
+            VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
+        )
+    }
+
     fun execute(
         command: IdempotentVoucherCommand,
         admission: () -> StoredHttpResponse?,
         business: () -> StoredHttpResponse,
-    ): IdempotentCommandResult = executeOwned(command, admission, transactionalBusiness = true, business)
+    ): IdempotentCommandResult =
+        executeOwned(command, admission, transactionalBusiness = true, business)
 
     /**
      * bounded reconciliation batch처럼 business operation이 더 작은 독립 transaction을 소유하는 command를 실행합니다.
@@ -97,18 +114,18 @@ internal class IdempotentVoucherCommandService(
         command: IdempotentVoucherCommand,
         admission: () -> StoredHttpResponse?,
         business: () -> StoredHttpResponse,
-    ): IdempotentCommandResult = executeOwned(command, admission, transactionalBusiness = false, business)
+    ): IdempotentCommandResult =
+        executeOwned(command, admission, transactionalBusiness = false, business)
 
-    private fun executeOwned(
+    private inline fun executeOwned(
         command: IdempotentVoucherCommand,
         admission: () -> StoredHttpResponse?,
         transactionalBusiness: Boolean,
-        business: () -> StoredHttpResponse,
+        crossinline business: () -> StoredHttpResponse,
     ): IdempotentCommandResult {
-        val replay =
-            transactions.foregroundTransaction {
-                idempotency.lookup(command.scope, command.fingerprint)
-            }
+        val replay = transactions.foregroundTransaction {
+            idempotency.lookup(command.scope, command.fingerprint)
+        }
         terminalResult(replay)?.let { return it }
 
         admission()?.let { rejected ->
@@ -119,62 +136,67 @@ internal class IdempotentVoucherCommandService(
         }
 
         val now = Instant.now(clock)
-        val acquired =
-            transactions.foregroundTransaction {
-                idempotency.acquire(
-                    scope = command.scope,
-                    fingerprint = command.fingerprint,
-                    now = now,
-                    ownerToken = ownerTokens(),
-                    lease = command.lease,
-                    commandTimeout = command.commandTimeout,
-                    retention = command.retention,
-                )
-            }
+        val acquired: IdempotencyAcquireResult = transactions.foregroundTransaction {
+            idempotency.acquire(
+                scope = command.scope,
+                fingerprint = command.fingerprint,
+                now = now,
+                ownerToken = ownerTokens(),
+                lease = command.lease,
+                commandTimeout = command.commandTimeout,
+                retention = command.retention,
+            )
+        }
         terminalResult(acquired)?.let { return it }
+
         if (acquired is IdempotencyAcquireResult.InProgress) {
             return IdempotentCommandResult.InProgress(acquired.retryAfter.coerceAtMost(command.lease))
         }
-        check(acquired is IdempotencyAcquireResult.Owner) { "unexpected idempotency acquisition result" }
+        check(acquired is IdempotencyAcquireResult.Owner) {
+            "unexpected idempotency acquisition result"
+        }
         cutPoint(IdempotencyCutPoint.AFTER_ACQUIRE)
 
-        val response =
-            try {
-                if (transactionalBusiness) {
-                    transactions.foregroundTransaction {
-                        requireOwner(command, acquired, Instant.now(clock))
-                        cutPoint(IdempotencyCutPoint.BEFORE_BUSINESS)
-                        val completed = business()
-                        finalize(command, acquired, completed)
-                        completed
-                    }
-                } else {
-                    transactions.foregroundTransaction {
-                        requireOwner(command, acquired, Instant.now(clock))
-                    }
+        val response = try {
+            if (transactionalBusiness) {
+                transactions.foregroundTransaction {
+                    requireOwner(command, acquired, Instant.now(clock))
                     cutPoint(IdempotencyCutPoint.BEFORE_BUSINESS)
                     val completed = business()
-                    transactions.foregroundTransaction {
-                        finalize(command, acquired, completed)
-                    }
+                    finalize(command, acquired, completed)
                     completed
                 }
-            } catch (retryable: RetryableVoucherCommand) {
+            } else {
                 transactions.foregroundTransaction {
-                    idempotency.release(command.scope, acquired.ownerToken)
+                    requireOwner(command, acquired, Instant.now(clock))
                 }
-                log.warn {
-                    "voucher_command_retryable operation=${command.scope.operation} " +
-                        "kind=${retryable.response.responseKind} keyDigestPrefix=${command.scope.keyDigest.base64Url.take(12)}"
+                cutPoint(IdempotencyCutPoint.BEFORE_BUSINESS)
+                val completed = business()
+                transactions.foregroundTransaction {
+                    finalize(command, acquired, completed)
                 }
-                return IdempotentCommandResult.Retryable(retryable.response)
+                completed
             }
+        } catch (retryable: RetryableVoucherCommand) {
+            transactions.foregroundTransaction {
+                idempotency.release(command.scope, acquired.ownerToken)
+            }
+            log.warn {
+                "voucher_command_retryable operation=${command.scope.operation} " +
+                        "kind=${retryable.response.responseKind} " +
+                        "keyDigestPrefix=${command.scope.keyDigest.base64Url.take(12)}"
+            }
+            return IdempotentCommandResult.Retryable(retryable.response)
+        }
 
         cutPoint(IdempotencyCutPoint.AFTER_COMMIT_BEFORE_RESPONSE)
+
         log.debug {
-            "voucher_command_completed operation=${command.scope.operation} responseKind=${response.responseKind} " +
-                "keyDigestPrefix=${command.scope.keyDigest.base64Url.take(12)}"
+            "voucher_command_completed operation=${command.scope.operation} " +
+                    "responseKind=${response.responseKind} " +
+                    "keyDigestPrefix=${command.scope.keyDigest.base64Url.take(12)}"
         }
+
         return IdempotentCommandResult.Completed(response, replayed = false)
     }
 
@@ -183,9 +205,8 @@ internal class IdempotentVoucherCommandService(
         acquired: IdempotencyAcquireResult.Owner,
         now: Instant,
     ) {
-        check(idempotency.isOwner(command.scope, acquired.ownerToken, now)) {
-            "idempotency owner or command deadline was lost before business mutation"
-        }
+        val isOwner = idempotency.isOwner(command.scope, acquired.ownerToken, now)
+        check(isOwner) { "idempotency owner or command deadline was lost before business mutation" }
     }
 
     private fun finalize(
@@ -193,29 +214,21 @@ internal class IdempotentVoucherCommandService(
         acquired: IdempotencyAcquireResult.Owner,
         response: StoredHttpResponse,
     ) {
-        check(idempotency.finalize(command.scope, acquired.ownerToken, Instant.now(clock), response)) {
-            "idempotency owner was lost before terminal finalize"
-        }
+        val finalized = idempotency.finalize(command.scope, acquired.ownerToken, Instant.now(clock), response)
+        check(finalized) { "idempotency owner was lost before terminal finalize" }
+
         cutPoint(IdempotencyCutPoint.AFTER_FINALIZE_BEFORE_COMMIT)
     }
 
-    private fun terminalResult(result: IdempotencyAcquireResult?): IdempotentCommandResult? =
-        when (result) {
-            is IdempotencyAcquireResult.Replay ->
-                IdempotentCommandResult.Completed(result.response, replayed = true)
-            IdempotencyAcquireResult.FingerprintConflict -> IdempotentCommandResult.FingerprintConflict
-            else -> null
-        }
-
-    companion object : KLogging() {
-        private val RETRYABLE_WITHOUT_OWNER =
-            setOf(
-                VoucherResponseKind.RATE_LIMITED,
-                VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
-                VoucherResponseKind.AUTHORITATIVE_BACKEND_UNAVAILABLE,
-                VoucherResponseKind.CAMPAIGN_PAUSED,
-                VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE,
-                VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
+    private fun terminalResult(
+        result: IdempotencyAcquireResult?,
+    ): IdempotentCommandResult? = when (result) {
+        is IdempotencyAcquireResult.Replay           ->
+            IdempotentCommandResult.Completed(
+                result.response,
+                replayed = true
             )
+        IdempotencyAcquireResult.FingerprintConflict -> IdempotentCommandResult.FingerprintConflict
+        else                                         -> null
     }
 }

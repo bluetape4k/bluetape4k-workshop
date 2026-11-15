@@ -19,65 +19,75 @@ import java.util.*
 internal class ClaimRepository(
     private val gate: DatabasePermitGate,
 ): LongAuditableJdbcRepository<ClaimRecord, ClaimTable> {
+
+    companion object: KLogging() {
+        private val USER_LIMIT_STATES: List<ClaimState> = listOf(
+            ClaimState.ALLOCATED,
+            ClaimState.REVIEW_REQUIRED,
+            ClaimState.REDEEMED
+        )
+    }
+
     override val table = ClaimTable
 
     override fun extractId(entity: ClaimRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): ClaimRecord =
-        ClaimRecord(
-            id = this[table.id].value,
-            tenantId = this[table.tenantId],
-            campaignRowId = this[table.campaignRowId].value,
-            campaignId = this[table.campaignId],
-            claimId = this[table.claimId],
-            allocationId = this[table.allocationId],
-            userDigest = this[table.userDigest],
-            state = this[table.state],
-            reviewKind = this[table.reviewKind],
-            pendingFromState = this[table.pendingFromState],
-            capacityReserved = this[table.capacityReserved],
-            allocationPolicyVersion = this[table.allocationPolicyVersion],
-            codeVerifier = this[table.codeVerifier],
-            generationKeyVersion = this[table.generationKeyVersion],
-            verificationKeyVersion = this[table.verificationKeyVersion],
-            expiresAt = this[table.expiresAt],
-            redemptionReferenceDigest = this[table.redemptionReferenceDigest],
-            revision = this[table.revision],
-            createdBy = this[table.createdBy],
-            createdAt = this[table.createdAt],
-            updatedBy = this[table.updatedBy],
-            updatedAt = this[table.updatedAt],
-        )
+    override fun ResultRow.toEntity(): ClaimRecord = ClaimRecord(
+        id = this[table.id].value,
+        tenantId = this[table.tenantId],
+        campaignRowId = this[table.campaignRowId].value,
+        campaignId = this[table.campaignId],
+        claimId = this[table.claimId],
+        allocationId = this[table.allocationId],
+        userDigest = this[table.userDigest],
+        state = this[table.state],
+        reviewKind = this[table.reviewKind],
+        pendingFromState = this[table.pendingFromState],
+        capacityReserved = this[table.capacityReserved],
+        allocationPolicyVersion = this[table.allocationPolicyVersion],
+        codeVerifier = this[table.codeVerifier],
+        generationKeyVersion = this[table.generationKeyVersion],
+        verificationKeyVersion = this[table.verificationKeyVersion],
+        expiresAt = this[table.expiresAt],
+        redemptionReferenceDigest = this[table.redemptionReferenceDigest],
+        revision = this[table.revision],
+        createdBy = this[table.createdBy],
+        createdAt = this[table.createdAt],
+        updatedBy = this[table.updatedBy],
+        updatedAt = this[table.updatedAt],
+    )
 
     fun insert(record: ClaimRecord): ClaimRecord {
         gate.requireHeld()
-        val id =
-            table.insertAndGetId {
-                it[tenantId] = record.tenantId
-                it[campaignRowId] = record.campaignRowId
-                it[campaignId] = record.campaignId
-                it[claimId] = record.claimId
-                it[allocationId] = record.allocationId
-                it[userDigest] = record.userDigest
-                it[state] = record.state
-                it[reviewKind] = record.reviewKind
-                it[pendingFromState] = record.pendingFromState
-                it[capacityReserved] = record.capacityReserved
-                it[allocationPolicyVersion] = record.allocationPolicyVersion
-                it[codeVerifier] = record.codeVerifier
-                it[generationKeyVersion] = record.generationKeyVersion
-                it[verificationKeyVersion] = record.verificationKeyVersion
-                it[expiresAt] = record.expiresAt
-                it[redemptionReferenceDigest] = record.redemptionReferenceDigest
-                it[revision] = record.revision
-            }.value
+        val id = table.insertAndGetId {
+            it[tenantId] = record.tenantId
+            it[campaignRowId] = record.campaignRowId
+            it[campaignId] = record.campaignId
+            it[claimId] = record.claimId
+            it[allocationId] = record.allocationId
+            it[userDigest] = record.userDigest
+            it[state] = record.state
+            it[reviewKind] = record.reviewKind
+            it[pendingFromState] = record.pendingFromState
+            it[capacityReserved] = record.capacityReserved
+            it[allocationPolicyVersion] = record.allocationPolicyVersion
+            it[codeVerifier] = record.codeVerifier
+            it[generationKeyVersion] = record.generationKeyVersion
+            it[verificationKeyVersion] = record.verificationKeyVersion
+            it[expiresAt] = record.expiresAt
+            it[redemptionReferenceDigest] = record.redemptionReferenceDigest
+            it[revision] = record.revision
+        }.value
         log.debug { "voucher_claim_inserted claimId=${record.claimId}" }
         return findById(id)
     }
 
     override fun findById(id: Long): ClaimRecord {
         gate.requireHeld()
-        return table.selectAll().where { table.id eq id }.single().let { with(this) { it.toEntity() } }
+        return table.selectAll()
+            .where { table.id eq id }
+            .single()
+            .toEntity()
     }
 
     fun findPublic(
@@ -85,11 +95,10 @@ internal class ClaimRepository(
         claimId: UUID,
     ): ClaimRecord? {
         gate.requireHeld()
-        return table
-            .selectAll()
+        return table.selectAll()
             .where { (table.tenantId eq tenantId) and (table.claimId eq claimId) }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
     }
 
     fun findPublicForUpdate(
@@ -97,12 +106,11 @@ internal class ClaimRepository(
         claimId: UUID,
     ): ClaimRecord? {
         gate.requireHeld()
-        return table
-            .selectAll()
+        return table.selectAll()
             .where { (table.tenantId eq tenantId) and (table.claimId eq claimId) }
             .forUpdate()
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
     }
 
     fun findByVerifier(
@@ -115,7 +123,7 @@ internal class ClaimRepository(
             .selectAll()
             .where { (table.tenantId eq tenantId) and (table.codeVerifier eq verifier) }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
     }
 
     fun countForUser(
@@ -158,10 +166,5 @@ internal class ClaimRepository(
             it[redemptionReferenceDigest] = record.redemptionReferenceDigest
             it[revision] = record.revision
         } == 1
-    }
-
-    companion object: KLogging() {
-        private val USER_LIMIT_STATES =
-            listOf(ClaimState.ALLOCATED, ClaimState.REVIEW_REQUIRED, ClaimState.REDEEMED)
     }
 }

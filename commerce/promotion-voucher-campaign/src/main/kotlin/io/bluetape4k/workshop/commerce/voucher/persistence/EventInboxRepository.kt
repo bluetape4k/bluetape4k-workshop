@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.persistence
 
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -19,7 +20,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
@@ -29,45 +29,49 @@ import java.util.*
 internal class EventInboxRepository(
     private val gate: DatabasePermitGate,
 ): LongAuditableJdbcRepository<EventInboxRecord, EventInboxTable> {
+
+    companion object: KLogging() {
+        private val TERMINAL_OUTCOMES = setOf(InboxStatus.APPLIED, InboxStatus.IGNORED, InboxStatus.CONFLICT)
+        private val BACKLOG_STATUSES = listOf(InboxStatus.PENDING, InboxStatus.CLAIMED, InboxStatus.FAILED)
+    }
+
     override val table = EventInboxTable
     override fun extractId(entity: EventInboxRecord): Long = entity.id
 
-    override fun ResultRow.toEntity(): EventInboxRecord =
-        EventInboxRecord(
-            id = this[table.id].value,
-            tenantId = this[table.tenantId],
-            eventId = this[table.eventId],
-            aggregateType = this[table.aggregateType],
-            aggregateId = this[table.aggregateId],
-            payloadDigest = this[table.payloadDigest],
-            observedSequence = this[table.observedSequence],
-            status = this[table.status],
-            attempt = this[table.attempt],
-            nextAttemptAt = this[table.nextAttemptAt],
-            claimOwner = this[table.claimOwner],
-            claimUntil = this[table.claimUntil],
-            createdBy = this[table.createdBy],
-            createdAt = this[table.createdAt],
-            updatedBy = this[table.updatedBy],
-            updatedAt = this[table.updatedAt],
-        )
+    override fun ResultRow.toEntity(): EventInboxRecord = EventInboxRecord(
+        id = this[table.id].value,
+        tenantId = this[table.tenantId],
+        eventId = this[table.eventId],
+        aggregateType = this[table.aggregateType],
+        aggregateId = this[table.aggregateId],
+        payloadDigest = this[table.payloadDigest],
+        observedSequence = this[table.observedSequence],
+        status = this[table.status],
+        attempt = this[table.attempt],
+        nextAttemptAt = this[table.nextAttemptAt],
+        claimOwner = this[table.claimOwner],
+        claimUntil = this[table.claimUntil],
+        createdBy = this[table.createdBy],
+        createdAt = this[table.createdAt],
+        updatedBy = this[table.updatedBy],
+        updatedAt = this[table.updatedAt],
+    )
 
     fun insert(record: EventInboxRecord): EventInboxRecord {
         gate.requireHeld()
-        val id =
-            table.insertAndGetId {
-                it[tenantId] = record.tenantId
-                it[eventId] = record.eventId
-                it[aggregateType] = record.aggregateType
-                it[aggregateId] = record.aggregateId
-                it[payloadDigest] = record.payloadDigest
-                it[observedSequence] = record.observedSequence
-                it[status] = record.status
-                it[attempt] = record.attempt
-                it[nextAttemptAt] = record.nextAttemptAt
-                it[claimOwner] = record.claimOwner
-                it[claimUntil] = record.claimUntil
-            }.value
+        val id = table.insertAndGetId {
+            it[tenantId] = record.tenantId
+            it[eventId] = record.eventId
+            it[aggregateType] = record.aggregateType
+            it[aggregateId] = record.aggregateId
+            it[payloadDigest] = record.payloadDigest
+            it[observedSequence] = record.observedSequence
+            it[status] = record.status
+            it[attempt] = record.attempt
+            it[nextAttemptAt] = record.nextAttemptAt
+            it[claimOwner] = record.claimOwner
+            it[claimUntil] = record.claimUntil
+        }.value
         return findById(id)
     }
 
@@ -88,13 +92,18 @@ internal class EventInboxRepository(
                 it[claimOwner] = record.claimOwner
                 it[claimUntil] = record.claimUntil
             }.insertedCount == 1
+
         val durable = checkNotNull(findEvent(record.tenantId, record.eventId))
         return InboxInsertResult(durable, inserted)
     }
 
     override fun findById(id: Long): EventInboxRecord {
         gate.requireHeld()
-        return table.selectAll().where { table.id eq id }.single().let { with(this) { it.toEntity() } }
+        return table
+            .selectAll()
+            .where { table.id eq id }
+            .single()
+            .toEntity()
     }
 
     fun findEvent(
@@ -106,7 +115,7 @@ internal class EventInboxRepository(
             .selectAll()
             .where { (table.tenantId eq tenantId) and (table.eventId eq eventId) }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
     }
 
     fun findBacklogPage(
@@ -115,15 +124,18 @@ internal class EventInboxRepository(
         limit: Int,
     ): List<EventInboxRecord> {
         gate.requireHeld()
-        val predicate =
-            (table.tenantId eq tenantId) and
-                    (table.status inList BACKLOG_STATUSES) and
-                    (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
+        var predicate = (table.tenantId eq tenantId) and
+                (table.status inList BACKLOG_STATUSES)
+
+        afterId?.let {
+            predicate = predicate and (table.id greater it)
+        }
+
         return table.selectAll()
             .where { predicate }
             .orderBy(table.id to SortOrder.ASC)
             .limit(limit)
-            .map { with(this) { it.toEntity() } }
+            .map { it.toEntity() }
     }
 
     /** 다른 worker가 이미 소유한 row 뒤에서 기다리지 않고 due row 하나를 claim합니다. */
@@ -133,20 +145,20 @@ internal class EventInboxRepository(
         lease: Duration,
     ): EventInboxRecord? {
         gate.requireHeld()
-        val row =
-            table
-                .selectAll()
-                .where {
-                    ((table.status eq InboxStatus.PENDING) and (table.nextAttemptAt lessEq now)) or
-                            ((table.status eq InboxStatus.CLAIMED) and (table.claimUntil lessEq now))
-                }.orderBy(table.nextAttemptAt to SortOrder.ASC, table.id to SortOrder.ASC)
-                .limit(1)
-                .forUpdate(
-                    ForUpdateOption.PostgreSQL.ForUpdate(
-                        ForUpdateOption.PostgreSQL.MODE.SKIP_LOCKED,
-                    ),
-                ).singleOrNull()
-                ?: return null
+        val row = table
+            .selectAll()
+            .where {
+                ((table.status eq InboxStatus.PENDING) and (table.nextAttemptAt lessEq now)) or
+                        ((table.status eq InboxStatus.CLAIMED) and (table.claimUntil lessEq now))
+            }
+            .orderBy(table.nextAttemptAt to SortOrder.ASC, table.id to SortOrder.ASC)
+            .limit(1)
+            .forUpdate(
+                ForUpdateOption.PostgreSQL.ForUpdate(
+                    ForUpdateOption.PostgreSQL.MODE.SKIP_LOCKED,
+                ),
+            ).singleOrNull() ?: return null
+
         val id = row[table.id].value
         table.update({ table.id eq id }) {
             it[status] = InboxStatus.CLAIMED
@@ -164,20 +176,21 @@ internal class EventInboxRepository(
         lease: Duration,
     ): EventInboxRecord {
         gate.requireHeld()
-        val row =
-            table
-                .selectAll()
-                .where { (table.id eq id) and (table.status eq InboxStatus.PENDING) }
-                .forUpdate()
-                .single()
+        val row = table
+            .selectAll()
+            .where { (table.id eq id) and (table.status eq InboxStatus.PENDING) }
+            .forUpdate()
+            .single()
         check(row[table.id].value == id)
-        check(
-            table.update({ (table.id eq id) and (table.status eq InboxStatus.PENDING) }) {
+
+        val updated = table
+            .update({ (table.id eq id) and (table.status eq InboxStatus.PENDING) }) {
                 it[status] = InboxStatus.CLAIMED
                 it[claimOwner] = owner.take(128)
                 it[claimUntil] = now.plus(lease)
-            } == 1,
-        ) { "pending inbox row changed before synchronous claim" }
+            } == 1
+        check(updated) { "pending inbox row changed before synchronous claim" }
+
         return findById(id)
     }
 
@@ -199,7 +212,8 @@ internal class EventInboxRepository(
                         (table.aggregateType eq record.aggregateType) and
                         (table.aggregateId eq record.aggregateId) and
                         (table.status eq InboxStatus.APPLIED)
-            }.orderBy(table.observedSequence to SortOrder.DESC)
+            }
+            .orderBy(table.observedSequence to SortOrder.DESC)
             .limit(1)
             .singleOrNull()
             ?.get(table.observedSequence)
@@ -211,13 +225,15 @@ internal class EventInboxRepository(
     ): EventInboxRecord {
         gate.requireHeld()
         require(outcome in TERMINAL_OUTCOMES) { "outcome must be terminal" }
-        check(
-            table.update({ (table.id eq id) and (table.status eq InboxStatus.CLAIMED) }) {
+
+        val updated = table
+            .update({ (table.id eq id) and (table.status eq InboxStatus.CLAIMED) }) {
                 it[status] = outcome
                 it[claimOwner] = null
                 it[claimUntil] = null
-            } == 1,
-        ) { "claimed inbox row changed before completion" }
+            } == 1
+        check(updated) { "claimed inbox row changed before completion" }
+
         return findById(id)
     }
 
@@ -230,21 +246,17 @@ internal class EventInboxRepository(
         gate.requireHeld()
         val nextAttempt = record.attempt + 1
         val nextStatus = if (nextAttempt >= maxAttempts) InboxStatus.FAILED else InboxStatus.PENDING
-        check(
-            table.update({ (table.id eq record.id) and (table.status eq InboxStatus.CLAIMED) }) {
+        val updated = table
+            .update({ (table.id eq record.id) and (table.status eq InboxStatus.CLAIMED) }) {
                 it[status] = nextStatus
                 it[attempt] = nextAttempt
                 it[EventInboxTable.nextAttemptAt] = if (nextStatus == InboxStatus.FAILED) now else nextAttemptAt
                 it[claimOwner] = null
                 it[claimUntil] = null
-            } == 1,
-        ) { "claimed inbox row changed before retry" }
-        return findById(record.id)
-    }
+            } == 1
 
-    companion object: KLogging() {
-        private val TERMINAL_OUTCOMES = setOf(InboxStatus.APPLIED, InboxStatus.IGNORED, InboxStatus.CONFLICT)
-        private val BACKLOG_STATUSES = listOf(InboxStatus.PENDING, InboxStatus.CLAIMED, InboxStatus.FAILED)
+        check(updated) { "claimed inbox row changed before retry" }
+        return findById(record.id)
     }
 }
 

@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableScheduling
 @SpringBootApplication
 internal class VoucherCampaignApplication {
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 fun main(args: Array<String>) {

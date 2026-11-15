@@ -1,10 +1,15 @@
+@file:Suppress("SqlResolve")
+
 package io.bluetape4k.workshop.commerce.voucher
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.jdbc.sql.singleLong
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord
@@ -17,6 +22,7 @@ import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ConfigurableApplicationContext
@@ -25,11 +31,13 @@ import org.springframework.modulith.events.core.PublicationTargetIdentifier
 import org.springframework.modulith.events.core.TargetEventPublication
 import java.io.Serializable
 import java.sql.DriverManager
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class VoucherContextRestartIntegrationTest {
+
+    companion object: KLogging()
+
     private val postgres = PostgreSQLServer.Launcher.postgres
     private val applicationJdbcUrl = VoucherTestSchema.create("voucher_restart")
 
@@ -38,29 +46,32 @@ internal class VoucherContextRestartIntegrationTest {
         val tenant = Base58.randomString(8)
         val eventId = Uuid.V7.nextId()
         var publicationId: UUID? = null
+
         startContext().use { first ->
-            val publications = first.getBean(ExposedEventPublicationRepository::class.java)
-            val publication =
-                TargetEventPublication.of(
-                    RestartPublication(eventId.toString()),
-                    PublicationTargetIdentifier.of("voucher.restart.listener"),
-                    Instant.now(),
-                )
+            val publications = first.getBean<ExposedEventPublicationRepository>()
+            val publication = TargetEventPublication.of(
+                RestartPublication(eventId.toString()),
+                PublicationTargetIdentifier.of("voucher.restart.listener"),
+                Instant.now(),
+            )
             publications.create(publication)
             publications.markFailed(publication.identifier)
             publicationId = publication.identifier
             seedPending(first, tenant, eventId)
         }
+
         startContext().use { restarted ->
-            val publications = restarted.getBean(ExposedEventPublicationRepository::class.java)
+            val publications = restarted.getBean<ExposedEventPublicationRepository>()
             publications.findByStatus(Status.FAILED).single { it.identifier == publicationId }
             publications.markCompleted(checkNotNull(publicationId), Instant.now())
             publications.findByStatus(Status.COMPLETED).single { it.identifier == publicationId }
-            val result = restarted.getBean(VoucherReconciliationService::class.java)
+            val result = restarted.getBean<VoucherReconciliationService>()
                 .runBatch(50, 10.seconds())
+
             check(result.processed >= 1)
             readInbox(restarted, tenant, eventId).status shouldBeEqualTo InboxStatus.APPLIED
             queryAuditCount(tenant) shouldBeEqualTo 1L
+
             await atMost 5.seconds() untilAsserted {
                 publications.findCompletedPublications().any { publication ->
                     val event = publication.event as? VoucherInboxAppliedEvent
@@ -75,8 +86,9 @@ internal class VoucherContextRestartIntegrationTest {
         tenant: String,
         eventId: UUID,
     ) {
-        val jdbc = context.getBean(VoucherJdbcExecutor::class.java)
-        val inbox = context.getBean(EventInboxRepository::class.java)
+        val jdbc = context.getBean<VoucherJdbcExecutor>()
+        val inbox = context.getBean<EventInboxRepository>()
+
         jdbc.foregroundTransaction {
             inbox.insert(
                 EventInboxRecord(
@@ -102,9 +114,12 @@ internal class VoucherContextRestartIntegrationTest {
         tenant: String,
         eventId: UUID,
     ): EventInboxRecord {
-        val jdbc = context.getBean(VoucherJdbcExecutor::class.java)
-        val inbox = context.getBean(EventInboxRepository::class.java)
-        return jdbc.foregroundTransaction { checkNotNull(inbox.findEvent(tenant, eventId)) }
+        val jdbc = context.getBean<VoucherJdbcExecutor>()
+        val inbox = context.getBean<EventInboxRepository>()
+
+        return jdbc.foregroundTransaction {
+            inbox.findEvent(tenant, eventId).shouldNotBeNull()
+        }
     }
 
     private fun startContext(): ConfigurableApplicationContext =
@@ -122,17 +137,17 @@ internal class VoucherContextRestartIntegrationTest {
     private fun queryAuditCount(tenant: String): Long =
         DriverManager.getConnection(
             applicationJdbcUrl,
-            requireNotNull(postgres.username),
-            requireNotNull(postgres.password),
-        ).use { connection ->
-            connection.prepareStatement("SELECT count(*) FROM voucher_audits WHERE tenant_id = ?").use { statement ->
+            postgres.username!!,
+            postgres.password!!,
+        ).use { conn ->
+            val sql = "SELECT count(*) FROM voucher_audits WHERE tenant_id = ?"
+            conn.prepareStatement(sql).use { statement ->
                 statement.setString(1, tenant)
                 statement.executeQuery().use { result ->
-                    check(result.next())
-                    result.getLong(1)
+                    result.singleLong()
                 }
             }
         }
 
-    private data class RestartPublication(val eventId: String) : Serializable
+    private data class RestartPublication(val eventId: String): Serializable
 }

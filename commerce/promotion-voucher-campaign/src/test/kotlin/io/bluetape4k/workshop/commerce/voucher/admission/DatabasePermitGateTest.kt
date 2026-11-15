@@ -8,6 +8,7 @@ import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.CancellationException
@@ -15,6 +16,9 @@ import java.util.concurrent.CountDownLatch
 import kotlin.time.Duration.Companion.seconds
 
 internal class DatabasePermitGateTest {
+
+    companion object: KLogging()
+
     @Test
     fun `cancelled foreground work returns only the local JDBC permit`() {
         val gate = gate()
@@ -35,13 +39,12 @@ internal class DatabasePermitGateTest {
         val sseRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { executor ->
-            val sse =
-                executor.submit {
-                    gate.withPermit(DatabaseLane.SSE_MAINTENANCE) {
-                        sseEntered.countDown()
-                        sseRelease.await(5.seconds).shouldBeTrue()
-                    }
+            val sse = executor.submit {
+                gate.withPermit(DatabaseLane.SSE_MAINTENANCE) {
+                    sseEntered.countDown()
+                    sseRelease.await(5.seconds).shouldBeTrue()
                 }
+            }
             sseEntered.await(5.seconds).shouldBeTrue()
 
             gate.withPermit(DatabaseLane.WORKER) { "worker-progress" } shouldBeEqualTo "worker-progress"
@@ -57,22 +60,22 @@ internal class DatabasePermitGateTest {
         val foregroundRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { executor ->
-            val holder =
-                executor.submit {
-                    gate.withPermit(DatabaseLane.FOREGROUND) {
-                        foregroundEntered.countDown()
-                        foregroundRelease.await(5.seconds).shouldBeTrue()
-                    }
+            val holder = executor.submit {
+                gate.withPermit(DatabaseLane.FOREGROUND) {
+                    foregroundEntered.countDown()
+                    foregroundRelease.await(5.seconds).shouldBeTrue()
                 }
+            }
             foregroundEntered.await(5.seconds).shouldBeTrue()
 
-            val failure =
-                assertFailsWith<DatabasePermitRejected> {
-                    val result = gate.withPermit(DatabaseLane.FOREGROUND) { Unit }
-                    error("foreground permit was acquired unexpectedly: $result")
-                }
+            val failure = assertFailsWith<DatabasePermitRejected> {
+                val result = gate.withPermit(DatabaseLane.FOREGROUND) { Unit }
+                error("foreground permit was acquired unexpectedly: $result")
+            }
             failure.retryAfter shouldBeEqualTo 1.seconds()
-            gate.withPermit(DatabaseLane.WORKER) { "worker-progress" } shouldBeEqualTo "worker-progress"
+            gate.withPermit(DatabaseLane.WORKER) {
+                "worker-progress"
+            } shouldBeEqualTo "worker-progress"
 
             foregroundRelease.countDown()
             holder.get(5.seconds)
@@ -87,19 +90,17 @@ internal class DatabasePermitGateTest {
         val waiterStarted = CountDownLatch(1)
 
         VirtualThreads.executorService().use { executor ->
-            val holder =
-                executor.submit {
-                    gate.withPermit(DatabaseLane.FOREGROUND) {
-                        foregroundEntered.countDown()
-                        foregroundRelease.await(5.seconds).shouldBeTrue()
-                    }
+            val holder = executor.submit {
+                gate.withPermit(DatabaseLane.FOREGROUND) {
+                    foregroundEntered.countDown()
+                    foregroundRelease.await(5.seconds).shouldBeTrue()
                 }
+            }
             foregroundEntered.await(5.seconds).shouldBeTrue()
-            val waiter =
-                executor.submit<String> {
-                    waiterStarted.countDown()
-                    gate.withPermit(DatabaseLane.FOREGROUND) { "queued-progress" }
-                }
+            val waiter = executor.submit<String> {
+                waiterStarted.countDown()
+                gate.withPermit(DatabaseLane.FOREGROUND) { "queued-progress" }
+            }
             waiterStarted.await(5.seconds).shouldBeTrue()
 
             awaitQueued(gate)
@@ -120,11 +121,10 @@ internal class DatabasePermitGateTest {
         val gate = gate()
 
         assertFailsWith<IllegalStateException> {
-            val result =
-                gate.withPermit(DatabaseLane.FOREGROUND) {
-                    val nestedResult = gate.withPermit(DatabaseLane.SSE_MAINTENANCE) { Unit }
-                    error("nested permit was acquired unexpectedly: $nestedResult")
-                }
+            val result = gate.withPermit(DatabaseLane.FOREGROUND) {
+                val nestedResult = gate.withPermit(DatabaseLane.SSE_MAINTENANCE) { Unit }
+                error("nested permit was acquired unexpectedly: $nestedResult")
+            }
             error("outer permit completed unexpectedly: $result")
         }
     }
@@ -136,24 +136,22 @@ internal class DatabasePermitGateTest {
         val foregroundRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { executor ->
-            val holder =
-                executor.submit {
-                    gate.withPermit(DatabaseLane.FOREGROUND) {
-                        foregroundEntered.countDown()
-                        foregroundRelease.await(5.seconds).shouldBeTrue()
-                    }
+            val holder = executor.submit {
+                gate.withPermit(DatabaseLane.FOREGROUND) {
+                    foregroundEntered.countDown()
+                    foregroundRelease.await(5.seconds).shouldBeTrue()
                 }
+            }
             foregroundEntered.await(5.seconds).shouldBeTrue()
 
-            val interrupted =
-                executor.submit<Boolean> {
-                    Thread.currentThread().interrupt()
-                    assertFailsWith<DatabasePermitRejected> {
-                        val result = gate.withPermit(DatabaseLane.FOREGROUND) { Unit }
-                        error("interrupted permit was acquired unexpectedly: $result")
-                    }
-                    Thread.currentThread().isInterrupted
+            val interrupted = executor.submit<Boolean> {
+                Thread.currentThread().interrupt()
+                assertFailsWith<DatabasePermitRejected> {
+                    val result = gate.withPermit(DatabaseLane.FOREGROUND) { Unit }
+                    error("interrupted permit was acquired unexpectedly: $result")
                 }
+                Thread.currentThread().isInterrupted
+            }
             interrupted.get(5.seconds).shouldBeTrue()
 
             foregroundRelease.countDown()

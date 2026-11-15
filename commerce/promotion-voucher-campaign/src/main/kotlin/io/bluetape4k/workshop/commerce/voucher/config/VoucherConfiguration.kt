@@ -8,6 +8,7 @@ import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeKeyRing
@@ -26,13 +27,14 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.SpringProperties
 import org.springframework.core.env.Environment
+import org.springframework.core.env.getProperty
 import org.springframework.core.io.ClassPathResource
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import java.nio.charset.StandardCharsets
 import java.time.Clock
 import java.time.Duration
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
 
@@ -153,6 +155,14 @@ internal fun sanitizedStartupCode(failure: Throwable): StartupFailureCode {
 internal class VoucherStartupValidator(
     private val referencedKeyVersions: ReferencedKeyVersionSource = ReferencedKeyVersionSource.NONE,
 ) {
+
+    companion object: KLogging() {
+        private const val HIKARI_MAXIMUM_POOL_SIZE = 16
+        private const val BACKGROUND_PERMITS = 4
+        private const val MINIMUM_KEY_BYTES = 32
+        private val DEMO_PROFILES = setOf("demo", "test", "local")
+    }
+
     fun validate(
         properties: VoucherProperties,
         runtime: VoucherRuntimeEnvironment,
@@ -172,15 +182,15 @@ internal class VoucherStartupValidator(
         database: VoucherDatabaseProperties,
         hikariMaximumPoolSize: Int,
     ) {
-        val invalid =
-            hikariMaximumPoolSize != HIKARI_MAXIMUM_POOL_SIZE ||
-                    database.foregroundPermits <= 0 ||
-                    database.backgroundPermits != BACKGROUND_PERMITS ||
-                    database.foregroundPermits + database.backgroundPermits > hikariMaximumPoolSize ||
-                    database.permitTimeout.isNegative ||
-                    database.permitTimeout.isZero ||
-                    database.lockTimeout.isNegative ||
-                    database.lockTimeout.isZero
+        val invalid = hikariMaximumPoolSize != HIKARI_MAXIMUM_POOL_SIZE ||
+                database.foregroundPermits <= 0 ||
+                database.backgroundPermits != BACKGROUND_PERMITS ||
+                database.foregroundPermits + database.backgroundPermits > hikariMaximumPoolSize ||
+                database.permitTimeout.isNegative ||
+                database.permitTimeout.isZero ||
+                database.lockTimeout.isNegative ||
+                database.lockTimeout.isZero
+
         if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
@@ -191,7 +201,9 @@ internal class VoucherStartupValidator(
         val currentGeneration = keys.generation[keys.currentVersion]
         val currentVerification = keys.verification[keys.currentVersion]
         val required = listOf(currentGeneration, currentVerification, keys.identity, keys.risk, keys.redisSlot)
-        if (required.any { it.isNullOrBlank() }) fail(StartupFailureCode.MISSING_KEY)
+        if (required.any { it.isNullOrBlank() }) {
+            fail(StartupFailureCode.MISSING_KEY)
+        }
 
         val nonNullRequired = required.filterNotNull()
         if (nonNullRequired.any { it.toUtf8Bytes().size < MINIMUM_KEY_BYTES }) {
@@ -200,89 +212,92 @@ internal class VoucherStartupValidator(
         if (production && nonNullRequired.any(::isKnownTestKey)) {
             fail(StartupFailureCode.TEST_KEY_FORBIDDEN)
         }
-        val ringInvalid =
-            keys.currentVersion !in keys.activeReadVersions ||
-                    keys.activeReadVersions.any { it !in keys.generation || it !in keys.verification }
-        if (ringInvalid) fail(StartupFailureCode.INVALID_KEY_RING)
+        val ringInvalid = keys.currentVersion !in keys.activeReadVersions ||
+                keys.activeReadVersions.any { it !in keys.generation || it !in keys.verification }
+        if (ringInvalid) {
+            fail(StartupFailureCode.INVALID_KEY_RING)
+        }
 
-        val domains =
-            buildList {
-                keys.generation.values.forEach { add("generation" to it) }
-                keys.verification.values.forEach { add("verification" to it) }
-                add("identity" to keys.identity)
-                add("risk" to keys.risk)
-                add("redis-slot" to keys.redisSlot)
+        val domains = buildList {
+            keys.generation.values.forEach { add("generation" to it) }
+            keys.verification.values.forEach { add("verification" to it) }
+            add("identity" to keys.identity)
+            add("risk" to keys.risk)
+            add("redis-slot" to keys.redisSlot)
+        }
+        val reusedAcrossDomains = domains
+            .groupBy { it.second }
+            .values
+            .any { values ->
+                values.map { it.first }.distinct().size > 1
             }
-        val reusedAcrossDomains =
-            domains
-                .groupBy { it.second }
-                .values
-                .any { values -> values.map { it.first }.distinct().size > 1 }
-        if (reusedAcrossDomains) fail(StartupFailureCode.DOMAIN_KEY_REUSE)
+        if (reusedAcrossDomains) {
+            fail(StartupFailureCode.DOMAIN_KEY_REUSE)
+        }
     }
 
     private fun validateRedis(redis: VoucherRedisProperties) {
-        val invalid =
-            (redis.enabled && redis.uri.isBlank()) ||
-                    redis.commandTimeout.isNegative ||
-                    redis.commandTimeout.isZero ||
-                    redis.failureThreshold <= 0 ||
-                    redis.recoverySuccessThreshold <= 0 ||
-                    redis.probeInterval.isNegative ||
-                    redis.probeInterval.isZero ||
-                    redis.maxInFlightProbes <= 0 ||
-                    redis.quotaCapacity <= 0 ||
-                    redis.quotaPeriod.isNegative ||
-                    redis.quotaPeriod.isZero ||
-                    redis.bloomExpectedInsertions <= 0 ||
-                    redis.bloomFalseProbability <= 0.0 ||
-                    redis.bloomFalseProbability >= 1.0
+        val invalid = (redis.enabled && redis.uri.isBlank()) ||
+                redis.commandTimeout.isNegative ||
+                redis.commandTimeout.isZero ||
+                redis.failureThreshold <= 0 ||
+                redis.recoverySuccessThreshold <= 0 ||
+                redis.probeInterval.isNegative ||
+                redis.probeInterval.isZero ||
+                redis.maxInFlightProbes <= 0 ||
+                redis.quotaCapacity <= 0 ||
+                redis.quotaPeriod.isNegative ||
+                redis.quotaPeriod.isZero ||
+                redis.bloomExpectedInsertions <= 0 ||
+                redis.bloomFalseProbability <= 0.0 ||
+                redis.bloomFalseProbability >= 1.0
+
         if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
     private fun validateWorker(worker: VoucherWorkerProperties) {
-        val invalid =
-            worker.batchSize !in 1..50 ||
-                    worker.runDeadline.isNegative ||
-                    worker.runDeadline.isZero ||
-                    worker.transactionTimeout.isNegative ||
-                    worker.transactionTimeout.isZero ||
-                    worker.transactionTimeout > worker.runDeadline ||
-                    worker.maxAttempts !in 1..20 ||
-                    worker.instanceId.isBlank() ||
-                    worker.instanceId.length > 128 ||
-                    worker.interval.isNegative ||
-                    worker.interval.isZero ||
-                    worker.initialDelay.isNegative
+        val invalid = worker.batchSize !in 1..50 ||
+                worker.runDeadline.isNegative ||
+                worker.runDeadline.isZero ||
+                worker.transactionTimeout.isNegative ||
+                worker.transactionTimeout.isZero ||
+                worker.transactionTimeout > worker.runDeadline ||
+                worker.maxAttempts !in 1..20 ||
+                worker.instanceId.isBlank() ||
+                worker.instanceId.length > 128 ||
+                worker.interval.isNegative ||
+                worker.interval.isZero ||
+                worker.initialDelay.isNegative
+
         if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
     private fun validateSse(sse: VoucherSseProperties) {
-        val invalid =
-            sse.maxCampaigns !in 1..32 ||
-                    sse.queueSize !in 1..32 ||
-                    sse.pollInterval.isNegative ||
-                    sse.pollInterval.isZero ||
-                    sse.maxIdleInterval < sse.pollInterval ||
-                    sse.maxIdleInterval > 2.seconds() ||
-                    sse.heartbeatInterval.isNegative ||
-                    sse.heartbeatInterval.isZero ||
-                    sse.writeTimeout.isNegative ||
-                    sse.writeTimeout.isZero ||
-                    sse.maxRows !in 1..200 ||
-                    sse.maxPayloadBytes !in 1..(256 * 1024)
+        val invalid = sse.maxCampaigns !in 1..32 ||
+                sse.queueSize !in 1..32 ||
+                sse.pollInterval.isNegative ||
+                sse.pollInterval.isZero ||
+                sse.maxIdleInterval < sse.pollInterval ||
+                sse.maxIdleInterval > 2.seconds() ||
+                sse.heartbeatInterval.isNegative ||
+                sse.heartbeatInterval.isZero ||
+                sse.writeTimeout.isNegative ||
+                sse.writeTimeout.isZero ||
+                sse.maxRows !in 1..200 ||
+                sse.maxPayloadBytes !in 1..(256 * 1024)
+
         if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
     private fun validateHttp(http: VoucherHttpProperties) {
-        val invalid =
-            http.maxHeaderLength !in 8..256 ||
-                    http.maxScalarBytes !in 32..1024 ||
-                    http.maxPageSize !in 1..100 ||
-                    http.maxCursorBytes !in 64..512 ||
-                    http.operatorSecret.toUtf8Bytes().size < MINIMUM_KEY_BYTES ||
-                    http.operatorGuard.length !in 8..64 ||
-                    http.allowedHosts.isEmpty()
+        val invalid = http.maxHeaderLength !in 8..256 ||
+                http.maxScalarBytes !in 32..1024 ||
+                http.maxPageSize !in 1..100 ||
+                http.maxCursorBytes !in 64..512 ||
+                http.operatorSecret.toUtf8Bytes().size < MINIMUM_KEY_BYTES ||
+                http.operatorGuard.length !in 8..64 ||
+                http.allowedHosts.isEmpty()
+
         if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
@@ -317,23 +332,25 @@ internal class VoucherStartupValidator(
 
     private fun isKnownTestKey(value: String): Boolean {
         val normalized = value.lowercase()
-        return normalized.startsWith("test-") || normalized.startsWith("local-") || "known-test" in normalized
+        return normalized.startsWith("test-") ||
+                normalized.startsWith("local-") ||
+                "known-test" in normalized
     }
 
-    private fun fail(code: StartupFailureCode): Nothing = throw VoucherStartupException(code)
-
-    companion object {
-        private const val HIKARI_MAXIMUM_POOL_SIZE = 16
-        private const val BACKGROUND_PERMITS = 4
-        private const val MINIMUM_KEY_BYTES = 32
-        private val DEMO_PROFILES = setOf("demo", "test", "local")
-    }
+    private fun fail(code: StartupFailureCode): Nothing =
+        throw VoucherStartupException(code)
 }
 
 /** Java 25 executor, Exposed transaction boundary, bounded JDBC lane을 제공합니다. */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(VoucherProperties::class)
 internal class VoucherConfiguration {
+
+    companion object: KLogging() {
+        private const val SPRING_HTTP_RESPONSE_FLUSH_ENABLED = "spring.http.response.flush.enabled"
+        private const val VOUCHER_MIGRATION_LOCK_KEY = 534001L
+    }
+
     init {
         // Spring Framework 7은 기본적으로 body-stream flush를 비활성화합니다. SSE는 각 event가 network에 도달해야 합니다.
         SpringProperties.setProperty(SPRING_HTTP_RESPONSE_FLUSH_ENABLED, "true")
@@ -352,11 +369,9 @@ internal class VoucherConfiguration {
         springTransactionManager: PlatformTransactionManager,
     ): VoucherExposedDatabaseRegistration =
         VoucherExposedDatabaseRegistration(
-            checkNotNull(
-                TransactionTemplate(springTransactionManager).execute {
-                    TransactionManager.current().db
-                },
-            ),
+            TransactionTemplate(springTransactionManager).execute {
+                TransactionManager.current().db
+            },
         )
 
     @Bean(destroyMethod = "")
@@ -388,7 +403,12 @@ internal class VoucherConfiguration {
         @Qualifier("springTransactionManager")
         transactionManager: PlatformTransactionManager,
         properties: VoucherProperties,
-    ): VoucherJdbcExecutor = VoucherJdbcExecutor(gate, transactionManager, properties.db.lockTimeout)
+    ): VoucherJdbcExecutor =
+        VoucherJdbcExecutor(
+            gate = gate,
+            transactionManager = transactionManager,
+            lockTimeout = properties.db.lockTimeout
+        )
 
     @Bean
     fun voucherCodeService(properties: VoucherProperties): VoucherCodeService =
@@ -432,18 +452,17 @@ internal class VoucherConfiguration {
     ): SmartInitializingSingleton =
         SmartInitializingSingleton {
             val activeProfiles = environment.activeProfiles.toSet().ifEmpty { environment.defaultProfiles.toSet() }
-            val runtime =
-                VoucherRuntimeEnvironment(
-                    activeProfiles = activeProfiles,
-                    serverAddress = environment.getProperty("server.address", "127.0.0.1"),
-                    hikariMaximumPoolSize =
-                        environment.getProperty(
-                            "spring.datasource.hikari.maximum-pool-size",
-                            Int::class.java,
-                            16,
-                        ),
-                )
-            val validator = VoucherStartupValidator(referencedKeys.getIfAvailable() ?: ReferencedKeyVersionSource.NONE)
+            val runtime = VoucherRuntimeEnvironment(
+                activeProfiles = activeProfiles,
+                serverAddress = environment.getProperty("server.address", "127.0.0.1"),
+                hikariMaximumPoolSize = environment.getProperty<Int>(
+                    "spring.datasource.hikari.maximum-pool-size",
+                    16,
+                ),
+            )
+            val validator = VoucherStartupValidator(
+                referencedKeys.getIfAvailable() ?: ReferencedKeyVersionSource.NONE
+            )
             try {
                 validator.validate(properties, runtime)
             } catch (failure: RuntimeException) {
@@ -452,18 +471,13 @@ internal class VoucherConfiguration {
             }
             log.info { "voucher_startup_validation_passed profiles=${activeProfiles.sorted()}" }
         }
-
-    companion object: KLogging() {
-        private const val SPRING_HTTP_RESPONSE_FLUSH_ENABLED = "spring.http.response.flush.enabled"
-        private const val VOUCHER_MIGRATION_LOCK_KEY = 534001L
-    }
 }
 
 /** Spring context가 닫힐 때 Exposed process-wide database registration을 제거합니다. */
 internal class VoucherExposedDatabaseRegistration(
     private val database: Database,
 ): AutoCloseable {
-    private val closed = java.util.concurrent.atomic.AtomicBoolean()
+    private val closed = AtomicBoolean()
 
     init {
         TransactionManager.defaultDatabase = database
@@ -481,7 +495,10 @@ internal class VoucherExecutorShutdown(
     private val executor: ExecutorService,
     private val timeout: Duration = 10.seconds(),
 ): AutoCloseable {
-    private val closed = java.util.concurrent.atomic.AtomicBoolean()
+
+    companion object: KLogging()
+
+    private val closed = AtomicBoolean()
 
     override fun close() {
         if (!closed.compareAndSet(false, true)) return
@@ -497,6 +514,4 @@ internal class VoucherExecutorShutdown(
         }
         log.info { "voucher_executor_shutdown" }
     }
-
-    companion object: KLogging()
 }

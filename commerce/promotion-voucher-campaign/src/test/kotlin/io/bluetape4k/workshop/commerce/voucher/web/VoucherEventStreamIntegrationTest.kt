@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +18,15 @@ import java.net.http.HttpResponse
 import java.time.Duration
 
 @TestPropertySource(properties = ["workshop.voucher.sse.heartbeat-interval=100ms"])
-internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTest() {
+internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest() {
+
+    private companion object: KLogging() {
+        val STREAM_TIMEOUT: Duration = 5.seconds()
+        val HTTP_CLIENT: HttpClient = HttpClient.newBuilder()
+            .connectTimeout(STREAM_TIMEOUT)
+            .build()
+    }
+
     @Autowired
     private lateinit var streams: VoucherEventStream
 
@@ -25,25 +35,35 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
 
-        val request =
-            HttpRequest.newBuilder(URI("http://127.0.0.1:$port/api/v1/campaigns/$campaignId/events"))
-                .timeout(STREAM_TIMEOUT)
-                .header("Accept", "text/event-stream")
-                .header(TENANT_HEADER, tenant)
-                .header(PRINCIPAL_HEADER, randomIdentifier())
-                .GET()
-                .build()
+        val request = HttpRequest
+            .newBuilder(URI("http://127.0.0.1:$port/api/v1/campaigns/$campaignId/events"))
+            .timeout(STREAM_TIMEOUT)
+            .header("Accept", "text/event-stream")
+            .header(TENANT_HEADER, tenant)
+            .header(PRINCIPAL_HEADER, randomIdentifier())
+            .GET()
+            .build()
 
-        val response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream())
+        val response = HTTP_CLIENT.send(
+            request,
+            HttpResponse.BodyHandlers.ofInputStream()
+        )
         response.statusCode() shouldBeEqualTo 200
-        val firstEvent =
-            response.body().bufferedReader().use { reader ->
-                generateSequence(reader::readLine).takeWhile(String::isNotEmpty).toList()
-            }
+        val firstEvent = response.body().bufferedReader().use { reader ->
+            generateSequence(reader::readLine)
+                .takeWhile(String::isNotEmpty)
+                .toList()
+        }
 
         firstEvent.any { it == "event: snapshot" }.shouldBeTrue()
-        firstEvent.any { it.startsWith("id: ") && it.substringAfter("id: ").contains(':') }.shouldBeTrue()
-        firstEvent.any { it.startsWith("data: ") && it.contains("\"campaignId\":\"$campaignId\"") }.shouldBeTrue()
+        firstEvent.any {
+            it.startsWith("id: ") &&
+                    it.substringAfter("id: ").contains(':')
+        }.shouldBeTrue()
+        firstEvent.any {
+            it.startsWith("data: ") &&
+                    it.contains("\"campaignId\":\"$campaignId\"")
+        }.shouldBeTrue()
     }
 
     @Test
@@ -88,7 +108,9 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
 
         val secondTenant = randomIdentifier()
         val secondCampaign = createActiveCampaign(secondTenant)
-        val failure = runCatching { streams.open(secondTenant, secondCampaign, foreignCursor) }.exceptionOrNull()
+        val failure = runCatching {
+            streams.open(secondTenant, secondCampaign, foreignCursor)
+        }.exceptionOrNull()
 
         failure.shouldBeInstanceOf<VoucherApiException>().stableCode shouldBeEqualTo "INVALID_EVENT_CURSOR"
     }
@@ -105,7 +127,7 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val snapshot = resumed.next(Duration.ZERO).shouldNotBeNull()
 
         snapshot.event shouldBeEqualTo "snapshot"
-        (snapshot.cursor.id >= cursor.id).shouldBeTrue()
+        snapshot.cursor.id shouldBeGreaterOrEqualTo cursor.id
         resumed.queueDepth() shouldBeEqualTo 0
         resumed.close()
     }
@@ -114,12 +136,15 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
     fun `delayed event fixture leaves a cursor that can resume`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
+
         operatorPost(
             tenant,
             "/operator/api/v1/fixtures/delayed-duplicate-out-of-order/run",
             randomIdentifier(),
             mapOf("principalRef" to randomIdentifier(), "campaignId" to campaignId),
-        ).exchange().expectStatus().isOk
+        )
+            .exchange()
+            .expectStatus().isOk
 
         val first = streams.open(tenant, campaignId, null)
         val cursor = first.next(Duration.ZERO).shouldNotBeNull().cursor
@@ -135,12 +160,15 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
 
-        webTestClient.get().uri("/api/v1/campaigns/$campaignId/events")
+        webTestClient.get()
+            .uri("/api/v1/campaigns/$campaignId/events")
             .header(TENANT_HEADER, tenant)
             .header(PRINCIPAL_HEADER, randomIdentifier())
             .header("Last-Event-ID", "${Long.MAX_VALUE}:${Long.MAX_VALUE}")
-            .exchange().expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_EVENT_CURSOR")
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_EVENT_CURSOR")
     }
 
     @Test
@@ -148,19 +176,15 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
 
-        webTestClient.get().uri("/api/v1/campaigns/$campaignId/events")
+        webTestClient.get()
+            .uri("/api/v1/campaigns/$campaignId/events")
             .header(TENANT_HEADER, tenant)
             .header(PRINCIPAL_HEADER, randomIdentifier())
             .header("Last-Event-ID", "${Long.MAX_VALUE}:0")
-            .exchange().expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_EVENT_CURSOR")
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_EVENT_CURSOR")
     }
 
-    private companion object {
-        val STREAM_TIMEOUT: Duration = 5.seconds()
-        val HTTP_CLIENT: HttpClient =
-            HttpClient.newBuilder()
-                .connectTimeout(STREAM_TIMEOUT)
-                .build()
-    }
 }

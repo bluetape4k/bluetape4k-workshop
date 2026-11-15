@@ -19,7 +19,10 @@ internal class VoucherJdbcExecutor(
     private val gate: DatabasePermitGate,
     private val transactionManager: PlatformTransactionManager,
     private val lockTimeout: Duration = 5.seconds(),
-) : VoucherTransactionRunner {
+): VoucherTransactionRunner {
+
+    companion object: KLogging()
+
     private val transactions = TransactionTemplate(transactionManager)
 
     override fun <T> foregroundTransaction(block: () -> T): T =
@@ -38,6 +41,7 @@ internal class VoucherJdbcExecutor(
         block: () -> T,
     ): T {
         require(!timeout.isNegative && !timeout.isZero) { "timeout must be positive" }
+
         return transaction(
             lane = DatabaseLane.WORKER,
             applyLockTimeout = false,
@@ -49,31 +53,33 @@ internal class VoucherJdbcExecutor(
     fun <T> sseMaintenanceTransaction(block: () -> T): T =
         transaction(DatabaseLane.SSE_MAINTENANCE, applyLockTimeout = false, block = block)
 
-    private fun <T> transaction(
+    private inline fun <T> transaction(
         lane: DatabaseLane,
         applyLockTimeout: Boolean,
         transactionTimeout: Duration? = null,
-        block: () -> T,
+        crossinline block: () -> T,
     ): T =
         gate.withPermit(lane) {
-            val template =
-                transactionTimeout?.let { timeout ->
-                    TransactionTemplate(transactionManager).apply {
-                        this.timeout = timeout.toSpringTimeoutSeconds()
-                    }
-                } ?: transactions
-            val result =
-                template.execute {
-                    if (applyLockTimeout) {
-                        TransactionManager.current().exec("SET LOCAL lock_timeout = '${lockTimeout.toMillis()}ms'")
-                    }
-                    if (transactionTimeout != null) {
-                        TransactionManager.current().exec(
+            val template = transactionTimeout?.let { timeout ->
+                TransactionTemplate(transactionManager).apply {
+                    this.timeout = timeout.toSpringTimeoutSeconds()
+                }
+            } ?: transactions
+
+            val result = template.execute {
+                if (applyLockTimeout) {
+                    TransactionManager.current()
+                        .exec("SET LOCAL lock_timeout = '${lockTimeout.toMillis()}ms'")
+                }
+                if (transactionTimeout != null) {
+                    TransactionManager.current()
+                        .exec(
                             "SET LOCAL statement_timeout = '${transactionTimeout.toMillis().coerceAtLeast(1)}ms'",
                         )
-                    }
-                    TransactionResult(block())
                 }
+                TransactionResult(block())
+            }
+
             log.debug { "voucher_jdbc_transaction_completed lane=$lane" }
             result.value
         }
@@ -85,6 +91,4 @@ internal class VoucherJdbcExecutor(
             .coerceAtLeast(1L)
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
-
-    companion object : KLogging()
 }

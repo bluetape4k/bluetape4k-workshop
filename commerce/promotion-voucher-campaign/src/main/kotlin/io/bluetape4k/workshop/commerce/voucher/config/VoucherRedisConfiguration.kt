@@ -14,6 +14,7 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.redis.lettuce.filter.BloomFilterOptions
 import io.bluetape4k.redis.lettuce.filter.LettuceBloomFilter
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionRecoveryPolicy
 import io.bluetape4k.workshop.commerce.voucher.admission.LettuceBloomRiskBackend
 import io.bluetape4k.workshop.commerce.voucher.admission.RiskSignalService
@@ -41,46 +42,6 @@ internal class VoucherRedisResources private constructor(
     val bloomFilter: LettuceBloomFilter?,
     private val degradation: VoucherDegradationState,
 ): AutoCloseable {
-    private val leaderLock = ReentrantLock()
-    private val closed = AtomicBoolean()
-
-    @Volatile
-    private var leaderConnection: StatefulRedisConnection<String, String>? = null
-
-    @Volatile
-    private var leaderElector: LettuceLeaderElector? = null
-
-    /** lazy하게 연결되는 Lettuce elector 하나를 재사용하고, startup backend가 없으면 이후 재시도합니다. */
-    fun leaderElector(): LettuceLeaderElector? =
-        leaderLock.withLock {
-            leaderElector ?: try {
-                val connection = client.connect()
-                leaderConnection = connection
-                LettuceLeaderElector(connection).also {
-                    leaderElector = it
-                    degradation.recover(VoucherDegradedComponent.LEADER)
-                    log.info { "voucher_redis_leader_connected" }
-                }
-            } catch (failure: Exception) {
-                degradation.degrade(VoucherDegradedComponent.LEADER)
-                log.warn {
-                    "voucher_redis_leader_unavailable fallback=MANUAL failure=${failure.javaClass.simpleName}"
-                }
-                null
-            }
-        }
-
-    override fun close() {
-        if (!closed.compareAndSet(false, true)) return
-        leaderConnection?.close()
-        if (bloomFilter != null) {
-            bloomFilter.close()
-        } else {
-            bloomConnection?.close()
-        }
-        LettuceClients.shutdown(client)
-        log.info { "voucher_redis_resources_closed" }
-    }
 
     companion object: KLogging() {
         fun open(
@@ -93,16 +54,15 @@ internal class VoucherRedisResources private constructor(
             var filter: LettuceBloomFilter? = null
             try {
                 connection = client.connect()
-                filter =
-                    LettuceBloomFilter(
-                        connection,
-                        filterName = BLOOM_FILTER_NAME,
-                        options =
-                            BloomFilterOptions(
-                                properties.bloomExpectedInsertions,
-                                properties.bloomFalseProbability,
-                            ),
-                    ).also { it.tryInit() }
+                filter = LettuceBloomFilter(
+                    connection,
+                    filterName = BLOOM_FILTER_NAME,
+                    options =
+                        BloomFilterOptions(
+                            properties.bloomExpectedInsertions,
+                            properties.bloomFalseProbability,
+                        ),
+                ).also { it.tryInit() }
                 degradation.recover(VoucherDegradedComponent.REDIS)
                 log.info { "voucher_redis_bloom_connected" }
             } catch (failure: Exception) {
@@ -117,6 +77,47 @@ internal class VoucherRedisResources private constructor(
 
         private const val BLOOM_FILTER_NAME = "voucher:risk:v1"
     }
+
+    private val leaderLock = ReentrantLock()
+    private val closed = AtomicBoolean()
+
+    @Volatile
+    private var leaderConnection: StatefulRedisConnection<String, String>? = null
+
+    @Volatile
+    private var leaderElector: LettuceLeaderElector? = null
+
+    /** lazy하게 연결되는 Lettuce elector 하나를 재사용하고, startup backend가 없으면 이후 재시도합니다. */
+    fun leaderElector(): LettuceLeaderElector? = leaderLock.withLock {
+        leaderElector ?: try {
+            val connection = client.connect()
+            leaderConnection = connection
+            LettuceLeaderElector(connection).also {
+                leaderElector = it
+                degradation.recover(VoucherDegradedComponent.LEADER)
+                log.info { "voucher_redis_leader_connected" }
+            }
+        } catch (failure: Exception) {
+            degradation.degrade(VoucherDegradedComponent.LEADER)
+            log.warn {
+                "voucher_redis_leader_unavailable fallback=MANUAL failure=${failure.javaClass.simpleName}"
+            }
+            null
+        }
+    }
+
+    override fun close() {
+        if (!closed.compareAndSet(false, true)) return
+        leaderConnection?.close()
+
+        if (bloomFilter != null) {
+            bloomFilter.close()
+        } else {
+            bloomConnection?.close()
+        }
+        LettuceClients.shutdown(client)
+        log.info { "voucher_redis_resources_closed" }
+    }
 }
 
 internal fun voucherDistributedRateLimiter(
@@ -124,17 +125,20 @@ internal fun voucherDistributedRateLimiter(
     properties: VoucherRedisProperties,
 ): RateLimiter<String> {
     val manager = lettuceBasedProxyManagerOf(client) {}
-    val configuration =
-        bucketConfiguration {
-            addBandwidth {
-                Bandwidth.builder()
-                    .capacity(properties.quotaCapacity)
-                    .refillGreedy(properties.quotaCapacity, properties.quotaPeriod)
-                    .build()
-            }
+    val configuration = bucketConfiguration {
+        addBandwidth {
+            Bandwidth.builder()
+                .capacity(properties.quotaCapacity)
+                .refillGreedy(properties.quotaCapacity, properties.quotaPeriod)
+                .build()
         }
+    }
     return DistributedRateLimiter(
-        BucketProxyProvider(manager, configuration, keyPrefix = "voucher:rate:"),
+        BucketProxyProvider(
+            proxyManager = manager,
+            bucketConfiguration = configuration,
+            keyPrefix = "voucher:rate:"
+        ),
     )
 }
 
@@ -144,6 +148,9 @@ internal class RecoverableVoucherRateLimiter(
     private val properties: VoucherRedisProperties,
     private val degradation: VoucherDegradationState = VoucherDegradationState(),
 ): RateLimiter<String> {
+
+    companion object: KLogging()
+
     private val delegateLock = ReentrantLock()
 
     @Volatile
@@ -153,18 +160,20 @@ internal class RecoverableVoucherRateLimiter(
         key: String,
         numToken: Long,
     ): RateLimitResult {
-        val limiter =
-            delegate ?: createDelegate() ?: return RateLimitResult.error(IllegalStateException("redis unavailable"))
+        val limiter = delegate ?: createDelegate()
+        ?: return RateLimitResult.error(IllegalStateException("redis unavailable"))
+
         return limiter.consume(key, numToken)
     }
 
-    private fun createDelegate(): RateLimiter<String>? =
-        delegateLock.withLock {
-            delegate ?: try {
-                voucherDistributedRateLimiter(client, properties).also {
-                    delegate = it
-                    degradation.recover(VoucherDegradedComponent.REDIS)
-                }
+    private fun createDelegate(): RateLimiter<String>? = delegateLock.withLock {
+        delegate
+            ?: try {
+                voucherDistributedRateLimiter(client, properties)
+                    .also {
+                        delegate = it
+                        degradation.recover(VoucherDegradedComponent.REDIS)
+                    }
             } catch (failure: Exception) {
                 degradation.degrade(VoucherDegradedComponent.REDIS)
                 log.warn {
@@ -172,14 +181,15 @@ internal class RecoverableVoucherRateLimiter(
                 }
                 null
             }
-        }
-
-    companion object: KLogging()
+    }
 }
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(VoucherProperties::class)
 internal class VoucherAdmissionConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun voucherAdmissionKeyFactory(properties: VoucherProperties): VoucherAdmissionKeyFactory =
         VoucherAdmissionKeyFactory(
@@ -213,21 +223,27 @@ internal class VoucherAdmissionConfiguration {
         degradation: ObjectProvider<VoucherDegradationState>,
     ): RiskSignalService =
         RiskSignalService(
-            keys,
-            resources.ifAvailable?.bloomFilter?.let(::LettuceBloomRiskBackend),
-            degradation.getIfAvailable(::VoucherDegradationState),
+            keys = keys,
+            backend = resources.ifAvailable?.bloomFilter?.let(::LettuceBloomRiskBackend),
+            degradation = degradation.getIfAvailable(::VoucherDegradationState),
         )
 }
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "workshop.voucher.redis", name = ["enabled"], havingValue = "true")
 internal class VoucherRedisConfiguration {
+
+    companion object: KLogging()
+
     @Bean(destroyMethod = "close")
     fun voucherRedisResources(
         properties: VoucherProperties,
         degradation: ObjectProvider<VoucherDegradationState>,
     ): VoucherRedisResources =
-        VoucherRedisResources.open(properties.redis, degradation.getIfAvailable(::VoucherDegradationState))
+        VoucherRedisResources.open(
+            properties = properties.redis,
+            degradation = degradation.getIfAvailable(::VoucherDegradationState)
+        )
 
     @Bean("voucherRateLimiter")
     fun voucherRateLimiter(
@@ -236,8 +252,8 @@ internal class VoucherRedisConfiguration {
         degradation: ObjectProvider<VoucherDegradationState>,
     ): RateLimiter<String> =
         RecoverableVoucherRateLimiter(
-            resources.client,
-            properties.redis,
-            degradation.getIfAvailable(::VoucherDegradationState),
+            client = resources.client,
+            properties = properties.redis,
+            degradation = degradation.getIfAvailable(::VoucherDegradationState),
         )
 }

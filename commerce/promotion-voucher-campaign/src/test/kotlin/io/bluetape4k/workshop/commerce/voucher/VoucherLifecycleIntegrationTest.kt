@@ -4,10 +4,12 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.await
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitRejected
@@ -19,6 +21,9 @@ import java.util.concurrent.CountDownLatch
 import kotlin.time.Duration.Companion.seconds
 
 internal class VoucherLifecycleIntegrationTest {
+
+    companion object: KLogging()
+
     @Test
     fun `shutdown rejects new work drains database and closes resources in order`() {
         val gate = DatabasePermitGate(foregroundPermits = 1, workerPermits = 1, sseMaintenancePermits = 1)
@@ -30,40 +35,42 @@ internal class VoucherLifecycleIntegrationTest {
                 release.await()
             }
         }
-        check(entered.await(2.seconds))
-        val coordinator =
-            VoucherLifecycleCoordinator(
-                gate = gate,
-                stopWorker = {},
-                stopSse = {},
-                releaseLeader = {},
-                closeRedis = {},
-                closeExecutor = {},
-                graceDeadline = 2.seconds(),
-            )
+        entered.await(2.seconds).shouldBeTrue()
+
+        val coordinator = VoucherLifecycleCoordinator(
+            gate = gate,
+            stopWorker = {},
+            stopSse = {},
+            releaseLeader = {},
+            closeRedis = {},
+            closeExecutor = {},
+            graceDeadline = 2.seconds(),
+        )
 
         val closeThread = Thread.ofPlatform().start(coordinator::shutdown)
-        check(coordinator.awaitEvent(VoucherShutdownEvent.AWAIT_DB, 1.seconds()))
+        coordinator.awaitEvent(VoucherShutdownEvent.AWAIT_DB, 1.seconds()).shouldBeTrue()
+
         assertFailsWith<DatabasePermitRejected> {
             gate.withPermit(DatabaseLane.FOREGROUND) { error("new work must not start") }
         }
+
         release.countDown()
         closeThread.join(3.seconds())
         inFlight.join(3.seconds())
 
         closeThread.isAlive.shouldBeFalse()
         gate.inUsePermits() shouldBeEqualTo 0
-        coordinator.events() shouldBeEqualTo
-                listOf(
-                    VoucherShutdownEvent.READINESS_DOWN,
-                    VoucherShutdownEvent.REJECT_NEW,
-                    VoucherShutdownEvent.STOP_WORKER,
-                    VoucherShutdownEvent.AWAIT_DB,
-                    VoucherShutdownEvent.STOP_SSE,
-                    VoucherShutdownEvent.RELEASE_LEADER,
-                    VoucherShutdownEvent.CLOSE_REDIS,
-                    VoucherShutdownEvent.CLOSE_EXECUTOR,
-                )
+
+        coordinator.events() shouldBeEqualTo listOf(
+            VoucherShutdownEvent.READINESS_DOWN,
+            VoucherShutdownEvent.REJECT_NEW,
+            VoucherShutdownEvent.STOP_WORKER,
+            VoucherShutdownEvent.AWAIT_DB,
+            VoucherShutdownEvent.STOP_SSE,
+            VoucherShutdownEvent.RELEASE_LEADER,
+            VoucherShutdownEvent.CLOSE_REDIS,
+            VoucherShutdownEvent.CLOSE_EXECUTOR,
+        )
     }
 
     @Test
@@ -77,9 +84,9 @@ internal class VoucherLifecycleIntegrationTest {
                 release.await()
             }
         }
-        check(entered.await(2.seconds))
-        val coordinator =
-            VoucherLifecycleCoordinator(
+        entered.await(2.seconds).shouldBeTrue()
+
+        val coordinator = VoucherLifecycleCoordinator(
                 gate = gate,
                 stopWorker = {},
                 stopSse = {},

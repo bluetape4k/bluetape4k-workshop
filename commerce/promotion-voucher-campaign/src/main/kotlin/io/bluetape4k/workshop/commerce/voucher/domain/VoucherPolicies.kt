@@ -15,10 +15,11 @@ internal enum class VoucherPolicyFailure {
 
 internal class VoucherPolicyException(
     val code: VoucherPolicyFailure,
-) : RuntimeException(code.name)
+): RuntimeException(code.name)
 
 /** HTTP command, review, reconciliation worker가 공유하는 순수 transition policy입니다. */
-internal object VoucherPolicies : KLogging() {
+internal object VoucherPolicies: KLogging() {
+    
     fun activateCampaign(
         campaign: CampaignSnapshot,
         expectedRevision: Long,
@@ -79,6 +80,7 @@ internal object VoucherPolicies : KLogging() {
         expectedRevision: Long,
     ): TransitionOutcome {
         requireReview(claim, expectedRevision)
+
         return when (claim.reviewKind) {
             ReviewKind.ALLOCATION -> transition(claim, ClaimState.ALLOCATED, capacityReserved = true, capacityDelta = 1)
             ReviewKind.REDEMPTION -> transition(claim, ClaimState.REDEEMED, capacityReserved = true, capacityDelta = 0)
@@ -91,6 +93,7 @@ internal object VoucherPolicies : KLogging() {
         expectedRevision: Long,
     ): TransitionOutcome {
         requireReview(claim, expectedRevision)
+
         return when (claim.reviewKind) {
             ReviewKind.ALLOCATION -> transition(claim, ClaimState.REJECTED, capacityReserved = false, capacityDelta = 0)
             ReviewKind.REDEMPTION -> transition(claim, ClaimState.ALLOCATED, capacityReserved = true, capacityDelta = 0)
@@ -107,21 +110,26 @@ internal object VoucherPolicies : KLogging() {
         if (claim.state != ClaimState.ALLOCATED || !claim.capacityReserved) {
             fail(VoucherPolicyFailure.INVALID_TRANSITION)
         }
-        if (claim.expiresAt?.let { !now.isBefore(it) } == true) fail(VoucherPolicyFailure.VOUCHER_EXPIRED)
+        if (claim.expiresAt?.let { !now.isBefore(it) } == true) {
+            fail(VoucherPolicyFailure.VOUCHER_EXPIRED)
+        }
         return transition(claim, ClaimState.REDEEMED, capacityReserved = true, capacityDelta = 0)
     }
 
     fun release(
         claim: ClaimSnapshot,
         expectedRevision: Long,
-    ): TransitionOutcome = terminateReserved(claim, expectedRevision, ClaimState.RELEASED)
+    ): TransitionOutcome =
+        terminateReserved(claim, expectedRevision, ClaimState.RELEASED)
 
     fun expire(
         claim: ClaimSnapshot,
         expectedRevision: Long,
         now: Instant,
     ): TransitionOutcome {
-        if (claim.expiresAt?.let(now::isBefore) != false) fail(VoucherPolicyFailure.NOT_EXPIRED)
+        if (claim.expiresAt?.let(now::isBefore) != false) {
+            fail(VoucherPolicyFailure.NOT_EXPIRED)
+        }
         return terminateReserved(claim, expectedRevision, ClaimState.EXPIRED)
     }
 
@@ -148,7 +156,7 @@ internal object VoucherPolicies : KLogging() {
         requireRevision(claim.revision, expectedRevision)
         val releasable =
             claim.state == ClaimState.ALLOCATED ||
-                (claim.state == ClaimState.REVIEW_REQUIRED && claim.reviewKind == ReviewKind.REDEMPTION)
+                    (claim.state == ClaimState.REVIEW_REQUIRED && claim.reviewKind == ReviewKind.REDEMPTION)
         if (!releasable || !claim.capacityReserved) fail(VoucherPolicyFailure.INVALID_TRANSITION)
         return transition(claim, terminalState, capacityReserved = false, capacityDelta = -1)
     }

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.idempotency
 import io.bluetape4k.jackson3.jsonMapper
 import io.bluetape4k.support.toUtf8Bytes
 import tools.jackson.databind.JsonNode
+import java.io.Serializable
 import java.math.BigDecimal
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -40,7 +41,11 @@ internal value class OwnerToken private constructor(
     fun digest(): Digest = Digest.sha256("$OWNER_TOKEN_DOMAIN\u0000$base64Url")
 
     companion object {
-        fun of(bytes: ByteArray): OwnerToken = OwnerToken(encodeBase64Url(bytes.copyOf()))
+
+        operator fun invoke(bytes: ByteArray): OwnerToken =
+            OwnerToken(encodeBase64Url(bytes.copyOf()))
+
+        fun of(bytes: ByteArray): OwnerToken = invoke(bytes)
 
         fun random(random: SecureRandom = SECURE_RANDOM): OwnerToken =
             of(ByteArray(SHA256_BYTES).also(random::nextBytes))
@@ -50,7 +55,7 @@ internal value class OwnerToken private constructor(
 }
 
 /** bounded voucher command DTO를 canonicalize하는 데 사용하는 닫힌 scalar schema입니다. */
-internal sealed interface CanonicalField {
+internal sealed interface CanonicalField: Serializable {
     val nullable: kotlin.Boolean
     val nullEquivalentToOmitted: kotlin.Boolean
 
@@ -140,73 +145,74 @@ internal object IdempotencyFingerprint {
         require(resourceId.isNotBlank()) { "resourceId must not be blank" }
         require(body.toUtf8Bytes().size <= MAX_BODY_BYTES) { "request body is too large" }
 
-        val canonical =
-            buildString {
-                append(REQUEST_DOMAIN).append('\n')
-                append(method.trim().uppercase(Locale.ROOT)).append('\n')
-                append(normalizePath(path)).append('\n')
-                append(resourceId.trim()).append('\n')
-                append(canonicalHeaders(headers)).append('\n')
-                append(canonicalBody(body, schema))
-            }
+        val canonical = buildString {
+            append(REQUEST_DOMAIN).append('\n')
+            append(method.trim().uppercase(Locale.ROOT)).append('\n')
+            append(normalizePath(path)).append('\n')
+            append(resourceId.trim()).append('\n')
+            append(canonicalHeaders(headers)).append('\n')
+            append(canonicalBody(body, schema))
+        }
         return Digest.sha256(canonical)
     }
 
     private fun canonicalHeaders(headers: Map<String, String>): String {
-        val normalized =
-            headers.entries
-                .map { it.key.trim().lowercase(Locale.ROOT) to it.value.trim() }
-                .filter { it.first in SEMANTIC_HEADERS }
-                .groupBy({ it.first }, { it.second })
-                .mapValues { (name, values) ->
-                    require(values.distinct().size == 1) { "conflicting semantic header: $name" }
-                    require(values.single().none { it == '\r' || it == '\n' }) {
-                        "semantic header must not contain a line break: $name"
-                    }
-                    values.single()
+        val normalized: Map<String, String> = headers.entries
+            .map { it.key.trim().lowercase(Locale.ROOT) to it.value.trim() }
+            .filter { it.first in SEMANTIC_HEADERS }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (name, values) ->
+                require(values.distinct().size == 1) { "conflicting semantic header: $name" }
+                require(values.single().none { it == '\r' || it == '\n' }) {
+                    "semantic header must not contain a line break: $name"
                 }
-        return SEMANTIC_HEADERS.sorted().joinToString("\n") { name -> "$name=${normalized[name].orEmpty()}" }
+                values.single()
+            }
+        return SEMANTIC_HEADERS.sorted().joinToString("\n") { name ->
+            "$name=${normalized[name].orEmpty()}"
+        }
     }
 
     private fun canonicalBody(
         body: String,
         schema: ClosedRequestSchema,
     ): String {
-        val root =
-            try {
-                mapper.readTree(body)
-            } catch (e: Exception) {
-                throw IllegalArgumentException("request body must be valid JSON", e)
-            }
+        val root = try {
+            mapper.readTree(body)
+        } catch (e: Exception) {
+            throw IllegalArgumentException("request body must be valid JSON", e)
+        }
         require(root.isObject) { "request body must be a JSON object" }
 
         val providedNames = root.propertyNames().toSet()
         val unknown = providedNames - schema.fields.keys
         require(unknown.isEmpty()) { "unknown request properties: ${unknown.sorted().joinToString()}" }
 
-        return schema.fields.keys.sortedWith(UTF8_COMPARATOR).mapNotNull { name ->
-            val field = schema.fields.getValue(name)
-            val node = root.get(name)
-            when {
-                node == null                  -> omittedEntry(name, field)
-                node.isNull && field.nullEquivalentToOmitted -> omittedEntry(name, field)
-                node.isNull && field.nullable -> "$name=null"
-                node.isNull                   -> throw IllegalArgumentException("$name must not be null")
-                else                          -> "$name=${field.canonical(node)}"
+        return schema.fields.keys
+            .sortedWith(UTF8_COMPARATOR)
+            .mapNotNull { name ->
+                val field = schema.fields.getValue(name)
+                val node = root.get(name)
+                when {
+                    node == null                                 -> omittedEntry(name, field)
+                    node.isNull && field.nullEquivalentToOmitted -> omittedEntry(name, field)
+                    node.isNull && field.nullable                -> "$name=null"
+                    node.isNull                                  -> throw IllegalArgumentException("$name must not be null")
+                    else                                         -> "$name=${field.canonical(node)}"
+                }
             }
-        }.joinToString("\n")
+            .joinToString("\n")
     }
 
     private fun omittedEntry(
         name: String,
         field: CanonicalField,
     ): String? {
-        val default =
-            when (field) {
-                is CanonicalField.Text -> field.default?.let { "$name=${jsonString(it)}" }
-                is CanonicalField.Boolean -> field.default?.let { "$name=$it" }
-                is CanonicalField.Decimal -> field.default?.let { "$name=${canonicalDecimal(it)}" }
-            }
+        val default = when (field) {
+            is CanonicalField.Text    -> field.default?.let { "$name=${jsonString(it)}" }
+            is CanonicalField.Boolean -> field.default?.let { "$name=$it" }
+            is CanonicalField.Decimal -> field.default?.let { "$name=${canonicalDecimal(it)}" }
+        }
         if (default != null || field.nullEquivalentToOmitted) return default
         throw IllegalArgumentException("required request property is missing: $name")
     }
@@ -238,30 +244,28 @@ internal object IdempotencyFingerprint {
     private const val MAX_KEY_LENGTH = 200
     private const val KEY_DOMAIN = "voucher-http-idempotency-key-v1"
     private const val REQUEST_DOMAIN = "voucher-http-idempotency-request-v1"
-    private val SEMANTIC_HEADERS =
-        setOf("content-type", "x-workshop-principal", "x-workshop-tenant")
+    private val SEMANTIC_HEADERS = setOf("content-type", "x-workshop-principal", "x-workshop-tenant")
 }
 
 private fun canonicalDecimal(value: BigDecimal): String =
     value.stripTrailingZeros().let { if (it.compareTo(BigDecimal.ZERO) == 0) "0" else it.toPlainString() }
 
-private fun jsonString(value: String): String =
-    buildString(value.length + 2) {
-        append('"')
-        value.forEach { character ->
-            when (character) {
-                '"'  -> append("\\\"")
-                '\\' -> append("\\\\")
-                '\b' -> append("\\b")
-                '\u000C' -> append("\\f")
-                '\n' -> append("\\n")
-                '\r' -> append("\\r")
-                '\t' -> append("\\t")
-                else -> if (character.code < 0x20) append("\\u%04x".format(character.code)) else append(character)
-            }
+private fun jsonString(value: String): String = buildString(value.length + 2) {
+    append('"')
+    value.forEach { character ->
+        when (character) {
+            '"'      -> append("\\\"")
+            '\\'     -> append("\\\\")
+            '\b'     -> append("\\b")
+            '\u000C' -> append("\\f")
+            '\n'     -> append("\\n")
+            '\r'     -> append("\\r")
+            '\t'     -> append("\\t")
+            else     -> if (character.code < 0x20) append("\\u%04x".format(character.code)) else append(character)
         }
-        append('"')
     }
+    append('"')
+}
 
 private fun encodeBase64Url(bytes: ByteArray): String =
     Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)

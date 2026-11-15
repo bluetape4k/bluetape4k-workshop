@@ -4,8 +4,11 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.bucket4j.ratelimit.RateLimitDiagnostics
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
@@ -17,6 +20,7 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionDecision
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionRecoveryPolicy
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionState
@@ -64,6 +68,19 @@ internal enum class FailureScenario {
 }
 
 internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
+
+    private companion object: KLogging() {
+        fun consumed(): RateLimitResult = RateLimitResult.consumed(
+            consumedTokens = 1,
+            availableTokens = 99,
+            diagnostics = RateLimitDiagnostics.EMPTY
+        )
+
+        fun failure(): RateLimitResult = RateLimitResult.error(IllegalStateException("redis timeout"))
+
+        const val OPERATOR_SECRET = "local-operator-secret-0000000000000001"
+    }
+
     @ParameterizedTest(name = "{0}")
     @EnumSource(FailureScenario::class)
     fun `every failure scenario preserves PostgreSQL capacity and idempotency`(scenario: FailureScenario) {
@@ -72,24 +89,25 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
         createCampaign(capacity = 1, perUserLimit = 1, campaignId = campaignId)
 
         val capture = LogCapture()
-        val allocationResult =
-            capture.use {
-                exercise(scenario, campaignId)
-                val allocated = allocation.allocate(AllocateVoucherCommand(TENANT_ID, campaignId, userRef))
-                assertFailsWith<VoucherCommandException> {
-                    allocation.allocate(AllocateVoucherCommand(TENANT_ID, campaignId, userRef))
-                }.code shouldBeEqualTo VoucherCommandFailure.PER_USER_LIMIT_REACHED
-                allocated
-            }
+        val allocationResult = capture.use {
+            exercise(scenario, campaignId)
+            val allocated = allocation.allocate(AllocateVoucherCommand(TENANT_ID, campaignId, userRef))
+            assertFailsWith<VoucherCommandException> {
+                allocation.allocate(AllocateVoucherCommand(TENANT_ID, campaignId, userRef))
+            }.code shouldBeEqualTo VoucherCommandFailure.PER_USER_LIMIT_REACHED
+            allocated
+        }
 
         val campaign = campaignSnapshot(campaignId)
         campaign.allocatedCount shouldBeEqualTo 1
         contributingClaims(campaignId) shouldBeEqualTo 1L
         totalClaims(campaignId) shouldBeEqualTo 1L
+
         gate.inUsePermits() shouldBeEqualTo 0
         gate.availablePermits(DatabaseLane.FOREGROUND) shouldBeEqualTo 12
         gate.availablePermits(DatabaseLane.WORKER) shouldBeEqualTo 1
         gate.availablePermits(DatabaseLane.SSE_MAINTENANCE) shouldBeEqualTo 3
+
         capture.rendered shouldNotContainSensitive listOf(
             TENANT_ID,
             userRef,
@@ -103,35 +121,35 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
         campaignId: java.util.UUID,
     ) {
         when (scenario) {
-            FailureScenario.REDIS_TIMEOUT_FLAPPING   -> exerciseRedisFlapping()
+            FailureScenario.REDIS_TIMEOUT_FLAPPING -> exerciseRedisFlapping()
             FailureScenario.DATABASE_CONNECTION_EXHAUSTION -> exerciseDatabaseExhaustion(DatabaseLane.FOREGROUND)
-            FailureScenario.POSTGRESQL_LOCK_TIMEOUT  -> exerciseLockTimeout(campaignId)
-            FailureScenario.RESPONSE_LOSS_REPLAY     -> exerciseResponseLossReplay(campaignId)
-            FailureScenario.CONTEXT_RESTART          -> configureCommandRuntime()
-            FailureScenario.SLOW_SSE_CONSUMER        -> exerciseDatabaseExhaustion(DatabaseLane.SSE_MAINTENANCE)
+            FailureScenario.POSTGRESQL_LOCK_TIMEOUT -> exerciseLockTimeout(campaignId)
+            FailureScenario.RESPONSE_LOSS_REPLAY -> exerciseResponseLossReplay(campaignId)
+            FailureScenario.CONTEXT_RESTART -> configureCommandRuntime()
+            FailureScenario.SLOW_SSE_CONSUMER -> exerciseDatabaseExhaustion(DatabaseLane.SSE_MAINTENANCE)
             FailureScenario.WORKER_POISON_STARVATION -> exerciseWorkerIsolation()
-            FailureScenario.KEY_ROTATION             -> exerciseKeyRotation(campaignId)
-            FailureScenario.CANCELLATION             -> exerciseCancellation()
-            FailureScenario.SHUTDOWN                 -> exerciseShutdown()
+            FailureScenario.KEY_ROTATION -> exerciseKeyRotation(campaignId)
+            FailureScenario.CANCELLATION -> exerciseCancellation()
+            FailureScenario.SHUTDOWN -> exerciseShutdown()
         }
     }
 
     private fun exerciseRedisFlapping() {
         val limiter = SequenceRateLimiter(failure(), consumed())
-        val admission =
-            VoucherAdmissionGate(
-                rateLimiter = limiter,
-                recoveryPolicy =
-                    AdmissionRecoveryPolicy(
-                        failureThreshold = 1,
-                        recoverySuccessThreshold = 1,
-                        probeInterval = 1.nanos(),
-                    ),
-                clock = Clock.systemUTC(),
-            )
+        val admission = VoucherAdmissionGate(
+            rateLimiter = limiter,
+            recoveryPolicy =
+                AdmissionRecoveryPolicy(
+                    failureThreshold = 1,
+                    recoverySuccessThreshold = 1,
+                    probeInterval = 1.nanos(),
+                ),
+            clock = Clock.systemUTC(),
+        )
 
         admission.decide("v1:${Base58.randomString(8)}") shouldBeEqualTo AdmissionDecision.Proceed
         admission.state() shouldBeEqualTo AdmissionState.DEGRADED
+
         while (admission.state() != AdmissionState.HEALTHY) {
             admission.decide("v1:${Base58.randomString(8)}") shouldBeEqualTo AdmissionDecision.Proceed
         }
@@ -142,17 +160,23 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
         val isolated = DatabasePermitGate(1, 1, 1, acquireTimeout = 25.millis())
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
+
         VirtualThreads.executorService().use { executor ->
-            val holder =
-                executor.submit {
-                    isolated.withPermit(lane) {
-                        entered.countDown()
-                        release.await(5.seconds).shouldBeTrue()
-                    }
+            val holder = executor.submit {
+                isolated.withPermit(lane) {
+                    entered.countDown()
+                    release.await(5.seconds).shouldBeTrue()
                 }
+            }
             entered.await(5.seconds).shouldBeTrue()
-            assertFailsWith<DatabasePermitRejected> { isolated.withPermit(lane) { error("must not execute") } }
+
+            assertFailsWith<DatabasePermitRejected> {
+                isolated.withPermit(lane) {
+                    error("must not execute")
+                }
+            }
             val unaffected = if (lane == DatabaseLane.FOREGROUND) DatabaseLane.WORKER else DatabaseLane.FOREGROUND
+
             isolated.withPermit(unaffected) { "reserved-progress" } shouldBeEqualTo "reserved-progress"
             release.countDown()
             holder.get(5.seconds)
@@ -163,22 +187,29 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
     private fun exerciseLockTimeout(campaignId: java.util.UUID) {
         dataSource.connection.use { blocker ->
             blocker.autoCommit = false
-            blocker.prepareStatement(
-                "SELECT campaign_id FROM voucher_campaigns WHERE tenant_id = ? AND campaign_id = ? FOR UPDATE",
-            ).use { statement ->
+            val sql = "SELECT campaign_id FROM voucher_campaigns WHERE tenant_id = ? AND campaign_id = ? FOR UPDATE"
+            blocker.prepareStatement(sql).use { statement ->
                 statement.setString(1, TENANT_ID)
                 statement.setObject(2, campaignId)
-                statement.executeQuery().use { it.next().shouldBeTrue() }
+                statement.executeQuery().use {
+                    it.next().shouldBeTrue()
+                }
             }
             configureCommandRuntime(lockTimeout = 50.millis())
             VirtualThreads.executorService().use { executor ->
-                val failure =
-                    executor.submit<Throwable?> {
-                        runCatching {
-                            allocation.allocate(AllocateVoucherCommand(TENANT_ID, campaignId, Base58.randomString(8)))
-                        }.exceptionOrNull()
-                    }.get(3.seconds)
-                (failure != null).shouldBeTrue()
+                val failure = executor.submit<Throwable?> {
+                    runCatching {
+                        allocation.allocate(
+                            AllocateVoucherCommand(
+                                tenantId = TENANT_ID,
+                                campaignId = campaignId,
+                                userRef = Base58.randomString(8)
+                            )
+                        )
+                    }.exceptionOrNull()
+                }.get(3.seconds)
+
+                failure.shouldNotBeNull()
             }
             blocker.rollback()
         }
@@ -187,38 +218,50 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
 
     private fun exerciseResponseLossReplay(campaignId: java.util.UUID) {
         val repository = HttpIdempotencyRepository(gate)
-        val command =
-            IdempotentVoucherCommand(
-                scope =
-                    IdempotencyScope(
-                        tenantId = TENANT_ID,
-                        principalDigest = Digest.sha256("principal"),
-                        operation = "allocate",
-                        resourceId = campaignId.toString(),
-                        keyDigest = Digest.sha256("key"),
-                    ),
-                fingerprint = Digest.sha256("request"),
-            )
-        val response =
-            StoredHttpResponse(
-                responseKind = VoucherResponseKind.ALLOCATION_ACCEPTED,
-                status = 201,
-                headers = emptyMap(),
-                aggregateId = campaignId,
-                allocationId = Uuid.V7.nextId(),
-                aggregateRevision = 0,
-                generationKeyVersion = 5,
-                verificationKeyVersion = 7,
-            )
+        val command = IdempotentVoucherCommand(
+            scope =
+                IdempotencyScope(
+                    tenantId = TENANT_ID,
+                    principalDigest = Digest.sha256("principal"),
+                    operation = "allocate",
+                    resourceId = campaignId.toString(),
+                    keyDigest = Digest.sha256("key"),
+                ),
+            fingerprint = Digest.sha256("request"),
+        )
+        val response = StoredHttpResponse(
+            responseKind = VoucherResponseKind.ALLOCATION_ACCEPTED,
+            status = 201,
+            headers = emptyMap(),
+            aggregateId = campaignId,
+            allocationId = Uuid.V7.nextId(),
+            aggregateRevision = 0,
+            generationKeyVersion = 5,
+            verificationKeyVersion = 7,
+        )
         var effects = 0
-        val losingClient =
-            IdempotentVoucherCommandService(repository, jdbc, clock) { point ->
-                if (point == IdempotencyCutPoint.AFTER_COMMIT_BEFORE_RESPONSE) error("response lost")
+        val losingClient = IdempotentVoucherCommandService(
+            idempotency = repository,
+            transactions = jdbc,
+            clock = clock
+        ) { point ->
+            if (point == IdempotencyCutPoint.AFTER_COMMIT_BEFORE_RESPONSE) {
+                error("response lost")
             }
-        assertFailsWith<IllegalStateException> {
-            losingClient.execute(command, admission = { null }) { effects++; response }
         }
-        val replay = IdempotentVoucherCommandService(repository, jdbc, clock).execute(command, admission = { null }) {
+        assertFailsWith<IllegalStateException> {
+            losingClient.execute(command, admission = { null }) {
+                effects++
+                response
+            }
+        }
+        val replay = IdempotentVoucherCommandService(
+            idempotency = repository,
+            transactions = jdbc,
+            clock = clock
+        ).execute(
+            command,
+            admission = { null }) {
             effects++
             response
         }
@@ -230,66 +273,81 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
         val isolated = DatabasePermitGate(1, 1, 1, acquireTimeout = 25.millis())
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
+
         VirtualThreads.executorService().use { executor ->
-            val poisoned =
-                executor.submit<Throwable?> {
-                    runCatching {
-                        isolated.withPermit(DatabaseLane.WORKER) {
-                            entered.countDown()
-                            release.await(5.seconds).shouldBeTrue()
-                            error("poisoned worker item")
-                        }
-                    }.exceptionOrNull()
-                }
+            val poisoned = executor.submit<Throwable?> {
+                runCatching {
+                    isolated.withPermit(DatabaseLane.WORKER) {
+                        entered.countDown()
+                        release.await(5.seconds).shouldBeTrue()
+                        error("poisoned worker item")
+                    }
+                }.exceptionOrNull()
+            }
             entered.await(5.seconds).shouldBeTrue()
-            isolated.withPermit(DatabaseLane.FOREGROUND) { "foreground-progress" } shouldBeEqualTo "foreground-progress"
+
+            isolated.withPermit(DatabaseLane.FOREGROUND) {
+                "foreground-progress"
+            } shouldBeEqualTo "foreground-progress"
+
             release.countDown()
-            (poisoned.get(5.seconds) is IllegalStateException).shouldBeTrue()
+            poisoned.get(5.seconds).shouldBeInstanceOf<IllegalStateException>()
         }
         isolated.availablePermits(DatabaseLane.WORKER) shouldBeEqualTo 1
     }
 
     private fun exerciseKeyRotation(campaignId: java.util.UUID) {
-        val originalRing =
-            VoucherCodeKeyRing(
-                currentGenerationVersion = 5,
-                currentVerificationVersion = 7,
-                generationKeys = mapOf(5 to ByteArray(32) { 0x15 }),
-                verificationKeys = mapOf(7 to ByteArray(32) { 0x27 }),
-            )
+        val originalRing = VoucherCodeKeyRing(
+            currentGenerationVersion = 5,
+            currentVerificationVersion = 7,
+            generationKeys = mapOf(5 to ByteArray(32) { 0x15 }),
+            verificationKeys = mapOf(7 to ByteArray(32) { 0x27 }),
+        )
         val input = VoucherGenerationInput(TENANT_ID, campaignId, Uuid.V7.nextId())
         val issued = VoucherCodeService(originalRing).issue(input)
-        val rotatedRing =
-            originalRing.copy(
-                currentVerificationVersion = 8,
-                verificationKeys = originalRing.verificationKeys + (8 to ByteArray(32) { 0x28 }),
+        val rotatedRing = originalRing.copy(
+            currentVerificationVersion = 8,
+            verificationKeys = originalRing.verificationKeys + (8 to ByteArray(32) { 0x28 }),
+        )
+        VoucherCodeService(rotatedRing)
+            .verify(
+                candidate = issued.code,
+                expectedVerifier = issued.verifier,
+                verificationKeyVersion = 7
             )
-        VoucherCodeService(rotatedRing).verify(issued.code, issued.verifier, 7).shouldBeTrue()
+            .shouldBeTrue()
+
         VoucherCodeService(rotatedRing.copy(verificationKeys = rotatedRing.verificationKeys - 7))
             .verifyExternal(issued.code) shouldBeEqualTo VerificationResult.INVALID_CODE
     }
 
     private fun exerciseCancellation() {
-        val isolated = DatabasePermitGate(1, 1, 1, acquireTimeout = 5.seconds())
+        val isolated = DatabasePermitGate(
+            foregroundPermits = 1,
+            workerPermits = 1,
+            sseMaintenancePermits = 1,
+            acquireTimeout = 5.seconds()
+        )
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
+
         VirtualThreads.executorService().use { executor ->
-            val holder =
-                executor.submit {
-                    isolated.withPermit(DatabaseLane.FOREGROUND) {
-                        entered.countDown()
-                        release.await(5.seconds).shouldBeTrue()
-                    }
+            val holder = executor.submit {
+                isolated.withPermit(DatabaseLane.FOREGROUND) {
+                    entered.countDown()
+                    release.await(5.seconds).shouldBeTrue()
                 }
+            }
             entered.await(5.seconds).shouldBeTrue()
-            val cancelled =
-                executor.submit<Boolean> {
-                    Thread.currentThread().interrupt()
-                    assertFailsWith<DatabasePermitRejected> {
-                        isolated.withPermit(DatabaseLane.FOREGROUND) { error("must not execute") }
+            val cancelled = executor.submit<Boolean> {
+                Thread.currentThread().interrupt()
+                assertFailsWith<DatabasePermitRejected> {
+                    isolated.withPermit(DatabaseLane.FOREGROUND) {
+                        error("must not execute")
                     }
-                    Thread.currentThread().isInterrupted
                 }
+                Thread.currentThread().isInterrupted
+            }
             cancelled.get(5.seconds).shouldBeTrue()
             release.countDown()
             holder.get(5.seconds)
@@ -299,19 +357,20 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
 
     private fun exerciseShutdown() {
         val isolated = DatabasePermitGate(1, 1, 1)
-        val coordinator =
-            VoucherLifecycleCoordinator(
-                gate = isolated,
-                stopWorker = {},
-                stopSse = {},
-                releaseLeader = {},
-                closeRedis = {},
-                closeExecutor = {},
-                graceDeadline = 1.seconds(),
-            )
+        val coordinator = VoucherLifecycleCoordinator(
+            gate = isolated,
+            stopWorker = {},
+            stopSse = {},
+            releaseLeader = {},
+            closeRedis = {},
+            closeExecutor = {},
+            graceDeadline = 1.seconds(),
+        )
         coordinator.shutdown()
         assertFailsWith<DatabasePermitRejected> {
-            isolated.withPermit(DatabaseLane.FOREGROUND) { error("must not execute") }
+            isolated.withPermit(DatabaseLane.FOREGROUND) {
+                error("must not execute")
+            }
         }
         isolated.inUsePermits() shouldBeEqualTo 0
     }
@@ -362,14 +421,8 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
     }
 
     private infix fun String.shouldNotContainSensitive(values: List<String>) {
-        values.mapIndexedNotNull { index, sensitive -> index.takeIf { contains(sensitive) } } shouldBeEqualTo emptyList()
-    }
-
-    private companion object {
-        fun consumed(): RateLimitResult = RateLimitResult.consumed(1, 99, RateLimitDiagnostics.EMPTY)
-
-        fun failure(): RateLimitResult = RateLimitResult.error(IllegalStateException("redis timeout"))
-
-        const val OPERATOR_SECRET = "local-operator-secret-0000000000000001"
+        values.mapIndexedNotNull { index, sensitive ->
+            index.takeIf { contains(sensitive) }
+        }.shouldBeEmpty()
     }
 }

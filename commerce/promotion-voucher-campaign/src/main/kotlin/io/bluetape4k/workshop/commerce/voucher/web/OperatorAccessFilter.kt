@@ -23,6 +23,12 @@ internal class OperatorAccessFilter(
     private val properties: VoucherProperties,
     private val mapper: ObjectMapper,
 ): OncePerRequestFilter() {
+
+    companion object: KLogging() {
+        private val LOOPBACK_ADDRESSES = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
+        private val SAFE_METHODS = setOf("GET", "HEAD")
+    }
+
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !request.requestURI.startsWith("/operator/")
 
@@ -51,14 +57,20 @@ internal class OperatorAccessFilter(
         if (request.serverName.lowercase() !in http.allowedHosts.map(String::lowercase)) return false
         if (!constantTimeEquals(request.getHeader(OPERATOR_SECRET_HEADER), http.operatorSecret)) return false
         if (!constantTimeEquals(request.getHeader(OPERATOR_GUARD_HEADER), http.operatorGuard)) return false
-        if (runCatching {
-                requireAsciiIdentifier(
-                    request.getHeader(TENANT_HEADER),
-                    TENANT_HEADER
-                )
-            }.isFailure) return false
+
+        runCatching {
+            requireAsciiIdentifier(
+                request.getHeader(TENANT_HEADER),
+                TENANT_HEADER
+            )
+        }.onFailure {
+            return false
+        }
         if (!sameOrigin(request)) return false
-        if (request.method !in SAFE_METHODS && request.contentType?.startsWith(MediaType.APPLICATION_JSON_VALUE) != true) {
+        if (
+            request.method !in SAFE_METHODS &&
+            request.contentType?.startsWith(MediaType.APPLICATION_JSON_VALUE) != true
+        ) {
             return false
         }
         return true
@@ -68,6 +80,7 @@ internal class OperatorAccessFilter(
         request.getHeader("Origin")?.let { return matchesServerOrigin(it, request) }
         if (request.method !in SAFE_METHODS) return false
         val explicitOrigin = request.getHeader("X-Workshop-Origin") ?: return false
+
         return matchesServerOrigin(explicitOrigin, request)
     }
 
@@ -77,6 +90,7 @@ internal class OperatorAccessFilter(
     ): Boolean {
         val uri = runCatching { URI(value) }.getOrNull() ?: return false
         val originPort = if (uri.port >= 0) uri.port else if (uri.scheme == "https") 443 else 80
+
         return uri.scheme in setOf("http", "https") &&
                 uri.host.equals(request.serverName, ignoreCase = true) &&
                 originPort == request.serverPort
@@ -93,8 +107,4 @@ internal class OperatorAccessFilter(
     private fun HttpServletRequest.requestId(): String =
         getAttribute(REQUEST_ID_ATTRIBUTE) as? String ?: "unavailable"
 
-    companion object: KLogging() {
-        private val LOOPBACK_ADDRESSES = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
-        private val SAFE_METHODS = setOf("GET", "HEAD")
-    }
 }
