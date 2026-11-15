@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.config
 
+import io.bluetape4k.logging.KLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -22,6 +23,12 @@ import java.io.Serializable
 @EnableKafka
 @EnableConfigurationProperties(InvoiceKafkaProperties::class)
 class InvoiceKafkaMessagingConfiguration {
+
+    private companion object: KLogging() {
+        const val PRODUCER_FAILURE_TIMEOUT_MS = 5_000
+        const val PRODUCER_REQUEST_TIMEOUT_MS = 3_000
+    }
+
     @Bean
     fun invoiceProducerFactory(properties: InvoiceKafkaProperties): ProducerFactory<String, String> =
         DefaultKafkaProducerFactory(
@@ -63,11 +70,6 @@ class InvoiceKafkaMessagingConfiguration {
             factory.setConsumerFactory(invoiceConsumerFactory)
             factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
         }
-
-    private companion object {
-        const val PRODUCER_FAILURE_TIMEOUT_MS = 5_000
-        const val PRODUCER_REQUEST_TIMEOUT_MS = 3_000
-    }
 }
 
 @ConfigurationProperties("usage-billing.invoice.kafka")
@@ -75,7 +77,7 @@ data class InvoiceKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val consumerGroup: String = "usage-billing-invoice-service",
     val producerClientId: String = "usage-billing-invoice-service",
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

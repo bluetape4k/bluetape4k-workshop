@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging
 
 import io.bluetape4k.concurrent.get
+import io.bluetape4k.logging.KLogging
 import org.springframework.kafka.KafkaException
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
@@ -12,6 +13,12 @@ import kotlin.time.Duration.Companion.seconds
 class KafkaInvoiceEventTransport(
     private val kafkaTemplate: KafkaTemplate<String, String>,
 ): InvoiceEventTransport {
+
+    private companion object: KLogging() {
+        const val TOPIC = "invoice.events.v1"
+        const val PUBLISH_TIMEOUT_SECONDS = 5L
+    }
+
     @Suppress("ThrowsCount")
     override fun publish(partitionKey: String, payload: String) {
         try {
@@ -26,10 +33,5 @@ class KafkaInvoiceEventTransport(
             Thread.currentThread().interrupt()
             throw InvoiceEventTransportFailure(failure)
         }
-    }
-
-    private companion object {
-        const val TOPIC = "invoice.events.v1"
-        const val PUBLISH_TIMEOUT_SECONDS = 5L
     }
 }

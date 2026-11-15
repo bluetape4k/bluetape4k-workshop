@@ -4,17 +4,27 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceJournal
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceLine
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 class InvoiceInboxServiceTest {
+
+    companion object: KLogging()
+
     private val journal = InMemoryInvoiceJournal()
     private val service = InvoiceInboxService(journal)
+
+    @BeforeEach
+    fun beforeEach() {
+        journal.reset()
+    }
 
     @Test
     fun `ChargeRated creates one immutable invoice line with source event provenance`() {
@@ -50,7 +60,12 @@ class InvoiceInboxServiceTest {
     fun `AdjustmentPosted appends a correction line without mutating original charge line`() {
         val original = chargeRated()
         service.handle(original)
-        val correction = InvoiceInboxEvent(UUID.randomUUID(), "AdjustmentPosted", original.eventId, BigDecimal("-0.10"))
+        val correction = InvoiceInboxEvent(
+            eventId = UUID.randomUUID(),
+            eventType = "AdjustmentPosted",
+            correctionOf = original.eventId,
+            amount = BigDecimal("-0.10")
+        )
 
         service.handle(correction).created.shouldBeTrue()
         journal.lines.size shouldBeEqualTo 2
@@ -61,7 +76,7 @@ class InvoiceInboxServiceTest {
     private fun chargeRated(): InvoiceInboxEvent =
         InvoiceInboxEvent(UUID.randomUUID(), "ChargeRated", null, BigDecimal("0.10"))
 
-    private class InMemoryInvoiceJournal : InvoiceJournal {
+    private class InMemoryInvoiceJournal: InvoiceJournal {
         override val lines = mutableListOf<InvoiceLine>()
 
         override fun findLine(sourceEventId: UUID): InvoiceLine? =
@@ -81,6 +96,10 @@ class InvoiceInboxServiceTest {
             digestByEvent[event.eventId] = event.payloadDigest
             lines += InvoiceLine(event.eventId, event.correctionOf, event.amount)
             return InvoiceInboxOutcome.APPLIED
+        }
+
+        fun reset() {
+            lines.clear()
         }
     }
 }
