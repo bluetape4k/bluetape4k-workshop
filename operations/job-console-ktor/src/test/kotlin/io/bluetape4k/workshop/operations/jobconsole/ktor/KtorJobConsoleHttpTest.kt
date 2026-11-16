@@ -9,11 +9,13 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.net.ServerSocket
 import java.net.URI
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KtorJobConsoleHttpTest {
 

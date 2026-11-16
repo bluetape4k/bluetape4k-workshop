@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,6 +39,7 @@ import java.time.Instant
 import javax.sql.DataSource
 
 
+@Tag("integration")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = ["workshop.metering.close.scheduler-enabled=false"],

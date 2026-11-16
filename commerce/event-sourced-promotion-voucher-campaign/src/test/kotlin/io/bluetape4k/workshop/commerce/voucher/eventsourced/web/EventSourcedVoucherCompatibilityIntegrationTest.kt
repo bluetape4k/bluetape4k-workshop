@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.concurrent.await
 import io.bluetape4k.javatimes.days
@@ -30,6 +31,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,9 +50,9 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CyclicBarrier
 import javax.sql.DataSource
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@Tag("integration")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = ["voucher.projection.worker.enabled=false"],
@@ -247,7 +249,7 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
         responses.map(Pair<Int, String>::first).sorted() shouldBeEqualTo listOf(201, 409)
 
         val rejectedBody = responses.single { it.first == 409 }.second
-        assertTrue { "CONCURRENT_MODIFICATION" in rejectedBody || "CAPACITY_EXHAUSTED" in rejectedBody }
+        ("CONCURRENT_MODIFICATION" in rejectedBody || "CAPACITY_EXHAUSTED" in rejectedBody).shouldBeTrue()
 
         transaction(database) {
             EventLog

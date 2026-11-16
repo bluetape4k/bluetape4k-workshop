@@ -12,6 +12,7 @@ import io.bluetape4k.testcontainers.storage.RedisServer
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisURI
 import io.lettuce.core.codec.StringCodec
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -26,6 +27,7 @@ import kotlin.time.Duration.Companion.seconds
  * singleton을 중지하면 다른 모든 테스트가 깨집니다.
  *
  * `junit.jupiter.execution.exclude.tags=smoke`로 기본 `test` task에서 제외됩니다.
+@Tag("smoke")
  */
 class RedisFailureTest {
 

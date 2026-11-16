@@ -25,6 +25,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.Project
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionHandlers
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionLease
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionModelType
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -32,6 +33,7 @@ import java.time.Instant
 import java.util.*
 
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CorrectionReconciliationIntegrationTest {
 

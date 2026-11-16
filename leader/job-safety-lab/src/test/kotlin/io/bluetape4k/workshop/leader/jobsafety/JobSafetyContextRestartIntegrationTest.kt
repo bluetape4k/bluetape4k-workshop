@@ -26,6 +26,7 @@ import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.update
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.getBean
 import org.springframework.beans.factory.getBeansOfType
@@ -40,6 +41,7 @@ import java.time.Instant
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ScheduledThreadPoolExecutor
 
+@Tag("integration")
 internal class JobSafetyContextRestartIntegrationTest {
 
     companion object: KLogging() {

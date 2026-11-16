@@ -15,11 +15,13 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+@Tag("integration")
 internal class ProjectionRuntimeRestartIntegrationTest {
 
     private companion object: KLogging() {

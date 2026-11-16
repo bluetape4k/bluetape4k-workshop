@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.shouldNotBeBlank
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.shiftcoverage.adapter.ShiftCoverageProvider
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageDemoService
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageInboxService

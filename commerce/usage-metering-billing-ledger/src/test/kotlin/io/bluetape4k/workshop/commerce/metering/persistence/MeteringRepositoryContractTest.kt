@@ -4,10 +4,12 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 
+@Tag("integration")
 class MeteringRepositoryContractTest {
 
     companion object: KLogging()

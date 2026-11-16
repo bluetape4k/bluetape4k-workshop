@@ -26,6 +26,7 @@ import io.bluetape4k.io.serializer.BinarySerializers
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProcessedProfileImage
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream

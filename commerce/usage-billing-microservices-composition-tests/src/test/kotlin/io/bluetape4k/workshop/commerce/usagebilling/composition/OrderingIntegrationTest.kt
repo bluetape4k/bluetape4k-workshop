@@ -8,11 +8,13 @@ import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.during
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
+@Tag("integration")
 class OrderingIntegrationTest {
 
     private companion object: KLogging() {

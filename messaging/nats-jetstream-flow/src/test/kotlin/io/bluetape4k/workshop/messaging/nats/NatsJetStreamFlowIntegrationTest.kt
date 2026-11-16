@@ -213,8 +213,9 @@ class NatsJetStreamFlowIntegrationTest {
                     releaseDelivery.complete(Unit)
 
                     val failure = runCatching { collector.awaitUntil(8.seconds) }.exceptionOrNull()
-                    failure.shouldBeInstanceOf<NatsConsumerFlowException>()
-                        .droppedMessages shouldBeGreaterThan 0L
+                    check(failure is NatsConsumerFlowException && failure.droppedMessages > 0) {
+                        "pending queue drop을 bounded 시간 안에 관찰하지 못했습니다: $failure"
+                    }
                 } finally {
                     releaseDelivery.complete(Unit)
                     collector.cancelAndJoin()

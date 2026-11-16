@@ -103,8 +103,10 @@ class OrderAuditService(
         limit: Int = DEFAULT_HISTORY_LIMIT,
     ): List<CdoSnapshot> {
         orderId.requireNotBlank("orderId")
-        limit.requireInRange(1, MAX_HISTORY_LIMIT, "limit")
-        
+        require(limit in 1..MAX_HISTORY_LIMIT) {
+            "limit must be between 1 and $MAX_HISTORY_LIMIT."
+        }
+
         val query = QueryBuilder.byInstanceId(orderId, Order::class.java)
             .limit(limit)
             .build()

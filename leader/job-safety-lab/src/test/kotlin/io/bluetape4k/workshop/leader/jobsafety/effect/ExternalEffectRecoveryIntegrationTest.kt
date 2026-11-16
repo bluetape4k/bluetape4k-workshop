@@ -6,8 +6,10 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyDatabaseFixture
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
+@Tag("integration")
 internal class ExternalEffectRecoveryIntegrationTest {
 
     companion object: KLogging() {

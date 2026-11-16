@@ -11,11 +11,13 @@ import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.during
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
+@Tag("integration")
 class UsageBillingMicroserviceCompositionIntegrationTest {
 
     private companion object: KLogging() {

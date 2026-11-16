@@ -12,6 +12,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuara
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryRecoveryService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,6 +23,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import java.time.Instant
 import java.util.*
 
+@Tag("integration")
 @SpringBootTest
 class QueryProjectionPostgresIntegrationTest {
 

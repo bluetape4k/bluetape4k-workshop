@@ -16,6 +16,7 @@ import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.utils.Resourcex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -297,7 +298,7 @@ class BarcodeExtractionServiceTest {
         val image = ImageIO.read(ByteArrayInputStream(fixtures.bytes(BarcodeExampleFixture.SAMPLE)))
         return ByteArrayOutputStream().use { output ->
             check(ImageIO.write(image, "jpeg", output)) { "JPEG writer is not available." }
-            output.toUtf8Bytes()
+            output.toByteArray()
         }
     }
 

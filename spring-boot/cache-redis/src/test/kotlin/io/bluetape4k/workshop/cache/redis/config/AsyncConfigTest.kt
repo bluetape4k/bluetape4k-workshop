@@ -29,7 +29,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class AsyncConfigTest {
@@ -100,14 +99,14 @@ class AsyncConfigTest {
         val executor = context.getBean<ExecutorService>(AsyncConfig.CACHE_REDIS_EXECUTOR_BEAN_NAME)
         val beanFactory = context.beanFactory
 
-        assertTrue {
+        (
             TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME in
                     beanFactory.getDependentBeans(AsyncConfig.CACHE_REDIS_EXECUTOR_BEAN_NAME)
-        }
-        assertTrue {
+        ).shouldBeTrue()
+        (
             "lettuceConnectionFactory" in
                     beanFactory.getDependentBeans(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
-        }
+        ).shouldBeTrue()
 
         context.close()
 

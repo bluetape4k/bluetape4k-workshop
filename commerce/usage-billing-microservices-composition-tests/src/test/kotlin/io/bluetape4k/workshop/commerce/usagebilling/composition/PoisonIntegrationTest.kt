@@ -7,10 +7,12 @@ import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBil
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
+@Tag("integration")
 class PoisonIntegrationTest {
 
     private companion object: KLogging() {

@@ -10,6 +10,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Instant
@@ -17,6 +18,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProjectionCoordinatorPostgresIntegrationTest {
 

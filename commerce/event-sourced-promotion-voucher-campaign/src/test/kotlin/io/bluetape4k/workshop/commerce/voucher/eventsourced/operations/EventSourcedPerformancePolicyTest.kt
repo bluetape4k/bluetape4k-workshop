@@ -11,9 +11,11 @@ import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
 
+@Tag("stress")
 internal class EventSourcedPerformancePolicyTest {
 
     companion object: KLogging()

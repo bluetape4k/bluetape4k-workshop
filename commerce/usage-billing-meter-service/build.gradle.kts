@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -64,4 +65,17 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
     testImplementation(libs.mockk)
+}
+
+tasks.test {
+    useJUnitPlatform { excludeTags("integration") }
+}
+
+tasks.register<Test>("integrationTest") {
+    description = "Runs PostgreSQL-backed Meter service integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    shouldRunAfter(tasks.test)
+    useJUnitPlatform { includeTags("integration") }
 }

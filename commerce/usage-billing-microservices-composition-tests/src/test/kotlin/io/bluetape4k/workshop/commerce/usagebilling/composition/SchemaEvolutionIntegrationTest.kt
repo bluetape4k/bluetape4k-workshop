@@ -7,11 +7,13 @@ import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+@Tag("integration")
 class SchemaEvolutionIntegrationTest {
 
     private companion object: KLogging() {

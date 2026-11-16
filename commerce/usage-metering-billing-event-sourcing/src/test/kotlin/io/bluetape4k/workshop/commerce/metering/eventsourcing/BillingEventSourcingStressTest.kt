@@ -43,12 +43,14 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.Project
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionEventContext
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionHandlers
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionModelType
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 
+@Tag("stress")
 class BillingEventSourcingStressTest {
 
     companion object: KLogging() {

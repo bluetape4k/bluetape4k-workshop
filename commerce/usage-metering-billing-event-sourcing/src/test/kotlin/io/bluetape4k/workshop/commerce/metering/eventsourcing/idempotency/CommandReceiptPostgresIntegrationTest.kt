@@ -18,6 +18,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccept
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -25,6 +26,7 @@ import java.time.Instant
 import java.util.*
 
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandReceiptPostgresIntegrationTest {
 

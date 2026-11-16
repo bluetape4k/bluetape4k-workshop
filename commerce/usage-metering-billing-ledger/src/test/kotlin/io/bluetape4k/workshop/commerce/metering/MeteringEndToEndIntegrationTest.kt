@@ -35,6 +35,7 @@ import io.bluetape4k.workshop.commerce.metering.persistence.PriceVersionReposito
 import io.bluetape4k.workshop.commerce.metering.persistence.PricingScheduleRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.UsageEventRepository
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -46,6 +47,7 @@ import java.time.ZoneOffset
 import java.util.*
 
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MeteringEndToEndIntegrationTest {
 

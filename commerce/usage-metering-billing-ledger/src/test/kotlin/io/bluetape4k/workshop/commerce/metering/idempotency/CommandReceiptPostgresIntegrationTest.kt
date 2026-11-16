@@ -16,6 +16,7 @@ import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.MeteringDatabaseFixture
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Clock
@@ -26,6 +27,7 @@ import java.time.ZoneOffset
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandReceiptPostgresIntegrationTest {
 

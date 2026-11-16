@@ -6,6 +6,7 @@ import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
+import io.bluetape4k.support.toUtf8Bytes
 import okio.Buffer
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test

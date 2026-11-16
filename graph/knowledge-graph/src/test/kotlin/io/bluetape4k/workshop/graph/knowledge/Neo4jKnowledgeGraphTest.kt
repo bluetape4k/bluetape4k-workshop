@@ -17,6 +17,7 @@ import org.neo4j.driver.GraphDatabase
  * Neo4j Testcontainer가 뒷받침하는 [AbstractKnowledgeGraphTest]입니다.
  *
  * Docker가 필요합니다. 실행: `./gradlew :graph-knowledge-graph:integrationTest`
+@Tag("integration")
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Neo4jKnowledgeGraphTest: AbstractKnowledgeGraphTest() {

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.sql.SQLException
@@ -45,6 +46,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 import kotlin.time.toJavaDuration
 
+@Tag("stress")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSourcedAppendStressTest {
 

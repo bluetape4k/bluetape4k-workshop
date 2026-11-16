@@ -19,6 +19,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventS
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionFailureRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -26,6 +27,7 @@ import java.time.Instant
 import java.util.*
 
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProjectionRecoveryPostgresIntegrationTest {
 

@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import kotlin.time.Duration.Companion.seconds
@@ -18,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * 실행 명령: `./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=`
  */
+@Tag("smoke")
 class LockFailureTest: AbstractDistributedLockTest() {
 
     @Test

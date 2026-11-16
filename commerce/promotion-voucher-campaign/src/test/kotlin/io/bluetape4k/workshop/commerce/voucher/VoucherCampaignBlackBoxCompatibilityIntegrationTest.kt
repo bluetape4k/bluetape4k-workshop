@@ -15,6 +15,7 @@ import io.bluetape4k.workshop.commerce.shared.voucher.VoucherLifecycleAction
 import io.bluetape4k.workshop.commerce.shared.voucher.VoucherLifecycleBlackBoxScenario
 import io.bluetape4k.workshop.commerce.shared.voucher.VoucherLifecycleFailureKind
 import io.bluetape4k.workshop.commerce.voucher.web.AllocationHttpResponse
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
@@ -24,6 +25,7 @@ internal class VoucherCampaignBlackBoxCompatibilityIntegrationTest: AbstractVouc
 
     companion object: KLogging()
 
+@Tag("integration")
     @Test
     fun `normalized state adapter satisfies the shared campaign contract`() {
         VoucherCampaignBlackBoxContract.scenarios.forEach { scenario ->

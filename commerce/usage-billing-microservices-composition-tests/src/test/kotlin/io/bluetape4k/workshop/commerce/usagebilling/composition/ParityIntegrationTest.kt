@@ -8,10 +8,12 @@ import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 
+@Tag("integration")
 class ParityIntegrationTest {
 
     private companion object: KLogging() {

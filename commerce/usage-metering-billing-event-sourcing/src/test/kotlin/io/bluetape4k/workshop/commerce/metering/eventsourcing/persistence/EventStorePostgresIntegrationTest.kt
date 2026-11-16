@@ -11,6 +11,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.StreamAppend
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -22,6 +23,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EventStorePostgresIntegrationTest {
 

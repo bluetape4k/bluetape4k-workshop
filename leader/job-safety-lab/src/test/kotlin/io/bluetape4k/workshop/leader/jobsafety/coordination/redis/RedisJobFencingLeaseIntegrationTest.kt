@@ -13,9 +13,11 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
 import io.lettuce.core.api.StatefulRedisConnection
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
+@Tag("integration")
 internal class RedisJobFencingLeaseIntegrationTest {
 
     companion object: KLogging() {

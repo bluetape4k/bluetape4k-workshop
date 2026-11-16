@@ -15,6 +15,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceResult
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,6 +27,7 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
+@Tag("integration")
 @SpringBootTest
 @Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class UsageAcceptancePostgresIntegrationTest {

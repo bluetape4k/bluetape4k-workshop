@@ -556,7 +556,7 @@ function referenceAuditsAvailable() {
 
 function runSkillAudits(file, svg) {
   const scope = rel(file);
-  const isConnectorHeavy = /data-connector=|class="edge"|marker-end\s*:|marker-end=/.test(svg);
+  const isConnectorHeavy = /data-connector=|class="edge"|data-edge=/.test(svg);
   if (!isConnectorHeavy) return;
 
   const audits = [

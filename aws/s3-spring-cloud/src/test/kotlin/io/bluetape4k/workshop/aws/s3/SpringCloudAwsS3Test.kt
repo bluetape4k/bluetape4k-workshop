@@ -9,6 +9,7 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.aws.spring.s3.S3Resource
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.aws.FlociServer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

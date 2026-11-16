@@ -19,9 +19,11 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobAuthoritySeed
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyDatabaseFixture
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
 
+@Tag("integration")
 internal class FencedMutationPostgresIntegrationTest {
 
     companion object: KLogging() {

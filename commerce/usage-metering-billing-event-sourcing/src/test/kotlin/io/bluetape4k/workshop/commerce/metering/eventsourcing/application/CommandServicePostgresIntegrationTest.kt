@@ -13,6 +13,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccept
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -20,6 +21,7 @@ import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandServicePostgresIntegrationTest {
 

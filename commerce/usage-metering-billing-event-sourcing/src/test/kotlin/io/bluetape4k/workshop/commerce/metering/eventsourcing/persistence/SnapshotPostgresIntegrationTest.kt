@@ -8,11 +8,13 @@ import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Instant
 
 
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SnapshotPostgresIntegrationTest {
 

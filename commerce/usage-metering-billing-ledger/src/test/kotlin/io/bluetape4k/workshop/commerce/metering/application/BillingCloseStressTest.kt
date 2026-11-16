@@ -24,6 +24,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -32,6 +33,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.util.*
 
+@Tag("stress")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BillingCloseStressTest {
 

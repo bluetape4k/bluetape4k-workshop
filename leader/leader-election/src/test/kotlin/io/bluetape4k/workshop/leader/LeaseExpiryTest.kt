@@ -4,6 +4,7 @@ import io.bluetape4k.codec.Base58
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * `junit.jupiter.execution.exclude.tags=smoke`로 기본 `test` task에서 제외됩니다.
  * nightly 또는 다음 명령으로 명시 실행합니다. `./gradlew test -Djunit.jupiter.execution.exclude.tags=`
  */
+@Tag("smoke")
 class LeaseExpiryTest: AbstractLeaderElectionTest() {
 
     companion object: KLogging()

@@ -15,11 +15,13 @@ import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+@Tag("integration")
 class BrokerPathRecoveryIntegrationTest {
 
     private companion object: KLogging() {

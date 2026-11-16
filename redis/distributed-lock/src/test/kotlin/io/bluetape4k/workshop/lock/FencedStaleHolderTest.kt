@@ -12,6 +12,7 @@ import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import kotlin.time.Duration.Companion.milliseconds
@@ -25,6 +26,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * 실행 명령: `./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=`
  */
+@Tag("smoke")
 class FencedStaleHolderTest: AbstractDistributedLockTest() {
 
     companion object: KLogging()

@@ -9,6 +9,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.meter.application.MeterCommandService
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.ActivatePriceCommand
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -20,6 +21,7 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
+@Tag("integration")
 @SpringBootTest
 @Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class MeterOutboxPostgresIntegrationTest {

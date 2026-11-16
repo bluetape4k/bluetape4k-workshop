@@ -26,6 +26,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.Projec
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionCoordinator
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionEventContext
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionHandlers
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
@@ -33,6 +34,7 @@ import java.time.Instant
 import java.util.*
 
 
+@Tag("integration")
 class TenantIsolationIntegrationTest {
 
     private companion object: KLogging() {

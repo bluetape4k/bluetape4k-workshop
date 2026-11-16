@@ -8,10 +8,11 @@ import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.database.getHikariDataSource
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
 
-// @Tag("integration")
+@Tag("integration")
 internal class EventStoreAppendOnlyIntegrationTest {
 
     companion object: KLogging()

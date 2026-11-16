@@ -160,7 +160,9 @@ class ProductPolicyApprovalService(
         limit: Int = DEFAULT_HISTORY_LIMIT,
     ): List<CdoSnapshot> {
         val validPolicyId = policyId.requirePositiveNumber("policyId")
-        limit.requireInRange(1, MAX_HISTORY_LIMIT, "limit")
+        require(limit in 1..MAX_HISTORY_LIMIT) {
+            "limit must be between 1 and $MAX_HISTORY_LIMIT."
+        }
 
         val query = QueryBuilder.byInstanceId(validPolicyId, ProductPolicy::class.java)
             .limit(limit)

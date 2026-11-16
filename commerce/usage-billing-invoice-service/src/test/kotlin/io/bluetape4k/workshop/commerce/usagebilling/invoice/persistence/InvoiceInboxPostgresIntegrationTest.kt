@@ -9,6 +9,7 @@ import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.application.InvoiceInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -19,6 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.util.*
 
+@Tag("integration")
 @SpringBootTest
 class InvoiceInboxPostgresIntegrationTest {
 

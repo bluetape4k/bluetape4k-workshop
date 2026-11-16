@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.redisson
 
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
-import io.bluetape4k.coroutines.support.awaitUntil
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -10,10 +9,14 @@ import io.bluetape4k.logging.error
 import io.bluetape4k.redis.redisson.codec.RedissonCodecs
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.utils.ShutdownQueue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.BeforeAll
 import org.redisson.Redisson
 import org.redisson.api.RFuture
@@ -106,8 +109,15 @@ abstract class AbstractRedissonTest {
     protected suspend fun <T> awaitRedis(
         future: RFuture<T>,
         timeout: kotlin.time.Duration = 5.seconds,
-    ): T =
-        future.awaitUntil(timeout)
+    ): T = try {
+        withTimeout(timeout) { future.await() }
+    } catch (cause: TimeoutCancellationException) {
+        future.cancel(false)
+        throw cause
+    } catch (cause: CancellationException) {
+        future.cancel(false)
+        throw cause
+    }
 
     @BeforeAll
     fun beforeAll() {
