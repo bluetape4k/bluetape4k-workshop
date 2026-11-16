@@ -6,6 +6,7 @@ import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.commerce.metering.domain.BillingPeriodState
 import io.bluetape4k.workshop.commerce.metering.domain.LedgerEntryType
+import io.bluetape4k.workshop.commerce.metering.domain.chargeAmount
 import io.bluetape4k.workshop.commerce.metering.persistence.BillingPeriodEntity
 import io.bluetape4k.workshop.commerce.metering.persistence.BillingPeriods
 import io.bluetape4k.workshop.commerce.metering.persistence.LedgerEntries
@@ -21,11 +22,8 @@ import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.Clock
 import java.util.*
-
-private const val MONEY_SCALE = 6
 
 @Service
 class AdjustmentService(
@@ -78,7 +76,7 @@ class AdjustmentService(
             it[priceVersionId] = price.id.value
             it[quantity] = usage.quantity
             it[unitPrice] = price.unitPrice
-            it[amount] = usage.quantity.multiply(price.unitPrice).setScale(MONEY_SCALE, RoundingMode.HALF_UP)
+            it[amount] = chargeAmount(usage.quantity, price.unitPrice, currency)
             it[LedgerEntries.currency] = currency
             it[relatedOriginalEntryId] = null
             it[reason] = "late usage received after finalized cutoff"

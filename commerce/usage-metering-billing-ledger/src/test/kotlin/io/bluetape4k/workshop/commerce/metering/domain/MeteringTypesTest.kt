@@ -3,9 +3,13 @@ package io.bluetape4k.workshop.commerce.metering.domain
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.money.bigDecimalValue
+import io.bluetape4k.money.currencyUnitOf
+import io.bluetape4k.money.moneyOf
 import org.junit.jupiter.api.Test
+import org.javamoney.moneta.Money as MonetaMoney
 import java.math.BigDecimal
-import java.util.*
+import java.util.Currency
 
 class MeteringTypesTest {
 
@@ -40,16 +44,16 @@ class MeteringTypesTest {
 
     @Test
     fun `money normalizes using currency fraction digits and half up rounding`() {
-        Money(BigDecimal("12.345"), Currency.getInstance("USD")).normalized() shouldBeEqualTo
-                Money(BigDecimal("12.35"), Currency.getInstance("USD"))
-        Money(BigDecimal("12.5"), Currency.getInstance("KRW")).normalized() shouldBeEqualTo
-                Money(BigDecimal("13"), Currency.getInstance("KRW"))
+        moneyOf(BigDecimal("12.345"), currencyUnitOf("USD")).normalized().bigDecimalValue shouldBeEqualTo
+                BigDecimal("12.35")
+        moneyOf(BigDecimal("12.5"), currencyUnitOf("KRW")).normalized().bigDecimalValue shouldBeEqualTo
+                BigDecimal("13")
     }
 
     @Test
     fun `money arithmetic rejects currency mismatch`() {
-        val dollars = Money(BigDecimal("10.00"), Currency.getInstance("USD"))
-        val won = Money(BigDecimal("10"), Currency.getInstance("KRW"))
+        val dollars = moneyOf(BigDecimal("10.00"), currencyUnitOf("USD"))
+        val won = moneyOf(BigDecimal("10"), currencyUnitOf("KRW"))
 
         assertFailsWith<IllegalArgumentException> {
             dollars + won
@@ -57,11 +61,38 @@ class MeteringTypesTest {
     }
 
     @Test
+    fun `money arithmetic normalizes the Moneta result`() {
+        val total =
+            moneyOf(BigDecimal("10.005"), currencyUnitOf("USD")) +
+                moneyOf(BigDecimal("1.005"), currencyUnitOf("USD"))
+
+        total.bigDecimalValue shouldBeEqualTo BigDecimal("11.01")
+    }
+
+    @Test
+    fun `money rejects negative amounts before normalization`() {
+        assertFailsWith<IllegalArgumentException> {
+            moneyOf(BigDecimal("-1.00"), currencyUnitOf("USD")).normalized()
+        }
+    }
+
+    @Test
     fun `charge multiplies quantity and unit price before currency rounding`() {
-        charge(
+        val result: MonetaMoney = charge(
             quantity = UsageQuantity(BigDecimal("3.333333")),
             unitPrice = UnitPrice(BigDecimal("0.015")),
             currency = Currency.getInstance("USD"),
-        ) shouldBeEqualTo Money(BigDecimal("0.05"), Currency.getInstance("USD"))
+        )
+
+        result shouldBeEqualTo moneyOf(BigDecimal("0.05"), currencyUnitOf("USD"))
+    }
+
+    @Test
+    fun `billing charge keeps the ledger six decimal scale through Moneta`() {
+        chargeAmount(
+            quantity = BigDecimal("3.333333"),
+            unitPrice = BigDecimal("0.015"),
+            currencyCode = "USD",
+        ) shouldBeEqualTo BigDecimal("0.050000")
     }
 }

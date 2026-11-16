@@ -16,6 +16,17 @@
 
 이 구분 덕분에 mutable workflow와 immutable financial fact를 같은 데이터베이스에 두면서도 역할을 섞지 않는다.
 
+## Money primitive
+
+`domain/PricingModels.kt`는 금액 생성·통화 조회·산술에
+`bluetape4k-money`의 Moneta `Money` 구현을 사용한다. 도메인 정책은 별도로
+명시한다. 금액은 음수가 될 수 없고, charge를 기록하기 전에 `HALF_UP`으로
+반올림한다. Billing ledger는 기존 scalar 정밀도인 6자리(`decimal(19, 6)`)를
+유지한다. Production의 close·late-debit·reconciliation 경로는 모두
+`chargeAmount`를 사용해 Moneta 금액을 만들고 ledger scale을 적용한다.
+Persistence와 HTTP 계약은 기존처럼 scalar `BigDecimal` 금액과 ISO 통화 코드를
+사용하므로 Moneta 구현이 그 경계를 새 타입으로 오염시키지 않는다.
+
 ## 상태 모델
 
 Billing period와 close run은 서로 다른 상태를 가진다. Period는 청구 경계이고 close run은 그 경계를 처리하는 재시작 가능한 작업이다.

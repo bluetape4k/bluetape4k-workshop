@@ -11,6 +11,7 @@ import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.BillingPeriodState
 import io.bluetape4k.workshop.commerce.metering.domain.LedgerEntryType
 import io.bluetape4k.workshop.commerce.metering.domain.ReconciliationFindingType
+import io.bluetape4k.workshop.commerce.metering.domain.chargeAmount
 import io.bluetape4k.workshop.commerce.metering.idempotency.Sha256Digest
 import io.bluetape4k.workshop.commerce.metering.persistence.BillingPeriodEntity
 import io.bluetape4k.workshop.commerce.metering.persistence.BillingPeriods
@@ -39,7 +40,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.Clock
 import java.time.Instant
 import java.util.*
@@ -70,7 +70,6 @@ class ReconciliationService(
 ) {
 
     private companion object: KLogging() {
-        const val MONEY_SCALE = 6
         const val USAGE_EVENT = "USAGE_EVENT"
         const val LEDGER_ENTRY = "LEDGER_ENTRY"
         const val SCAN_PAGE_SIZE = 200
@@ -253,9 +252,7 @@ class ReconciliationService(
             .findById(UUID.fromString(entry.sourceReferenceId)) ?: return null
         val expected = prices
             .select(tenantId, usage.meterId.value, entry.currency, usage.occurredAt) ?: return null
-        val expectedAmount = usage.quantity
-            .multiply(expected.unitPrice)
-            .setScale(MONEY_SCALE, RoundingMode.HALF_UP)
+        val expectedAmount = chargeAmount(usage.quantity, expected.unitPrice, entry.currency)
 
         if (entry.priceVersionId.value == expected.id.value &&
             entry.unitPrice.compareTo(expected.unitPrice) == 0 &&
