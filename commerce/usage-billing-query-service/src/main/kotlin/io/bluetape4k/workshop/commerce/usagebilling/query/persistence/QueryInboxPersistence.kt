@@ -10,6 +10,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
+import io.bluetape4k.workshop.commerce.shared.integration.AggregatePartitionKey
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
@@ -212,7 +213,7 @@ class ExposedQueryProjectionJournal: QueryProjectionJournal {
             aggregateType = event.aggregateType
             aggregateId = event.aggregateId
             aggregateVersion = event.aggregateVersion
-            partitionKey = "${event.tenantId}|${event.aggregateType}|${event.aggregateId}"
+            partitionKey = AggregatePartitionKey.of(event.tenantId, event.aggregateType, event.aggregateId)
             payload = event.payload
             payloadDigest = event.payloadDigest
             outcome = "APPLIED"

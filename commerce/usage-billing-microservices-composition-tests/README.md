@@ -52,9 +52,9 @@ Local decoders use Bluetape validation helpers for required envelope fields, and
 
 ## Payload digest contract
 
-All five services generate SHA-256 digests with
-`TinkDigesters.SHA256.digestHex` and verify received values with `matchesHex`.
-The wire value remains the lowercase 64-character hex encoding of the UTF-8
+All five services delegate SHA-256 generation and canonical verification to
+`io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest`. The shared
+contract preserves the lowercase 64-character hex encoding of the UTF-8
 payload; no schema or database migration is required. The digest is a
 non-authenticating checksum for accidental corruption and contract drift, not a
 MAC or signature. Composition fixtures deliberately keep an independent JDK

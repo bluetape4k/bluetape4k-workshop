@@ -4,7 +4,7 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingPricingEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
@@ -103,7 +103,7 @@ class BillingInboundEventDecoder {
     }
 
     private fun verifyPayloadDigest(eventId: UUID, payload: String, payloadDigest: String) {
-        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) {
+        if (!PayloadDigest.matches(payload, payloadDigest)) {
             throw InvalidBillingInboundEnvelope(eventId)
         }
     }

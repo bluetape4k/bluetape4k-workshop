@@ -5,7 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.PriceEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
@@ -41,7 +41,7 @@ class MeterPriceEvidenceDecoder {
         val payload = envelope.requiredText("payload")
         val payloadDigest = envelope.requiredText("payloadDigest")
 
-        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) {
+        if (!PayloadDigest.matches(payload, payloadDigest)) {
             throw InvalidMeterPriceEvidenceEnvelope(eventId)
         }
 
