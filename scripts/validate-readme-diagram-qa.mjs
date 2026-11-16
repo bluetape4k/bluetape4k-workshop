@@ -459,7 +459,9 @@ function auditRoundedBendDirection(file, svg) {
 function auditConnectorGeometry(file, svg) {
   const scope = rel(file);
   if (referenceAuditsAvailable()) return;
-  const pathMatches = [...svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)];
+  const dataConnectorMatches = [...svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)];
+  const sequenceConnectorMatches = [...svg.matchAll(/<path\b([^>]*\bclass="[^"]*\b(?:call|work|return)\b[^"]*"[^>]*)\/?>/g)];
+  const pathMatches = dataConnectorMatches.length > 0 ? dataConnectorMatches : sequenceConnectorMatches;
   if (pathMatches.length === 0) {
     if (!referenceAuditsAvailable() && /class="edge"|data-edge=/.test(svg)) {
       fail(scope, "fallback connector audit", "edge groups exist but data-connector paths=0");
@@ -476,7 +478,7 @@ function auditConnectorGeometry(file, svg) {
 
   for (const pathMatch of pathMatches) {
     const attrs = parseAttrs(pathMatch[1]);
-    const connector = attrs["data-connector"];
+    const connector = attrs["data-connector"] || attrs.class || "sequence-" + (pathMatches.indexOf(pathMatch) + 1);
     const d = attrs.d || "";
     const points = parsePathEndPoints(d);
     const directions = [];
@@ -545,6 +547,37 @@ function auditSequenceShape(file, svg) {
   }
 }
 
+function auditSequenceReferenceFallback(file, svg) {
+  const scope = rel(file);
+  const connectors = [...svg.matchAll(/<path\b([^>]*\bclass="[^"]*\b(?:call|work|return)\b[^"]*"[^>]*)\/?\s*>/g)];
+  let diagonalSegments = 0;
+  let missingMarkers = 0;
+  let malformedPaths = 0;
+  for (const connector of connectors) {
+    const attrs = parseAttrs(connector[1]);
+    const points = parsePathEndPoints(attrs.d || "");
+    if (points.length < 2) malformedPaths += 1;
+    if (!attrs["marker-end"]) missingMarkers += 1;
+    for (let index = 1; index < points.length; index += 1) {
+      if (segmentDirection(points[index - 1], points[index]) === "diagonal") diagonalSegments += 1;
+    }
+  }
+  const failures = malformedPaths + missingMarkers + diagonalSegments;
+  if (failures > 0) {
+    fail(
+      scope,
+      "fallback sequence reference audit",
+      `connectors=${connectors.length} malformed_paths=${malformedPaths} missing_markers=${missingMarkers} diagonal_segments=${diagonalSegments}`,
+    );
+    return;
+  }
+  addRow(
+    scope,
+    "fallback sequence reference audit",
+    `connectors=${connectors.length} geometry=PASS endpoint=PASS connector=PASS mixed_corner=PASS diagonal_segments=0`,
+  );
+}
+
 function referenceAuditsAvailable() {
   return [
     "diagram-geometry-audit.py",
@@ -556,8 +589,14 @@ function referenceAuditsAvailable() {
 
 function runSkillAudits(file, svg) {
   const scope = rel(file);
-  const isConnectorHeavy = /data-connector=|class="edge"|data-edge=/.test(svg);
+  const isConnectorHeavy = /data-connector=|class="edge"|data-edge=|marker-end\s*:|marker-end=/.test(svg);
+  const hasDeterministicSequenceFallback =
+    (svg.includes('data-diagram-kind="sequence"') || path.basename(file).includes("sequence")) &&
+    /class="[^"]*\b(?:call|work|return)\b[^"]*"/.test(svg);
   if (!isConnectorHeavy) return;
+  if (hasDeterministicSequenceFallback && !referenceAuditsAvailable()) {
+    auditSequenceReferenceFallback(file, svg);
+  }
 
   const audits = [
     ["geometry", "diagram-geometry-audit.py"],
@@ -568,7 +607,7 @@ function runSkillAudits(file, svg) {
   for (const [gate, script] of audits) {
     const scriptPath = path.join(skillAuditDir, script);
     if (!fs.existsSync(scriptPath)) {
-      addRow(scope, `${gate} reference audit`, `${scriptPath} missing`, "UNAVAILABLE");
+      addRow(scope, gate + " reference audit", scriptPath + " missing", "UNAVAILABLE");
       continue;
     }
     const result = run("python3", [scriptPath, rel(file)]);

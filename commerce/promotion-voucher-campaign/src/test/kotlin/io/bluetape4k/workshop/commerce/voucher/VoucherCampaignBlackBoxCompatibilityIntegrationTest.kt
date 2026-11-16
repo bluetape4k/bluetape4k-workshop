@@ -21,11 +21,11 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import java.util.*
 
+@Tag("integration")
 internal class VoucherCampaignBlackBoxCompatibilityIntegrationTest: AbstractVoucherIntegrationTest() {
 
     companion object: KLogging()
 
-@Tag("integration")
     @Test
     fun `normalized state adapter satisfies the shared campaign contract`() {
         VoucherCampaignBlackBoxContract.scenarios.forEach { scenario ->
