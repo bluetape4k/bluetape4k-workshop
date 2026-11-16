@@ -7,13 +7,14 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 
 /**
- * 서로 다른 rate-limit 전략으로 보호되는 세 endpoint를 제공하는 demo controller입니다.
+ * 서로 다른 rate-limit 전략으로 보호되는 네 endpoint를 제공하는 demo controller입니다.
  *
  * | Path | Strategy | Required headers |
  * |---|---|---|
  * | `/api/anonymous/hello` | IP-based | none |
  * | `/api/authenticated/hello` | userId-based | `X-User-ID` |
  * | `/api/sensitive/hello` | Combined IP + userId | `X-User-ID` |
+ * | `/api/sensitive-or/hello` | IP OR userId | `X-User-ID` |
  *
  * rate-limit 응답 header(`X-RateLimit-Remaining`, `Retry-After`)는 여기서가 아니라
  * 각 [WebFilter][org.springframework.web.server.WebFilter]에서 설정합니다.
@@ -65,6 +66,21 @@ class RateLimitDemoController {
         return mapOf(
             "message" to "Hello from sensitive endpoint",
             "strategy" to "Combined IP+userId rate limit",
+            "timestamp" to Instant.now().toString()
+        )
+    }
+
+    /**
+     * 민감 endpoint에 IP와 userId rate limit을 각각 적용하는 예제입니다.
+     *
+     * 두 bucket 중 하나라도 소진되면 OR filter가 요청을 거절합니다.
+     */
+    @GetMapping("/api/sensitive-or/hello")
+    suspend fun sensitiveOrHello(): Map<String, String> {
+        log.debug { "Handling /api/sensitive-or/hello" }
+        return mapOf(
+            "message" to "Hello from sensitive OR endpoint",
+            "strategy" to "IP or userId rate limit",
             "timestamp" to Instant.now().toString()
         )
     }
