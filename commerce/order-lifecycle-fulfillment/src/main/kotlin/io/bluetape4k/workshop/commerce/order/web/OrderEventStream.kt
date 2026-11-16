@@ -1,17 +1,21 @@
 package io.bluetape4k.workshop.commerce.order.web
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.order.query.OrderLifecycleQueryService
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.core.env.Environment
+import org.springframework.core.env.getProperty
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
@@ -22,39 +26,38 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-internal class StreamCapacityExceeded : IllegalStateException("SSE connection capacity exceeded")
+internal class StreamCapacityExceeded: IllegalStateException("SSE connection capacity exceeded")
 
-internal class StreamShuttingDown : IllegalStateException("SSE stream is shutting down")
+internal class StreamShuttingDown: IllegalStateException("SSE stream is shutting down")
 
 @Component
 internal class OrderEventStream(
     private val queries: OrderLifecycleQueryService,
     private val orderLifecycleExecutor: ExecutorService,
     environment: Environment,
-) : DisposableBean {
-    private val timeout =
-        environment.getProperty(
-            "order-lifecycle.sse.timeout",
-            Duration::class.java,
-            Duration.ofSeconds(60)
-        )
-    private val pollInterval =
-        environment.getProperty(
-            "order-lifecycle.sse.poll-interval",
-            Duration::class.java,
-            Duration.ofMillis(250)
-        )
-    private val heartbeatInterval =
-        environment.getProperty(
-            "order-lifecycle.sse.heartbeat-interval",
-            Duration::class.java,
-            Duration.ofSeconds(15)
-        )
-    private val maxConnections = environment.getProperty("order-lifecycle.sse.max-connections", Int::class.java, 1_000)
-    private val maxConcurrentPolls =
-        environment
-            .getProperty("order-lifecycle.sse.max-concurrent-polls", Int::class.java, 4)
-            .requirePositiveNumber("order-lifecycle.sse.max-concurrent-polls")
+): DisposableBean {
+
+    companion object: KLogging()
+
+    private val timeout = environment.getProperty<Duration>(
+        "order-lifecycle.sse.timeout",
+        60.seconds(),
+    )
+    private val pollInterval = environment.getProperty<Duration>(
+        "order-lifecycle.sse.poll-interval",
+        250.millis()
+    )
+    private val heartbeatInterval = environment.getProperty<Duration>(
+        "order-lifecycle.sse.heartbeat-interval",
+        15.seconds()
+    )
+    private val maxConnections = environment.getProperty<Int>("order-lifecycle.sse.max-connections", 1_000)
+    private val _maxConcurrentPolls = environment.getProperty<Int>("order-lifecycle.sse.max-concurrent-polls", 4)
+        .requirePositiveNumber("order-lifecycle.sse.max-concurrent-polls")
+
+    private val maxConcurrentPolls: Int
+        get() = _maxConcurrentPolls
+
     private val pollPermits = Semaphore(maxConcurrentPolls, true)
     private val activeConnections = AtomicInteger()
     private val connections = ConcurrentHashMap<SseEmitter, StreamConnection>()
@@ -68,6 +71,7 @@ internal class OrderEventStream(
     ): SseEmitter {
         val emitter = SseEmitter(timeout.toMillis())
         val connection = StreamConnection(emitter, orderId, lastEventId, heartbeatInterval)
+
         lifecycleLock.withLock {
             if (draining.get()) throw StreamShuttingDown()
             if (activeConnections.incrementAndGet() > maxConnections) {
@@ -77,9 +81,8 @@ internal class OrderEventStream(
             }
             connections[emitter] = connection
         }
-        val release = {
+        val release: () -> Unit = {
             release(connection)
-            Unit
         }
         emitter.onCompletion(release)
         emitter.onTimeout(release)
@@ -103,17 +106,16 @@ internal class OrderEventStream(
 
             lifecycleLock.withLock {
                 if (draining.get()) throw StreamShuttingDown()
-                val feed =
-                    checkNotNull(feeds.compute(orderId) { _, current ->
-                        current?.takeUnless { it.closed.get() } ?: OrderFeed(orderId)
-                    }) { "feed creation must return an OrderFeed" }
+                val feed = feeds.compute(orderId) { _, current ->
+                    current?.takeUnless { it.closed.get() } ?: OrderFeed(orderId)
+                }.checkNotNull { "feed creation must return an OrderFeed" }
                 connection.feed = feed
                 feed.connections[emitter] = connection
                 start(feed)
             }
             log.info {
                 "sse_connection_opened orderId=$orderId lastEventId=$lastEventId cursor=$snapshotCursor " +
-                    "activeConnections=${activeConnections.get()}"
+                        "activeConnections=${activeConnections.get()}"
             }
         } catch (failure: Exception) {
             release()
@@ -124,22 +126,25 @@ internal class OrderEventStream(
     }
 
     override fun destroy() {
-        val (drainingConnections, drainingFeeds) =
-            lifecycleLock.withLock {
-                if (!draining.compareAndSet(false, true)) return
-                val registeredConnections = connections.values.toList()
-                registeredConnections.forEach { connection ->
-                    if (connection.closed.compareAndSet(false, true)) {
-                        activeConnections.decrementAndGet()
-                    }
+        val (drainingConnections, drainingFeeds) = lifecycleLock.withLock {
+            if (!draining.compareAndSet(false, true)) return
+            val registeredConnections = connections.values.toList()
+
+            registeredConnections.forEach { connection ->
+                if (connection.closed.compareAndSet(false, true)) {
+                    activeConnections.decrementAndGet()
                 }
-                val registeredFeeds = feeds.values.toList()
-                registeredFeeds.forEach { it.closed.set(true) }
-                registeredConnections to registeredFeeds
             }
+            val registeredFeeds = feeds.values.toList()
+            registeredFeeds.forEach { it.closed.set(true) }
+            registeredConnections to registeredFeeds
+        }
+
         // emitter를 완료하기 전에 모든 poller를 취소해,
         // 연결된 client 수와 무관하게 shutdown이 하나의 bounded deadline을 갖도록 합니다.
-        drainingFeeds.forEach { it.future?.cancel(true) }
+        drainingFeeds.forEach {
+            it.future?.cancel(true)
+        }
         drainingConnections.forEach { it.emitter.complete() }
         connections.clear()
         feeds.clear()
@@ -157,28 +162,31 @@ internal class OrderEventStream(
             while (!feed.closed.get()) {
                 val subscribers = feed.connections.values.filterNot { it.closed.get() }
                 if (subscribers.isEmpty()) return
+
                 val cursor = subscribers.minOf { it.cursor.get() }
                 pollPermits.acquire()
-                val events =
-                    try {
-                        queries.auditAfter(feed.orderId, cursor)
-                    } finally {
-                        pollPermits.release()
-                    }
+                val events = try {
+                    queries.auditAfter(feed.orderId, cursor)
+                } finally {
+                    pollPermits.release()
+                }
                 val now = System.nanoTime()
+
                 subscribers.forEach { connection ->
                     if (!connection.closed.get()) {
                         try {
-                            events.asSequence().filter { it.id > connection.cursor.get() }.forEach { event ->
-                                connection.emitter.send(
-                                    SseEmitter
-                                        .event()
-                                        .id(event.id.toString())
-                                        .name("audit")
-                                        .data(event)
-                                )
-                                connection.cursor.set(event.id)
-                            }
+                            events.asSequence()
+                                .filter { it.id > connection.cursor.get() }
+                                .forEach { event ->
+                                    connection.emitter.send(
+                                        SseEmitter
+                                            .event()
+                                            .id(event.id.toString())
+                                            .name("audit")
+                                            .data(event)
+                                    )
+                                    connection.cursor.set(event.id)
+                                }
                             if (now >= connection.heartbeatAt.get()) {
                                 connection.emitter.send(SseEmitter.event().comment("heartbeat"))
                                 connection.heartbeatAt.set(now + heartbeatInterval.toNanos())
@@ -252,6 +260,4 @@ internal class OrderEventStream(
         @Volatile
         var future: Future<*>? = null
     }
-
-    companion object : KLogging()
 }

@@ -6,7 +6,7 @@ import java.io.Serializable
 data class UserSummary(
     val name: String,
     val login: String,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -24,7 +24,7 @@ data class UserQbeResponse(
     val page: Int,
     val size: Int,
     val hasNext: Boolean,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.text.detection.CoroutineLanguageDetectionService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.Collections
+import java.util.*
 
 /**
  * coroutine-safe in-memory multilingual search index 입니다.

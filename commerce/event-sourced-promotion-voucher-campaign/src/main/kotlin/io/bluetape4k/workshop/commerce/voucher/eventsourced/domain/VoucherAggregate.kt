@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.domain
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class VoucherAggregate(
     val tenantId: TenantId?,
@@ -17,7 +17,7 @@ internal data class VoucherAggregate(
 ) {
     private fun apply(event: VoucherEvent): VoucherAggregate =
         when (event) {
-            is VoucherEvent.VoucherIssued -> {
+            is VoucherEvent.VoucherIssued   -> {
                 if (voucherId != null) fail("voucher is already issued")
                 copy(
                     tenantId = event.tenantId,
@@ -50,9 +50,9 @@ internal data class VoucherAggregate(
                 copy(state = VoucherState.REDEEMED, version = version + 1)
             }
 
-            VoucherEvent.VoucherReleased -> transitionFromAllocation(VoucherState.RELEASED)
-            VoucherEvent.VoucherExpired -> transitionFromAllocation(VoucherState.EXPIRED)
-            VoucherEvent.VoucherRevoked -> {
+            VoucherEvent.VoucherReleased    -> transitionFromAllocation(VoucherState.RELEASED)
+            VoucherEvent.VoucherExpired     -> transitionFromAllocation(VoucherState.EXPIRED)
+            VoucherEvent.VoucherRevoked     -> {
                 requireIssued()
                 if (state == VoucherState.REDEEMED || state == VoucherState.REVOKED) {
                     fail("voucher cannot revoke from $state")
@@ -71,11 +71,14 @@ internal data class VoucherAggregate(
         if (voucherId == null) fail("voucher must be issued first")
     }
 
-    private fun fail(message: String): Nothing = throw DomainTransitionException(message)
+    private fun fail(message: String): Nothing =
+        throw DomainTransitionException(message)
 
     companion object {
         fun replay(events: List<VoucherEvent>): VoucherAggregate =
-            events.fold(empty()) { aggregate, event -> aggregate.apply(event) }
+            events.fold(empty()) { aggregate, event ->
+                aggregate.apply(event)
+            }
 
         private fun empty(): VoucherAggregate =
             VoucherAggregate(

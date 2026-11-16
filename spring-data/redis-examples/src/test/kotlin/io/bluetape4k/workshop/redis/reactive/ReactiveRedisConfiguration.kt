@@ -28,7 +28,7 @@ class ReactiveRedisConfiguration(
     private val reactiveRedisConnectionFactory: ReactiveRedisConnectionFactory,
 ) {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
 

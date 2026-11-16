@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.config
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class ImageOcrPropertiesTest {
+
+    private companion object: KLogging()
 
     @Test
     fun `upload byte limit must be positive`() {

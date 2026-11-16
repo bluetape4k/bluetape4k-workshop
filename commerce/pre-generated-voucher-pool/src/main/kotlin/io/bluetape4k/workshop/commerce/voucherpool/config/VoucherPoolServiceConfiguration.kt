@@ -8,12 +8,12 @@ import io.bluetape4k.workshop.commerce.voucherpool.application.JdbcAllocationSer
 import io.bluetape4k.workshop.commerce.voucherpool.application.JdbcCampaignBatchCommandService
 import io.bluetape4k.workshop.commerce.voucherpool.application.JdbcRedemptionService
 import io.bluetape4k.workshop.commerce.voucherpool.application.JdbcReservationService
-import io.bluetape4k.workshop.commerce.voucherpool.application.JdbcVoucherPoolRevocationService
 import io.bluetape4k.workshop.commerce.voucherpool.application.JdbcVoucherPoolReconciliationCommandService
+import io.bluetape4k.workshop.commerce.voucherpool.application.JdbcVoucherPoolRevocationService
 import io.bluetape4k.workshop.commerce.voucherpool.application.RedemptionService
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReservationService
-import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolRevocationService
 import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolReconciliationCommandService
+import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolRevocationService
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.JdbcVoucherPoolIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.VoucherPoolIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcVoucherPoolRepository
@@ -42,14 +42,22 @@ import javax.sql.DataSource
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
 internal class VoucherPoolServiceConfiguration {
-    @Bean
-    fun voucherPoolRuntimeKeys(provider: VoucherPoolKeyMaterialProvider): VoucherPoolRuntimeKeys = provider.load()
+
+    private companion object {
+        const val VOUCHER_POOL_MIGRATION_LOCK_KEY = 537_001L
+    }
 
     @Bean
-    fun voucherDigestService(keys: VoucherPoolRuntimeKeys): VoucherDigestService = keys.digests
+    fun voucherPoolRuntimeKeys(provider: VoucherPoolKeyMaterialProvider): VoucherPoolRuntimeKeys =
+        provider.load()
 
     @Bean
-    fun voucherKekRing(keys: VoucherPoolRuntimeKeys): VoucherKekRing = keys.kekRing
+    fun voucherDigestService(keys: VoucherPoolRuntimeKeys): VoucherDigestService =
+        keys.digests
+
+    @Bean
+    fun voucherKekRing(keys: VoucherPoolRuntimeKeys): VoucherKekRing =
+        keys.kekRing
 
     @Bean
     fun voucherPoolMigrationRunner(dataSource: DataSource): VoucherPoolMigrationRunner =
@@ -64,7 +72,8 @@ internal class VoucherPoolServiceConfiguration {
         dataSource: DataSource,
         digests: VoucherDigestService,
         kekRing: VoucherKekRing,
-    ): VoucherPoolReferencedKeyPreflight = VoucherPoolReferencedKeyPreflight(dataSource, digests, kekRing)
+    ): VoucherPoolReferencedKeyPreflight =
+        VoucherPoolReferencedKeyPreflight(dataSource, digests, kekRing)
 
     @Bean
     @ConditionalOnProperty(
@@ -77,10 +86,12 @@ internal class VoucherPoolServiceConfiguration {
         migration: VoucherPoolMigrationRunner,
         keyPreflight: VoucherPoolReferencedKeyPreflight,
         health: VoucherPoolHealthState,
-    ): VoucherPoolStartupInitializer = VoucherPoolStartupInitializer(migration, keyPreflight, health)
+    ): VoucherPoolStartupInitializer =
+        VoucherPoolStartupInitializer(migration, keyPreflight, health)
 
     @Bean
-    fun voucherPoolRepository(): VoucherPoolRepository = JdbcVoucherPoolRepository()
+    fun voucherPoolRepository(): VoucherPoolRepository =
+        JdbcVoucherPoolRepository()
 
     @Bean
     fun voucherEnvelopeCrypto(kekRing: VoucherKekRing, digests: VoucherDigestService): VoucherEnvelopeCrypto =
@@ -101,7 +112,10 @@ internal class VoucherPoolServiceConfiguration {
         JdbcVoucherPoolIdempotencyRepository(digests, descriptorRetention = policy.descriptor)
 
     @Bean
-    fun voucherCryptoStorage(repository: VoucherPoolRepository, crypto: VoucherEnvelopeCrypto): VoucherCryptoStorage =
+    fun voucherCryptoStorage(
+        repository: VoucherPoolRepository,
+        crypto: VoucherEnvelopeCrypto,
+    ): VoucherCryptoStorage =
         VoucherCryptoStorage(repository, crypto)
 
     @Bean
@@ -111,7 +125,8 @@ internal class VoucherPoolServiceConfiguration {
         idempotency: VoucherPoolIdempotencyRepository,
         digests: VoucherDigestService,
         crypto: VoucherEnvelopeCrypto,
-    ): CampaignBatchCommandService = JdbcCampaignBatchCommandService(executor, repository, idempotency, digests, crypto)
+    ): CampaignBatchCommandService =
+        JdbcCampaignBatchCommandService(executor, repository, idempotency, digests, crypto)
 
     @Bean
     fun reservationService(
@@ -176,7 +191,8 @@ internal class VoucherPoolServiceConfiguration {
         executor: VoucherPoolJdbcExecutor,
         claims: JdbcVoucherPoolWorkerRepository,
         repository: VoucherPoolRepository,
-    ): VoucherPoolWorkers = JdbcVoucherPoolWorkers(executor, claims, repository)
+    ): VoucherPoolWorkers =
+        JdbcVoucherPoolWorkers(executor, claims, repository)
 
     @Bean
     @ConditionalOnProperty(
@@ -189,7 +205,8 @@ internal class VoucherPoolServiceConfiguration {
         workers: VoucherPoolWorkers,
         runtime: VoucherPoolRuntimeControl,
         leaders: ObjectProvider<VoucherPoolLeaderTrigger>,
-    ): VoucherPoolWorkerTrigger = VoucherPoolWorkerTrigger(workers, runtime, leaders.ifAvailable)
+    ): VoucherPoolWorkerTrigger =
+        VoucherPoolWorkerTrigger(workers, runtime, leaders.ifAvailable)
 
     @Bean
     @ConditionalOnProperty(
@@ -202,9 +219,6 @@ internal class VoucherPoolServiceConfiguration {
         claims: JdbcVoucherPoolWorkerRepository,
         trigger: VoucherPoolWorkerTrigger,
         properties: VoucherPoolProperties,
-    ): VoucherPoolWorkerDispatcher = VoucherPoolWorkerDispatcher(claims, trigger, properties.workerInstanceId)
-
-    private companion object {
-        const val VOUCHER_POOL_MIGRATION_LOCK_KEY = 537_001L
-    }
+    ): VoucherPoolWorkerDispatcher =
+        VoucherPoolWorkerDispatcher(claims, trigger, properties.workerInstanceId)
 }

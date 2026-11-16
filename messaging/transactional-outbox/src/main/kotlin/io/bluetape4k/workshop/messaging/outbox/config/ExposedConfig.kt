@@ -16,9 +16,9 @@ import org.springframework.transaction.annotation.Transactional
  * `SchemaUtils.createMissingTablesAndColumns` 를 사용하므로 existing database 에 대해 실행해도 안전합니다. 이미 존재하는 column 과 table 은 그대로 둡니다.
  */
 @Component
-class ExposedConfig : ApplicationRunner {
+class ExposedConfig: ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Transactional
     override fun run(args: ApplicationArguments) {

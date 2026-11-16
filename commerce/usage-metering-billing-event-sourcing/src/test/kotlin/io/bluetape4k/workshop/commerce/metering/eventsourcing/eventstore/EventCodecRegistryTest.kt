@@ -8,16 +8,27 @@ class EventCodecRegistryTest {
     @Test
     fun `registry applies a contiguous upcast chain before decoding`() {
         val registry = EventCodecRegistry()
-            .register("usage.accepted", 3) { payload -> payload }
-            .registerUpcaster("usage.accepted", 1) { payload -> payload.replace("quantity", "amount") }
-            .registerUpcaster("usage.accepted", 2) { payload -> payload.replace("amount", "quantity") }
+            .register("usage.accepted", 3) { payload ->
+                payload
+            }
+            .registerUpcaster("usage.accepted", 1) { payload ->
+                payload.replace("quantity", "amount")
+            }
+            .registerUpcaster("usage.accepted", 2) { payload ->
+                payload.replace("amount", "quantity")
+            }
 
-        registry.decode("usage.accepted", 1, """{"quantity":10}""").shouldBeEqualTo("""{"quantity":10}""")
+        registry.decode(
+            "usage.accepted",
+            1,
+            """{"quantity":10}"""
+        ) shouldBeEqualTo """{"quantity":10}"""
     }
 
     @Test
     fun `registry rejects unknown event versions`() {
-        val registry = EventCodecRegistry().register("usage.accepted", 1) { it }
+        val registry = EventCodecRegistry()
+            .register("usage.accepted", 1) { it }
 
         assertFailsWith<UnknownEventSchemaException> {
             registry.decode("usage.accepted", 2, "{}")
@@ -30,6 +41,8 @@ class EventCodecRegistryTest {
             .register("usage.accepted", 3) { it }
             .registerUpcaster("usage.accepted", 1) { it }
 
-        assertFailsWith<IllegalStateException> { registry.validate() }
+        assertFailsWith<IllegalStateException> {
+            registry.validate()
+        }
     }
 }

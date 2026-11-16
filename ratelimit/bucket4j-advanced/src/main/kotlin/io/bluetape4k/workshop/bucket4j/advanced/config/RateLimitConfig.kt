@@ -5,6 +5,8 @@ import io.bluetape4k.bucket4j.distributed.AsyncBucketProxyProvider
 import io.bluetape4k.bucket4j.distributed.redis.lettuceBasedProxyManagerOf
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedSuspendRateLimiter
 import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy
 import io.github.bucket4j.distributed.proxy.ClientSideConfig
@@ -58,24 +60,24 @@ class RateLimitConfig {
     @Bean
     @Qualifier("ipBucketConfiguration")
     fun ipBucketConfiguration(): BucketConfiguration = bucketConfiguration {
-        addLimit { it.capacity(20).refillIntervally(20, Duration.ofSeconds(10)) }
-        addLimit { it.capacity(100).refillGreedy(10, Duration.ofMinutes(1)) }
+        addLimit { it.capacity(20).refillIntervally(20, 30.seconds()) }
+        addLimit { it.capacity(100).refillGreedy(10, 1.minutes()) }
     }
 
     /** User 기반 bucket입니다. 인증 traffic에 10초당 50 token, 분당 200 token을 허용합니다. */
     @Bean
     @Qualifier("userBucketConfiguration")
     fun userBucketConfiguration(): BucketConfiguration = bucketConfiguration {
-        addLimit { it.capacity(50).refillIntervally(50, Duration.ofSeconds(10)) }
-        addLimit { it.capacity(200).refillGreedy(20, Duration.ofMinutes(1)) }
+        addLimit { it.capacity(50).refillIntervally(50, 10.seconds()) }
+        addLimit { it.capacity(200).refillGreedy(20, 1.minutes()) }
     }
 
     /** Combined(IP+userId) bucket입니다. 10초당 10 token, 분당 50 token을 허용합니다. */
     @Bean
     @Qualifier("combinedBucketConfiguration")
     fun combinedBucketConfiguration(): BucketConfiguration = bucketConfiguration {
-        addLimit { it.capacity(10).refillIntervally(10, Duration.ofSeconds(10)) }
-        addLimit { it.capacity(50).refillGreedy(5, Duration.ofMinutes(1)) }
+        addLimit { it.capacity(10).refillIntervally(10, 10.seconds()) }
+        addLimit { it.capacity(50).refillGreedy(5, 1.minutes()) }
     }
 
     // ------------------------------------------------------------------

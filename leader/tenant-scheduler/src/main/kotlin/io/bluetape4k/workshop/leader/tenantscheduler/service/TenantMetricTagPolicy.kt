@@ -26,7 +26,7 @@ data class TenantMetricTagPolicy(
         val distinctTenants = tenants.distinctBy { it.value }
         val effectiveLimit = min(maxTenantTagValues, MAX_LOCAL_TENANT_TAG_VALUES)
         val usePerTenantRows = maxTenantTagValues <= MAX_LOCAL_TENANT_TAG_VALUES &&
-            distinctTenants.size <= effectiveLimit
+                distinctTenants.size <= effectiveLimit
 
         val rows = if (usePerTenantRows) {
             distinctTenants.map { tenant ->

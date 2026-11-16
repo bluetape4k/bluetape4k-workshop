@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.part3
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.concurrent.virtualthread.VT
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
@@ -8,16 +9,15 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * 동기 코드를 Coroutines 환경에서 `Executors.newVirtualThreadPerTaskExecutor()` 를 이용해서 비동기로 실행할 수 있습니다.
  */
-class CoroutineWithVirtualThread : AbstractVirtualThreadTest() {
+class CoroutineWithVirtualThread: AbstractVirtualThreadTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val REPEAT_SIZE = 3
     }
 

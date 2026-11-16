@@ -18,9 +18,9 @@ import io.vertx.kotlin.jdbcclient.jdbcConnectOptionsOf
 import io.vertx.kotlin.sqlclient.poolOptionsOf
 import io.vertx.sqlclient.Tuple
 
-class MovieRatingVerticle : CoroutineVerticle() {
+class MovieRatingVerticle: CoroutineVerticle() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private val statements = listOf(
             "CREATE TABLE MOVIE (ID VARCHAR(16) PRIMARY KEY, TITLE VARCHAR(256) NOT NULL)",
             "CREATE TABLE RATING (ID INT AUTO_INCREMENT PRIMARY KEY, RATE_VALUE INT, MOVIE_ID VARCHAR(16))",

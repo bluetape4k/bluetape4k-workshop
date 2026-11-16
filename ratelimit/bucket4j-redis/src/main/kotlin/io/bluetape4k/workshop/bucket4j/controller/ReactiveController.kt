@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/reactive")
 class ReactiveController {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val RESPONSE_BODY = "Hello World"
     }
 

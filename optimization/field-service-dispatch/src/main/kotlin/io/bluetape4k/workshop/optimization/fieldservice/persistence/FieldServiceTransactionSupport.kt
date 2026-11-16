@@ -7,4 +7,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 inline fun <T> fieldServiceTransaction(
     database: Database? = null,
     crossinline block: () -> T,
-): T = if (database == null) transaction { block() } else transaction(database) { block() }
+): T =
+    if (database == null) transaction { block() }
+    else transaction(database) { block() }

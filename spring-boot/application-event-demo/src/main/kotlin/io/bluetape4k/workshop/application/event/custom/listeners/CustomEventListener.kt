@@ -10,14 +10,15 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.springframework.context.ApplicationListener
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.context.ApplicationListener
 import org.springframework.stereotype.Component
+import kotlin.time.Duration.Companion.milliseconds
 
 @Component
-class CustomEventListener : ApplicationListener<CustomEvent>, DisposableBean {
+class CustomEventListener: ApplicationListener<CustomEvent>, DisposableBean {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val listenerScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineName("custom-event-listener")
@@ -35,6 +36,6 @@ class CustomEventListener : ApplicationListener<CustomEvent>, DisposableBean {
 
     suspend fun saveEvent(event: CustomEvent) {
         log.debug { "Handle custom event. $event" }
-        delay(100)
+        delay(100.milliseconds)
     }
 }

@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.optimization.warehouseallocation.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.warehouseallocation.adapter.http.WarehouseAllocationHttpService
-import io.bluetape4k.workshop.optimization.warehouseallocation.application.WarehouseAllocationApprovalService
 import io.bluetape4k.workshop.optimization.warehouseallocation.application.WarehouseAllocationApprovalResult
+import io.bluetape4k.workshop.optimization.warehouseallocation.application.WarehouseAllocationApprovalService
 import io.bluetape4k.workshop.optimization.warehouseallocation.application.WarehouseAllocationCommandService
 import io.bluetape4k.workshop.optimization.warehouseallocation.application.WarehouseAllocationOrderService
 import io.bluetape4k.workshop.optimization.warehouseallocation.application.WarehouseAllocationPinService
@@ -34,6 +35,9 @@ internal class WarehouseAllocationMutationController(
     private val orders: WarehouseAllocationOrderService,
     private val repository: WarehouseAllocationRepository,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping("/events")
     fun event(
         @RequestBody request: WarehouseAllocationEventRequest,
@@ -43,7 +47,14 @@ internal class WarehouseAllocationMutationController(
     ): ResponseEntity<Any> {
         requireOperator(demo, key, requestId)
         val result = http.ingest(request, requestId)
-        return ResponseEntity.accepted().body(mapOf("operationKey" to result.operationKey, "requestId" to requestId, "state" to result.state))
+        return ResponseEntity.accepted()
+            .body(
+                mapOf(
+                    "operationKey" to result.operationKey,
+                    "requestId" to requestId,
+                    "state" to result.state
+                )
+            )
     }
 
     @PostMapping("/replans")
@@ -54,13 +65,24 @@ internal class WarehouseAllocationMutationController(
         @RequestHeader("X-Request-Id") requestId: String,
     ): ResponseEntity<Any> {
         requireOperator(demo, key, requestId)
-        val generation = request.parentPlanRevision ?: transaction { repository.nextReplanGeneration(request.datasetId) }
+        val generation =
+            request.parentPlanRevision ?: transaction { repository.nextReplanGeneration(request.datasetId) }
         val queued = replan.queue(request.datasetId, generation, requestId)
         val alreadyMaterialized = transaction { repository.outbox(queued.operationKey) != null }
         if (!alreadyMaterialized && queued.requestId == requestId) {
-            val planned = command.createPlanFromCurrentSnapshot(request.datasetId, request.seed, requestId, queued.operationKey)
+            val planned = command.createPlanFromCurrentSnapshot(
+                request.datasetId,
+                request.seed,
+                requestId,
+                queued.operationKey
+            )
             transaction {
-                repository.markReplanMaterialized(request.datasetId, generation, planned.proposal.planId.value, planned.proposal.datasetVersion)
+                repository.markReplanMaterialized(
+                    request.datasetId,
+                    generation,
+                    planned.proposal.planId.value,
+                    planned.proposal.datasetVersion
+                )
             }
         }
         return ResponseEntity.accepted().body(queued)
@@ -79,34 +101,78 @@ internal class WarehouseAllocationMutationController(
     }
 
     @PostMapping("/plans/{planId}/reject")
-    fun reject(@PathVariable planId: String, @RequestBody request: WarehouseAllocationRejectRequest, @RequestHeader("X-Demo-Operator") demo: String, @RequestHeader("Idempotency-Key") key: String, @RequestHeader("X-Request-Id") requestId: String): WarehouseAllocationApprovalResult {
+    fun reject(
+        @PathVariable planId: String,
+        @RequestBody request: WarehouseAllocationRejectRequest,
+        @RequestHeader("X-Demo-Operator") demo: String,
+        @RequestHeader("Idempotency-Key") key: String,
+        @RequestHeader("X-Request-Id") requestId: String,
+    ): WarehouseAllocationApprovalResult {
         requireOperator(demo, key, requestId)
         return approval.reject(planId, request.expectedPlanRevision, request.reasonCode, requestId)
     }
 
     @PostMapping("/pins")
-    fun pin(@RequestBody request: WarehouseAllocationPinRequest, @RequestHeader("X-Demo-Operator") demo: String, @RequestHeader("Idempotency-Key") key: String, @RequestHeader("X-Request-Id") requestId: String) = run {
+    fun pin(
+        @RequestBody request: WarehouseAllocationPinRequest,
+        @RequestHeader("X-Demo-Operator") demo: String,
+        @RequestHeader("Idempotency-Key") key: String,
+        @RequestHeader("X-Request-Id") requestId: String,
+    ) = run {
         requireOperator(demo, key, requestId)
-        pins.create(request.lineId, request.warehouseId, request.quantity, request.expectedLineRevision, "demo-operator", requestId)
+        pins.create(
+            request.lineId,
+            request.warehouseId,
+            request.quantity,
+            request.expectedLineRevision,
+            "demo-operator",
+            requestId
+        )
     }
 
     @DeleteMapping("/pins/{pinId}")
-    fun removePin(@PathVariable pinId: String, @RequestParam(defaultValue = "0") expectedRevision: Long, @RequestHeader("X-Demo-Operator") demo: String, @RequestHeader("Idempotency-Key") key: String, @RequestHeader("X-Request-Id") requestId: String) = run {
+    fun removePin(
+        @PathVariable pinId: String,
+        @RequestParam(defaultValue = "0") expectedRevision: Long,
+        @RequestHeader("X-Demo-Operator") demo: String,
+        @RequestHeader("Idempotency-Key") key: String,
+        @RequestHeader("X-Request-Id") requestId: String,
+    ) = run {
         requireOperator(demo, key, requestId)
         pins.remove(pinId, expectedRevision, requestId)
     }
 
     @PostMapping("/orders/{orderId}/cancel")
-    fun cancel(@PathVariable orderId: String, @RequestBody request: WarehouseAllocationCancelRequest, @RequestHeader("X-Demo-Operator") demo: String, @RequestHeader("Idempotency-Key") key: String, @RequestHeader("X-Request-Id") requestId: String) = run {
+    fun cancel(
+        @PathVariable orderId: String,
+        @RequestBody request: WarehouseAllocationCancelRequest,
+        @RequestHeader("X-Demo-Operator") demo: String,
+        @RequestHeader("Idempotency-Key") key: String,
+        @RequestHeader("X-Request-Id") requestId: String,
+    ) = run {
         requireOperator(demo, key, requestId)
         orders.cancel(orderId, request.expectedOrderRevision, requestId)
     }
 
     @PostMapping("/outbox/{operationKey}/redrive")
-    fun redrive(@PathVariable operationKey: String, @RequestHeader("X-Demo-Operator") demo: String, @RequestHeader("Idempotency-Key") key: String, @RequestHeader("X-Request-Id") requestId: String): ResponseEntity<Any> {
+    fun redrive(
+        @PathVariable operationKey: String,
+        @RequestHeader("X-Demo-Operator") demo: String,
+        @RequestHeader("Idempotency-Key") key: String,
+        @RequestHeader("X-Request-Id") requestId: String,
+    ): ResponseEntity<Any> {
         requireOperator(demo, key, requestId)
-        org.jetbrains.exposed.v1.jdbc.transactions.transaction { repository.redriveOutbox(operationKey) }
-        return ResponseEntity.accepted().body(mapOf("operationKey" to operationKey, "requestId" to requestId, "state" to "RETRYABLE"))
+        transaction {
+            repository.redriveOutbox(operationKey)
+        }
+        return ResponseEntity.accepted()
+            .body(
+                mapOf(
+                    "operationKey" to operationKey,
+                    "requestId" to requestId,
+                    "state" to "RETRYABLE"
+                )
+            )
     }
 
     private fun requireOperator(demo: String, key: String, requestId: String) {

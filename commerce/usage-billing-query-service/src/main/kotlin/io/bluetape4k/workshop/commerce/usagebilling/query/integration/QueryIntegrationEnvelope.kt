@@ -3,12 +3,13 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.integration
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * tenant-scoped projection과 recovery audit를 위해 Query가 수락하는 Versioned event contract입니다.
@@ -16,10 +17,76 @@ import java.util.UUID
  * harmless replay와 quarantined conflict를 구분하는 immutable payload digest를 담습니다.
  */
 class QueryIntegrationEnvelope private constructor(
-    val eventId: UUID, val eventType: String, val schemaVersion: Int, val tenantId: String,
-    val aggregateType: String, val aggregateId: String, val aggregateVersion: Long,
-    val payload: String, val payloadDigest: String, val occurredAt: Instant, val recordedAt: Instant,
-) : Serializable {
+    val eventId: UUID,
+    val eventType: String,
+    val schemaVersion: Int,
+    val tenantId: String,
+    val aggregateType: String,
+    val aggregateId: String,
+    val aggregateVersion: Long,
+    val payload: String,
+    val payloadDigest: String,
+    val occurredAt: Instant,
+    val recordedAt: Instant,
+): Serializable {
+
+    companion object: KLogging() {
+        private const val serialVersionUID: Long = 1L
+
+        operator fun invoke(
+            eventId: UUID,
+            eventType: String,
+            schemaVersion: Int,
+            tenantId: String,
+            aggregateType: String,
+            aggregateId: String,
+            aggregateVersion: Long,
+            payload: String,
+            occurredAt: Instant,
+            recordedAt: Instant,
+        ): QueryIntegrationEnvelope =
+            QueryIntegrationEnvelope(
+                eventId,
+                eventType,
+                schemaVersion,
+                tenantId,
+                aggregateType,
+                aggregateId,
+                aggregateVersion,
+                payload,
+                digestOf(payload),
+                occurredAt,
+                recordedAt,
+            )
+
+        fun create(
+            eventId: UUID,
+            eventType: String,
+            schemaVersion: Int,
+            tenantId: String,
+            aggregateType: String,
+            aggregateId: String,
+            aggregateVersion: Long,
+            payload: String,
+            occurredAt: Instant,
+            recordedAt: Instant,
+        ): QueryIntegrationEnvelope =
+            invoke(
+                eventId,
+                eventType,
+                schemaVersion,
+                tenantId,
+                aggregateType,
+                aggregateId,
+                aggregateVersion,
+                payload,
+                occurredAt,
+                recordedAt,
+            )
+
+        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
+    }
+
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -31,42 +98,35 @@ class QueryIntegrationEnvelope private constructor(
     }
 
     fun partitionKey(): String = "$tenantId|$aggregateType|$aggregateId"
-    fun hasValidPayloadDigest(): Boolean = TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
+    fun hasValidPayloadDigest(): Boolean =
+        TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
 
-    fun wirePayload(): String = Jackson.defaultJsonMapper.writeValueAsString(
-        linkedMapOf(
-            "eventId" to eventId.toString(),
-            "eventType" to eventType,
-            "schemaVersion" to schemaVersion,
-            "tenantId" to tenantId,
-            "aggregateType" to aggregateType,
-            "aggregateId" to aggregateId,
-            "aggregateVersion" to aggregateVersion,
-            "payload" to payload,
-            "payloadDigest" to payloadDigest,
-            "occurredAt" to occurredAt.toString(),
-            "recordedAt" to recordedAt.toString(),
-        ),
-    )
+    fun wirePayload(): String =
+        Jackson.defaultJsonMapper.writeValueAsString(
+            linkedMapOf(
+                "eventId" to eventId.toString(),
+                "eventType" to eventType,
+                "schemaVersion" to schemaVersion,
+                "tenantId" to tenantId,
+                "aggregateType" to aggregateType,
+                "aggregateId" to aggregateId,
+                "aggregateVersion" to aggregateVersion,
+                "payload" to payload,
+                "payloadDigest" to payloadDigest,
+                "occurredAt" to occurredAt.toString(),
+                "recordedAt" to recordedAt.toString(),
+            ),
+        )
 
-    fun wirePayloadDigest(): String = digestOf(wirePayload())
+    fun wirePayloadDigest(): String =
+        digestOf(wirePayload())
 
-    companion object {
-        private const val serialVersionUID: Long = 1L
-        fun create(
-            eventId: UUID, eventType: String, schemaVersion: Int, tenantId: String, aggregateType: String,
-            aggregateId: String, aggregateVersion: Long, payload: String, occurredAt: Instant, recordedAt: Instant,
-        ): QueryIntegrationEnvelope =
-            QueryIntegrationEnvelope(
-                eventId, eventType, schemaVersion, tenantId, aggregateType, aggregateId, aggregateVersion,
-                payload, digestOf(payload), occurredAt, recordedAt,
-            )
-
-        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
-    }
 }
 
 class QueryEnvelopeCodecRegistry {
+
+    companion object: KLogging()
+
     private val supportedSchemas = setOf(
         QueryEnvelopeSchema("PriceActivated", 1), QueryEnvelopeSchema("UsageAccepted", 1),
         QueryEnvelopeSchema("ChargeRated", 1), QueryEnvelopeSchema("AdjustmentPosted", 1),
@@ -85,7 +145,7 @@ class QueryEnvelopeCodecRegistry {
 data class QueryEnvelopeSchema(
     val eventType: String,
     val schemaVersion: Int,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -94,6 +154,6 @@ data class QueryEnvelopeSchema(
 class UnsupportedQueryEnvelopeVersion(
     eventType: String,
     schemaVersion: Int,
-) : IllegalArgumentException("unsupported_query_envelope:$eventType:$schemaVersion")
+): IllegalArgumentException("unsupported_query_envelope:$eventType:$schemaVersion")
 
-class InvalidQueryEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_query_envelope_digest:$eventId")
+class InvalidQueryEnvelopeDigest(eventId: UUID): IllegalArgumentException("invalid_query_envelope_digest:$eventId")

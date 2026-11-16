@@ -2,10 +2,7 @@
 
 [English](README.md) | 한국어
 
-이 Spring Boot 예제는 비동기 optimization provider를 애플리케이션 경계 안에
-두는 방법을 보여줍니다. Planning 결과는 제안일 뿐 최종 업무 결정이 아닙니다.
-애플리케이션은 command candidate를 반환하기 직전에 PostgreSQL에서 aggregate
-version을 다시 읽습니다.
+이 Spring Boot 예제는 비동기 optimization provider를 애플리케이션 경계 안에 두는 방법을 보여줍니다. Planning 결과는 제안일 뿐 최종 업무 결정이 아닙니다. 애플리케이션은 command candidate를 반환하기 직전에 PostgreSQL에서 aggregate version을 다시 읽습니다.
 
 ## 계약
 
@@ -19,33 +16,29 @@ version을 다시 읽습니다.
 
 ## Bluetape stack
 
-| 책임 | 사용 기능 |
-|---|---|
-| 버전 기준 | `bluetape4k-dependencies:2.1.0-SNAPSHOT` |
-| Repository | `bluetape4k-exposed-jdbc`의 `UUIDAuditableJdbcRepository`, `LongAuditableJdbcRepository`, `LongJdbcRepository` |
-| PostgreSQL 테스트 | `PostgreSQLServer.Launcher.postgres`, 공개된 `bluetape4k-exposed-jdbc-tests` 지원 기능 |
-| Virtual thread | `bluetape4k-virtualthread-api`와 runtime `bluetape4k-virtualthread-jdk25` |
-| Provider HTTP | `productionVirtualThreadHttpClientOf`; `HttpEntity.readBodyString(64 KiB)` strict byte 상한과 submit `POST` 자동 retry 비활성화 |
-| 동시성 테스트 | `MultithreadingTester` |
+| 책임              | 사용 기능                                                                                                                       |
+|-------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| 버전 기준         | `bluetape4k-dependencies:2.1.0-SNAPSHOT`                                                                                        |
+| Repository        | `bluetape4k-exposed-jdbc`의 `UUIDAuditableJdbcRepository`, `LongAuditableJdbcRepository`, `LongJdbcRepository`                  |
+| PostgreSQL 테스트 | `PostgreSQLServer.Launcher.postgres`, 공개된 `bluetape4k-exposed-jdbc-tests` 지원 기능                                          |
+| Virtual thread    | `bluetape4k-virtualthread-api`와 runtime `bluetape4k-virtualthread-jdk25`                                                       |
+| Provider HTTP     | `productionVirtualThreadHttpClientOf`; `HttpEntity.readBodyString(64 KiB)` strict byte 상한과 submit `POST` 자동 retry 비활성화 |
+| 동시성 테스트     | `MultithreadingTester`                                                                                                          |
 
 JetBrains Exposed 좌표는 버전 없이 선언합니다. 현재
-`bluetape4k-dependencies:2.1.0-SNAPSHOT` 해석 결과는 JetBrains Exposed `1.4.0`,
-Bluetape Exposed `2.1.0-SNAPSHOT`입니다. 하위 artifact 버전은 root BOM 버전과
-별도로 관리됩니다.
+`bluetape4k-dependencies:2.1.0-SNAPSHOT` 해석 결과는 JetBrains Exposed `1.4.0`, Bluetape Exposed `2.1.0-SNAPSHOT`입니다. 하위 artifact 버전은 root BOM 버전과 별도로 관리됩니다.
 
-모든 configuration에서 JDK 21 virtual-thread provider를 제외합니다. 첫 계약은
-PostgreSQL만으로 충분하므로 Redis를 추가하지 않았습니다. 뒤의 예제에서 실제
-필요가 확인되면 Lettuce를 사용해야 합니다.
+모든 configuration에서 JDK 21 virtual-thread provider를 제외합니다. 첫 계약은 PostgreSQL만으로 충분하므로 Redis를 추가하지 않았습니다. 뒤의 예제에서 실제 필요가 확인되면 Lettuce를 사용해야 합니다.
 
 ## 영속성
 
-| 테이블 | 역할 |
-|---|---|
-| `planning_aggregates` | callback과 command에서 비교할 현재 aggregate version |
-| `planning_requests` | normalized request 상태와 redacted result projection |
-| `planning_outbox` | lease, retry, completion, dead-letter 상태 |
-| `planning_callback_inbox` | provider event idempotency |
-| `planning_audits` | append-only callback decision |
+| 테이블                    | 역할                                                 |
+|---------------------------|------------------------------------------------------|
+| `planning_aggregates`     | callback과 command에서 비교할 현재 aggregate version |
+| `planning_requests`       | normalized request 상태와 redacted result projection |
+| `planning_outbox`         | lease, retry, completion, dead-letter 상태           |
+| `planning_callback_inbox` | provider event idempotency                           |
+| `planning_audits`         | append-only callback decision                        |
 
 ## API 실행 순서
 
@@ -65,18 +58,12 @@ curl -s http://localhost:8080/api/planning/requests/<request-id>
 curl -s -X POST http://localhost:8080/api/planning/requests/<request-id>/commands
 ```
 
-`process` endpoint는 예제 흐름을 눈으로 확인하기 위해 동기 방식으로 두었습니다.
-운영 환경에서는 public endpoint로 노출하지 말고, 인증된 operator control 뒤에서
-worker를 scheduling해야 합니다.
-Callback body는 parsing 전에 256 KiB로 제한합니다. Provider response는 공통
-`HttpEntity.readBodyString(64 KiB)` strict 계약을 사용하므로 known, unknown, chunked
-body 모두 byte 상한 안에서 끝까지 읽어야 하며 성공·실패 모두 entity stream을 닫습니다.
-404 status 경로도 무제한 drain 대신 bounded cleanup 후 `null`을 반환합니다.
+`process` endpoint는 예제 흐름을 눈으로 확인하기 위해 동기 방식으로 두었습니다. 운영 환경에서는 public endpoint로 노출하지 말고, 인증된 operator control 뒤에서 worker를 scheduling해야 합니다. Callback body는 parsing 전에 256 KiB로 제한합니다. Provider response는 공통
+`HttpEntity.readBodyString(64 KiB)` strict 계약을 사용하므로 known, unknown, chunked body 모두 byte 상한 안에서 끝까지 읽어야 하며 성공·실패 모두 entity stream을 닫습니다. 404 status 경로도 무제한 drain 대신 bounded cleanup 후 `null`을 반환합니다.
 
 ## Provider profile
 
-기본 profile은 fake provider를 사용합니다. HTTP profile에는 base URL과 webhook
-secret이 모두 필요합니다.
+기본 profile은 fake provider를 사용합니다. HTTP profile에는 base URL과 webhook secret이 모두 필요합니다.
 
 ```bash
 SPRING_PROFILES_ACTIVE=timefold \
@@ -85,8 +72,7 @@ PLANNING_CALLBACK_SECRET=replace-me \
 ./gradlew :optimization-planning-contracts:bootRun
 ```
 
-Custom Solver endpoint mapping을 보려면 `timefold` 대신 `custom-solver`를
-사용합니다. 테스트는 WireMock만 사용하며 외부 서비스에 연결하지 않습니다.
+Custom Solver endpoint mapping을 보려면 `timefold` 대신 `custom-solver`를 사용합니다. 테스트는 WireMock만 사용하며 외부 서비스에 연결하지 않습니다.
 
 ## 검증
 
@@ -98,6 +84,4 @@ Java 25와 Docker가 필요합니다.
   --no-build-cache --max-workers=1
 ```
 
-테스트는 Java 25 runtime 선택, JDK 25 virtual thread, repository CRUD, 동시 inbox/
-outbox 수렴, transaction rollback, callback 보안, HTTP no-retry, redacted MVC 응답,
-최종 aggregate version 검증을 다룹니다.
+테스트는 Java 25 runtime 선택, JDK 25 virtual thread, repository CRUD, 동시 inbox/ outbox 수렴, transaction rollback, callback 보안, HTTP no-retry, redacted MVC 응답, 최종 aggregate version 검증을 다룹니다.

@@ -13,7 +13,7 @@ class NativeOcrEngineConfig {
 
     @Bean
     @ConditionalOnExpression(
-        "'\${workshop.ocr.native-enabled:false}' == 'true' || '\${ocr.enabled:false}' == 'true'",
+        $$"'${workshop.ocr.native-enabled:false}' == 'true' || '${ocr.enabled:false}' == 'true'",
     )
     fun tesseractOcrEngine(): OcrEngine =
         TesseractOcrEngine()

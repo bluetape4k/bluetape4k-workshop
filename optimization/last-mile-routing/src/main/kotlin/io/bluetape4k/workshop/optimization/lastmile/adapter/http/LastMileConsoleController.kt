@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.lastmile.adapter.http
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.Resource
 import org.springframework.http.CacheControl
@@ -10,9 +11,15 @@ import org.springframework.web.bind.annotation.GetMapping
 
 @Controller
 internal class LastMileConsoleController {
+
+    companion object: KLogging()
+
     @GetMapping("/last-mile-routing/", produces = [MediaType.TEXT_HTML_VALUE])
     fun index(): ResponseEntity<Resource> = ResponseEntity.ok()
         .cacheControl(CacheControl.noCache())
-        .header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'")
+        .header(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'"
+        )
         .body(ClassPathResource("static/last-mile-routing/index.html"))
 }

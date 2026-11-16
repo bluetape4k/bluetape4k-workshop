@@ -19,13 +19,13 @@ import java.nio.file.AccessDeniedException
 @RequestMapping("/tasks")
 class TaskController {
 
-    data class Task(val id: Long, val name: String) : Serializable {
+    data class Task(val id: Long, val name: String): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private val tasks = mapOf(
             1L to Task(1L, "My first task"),
             2L to Task(2L, "My second task"),

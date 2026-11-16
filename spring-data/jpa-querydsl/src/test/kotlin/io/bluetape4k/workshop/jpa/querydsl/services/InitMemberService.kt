@@ -13,7 +13,7 @@ class InitMemberService(
     private val em: EntityManager,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Transactional
     fun init() {

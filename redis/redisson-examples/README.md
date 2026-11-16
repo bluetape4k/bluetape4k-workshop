@@ -38,78 +38,76 @@ Use the matching `CompositeCodec(String, Double, Double)` for fractional values.
 
 ### Distributed Locks (`locks/`)
 
-| Class | Description |
-|---|---|
-| `LockExamples` | Basic distributed lock (`RLock`) |
-| `FairLockExamples` | Fair lock that preserves request order |
-| `ReadWriteLockExamples` | Separate read/write lock (`RReadWriteLock`) |
-| `FencedLockExamples` | Fencing-token-based lock (prevents split brain) |
-| `SpinLockExamples` | Spin lock for short critical sections |
-| `MultiLockExamples` | Distributed lock across multiple Redis nodes |
+| Class                   | Description                                     |
+|-------------------------|-------------------------------------------------|
+| `LockExamples`          | Basic distributed lock (`RLock`)                |
+| `FairLockExamples`      | Fair lock that preserves request order          |
+| `ReadWriteLockExamples` | Separate read/write lock (`RReadWriteLock`)     |
+| `FencedLockExamples`    | Fencing-token-based lock (prevents split brain) |
+| `SpinLockExamples`      | Spin lock for short critical sections           |
+| `MultiLockExamples`     | Distributed lock across multiple Redis nodes    |
 
 ### Distributed Semaphores (`locks/`)
 
-| Class | Description |
-|---|---|
-| `SemaphoreExamples` | Distributed semaphore (`RSemaphore`) |
-| `PermitExpirableSemaphoreExamples` | TTL-based auto-expiring semaphore |
-| `CountDownLatchExamples` | Distributed `CountDownLatch` |
+| Class                              | Description                          |
+|------------------------------------|--------------------------------------|
+| `SemaphoreExamples`                | Distributed semaphore (`RSemaphore`) |
+| `PermitExpirableSemaphoreExamples` | TTL-based auto-expiring semaphore    |
+| `CountDownLatchExamples`           | Distributed `CountDownLatch`         |
 
 ### Distributed Objects (`objects/`)
 
-| Class | Description |
-|---|---|
-| `BucketExamples` | `RBucket` — object holder similar to `AtomicReference` |
-| `AtomicLongExamples` | `RAtomicLong` — distributed atomic integer |
-| `BloomFilterExamples` | `RBloomFilter` — probabilistic membership filter |
-| `HyperLogLogExamples` | `RHyperLogLog` — large-scale cardinality estimation |
-| `GeoExamples` | `RGeo` — geospatial data |
-| `RateLimiterExamples` | `RRateLimiter` — distributed rate limiting |
-| `IdGeneratorExamples` | `RIdGenerator` — distributed ID generation |
-| `BatchExamples` | Executes commands in batches |
+| Class                 | Description                                            |
+|-----------------------|--------------------------------------------------------|
+| `BucketExamples`      | `RBucket` — object holder similar to `AtomicReference` |
+| `AtomicLongExamples`  | `RAtomicLong` — distributed atomic integer             |
+| `BloomFilterExamples` | `RBloomFilter` — probabilistic membership filter       |
+| `HyperLogLogExamples` | `RHyperLogLog` — large-scale cardinality estimation    |
+| `GeoExamples`         | `RGeo` — geospatial data                               |
+| `RateLimiterExamples` | `RRateLimiter` — distributed rate limiting             |
+| `IdGeneratorExamples` | `RIdGenerator` — distributed ID generation             |
+| `BatchExamples`       | Executes commands in batches                           |
 
 ### Pub/Sub (`objects/`)
 
-| Class | Description |
-|---|---|
-| `TopicExamples` | Publishes and subscribes to messages through `RTopic` channels |
-| `ReliableTopicExamples` | `RReliableTopic` — reliable Pub/Sub without message loss |
+| Class                   | Description                                                    |
+|-------------------------|----------------------------------------------------------------|
+| `TopicExamples`         | Publishes and subscribes to messages through `RTopic` channels |
+| `ReliableTopicExamples` | `RReliableTopic` — reliable Pub/Sub without message loss       |
 
 ### Distributed Collections (`collections/`)
 
-| Class | Description |
-|---|---|
-| `LocalCachedMapExamples` | `RLocalCachedMap` — local cache + Redis synchronization |
-| `StreamExamples` | `RStream` — Redis Streams |
-| `ScoredSortedSetExamples` | `RScoredSortedSet` — score-based sorted set |
+| Class                     | Description                                             |
+|---------------------------|---------------------------------------------------------|
+| `LocalCachedMapExamples`  | `RLocalCachedMap` — local cache + Redis synchronization |
+| `StreamExamples`          | `RStream` — Redis Streams                               |
+| `ScoredSortedSetExamples` | `RScoredSortedSet` — score-based sorted set             |
 
 ### Read/Write Through
 
-| Class | Description |
-|---|---|
+| Class                      | Description                                          |
+|----------------------------|------------------------------------------------------|
 | `ReadWriteThroughExamples` | Cache-as-SOR — the cache proxies DB reads and writes |
 
 ## Used bluetape4k Features
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `RedissonCodecs.LZ4FastForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | LZ4 compression + FastFory serialization for volatile/cache examples |
-| `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | Combines the `LocalCachedMapOptions` DSL and map creation call to reduce duplicate Near Cache configuration |
-| `RedissonCodecs.Int` / `Double` + `CompositeCodec` | `bluetape4k-redisson` | `LocalCachedMapExamples`, `LocalCachedMapTest` | Keeps Redis hash numeric payloads compatible with `addAndGetAsync` while retaining String map keys |
-| `awaitRedis` | workshop test fixture | `AbstractRedissonTest` | Bounds async Redis waits and propagates timeout/cancellation to the underlying future |
-| `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Creates Redis Stream append arguments with a Kotlin-friendly helper |
-| `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Handles Redisson I/O with Virtual Threads |
-| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractRedissonTest` | Testcontainers Redis singleton that starts and stops automatically |
-| `ShutdownQueue.register` | `bluetape4k-core` | `AbstractRedissonTest` | Automatically closes `RedissonClient` on JVM shutdown |
-| `Base58.randomString` | `bluetape4k-io` | `AbstractRedissonTest` | Generates URL-safe random keys |
-| `MultithreadingTester` | `bluetape4k-junit5` | `FencedLockExamples` | Verifies concurrency with a fixed thread pool |
-| `StructuredTaskScopeTester` | `bluetape4k-junit5` | `FencedLockExamples` | Verifies Virtual Thread concurrency |
-| `SuspendedJobTester` | `bluetape4k-junit5` | `FencedLockExamples` | Verifies coroutine race conditions |
-| `getLockId()` | `bluetape4k-redis` | `FencedLockExamples` | Gets coroutine-safe `RFencedLock` IDs |
+| Feature                                            | Artifact                    | Code Location                                  | Benefit                                                                                                     |
+|----------------------------------------------------|-----------------------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `RedissonCodecs.LZ4FastForyComposite`              | `bluetape4k-redisson`       | `AbstractRedissonTest`                         | LZ4 compression + FastFory serialization for volatile/cache examples                                        |
+| `localCachedMap()`                                 | `bluetape4k-redisson`       | `LocalCachedMapExamples`                       | Combines the `LocalCachedMapOptions` DSL and map creation call to reduce duplicate Near Cache configuration |
+| `RedissonCodecs.Int` / `Double` + `CompositeCodec` | `bluetape4k-redisson`       | `LocalCachedMapExamples`, `LocalCachedMapTest` | Keeps Redis hash numeric payloads compatible with `addAndGetAsync` while retaining String map keys          |
+| `awaitRedis`                                       | workshop test fixture       | `AbstractRedissonTest`                         | Bounds async Redis waits and propagates timeout/cancellation to the underlying future                       |
+| `streamAddArgsOf()`                                | `bluetape4k-redisson`       | `StreamExamples`                               | Creates Redis Stream append arguments with a Kotlin-friendly helper                                         |
+| `VirtualThreadExecutor`                            | `bluetape4k-coroutines`     | `AbstractRedissonTest`                         | Handles Redisson I/O with Virtual Threads                                                                   |
+| `RedisServer.Launcher.redis`                       | `bluetape4k-testcontainers` | `AbstractRedissonTest`                         | Testcontainers Redis singleton that starts and stops automatically                                          |
+| `ShutdownQueue.register`                           | `bluetape4k-core`           | `AbstractRedissonTest`                         | Automatically closes `RedissonClient` on JVM shutdown                                                       |
+| `Base58.randomString`                              | `bluetape4k-io`             | `AbstractRedissonTest`                         | Generates URL-safe random keys                                                                              |
+| `MultithreadingTester`                             | `bluetape4k-junit5`         | `FencedLockExamples`                           | Verifies concurrency with a fixed thread pool                                                               |
+| `StructuredTaskScopeTester`                        | `bluetape4k-junit5`         | `FencedLockExamples`                           | Verifies Virtual Thread concurrency                                                                         |
+| `SuspendedJobTester`                               | `bluetape4k-junit5`         | `FencedLockExamples`                           | Verifies coroutine race conditions                                                                          |
+| `getLockId()`                                      | `bluetape4k-redis`          | `FencedLockExamples`                           | Gets coroutine-safe `RFencedLock` IDs                                                                       |
 
-`FastFory` requires `SCHEMA_CONSISTENT` classes and is not wire-compatible with
-the default Fory codec. Use it only for disposable cache contents; do not use
-this codec for durable or cross-version data.
+`FastFory` requires `SCHEMA_CONSISTENT` classes and is not wire-compatible with the default Fory codec. Use it only for disposable cache contents; do not use this codec for durable or cross-version data.
 
 ## bluetape4k Before / After
 

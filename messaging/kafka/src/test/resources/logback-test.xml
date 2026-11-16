@@ -9,7 +9,7 @@
               value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %highlight(${LOG_LEVEL_PATTERN:-%5p}) %magenta(${PID:- }) %clr(---){faint} %clr([%25.25t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
     <!-- Appender to log to console -->
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <!-- Minimum logging level to be presented in the console logs-->
             <level>DEBUG</level>
@@ -28,6 +28,6 @@
 <!--    <logger name="org.springframework.web.reactive" level="DEBUG"/>-->
 
     <root level="INFO">
-        <appender-ref ref="console"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

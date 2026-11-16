@@ -23,9 +23,9 @@ import java.util.concurrent.ExecutorService
 class DatabaseInitializer(
     private val db: Database,
     private val executor: ExecutorService,
-) : ApplicationRunner {
+): ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override fun run(args: ApplicationArguments) {
         try {

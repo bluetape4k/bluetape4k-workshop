@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryRecoveryService
 import io.bluetape4k.workshop.commerce.usagebilling.query.config.QueryMetrics
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
+import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRedriveResult
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Component
@@ -13,11 +15,17 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.io.Serializable
-import java.util.UUID
+import java.util.*
 
 @Component
 class QueryTenantAuthorizer {
-    fun requireAccess(authentication: Authentication, tenantId: String) {
+
+    companion object: KLogging()
+
+    fun requireAccess(
+        authentication: Authentication,
+        tenantId: String,
+    ) {
         val expectedAuthority = "TENANT_$tenantId"
         if (authentication.authorities.none { it.authority == expectedAuthority }) {
             throw AccessDeniedException("tenant_access_denied")
@@ -28,7 +36,7 @@ class QueryTenantAuthorizer {
 data class QueryReadModelSummary(
     val appliedEventCount: Int,
     val checkpoint: Long,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -40,8 +48,13 @@ class QueryReadController(
     private val projections: QueryProjectionJournal,
     private val authorizer: QueryTenantAuthorizer,
 ) {
+    companion object: KLogging()
+
     @GetMapping("/summary")
-    fun summary(@PathVariable tenantId: String, authentication: Authentication): QueryReadModelSummary {
+    fun summary(
+        @PathVariable tenantId: String,
+        authentication: Authentication,
+    ): QueryReadModelSummary {
         authorizer.requireAccess(authentication, tenantId)
         return QueryReadModelSummary(projections.readModelEventIds.size, projections.checkpoint)
     }
@@ -53,6 +66,9 @@ class OperatorRecoveryController(
     private val recovery: QueryRecoveryService,
     private val metrics: QueryMetrics,
 ) {
+
+    companion object: KLogging()
+
     @GetMapping
     fun snapshot() = recovery.snapshot()
 
@@ -61,7 +77,9 @@ class OperatorRecoveryController(
         @PathVariable eventId: UUID,
         @RequestHeader("X-Correlation-Id") correlationId: String,
         authentication: Authentication,
-    ) = recovery.redrive(eventId, authentication.name, correlationId).also {
-        metrics.redrive(if (it.requested) "REQUESTED" else "NOT_FOUND")
-    }
+    ): QueryRedriveResult =
+        recovery.redrive(eventId = eventId, authentication.name, correlationId)
+            .also {
+                metrics.redrive(if (it.requested) "REQUESTED" else "NOT_FOUND")
+            }
 }

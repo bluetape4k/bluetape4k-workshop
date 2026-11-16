@@ -4,7 +4,6 @@ import io.bluetape4k.logging.KLogging
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.QueueDispatcher
-import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -15,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.util.concurrent.TimeUnit
 
 /**
  * 모든 observability-basic integration test 의 base class 입니다.
@@ -30,7 +30,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractBasicTest {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         val mockServer: MockWebServer = MockWebServer().also {
             it.dispatcher = newQueueDispatcher()
             it.start()
@@ -70,8 +70,8 @@ abstract class AbstractBasicTest {
     fun resetMockServerDispatcher() {
         // 소비되지 않은 recorded request 를 drain 하여 stale entry 가 오염시키지 않게 합니다.
         // takeRequest() 를 호출하는 cross-context test(예: TracePropagationTest)를 보호합니다.
-        @Suppress("ControlFlowWithEmptyBody")
-        while (mockServer.takeRequest(0, TimeUnit.MILLISECONDS) != null) { /* drain */ }
+        while (mockServer.takeRequest(0, TimeUnit.MILLISECONDS) != null) { /* drain */
+        }
         mockServer.dispatcher.close()
         mockServer.dispatcher = newQueueDispatcher()
     }

@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.jpa.querydsl.domain.repository
 
-import com.querydsl.core.types.Projections
 import com.querydsl.core.types.Order
 import com.querydsl.core.types.OrderSpecifier
+import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import io.bluetape4k.workshop.jpa.querydsl.domain.dto.MemberSearchCondition
@@ -103,12 +103,12 @@ class MemberRepositoryImpl: QuerydslRepositorySupport(Member::class.java), Membe
     private fun orderSpecifier(order: org.springframework.data.domain.Sort.Order): OrderSpecifier<*> {
         val direction = if (order.isAscending) Order.ASC else Order.DESC
         return when (order.property) {
-            "id" -> OrderSpecifier(direction, qmember.id)
-            "name" -> OrderSpecifier(direction, qmember.name)
-            "age" -> OrderSpecifier(direction, qmember.age)
+            "id"     -> OrderSpecifier(direction, qmember.id)
+            "name"   -> OrderSpecifier(direction, qmember.name)
+            "age"    -> OrderSpecifier(direction, qmember.age)
             "teamId" -> OrderSpecifier(direction, qteam.id)
             "teamName" -> OrderSpecifier(direction, qteam.name)
-            else -> throw IllegalArgumentException("Unsupported sort property: ${order.property}")
+            else     -> throw IllegalArgumentException("Unsupported sort property: ${order.property}")
         }
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 enum class UsageOutboxStatus {
     PENDING,
@@ -21,7 +21,7 @@ data class UsageOutboxLease(
     val eventId: UUID,
     val partitionKey: String,
     val payload: String,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -31,7 +31,7 @@ data class UsageOutboxPublishResult(
     val claimed: Int = 0,
     val published: Int = 0,
     val retryWait: Int = 0,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -49,7 +49,7 @@ interface UsageEventTransport {
     fun publish(partitionKey: String, payload: String)
 }
 
-class UsageEventTransportFailure(cause: Exception) : RuntimeException("usage_event_transport_failure", cause)
+class UsageEventTransportFailure(cause: Exception): RuntimeException("usage_event_transport_failure", cause)
 
 @Component
 class UsageOutboxPublisher(
@@ -57,6 +57,10 @@ class UsageOutboxPublisher(
     private val transport: UsageEventTransport,
     private val clock: Clock,
 ) {
+    private companion object: KLogging() {
+        const val DEFAULT_BATCH_SIZE = 100
+    }
+
     fun publishPending(limit: Int = DEFAULT_BATCH_SIZE): UsageOutboxPublishResult {
         val owner = Uuid.V7.nextId().toString()
         val claimed = journal.claim(owner, clock.instant(), limit)
@@ -76,9 +80,5 @@ class UsageOutboxPublisher(
             }
         }
         return UsageOutboxPublishResult(claimed.size, published, retryWait)
-    }
-
-    private companion object : KLogging() {
-        const val DEFAULT_BATCH_SIZE = 100
     }
 }

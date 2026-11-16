@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.time.Instant
@@ -8,10 +9,14 @@ import java.util.UUID
 
 internal class EventSourcedCampaignHttpContractTest {
 
+    companion object: KLogging()
+
     @Test
     fun `fresh campaign keeps the compatible body and adds projection headers`() {
         val campaignId = Uuid.V7.nextUUID()
-        client(CampaignProjectionResult.Fresh(campaign(campaignId), positions())).get()
+
+        client(CampaignProjectionResult.Fresh(campaign(campaignId), positions()))
+            .get()
             .uri("/api/v1/campaigns/$campaignId")
             .header(TENANT_HEADER, "tenant-a")
             .header(PRINCIPAL_HEADER, "principal-a")
@@ -29,7 +34,9 @@ internal class EventSourcedCampaignHttpContractTest {
     @Test
     fun `minimum stream position returns bounded projection pending without exposing internals`() {
         val campaignId = Uuid.V7.nextUUID()
-        client(CampaignProjectionResult.Pending(positions(stream = 12, projection = 9))).get()
+
+        client(CampaignProjectionResult.Pending(positions(stream = 12, projection = 9)))
+            .get()
             .uri("/api/v1/campaigns/$campaignId")
             .header(TENANT_HEADER, "tenant-a")
             .header(PRINCIPAL_HEADER, "principal-a")
@@ -52,7 +59,9 @@ internal class EventSourcedCampaignHttpContractTest {
     @Test
     fun `invalid query input is redacted as a stable client error`() {
         val campaignId = Uuid.V7.nextUUID()
-        client(CampaignProjectionResult.Fresh(campaign(campaignId), positions())).get()
+
+        client(CampaignProjectionResult.Fresh(campaign(campaignId), positions()))
+            .get()
             .uri("/api/v1/campaigns/$campaignId")
             .header(PRINCIPAL_HEADER, "principal-a")
             .exchange()
@@ -64,7 +73,8 @@ internal class EventSourcedCampaignHttpContractTest {
     }
 
     private fun client(result: CampaignProjectionResult): WebTestClient =
-        WebTestClient.bindToController(EventSourcedCampaignQueryController(CampaignProjectionQuery { result }))
+        WebTestClient
+            .bindToController(EventSourcedCampaignQueryController { result })
             .controllerAdvice(EventSourcedApiExceptionHandler())
             .build()
 
@@ -85,6 +95,10 @@ internal class EventSourcedCampaignHttpContractTest {
     private fun positions(
         stream: Long = 12,
         projection: Long = 12,
-    ): ProjectionPositions = ProjectionPositions(stream, projection)
+    ): ProjectionPositions =
+        ProjectionPositions(
+            streamPosition = stream,
+            projectionPosition = projection
+        )
 
 }

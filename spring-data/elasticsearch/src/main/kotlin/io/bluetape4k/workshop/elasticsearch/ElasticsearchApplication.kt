@@ -19,7 +19,7 @@ class ElasticsearchApplication(
     private val repository: ConferenceRepository,
 ) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         // Elasticsearch 서버
         val elasticsearch = ElasticsearchOssServer.Launcher.elasticsearchOssServer
     }

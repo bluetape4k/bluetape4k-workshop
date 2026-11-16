@@ -30,7 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractLeaderElectionTest {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         /** 전체 test suite에서 한 번 시작하는 공유 Redis Testcontainer입니다. */
         val redis = RedisServer.Launcher.redis
 

@@ -1,37 +1,36 @@
 package io.bluetape4k.workshop.operations.jobconsole.ktor
 
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
+import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionHttpResponse
+import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
+import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.charset
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respondBytes
-import io.ktor.utils.io.InternalAPI
-import io.ktor.utils.io.readRemaining
-import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
-import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionHttpResponse
-import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
-import io.bluetape4k.workshop.operations.jobconsole.application.JobSubmissionHttpMapper
-import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
-import io.ktor.http.HttpStatusCode
+import io.ktor.utils.io.readBuffer
 import kotlinx.io.readByteArray
 import tools.jackson.databind.json.JsonMapper
-import java.nio.charset.StandardCharsets.UTF_8
+import tools.jackson.module.kotlin.readValue
 
 internal const val MAX_JOB_SUBMISSION_BODY_BYTES: Int = 64 * 1024
 
-internal class KtorJobSubmissionRequestTooLargeException : RuntimeException("job submission body exceeds 64 KiB")
+internal class KtorJobSubmissionRequestTooLargeException: RuntimeException("job submission body exceeds 64 KiB")
 
 internal class KtorJobSubmissionInvalidRequestException(
     message: String,
     cause: Throwable? = null,
-) : RuntimeException(message, cause)
+): RuntimeException(message, cause)
 
 internal class KtorJobSubmissionScopeDeniedException(
     message: String,
     cause: Throwable? = null,
-) : RuntimeException(message, cause)
+): RuntimeException(message, cause)
 
 internal object JobConsoleKtorSubmissionHttp {
     private val strictMapper: JsonMapper = JobConsoleJson.strictRequestMapper(MAX_JOB_SUBMISSION_BODY_BYTES)
@@ -39,6 +38,7 @@ internal object JobConsoleKtorSubmissionHttp {
     fun scope(call: ApplicationCall): DemoCallerScope {
         val tenant = requiredSingleHeader(call, "X-Demo-Tenant", scopeHeader = true)
         val submitter = requiredSingleHeader(call, "X-Demo-Submitter", scopeHeader = true)
+
         return try {
             DemoCallerScope(tenant, submitter)
         } catch (failure: IllegalArgumentException) {
@@ -48,14 +48,13 @@ internal object JobConsoleKtorSubmissionHttp {
 
     fun idempotencyKey(call: ApplicationCall): String {
         val key = requiredSingleHeader(call, "Idempotency-Key", scopeHeader = false)
-        val bytes = key.toByteArray(UTF_8)
+        val bytes = key.toUtf8Bytes()
         if (bytes.isEmpty() || bytes.size > 255 || bytes.any { it.toInt() !in 0x21..0x7e } || ',' in key) {
             throw KtorJobSubmissionInvalidRequestException("Idempotency-Key must be printable ASCII, 1..255 bytes, and contain no comma")
         }
         return key
     }
 
-    @OptIn(InternalAPI::class)
     suspend fun readSubmitRequest(call: ApplicationCall): SubmitJobRequest {
         validateContentType(call.request.contentType())
         val contentLength = call.request.headers[HttpHeaders.ContentLength]?.toLongOrNull()
@@ -63,9 +62,10 @@ internal object JobConsoleKtorSubmissionHttp {
             throw KtorJobSubmissionRequestTooLargeException()
         }
         try {
-            val bytes = call.receiveChannel().readRemaining((MAX_JOB_SUBMISSION_BODY_BYTES + 1L)).readByteArray()
+            val bytes = call.receiveChannel().readBuffer((MAX_JOB_SUBMISSION_BODY_BYTES + 1L)).readByteArray()
             if (bytes.size > MAX_JOB_SUBMISSION_BODY_BYTES) throw KtorJobSubmissionRequestTooLargeException()
-            return strictMapper.readValue(bytes, SubmitJobRequest::class.java)
+
+            return strictMapper.readValue<SubmitJobRequest>(bytes)
         } catch (failure: KtorJobSubmissionRequestTooLargeException) {
             throw failure
         } catch (failure: Exception) {
@@ -85,7 +85,7 @@ internal object JobConsoleKtorSubmissionHttp {
     private fun validateContentType(contentType: ContentType) {
         if (!contentType.contentType.equals("application", ignoreCase = true) ||
             !contentType.contentSubtype.equals("json", ignoreCase = true) ||
-            (contentType.charset() != null && contentType.charset() != UTF_8)
+            (contentType.charset() != null && contentType.charset() != Charsets.UTF_8)
         ) {
             throw KtorJobSubmissionInvalidRequestException("Content-Type must be application/json with UTF-8")
         }
@@ -101,4 +101,5 @@ internal suspend fun ApplicationCall.respondSubmission(response: JobSubmissionHt
     )
 }
 
-internal suspend fun ApplicationCall.respondSubmissionProblem(response: JobSubmissionHttpResponse) = respondSubmission(response)
+internal suspend fun ApplicationCall.respondSubmissionProblem(response: JobSubmissionHttpResponse) =
+    respondSubmission(response)

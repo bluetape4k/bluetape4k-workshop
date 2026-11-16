@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.operations.jobconsole.application
 
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.operations.jobconsole.api.JobEvent
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
-import java.util.concurrent.TimeUnit
+import kotlin.time.toKotlinDuration
 
 data class FanoutResult(
     val deliveredSubscribers: Int,
@@ -17,6 +21,9 @@ class BoundedJobEventFanout(
     /** Adapter가 소유하고 lifecycle을 관리하는 executor입니다. */
     private val executor: ExecutorService = ForkJoinPool.commonPool(),
 ) {
+
+    companion object: KLogging()
+
     private val subscribers = ConcurrentHashMap<String, (JobEvent) -> Unit>()
 
     val subscriberCount: Int
@@ -32,13 +39,16 @@ class BoundedJobEventFanout(
         var delivered = 0
         var evicted = 0
         val writes = snapshot.associateWith { (_, consumer) -> executor.submit { consumer(event) } }
+
         writes.forEach { (subscriber, future) ->
-            val succeeded = runCatching { future.get(writeTimeout.toMillis(), TimeUnit.MILLISECONDS) }.isSuccess
+            val succeeded = runCatching { future.get(writeTimeout.toKotlinDuration()) }.isSuccess
             if (succeeded) {
                 delivered++
+                log.info { "Job is success. key=${subscriber.key}" }
             } else {
                 future.cancel(true)
                 subscribers.remove(subscriber.key, subscriber.value)
+                log.warn { "Remove Job. key=${subscriber.key}" }
                 evicted++
             }
         }

@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.kafka
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.client.awaitExchange
  */
 class PingPongApplicationTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     val client = WebClient.builder().baseUrl("http://localhost:8080").build()
 

@@ -2,27 +2,29 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.query.persistence
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoveryJournal
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoverySnapshot
-import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
+import kotlin.reflect.KClass
 
-object QueryInboxEvents : UUIDTable("query_inbox_event", "inbox_event_id") {
-    val eventId = javaUUID("event_id")
+object QueryInboxEvents: TimebasedUUIDTable("query_inbox_event", "inbox_event_id") {
+    val eventId = javaUUID("event_id").uniqueIndex()
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
     val aggregateType = varchar("aggregate_type", 64)
@@ -40,32 +42,23 @@ object QueryInboxEvents : UUIDTable("query_inbox_event", "inbox_event_id") {
     val updatedAt = timestamp("updated_at")
 
     init {
-        uniqueIndex(eventId)
         index(false, outcome, nextAttemptAt, id)
     }
 }
 
-object QueryReadModels : UUIDTable("query_read_model", "read_model_id") {
-    val sourceEventId = javaUUID("source_event_id")
+object QueryReadModels: TimebasedUUIDTable("query_read_model", "read_model_id") {
+    val sourceEventId = javaUUID("source_event_id").uniqueIndex()
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
-
-    init {
-        uniqueIndex(sourceEventId)
-    }
 }
 
-object QueryCheckpoints : UUIDTable("query_checkpoint", "checkpoint_id") {
-    val name = varchar("name", 64)
+object QueryCheckpoints: TimebasedUUIDTable("query_checkpoint", "checkpoint_id") {
+    val name = varchar("name", 64).uniqueIndex()
     val position = long("position")
-
-    init {
-        uniqueIndex(name)
-    }
 }
 
-object QueryQuarantineEvents : UUIDTable("query_quarantine_event", "quarantine_id") {
-    val eventId = javaUUID("event_id")
+object QueryQuarantineEvents: TimebasedUUIDTable("query_quarantine_event", "quarantine_id") {
+    val eventId = javaUUID("event_id").uniqueIndex()
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
     val reason = varchar("reason", 128)
@@ -74,12 +67,11 @@ object QueryQuarantineEvents : UUIDTable("query_quarantine_event", "quarantine_i
     val updatedAt = timestamp("updated_at")
 
     init {
-        uniqueIndex(eventId)
         index(false, state, quarantinedAt)
     }
 }
 
-object QueryRedriveAudits : UUIDTable("query_redrive_audit", "redrive_audit_id") {
+object QueryRedriveAudits: TimebasedUUIDTable("query_redrive_audit", "redrive_audit_id") {
     val eventId = javaUUID("event_id")
     val actor = varchar("actor", 128)
     val correlationId = varchar("correlation_id", 128)
@@ -88,8 +80,8 @@ object QueryRedriveAudits : UUIDTable("query_redrive_audit", "redrive_audit_id")
     val requestedAt = timestamp("requested_at")
 }
 
-class QueryInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryInboxEventEntity>(QueryInboxEvents)
+class QueryInboxEventEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<QueryInboxEventEntity>(QueryInboxEvents)
 
     var eventId by QueryInboxEvents.eventId
     var tenantId by QueryInboxEvents.tenantId
@@ -109,23 +101,23 @@ class QueryInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by QueryInboxEvents.updatedAt
 }
 
-class QueryReadModelEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryReadModelEntity>(QueryReadModels)
+class QueryReadModelEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<QueryReadModelEntity>(QueryReadModels)
 
     var sourceEventId by QueryReadModels.sourceEventId
     var tenantId by QueryReadModels.tenantId
     var eventType by QueryReadModels.eventType
 }
 
-class QueryCheckpointEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryCheckpointEntity>(QueryCheckpoints)
+class QueryCheckpointEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<QueryCheckpointEntity>(QueryCheckpoints)
 
     var name by QueryCheckpoints.name
     var position by QueryCheckpoints.position
 }
 
-class QueryQuarantineEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryQuarantineEventEntity>(QueryQuarantineEvents)
+class QueryQuarantineEventEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<QueryQuarantineEventEntity>(QueryQuarantineEvents)
 
     var eventId by QueryQuarantineEvents.eventId
     var tenantId by QueryQuarantineEvents.tenantId
@@ -136,8 +128,8 @@ class QueryQuarantineEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by QueryQuarantineEvents.updatedAt
 }
 
-class QueryRedriveAuditEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<QueryRedriveAuditEntity>(QueryRedriveAudits)
+class QueryRedriveAuditEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<QueryRedriveAuditEntity>(QueryRedriveAudits)
 
     var eventId by QueryRedriveAudits.eventId
     var actor by QueryRedriveAudits.actor
@@ -148,16 +140,16 @@ class QueryRedriveAuditEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 }
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class QueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
+abstract class QueryExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass.java))
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class AppendOnlyQueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : QueryExposedJdbcRepository<E, ID>(domainClass) {
-    final override fun <S : E> save(entity: S): S = immutableMutation()
-    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+abstract class AppendOnlyQueryExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): QueryExposedJdbcRepository<E, ID>(domainClass) {
+    final override fun <S: E> save(entity: S): S = immutableMutation()
+    final override fun <S: E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
     final override fun deleteById(id: ID): Unit = immutableMutation()
     final override fun delete(entity: E): Unit = immutableMutation()
     final override fun deleteAllById(ids: Iterable<ID>): Unit = immutableMutation()
@@ -168,27 +160,30 @@ abstract class AppendOnlyQueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
 }
 
 @Repository
-class QueryInboxRepository :
-    AppendOnlyQueryExposedJdbcRepository<QueryInboxEventEntity, UUID>(QueryInboxEventEntity::class.java)
+class QueryInboxRepository:
+    AppendOnlyQueryExposedJdbcRepository<QueryInboxEventEntity, UUID>(QueryInboxEventEntity::class)
 
 @Repository
-class QueryReadModelRepository :
-    AppendOnlyQueryExposedJdbcRepository<QueryReadModelEntity, UUID>(QueryReadModelEntity::class.java)
+class QueryReadModelRepository:
+    AppendOnlyQueryExposedJdbcRepository<QueryReadModelEntity, UUID>(QueryReadModelEntity::class)
 
 @Repository
-class QueryCheckpointRepository :
-    AppendOnlyQueryExposedJdbcRepository<QueryCheckpointEntity, UUID>(QueryCheckpointEntity::class.java)
+class QueryCheckpointRepository:
+    AppendOnlyQueryExposedJdbcRepository<QueryCheckpointEntity, UUID>(QueryCheckpointEntity::class)
 
 @Repository
-class QueryQuarantineRepository :
-    AppendOnlyQueryExposedJdbcRepository<QueryQuarantineEventEntity, UUID>(QueryQuarantineEventEntity::class.java)
+class QueryQuarantineRepository:
+    AppendOnlyQueryExposedJdbcRepository<QueryQuarantineEventEntity, UUID>(QueryQuarantineEventEntity::class)
 
 @Repository
-class QueryRedriveAuditRepository :
-    AppendOnlyQueryExposedJdbcRepository<QueryRedriveAuditEntity, UUID>(QueryRedriveAuditEntity::class.java)
+class QueryRedriveAuditRepository:
+    AppendOnlyQueryExposedJdbcRepository<QueryRedriveAuditEntity, UUID>(QueryRedriveAuditEntity::class)
 
 @Repository
-class ExposedQueryProjectionJournal : QueryProjectionJournal {
+class ExposedQueryProjectionJournal: QueryProjectionJournal {
+
+    companion object: KLogging()
+
     override val readModelEventIds: Set<UUID>
         get() = QueryReadModelEntity.all().map { it.sourceEventId }.toSet()
 
@@ -234,9 +229,19 @@ class ExposedQueryProjectionJournal : QueryProjectionJournal {
 }
 
 @Repository
-class ExposedQueryRecoveryJournal : QueryRecoveryJournal {
+class ExposedQueryRecoveryJournal: QueryRecoveryJournal {
+
+    private companion object: KLogging() {
+        const val QUARANTINED = "QUARANTINED"
+        const val REDRIVE_REQUESTED = "REDRIVE_REQUESTED"
+    }
+
+
     override fun snapshot(): QueryRecoverySnapshot {
-        val quarantines = QueryQuarantineEventEntity.all().filter { it.state == QUARANTINED }
+        val quarantines = QueryQuarantineEventEntity
+            .all()
+            .filter { it.state == QUARANTINED }
+
         return QueryRecoverySnapshot(
             quarantineCount = quarantines.size.toLong(),
             oldestQuarantineAt = quarantines.minOfOrNull { it.quarantinedAt },
@@ -244,7 +249,10 @@ class ExposedQueryRecoveryJournal : QueryRecoveryJournal {
     }
 
     override fun quarantine(event: QueryQuarantineEvent) {
-        if (QueryQuarantineEventEntity.find { QueryQuarantineEvents.eventId eq event.eventId }.any()) {
+        val exists = QueryQuarantineEventEntity
+            .find { QueryQuarantineEvents.eventId eq event.eventId }
+            .any()
+        if (exists) {
             return
         }
         QueryQuarantineEventEntity.new {
@@ -259,7 +267,8 @@ class ExposedQueryRecoveryJournal : QueryRecoveryJournal {
     }
 
     override fun requestRedrive(eventId: UUID, actor: String, correlationId: String): Boolean =
-        QueryQuarantineEventEntity.find { QueryQuarantineEvents.eventId eq eventId }
+        QueryQuarantineEventEntity
+            .find { QueryQuarantineEvents.eventId eq eventId }
             .firstOrNull()
             ?.takeIf { it.state == QUARANTINED }
             ?.let {
@@ -275,9 +284,4 @@ class ExposedQueryRecoveryJournal : QueryRecoveryJournal {
                 true
             }
             ?: false
-
-    private companion object {
-        const val QUARANTINED = "QUARANTINED"
-        const val REDRIVE_REQUESTED = "REDRIVE_REQUESTED"
-    }
 }

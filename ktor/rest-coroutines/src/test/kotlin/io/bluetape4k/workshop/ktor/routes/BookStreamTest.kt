@@ -1,5 +1,11 @@
 package io.bluetape4k.workshop.ktor.routes
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.ktor.AbstractKtorTest
 import io.bluetape4k.workshop.ktor.module
 import io.bluetape4k.workshop.ktor.repository.InMemoryBookRepository
@@ -17,15 +23,15 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
-class BookStreamTest : AbstractKtorTest() {
+class BookStreamTest: AbstractKtorTest() {
+
+    companion object: KLoggingChannel()
 
     /**
      * book 이 POST 된 뒤 SSE stream 이 event 를 방출하는지 검증합니다.
@@ -48,13 +54,15 @@ class BookStreamTest : AbstractKtorTest() {
         val subscriptionScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
         val subscription = subscriptionScope.launch {
             sseClient.sse("/books/stream") {
-                incoming.collect { event ->
-                    event.data?.let { events.send(it) }
-                }
+                incoming
+                    .log("Incoming")
+                    .collect { event ->
+                        event.data?.let { events.send(it) }
+                    }
             }
         }
 
-        delay(100) // allow subscription to register on hot SharedFlow
+        delay(100.milliseconds) // allow subscription to register on hot SharedFlow
 
         val response = client.post("/books") {
             contentType(ContentType.Application.Json)
@@ -62,7 +70,7 @@ class BookStreamTest : AbstractKtorTest() {
         }
         response.status shouldBeEqualTo HttpStatusCode.Created
 
-        val received = withTimeoutOrNull(5_000) { events.receive() }
+        val received = withTimeoutOrNull(5.seconds) { events.receive() }
         received.shouldNotBeNull()
         received shouldContain "stream-1"
 
@@ -83,7 +91,7 @@ class BookStreamTest : AbstractKtorTest() {
         }
         postResponse.status shouldBeEqualTo HttpStatusCode.Created
 
-        delay(50) // ensure POST processed
+        delay(50.milliseconds) // ensure POST processed
 
         val sseClient = createClient { install(SSE) }
         val events = Channel<String>(Channel.BUFFERED)
@@ -91,17 +99,19 @@ class BookStreamTest : AbstractKtorTest() {
         val subscriptionScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
         val subscription = subscriptionScope.launch {
             sseClient.sse("/books/stream") {
-                incoming.collect { event ->
-                    event.data?.let { events.send(it) }
-                }
+                incoming
+                    .log("Incoming")
+                    .collect { event ->
+                        event.data?.let { events.send(it) }
+                    }
             }
         }
 
-        delay(100) // allow subscription to connect
+        delay(100.milliseconds) // allow subscription to connect
 
         // 늦게 구독한 subscriber 는 이미 방출된 event 를 받지 않아야 합니다.
-        val received = withTimeoutOrNull(500) { events.receive() }
-        received shouldBeEqualTo null
+        val received = withTimeoutOrNull(500.milliseconds) { events.receive() }
+        received.shouldBeNull()
 
         subscription.cancel()
         subscriptionScope.cancel()

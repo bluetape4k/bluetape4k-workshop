@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentReducer
@@ -15,10 +17,9 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.Billin
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.Locale
+import java.util.*
 
 @Service
 class AdjustmentCommandService(
@@ -26,16 +27,29 @@ class AdjustmentCommandService(
     private val codec: DomainEventJsonCodec,
     metrics: ReplayTelemetry? = null,
 ) {
+
+    companion object: KLogging()
+
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
-    fun post(tenantId: String, adjustmentId: String, adjustment: AdjustmentPosted, now: Instant): Boolean {
+    fun post(
+        tenantId: String,
+        adjustmentId: String,
+        adjustment: AdjustmentPosted,
+        now: Instant,
+    ): Boolean {
         val stream = StreamKey(tenantId, "Adjustment", adjustmentId)
         val current = replay(stream, AdjustmentState.Empty, AdjustmentReducer, replayRuntime)
+
         if (current.state is AdjustmentState.Posted) {
             check(current.state.adjustment == adjustment) { "adjustment_conflict" }
             return false
         }
-        eventStore.append(stream, 0, listOf(codec.encode(adjustment, now)))
+        eventStore.append(
+            stream = stream,
+            expectedVersion = 0,
+            events = listOf(codec.encode(adjustment, now))
+        )
         return true
     }
 }
@@ -66,21 +80,29 @@ class ReconciliationService(
     private val readModels: BillingReadModelRepository,
     private val metrics: BillingTelemetry? = null,
 ) {
+
+    private companion object: KLogging() {
+        const val EVENT_PAGE_SIZE = 1_000
+    }
+
     fun inspect(query: ReconciliationQuery): ReconciliationFinding? {
         val active = checkNotNull(generations.active(query.projectionName)) { "active_projection_missing" }
-        val expected = financialEvents(query).fold(BigDecimal.ZERO) { total, persisted ->
-            when (val event = codec.registry.decode(persisted.eventType, persisted.schemaVersion, persisted.payload)) {
-                is UsageRated -> total + event.amount
-                is AdjustmentPosted -> if (event.direction == AdjustmentDirection.CREDIT) {
-                    total - event.amount
-                } else {
-                    total + event.amount
+        val expected = financialEvents(query)
+            .fold(BigDecimal.ZERO) { total, persisted ->
+                when (val event =
+                    codec.registry.decode(persisted.eventType, persisted.schemaVersion, persisted.payload)) {
+                    is UsageRated       -> total + event.amount
+                    is AdjustmentPosted -> if (event.direction == AdjustmentDirection.CREDIT) {
+                        total - event.amount
+                    } else {
+                        total + event.amount
+                    }
+                    else                -> total
                 }
-                else -> total
             }
-        }
         val actual = readModels.financialTotal(query.projectionName, active.generation, query.tenantId)
         if (expected.compareTo(actual) == 0) return null
+
         val material = listOf(
             query.tenantId,
             query.projectionName,
@@ -89,44 +111,57 @@ class ReconciliationService(
             expected.toPlainString(),
             actual.toPlainString(),
         ).joinToString("|")
+
         return ReconciliationFinding(
-            ReconciliationFindingType.AMOUNT_MISMATCH,
-            expected,
-            actual,
-            active.generation,
-            active.checkpoint,
-            sha256(material),
-        ).also { metrics?.recordReconciliation(it.type.name.lowercase()) }
+            type = ReconciliationFindingType.AMOUNT_MISMATCH,
+            expectedAmount = expected,
+            actualAmount = actual,
+            generation = active.generation,
+            observedPosition = active.checkpoint,
+            digest = sha256(material),
+        ).also {
+            metrics?.recordReconciliation(it.type.name.lowercase())
+        }
     }
 
     fun isStillCurrent(query: ReconciliationQuery, finding: ReconciliationFinding): Boolean =
-        inspect(query)?.let { current ->
-            current.digest == finding.digest &&
-                current.generation == finding.generation &&
-                current.observedPosition == finding.observedPosition
-        } == true
+        inspect(query)
+            ?.let { current ->
+                current.digest == finding.digest &&
+                        current.generation == finding.generation &&
+                        current.observedPosition == finding.observedPosition
+            } == true
 
     private fun financialEvents(query: ReconciliationQuery): List<PersistedEvent> =
-        loadAll(query, "usage.rated") + loadAll(query, "adjustment.posted")
+        buildList {
+            addAll(loadAll(query, "usage.rated"))
+            addAll(loadAll(query, "adjustment.posted"))
+        }
 
     private fun loadAll(query: ReconciliationQuery, eventType: String): List<PersistedEvent> {
         val events = mutableListOf<PersistedEvent>()
         var cursor: OccurredEventCursor? = null
         do {
             val page = eventStore.loadByType(
-                EventTypeQuery(query.tenantId, eventType, query.startsAt, query.endsAt, cursor, EVENT_PAGE_SIZE),
+                EventTypeQuery(
+                    tenantId = query.tenantId,
+                    eventType = eventType,
+                    startsAt = query.startsAt,
+                    endsAt = query.endsAt,
+                    after = cursor,
+                    limit = EVENT_PAGE_SIZE
+                ),
             )
             events += page
             cursor = page.lastOrNull()?.let { OccurredEventCursor(it.occurredAt, it.eventId) }
         } while (page.size == EVENT_PAGE_SIZE)
+
         return events
     }
 
-    private fun sha256(material: String): String = MessageDigest.getInstance("SHA-256")
-        .digest(material.toByteArray(UTF_8))
-        .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
+    private fun sha256(material: String): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest(material.toUtf8Bytes())
+            .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 
-    private companion object {
-        const val EVENT_PAGE_SIZE = 1_000
-    }
 }

@@ -14,11 +14,17 @@ class FieldServiceCommandService(
     private val repository: FieldServiceRepository,
     private val clock: Clock = Clock.systemUTC(),
 ) {
-    fun accept(command: FieldServiceCommand): CommandResult = accept(command) {}
+    companion object: KLogging()
 
-    fun accept(command: FieldServiceCommand, mutation: () -> Unit): CommandResult = transaction {
+    fun accept(command: FieldServiceCommand): CommandResult =
+        accept(command) {}
+
+    fun accept(
+        command: FieldServiceCommand,
+        mutation: () -> Unit,
+    ): CommandResult = transaction {
         when (repository.appendEvent(command)) {
-            EventAppendResult.APPENDED -> {
+            EventAppendResult.APPENDED  -> {
                 mutation()
                 repository.enqueueOutbox(
                     OutboxRecord(
@@ -34,8 +40,6 @@ class FieldServiceCommandService(
             EventAppendResult.VERSION_CONFLICT -> CommandResult.VERSION_CONFLICT
         }
     }
-
-    companion object : KLogging()
 }
 
 enum class CommandResult {

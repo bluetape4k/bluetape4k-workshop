@@ -1,24 +1,25 @@
 package io.bluetape4k.workshop.exposed.r2dbc.controller
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.r2dbc.AbstractWebfluxR2dbcExposedApplicationTest
-import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
-import io.bluetape4k.workshop.exposed.r2dbc.service.UserService
-import io.bluetape4k.spring.tests.httpDelete
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
-import io.bluetape4k.spring.tests.httpPut
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
+import io.bluetape4k.workshop.exposed.r2dbc.AbstractWebfluxR2dbcExposedApplicationTest
+import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
+import io.bluetape4k.workshop.exposed.r2dbc.service.UserService
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,7 +30,7 @@ class UserControllerTest(
     @param:Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcExposedApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class Find {
@@ -40,10 +41,10 @@ class UserControllerTest(
                 .expectStatus().is2xxSuccessful
                 .returnResult<UserRecord>().responseBody
                 .asFlow()
+                .log("User")
                 .toList()
 
             users.shouldNotBeEmpty()
-            users.forEach { log.debug { it } }
         }
 
         @Test
@@ -94,6 +95,7 @@ class UserControllerTest(
                 .expectStatus().is2xxSuccessful
                 .returnResult<UserRecord>().responseBody
                 .asFlow()
+                .log("User")
                 .toList()
 
             searchedUsers shouldHaveSize 1
@@ -186,7 +188,7 @@ class UserControllerTest(
         @Test
         fun `update existing user`() = runSuspendIO {
             val newUser = createUserRecord()
-            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
+            val savedUser = service.addUser(newUser).shouldNotBeNull()
 
             val userToUpdate = createUserRecord().withId(savedUser.id)
 
@@ -231,7 +233,7 @@ class UserControllerTest(
         @Test
         fun `delete existing user`() = runSuspendIO {
             val newUser = createUserRecord()
-            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
+            val savedUser = service.addUser(newUser).shouldNotBeNull()
 
             webTestClient
                 .httpDelete("/api/users/${savedUser.id}")

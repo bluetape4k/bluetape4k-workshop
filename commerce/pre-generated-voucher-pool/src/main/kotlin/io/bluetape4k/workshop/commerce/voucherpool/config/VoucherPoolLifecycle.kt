@@ -1,6 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -15,11 +21,12 @@ import org.springframework.stereotype.Component
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import javax.sql.DataSource
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toKotlinDuration
 
 internal enum class VoucherPoolShutdownEvent {
     READINESS_DOWN,
@@ -42,30 +49,28 @@ internal enum class VoucherPoolShutdownReason {
 }
 
 internal class VoucherPoolShutdownDeadlines(
-    val transactionDrain: Duration = Duration.ofSeconds(DEFAULT_TRANSACTION_DRAIN_SECONDS),
-    val claimRelease: Duration = Duration.ofSeconds(DEFAULT_CLAIM_RELEASE_SECONDS),
-    val phase: Duration = Duration.ofSeconds(DEFAULT_PHASE_SECONDS),
-    val total: Duration = Duration.ofSeconds(DEFAULT_TOTAL_SECONDS),
+    val transactionDrain: Duration = DEFAULT_TRANSACTION_DRAIN_SECONDS.seconds(),
+    val claimRelease: Duration = DEFAULT_CLAIM_RELEASE_SECONDS.seconds(),
+    val phase: Duration = DEFAULT_PHASE_SECONDS.seconds(),
+    val total: Duration = DEFAULT_TOTAL_SECONDS.seconds(),
 ) {
-    init {
-        requirePositive(transactionDrain, "transactionDrain")
-        requirePositive(claimRelease, "claimRelease")
-        requirePositive(phase, "phase")
-        requirePositive(total, "total")
-        require(total >= transactionDrain.plus(claimRelease)) {
-            "total shutdown deadline must include drain and claim release"
-        }
-    }
 
-    private fun requirePositive(duration: Duration, name: String) {
-        require(!duration.isNegative && !duration.isZero) { "$name must be positive" }
-    }
-
-    private companion object {
+    private companion object: KLogging() {
         const val DEFAULT_TRANSACTION_DRAIN_SECONDS = 12L
         const val DEFAULT_CLAIM_RELEASE_SECONDS = 5L
         const val DEFAULT_PHASE_SECONDS = 5L
         const val DEFAULT_TOTAL_SECONDS = 45L
+    }
+
+    init {
+        transactionDrain.requirePositiveDuration("transactionDrain")
+        claimRelease.requirePositiveDuration("claimRelease")
+        phase.requirePositiveDuration("phase")
+        total.requirePositiveDuration("total")
+
+        require(total >= transactionDrain + claimRelease) {
+            "total shutdown deadline must include drain and claim release"
+        }
     }
 }
 
@@ -95,6 +100,9 @@ internal class VoucherPoolLifecycleCoordinator(
     private val actions: VoucherPoolLifecycleActions,
     private val deadlines: VoucherPoolShutdownDeadlines = VoucherPoolShutdownDeadlines(),
 ) {
+
+    companion object: KLogging()
+
     private val shuttingDown = AtomicBoolean()
     private val eventLock = ReentrantLock()
     private val recordedEvents = ArrayList<VoucherPoolShutdownEvent>()
@@ -105,15 +113,19 @@ internal class VoucherPoolLifecycleCoordinator(
     fun shutdown() {
         if (!shuttingDown.compareAndSet(false, true)) return
         val totalDeadline = System.nanoTime() + deadlines.total.toNanos()
+
         phase(VoucherPoolShutdownEvent.READINESS_DOWN, totalDeadline, actions::readinessDown)
         phase(VoucherPoolShutdownEvent.COMMANDS_AND_SSE_REJECTED, totalDeadline, actions::rejectCommandsAndSse)
         phase(VoucherPoolShutdownEvent.TRIGGERS_STOPPED, totalDeadline, actions::stopTriggers)
         phase(VoucherPoolShutdownEvent.CLAIMS_STOPPED, totalDeadline, actions::stopClaims)
+
         drain(totalDeadline)
+
         phase(VoucherPoolShutdownEvent.SSE_AND_POLLER_CLOSED, totalDeadline, actions::closeSseAndPoller)
         phase(VoucherPoolShutdownEvent.ADVISORY_RESOURCES_CLOSED, totalDeadline, actions::closeAdvisoryResources)
         phase(VoucherPoolShutdownEvent.EXECUTOR_CLOSED, totalDeadline, actions::closeExecutor)
         phase(VoucherPoolShutdownEvent.DATASOURCE_CLOSED, totalDeadline, actions::closeDataSource)
+
         log.info { "voucher_pool_shutdown_completed reason=$shutdownReason" }
     }
 
@@ -124,11 +136,14 @@ internal class VoucherPoolLifecycleCoordinator(
     private fun drain(totalDeadline: Long) {
         record(VoucherPoolShutdownEvent.TRANSACTION_DRAIN)
         val drainBudget = minOf(deadlines.transactionDrain, remaining(totalDeadline))
+
         if (drainBudget.isZero || !actions.awaitTransactions(drainBudget)) {
             shutdownReason = VoucherPoolShutdownReason.TRANSACTION_DRAIN_TIMEOUT
             log.warn { "voucher_pool_shutdown_forced reason=$shutdownReason" }
+
             runBounded(totalDeadline, actions::cancelTransactions)
             runBounded(totalDeadline) { check(actions.verifyRollback()) { "transaction rollback was not verified" } }
+
             val releaseBudget = minOf(deadlines.claimRelease, remaining(totalDeadline))
             runBounded(totalDeadline) {
                 check(!releaseBudget.isZero && actions.awaitClaimRelease(releaseBudget)) {
@@ -161,7 +176,8 @@ internal class VoucherPoolLifecycleCoordinator(
                 completed.countDown()
             }
         }
-        val finished = completed.await(budget.toNanos(), TimeUnit.NANOSECONDS)
+
+        val finished = completed.await(budget.toKotlinDuration())
         if (!finished) {
             thread.interrupt()
             updateReason(VoucherPoolShutdownReason.PHASE_TIMEOUT)
@@ -186,14 +202,16 @@ internal class VoucherPoolLifecycleCoordinator(
     }
 
     private fun remaining(deadline: Long): Duration =
-        Duration.ofNanos((deadline - System.nanoTime()).coerceAtLeast(0L))
+        ((deadline - System.nanoTime()).coerceAtLeast(0L)).nanos()
 
-    companion object : KLogging()
 }
 
 /** scheduled worker와 Task 8 claim path가 공유하는 rejection/cancellation state입니다. */
 @Component
 internal class VoucherPoolRuntimeControl {
+
+    companion object: KLogging()
+
     private val acceptingCommands = AtomicBoolean(true)
     private val acceptingClaims = AtomicBoolean(true)
     private val triggersRunning = AtomicBoolean(true)
@@ -223,16 +241,16 @@ internal class VoucherPoolRuntimeControl {
     fun triggersRunning(): Boolean = triggersRunning.get()
 
     fun <T> withClaim(block: () -> T): T? {
-        val reserved =
-            claimLock.withLock {
-                if (!acceptingClaims.get()) {
-                    false
-                } else {
-                    activeClaims++
-                    true
-                }
+        val reserved = claimLock.withLock {
+            if (!acceptingClaims.get()) {
+                false
+            } else {
+                activeClaims++
+                true
             }
+        }
         if (!reserved) return null
+
         return try {
             block()
         } finally {
@@ -245,7 +263,8 @@ internal class VoucherPoolRuntimeControl {
     }
 
     fun awaitClaimRelease(timeout: Duration): Boolean {
-        require(!timeout.isNegative) { "timeout must not be negative" }
+        timeout.requireZeroOrPositiveDuration("timeout")
+
         var remaining = timeout.toNanos()
         claimLock.withLock {
             while (activeClaims > 0 && remaining > 0L) {
@@ -269,69 +288,71 @@ internal class VoucherPoolLifecycle(
     redis: ObjectProvider<VoucherPoolRedisResources>,
     @Qualifier("voucherPoolExecutor") executor: ObjectProvider<ExecutorService>,
     dataSource: DataSource,
-) : SmartLifecycle {
+): SmartLifecycle {
     private val running = AtomicBoolean()
-    private val coordinator =
-        VoucherPoolLifecycleCoordinator(
-            @Suppress("TooManyFunctions")
-            object : VoucherPoolLifecycleActions {
-                override fun readinessDown() {
-                    health.fail(VoucherPoolHealthComponent.LIFECYCLE, VoucherPoolHealthReason.SHUTTING_DOWN)
-                    AvailabilityChangeEvent.publish(applicationContext, ReadinessState.REFUSING_TRAFFIC)
-                }
 
-                override fun rejectCommandsAndSse() {
-                    runtime.rejectCommandsAndSse()
-                    gate.beginShutdown()
-                }
+    @Suppress("TooManyFunctions")
+    private val coordinator = VoucherPoolLifecycleCoordinator(
+        actions = object: VoucherPoolLifecycleActions {
+            override fun readinessDown() {
+                health.fail(VoucherPoolHealthComponent.LIFECYCLE, VoucherPoolHealthReason.SHUTTING_DOWN)
+                AvailabilityChangeEvent.publish(applicationContext, ReadinessState.REFUSING_TRAFFIC)
+            }
 
-                override fun stopTriggers() = runtime.stopTriggers()
+            override fun rejectCommandsAndSse() {
+                runtime.rejectCommandsAndSse()
+                gate.beginShutdown()
+            }
 
-                override fun stopClaims() = runtime.stopClaims()
+            override fun stopTriggers() = runtime.stopTriggers()
 
-                override fun awaitTransactions(timeout: Duration): Boolean = gate.awaitDrained(timeout)
+            override fun stopClaims() = runtime.stopClaims()
 
-                override fun cancelTransactions() {
-                    gate.cancelActiveTransactions()
-                }
+            override fun awaitTransactions(timeout: Duration): Boolean = gate.awaitDrained(timeout)
 
-                override fun verifyRollback(): Boolean =
-                    gate.awaitDrained(Duration.ofSeconds(ROLLBACK_VERIFY_TIMEOUT_SECONDS))
+            override fun cancelTransactions() {
+                gate.cancelActiveTransactions()
+            }
 
-                override fun awaitClaimRelease(timeout: Duration): Boolean = runtime.awaitClaimRelease(timeout)
+            override fun verifyRollback(): Boolean =
+                gate.awaitDrained(ROLLBACK_VERIFY_TIMEOUT_SECONDS.seconds())
 
-                override fun closeSseAndPoller() {
-                    streamShutdown.ifAvailable?.closeSseAndPoller()
-                }
+            override fun awaitClaimRelease(timeout: Duration): Boolean = runtime.awaitClaimRelease(timeout)
 
-                override fun closeAdvisoryResources() {
-                    redis.ifAvailable?.close()
-                }
+            override fun closeSseAndPoller() {
+                streamShutdown.ifAvailable?.closeSseAndPoller()
+            }
 
-                override fun closeExecutor() {
-                    executor.ifAvailable?.let { service ->
-                        service.shutdown()
-                        if (!service.awaitTermination(EXECUTOR_CLOSE_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                            service.shutdownNow()
-                        }
+            override fun closeAdvisoryResources() {
+                redis.ifAvailable?.close()
+            }
+
+            override fun closeExecutor() {
+                executor.ifAvailable?.let { service ->
+                    service.shutdown()
+                    if (!service.awaitTermination(EXECUTOR_CLOSE_TIMEOUT_SECONDS.seconds)) {
+                        service.shutdownNow()
                     }
                 }
+            }
 
-                override fun closeDataSource() {
-                    when (dataSource) {
-                        is HikariDataSource -> dataSource.close()
-                        is AutoCloseable -> dataSource.close()
-                    }
+            override fun closeDataSource() {
+                when (dataSource) {
+                    is HikariDataSource -> dataSource.close()
+                    is AutoCloseable    -> dataSource.close()
                 }
-            },
-        )
+            }
+        },
+    )
 
     override fun start() {
         running.set(true)
     }
 
     override fun stop(callback: Runnable) {
-        if (running.compareAndSet(true, false)) coordinator.shutdown()
+        if (running.compareAndSet(true, false)) {
+            coordinator.shutdown()
+        }
         callback.run()
     }
 
@@ -347,7 +368,7 @@ internal class VoucherPoolLifecycle(
 
     internal fun reason(): VoucherPoolShutdownReason = coordinator.reason()
 
-    private companion object {
+    private companion object: KLogging() {
         const val EXECUTOR_CLOSE_TIMEOUT_SECONDS = 5L
         const val LIFECYCLE_PHASE_OFFSET = 100
         const val ROLLBACK_VERIFY_TIMEOUT_SECONDS = 5L

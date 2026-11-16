@@ -10,7 +10,7 @@ data class MemberSearchCondition(
     val teamName: String? = null,
     val ageGoe: Int? = null,
     val ageLoe: Int? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

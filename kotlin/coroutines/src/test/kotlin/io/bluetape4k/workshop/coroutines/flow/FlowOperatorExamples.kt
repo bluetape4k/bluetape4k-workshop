@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.flow
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -20,8 +21,9 @@ import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class FlowOperatorExamples {
 
@@ -59,7 +61,7 @@ class FlowOperatorExamples {
 
     @Test
     fun `merge elements of flows with time`() = runTest {
-        val ints = flowOf(1, 2, 3).onEach { delay(100) }.log("int")
+        val ints = flowOf(1, 2, 3).onEach { delay(100.milliseconds) }.log("int")
         val doubles = flowOf(0.1, 0.2, 0.3).log("double")
 
         // merge는 복수 개의 flow의 요소들을 합쳐서 하나의 flow로 만든다
@@ -78,8 +80,8 @@ class FlowOperatorExamples {
          * .... A .... B .... C
          * .............. 1 ............. 2 .......... 3 .......... 4
          */
-        val flow1 = flowOf("A", "B", "C").onEach { delay(400) }.log("char")
-        val flow2 = flowOf(1, 2, 3, 4).onEach { delay(1000) }.log("ints")
+        val flow1 = flowOf("A", "B", "C").onEach { delay(400.milliseconds) }.log("char")
+        val flow2 = flowOf(1, 2, 3, 4).onEach { delay(1.seconds) }.log("ints")
 
         val ziped = flow1
             .zip(flow2) { f1, f2 -> "${f1}_${f2}" }
@@ -98,10 +100,10 @@ class FlowOperatorExamples {
          * .............. 1 ............. 2 .......... 3 .......... 4
          */
         val flow1 = flowOf("A", "B", "C")
-            .onEach { delay(400) }
+            .onEach { delay(400.milliseconds) }
             .log("chars")
         val flow2 = flowOf(1, 2, 3, 4)
-            .onEach { delay(1000) }
+            .onEach { delay(1.seconds) }
             .log("ints")
 
         val combined = flow1
@@ -115,7 +117,7 @@ class FlowOperatorExamples {
     @Test
     fun `fold - accumulate all values in flow`() = runTest {
         val list = flowOf(1, 2, 3, 4)
-            .onEach { delay(10) }
+            .onEach { delay(10.milliseconds) }
             .log("nums")
         val res = list.fold(0) { acc, i ->
             (acc + i).also {
@@ -129,7 +131,7 @@ class FlowOperatorExamples {
     fun `scan - sliding fold`() = runTest {
         val list = flowOf(1, 2, 3, 4).log("nums")
         val res = list
-            .onEach { delay(10) }
+            .onEach { delay(10.milliseconds) }
             .scan(0) { acc, i ->
                 (acc + i).also {
                     log.debug { "acc=$it" }
@@ -142,7 +144,7 @@ class FlowOperatorExamples {
     @Test
     fun `flatMapConcat - concat two flows`() = runTest {
         fun flowFrom(elem: String) = flowOf(1, 2, 3)
-            .onEach { delay(100) }
+            .onEach { delay(100.milliseconds) }
             .log("nums")
             .map { "${it}_${elem}" }
             .log("map")
@@ -158,7 +160,7 @@ class FlowOperatorExamples {
     @Test
     fun `flatMapMerge - merge two flows`() = runTest {
         fun flowFrom(elem: String) = flowOf(1, 2, 3)
-            .onEach { delay(10) }
+            .onEach { delay(10.milliseconds) }
             .map { "${it}_${elem}" }
             .log("map")
 
@@ -174,7 +176,7 @@ class FlowOperatorExamples {
     fun `flatMapMerge with concurrency - merge two flows`() = runTest {
         fun flowFrom(elem: String) = flowOf(1, 2, 3)
             .onEach {
-                delay(10)
+                delay(10.milliseconds)
             }
             .map { "${it}_${elem}" }
 
@@ -188,7 +190,7 @@ class FlowOperatorExamples {
     @Test
     fun `flatMapLatest - latest element with two flows`() = runTest {
         fun flowFrom(elem: String) = flowOf(1, 2, 3)
-            .onEach { delay(10) }
+            .onEach { delay(10.milliseconds) }
             .log("nums")
             .map { "${it}_${elem}" }
             .log("map")
@@ -207,7 +209,7 @@ class FlowOperatorExamples {
     @Test
     fun `flatMapLatest - latest element with two flows with different delay`() = runTest {
         fun flowFrom(elem: String) = flowOf(1, 2, 3)
-            .onEach { delay(1000) }
+            .onEach { delay(1.seconds) }
             .log("nums")
             .map { "${it}_${elem}" }
 
@@ -219,7 +221,7 @@ class FlowOperatorExamples {
          *
          */
         val result = flowOf("A", "B", "C")
-            .onEach { delay(1200) }.log("chars")
+            .onEach { delay(1200.milliseconds) }.log("chars")
             .flatMapLatest { flowFrom(it) }         // 각 flow의 마지막 요소들만 선택
             .log("flatMapLatest")
             .toList()

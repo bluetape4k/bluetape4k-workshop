@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.coroutines.controller
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendVT
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
-import io.bluetape4k.workshop.coroutines.model.Banner
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
+import io.bluetape4k.workshop.coroutines.model.Banner
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
@@ -14,8 +16,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,12 +23,13 @@ import org.springframework.context.ApplicationContext
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.node.JsonNodeFactory
+import kotlin.time.Duration.Companion.milliseconds
 
 class VTCoroutineControllerTest @Autowired constructor(
     context: ApplicationContext,
-) : AbstractCoroutineApplicationTest(context) {
+): AbstractCoroutineApplicationTest(context) {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val BASE_PATH = "/controller/vt"
     }
 
@@ -66,6 +67,7 @@ class VTCoroutineControllerTest @Autowired constructor(
             .returnResult<Banner>().responseBody
             .shouldNotBeNull()
             .asFlow()
+            .log("Sequential")
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
@@ -76,6 +78,7 @@ class VTCoroutineControllerTest @Autowired constructor(
             .returnResult<Banner>().responseBody
             .shouldNotBeNull()
             .asFlow()
+            .log("Concurrent")
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
@@ -89,9 +92,9 @@ class VTCoroutineControllerTest @Autowired constructor(
     @RepeatedTest(REPEAT_SIZE)
     fun `request as flow`() = runSuspendVT {
         val request = (1..5).asFlow()
+            .log("Request")
             .onEach {
-                delay(10)
-                log.debug { "request node=$it" }
+                delay(10.milliseconds)
             }
             .map {
                 JsonNodeFactory.instance.numberNode(it)

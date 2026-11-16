@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.messaging.kafka.controller
 
-import kotlinx.coroutines.CoroutineScope
 import io.bluetape4k.assertions.shouldBeFalse
+import kotlinx.coroutines.CoroutineScope
 import org.junit.jupiter.api.Test
 
 class GreetingControllerScopeTest {

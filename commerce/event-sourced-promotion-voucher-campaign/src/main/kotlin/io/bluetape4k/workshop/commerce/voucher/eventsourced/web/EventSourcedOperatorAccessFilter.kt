@@ -5,6 +5,7 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.HmacPurpose
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import tools.jackson.databind.ObjectMapper
 import java.net.URI
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
 internal const val OPERATOR_SECRET_HEADER = "X-Workshop-Operator-Secret"
@@ -36,13 +36,11 @@ internal class EventSourcedOperatorProperties(
 ) {
     val secret: String = secret.requireNotBlank("voucher.operator.secret")
     val guard: String = guard.requireNotBlank("voucher.operator.guard")
-    val allowedHosts: Set<String> =
-        allowedHosts
-            .requireNotEmpty("voucher.operator.allowed-hosts")
-            .requireNotNull("voucher.operator.allowed-hosts")
-            .mapTo(linkedSetOf()) { host ->
-                host.requireNotBlank("voucher.operator.allowed-hosts").lowercase()
-            }
+    val allowedHosts: Set<String> = allowedHosts
+        .requireNotEmpty("voucher.operator.allowed-hosts")
+        .mapTo(linkedSetOf()) { host ->
+            host.requireNotBlank("voucher.operator.allowed-hosts").lowercase()
+        }
 }
 
 /** mutation-capable operator route를 위한 fail-closed workshop trust boundary입니다. */
@@ -52,7 +50,7 @@ internal class EventSourcedOperatorAccessFilter(
     private val properties: EventSourcedOperatorProperties,
     private val mapper: ObjectMapper,
     private val hmacKeyRing: EventSourcedHmacKeyRing,
-) : OncePerRequestFilter() {
+): OncePerRequestFilter() {
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !request.requestURI.startsWith("/operator/")
 
@@ -85,33 +83,31 @@ internal class EventSourcedOperatorAccessFilter(
 
     private fun isAllowed(request: HttpServletRequest): Boolean =
         hasSingleValuedHeaders(request) &&
-            request.method in ALLOWED_METHODS &&
-            request.remoteAddr in LOOPBACK_ADDRESSES &&
-            request.serverName.lowercase() in properties.allowedHosts &&
-            constantTimeEquals(request.singleHeader(OPERATOR_SECRET_HEADER), properties.secret) &&
-            constantTimeEquals(request.singleHeader(OPERATOR_GUARD_HEADER), properties.guard) &&
-            request.singleHeader(OPERATOR_ROLE_HEADER) == "OPERATOR" &&
-            !request.singleHeader(TENANT_HEADER).isNullOrBlank() &&
-            !request.singleHeader(PRINCIPAL_HEADER).isNullOrBlank() &&
-            sameOrigin(request) &&
-            hasSafeContentType(request)
+                request.method in ALLOWED_METHODS &&
+                request.remoteAddr in LOOPBACK_ADDRESSES &&
+                request.serverName.lowercase() in properties.allowedHosts &&
+                constantTimeEquals(request.singleHeader(OPERATOR_SECRET_HEADER), properties.secret) &&
+                constantTimeEquals(request.singleHeader(OPERATOR_GUARD_HEADER), properties.guard) &&
+                request.singleHeader(OPERATOR_ROLE_HEADER) == "OPERATOR" &&
+                !request.singleHeader(TENANT_HEADER).isNullOrBlank() &&
+                !request.singleHeader(PRINCIPAL_HEADER).isNullOrBlank() &&
+                sameOrigin(request) &&
+                hasSafeContentType(request)
 
     private fun hasSingleValuedHeaders(request: HttpServletRequest): Boolean =
         TRUST_HEADERS.all { header -> request.getHeaders(header).toList().size <= 1 }
 
     private fun hasSafeContentType(request: HttpServletRequest): Boolean =
-        request.method != "POST" ||
-            request.contentType?.startsWith(MediaType.APPLICATION_JSON_VALUE) == true
+        request.method != "POST" || request.contentType?.startsWith(MediaType.APPLICATION_JSON_VALUE) == true
 
     private fun sameOrigin(request: HttpServletRequest): Boolean {
-        val origin =
-            request.singleHeader("Origin")
-                ?: request.singleHeader("X-Workshop-Origin")
+        val origin = request.singleHeader("Origin") ?: request.singleHeader("X-Workshop-Origin")
         val uri = origin?.let { runCatching { URI(it) }.getOrNull() } ?: return false
         val port = if (uri.port >= 0) uri.port else if (uri.scheme == "https") HTTPS_PORT else HTTP_PORT
+
         return uri.scheme in ALLOWED_SCHEMES &&
-            uri.host.equals(request.serverName, ignoreCase = true) &&
-            port == request.serverPort
+                uri.host.equals(request.serverName, ignoreCase = true) &&
+                port == request.serverPort
     }
 
     private fun constantTimeEquals(
@@ -119,26 +115,25 @@ internal class EventSourcedOperatorAccessFilter(
         expected: String,
     ): Boolean =
         MessageDigest.isEqual(
-            actual?.toByteArray(UTF_8) ?: ByteArray(0),
-            expected.toByteArray(UTF_8),
+            actual?.toUtf8Bytes() ?: ByteArray(0),
+            expected.toUtf8Bytes(),
         )
 
-    private companion object : KLogging() {
+    private companion object: KLogging() {
         const val HTTP_PORT = 80
         const val HTTPS_PORT = 443
         val LOOPBACK_ADDRESSES = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
         val ALLOWED_METHODS = setOf("GET", "HEAD", "POST")
         val ALLOWED_SCHEMES = setOf("http", "https")
-        val TRUST_HEADERS =
-            setOf(
-                OPERATOR_SECRET_HEADER,
-                OPERATOR_GUARD_HEADER,
-                OPERATOR_ROLE_HEADER,
-                TENANT_HEADER,
-                PRINCIPAL_HEADER,
-                "Origin",
-                "X-Workshop-Origin",
-            )
+        val TRUST_HEADERS = setOf(
+            OPERATOR_SECRET_HEADER,
+            OPERATOR_GUARD_HEADER,
+            OPERATOR_ROLE_HEADER,
+            TENANT_HEADER,
+            PRINCIPAL_HEADER,
+            "Origin",
+            "X-Workshop-Origin",
+        )
     }
 }
 

@@ -22,13 +22,13 @@ The fenced variants issue a monotonic token from Redis, pass that token into `Fe
 
 ## Core Features
 
-| Feature | Class | Key API |
-|---|---|---|
-| Unsafe (race demo) | `UnsafeInventoryService` | No lock; shows oversell |
-| Distributed lock | `LockedInventoryService` | `RLock.tryLock(wait, lease, unit)` |
-| Fenced lock (blocking) | `FencedInventoryService` | `RFencedLock.tryLockAndGetToken(wait, lease, unit)` |
+| Feature                 | Class                              | Key API                                                 |
+|-------------------------|------------------------------------|---------------------------------------------------------|
+| Unsafe (race demo)      | `UnsafeInventoryService`           | No lock; shows oversell                                 |
+| Distributed lock        | `LockedInventoryService`           | `RLock.tryLock(wait, lease, unit)`                      |
+| Fenced lock (blocking)  | `FencedInventoryService`           | `RFencedLock.tryLockAndGetToken(wait, lease, unit)`     |
 | Fenced lock (coroutine) | `SuspendingFencedInventoryService` | `tryLockAsync` + `tokenAsync` + `NonCancellable` unlock |
-| Token guard | `FencedResource` | CAS `lastSeenToken`; rejects stale-holder writes |
+| Token guard             | `FencedResource`                   | CAS `lastSeenToken`; rejects stale-holder writes        |
 
 ---
 
@@ -87,9 +87,7 @@ when (result) {
 
 ### 3. Fenced Lock — guards against stale holders
 
-The `FencedResource` CAS gate rejects any write whose fencing token is older than
-the current `lastSeenToken`, preventing a slow/restarted lock-holder from
-overwriting data written by a newer holder.
+The `FencedResource` CAS gate rejects any write whose fencing token is older than the current `lastSeenToken`, preventing a slow/restarted lock-holder from overwriting data written by a newer holder.
 
 ```kotlin
 // FencedInventoryService internally:
@@ -110,8 +108,7 @@ val result = suspendingService.deduct(inventoryId, qty = 10, waitMs = 3000L, lea
 #### Cancellation Safety
 
 The `SuspendingFencedInventoryService` uses a `withContext(NonCancellable)` block in its
-`finally` clause so that `unlockAsync(lockId).await()` always completes even when the
-calling coroutine is cancelled mid-flight.
+`finally` clause so that `unlockAsync(lockId).await()` always completes even when the calling coroutine is cancelled mid-flight.
 
 ```kotlin
 // Simplified internal pattern
@@ -154,9 +151,7 @@ try {
 
 ### Fencing Token Protocol
 
-A fencing token is a monotonically increasing number issued by the lock server on
-each successful lock acquisition. Any resource update must carry the token; the resource
-guard (CAS on `lastSeenToken`) rejects writes from older tokens.
+A fencing token is a monotonically increasing number issued by the lock server on each successful lock acquisition. Any resource update must carry the token; the resource guard (CAS on `lastSeenToken`) rejects writes from older tokens.
 
 This prevents the classic "process paused after lock acquired but before write" race:
 
@@ -169,32 +164,32 @@ Client A resumes → FencedResource rejects write (1 < 2) ✅
 
 ### SuspendedJobTester Semantics
 
-`SuspendedJobTester.workers(N).rounds(R)` spawns `N` concurrent workers that
-cooperatively execute `R` rounds of each `add { }` block. `totalUnits = R × blockCount`.
+`SuspendedJobTester.workers(N).rounds(R)` spawns `N` concurrent workers that cooperatively execute `R` rounds of each `add { }` block. `totalUnits = R × blockCount`.
 
 For a stock-100/qty-10 test:
+
 - `workers(20).rounds(20)` → 20 total attempts → exactly 10 succeed
 
 ### Smoke vs Default Tests
 
-| Tag | Purpose | Includes timing? | Default CI |
-|---|---|---|---|
-| _(none)_ | Fast correctness checks | No (logic only) | ✅ included |
-| `smoke` | Lease expiry, timeout | Yes (real wall-clock) | ❌ excluded |
+| Tag      | Purpose                 | Includes timing?      | Default CI  |
+|----------|-------------------------|-----------------------|-------------|
+| _(none)_ | Fast correctness checks | No (logic only)       | ✅ included |
+| `smoke`  | Lease expiry, timeout   | Yes (real wall-clock) | ❌ excluded |
 
 ---
 
 ## Used bluetape4k Features
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractDistributedLockTest` companion | Testcontainers Redis singleton — one-line setup, no `@DynamicPropertySource` |
-| `redissonClient {}` DSL | `bluetape4k-redisson` | `AbstractDistributedLockTest.redisson` | Kotlin DSL for `RedissonClient` — eliminates `Config()` boilerplate |
-| `getLockId(lockName)` | `bluetape4k-redis` (`coroutines` package) | `SuspendingFencedInventoryService.deduct()` | Coroutine-safe Snowflake ID for `RFencedLock` identity — required for two-step async acquire |
-| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Coroutine-context-aware structured logging |
-| `requirePositiveNumber` | `bluetape4k-core` | `SuspendingFencedInventoryService.deduct()` | Inline argument validation — throws `IllegalArgumentException` with a clear message |
-| `SuspendedJobTester` | `bluetape4k-junit5` | `SuspendFencedLockTest` | Reproducible coroutine concurrency harness — deterministic race verification |
-| `MultithreadingTester` | `bluetape4k-junit5` | `DistributedLockTest` | Fixed-thread-pool concurrency verification for OS-thread lock scenarios |
+| Feature                      | Artifact                                  | Code Location                               | Benefit                                                                                      |
+|------------------------------|-------------------------------------------|---------------------------------------------|----------------------------------------------------------------------------------------------|
+| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers`               | `AbstractDistributedLockTest` companion     | Testcontainers Redis singleton — one-line setup, no `@DynamicPropertySource`                 |
+| `redissonClient {}` DSL      | `bluetape4k-redisson`                     | `AbstractDistributedLockTest.redisson`      | Kotlin DSL for `RedissonClient` — eliminates `Config()` boilerplate                          |
+| `getLockId(lockName)`        | `bluetape4k-redis` (`coroutines` package) | `SuspendingFencedInventoryService.deduct()` | Coroutine-safe Snowflake ID for `RFencedLock` identity — required for two-step async acquire |
+| `KLoggingChannel`            | `bluetape4k-logging`                      | All companion objects                       | Coroutine-context-aware structured logging                                                   |
+| `requirePositiveNumber`      | `bluetape4k-core`                         | `SuspendingFencedInventoryService.deduct()` | Inline argument validation — throws `IllegalArgumentException` with a clear message          |
+| `SuspendedJobTester`         | `bluetape4k-junit5`                       | `SuspendFencedLockTest`                     | Reproducible coroutine concurrency harness — deterministic race verification                 |
+| `MultithreadingTester`       | `bluetape4k-junit5`                       | `DistributedLockTest`                       | Fixed-thread-pool concurrency verification for OS-thread lock scenarios                      |
 
 ---
 

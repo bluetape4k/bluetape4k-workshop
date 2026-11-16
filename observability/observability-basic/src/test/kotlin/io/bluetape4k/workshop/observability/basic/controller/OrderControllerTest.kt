@@ -1,21 +1,25 @@
 package io.bluetape4k.workshop.observability.basic.controller
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.observability.basic.AbstractBasicTest
 import io.bluetape4k.workshop.observability.basic.TestObservationConfig
 import io.bluetape4k.workshop.observability.basic.model.Order
 import io.micrometer.observation.tck.TestObservationRegistry
 import io.micrometer.observation.tck.TestObservationRegistryAssert
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.test.web.reactive.server.expectBody
 
 @Import(TestObservationConfig::class)
-class OrderControllerTest : AbstractBasicTest() {
+class OrderControllerTest: AbstractBasicTest() {
+
+    companion object: KLoggingChannel()
 
     @Autowired
     private lateinit var testRegistry: TestObservationRegistry
@@ -39,7 +43,7 @@ class OrderControllerTest : AbstractBasicTest() {
             .uri("/orders/42")
             .exchange()
             .expectStatus().isOk
-            .expectBody(Order::class.java)
+            .expectBody<Order>()
             .returnResult()
 
         val body = response.responseBody.shouldNotBeNull()
@@ -47,9 +51,6 @@ class OrderControllerTest : AbstractBasicTest() {
 
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("order.service.fetch")
-            .that()
-            .hasBeenStarted()
-            .hasBeenStopped()
+            .that().hasBeenStarted().hasBeenStopped()
     }
-
 }

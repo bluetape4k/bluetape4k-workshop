@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
@@ -11,13 +15,17 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.toKotlinDuration
 
 /** CPU planner admission과 shutdown drain을 소유하는 lifecycle입니다. */
 class ShiftCoverageExecutorLifecycle(
     plannerWorkers: Int = 4,
     plannerQueue: Int = 8,
-    private val drain: Duration = Duration.ofSeconds(30),
-) : AutoCloseable {
+    private val drain: Duration = 30.seconds(),
+): AutoCloseable {
+
+    companion object: KLogging()
+
     private val accepting = AtomicBoolean(true)
     private val closed = AtomicBoolean(false)
     private val executor: ExecutorService = ThreadPoolExecutor(
@@ -32,7 +40,7 @@ class ShiftCoverageExecutorLifecycle(
 
     init {
         require(plannerWorkers > 0 && plannerQueue > 0) { "planner executor dimensions must be positive" }
-        require(!drain.isNegative) { "drain timeout must not be negative" }
+        drain.requireZeroOrPositiveDuration("drain")
     }
 
     fun isReady(): Boolean = accepting.get() && !closed.get()
@@ -51,6 +59,7 @@ class ShiftCoverageExecutorLifecycle(
     fun <T> submitCallable(task: Callable<T>): Future<T>? {
         if (!accepting.get()) return null
         val future = FutureTask(task)
+
         return try {
             executor.execute(future)
             future
@@ -64,7 +73,9 @@ class ShiftCoverageExecutorLifecycle(
         accepting.set(false)
         executor.shutdown()
         try {
-            if (!executor.awaitTermination(drain.toMillis(), TimeUnit.MILLISECONDS)) executor.shutdownNow()
+            if (!executor.awaitTermination(drain.toKotlinDuration())) {
+                executor.shutdownNow()
+            }
         } catch (interrupted: InterruptedException) {
             executor.shutdownNow()
             Thread.currentThread().interrupt()

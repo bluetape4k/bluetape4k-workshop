@@ -28,7 +28,6 @@ configurations.configureEach {
 
 dependencies {
     implementation(libs.bluetape4k.core)
-    implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.micrometer)
@@ -41,6 +40,10 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.micrometer.core)
     runtimeOnly(libs.postgresql.driver)
+
+    // Coroutines
+    implementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)
@@ -57,6 +60,7 @@ dependencies {
     testFixturesImplementation(libs.bluetape4k.lettuce)
     testFixturesImplementation(libs.bluetape4k.testcontainers)
     testFixturesImplementation(libs.kotlinx.coroutines.core.lib)
+    testFixturesImplementation(libs.kotlinx.coroutines.test.lib)
     testFixturesImplementation(libs.hikaricp)
     testFixturesImplementation(libs.awaitility.kotlin)
     testFixturesImplementation(libs.testcontainers.postgresql)

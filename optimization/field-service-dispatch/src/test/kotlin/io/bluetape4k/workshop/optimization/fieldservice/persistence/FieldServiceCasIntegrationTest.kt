@@ -1,23 +1,31 @@
 package io.bluetape4k.workshop.optimization.fieldservice.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.junit5.concurrency.TestingExecutors
-import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceReplanService
-import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
-import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
-import io.bluetape4k.workshop.optimization.fieldservice.domain.EventKey
-import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEventType
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.fieldservice.application.ApprovalResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.DispatchResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceApprovalService
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceDispatchService
+import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceReplanService
+import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AvailabilityWindow
 import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
+import io.bluetape4k.workshop.optimization.fieldservice.domain.EventKey
+import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEventType
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceScoreSummary
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanProposal
@@ -42,15 +50,19 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.Callable
+import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FieldServiceCasIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private val repository = FieldServiceRepository()
     private val approval = FieldServiceApprovalService(repository)
     private val dispatch = FieldServiceDispatchService(repository)
@@ -59,7 +71,12 @@ class FieldServiceCasIntegrationTest {
 
     @BeforeAll
     fun connect() {
-        Database.connect(postgres.jdbcUrl, "org.postgresql.Driver", requireNotNull(postgres.username), requireNotNull(postgres.password))
+        Database.connect(
+            url = postgres.jdbcUrl,
+            driver = "org.postgresql.Driver",
+            user = postgres.username.requireNotNull("username"),
+            password = postgres.password.requireNotNull("password"),
+        )
     }
 
     @BeforeEach
@@ -74,12 +91,25 @@ class FieldServiceCasIntegrationTest {
     fun `approval version conflict changes neither proposal nor business versions`() {
         val fixture = saveFixture()
         transaction {
-            repository.updateVisitIfVersion(fixture.visit1.visitId, 0L, fixture.visit1.copy(version = 1L)).shouldBeTrue()
+            repository
+                .updateVisitIfVersion(
+                    fixture.visit1.visitId,
+                    0L,
+                    fixture.visit1.copy(version = 1L)
+                )
+                .shouldBeTrue()
         }
 
-        approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector) shouldBeEqualTo ApprovalResult.VERSION_CONFLICT
+        approval.approve(
+            fixture.plan.planId,
+            fixture.plan.planRevision,
+            fixture.plan.versionVector
+        ) shouldBeEqualTo ApprovalResult.VERSION_CONFLICT
+
         transaction {
-            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision).shouldNotBeNull().state shouldBeEqualTo PlanState.DRAFT
+            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision)
+                .shouldNotBeNull().state shouldBeEqualTo PlanState.DRAFT
+
             repository.findWorker(fixture.worker1.workerId).shouldNotBeNull().version shouldBeEqualTo 0L
             repository.countAssignments() shouldBeEqualTo 0L
         }
@@ -89,9 +119,15 @@ class FieldServiceCasIntegrationTest {
     fun `approval changes only proposal state`() {
         val fixture = saveFixture()
 
-        approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector) shouldBeEqualTo ApprovalResult.APPROVED
+        approval.approve(
+            fixture.plan.planId,
+            fixture.plan.planRevision,
+            fixture.plan.versionVector
+        ) shouldBeEqualTo ApprovalResult.APPROVED
+
         transaction {
-            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision).shouldNotBeNull().state shouldBeEqualTo PlanState.APPROVED
+            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision)
+                .shouldNotBeNull().state shouldBeEqualTo PlanState.APPROVED
             repository.findWorker(fixture.worker1.workerId).shouldNotBeNull().version shouldBeEqualTo 0L
             repository.findWorker(fixture.worker1.workerId).shouldNotBeNull().workerScheduleRevision shouldBeEqualTo 0L
         }
@@ -102,9 +138,24 @@ class FieldServiceCasIntegrationTest {
         val fixture = saveFixture()
         approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector)
 
-        dispatch.confirmWorkerRoute(fixture.worker1.workerId, fixture.plan.planId, fixture.plan.planRevision) shouldBeEqualTo DispatchResult.COMMITTED
-        dispatch.confirmWorkerRoute(fixture.worker1.workerId, fixture.plan.planId, fixture.plan.planRevision) shouldBeEqualTo DispatchResult.SCHEDULE_CONFLICT
-        dispatch.confirmWorkerRoute(fixture.worker2.workerId, fixture.plan.planId, fixture.plan.planRevision) shouldBeEqualTo DispatchResult.COMMITTED
+        dispatch.confirmWorkerRoute(
+            fixture.worker1.workerId,
+            fixture.plan.planId,
+            fixture.plan.planRevision
+        ) shouldBeEqualTo DispatchResult.COMMITTED
+
+        dispatch.confirmWorkerRoute(
+            fixture.worker1.workerId,
+            fixture.plan.planId,
+            fixture.plan.planRevision
+        ) shouldBeEqualTo DispatchResult.SCHEDULE_CONFLICT
+
+        dispatch.confirmWorkerRoute(
+            fixture.worker2.workerId,
+            fixture.plan.planId,
+            fixture.plan.planRevision
+        ) shouldBeEqualTo DispatchResult.COMMITTED
+
         transaction { repository.countAssignments() shouldBeEqualTo 2L }
     }
 
@@ -112,23 +163,33 @@ class FieldServiceCasIntegrationTest {
     fun `concurrent route confirmations commit exactly one worker route`() {
         val fixture = saveFixture()
         approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector)
+
         val barrier = CyclicBarrier(2)
         val executor = TestingExecutors.newFixedThreadPool(2)
 
         val results = try {
-            executor.invokeAll(
-                listOf(1, 2).map {
-                    Callable {
-                        barrier.await(5, TimeUnit.SECONDS)
-                        dispatch.confirmWorkerRoute(fixture.worker1.workerId, fixture.plan.planId, fixture.plan.planRevision)
-                    }
-                },
-                10,
-                TimeUnit.SECONDS,
-            ).map { it.get(10, TimeUnit.SECONDS) }
+            executor
+                .invokeAll(
+                    listOf(1, 2).map {
+                        Callable {
+                            barrier.await(5.seconds)
+                            dispatch.confirmWorkerRoute(
+                                fixture.worker1.workerId,
+                                fixture.plan.planId,
+                                fixture.plan.planRevision
+                            )
+                        }
+                    },
+                    10,
+                    TimeUnit.SECONDS,
+                )
+                .map { it.get(10.seconds) }
+                .onEach { log.debug { "result=$it" } }
         } finally {
             executor.shutdown()
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow()
+            if (!executor.awaitTermination(5.seconds)) {
+                executor.shutdownNow()
+            }
         }
 
         results.map { it.name }.sorted() shouldBeEqualTo listOf("COMMITTED", "SCHEDULE_CONFLICT")
@@ -139,6 +200,7 @@ class FieldServiceCasIntegrationTest {
     fun `route confirmation rejects a visit changed after proposal creation`() {
         val fixture = saveFixture()
         approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector)
+
         transaction {
             repository.updateVisitIfVersion(
                 fixture.visit1.visitId,
@@ -147,8 +209,12 @@ class FieldServiceCasIntegrationTest {
             ).shouldBeTrue()
         }
 
-        dispatch.confirmWorkerRoute(fixture.worker1.workerId, fixture.plan.planId, fixture.plan.planRevision) shouldBeEqualTo
-            DispatchResult.VERSION_CONFLICT
+        dispatch.confirmWorkerRoute(
+            fixture.worker1.workerId,
+            fixture.plan.planId,
+            fixture.plan.planRevision
+        ) shouldBeEqualTo DispatchResult.VERSION_CONFLICT
+
         transaction { repository.countAssignments() shouldBeEqualTo 0L }
     }
 
@@ -156,35 +222,43 @@ class FieldServiceCasIntegrationTest {
     fun `event append CAS permits exactly one command at the same expected version`() {
         val barrier = CyclicBarrier(2)
         val executor = TestingExecutors.newFixedThreadPool(2)
-        val commands = listOf("event-a", "event-b").map { key ->
-            FieldServiceCommand(
-                aggregateType = "visit",
-                aggregateId = AggregateId("visit-cas"),
-                eventKey = EventKey(key),
-                eventType = FieldServiceEventType.VISIT_URGENT,
-                digest = EventDigest("a".repeat(64)),
-                payloadSummary = "visit-cas",
-                expectedVersion = 0L,
-            )
-        }
+
+        val commands = listOf("event-a", "event-b")
+            .map { key ->
+                FieldServiceCommand(
+                    aggregateType = "visit",
+                    aggregateId = AggregateId("visit-cas"),
+                    eventKey = EventKey(key),
+                    eventType = FieldServiceEventType.VISIT_URGENT,
+                    digest = EventDigest("a".repeat(64)),
+                    payloadSummary = "visit-cas",
+                    expectedVersion = 0L,
+                )
+            }
 
         val results = try {
-            executor.invokeAll(
-                commands.map { command ->
-                    Callable {
-                        barrier.await(5, TimeUnit.SECONDS)
-                        transaction { repository.appendEvent(command) }
-                    }
-                },
-                10,
-                TimeUnit.SECONDS,
-            ).map { it.get(10, TimeUnit.SECONDS) }
+            executor
+                .invokeAll(
+                    commands.map { command ->
+                        Callable {
+                            barrier.await(5.seconds)
+                            transaction { repository.appendEvent(command) }
+                        }
+                    },
+                    10,
+                    TimeUnit.SECONDS,
+                )
+                .map { it.get(10.seconds) }
+                .onEach { log.debug { "result=$it" } }
         } finally {
             executor.shutdown()
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow()
+            if (!executor.awaitTermination(5.seconds)) {
+                executor.shutdownNow()
+            }
         }
 
         results.map { it.name }.sorted() shouldBeEqualTo listOf("APPENDED", "VERSION_CONFLICT")
+
         transaction {
             repository.countEvents() shouldBeEqualTo 1L
             FieldServiceEventsTable.selectAll().single()[FieldServiceEventsTable.aggregateVersion] shouldBeEqualTo 0L
@@ -231,12 +305,16 @@ class FieldServiceCasIntegrationTest {
         val workerPayload = FieldServiceRecordCodec.encodeWorker(worker)
         val visitPayload = FieldServiceRecordCodec.encodeVisit(visit)
         val planPayload = FieldServiceRecordCodec.encode(plan)
-        workerPayload.contains("\"workerId\":\"worker-round-trip\"").shouldBeTrue()
-        workerPayload.contains("\"workerId\":\" worker-round-trip \"").shouldBeFalse()
-        visitPayload.contains("\"visitId\":\"visit-round-trip\"").shouldBeTrue()
-        visitPayload.contains("\"visitId\":\" visit-round-trip \"").shouldBeFalse()
-        planPayload.contains("\"planId\":\"plan-round-trip\"").shouldBeTrue()
-        planPayload.contains("\"planId\":\" plan-round-trip \"").shouldBeFalse()
+        log.debug { "worker payload=$workerPayload" }
+        log.debug { "visitPayload=$visitPayload" }
+        log.debug { "planPayload=$planPayload" }
+
+        workerPayload shouldContain "\"workerId\":\"worker-round-trip\""
+        workerPayload shouldNotContain "\"workerId\":\" worker-round-trip \""
+        visitPayload shouldContain "\"visitId\":\"visit-round-trip\""
+        visitPayload shouldNotContain "\"visitId\":\" visit-round-trip \""
+        planPayload shouldContain "\"planId\":\"plan-round-trip\""
+        planPayload shouldNotContain "\"planId\":\" plan-round-trip \""
 
         transaction {
             repository.findWorker(WorkerId("worker-round-trip")) shouldBeEqualTo worker
@@ -279,6 +357,7 @@ class FieldServiceCasIntegrationTest {
         repository.saveWorker(worker2)
         repository.saveVisit(visit1)
         repository.saveVisit(visit2)
+
         val plan = PlanProposal(
             planId = PlanId("plan-1"),
             planRevision = 1,
@@ -303,12 +382,28 @@ class FieldServiceCasIntegrationTest {
     }
 
     private fun worker(id: String) = Worker(
-        WorkerId(id), "Synthetic $id", setOf(Skill("electrical")), listOf(AvailabilityWindow(start, end)), CoordinateId("depot-$id"),
+        WorkerId(id),
+        "Synthetic $id",
+        setOf(Skill("electrical")),
+        listOf(AvailabilityWindow(start, end)),
+        CoordinateId("depot-$id"),
     )
 
-    private fun visit(id: String, coordinate: String) = Visit(
-        VisitId(id), CoordinateId(coordinate), Skill("electrical"), start, end, Duration.ofMinutes(15),
-    )
+    private fun visit(id: String, coordinate: String) =
+        Visit(
+            visitId = VisitId(id),
+            coordinateId = CoordinateId(coordinate),
+            requiredSkill = Skill("electrical"),
+            windowStart = start,
+            windowEnd = end,
+            serviceDuration = 15.minutes(),
+        )
 
-    private data class Fixture(val worker1: Worker, val worker2: Worker, val visit1: Visit, val visit2: Visit, val plan: PlanProposal)
+    private data class Fixture(
+        val worker1: Worker,
+        val worker2: Worker,
+        val visit1: Visit,
+        val visit2: Visit,
+        val plan: PlanProposal,
+    )
 }

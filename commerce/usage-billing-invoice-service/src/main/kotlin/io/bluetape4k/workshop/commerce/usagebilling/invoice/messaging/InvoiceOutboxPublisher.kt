@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 enum class InvoiceOutboxStatus {
     PENDING,
@@ -21,7 +21,7 @@ data class InvoiceOutboxLease(
     val eventId: UUID,
     val partitionKey: String,
     val payload: String,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -31,7 +31,7 @@ data class InvoiceOutboxPublishResult(
     val claimed: Int = 0,
     val published: Int = 0,
     val retryWait: Int = 0,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -47,7 +47,7 @@ interface InvoiceEventTransport {
     fun publish(partitionKey: String, payload: String)
 }
 
-class InvoiceEventTransportFailure(cause: Exception) : RuntimeException("invoice_event_transport_failure", cause)
+class InvoiceEventTransportFailure(cause: Exception): RuntimeException("invoice_event_transport_failure", cause)
 
 @Component
 class InvoiceOutboxPublisher(
@@ -55,11 +55,17 @@ class InvoiceOutboxPublisher(
     private val transport: InvoiceEventTransport,
     private val clock: Clock,
 ) {
+
+    private companion object: KLogging() {
+        const val DEFAULT_BATCH_SIZE = 100
+    }
+    
     fun publishPending(limit: Int = DEFAULT_BATCH_SIZE): InvoiceOutboxPublishResult {
         val owner = Uuid.V7.nextId().toString()
         val claimed = journal.claim(owner, clock.instant(), limit)
         var published = 0
         var retryWait = 0
+
         claimed.forEach { event ->
             try {
                 transport.publish(event.partitionKey, event.payload)
@@ -71,9 +77,5 @@ class InvoiceOutboxPublisher(
             }
         }
         return InvoiceOutboxPublishResult(claimed.size, published, retryWait)
-    }
-
-    private companion object : KLogging() {
-        const val DEFAULT_BATCH_SIZE = 100
     }
 }

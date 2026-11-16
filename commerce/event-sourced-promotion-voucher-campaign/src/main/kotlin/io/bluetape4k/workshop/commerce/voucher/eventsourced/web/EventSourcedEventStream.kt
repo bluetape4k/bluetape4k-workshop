@@ -1,11 +1,14 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireEquals
-import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
@@ -24,11 +27,11 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
-import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
@@ -38,6 +41,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.toKotlinDuration
 
 private const val MAX_CURSOR_LENGTH = 96
 private const val CURSOR_COMPONENT_COUNT = 3
@@ -68,6 +72,7 @@ internal data class EventSourcedStreamCursor(
             raw.length.requireInRange(CURSOR_COMPONENT_COUNT, MAX_CURSOR_LENGTH, "Last-Event-ID.length")
             val components = raw.split(':')
             components.size.requireEquals(CURSOR_COMPONENT_COUNT, "Last-Event-ID.components")
+
             return EventSourcedStreamCursor(
                 streamPosition = components[0].toLongOrNull().requireNotNull("cursor.streamPosition"),
                 globalPosition = components[1].toLongOrNull().requireNotNull("cursor.globalPosition"),
@@ -117,16 +122,16 @@ internal data class EventSourcedStreamEvent(
 internal data class EventSourcedSseProperties(
     val maxSubscriptions: Int = 32,
     val queueSize: Int = 32,
-    val pollInterval: Duration = Duration.ofMillis(DEFAULT_POLL_INTERVAL_MILLIS),
-    val heartbeatInterval: Duration = Duration.ofSeconds(DEFAULT_HEARTBEAT_INTERVAL_SECONDS),
-    val writeTimeout: Duration = Duration.ofSeconds(DEFAULT_WRITE_TIMEOUT_SECONDS),
+    val pollInterval: Duration = DEFAULT_POLL_INTERVAL_MILLIS.millis(),
+    val heartbeatInterval: Duration = DEFAULT_HEARTBEAT_INTERVAL_SECONDS.seconds(),
+    val writeTimeout: Duration = DEFAULT_WRITE_TIMEOUT_SECONDS.seconds(),
 ) {
     init {
         maxSubscriptions.requireInRange(1, MAX_SSE_SUBSCRIPTIONS, "voucher.sse.max-subscriptions")
         queueSize.requireInRange(1, MAX_SSE_QUEUE_SIZE, "voucher.sse.queue-size")
-        pollInterval.requireGt(Duration.ZERO, "voucher.sse.poll-interval")
-        heartbeatInterval.requireGt(Duration.ZERO, "voucher.sse.heartbeat-interval")
-        writeTimeout.requireGt(Duration.ZERO, "voucher.sse.write-timeout")
+        pollInterval.requirePositiveDuration("voucher.sse.poll-interval")
+        heartbeatInterval.requirePositiveDuration("voucher.sse.heartbeat-interval")
+        writeTimeout.requirePositiveDuration("voucher.sse.write-timeout")
     }
 }
 
@@ -141,19 +146,19 @@ internal fun interface EventSourcedEventSource {
 internal class ProjectionSnapshotEventSource(
     private val snapshots: CampaignProjectionSnapshotReader,
     private val clock: Clock,
-) : EventSourcedEventSource {
+): EventSourcedEventSource {
     override fun read(
         tenant: String,
         campaignId: UUID,
     ): EventSourcedPublicEventDescriptor {
         val snapshot = snapshots.read(TenantId(tenant), campaignId)
-        val campaign =
-            snapshot.campaign
-                ?: throw EventSourcedStreamRejected(
-                    stableCode = "CAMPAIGN_NOT_FOUND",
-                    httpStatus = HttpStatus.NOT_FOUND.value(),
-                    safeReason = "campaign was not found",
-                )
+        val campaign = snapshot.campaign
+            ?: throw EventSourcedStreamRejected(
+                stableCode = "CAMPAIGN_NOT_FOUND",
+                httpStatus = HttpStatus.NOT_FOUND.value(),
+                safeReason = "campaign was not found",
+            )
+
         return EventSourcedPublicEventDescriptor(
             campaignId = campaign.campaignId,
             state = campaign.state.name,
@@ -173,9 +178,9 @@ internal class ProjectionSnapshotEventSource(
 @Component
 internal class EventSourcedEventStream(
     private val source: EventSourcedEventSource,
-    private val mapper: ObjectMapper,
+    private val mapper: JsonMapper,
     private val properties: EventSourcedSseProperties,
-) : AutoCloseable {
+): AutoCloseable {
     private val executor: ExecutorService = VirtualThreads.executorService()
     private val admission = Semaphore(properties.maxSubscriptions)
     private val closed = AtomicBoolean()
@@ -187,6 +192,7 @@ internal class EventSourcedEventStream(
     ): Subscription {
         requireAvailable()
         acquireAdmission()
+
         return runCatching {
             source.read(tenant, campaignId)
                 .also { initial -> validateReconnect(requestedCursor, initial.cursor()) }
@@ -201,6 +207,7 @@ internal class EventSourcedEventStream(
         emitter.onCompletion(subscription::close)
         emitter.onTimeout(subscription::close)
         emitter.onError { subscription.close() }
+
         executor.submit {
             try {
                 var streaming = true
@@ -246,9 +253,9 @@ internal class EventSourcedEventStream(
     private fun requireAvailable() {
         if (closed.get()) {
             throw EventSourcedStreamRejected(
-                "SSE_SHUTTING_DOWN",
-                HttpStatus.SERVICE_UNAVAILABLE.value(),
-                "event stream is shutting down",
+                stableCode = "SSE_SHUTTING_DOWN",
+                httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value(),
+                safeReason = "event stream is shutting down",
             )
         }
     }
@@ -256,9 +263,9 @@ internal class EventSourcedEventStream(
     private fun acquireAdmission() {
         if (!admission.tryAcquire()) {
             throw EventSourcedStreamRejected(
-                "SSE_CAPACITY_REJECTED",
-                HttpStatus.SERVICE_UNAVAILABLE.value(),
-                "event stream capacity is unavailable",
+                stableCode = "SSE_CAPACITY_REJECTED",
+                httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value(),
+                safeReason = "event stream capacity is unavailable",
             )
         }
     }
@@ -295,7 +302,7 @@ internal class EventSourcedEventStream(
             )
         }
         try {
-            send.get(properties.writeTimeout.toMillis(), TimeUnit.MILLISECONDS)
+            send.get(properties.writeTimeout.toKotlinDuration())
         } catch (timeout: TimeoutException) {
             send.cancel(true)
             throw timeout
@@ -306,7 +313,7 @@ internal class EventSourcedEventStream(
         private val tenant: String,
         private val campaignId: UUID,
         initial: EventSourcedPublicEventDescriptor,
-    ) : AutoCloseable {
+    ): AutoCloseable {
         private val queue = ArrayBlockingQueue<EventSourcedStreamEvent>(properties.queueSize)
         private val cursor = AtomicReference(initial.cursor())
         private val active = AtomicBoolean(true)
@@ -346,10 +353,7 @@ internal class EventSourcedEventStream(
                     terminate(failure.stableCode, failure.safeReason)
                 } catch (failure: IllegalArgumentException) {
                     if (active.get()) {
-                        log.warn {
-                            "event_sourced_sse_poll_failed " +
-                                "campaignId=$campaignId failure=${failure.javaClass.simpleName}"
-                        }
+                        log.warn { "event_sourced_sse_poll_failed campaignId=$campaignId failure=${failure.javaClass.simpleName}" }
                     }
                 }
             }
@@ -397,14 +401,14 @@ internal class EventSourcedEventStream(
         }
     }
 
-    private companion object : KLogging()
+    private companion object: KLogging()
 }
 
 internal class EventSourcedStreamRejected(
     val stableCode: String,
     val httpStatus: Int,
     val safeReason: String,
-) : RuntimeException(stableCode)
+): RuntimeException(stableCode)
 
 @RestController
 internal class EventSourcedEventStreamController(
@@ -417,11 +421,11 @@ internal class EventSourcedEventStreamController(
         @RequestHeader(PRINCIPAL_HEADER, required = false) principalHeader: String?,
         @RequestHeader("Last-Event-ID", required = false) lastEventId: String?,
     ): ResponseEntity<SseEmitter> {
-        val tenant = tenantHeader.requireNotNull(TENANT_HEADER).requireNotBlank(TENANT_HEADER)
-        principalHeader.requireNotNull(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER)
-        val cursor =
-            parseEventSourcedCursor(lastEventId)
+        val tenant = tenantHeader.requireNotBlank(TENANT_HEADER)
+        principalHeader.requireNotBlank(PRINCIPAL_HEADER)
+        val cursor = parseEventSourcedCursor(lastEventId)
         val subscription = openEventSourcedSubscription(streams, tenant, campaignId, cursor)
+
         return ResponseEntity.ok()
             .contentType(MediaType.TEXT_EVENT_STREAM)
             .header(HttpHeaders.CACHE_CONTROL, "no-store")
@@ -430,14 +434,15 @@ internal class EventSourcedEventStreamController(
 }
 
 private fun parseEventSourcedCursor(lastEventId: String?): EventSourcedStreamCursor? =
-    runCatching { EventSourcedStreamCursor.parse(lastEventId) }
-        .getOrElse {
-            throw EventSourcedStreamRejected(
-                "INVALID_EVENT_CURSOR",
-                HttpStatus.BAD_REQUEST.value(),
-                "event cursor is invalid",
-            )
-        }
+    runCatching {
+        EventSourcedStreamCursor.parse(lastEventId)
+    }.getOrElse {
+        throw EventSourcedStreamRejected(
+            stableCode = "INVALID_EVENT_CURSOR",
+            httpStatus = HttpStatus.BAD_REQUEST.value(),
+            safeReason = "event cursor is invalid",
+        )
+    }
 
 private fun openEventSourcedSubscription(
     streams: EventSourcedEventStream,
@@ -445,14 +450,15 @@ private fun openEventSourcedSubscription(
     campaignId: UUID,
     cursor: EventSourcedStreamCursor?,
 ): EventSourcedEventStream.Subscription =
-    runCatching { streams.open(tenant, campaignId, cursor) }
-        .getOrElse { failure ->
-            if (failure is IllegalArgumentException) {
-                throw EventSourcedStreamRejected(
-                    "INVALID_EVENT_CURSOR",
-                    HttpStatus.BAD_REQUEST.value(),
-                    "event cursor is invalid",
-                )
-            }
-            throw failure
+    runCatching {
+        streams.open(tenant, campaignId, cursor)
+    }.getOrElse { failure ->
+        if (failure is IllegalArgumentException) {
+            throw EventSourcedStreamRejected(
+                stableCode = "INVALID_EVENT_CURSOR",
+                httpStatus = HttpStatus.BAD_REQUEST.value(),
+                safeReason = "event cursor is invalid",
+            )
         }
+        throw failure
+    }

@@ -29,7 +29,7 @@ class RedisApplication(
     private val factory: RedisConnectionFactory,
 ) {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
     }
@@ -66,8 +66,8 @@ class RedisApplication(
         return RepoMetricsPostProcessor()
     }
 
-    class RepoMetricsPostProcessor : BeanPostProcessor {
-        companion object : KLogging()
+    class RepoMetricsPostProcessor: BeanPostProcessor {
+        companion object: KLogging()
 
         override fun postProcessBeforeInitialization(bean: Any, beanName: String): Any? {
 

@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.web
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkBeTrue
 import io.bluetape4k.workshop.commerce.metering.application.AdjustmentService
 import io.bluetape4k.workshop.commerce.metering.application.BillingCloseService
 import io.bluetape4k.workshop.commerce.metering.application.BillingPeriodService
@@ -36,8 +38,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import tools.jackson.databind.ObjectMapper
-import java.util.Currency
-import java.util.UUID
+import java.util.*
 
 data class IdempotentHttpCommand(
     val tenantId: String,
@@ -58,23 +59,27 @@ class IdempotentHttpCommandExecutor(
             request.operation,
             CommandFingerprint.key(IdempotencyKey(request.rawKey).value).value,
         )
+
         return when (val acquired = receipts.acquire(scope, request.fingerprint)) {
-            is CommandAcquireResult.Acquired -> executeOwned(request.operation, acquired, command)
-            is CommandAcquireResult.Replay -> meter(request.operation, "replay") {
-                ResponseEntity.status(acquired.httpStatus)
-                    .header("Idempotency-Replayed", "true")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(acquired.response)
-            }
-            is CommandAcquireResult.InProgress -> meter(request.operation, "in_progress") {
-                ResponseEntity.status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.RETRY_AFTER, acquired.retryAfter.seconds.coerceAtLeast(1).toString())
-                    .body(ApiError("command_in_progress", "command_in_progress"))
-            }
-            CommandAcquireResult.Conflict -> meter(request.operation, "conflict") {
-                ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiError("idempotency_conflict", "idempotency_conflict"))
-            }
+            is CommandAcquireResult.Acquired   -> executeOwned(request.operation, acquired, command)
+            is CommandAcquireResult.Replay     ->
+                meter(request.operation, "replay") {
+                    ResponseEntity.status(acquired.httpStatus)
+                        .header("Idempotency-Replayed", "true")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(acquired.response)
+                }
+            is CommandAcquireResult.InProgress ->
+                meter(request.operation, "in_progress") {
+                    ResponseEntity.status(HttpStatus.CONFLICT)
+                        .header(HttpHeaders.RETRY_AFTER, acquired.retryAfter.seconds.coerceAtLeast(1).toString())
+                        .body(ApiError("command_in_progress", "command_in_progress"))
+                }
+            CommandAcquireResult.Conflict      ->
+                meter(request.operation, "conflict") {
+                    ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiError("idempotency_conflict", "idempotency_conflict"))
+                }
         }
     }
 
@@ -86,14 +91,13 @@ class IdempotentHttpCommandExecutor(
         try {
             val result = command()
             val body = objectMapper.writeValueAsString(result)
-            check(
-                receipts.succeed(
-                    acquired.receipt.id,
-                    acquired.receipt.ownerToken,
-                    HttpStatus.CREATED.value(),
-                    body,
-                ),
-            ) { "command_receipt_owner_lost" }
+            receipts.succeed(
+                acquired.receipt.id,
+                acquired.receipt.ownerToken,
+                HttpStatus.CREATED.value(),
+                body,
+            ).checkBeTrue { "command_receipt_owner_lost" }
+
             metrics.command(operation, "created")
             return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(result)
         } catch (failure: IllegalArgumentException) {
@@ -107,7 +111,11 @@ class IdempotentHttpCommandExecutor(
         }
     }
 
-    private fun meter(operation: String, result: String, response: () -> ResponseEntity<Any>): ResponseEntity<Any> {
+    private fun meter(
+        operation: String,
+        result: String,
+        response: () -> ResponseEntity<Any>,
+    ): ResponseEntity<Any> {
         metrics.command(operation, result)
         return response()
     }
@@ -115,10 +123,10 @@ class IdempotentHttpCommandExecutor(
     private fun recordFailure(acquired: CommandAcquireResult.Acquired, failure: RuntimeException) {
         val message = failure.message ?: "command_failed"
         receipts.fail(
-            acquired.receipt.id,
-            acquired.receipt.ownerToken,
-            MeteringErrorStatus.from(failure).value(),
-            objectMapper.writeValueAsString(ApiError(message, message)),
+            receiptId = acquired.receipt.id,
+            ownerToken = acquired.receipt.ownerToken,
+            httpStatus = MeteringErrorStatus.from(failure).value(),
+            response = objectMapper.writeValueAsString(ApiError(message, message)),
         )
     }
 }
@@ -132,21 +140,35 @@ class TenantMeteringController(
     private val usage: UsageIngestionService,
     private val periods: BillingPeriodService,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping("/meters")
     fun registerMeter(
         @PathVariable tenantId: String,
         @RequestHeader("Idempotency-Key") key: String,
         @RequestBody request: RegisterMeterRequest,
         authentication: Authentication,
-    ): ResponseEntity<Any> = execute(
-        IdempotentHttpCommand(
-            tenantId,
-            "meter-register",
-            key,
-            CommandFingerprint.request("meter-register", mapOf("code" to request.code, "unit" to request.unit)),
-        ),
-        authentication,
-    ) { meters.register(TenantId(tenantId), MeterCode(request.code), request.unit, request.description) }
+    ): ResponseEntity<Any> =
+        execute(
+            request = IdempotentHttpCommand(
+                tenantId = tenantId,
+                operation = "meter-register",
+                rawKey = key,
+                fingerprint = CommandFingerprint.request(
+                    "meter-register",
+                    mapOf("code" to request.code, "unit" to request.unit)
+                ),
+            ),
+            authentication = authentication,
+        ) {
+            meters.register(
+                tenantId = TenantId(value = tenantId),
+                code = MeterCode(request.code),
+                unit = request.unit,
+                description = request.description
+            )
+        }
 
     @PostMapping("/meters/{meterCode}/prices")
     fun activatePrice(
@@ -155,28 +177,32 @@ class TenantMeteringController(
         @RequestHeader("Idempotency-Key") key: String,
         @RequestBody request: ActivatePriceRequest,
         authentication: Authentication,
-    ): ResponseEntity<Any> = execute(
-        IdempotentHttpCommand(
-            tenantId,
-            "price-activate",
-            key,
-            CommandFingerprint.request(
-                "price-activate",
-                mapOf(
-                    "meterCode" to meterCode,
-                    "currency" to request.currency,
-                    "unitPrice" to CommandFingerprint.decimal(request.unitPrice),
-                    "effectiveFrom" to CommandFingerprint.instant(request.effectiveFrom),
+    ): ResponseEntity<Any> =
+        execute(
+            request = IdempotentHttpCommand(
+                tenantId = tenantId,
+                operation = "price-activate",
+                rawKey = key,
+                fingerprint = CommandFingerprint.request(
+                    operation = "price-activate",
+                    fields = mapOf(
+                        "meterCode" to meterCode,
+                        "currency" to request.currency,
+                        "unitPrice" to CommandFingerprint.decimal(request.unitPrice),
+                        "effectiveFrom" to CommandFingerprint.instant(request.effectiveFrom),
+                    ),
                 ),
             ),
-        ),
-        authentication,
-    ) {
-        prices.activate(
-            TenantId(tenantId), MeterCode(meterCode), Currency.getInstance(request.currency),
-            UnitPrice(request.unitPrice), request.effectiveFrom,
-        )
-    }
+            authentication = authentication,
+        ) {
+            prices.activate(
+                tenantId = TenantId(tenantId),
+                meterCode = MeterCode(meterCode),
+                currency = Currency.getInstance(request.currency),
+                unitPrice = UnitPrice(request.unitPrice),
+                effectiveFrom = request.effectiveFrom,
+            )
+        }
 
     @PostMapping("/usage-events")
     fun ingest(
@@ -186,8 +212,8 @@ class TenantMeteringController(
         authentication: Authentication,
     ): ResponseEntity<Any> {
         val fingerprint = CommandFingerprint.request(
-            "usage-ingest",
-            mapOf(
+            operation = "usage-ingest",
+            fields = mapOf(
                 "sourceSystem" to request.sourceSystem,
                 "sourceEventId" to request.sourceEventId,
                 "meterCode" to request.meterCode,
@@ -195,7 +221,16 @@ class TenantMeteringController(
                 "occurredAt" to CommandFingerprint.instant(request.occurredAt),
             ),
         )
-        return execute(IdempotentHttpCommand(tenantId, "usage-ingest", key, fingerprint), authentication) {
+
+        return execute(
+            IdempotentHttpCommand(
+                tenantId = tenantId,
+                operation = "usage-ingest",
+                rawKey = key,
+                fingerprint = fingerprint
+            ),
+            authentication
+        ) {
             usage.ingest(
                 UsageIngestionCommand(
                     tenantId = TenantId(tenantId),
@@ -218,22 +253,30 @@ class TenantMeteringController(
         @RequestHeader("Idempotency-Key") key: String,
         @RequestBody request: CreateBillingPeriodRequest,
         authentication: Authentication,
-    ): ResponseEntity<Any> = execute(
-        IdempotentHttpCommand(
-            tenantId,
-            "period-create",
-            key,
-            CommandFingerprint.request(
-                "period-create",
-                mapOf(
-                    "currency" to request.currency,
-                    "startsAt" to request.startsAt.toString(),
-                    "endsAt" to request.endsAt.toString(),
+    ): ResponseEntity<Any> =
+        execute(
+            IdempotentHttpCommand(
+                tenantId = tenantId,
+                operation = "period-create",
+                rawKey = key,
+                fingerprint = CommandFingerprint.request(
+                    operation = "period-create",
+                    fields = mapOf(
+                        "currency" to request.currency,
+                        "startsAt" to request.startsAt.toString(),
+                        "endsAt" to request.endsAt.toString(),
+                    ),
                 ),
             ),
-        ),
-        authentication,
-    ) { periods.create(TenantId(tenantId), Currency.getInstance(request.currency), request.startsAt, request.endsAt) }
+            authentication,
+        ) {
+            periods.create(
+                tenantId = TenantId(tenantId),
+                currency = Currency.getInstance(request.currency),
+                startsAt = request.startsAt,
+                endsAt = request.endsAt
+            )
+        }
 
     private fun execute(
         request: IdempotentHttpCommand,
@@ -257,6 +300,9 @@ class MeteringOperatorController(
     private val prices: PriceActivationService,
     private val commands: IdempotentHttpCommandExecutor,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping("/billing-periods/{periodId}/close-runs")
     fun start(@PathVariable tenantId: String, @PathVariable periodId: UUID): ResponseEntity<Any> {
         val run = periods.startClose(TenantId(tenantId), periodId)
@@ -269,21 +315,24 @@ class MeteringOperatorController(
     fun process(
         @PathVariable tenantId: String,
         @PathVariable runId: UUID,
-    ): Any = close.processNextBatch(tenantId, runId)
+    ): Any =
+        close.processNextBatch(tenantId, runId)
 
     @PostMapping("/close-runs/{runId}/resume-after-price-repair")
     fun resume(@PathVariable tenantId: String, @PathVariable runId: UUID): Any =
         close.resumeAfterPriceRepair(tenantId, runId)
 
     @PostMapping("/close-runs/{runId}/finalize")
-    fun finalize(@PathVariable tenantId: String, @PathVariable runId: UUID): Any = invoices.finalize(tenantId, runId)
+    fun finalize(@PathVariable tenantId: String, @PathVariable runId: UUID): Any =
+        invoices.finalize(tenantId, runId)
 
     @PostMapping("/usage-events/{usageEventId}/late-debit")
     fun lateDebit(
         @PathVariable tenantId: String,
         @PathVariable usageEventId: UUID,
         @RequestHeader("X-Currency") currency: String,
-    ): Map<String, UUID> = mapOf("ledgerEntryId" to adjustments.postLateDebit(tenantId, usageEventId, currency))
+    ): Map<String, UUID> =
+        mapOf("ledgerEntryId" to adjustments.postLateDebit(tenantId, usageEventId, currency))
 
     @PostMapping("/adjustments/credits")
     fun credit(
@@ -292,16 +341,17 @@ class MeteringOperatorController(
         authentication: Authentication,
     ): Map<String, UUID> {
         val entryId = adjustments.postCredit(
-            tenantId,
-            UUID.fromString(request.originalEntryId),
-            request.reason,
-            authentication.name,
+            tenantId = tenantId,
+            originalEntryId = UUID.fromString(request.originalEntryId),
+            reason = request.reason,
+            actor = authentication.name,
         )
         return mapOf("ledgerEntryId" to entryId)
     }
 
     @PostMapping("/reconciliation-runs")
-    fun reconcile(@PathVariable tenantId: String): Any = reconciliation.inspect(tenantId)
+    fun reconcile(@PathVariable tenantId: String): Any =
+        reconciliation.inspect(tenantId)
 
     @PostMapping("/reconciliation-findings/{findingId}/repair-late-usage")
     fun repairLateUsage(
@@ -311,15 +361,20 @@ class MeteringOperatorController(
         @RequestBody request: ReconciliationRepairRequest,
     ): ResponseEntity<Any> {
         val fingerprint = CommandFingerprint.request(
-            "reconciliation-repair",
-            mapOf(
+            operation = "reconciliation-repair",
+            fields = mapOf(
                 "findingId" to findingId.toString(),
                 "expectedDigest" to request.expectedDigest,
                 "currency" to request.currency,
             ),
         )
         return commands.execute(
-            IdempotentHttpCommand(tenantId, "reconciliation-repair", key, fingerprint),
+            IdempotentHttpCommand(
+                tenantId = tenantId,
+                operation = "reconciliation-repair",
+                rawKey = key,
+                fingerprint = fingerprint
+            ),
         ) {
             mapOf(
                 "ledgerEntryId" to reconciliation.repairLateUsage(
@@ -339,8 +394,8 @@ class MeteringOperatorController(
         @RequestBody request: RepairPriceGapRequest,
     ): ResponseEntity<Any> {
         val fingerprint = CommandFingerprint.request(
-            "price-gap-repair",
-            mapOf(
+            operation = "price-gap-repair",
+            fields = mapOf(
                 "meterCode" to request.meterCode,
                 "currency" to request.currency,
                 "unitPrice" to CommandFingerprint.decimal(request.unitPrice),
@@ -348,15 +403,22 @@ class MeteringOperatorController(
                 "effectiveTo" to request.effectiveTo.toString(),
             ),
         )
-        return commands.execute(IdempotentHttpCommand(tenantId, "price-gap-repair", key, fingerprint)) {
+        return commands.execute(
+            IdempotentHttpCommand(
+                tenantId = tenantId,
+                operation = "price-gap-repair",
+                rawKey = key,
+                fingerprint = fingerprint
+            )
+        ) {
             prices.repairGap(
                 PriceGapRepair(
-                    TenantId(tenantId),
-                    MeterCode(request.meterCode),
-                    Currency.getInstance(request.currency),
-                    UnitPrice(request.unitPrice),
-                    request.effectiveFrom,
-                    request.effectiveTo,
+                    tenantId = TenantId(tenantId),
+                    meterCode = MeterCode(request.meterCode),
+                    currency = Currency.getInstance(request.currency),
+                    unitPrice = UnitPrice(request.unitPrice),
+                    effectiveFrom = request.effectiveFrom,
+                    effectiveTo = request.effectiveTo,
                 ),
             )
         }

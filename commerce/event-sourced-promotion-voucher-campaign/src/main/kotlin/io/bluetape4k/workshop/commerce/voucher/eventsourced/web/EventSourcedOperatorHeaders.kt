@@ -10,10 +10,9 @@ internal const val EXPECTED_GENERATION_TOKEN_HEADER = "X-Expected-Generation-Tok
 
 internal fun HttpHeaders.operatorIdentity(): RebuildRequestIdentity =
     RebuildRequestIdentity(
-        tenant = getFirst(TENANT_HEADER).requireNotNull(TENANT_HEADER).requireNotBlank(TENANT_HEADER),
-        principal = getFirst(PRINCIPAL_HEADER).requireNotNull(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER),
-        idempotencyKey =
-            getFirst(IDEMPOTENCY_HEADER).requireNotNull(IDEMPOTENCY_HEADER).requireNotBlank(IDEMPOTENCY_HEADER),
+        tenant = getFirst(TENANT_HEADER).requireNotBlank(TENANT_HEADER),
+        principal = getFirst(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER),
+        idempotencyKey = getFirst(IDEMPOTENCY_HEADER).requireNotBlank(IDEMPOTENCY_HEADER),
     )
 
 internal fun HttpHeaders.expectedGenerationToken(): Long =

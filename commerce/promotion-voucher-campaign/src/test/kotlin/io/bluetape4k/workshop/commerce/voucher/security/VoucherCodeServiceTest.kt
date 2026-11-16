@@ -5,15 +5,21 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 
 internal class VoucherCodeServiceTest {
+
+    companion object: KLogging()
+
     private val service = VoucherCodeService(fixedKeyRing())
 
     @Test
@@ -21,8 +27,14 @@ internal class VoucherCodeServiceTest {
         val issued = service.issue(fixedGenerationInput())
 
         issued.code.matches(Regex("V7-[1-9A-HJ-NP-Za-km-z]{22}[1-9A-HJ-NP-Za-km-z]{2}")).shouldBeTrue()
-        service.verify(issued.code, issued.verifier, verificationKeyVersion = 7).shouldBeTrue()
-        issued.verifier.contentEquals(issued.code.toByteArray()).shouldBeFalse()
+
+        service.verify(
+            candidate = issued.code,
+            expectedVerifier = issued.verifier,
+            verificationKeyVersion = 7
+        ).shouldBeTrue()
+
+        issued.verifier.contentEquals(issued.code.toUtf8Bytes()).shouldBeFalse()
         issued.generationKeyVersion shouldBeEqualTo 5
         issued.verificationKeyVersion shouldBeEqualTo 7
     }
@@ -32,8 +44,8 @@ internal class VoucherCodeServiceTest {
         val issued = service.issue(fixedGenerationInput())
 
         issued.code shouldBeEqualTo "V7-2JNj1cRbsKnoHUCJNpSTTmjR"
-        issued.verifier.toHexString() shouldBeEqualTo
-            "90e3bbf91f398b35d6e209fe13fa222f44137d142a54b4a0811ac896e2157689"
+        issued.verifier
+            .toHexString() shouldBeEqualTo "90e3bbf91f398b35d6e209fe13fa222f44137d142a54b4a0811ac896e2157689"
     }
 
     @ParameterizedTest
@@ -49,9 +61,13 @@ internal class VoucherCodeServiceTest {
         ],
     )
     fun `invalid code forms fail with one redacted result`(candidate: String) {
-        val captured = captureLogs { service.verifyExternal(candidate) shouldBeEqualTo VerificationResult.INVALID_CODE }
+        val captured = captureLogs {
+            service.verifyExternal(candidate) shouldBeEqualTo VerificationResult.INVALID_CODE
+        }
 
-        if (candidate.isNotEmpty()) captured.contains(candidate).shouldBeFalse()
+        if (candidate.isNotEmpty()) {
+            captured shouldNotContain candidate
+        }
     }
 
     @Test
@@ -61,26 +77,22 @@ internal class VoucherCodeServiceTest {
 
         baseline.code shouldNotBeEqualTo service.issue(input.copy(tenantId = "tenant-b")).code
         baseline.code shouldNotBeEqualTo
-            service.issue(input.copy(campaignId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ac"))).code
+                service.issue(input.copy(campaignId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ac"))).code
         baseline.code shouldNotBeEqualTo
-            service.issue(input.copy(allocationId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ce"))).code
+                service.issue(input.copy(allocationId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ce"))).code
     }
 
     @Test
     fun `active old verification key supports rotation and retirement fails closed`() {
         val issued = service.issue(fixedGenerationInput())
-        val rotatedRing =
-            fixedKeyRing().copy(
-                currentVerificationVersion = 8,
-                verificationKeys =
-                    fixedKeyRing().verificationKeys +
-                        (8 to "verification-secret-material-00000002".toByteArray()),
-            )
+        val rotatedRing = fixedKeyRing().copy(
+            currentVerificationVersion = 8,
+            verificationKeys = fixedKeyRing().verificationKeys + (8 to "verification-secret-material-00000002".toUtf8Bytes()),
+        )
         val rotated = VoucherCodeService(rotatedRing)
-        val retired =
-            VoucherCodeService(
-                rotatedRing.copy(verificationKeys = rotatedRing.verificationKeys - 7),
-            )
+        val retired = VoucherCodeService(
+            rotatedRing.copy(verificationKeys = rotatedRing.verificationKeys - 7),
+        )
 
         rotated.verify(issued.code, issued.verifier, verificationKeyVersion = 7).shouldBeTrue()
         retired.verify(issued.code, issued.verifier, verificationKeyVersion = 7).shouldBeFalse()
@@ -91,15 +103,21 @@ internal class VoucherCodeServiceTest {
     fun `wrong verifier is rejected with constant time comparison`() {
         val issued = service.issue(fixedGenerationInput())
 
-        service.verify(issued.code, ByteArray(32) { 0x01 }, verificationKeyVersion = 7).shouldBeFalse()
+        service.verify(
+            candidate = issued.code,
+            expectedVerifier = ByteArray(32) { 0x01 },
+            verificationKeyVersion = 7
+        ).shouldBeFalse()
     }
 
     private fun captureLogs(block: () -> Unit): String {
         val logger = LoggerFactory.getLogger(VoucherCodeService::class.java) as Logger
         val originalLevel = logger.level
+
         val appender = ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>().apply { start() }
         logger.level = Level.DEBUG
         logger.addAppender(appender)
+
         return try {
             block()
             appender.list.joinToString("\n") { it.formattedMessage }
@@ -113,8 +131,8 @@ internal class VoucherCodeServiceTest {
         VoucherCodeKeyRing(
             currentGenerationVersion = 5,
             currentVerificationVersion = 7,
-            generationKeys = mapOf(5 to "generation-secret-material-0000000001".toByteArray()),
-            verificationKeys = mapOf(7 to "verification-secret-material-00000001".toByteArray()),
+            generationKeys = mapOf(5 to "generation-secret-material-0000000001".toUtf8Bytes()),
+            verificationKeys = mapOf(7 to "verification-secret-material-00000001".toUtf8Bytes()),
         )
 
     private fun fixedGenerationInput(): VoucherGenerationInput =

@@ -6,17 +6,27 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.leader.diagnostics.LeaderBackendClockSource
 import io.bluetape4k.leader.diagnostics.LeaderBackendConnectivityReason
 import io.bluetape4k.leader.diagnostics.LeaderBackendConnectivityStatus
+import io.bluetape4k.leader.diagnostics.LeaderBackendDiagnosticsProbe
 import io.bluetape4k.leader.diagnostics.LeaderBackendSupport
 import io.bluetape4k.leader.diagnostics.LeaderBackendTtlMode
-import io.bluetape4k.leader.diagnostics.LeaderBackendDiagnosticsProbe
 import io.bluetape4k.leader.diagnostics.LeaderExecutionModel
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.backendcomparison.service.LeaderBackendCatalog
+import org.junit.jupiter.api.Test
 import java.util.concurrent.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import org.junit.jupiter.api.Test
 
 class LeaderBackendDiagnosticsProviderTest {
+
+    private companion object: KLogging() {
+        val NativeExecutionModels = setOf(
+            LeaderExecutionModel.BLOCKING,
+            LeaderExecutionModel.ASYNC,
+            LeaderExecutionModel.SUSPEND,
+        )
+    }
 
     private val catalog = LeaderBackendCatalog()
 
@@ -28,6 +38,7 @@ class LeaderBackendDiagnosticsProviderTest {
                 properties = LeaderBackendDiagnosticsProperties(backendId = profile.id),
             ).backendDescriptor
 
+            log.debug { "descriptor=$descriptor" }
             descriptor.backendId shouldBeEqualTo profile.id
             descriptor.displayName shouldBeEqualTo profile.displayName
             descriptor.capabilities.singleExecutionModels shouldBeEqualTo NativeExecutionModels
@@ -36,7 +47,7 @@ class LeaderBackendDiagnosticsProviderTest {
             descriptor.capabilities.leaseExtension.group shouldBeEqualTo LeaderBackendSupport.SUPPORTED
 
             when (profile.id) {
-                "redis-lettuce" -> {
+                "redis-lettuce"    -> {
                     descriptor.capabilities.auditState.single shouldBeEqualTo LeaderBackendSupport.UNSUPPORTED
                     descriptor.capabilities.auditState.group shouldBeEqualTo LeaderBackendSupport.UNSUPPORTED
                     descriptor.capabilities.clockSource shouldBeEqualTo LeaderBackendClockSource.BACKEND
@@ -64,6 +75,7 @@ class LeaderBackendDiagnosticsProviderTest {
 
         val diagnostics = provider.diagnostics()
 
+        log.debug { "diagnostics $diagnostics" }
         diagnostics.descriptor.backendId shouldBeEqualTo "redis-lettuce"
         diagnostics.connectivity.status shouldBeEqualTo LeaderBackendConnectivityStatus.NOT_CHECKED
         diagnostics.connectivity.reason shouldBeEqualTo LeaderBackendConnectivityReason.NOT_CHECKED
@@ -75,8 +87,11 @@ class LeaderBackendDiagnosticsProviderTest {
         val up = provider(ProbeOutcome.UP).checkConnectivity(250.milliseconds)
         val down = provider(ProbeOutcome.DOWN).checkConnectivity(250.milliseconds)
 
+        log.debug { "up=$up" }
         up.status shouldBeEqualTo LeaderBackendConnectivityStatus.UP
         up.reason shouldBeEqualTo LeaderBackendConnectivityReason.CONNECTED
+
+        log.debug { "down=$down" }
         down.status shouldBeEqualTo LeaderBackendConnectivityStatus.DOWN
         down.reason shouldBeEqualTo LeaderBackendConnectivityReason.DISCONNECTED
     }
@@ -86,8 +101,11 @@ class LeaderBackendDiagnosticsProviderTest {
         val unknown = provider(ProbeOutcome.UNKNOWN).checkConnectivity(250.milliseconds)
         val unsupported = provider(ProbeOutcome.UNSUPPORTED).checkConnectivity(250.milliseconds)
 
+        log.debug { "unknown=$unknown" }
         unknown.status shouldBeEqualTo LeaderBackendConnectivityStatus.UNKNOWN
         unknown.reason shouldBeEqualTo LeaderBackendConnectivityReason.CLIENT_STATE_UNCONFIRMED
+
+        log.debug { "unsupported=$unsupported" }
         unsupported.status shouldBeEqualTo LeaderBackendConnectivityStatus.UNKNOWN
         unsupported.reason shouldBeEqualTo LeaderBackendConnectivityReason.PROVIDER_UNSUPPORTED
     }
@@ -96,6 +114,7 @@ class LeaderBackendDiagnosticsProviderTest {
     fun `active probe normalizes provider exception`() {
         val diagnostics = provider(ProbeOutcome.EXCEPTION).checkConnectivity(250.milliseconds)
 
+        log.debug { "diagnostics $diagnostics" }
         diagnostics.status shouldBeEqualTo LeaderBackendConnectivityStatus.UNKNOWN
         diagnostics.reason shouldBeEqualTo LeaderBackendConnectivityReason.PROVIDER_EXCEPTION
     }
@@ -149,12 +168,4 @@ class LeaderBackendDiagnosticsProviderTest {
         ),
         cancellation = cancellation,
     )
-
-    private companion object {
-        val NativeExecutionModels = setOf(
-            LeaderExecutionModel.BLOCKING,
-            LeaderExecutionModel.ASYNC,
-            LeaderExecutionModel.SUSPEND,
-        )
-    }
 }

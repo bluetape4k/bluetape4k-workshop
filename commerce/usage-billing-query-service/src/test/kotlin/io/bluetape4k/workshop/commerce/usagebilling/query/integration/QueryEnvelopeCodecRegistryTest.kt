@@ -3,20 +3,24 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.integration
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class QueryEnvelopeCodecRegistryTest {
+
+    companion object: KLogging()
+
     @Test
     fun `wire payload retains the envelope identity and payload digest`() {
         val envelope = queryEnvelope("ChargeRated", 1)
 
         val wire = Jackson.defaultJsonMapper.readTree(envelope.wirePayload())
 
-        requireNotNull(wire.get("eventId")).asString() shouldBeEqualTo envelope.eventId.toString()
-        requireNotNull(wire.get("tenantId")).asString() shouldBeEqualTo "tenant-a"
-        requireNotNull(wire.get("payloadDigest")).asString() shouldBeEqualTo envelope.payloadDigest
+        wire.get("eventId")!!.asString() shouldBeEqualTo envelope.eventId.toString()
+        wire.get("tenantId")!!.asString() shouldBeEqualTo "tenant-a"
+        wire.get("payloadDigest")!!.asString() shouldBeEqualTo envelope.payloadDigest
     }
 
     @Test
@@ -28,10 +32,12 @@ class QueryEnvelopeCodecRegistryTest {
     @Test
     fun `unsupported query envelope is rejected`() {
         assertFailsWith<UnsupportedQueryEnvelopeVersion> {
-            QueryEnvelopeCodecRegistry().validate(queryEnvelope("ChargeRated", 99))
+            QueryEnvelopeCodecRegistry()
+                .validate(queryEnvelope("ChargeRated", 99))
         }.message shouldBeEqualTo "unsupported_query_envelope:ChargeRated:99"
     }
 
+    @Suppress("SameParameterValue")
     private fun queryEnvelope(eventType: String, schemaVersion: Int): QueryIntegrationEnvelope =
         QueryIntegrationEnvelope.create(
             eventId = UUID.fromString("018f4a40-7d3e-7b3a-8c5b-7f0f9b2e1a05"),

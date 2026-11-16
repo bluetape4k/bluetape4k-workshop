@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.coroutines.scope.spring
 
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.output.OutputCapture
 import io.bluetape4k.junit5.output.OutputCapturer
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -20,7 +20,8 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 
 @OutputCapture
@@ -44,7 +45,7 @@ class SpringCoroutineScopeTest {
     class MyBean: SpringCoroutineScope by SpringCoroutineScope() {
         suspend fun run(input: Int) =
             withContext(coroutineContext) {
-                delay(1000)
+                delay(1.seconds)
                 input
             }
 
@@ -70,9 +71,8 @@ class SpringCoroutineScopeTest {
         myBean2.shouldNotBeNull()
         myBean2.destroy()
 
-        await atMost Duration.ofMillis(500) untilAsserted {
+        await atMost 500.milliseconds untilAsserted {
             capturer.capture() shouldContain "destroy MyBean"
         }
     }
-
 }

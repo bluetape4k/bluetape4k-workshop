@@ -12,6 +12,7 @@ import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 
 class CoroutineBuilderExamples {
 
@@ -25,11 +26,11 @@ class CoroutineBuilderExamples {
             log.debug { "Start" }
 
             launch {
-                delay(100)
+                delay(100.milliseconds)
                 log.trace { "World 1" }
             }
             launch {
-                delay(100)
+                delay(100.milliseconds)
                 log.trace { "World 2" }
             }
             log.trace { "Hello, " }
@@ -44,7 +45,7 @@ class CoroutineBuilderExamples {
         @Test
         fun `async builder example`() = runTest {
             val resultDeferred = async {
-                delay(100L)
+                delay(100.milliseconds)
                 log.trace { "Return result=42" }
                 42
             }
@@ -58,7 +59,7 @@ class CoroutineBuilderExamples {
         fun `await returns`() = runTest {
             val results = List(10) {
                 async {
-                    delay(Random.nextLong(50, 100))
+                    delay(timeMillis = Random.nextLong(50, 100))
                     log.trace { "Return $it" }
                     "Result $it"
                 }

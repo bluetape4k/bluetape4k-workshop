@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.graalvm.native)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 idea {

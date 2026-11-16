@@ -2,18 +2,24 @@ package io.bluetape4k.workshop.commerce.voucher.web
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
-internal class VoucherRuntimeIntegrationTest : AbstractVoucherIntegrationTest() {
+internal class VoucherRuntimeIntegrationTest: AbstractVoucherIntegrationTest() {
+
+    companion object: KLogging()
+
     @Autowired
     private lateinit var hikari: HikariDataSource
 
     @Test
     fun `live request uses a Java 25 virtual thread and Hikari stays bounded`() {
-        webTestClient.get().uri("/internal/runtime-thread")
-            .exchange().expectStatus().isOk
+        webTestClient.get()
+            .uri("/internal/runtime-thread")
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.virtual").isEqualTo(true)
             .jsonPath("$.javaFeature").isEqualTo(25)

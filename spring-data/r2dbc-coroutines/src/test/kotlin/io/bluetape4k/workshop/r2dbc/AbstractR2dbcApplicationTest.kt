@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.r2dbc
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.r2dbc.domain.Comment
 import io.bluetape4k.workshop.r2dbc.domain.Post
@@ -18,16 +19,16 @@ import org.springframework.test.web.reactive.server.WebTestClient
 abstract class AbstractR2dbcApplicationTest {
 
     @Autowired
-    private var applicationContext: ApplicationContext? = null
+    private val applicationContext: ApplicationContext = uninitialized()
 
     protected val context: ApplicationContext
-        get() = checkNotNull(applicationContext) { "applicationContext is not injected." }
+        get() = applicationContext
 
     protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
     }
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
@@ -39,8 +40,8 @@ abstract class AbstractR2dbcApplicationTest {
             registry.add("spring.r2dbc.url") {
                 "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(PostgreSQLServer.PORT)}/${postgres.databaseName}"
             }
-            registry.add("spring.r2dbc.username") { checkNotNull(postgres.username) }
-            registry.add("spring.r2dbc.password") { checkNotNull(postgres.password) }
+            registry.add("spring.r2dbc.username") { postgres.username!! }
+            registry.add("spring.r2dbc.password") { postgres.password!! }
             registry.add("spring.sql.init.mode") { "always" }
         }
     }

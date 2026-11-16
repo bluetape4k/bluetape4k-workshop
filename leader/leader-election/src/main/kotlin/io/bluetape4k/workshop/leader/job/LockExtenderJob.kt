@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.leader.job
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.LockExtender
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -28,7 +30,13 @@ import java.time.Duration
  * 남은 예상 실행 시간을 extension delta로 사용합니다.
  */
 @Component
-class LockExtenderJob : LeaderGuardedJob {
+class LockExtenderJob: LeaderGuardedJob {
+
+    companion object: KLogging() {
+        /** work phase 사이에 active lease에 추가하는 extension duration입니다. */
+        val EXTENSION_DURATION: Duration = 30.seconds()
+        private val PHASE_DURATION: Duration = 50.millis()
+    }
 
     override val lockName = "leader:lock-extender-demo"
 
@@ -55,11 +63,5 @@ class LockExtenderJob : LeaderGuardedJob {
         // Phase 2: 두 번째 작업 단위
         simulateBlockingWork(PHASE_DURATION)
         log.info { "[LockExtenderJob] Phase 2 complete — job finished" }
-    }
-
-    companion object : KLogging() {
-        /** work phase 사이에 active lease에 추가하는 extension duration입니다. */
-        val EXTENSION_DURATION: Duration = Duration.ofSeconds(30)
-        private val PHASE_DURATION: Duration = Duration.ofMillis(50)
     }
 }

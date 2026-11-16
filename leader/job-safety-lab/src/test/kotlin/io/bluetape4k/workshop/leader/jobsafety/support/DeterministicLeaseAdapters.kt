@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety.support
 
+import io.bluetape4k.leader.ExtendOutcome
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FenceAcquireResult
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLease
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
@@ -10,7 +12,6 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobName
 import io.bluetape4k.workshop.leader.jobsafety.domain.LeaderOwnerId
-import io.bluetape4k.leader.ExtendOutcome
 import java.time.Duration
 
 internal class RecordingLeaderElection(
@@ -18,12 +19,15 @@ internal class RecordingLeaderElection(
     private val acquired: Boolean = true,
     private val releaseFailure: Boolean = false,
     private val extensionOutcome: ExtendOutcome = ExtendOutcome.Rejected,
-) : LeaderElectionPort {
+): LeaderElectionPort {
+
+    companion object: KLogging()
+
     override fun tryAcquire(jobName: JobName): LeaderLease? {
         events += "leader.acquire"
         if (!acquired) return null
 
-        return object : LeaderLease {
+        return object: LeaderLease {
             override val ownerId: LeaderOwnerId = LeaderOwnerId("leader-owner")
 
             override fun extendViaLockExtender(lockAtMostFor: kotlin.time.Duration): ExtendOutcome {
@@ -43,8 +47,15 @@ internal class RecordingFencingLease(
     private val events: MutableList<String>,
     private val outcome: Outcome = Outcome.ACQUIRED,
     private val releaseFailure: Boolean = false,
-) : FencingLeasePort {
-    enum class Outcome { ACQUIRED, ALREADY_OWNED, CONTENDED, BACKEND_FAILURE }
+): FencingLeasePort {
+    enum class Outcome {
+        ACQUIRED,
+        ALREADY_OWNED,
+        CONTENDED,
+        BACKEND_FAILURE
+    }
+
+    companion object: KLogging()
 
     override fun acquire(
         conflictKey: ConflictKey,
@@ -53,7 +64,7 @@ internal class RecordingFencingLease(
     ): FenceAcquireResult {
         events += "fence.acquire"
         val lease =
-            object : FencingLease {
+            object: FencingLease {
                 override val conflictKey: ConflictKey = conflictKey
                 override val ownerId: FencingOwnerId = ownerId
                 override val token: FencingToken = FencingToken(42L)
@@ -65,9 +76,9 @@ internal class RecordingFencingLease(
             }
 
         return when (outcome) {
-            Outcome.ACQUIRED -> FenceAcquireResult.Acquired(lease)
+            Outcome.ACQUIRED      -> FenceAcquireResult.Acquired(lease)
             Outcome.ALREADY_OWNED -> FenceAcquireResult.AlreadyOwned(lease)
-            Outcome.CONTENDED -> FenceAcquireResult.Contended
+            Outcome.CONTENDED     -> FenceAcquireResult.Contended
             Outcome.BACKEND_FAILURE -> FenceAcquireResult.BackendFailure(IllegalStateException("redis unavailable"))
         }
     }

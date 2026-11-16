@@ -5,7 +5,6 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.text.search.AhoCorasickAutomaton
 import io.bluetape4k.text.search.AhoCorasickMatch
 import io.bluetape4k.text.search.NormalizationForm
-import io.bluetape4k.text.search.SearchOptions
 import io.bluetape4k.text.search.ahoCorasick
 import io.bluetape4k.text.search.flow.matchesAsFlow
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +35,7 @@ class AbuseWordFilter @JvmOverloads constructor(
     private val normalization: NormalizationForm = NormalizationForm.NFC,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val automaton: AhoCorasickAutomaton<String> = ahoCorasick {
         ignoreCase = true

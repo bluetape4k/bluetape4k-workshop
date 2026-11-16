@@ -459,6 +459,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout pinned diagram audit skills
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: bluetape4k/bluetape-skills
+          ref: 82c282f0080e7bfe3f15f31a334a5b6cb3ca003e
+          path: .ci/bluetape-skills
+          sparse-checkout: skills/bluetape-diagram/scripts
+          sparse-checkout-cone-mode: true
+
       - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
@@ -471,6 +480,8 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Run README diagram QA
+        env:
+          DIAGRAM_QA_REFERENCE_AUDIT_DIR: ${{ github.workspace }}/.ci/bluetape-skills/skills/bluetape-diagram/scripts
         run: ./scripts/smoke-validate.sh diagram-qa
 
   readme-stale-guards:

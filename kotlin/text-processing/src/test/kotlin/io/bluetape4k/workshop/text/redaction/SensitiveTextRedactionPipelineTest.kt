@@ -7,15 +7,18 @@ import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotContain
-import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.coroutines.runSuspendDefault
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.workshop.text.detection.LanguageDetectionService
 import io.bluetape4k.workshop.text.filter.AbuseWordFilter
@@ -32,6 +35,8 @@ import kotlin.time.measureTime
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SensitiveTextRedactionPipelineTest {
+
+    companion object: KLogging()
 
     private val pipeline = SensitiveTextRedactionPipeline.default()
 
@@ -50,9 +55,11 @@ class SensitiveTextRedactionPipelineTest {
         )
         val rules = listOf(SensitiveRedactionRule.keyword("keyword.safe", "keyword", "safe"))
 
-        val policy = factory.invoke(SensitiveRedactionPolicy.Companion, rules, '#', 1_024)
-            as SensitiveRedactionPolicy
+        val policy = factory
+            .invoke(SensitiveRedactionPolicy.Companion, rules, '#', 1_024)
+            .shouldBeInstanceOf<SensitiveRedactionPolicy>()
 
+        log.debug("policy=$policy")
         policy.maskChar shouldBeEqualTo '#'
         policy.maxTextLength shouldBeEqualTo 1_024
         policy.keywordNormalization shouldBeEqualTo NormalizationForm.NFC
@@ -62,25 +69,30 @@ class SensitiveTextRedactionPipelineTest {
     fun `redacts email phone token and configured keyword deterministically`() {
         val input = "Contact $email at $phone with $token for $keyword review."
         val expected = "Contact ${"*".repeat(email.length)} at ${"*".repeat(phone.length)} " +
-            "with ${"*".repeat(token.length)} for ${"*".repeat(keyword.length)} review."
+                "with ${"*".repeat(token.length)} for ${"*".repeat(keyword.length)} review."
 
         val result = pipeline.redact(input)
         val repeated = pipeline.redact(input)
 
+        repeated shouldBeEqualTo result
+
+        log.debug { "result=$result" }
         result.redactedText.length shouldBeEqualTo input.length
         result.redactedText shouldBeEqualTo expected
         result.redactedText.startsWith("Contact ").shouldBeTrue()
         result.redactedText.endsWith(" review.").shouldBeTrue()
-        repeated shouldBeEqualTo result
         result.redactedText shouldNotContain email
         result.redactedText shouldNotContain phone
         result.redactedText shouldNotContain token
         result.redactedText shouldNotContain keyword
-        result.spans.map { it.range.startInclusive } shouldBeEqualTo result.spans.map { it.range.startInclusive }.sorted()
+
+        result.spans.map { it.range.startInclusive } shouldBeEqualTo
+                result.spans.map { it.range.startInclusive }.sorted()
         result.spans.map { it.category } shouldBeEqualTo listOf("contact", "contact", "secret", "keyword")
         result.spans.map { it.ruleIds.single() } shouldBeEqualTo listOf("email", "phone", "token", "support-keyword")
         result.spans.map { it.matchedLength } shouldBeEqualTo
-            listOf(email.length, phone.length, token.length, keyword.length)
+                listOf(email.length, phone.length, token.length, keyword.length)
+
         result.spans.map { it.range.startInclusive } shouldBeEqualTo listOf(
             input.indexOf(email),
             input.indexOf(phone),
@@ -101,10 +113,11 @@ class SensitiveTextRedactionPipelineTest {
         val keywordPolicy = SensitiveRedactionPolicy.of(rules = listOf(keywordRule))
         val result = pipeline.redact("Support note $email $token")
         val rendered = result.toString() +
-            result.spans.joinToString() +
-            keywordRule.toString() +
-            keywordPolicy.toString()
+                result.spans.joinToString() +
+                keywordRule.toString() +
+                keywordPolicy.toString()
 
+        log.debug { "rendered=$rendered" }
         rendered shouldNotContain email
         rendered shouldNotContain token
         rendered shouldNotContain keyword
@@ -127,6 +140,7 @@ class SensitiveTextRedactionPipelineTest {
 
         val result = localPipeline.redact("account number review")
 
+        log.debug { "result=$result" }
         result.spans shouldHaveSize 2
         result.spans.first().range.startInclusive shouldBeEqualTo 0
         result.spans.first().range.endExclusive shouldBeEqualTo "account number".length
@@ -144,6 +158,7 @@ class SensitiveTextRedactionPipelineTest {
 
         val result = SensitiveTextRedactionPipeline.of(policy).redact("abcdef")
 
+        log.debug { "result=$result" }
         result.spans shouldHaveSize 2
         result.spans.map { it.range } shouldBeEqualTo listOf(
             SensitiveTextRange.of(0, 3),
@@ -162,6 +177,7 @@ class SensitiveTextRedactionPipelineTest {
 
         val result = SensitiveTextRedactionPipeline.of(policy).redact("account number")
 
+        log.debug { "result=$result" }
         result.spans shouldHaveSize 1
         result.spans.single().category shouldBeEqualTo "alpha"
         result.spans.single().ruleIds shouldBeEqualTo listOf("keyword.alpha", "keyword.beta")
@@ -175,6 +191,7 @@ class SensitiveTextRedactionPipelineTest {
             )
         ).redact("open invoice")
 
+        log.debug { "result=$result" }
         result.spans.single().range shouldBeEqualTo SensitiveTextRange.of(5, 12)
         result.spans.single().matchedLength shouldBeEqualTo "invoice".length
     }
@@ -190,11 +207,15 @@ class SensitiveTextRedactionPipelineTest {
             )
         ).redact(input)
 
+        log.debug { "result=$result" }
         result.redactedText.length shouldBeEqualTo input.length
         result.spans.single().range.startInclusive shouldBeEqualTo input.indexOf(decomposed)
         result.spans.single().range.endExclusive shouldBeEqualTo input.indexOf(decomposed) + decomposed.length
         result.spans.single().matchedLength shouldBeEqualTo decomposed.length
-        result.redactedText.substring(result.spans.single().range.startInclusive, result.spans.single().range.endExclusive)
+        result.redactedText.substring(
+            result.spans.single().range.startInclusive,
+            result.spans.single().range.endExclusive
+        )
             .all { it == '*' }
             .shouldBeTrue()
     }
@@ -210,6 +231,8 @@ class SensitiveTextRedactionPipelineTest {
         ).redact(input)
 
         val originalIndex = input.indexOf('㈜')
+
+        log.debug { "result=$result" }
         result.spans.single().range shouldBeEqualTo SensitiveTextRange.of(originalIndex, originalIndex + 1)
         result.spans.single().matchedLength shouldBeEqualTo 1
         result.redactedText shouldBeEqualTo input.replace('㈜', '*')
@@ -225,6 +248,7 @@ class SensitiveTextRedactionPipelineTest {
             )
         ).redact("㈜㈜")
 
+        log.debug { "result=$result" }
         result.spans.map { it.range } shouldBeEqualTo listOf(
             SensitiveTextRange.of(0, 1),
             SensitiveTextRange.of(1, 2),
@@ -258,8 +282,11 @@ class SensitiveTextRedactionPipelineTest {
         val result = pipeline.redact(input)
 
         result.detectedLanguage.shouldNotBeNull()
-        (result.bestConfidence != null).shouldBeTrue()
-        result.spans.single().range shouldBeEqualTo SensitiveTextRange.of(input.indexOf(email), input.indexOf(email) + email.length)
+        result.bestConfidence.shouldNotBeNull()
+        result.spans.single().range shouldBeEqualTo SensitiveTextRange.of(
+            input.indexOf(email),
+            input.indexOf(email) + email.length
+        )
     }
 
     @Test
@@ -270,7 +297,7 @@ class SensitiveTextRedactionPipelineTest {
             pipeline.redact(raw)
         }
 
-        (failure.message ?: "") shouldNotContain raw
+        failure.message shouldNotContain raw
     }
 
     @Test
@@ -281,7 +308,7 @@ class SensitiveTextRedactionPipelineTest {
             pipeline.redact(raw)
         }
 
-        (failure.message ?: "") shouldNotContain raw.take(80)
+        failure.message shouldNotContain raw.take(80)
     }
 
     @Test
@@ -362,7 +389,9 @@ class SensitiveTextRedactionPipelineTest {
 
         logs.shouldNotBeEmpty()
         logs.any { it.contains("length=") || it.contains("hits=") || it.contains("matches=") }.shouldBeTrue()
+
         val rendered = logs.joinToString("\n")
+        log.debug { "rendered=$rendered" }
         rendered shouldNotContain email
         rendered shouldNotContain phone
         rendered shouldNotContain token

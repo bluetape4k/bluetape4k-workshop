@@ -3,11 +3,16 @@
 package io.bluetape4k.workshop.commerce.metering
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.metering.application.AdjustmentService
 import io.bluetape4k.workshop.commerce.metering.application.BillingCloseService
 import io.bluetape4k.workshop.commerce.metering.application.BillingPeriodService
 import io.bluetape4k.workshop.commerce.metering.application.InvoiceService
 import io.bluetape4k.workshop.commerce.metering.application.PriceActivationService
+import io.bluetape4k.workshop.commerce.metering.application.PriceGapRepair
 import io.bluetape4k.workshop.commerce.metering.application.ReconciliationService
 import io.bluetape4k.workshop.commerce.metering.application.UsageIngestionCommand
 import io.bluetape4k.workshop.commerce.metering.application.UsageIngestionService
@@ -39,11 +44,15 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.Currency
+import java.util.*
+
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MeteringEndToEndIntegrationTest {
+
+    companion object: KLogging()
+
     private val fixture = MeteringDatabaseFixture()
     private val clock = ScenarioClock(Instant.parse("2026-07-04T00:00:00Z"))
     private val properties = MeteringProperties()
@@ -71,28 +80,68 @@ class MeteringEndToEndIntegrationTest {
         val meter = MeterCode("api_calls")
         val currency = Currency.getInstance("USD")
         transaction {
-            activation.activate(tenant, meter, currency, UnitPrice(BigDecimal("0.125")), Instant.parse("2026-06-01T00:00:00Z"))
+            activation.activate(
+                tenantId = tenant,
+                meterCode = meter,
+                currency = currency,
+                unitPrice = UnitPrice(BigDecimal("0.125")),
+                effectiveFrom = Instant.parse("2026-06-01T00:00:00Z")
+            )
         }
-        val first = transaction { ingest("usage-1", Instant.parse("2026-06-15T00:00:00Z")) }
-        transaction { ingest("usage-1", Instant.parse("2026-06-15T00:00:00Z")) }.replayedProducerEvent shouldBeEqualTo true
+        val first = transaction {
+            ingest("usage-1", Instant.parse("2026-06-15T00:00:00Z"))
+        }
+        transaction {
+            ingest("usage-1", Instant.parse("2026-06-15T00:00:00Z"))
+        }.replayedProducerEvent.shouldBeTrue()
+
         val servicePeriod = transaction {
-            periodService.create(tenant, currency, Instant.parse("2026-06-01T00:00:00Z"), Instant.parse("2026-07-01T00:00:00Z"))
+            periodService.create(
+                tenantId = tenant,
+                currency = currency,
+                startsAt = Instant.parse("2026-06-01T00:00:00Z"),
+                endsAt = Instant.parse("2026-07-01T00:00:00Z")
+            )
         }
-        val run = transaction { periodService.startClose(tenant, servicePeriod) }
-        transaction { close.processNextBatch(tenant.value, run.id) }.state shouldBeEqualTo CloseRunState.READY_TO_FINALIZE
-        val invoice = transaction { invoices.finalize(tenant.value, run.id) }
+        val run = transaction {
+            periodService.startClose(tenant, servicePeriod)
+        }
+        transaction {
+            close.processNextBatch(tenant.value, run.id)
+        }.state shouldBeEqualTo CloseRunState.READY_TO_FINALIZE
+
+        val invoice = transaction {
+            invoices.finalize(tenant.value, run.id)
+        }
         invoice.total shouldBeEqualTo BigDecimal("1.250000")
 
         transaction {
-            periodService.create(tenant, currency, Instant.parse("2026-07-01T00:00:00Z"), Instant.parse("2026-08-01T00:00:00Z"))
+            periodService.create(
+                tenantId = tenant,
+                currency = currency,
+                startsAt = Instant.parse("2026-07-01T00:00:00Z"),
+                endsAt = Instant.parse("2026-08-01T00:00:00Z")
+            )
         }
-        val late = transaction { ingest("usage-late", Instant.parse("2026-06-20T00:00:00Z")) }
-        val debit = transaction { adjustments.postLateDebit(tenant.value, late.id, currency.currencyCode) }
-        transaction { adjustments.postLateDebit(tenant.value, late.id, currency.currencyCode) } shouldBeEqualTo debit
-        transaction { adjustments.postCredit(tenant.value, debit, "customer goodwill", "operator") }
+        val late = transaction {
+            ingest("usage-late", Instant.parse("2026-06-20T00:00:00Z"))
+        }
+        val debit = transaction {
+            adjustments.postLateDebit(tenant.value, late.id, currency.currencyCode)
+        }
 
-        first.replayedProducerEvent shouldBeEqualTo false
-        transaction { reconciliation.inspect(tenant.value, 200) }.findingCount shouldBeEqualTo 0
+        transaction {
+            adjustments.postLateDebit(tenant.value, late.id, currency.currencyCode)
+        } shouldBeEqualTo debit
+
+        transaction {
+            adjustments.postCredit(tenant.value, debit, "customer goodwill", "operator")
+        }
+
+        first.replayedProducerEvent.shouldBeFalse()
+        transaction {
+            reconciliation.inspect(tenant.value, 200)
+        }.findingCount shouldBeEqualTo 0
     }
 
     @Test
@@ -101,44 +150,54 @@ class MeteringEndToEndIntegrationTest {
         val tenant = TenantId("tenant-a")
         val meter = MeterCode("api_calls")
         val currency = Currency.getInstance("USD")
+
         transaction {
             activation.activate(
-                tenant,
-                meter,
-                currency,
-                UnitPrice(BigDecimal("0.200")),
-                Instant.parse("2026-07-01T00:00:00Z"),
+                tenantId = tenant,
+                meterCode = meter,
+                currency = currency,
+                unitPrice = UnitPrice(BigDecimal("0.200")),
+                effectiveFrom = Instant.parse("2026-07-01T00:00:00Z"),
             )
             ingest("unpriced-usage", Instant.parse("2026-06-15T00:00:00Z"))
         }
         val period = transaction {
             periodService.create(
-                tenant,
-                currency,
-                Instant.parse("2026-06-01T00:00:00Z"),
-                Instant.parse("2026-07-01T00:00:00Z"),
+                tenantId = tenant,
+                currency = currency,
+                startsAt = Instant.parse("2026-06-01T00:00:00Z"),
+                endsAt = Instant.parse("2026-07-01T00:00:00Z"),
             )
         }
-        val run = transaction { periodService.startClose(tenant, period) }
-        transaction { close.processNextBatch(tenant.value, run.id) }.state shouldBeEqualTo
-            CloseRunState.FAILED_VALIDATION
+        val run = transaction {
+            periodService.startClose(tenant, period)
+        }
+        log.debug { "run=$run" }
+
+        transaction {
+            close.processNextBatch(tenant.value, run.id)
+        }.state shouldBeEqualTo CloseRunState.FAILED_VALIDATION
 
         transaction {
             activation.repairGap(
-                io.bluetape4k.workshop.commerce.metering.application.PriceGapRepair(
-                    tenant,
-                    meter,
-                    currency,
-                    UnitPrice(BigDecimal("0.100")),
-                    Instant.parse("2026-06-01T00:00:00Z"),
-                    Instant.parse("2026-07-01T00:00:00Z"),
+                PriceGapRepair(
+                    tenantId = tenant,
+                    meterCode = meter,
+                    currency = currency,
+                    unitPrice = UnitPrice(BigDecimal("0.100")),
+                    effectiveFrom = Instant.parse("2026-06-01T00:00:00Z"),
+                    effectiveTo = Instant.parse("2026-07-01T00:00:00Z"),
                 ),
             )
             close.resumeAfterPriceRepair(tenant.value, run.id)
         }
-        transaction { close.processNextBatch(tenant.value, run.id) }.state shouldBeEqualTo
-            CloseRunState.READY_TO_FINALIZE
-        transaction { ledger.forPostingPeriod(tenant.value, period).size } shouldBeEqualTo 1
+        transaction {
+            close.processNextBatch(tenant.value, run.id)
+        }.state shouldBeEqualTo CloseRunState.READY_TO_FINALIZE
+
+        transaction {
+            ledger.forPostingPeriod(tenant.value, period).size
+        } shouldBeEqualTo 1
     }
 
     private fun ingest(sourceId: String, occurredAt: Instant) =
@@ -156,10 +215,11 @@ class MeteringEndToEndIntegrationTest {
             ),
         )
 
-    private fun <T> transaction(block: () -> T): T = fixture.executor.transaction { block() }
+    private inline fun <T> transaction(crossinline block: () -> T): T =
+        fixture.executor.transaction { block() }
 }
 
-private class ScenarioClock(private var current: Instant) : Clock() {
+private class ScenarioClock(private var current: Instant): Clock() {
     override fun getZone(): ZoneId = ZoneOffset.UTC
     override fun withZone(zone: ZoneId): Clock = this
     override fun instant(): Instant = current

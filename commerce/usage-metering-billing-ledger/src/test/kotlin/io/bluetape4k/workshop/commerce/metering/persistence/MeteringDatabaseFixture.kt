@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.commerce.metering.persistence
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.database.getHikariDataSource
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.postgresql.ds.PGSimpleDataSource
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class MeteringSeed(
     val tenantId: String = "tenant-a",
@@ -15,25 +16,27 @@ internal data class MeteringSeed(
     val calendarId: UUID = Uuid.V7.nextId(),
 )
 
-internal class MeteringDatabaseFixture : AutoCloseable {
+internal class MeteringDatabaseFixture: AutoCloseable {
+
+    companion object: KLogging() {
+        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     val executor: MeteringJdbcExecutor
 
     init {
-        val dataSource =
-            PGSimpleDataSource().apply {
-                setURL(postgres.jdbcUrl)
-                user = postgres.username ?: PostgreSQLServer.USERNAME
-                password = postgres.password ?: PostgreSQLServer.PASSWORD
-            }
+        val dataSource = postgres.getHikariDataSource { }
         executor = MeteringJdbcExecutor(dataSource, foregroundPermits = 8)
         resetAndSeed()
     }
 
     @Suppress("DEPRECATION") // Test-only ephemeral schemas deliberately avoid production migration artifacts.
     fun resetAndSeed(seed: MeteringSeed = MeteringSeed()): MeteringSeed {
+
         executor.transaction {
             SchemaUtils.drop(*METERING_TABLES.reversedArray())
             SchemaUtils.createMissingTablesAndColumns(*METERING_TABLES)
+
             MeterEntity.new(seed.meterId) {
                 tenantId = seed.tenantId
                 meterCode = seed.meterCode
@@ -58,7 +61,4 @@ internal class MeteringDatabaseFixture : AutoCloseable {
         executor.close()
     }
 
-    companion object {
-        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
-    }
 }

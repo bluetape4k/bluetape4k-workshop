@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.kotlin.noarg)
     alias(libs.plugins.kotlin.allopen)
+    kotlin("kapt")
 }
 
 allOpen {

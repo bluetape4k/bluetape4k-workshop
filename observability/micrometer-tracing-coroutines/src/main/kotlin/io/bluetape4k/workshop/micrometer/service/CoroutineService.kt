@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 @Service
 class CoroutineService(
@@ -32,18 +33,18 @@ class CoroutineService(
         // 전처리 단계입니다.
         withObservationSuspending("pre-processing-get-name", observationRegistry) {
             log.debug { "pre-processing-get-name ..." }
-            delay(100)
+            delay(100.milliseconds)
         }
 
         val name = withObservationSuspending("get-name-in-coroutine", observationRegistry) {
             log.debug { "Get fake name in coroutine service..." }
-            delay(100)
+            delay(100.milliseconds)
             faker.name().fullName()
         }
         // 후처리 단계입니다.
         withObservationSuspending("post-processing-get-name", observationRegistry) {
             log.debug { "psot-processing-get-name ..." }
-            delay(100)
+            delay(100.milliseconds)
         }
 
         return name ?: "Unknown"
@@ -59,7 +60,7 @@ class CoroutineService(
     private suspend fun getTodoById(id: Int): Todo? {
         return withObservationSuspending("get-todo-by-id", observationRegistry) {
             log.debug { "Get todo by id[$id] in coroutine service." }
-            delay(10)
+            delay(10.milliseconds)
 
             log.debug { "Get todo by id[$id] from jsonplaceholder..." }
             client.get()
@@ -72,14 +73,14 @@ class CoroutineService(
     private suspend fun preProcessing() {
         withObservationSuspending("pre-processing", observationRegistry) {
             log.debug { "Pre processing ..." }
-            delay(200)
+            delay(200.milliseconds)
         }
     }
 
     private suspend fun postProcessing() {
         withObservationSuspending("post-processing", observationRegistry) {
             log.debug { "Post processing ..." }
-            delay(300)
+            delay(300.milliseconds)
         }
     }
 }

@@ -9,7 +9,7 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
  * 표준 Exposed [LongIdTable]을 사용하며 audit 기능은 없다.
  * [authorId]는 [AuthorTable]을 가리키는 typed FK reference이다.
  */
-object BookTable : LongIdTable("books") {
+object BookTable: LongIdTable("books") {
     val title = varchar("title", 200)
     val publishDate = varchar("publish_date", 20)
     val authorId = reference("author_id", AuthorTable)

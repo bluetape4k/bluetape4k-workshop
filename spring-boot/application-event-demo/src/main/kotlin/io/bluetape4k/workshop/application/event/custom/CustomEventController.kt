@@ -6,18 +6,19 @@ import kotlinx.coroutines.delay
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import kotlin.time.Duration.Companion.milliseconds
 
 @RestController
 class CustomEventController(
     private val customEventPublisher: CustomEventPublisher,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @GetMapping("/event")
     suspend fun event(@RequestParam(name = "message") message: String): String {
         customEventPublisher.publish(message)
-        delay(100)
+        delay(100.milliseconds)
         customEventPublisher.publish(message)
 
         log.debug { "Finish to publish event. message=$message" }

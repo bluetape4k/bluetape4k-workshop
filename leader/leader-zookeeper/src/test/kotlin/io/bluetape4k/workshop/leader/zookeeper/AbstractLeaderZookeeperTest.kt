@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.LeaderGroupElectionOptions
 import io.bluetape4k.leader.zookeeper.ZooKeeperLeaderElector
@@ -11,7 +12,6 @@ import io.bluetape4k.testcontainers.infra.ZooKeeperServer
 import io.bluetape4k.utils.ShutdownQueue
 import org.apache.curator.framework.CuratorFramework
 import org.junit.jupiter.api.TestInstance
-import io.bluetape4k.codec.Base58
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -27,8 +27,8 @@ import kotlin.time.Duration.Companion.milliseconds
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractLeaderZookeeperTest {
 
-    companion object : KLogging() {
-        val zookeeper: ZooKeeperServer = ZooKeeperServer.Launcher.zookeeper
+    companion object: KLogging() {
+        val zookeeper: ZooKeeperServer by lazy { ZooKeeperServer.Launcher.zookeeper }
 
         /** 공유 [CuratorFramework]이다. InterProcessMutex가 Thread 기준이므로 스레드/코루틴 사이에 공유해도 안전하다. */
         val curator: CuratorFramework by lazy {
@@ -63,5 +63,5 @@ abstract class AbstractLeaderZookeeperTest {
             basePath = basePath
         )
 
-    fun randomLockName(prefix: String = "t") = "$prefix:${Base58.randomString(8)}"
+    fun randomLockName(prefix: String = "t") = "$prefix:${Base58.randomString(12)}"
 }

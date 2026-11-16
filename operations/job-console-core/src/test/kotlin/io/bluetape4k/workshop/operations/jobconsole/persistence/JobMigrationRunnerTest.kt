@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
@@ -25,7 +26,7 @@ class JobMigrationRunnerTest {
     fun `checksum drift fails closed`() {
         JobConsoleDatabaseFixture().use { fixture ->
             val original = JobMigration.classpath("002", "db/job-console/V002__bounded_wait_http_idempotency.sql")
-            val drifted = JobMigration("002", "CREATE TABLE migration_probe(id UUID PRIMARY KEY)".toByteArray())
+            val drifted = JobMigration("002", "CREATE TABLE migration_probe(id UUID PRIMARY KEY)".toUtf8Bytes())
 
             JobMigrationRunner(
                 fixture.dataSource,

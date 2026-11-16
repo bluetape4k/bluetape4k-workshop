@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.ticket.ticketing
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.ticket.domain.PaymentOutcome
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.FakePaymentProvider
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
@@ -12,6 +13,9 @@ import io.bluetape4k.workshop.commerce.ticket.ticketing.internal.TicketEffectWor
 import org.junit.jupiter.api.Test
 
 internal class TicketEffectIntegrationTest {
+
+    companion object: KLogging()
+
     @Test
     fun `response loss and duplicate delivery issue one external ticket and one receipt`() {
         PurchaseFixture().use { fixture ->
@@ -28,14 +32,14 @@ internal class TicketEffectIntegrationTest {
             worker.run(operationId).shouldBeTrue()
             fixture.execute(
                 "UPDATE ticket_effect_operations SET claim_until = CURRENT_TIMESTAMP - INTERVAL '1 second' " +
-                    "WHERE operation_id = '$operationId'",
+                        "WHERE operation_id = '$operationId'",
             )
             worker.run(operationId).shouldBeTrue()
             worker.run(operationId).shouldBeFalse()
 
-            provider.issueCount(operationId).shouldBeEqualTo(1)
-            fixture.queryString("SELECT state FROM ticket_tickets").shouldBeEqualTo("issued")
-            fixture.queryString("SELECT ticket_disposition FROM ticket_orders").shouldBeEqualTo("issued")
+            provider.issueCount(operationId) shouldBeEqualTo 1
+            fixture.queryString("SELECT state FROM ticket_tickets") shouldBeEqualTo "issued"
+            fixture.queryString("SELECT ticket_disposition FROM ticket_orders") shouldBeEqualTo "issued"
             fixture.queryInt("SELECT COUNT(*) FROM ticket_effect_receipts WHERE operation_id = '$operationId'")
                 .shouldBeEqualTo(1)
         }

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
-import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import org.redisson.api.RMap
 import org.redisson.api.RedissonClient
 import org.redisson.api.options.MapOptions
@@ -23,16 +23,18 @@ class ReadThroughService(
     redissonClient: RedissonClient,
     productMapLoader: ProductMapLoader,
     @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
-) : ProductCacheService {
+): ProductCacheService {
     companion object {
         const val CACHE_NAME = "products:read-through"
     }
 
+    private val options =
+        MapOptions
+            .name<Long, Product>(qualifiedCacheName(namespace, CACHE_NAME))
+            .loader(productMapLoader)
+
     private val products: RMap<Long, Product> =
-        redissonClient.getMap(
-            MapOptions.name<Long, Product>(qualifiedCacheName(namespace, CACHE_NAME))
-                .loader(productMapLoader)
-        )
+        redissonClient.getMap(options)
 
     override fun findById(id: Long): Product? = products[id]
 

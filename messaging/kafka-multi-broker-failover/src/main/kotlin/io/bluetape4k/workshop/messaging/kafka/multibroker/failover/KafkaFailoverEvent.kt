@@ -16,7 +16,7 @@ data class KafkaFailoverEvent(
     val sequence: Long,
     val payload: String,
     val partitionKey: String = PARTITION_KEY,
-) : Serializable {
+): Serializable {
 
     init {
         eventId.requireNotBlank("eventId")

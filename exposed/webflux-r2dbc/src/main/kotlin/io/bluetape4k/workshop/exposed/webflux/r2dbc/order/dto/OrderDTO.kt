@@ -15,7 +15,7 @@ data class ProductDTO(
     val name: String = "",
     val price: BigDecimal = BigDecimal.ZERO,
     val stock: Int = 0,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -25,7 +25,7 @@ data class CreateProductRequest(
     @field:NotBlank val name: String = "",
     @field:Positive val price: BigDecimal = BigDecimal.ZERO,
     @field:Min(0) val stock: Int = 0,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -37,7 +37,7 @@ data class OrderLineDTO(
     val productId: Long = 0L,
     val quantity: Int = 0,
     val unitPrice: BigDecimal = BigDecimal.ZERO,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -49,7 +49,7 @@ data class OrderDTO(
     val orderDate: Long = 0L,
     val status: OrderStatus = OrderStatus.PENDING,
     val lines: List<OrderLineDTO> = emptyList(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -58,7 +58,7 @@ data class OrderDTO(
 data class OrderLineRequest(
     @field:Positive val productId: Long = 0L,
     @field:Min(1) val quantity: Int = 1,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -67,7 +67,7 @@ data class OrderLineRequest(
 data class PlaceOrderRequest(
     @field:Positive val customerId: Long = 0L,
     @field:NotEmpty @field:Valid @field:Size(max = 100) val lines: List<OrderLineRequest> = emptyList(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

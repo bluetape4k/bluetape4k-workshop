@@ -1,12 +1,12 @@
 package org.springframework.web.servlet.mvc.method.annotation
 
 import org.springframework.http.MediaType
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Consumer
 
 /** servlet container 없이 실제 emitter callback을 실행하는 test-only bridge입니다. */
-internal class TestSseEmitterHandler : ResponseBodyEmitter.Handler {
-    val sent = CopyOnWriteArrayList<String>()
+internal class TestSseEmitterHandler: ResponseBodyEmitter.Handler {
+    val sent = ConcurrentLinkedQueue<String>()
     private var timeoutCallback: Runnable? = null
     private var errorCallback: Consumer<Throwable>? = null
     private var completionCallback: Runnable? = null

@@ -8,8 +8,8 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * lock 실패 시나리오용 smoke test입니다.
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
  * 실행 명령: `./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=`
  */
 @Tag("smoke")
-class LockFailureTest : AbstractDistributedLockTest() {
+class LockFailureTest: AbstractDistributedLockTest() {
 
     @Test
     fun `lease 만료 후 unlock 시도 시 IllegalMonitorStateException 이 발생한다`() {
@@ -30,7 +30,7 @@ class LockFailureTest : AbstractDistributedLockTest() {
         val acquired = lock.tryLock(1000, 200, MILLISECONDS)
         acquired.shouldBeTrue()
 
-        await atMost Duration.ofSeconds(2) untilAsserted {
+        await atMost 2.seconds untilAsserted {
             lock.isLocked.shouldBeFalse()
         }
 

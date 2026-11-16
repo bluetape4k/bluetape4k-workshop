@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.projection
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 enum class ProjectionGenerationState {
     ACTIVE,
@@ -16,10 +16,10 @@ interface ProjectionTelemetry {
 
 object ProjectionGenerationTransitions {
     fun allows(from: ProjectionGenerationState, to: ProjectionGenerationState): Boolean = when (from) {
-        ProjectionGenerationState.ACTIVE -> to == ProjectionGenerationState.RETIRED
+        ProjectionGenerationState.ACTIVE  -> to == ProjectionGenerationState.RETIRED
         ProjectionGenerationState.BUILDING ->
             to == ProjectionGenerationState.ACTIVE || to == ProjectionGenerationState.FAILED
-        ProjectionGenerationState.FAILED -> to == ProjectionGenerationState.RETIRED
+        ProjectionGenerationState.FAILED  -> to == ProjectionGenerationState.RETIRED
         ProjectionGenerationState.RETIRED -> to == ProjectionGenerationState.ACTIVE
     }
 }
@@ -48,5 +48,5 @@ enum class ProjectionApplyResult {
     ALREADY_APPLIED,
 }
 
-class StaleProjectionOwnerException(name: String, generation: Int) :
+class StaleProjectionOwnerException(name: String, generation: Int):
     IllegalStateException("stale_projection_owner:$name:$generation")

@@ -1,11 +1,18 @@
 package io.bluetape4k.workshop.commerce.shared.voucher
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class VoucherCampaignBlackBoxContractTest {
+
+    companion object: KLogging() {
+        private val STARTS_AT: Instant = Instant.parse("2026-07-24T00:00:00Z")
+        private val ENDS_AT: Instant = Instant.parse("2026-07-31T00:00:00Z")
+    }
+
     @Test
     fun `request rejects blank caller identity`() {
         assertFailsWith<IllegalArgumentException> {
@@ -85,9 +92,4 @@ class VoucherCampaignBlackBoxContractTest {
             perUserLimit = perUserLimit,
             redemptionTtlSeconds = redemptionTtlSeconds,
         )
-
-    companion object {
-        private val STARTS_AT: Instant = Instant.parse("2026-07-24T00:00:00Z")
-        private val ENDS_AT: Instant = Instant.parse("2026-07-31T00:00:00Z")
-    }
 }

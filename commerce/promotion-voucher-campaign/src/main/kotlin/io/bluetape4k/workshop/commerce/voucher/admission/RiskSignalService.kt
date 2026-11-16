@@ -4,11 +4,12 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.redis.lettuce.filter.LettuceBloomFilter
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradationState
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradedComponent
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.Base64
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -17,11 +18,20 @@ internal class VoucherAdmissionKeyFactory(
     rateKey: ByteArray,
     riskKey: ByteArray,
 ) {
+
+    private companion object: KLogging() {
+        const val MINIMUM_KEY_BYTES = 32
+        const val HMAC_SHA_256 = "HmacSHA256"
+        const val RATE_DOMAIN = "voucher-rate-key-v1"
+        const val RISK_DOMAIN = "voucher-risk-key-v1"
+        val SEPARATOR = byteArrayOf(0)
+    }
+
     private val rateKey = rateKey.copyOf()
     private val riskKey = riskKey.copyOf()
 
     init {
-        require(version > 0) { "version must be positive" }
+        version.requirePositiveNumber("version")
         require(this.rateKey.size >= MINIMUM_KEY_BYTES) { "rateKey must contain at least 32 bytes" }
         require(this.riskKey.size >= MINIMUM_KEY_BYTES) { "riskKey must contain at least 32 bytes" }
     }
@@ -30,12 +40,14 @@ internal class VoucherAdmissionKeyFactory(
         tenantId: String,
         principalRef: String,
         operation: String,
-    ): String = "v$version:${digest(rateKey, RATE_DOMAIN, tenantId, principalRef, operation)}"
+    ): String =
+        "v$version:${digest(rateKey, RATE_DOMAIN, tenantId, principalRef, operation)}"
 
     fun riskKey(
         tenantId: String,
         subjectRef: String,
-    ): String = "v$version:${digest(riskKey, RISK_DOMAIN, tenantId, subjectRef)}"
+    ): String =
+        "v$version:${digest(riskKey, RISK_DOMAIN, tenantId, subjectRef)}"
 
     private fun digest(
         key: ByteArray,
@@ -44,20 +56,12 @@ internal class VoucherAdmissionKeyFactory(
     ): String {
         val mac = Mac.getInstance(HMAC_SHA_256)
         mac.init(SecretKeySpec(key, HMAC_SHA_256))
-        mac.update(domain.toByteArray(UTF_8))
+        mac.update(domain.toUtf8Bytes())
         values.forEach { value ->
             mac.update(SEPARATOR)
-            mac.update(value.toByteArray(UTF_8))
+            mac.update(value.toUtf8Bytes())
         }
         return Base64.getUrlEncoder().withoutPadding().encodeToString(mac.doFinal())
-    }
-
-    private companion object {
-        const val MINIMUM_KEY_BYTES = 32
-        const val HMAC_SHA_256 = "HmacSHA256"
-        const val RATE_DOMAIN = "voucher-rate-key-v1"
-        const val RISK_DOMAIN = "voucher-risk-key-v1"
-        val SEPARATOR = byteArrayOf(0)
     }
 }
 
@@ -69,10 +73,12 @@ internal interface VoucherRiskBackend {
 
 internal class LettuceBloomRiskBackend(
     private val bloomFilter: LettuceBloomFilter,
-) : VoucherRiskBackend {
-    override fun add(digest: String) = bloomFilter.add(digest)
+): VoucherRiskBackend {
+    override fun add(digest: String) =
+        bloomFilter.add(digest)
 
-    override fun mightContain(digest: String): Boolean = bloomFilter.contains(digest)
+    override fun mightContain(digest: String): Boolean =
+        bloomFilter.contains(digest)
 }
 
 /** Bloom positive를 advisory review signal로, 모든 backend error를 UNKNOWN으로 처리합니다. */
@@ -81,16 +87,19 @@ internal class RiskSignalService(
     private val backend: VoucherRiskBackend?,
     private val degradation: VoucherDegradationState? = null,
 ) {
+    companion object: KLogging()
+
     fun assess(
         tenantId: String,
         subjectRef: String,
     ): RiskSignal {
         val digest = keys.riskKey(tenantId, subjectRef)
         val riskBackend = backend ?: return RiskSignal.UNKNOWN
+
         return try {
-            (if (riskBackend.mightContain(digest)) RiskSignal.REVIEW else RiskSignal.CLEAR).also {
-                degradation?.recover(VoucherDegradedComponent.REDIS)
-            }
+            val signal = if (riskBackend.mightContain(digest)) RiskSignal.REVIEW else RiskSignal.CLEAR
+            degradation?.recover(VoucherDegradedComponent.REDIS)
+            signal
         } catch (failure: Exception) {
             degradation?.degrade(VoucherDegradedComponent.REDIS)
             log.warn { "voucher_risk_unknown backend=REDIS failure=${failure.javaClass.simpleName}" }
@@ -103,11 +112,11 @@ internal class RiskSignalService(
         subjectRef: String,
     ): Boolean {
         val riskBackend = backend ?: return false
+
         return try {
-            riskBackend.add(keys.riskKey(tenantId, subjectRef)).let {
-                degradation?.recover(VoucherDegradedComponent.REDIS)
-                true
-            }
+            riskBackend.add(keys.riskKey(tenantId, subjectRef))
+            degradation?.recover(VoucherDegradedComponent.REDIS)
+            true
         } catch (failure: Exception) {
             degradation?.degrade(VoucherDegradedComponent.REDIS)
             log.warn { "voucher_risk_remember_failed backend=REDIS failure=${failure.javaClass.simpleName}" }
@@ -116,6 +125,4 @@ internal class RiskSignalService(
             log.debug { "voucher_risk_remembered success=$remembered" }
         }
     }
-
-    companion object : KLogging()
 }

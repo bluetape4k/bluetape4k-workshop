@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.application.event.custom
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeInstanceOf
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.output.OutputCapture
 import io.bluetape4k.junit5.output.OutputCapturer
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
@@ -17,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import kotlin.time.Duration.Companion.milliseconds
 
 @OutputCapture
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -25,7 +27,7 @@ class CustomEventPublisherTest(
     @param:Autowired private val controller: CustomEventController,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val client by lazy {
         WebTestClient.bindToApplicationContext(context).build()
@@ -38,7 +40,7 @@ class CustomEventPublisherTest(
 
     @Test
     fun `custom event controller does not keep its own coroutine scope`() {
-        (controller is CoroutineScope).shouldBeFalse()
+        controller.shouldNotBeInstanceOf<CoroutineScope>()
     }
 
     @Test
@@ -48,11 +50,14 @@ class CustomEventPublisherTest(
             .uri("/event?message=CustomEventMessage")
             .exchange()
             .expectStatus().isOk
-            .returnResult<String>().responseBody.awaitSingle()
+            .returnResult<String>()
+            .responseBody
+            .awaitSingle()
 
+        log.debug { "response=$response" }
         response shouldBeEqualTo "Finished"
 
-        delay(100L)
+        delay(100.milliseconds)
         output.capture() shouldContain "Handle custom event"
     }
 }

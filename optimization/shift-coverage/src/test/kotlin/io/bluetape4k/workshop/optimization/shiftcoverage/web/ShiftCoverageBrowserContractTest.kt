@@ -3,10 +3,14 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.web
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 
 internal class ShiftCoverageBrowserContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `console uses CSP safe DOM rendering and bounded command states`() {
         val html = resource("static/shift-coverage/index.html")

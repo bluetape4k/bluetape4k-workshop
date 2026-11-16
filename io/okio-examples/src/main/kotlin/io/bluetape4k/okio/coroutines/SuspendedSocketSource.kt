@@ -5,7 +5,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.okio.SEGMENT_SIZE
 import io.bluetape4k.okio.coroutines.internal.await
 import io.bluetape4k.support.requireZeroOrPositiveNumber
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okio.Buffer
 import java.net.Socket
 import java.nio.ByteBuffer
@@ -29,7 +30,7 @@ class SuspendedSocketSource(socket: Socket): SuspendedSource {
         byteBuffer.clear()
         byteBuffer.limit(minOf(SEGMENT_SIZE, byteCount).toInt())
 
-        val read = channel.read(byteBuffer)
+        val read = withContext(Dispatchers.IO) { channel.read(byteBuffer) }
         byteBuffer.flip()
 
         if (read > 0) {
@@ -39,10 +40,10 @@ class SuspendedSocketSource(socket: Socket): SuspendedSource {
         return read.toLong()
     }
 
-    override suspend fun close() = coroutineScope {
+    override suspend fun close() {
         if (channel.isOpen) {
             log.debug { "Closing socket channel" }
-            channel.close()
+            withContext(Dispatchers.IO) { channel.close() }
         }
     }
 }

@@ -1,17 +1,16 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.redisson.api.RBinaryStream
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 
 /**
  * [RBinaryStream] 예제
@@ -36,7 +35,7 @@ class BinaryStreamExamples: AbstractRedissonTest() {
         val contentBytes = contentStr.toUtf8Bytes()
 
         // 값이 없으면 설정하고, TTL 을 10초로 준다 
-        stream.setIfAbsentAsync(contentBytes, 10.seconds.toJavaDuration()).await().shouldBeTrue()
+        stream.setIfAbsentAsync(contentBytes, 10.seconds()).await().shouldBeTrue()
         // 값을 다시 설정한다
         stream.setAsync(contentBytes).await()
 

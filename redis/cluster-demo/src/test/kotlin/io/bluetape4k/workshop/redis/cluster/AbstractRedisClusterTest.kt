@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.redis.cluster
 
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.boot.test.context.SpringBootTest
@@ -11,7 +12,7 @@ import org.springframework.data.redis.connection.RedisConnection
 @SpringBootTest(classes = [RedisClusterApplication::class])
 abstract class AbstractRedisClusterTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
 
@@ -25,12 +26,16 @@ abstract class AbstractRedisClusterTest {
     protected fun RedisConnection.flushMasterDatabases() {
         val clusterConnection = this as? RedisClusterConnection
             ?: error("Redis connection is not a cluster connection: ${this::class.qualifiedName}")
+
         val masters = clusterConnection.clusterCommands().clusterGetNodes()
             .filter { RedisClusterNode.Flag.MASTER in it.flags }
 
-        check(masters.isNotEmpty()) { "Redis Cluster has no master nodes" }
+        // check(masters.isNotEmpty()) { "Redis Cluster has no master nodes" }
+        masters.shouldNotBeEmpty()
 
         val serverCommands: RedisClusterServerCommands = clusterConnection.serverCommands()
-        masters.forEach { node -> serverCommands.flushDb(node) }
+        masters.forEach { node ->
+            serverCommands.flushDb(node)
+        }
     }
 }

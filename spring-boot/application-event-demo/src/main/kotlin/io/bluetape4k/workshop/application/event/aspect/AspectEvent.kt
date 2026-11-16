@@ -9,7 +9,7 @@ import java.io.Serializable
 data class AspectEvent(
     val src: Any,
     val message: Any,
-) : ApplicationEvent(src), Serializable {
+): ApplicationEvent(src), Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

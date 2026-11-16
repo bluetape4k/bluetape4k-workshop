@@ -12,7 +12,7 @@ import java.io.Serializable
 internal data class ApiError(
     val code: String,
     val correlationId: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -20,6 +20,9 @@ internal data class ApiError(
 
 @RestControllerAdvice
 internal class ApiExceptionHandler {
+
+    companion object: KLogging()
+
     @ExceptionHandler(IllegalArgumentException::class)
     fun badRequest(failure: IllegalArgumentException): ResponseEntity<ApiError> =
         error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", failure)
@@ -49,6 +52,4 @@ internal class ApiExceptionHandler {
         log.warn(failure) { "http_request_failed status=${status.value()} code=$code correlationId=$correlationId" }
         return ResponseEntity.status(status).body(ApiError(code, correlationId))
     }
-
-    companion object : KLogging()
 }

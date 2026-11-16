@@ -13,6 +13,9 @@ import io.bluetape4k.images.privacy.suspendPrivacyDerivative
 import io.bluetape4k.images.privacy.toPayload
 import io.bluetape4k.images.thumbnail.ThumbnailCrop
 import io.bluetape4k.images.thumbnail.ThumbnailSize
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.imageprocessing.profile.config.ProfileImageModerationProperties
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProcessedProfileImage
 import kotlinx.coroutines.CancellationException
@@ -33,6 +36,11 @@ import kotlin.math.roundToInt
 class ProfileImageProcessor(
     private val properties: ProfileImageModerationProperties,
 ) {
+
+    companion object: KLoggingChannel() {
+        private const val PENDING_MAX_DIMENSION = 96
+        private const val APPROVED_MAX_DIMENSION = 512
+    }
 
     /**
      * 기존 호출자를 위한 ImageIO derivative 생성 경로입니다.
@@ -92,11 +100,11 @@ class ProfileImageProcessor(
     }
 
     private fun createLegacyDerivatives(image: BufferedImage): ProcessedProfileImage {
-        require(image.width in 1..properties.maxWidth) { "image width exceeds maxWidth" }
-        require(image.height in 1..properties.maxHeight) { "image height exceeds maxHeight" }
-        require(image.width.toLong() * image.height.toLong() <= properties.maxPixels) { "image pixels exceed maxPixels" }
+        validateDimensions(image)
+
         val approved = scaleToJpeg(image, APPROVED_MAX_DIMENSION)
         val pending = blur(scale(image, PENDING_MAX_DIMENSION))
+
         return ProcessedProfileImage(
             width = image.width,
             height = image.height,
@@ -125,22 +133,21 @@ class ProfileImageProcessor(
         }
 
     private fun validateDimensions(image: BufferedImage) {
-        require(image.width in 1..properties.maxWidth) { "image width exceeds maxWidth" }
-        require(image.height in 1..properties.maxHeight) { "image height exceeds maxHeight" }
+        image.width.requireInRange(1, properties.maxWidth, "image width")
+        image.height.requireInRange(1, properties.maxHeight, "image height")
         require(image.width.toLong() * image.height.toLong() <= properties.maxPixels) { "image pixels exceed maxPixels" }
     }
 
     private fun readSourceMetadata(bytes: ByteArray): ImageMetadataReport =
         try {
-            when (
-                val result = readImageMetadataReportStrict(
-                    bytes,
-                    ImageMetadataReadOptions(
-                        maxBytes = properties.privacy.maxMetadataBytes,
-                        stripSensitiveMetadata = false,
-                    ),
-                )
-            ) {
+            val result = readImageMetadataReportStrict(
+                bytes,
+                ImageMetadataReadOptions(
+                    maxBytes = properties.privacy.maxMetadataBytes,
+                    stripSensitiveMetadata = false,
+                ),
+            )
+            when (result) {
                 is ImageMetadataReadResult.Success -> result.report
                 is ImageMetadataReadResult.Failure ->
                     throw IllegalArgumentException("uploaded image metadata could not be inspected")
@@ -195,19 +202,24 @@ class ProfileImageProcessor(
         return target
     }
 
-    private fun scaleToJpeg(source: BufferedImage, maxDimension: Int): BufferedImage = scale(source, maxDimension)
+    private fun scaleToJpeg(source: BufferedImage, maxDimension: Int): BufferedImage =
+        scale(source, maxDimension)
 
     private fun blur(source: BufferedImage): BufferedImage {
         val target = BufferedImage(source.width, source.height, BufferedImage.TYPE_INT_RGB)
-        val graphics = target.createGraphics()
-        try {
+        target.useGraphics { graphics ->
             graphics.drawImage(source, 0, 0, null)
             graphics.color = Color(255, 255, 255, 110)
             graphics.fillRect(0, 0, source.width, source.height)
             graphics.color = Color(0, 0, 0, 50)
-            repeat(8) { step -> graphics.drawRect(step, step, source.width - step * 2 - 1, source.height - step * 2 - 1) }
-        } finally {
-            graphics.dispose()
+            repeat(8) { step ->
+                graphics.drawRect(
+                    step,
+                    step,
+                    source.width - step * 2 - 1,
+                    source.height - step * 2 - 1
+                )
+            }
         }
         return target
     }
@@ -216,10 +228,5 @@ class ProfileImageProcessor(
         val output = ByteArrayOutputStream()
         require(ImageIO.write(image, "jpg", output)) { "JPEG writer is not available" }
         return output.toByteArray()
-    }
-
-    companion object {
-        private const val PENDING_MAX_DIMENSION = 96
-        private const val APPROVED_MAX_DIMENSION = 512
     }
 }

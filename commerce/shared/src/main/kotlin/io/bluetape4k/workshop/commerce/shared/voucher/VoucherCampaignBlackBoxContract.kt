@@ -1,14 +1,16 @@
 package io.bluetape4k.workshop.commerce.shared.voucher
 
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.javatimes.days
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
-import java.time.Duration
+import io.bluetape4k.support.toUtf8Bytes
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * normalized-state 예제와 event-sourced voucher 예제가 공유하는 표준 요청이다.
@@ -208,10 +210,8 @@ class VoucherAllocationBlackBoxRequest private constructor(
             userRef: String,
         ): VoucherAllocationBlackBoxRequest {
             val validPrincipal = principal.requireNotBlank("principal")
-            val validUserRef =
-                userRef
-                    .requireNotBlank("userRef")
-                    .requireEquals(validPrincipal, "userRef")
+            val validUserRef = userRef.requireEquals(validPrincipal, "userRef")
+
             return VoucherAllocationBlackBoxRequest(
                 tenant = tenant.requireNotBlank("tenant"),
                 principal = validPrincipal,
@@ -357,8 +357,7 @@ class VoucherLifecycleBlackBoxScenario private constructor(
                 name = name.requireNotBlank("name"),
                 allocation = allocation,
                 action = action,
-                transitionIdempotencyKey =
-                    transitionIdempotencyKey.requireNotBlank("transitionIdempotencyKey"),
+                transitionIdempotencyKey = transitionIdempotencyKey.requireNotBlank("transitionIdempotencyKey"),
                 redemptionReference = redemptionReference?.requireNotBlank("redemptionReference"),
                 expectedFirst = expectedFirst,
                 expectedReplay = expectedReplay,
@@ -442,9 +441,9 @@ object VoucherCampaignBlackBoxContract {
     private const val CAPACITY = 20
 
     /** 실행일이 바뀌어도 공유 compatibility scenario가 만료되지 않도록 runtime-relative window를 사용합니다. */
-    private val CONTRACT_START: Instant = Instant.now().minus(Duration.ofMinutes(1))
+    private val CONTRACT_START: Instant = Instant.now().minus(1.minutes())
     private val STARTS_AT: Instant = CONTRACT_START
-    private val ENDS_AT: Instant = CONTRACT_START.plus(Duration.ofDays(2))
+    private val ENDS_AT: Instant = CONTRACT_START.plus(2.days())
 
     val createAndReplay: VoucherCampaignBlackBoxScenario =
         VoucherCampaignBlackBoxScenario(
@@ -461,18 +460,17 @@ object VoucherCampaignBlackBoxContract {
             first = request("contract-conflict-001"),
             replay = request("contract-conflict-001", capacity = CAPACITY + 1),
             expectedFirst = created(replayed = false),
-            expectedReplay =
-                NormalizedVoucherCampaignResult(
-                    status = 409,
-                    code = "IDEMPOTENCY_FINGERPRINT_CONFLICT",
-                    campaignId = null,
-                    state = null,
-                    revision = null,
-                    policyVersion = null,
-                    capacity = null,
-                    remainingCapacity = null,
-                    replayed = null,
-                ),
+            expectedReplay = NormalizedVoucherCampaignResult(
+                status = 409,
+                code = "IDEMPOTENCY_FINGERPRINT_CONFLICT",
+                campaignId = null,
+                state = null,
+                revision = null,
+                policyVersion = null,
+                capacity = null,
+                remainingCapacity = null,
+                replayed = null,
+            ),
         )
 
     val scenarios: List<VoucherCampaignBlackBoxScenario> =
@@ -492,12 +490,11 @@ object VoucherCampaignBlackBoxContract {
         listOf(
             VoucherLifecycleBlackBoxScenario(
                 name = "voucher redeem and same-key replay",
-                allocation =
-                    allocationScenario(
-                        createKey = "contract-redeem-create-001",
-                        activationKey = "contract-redeem-activate-001",
-                        allocationKey = "contract-redeem-allocate-001",
-                    ),
+                allocation = allocationScenario(
+                    createKey = "contract-redeem-create-001",
+                    activationKey = "contract-redeem-activate-001",
+                    allocationKey = "contract-redeem-allocate-001",
+                ),
                 action = VoucherLifecycleAction.REDEEM,
                 transitionIdempotencyKey = "contract-redeem-001",
                 redemptionReference = "contract-order-001",
@@ -506,12 +503,11 @@ object VoucherCampaignBlackBoxContract {
             ),
             VoucherLifecycleBlackBoxScenario(
                 name = "voucher release and same-key replay",
-                allocation =
-                    allocationScenario(
-                        createKey = "contract-release-create-001",
-                        activationKey = "contract-release-activate-001",
-                        allocationKey = "contract-release-allocate-001",
-                    ),
+                allocation = allocationScenario(
+                    createKey = "contract-release-create-001",
+                    activationKey = "contract-release-activate-001",
+                    allocationKey = "contract-release-allocate-001",
+                ),
                 action = VoucherLifecycleAction.RELEASE,
                 transitionIdempotencyKey = "contract-release-001",
                 expectedFirst = transitioned("RELEASED", replayed = false),
@@ -554,14 +550,13 @@ object VoucherCampaignBlackBoxContract {
         allocationKey: String,
     ): VoucherAllocationBlackBoxScenario =
         activationScenario(createKey, activationKey).let { campaign ->
-            val request =
-                VoucherAllocationBlackBoxRequest(
-                    tenant = campaign.create.tenant,
-                    principal = "contract-customer",
-                    idempotencyKey = allocationKey,
-                    campaignId = campaign.create.campaignId,
-                    userRef = "contract-customer",
-                )
+            val request = VoucherAllocationBlackBoxRequest(
+                tenant = campaign.create.tenant,
+                principal = "contract-customer",
+                idempotencyKey = allocationKey,
+                campaignId = campaign.create.campaignId,
+                userRef = "contract-customer",
+            )
             VoucherAllocationBlackBoxScenario(
                 name = "voucher allocate and same-key replay",
                 campaign = campaign,
@@ -578,52 +573,47 @@ object VoucherCampaignBlackBoxContract {
             name = "draft campaign rejects allocation",
             campaign = campaign,
             activateCampaign = false,
-            failureRequest =
-                allocationRequest(
-                    campaign = campaign,
-                    principal = "contract-draft-customer",
-                    key = "contract-draft-allocate-001",
-                ),
+            failureRequest = allocationRequest(
+                campaign = campaign,
+                principal = "contract-draft-customer",
+                key = "contract-draft-allocate-001",
+            ),
             expectedFailure = allocationFailure(409, "CAMPAIGN_NOT_ACTIVE"),
         )
     }
 
     private fun missingCampaignAllocationFailure(): VoucherAllocationFailureBlackBoxScenario {
-        val campaignId = UUID.nameUUIDFromBytes("contract-missing-campaign".toByteArray())
+        val campaignId = UUID.nameUUIDFromBytes("contract-missing-campaign".toUtf8Bytes())
         return VoucherAllocationFailureBlackBoxScenario(
             name = "missing campaign rejects allocation without leaking storage details",
             campaign = null,
             activateCampaign = false,
-            failureRequest =
-                VoucherAllocationBlackBoxRequest(
-                    tenant = TENANT,
-                    principal = "contract-missing-customer",
-                    idempotencyKey = "contract-missing-allocate-001",
-                    campaignId = campaignId,
-                    userRef = "contract-missing-customer",
-                ),
+            failureRequest = VoucherAllocationBlackBoxRequest(
+                tenant = TENANT,
+                principal = "contract-missing-customer",
+                idempotencyKey = "contract-missing-allocate-001",
+                campaignId = campaignId,
+                userRef = "contract-missing-customer",
+            ),
             expectedFailure = allocationFailure(404, "CAMPAIGN_NOT_FOUND"),
         )
     }
 
     private fun perUserLimitAllocationFailure(): VoucherAllocationFailureBlackBoxScenario {
-        val campaign =
-            activationScenario(
-                "contract-limit-create-001",
-                "contract-limit-activate-001",
-            )
+        val campaign = activationScenario(
+            "contract-limit-create-001",
+            "contract-limit-activate-001",
+        )
         val principal = "contract-limit-customer"
         return VoucherAllocationFailureBlackBoxScenario(
             name = "third allocation for one subject exceeds the campaign limit",
             campaign = campaign,
             activateCampaign = true,
-            warmupRequests =
-                listOf(
-                    allocationRequest(campaign, principal, "contract-limit-allocate-001"),
-                    allocationRequest(campaign, principal, "contract-limit-allocate-002"),
-                ),
-            failureRequest =
-                allocationRequest(campaign, principal, "contract-limit-allocate-003"),
+            warmupRequests = listOf(
+                allocationRequest(campaign, principal, "contract-limit-allocate-001"),
+                allocationRequest(campaign, principal, "contract-limit-allocate-002"),
+            ),
+            failureRequest = allocationRequest(campaign, principal, "contract-limit-allocate-003"),
             expectedFailure = allocationFailure(409, "PER_USER_LIMIT_REACHED"),
         )
     }
@@ -636,23 +626,21 @@ object VoucherCampaignBlackBoxContract {
     ): VoucherLifecycleFailureBlackBoxScenario =
         VoucherLifecycleFailureBlackBoxScenario(
             name = "voucher redeem rejects $slug",
-            allocation =
-                allocationScenario(
-                    createKey = "contract-$slug-create-001",
-                    activationKey = "contract-$slug-activate-001",
-                    allocationKey = "contract-$slug-allocate-001",
-                ),
+            allocation = allocationScenario(
+                createKey = "contract-$slug-create-001",
+                activationKey = "contract-$slug-activate-001",
+                allocationKey = "contract-$slug-allocate-001",
+            ),
             kind = kind,
             idempotencyKey = "contract-$slug-redeem-001",
-            expectedFailure =
-                NormalizedVoucherLifecycleResult(
-                    status = status,
-                    code = code,
-                    state = null,
-                    revision = null,
-                    policyVersion = null,
-                    replayed = null,
-                ),
+            expectedFailure = NormalizedVoucherLifecycleResult(
+                status = status,
+                code = code,
+                state = null,
+                revision = null,
+                policyVersion = null,
+                replayed = null,
+            ),
         )
 
     private fun allocationRequest(
@@ -673,14 +661,13 @@ object VoucherCampaignBlackBoxContract {
         activationKey: String,
     ): VoucherCampaignActivationScenario =
         request(createKey).let { create ->
-            val activation =
-                VoucherCampaignActivationRequest(
-                    tenant = create.tenant,
-                    principal = create.principal,
-                    idempotencyKey = activationKey,
-                    campaignId = create.campaignId,
-                    expectedRevision = 0,
-                )
+            val activation = VoucherCampaignActivationRequest(
+                tenant = create.tenant,
+                principal = create.principal,
+                idempotencyKey = activationKey,
+                campaignId = create.campaignId,
+                expectedRevision = 0,
+            )
             VoucherCampaignActivationScenario(
                 name = "campaign activate and same-key replay",
                 create = create,
@@ -700,7 +687,7 @@ object VoucherCampaignBlackBoxContract {
             tenant = TENANT,
             principal = PRINCIPAL,
             idempotencyKey = key,
-            campaignId = UUID.nameUUIDFromBytes(key.toByteArray()),
+            campaignId = UUID.nameUUIDFromBytes(key.toUtf8Bytes()),
             startsAt = STARTS_AT,
             endsAt = ENDS_AT,
             capacity = capacity,

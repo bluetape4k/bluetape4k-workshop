@@ -1,12 +1,13 @@
 package io.bluetape4k.workshop.spring.modulith.services
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.spring.modulith.services.department.DepartmentDTO
 import io.bluetape4k.workshop.spring.modulith.services.employee.EmployeeDTO
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -21,8 +22,8 @@ import org.springframework.test.web.reactive.server.returnResult
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AppRestControllerTest {
-    
-    companion object : KLoggingChannel() {
+
+    companion object: KLoggingChannel() {
         val faker = Fakers.faker
     }
 
@@ -51,6 +52,7 @@ class AppRestControllerTest {
             .returnResult<EmployeeDTO>().responseBody
             .awaitSingle()
 
+        log.debug { "emp=$emp" }
         emp.id.shouldNotBeNull()
     }
 
@@ -69,6 +71,7 @@ class AppRestControllerTest {
             .returnResult<DepartmentDTO>().responseBody
             .awaitSingle()
 
+        log.debug { "dept=$dept" }
         dept.id.shouldNotBeNull()
     }
 
@@ -82,6 +85,7 @@ class AppRestControllerTest {
             .returnResult<DepartmentDTO>().responseBody
             .awaitSingle()
 
+        log.debug { "dept=$dept" }
         dept.id.shouldNotBeNull()
     }
 }

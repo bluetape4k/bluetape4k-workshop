@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class FlowBasicExamples {
 
@@ -22,7 +24,7 @@ class FlowBasicExamples {
     private var sequence by sequencer
 
     private suspend fun computeNextValue(): Long {
-        delay(10)
+        delay(10.milliseconds)
         return sequencer.incrementAndGet()
     }
 
@@ -43,7 +45,7 @@ class FlowBasicExamples {
                 send(x)
             }
         }
-        delay(100)
+        delay(100.milliseconds)
         for (elem in channel) {
             log.debug { "receive=$elem" }
         }
@@ -61,7 +63,7 @@ class FlowBasicExamples {
                 emit(x)
             }
         }
-        delay(100) // 의미없다
+        delay(100.milliseconds) // 의미없다
         flow.collect { elem ->
             log.debug { "collect=$elem" }
         }
@@ -70,7 +72,7 @@ class FlowBasicExamples {
     private fun makeFlow() = flow {
         log.debug { "Flow started" }
         for (i in 1..3) {
-            delay(1000)
+            delay(1.seconds)
             emit(i)
         }
     }
@@ -83,13 +85,13 @@ class FlowBasicExamples {
     fun `flow {} is statement 이므로 실행 시마다 flow가 생성된다 `() = runTest {
         val flow = makeFlow()
 
-        delay(1000)
+        delay(1.seconds)
         log.debug { "Collect flow ... " }
         flow.collect { value ->
             log.debug { "collect $value" }
         }
 
-        delay(1000)
+        delay(1.seconds)
         log.debug { "Collect again ..." }
         flow.collect { value ->
             log.debug { "consume $value" }

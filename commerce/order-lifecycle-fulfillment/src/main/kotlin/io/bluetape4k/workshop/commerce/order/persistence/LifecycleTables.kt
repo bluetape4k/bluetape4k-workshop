@@ -19,7 +19,7 @@ import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 
-internal object OrderTable : AuditableUUIDTable("commerce_orders") {
+internal object OrderTable: AuditableUUIDTable("commerce_orders") {
     val tenantId = varchar("tenant_id", 80)
     val customerReference = varchar("customer_reference", 120)
     val status = enumerationByName<OrderStatus>("status", 40)
@@ -28,21 +28,21 @@ internal object OrderTable : AuditableUUIDTable("commerce_orders") {
     val cancelReason = varchar("cancel_reason", 80).nullable()
 }
 
-internal object PaymentAttemptTable : AuditableUUIDTable("commerce_payment_attempts") {
+internal object PaymentAttemptTable: AuditableUUIDTable("commerce_payment_attempts") {
     val orderId = javaUUID("order_id").index()
     val status = enumerationByName<PaymentStatus>("status", 40)
     val revision = long("revision").default(0)
     val providerReference = varchar("provider_reference", 160).nullable()
 }
 
-internal object InventoryReservationTable : AuditableUUIDTable("commerce_inventory_reservations") {
+internal object InventoryReservationTable: AuditableUUIDTable("commerce_inventory_reservations") {
     val orderId = javaUUID("order_id").uniqueIndex()
     val status = enumerationByName<ReservationStatus>("status", 40)
     val revision = long("revision").default(0)
     val reasonCode = varchar("reason_code", 80).nullable()
 }
 
-internal object FulfillmentGroupTable : AuditableUUIDTable("commerce_fulfillment_groups") {
+internal object FulfillmentGroupTable: AuditableUUIDTable("commerce_fulfillment_groups") {
     val orderId = javaUUID("order_id").index()
     val groupReference = varchar("group_reference", 80)
     val status = enumerationByName<FulfillmentStatus>("status", 40)
@@ -54,7 +54,7 @@ internal object FulfillmentGroupTable : AuditableUUIDTable("commerce_fulfillment
     }
 }
 
-internal object CancellationCaseTable : AuditableUUIDTable("commerce_cancellation_cases") {
+internal object CancellationCaseTable: AuditableUUIDTable("commerce_cancellation_cases") {
     val orderId = javaUUID("order_id").index()
     val lineId = javaUUID("line_id").index()
     val quantity = integer("quantity")
@@ -63,14 +63,14 @@ internal object CancellationCaseTable : AuditableUUIDTable("commerce_cancellatio
     val reasonCode = varchar("reason_code", 80)
 }
 
-internal object RefundCaseTable : AuditableUUIDTable("commerce_refund_cases") {
+internal object RefundCaseTable: AuditableUUIDTable("commerce_refund_cases") {
     val orderId = javaUUID("order_id").index()
     val status = enumerationByName<RefundStatus>("status", 40)
     val revision = long("revision").default(0)
     val reasonCode = varchar("reason_code", 80)
 }
 
-internal object OrderLineTable : AuditableLongIdTable("commerce_order_lines") {
+internal object OrderLineTable: AuditableLongIdTable("commerce_order_lines") {
     val lineId = javaUUID("line_id").uniqueIndex()
     val orderId = javaUUID("order_id").index()
     val sku = varchar("sku", 120)
@@ -79,7 +79,7 @@ internal object OrderLineTable : AuditableLongIdTable("commerce_order_lines") {
     val cancelledQuantity = integer("cancelled_quantity").default(0)
 }
 
-internal object FulfillmentLineTable : Table("commerce_fulfillment_lines") {
+internal object FulfillmentLineTable: Table("commerce_fulfillment_lines") {
     val fulfillmentGroupId = javaUUID("fulfillment_group_id")
     val lineId = javaUUID("line_id")
     val quantity = integer("quantity")
@@ -87,7 +87,7 @@ internal object FulfillmentLineTable : Table("commerce_fulfillment_lines") {
     override val primaryKey = PrimaryKey(fulfillmentGroupId, lineId)
 }
 
-internal object LifecycleAuditTable : LongIdTable("commerce_lifecycle_audits") {
+internal object LifecycleAuditTable: LongIdTable("commerce_lifecycle_audits") {
     val eventId = javaUUID("event_id").uniqueIndex()
     val orderId = javaUUID("order_id").index()
     val aggregateType = enumerationByName<AggregateType>("aggregate_type", 48)
@@ -104,7 +104,7 @@ internal object LifecycleAuditTable : LongIdTable("commerce_lifecycle_audits") {
     }
 }
 
-internal object ProviderEventInboxTable : AuditableLongIdTable("commerce_provider_event_inbox") {
+internal object ProviderEventInboxTable: AuditableLongIdTable("commerce_provider_event_inbox") {
     val provider = varchar("provider", 40)
     val providerEventId = varchar("provider_event_id", 160)
     val paymentAttemptId = javaUUID("payment_attempt_id").index()
@@ -118,7 +118,7 @@ internal object ProviderEventInboxTable : AuditableLongIdTable("commerce_provide
     }
 }
 
-internal object HttpIdempotencyTable : AuditableLongIdTable("commerce_http_idempotency") {
+internal object HttpIdempotencyTable: AuditableLongIdTable("commerce_http_idempotency") {
     val tenantId = varchar("tenant_id", 80)
     val operation = varchar("operation", 80)
     val keyHash = char("key_hash", 64)
@@ -135,17 +135,16 @@ internal object HttpIdempotencyTable : AuditableLongIdTable("commerce_http_idemp
     }
 }
 
-internal val commerceTables =
-    arrayOf(
-        OrderTable,
-        PaymentAttemptTable,
-        InventoryReservationTable,
-        FulfillmentGroupTable,
-        CancellationCaseTable,
-        RefundCaseTable,
-        OrderLineTable,
-        FulfillmentLineTable,
-        LifecycleAuditTable,
-        ProviderEventInboxTable,
-        HttpIdempotencyTable
-    )
+internal val commerceTables: Array<Table> = arrayOf(
+    OrderTable,
+    PaymentAttemptTable,
+    InventoryReservationTable,
+    FulfillmentGroupTable,
+    CancellationCaseTable,
+    RefundCaseTable,
+    OrderLineTable,
+    FulfillmentLineTable,
+    LifecycleAuditTable,
+    ProviderEventInboxTable,
+    HttpIdempotencyTable
+)

@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.leader
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.job.LeaderGuardedJob
 import io.bluetape4k.workshop.leader.job.LeaderScheduledJobService
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
-import io.bluetape4k.assertions.assertFailsWith
 
 /**
  * P3-11: 중복 lockName 감지 unit test입니다.
@@ -17,14 +18,16 @@ import io.bluetape4k.assertions.assertFailsWith
  */
 class DuplicateLockNameTest {
 
+    companion object: KLogging()
+
     @Test
     fun `duplicate lockName in job list throws IllegalStateException`() {
         val elector = mockk<io.bluetape4k.leader.LeaderElector>()
-        val job1 = object : LeaderGuardedJob {
+        val job1 = object: LeaderGuardedJob {
             override val lockName = "leader:cache-warmup"
             override fun execute() {}
         }
-        val job2 = object : LeaderGuardedJob {
+        val job2 = object: LeaderGuardedJob {
             override val lockName = "leader:cache-warmup"  // same lockName — duplicate!
             override fun execute() {}
         }
@@ -37,11 +40,11 @@ class DuplicateLockNameTest {
     @Test
     fun `unique lockNames in job list initialize successfully`() {
         val elector = mockk<io.bluetape4k.leader.LeaderElector>()
-        val job1 = object : LeaderGuardedJob {
+        val job1 = object: LeaderGuardedJob {
             override val lockName = "leader:job-a"
             override fun execute() {}
         }
-        val job2 = object : LeaderGuardedJob {
+        val job2 = object: LeaderGuardedJob {
             override val lockName = "leader:job-b"
             override fun execute() {}
         }

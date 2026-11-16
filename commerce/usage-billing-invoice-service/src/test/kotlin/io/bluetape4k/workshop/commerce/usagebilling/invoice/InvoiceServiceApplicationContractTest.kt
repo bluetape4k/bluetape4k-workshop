@@ -9,6 +9,6 @@ class InvoiceServiceApplicationContractTest {
         Class.forName(
             "io.bluetape4k.workshop.commerce.usagebilling.invoice.InvoiceServiceApplication",
         ).name shouldBeEqualTo
-            "io.bluetape4k.workshop.commerce.usagebilling.invoice.InvoiceServiceApplication"
+                "io.bluetape4k.workshop.commerce.usagebilling.invoice.InvoiceServiceApplication"
     }
 }

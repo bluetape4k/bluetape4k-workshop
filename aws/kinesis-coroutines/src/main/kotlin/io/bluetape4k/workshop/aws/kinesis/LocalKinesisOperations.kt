@@ -5,15 +5,11 @@ import io.bluetape4k.aws.spring.kinesis.KinesisPutRecordRequest
 import io.bluetape4k.aws.spring.kinesis.KinesisRecordFlowRequest
 import io.bluetape4k.aws.spring.kinesis.KinesisShardIteratorRequest
 import io.bluetape4k.aws.spring.kinesis.KinesisStartingPosition
-import java.time.Instant
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.services.kinesis.model.CreateStreamResponse
 import software.amazon.awssdk.services.kinesis.model.DeleteStreamResponse
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse
@@ -28,6 +24,11 @@ import software.amazon.awssdk.services.kinesis.model.Shard
 import software.amazon.awssdk.services.kinesis.model.ShardIteratorType
 import software.amazon.awssdk.services.kinesis.model.StreamDescription
 import software.amazon.awssdk.services.kinesis.model.StreamStatus
+import java.time.Instant
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * `local` 프로필에서 사용하는 단일 스트림·단일 샤드 인메모리 구현입니다.
@@ -39,7 +40,7 @@ import software.amazon.awssdk.services.kinesis.model.StreamStatus
 class LocalKinesisOperations(
     private val configuredStreamName: String = "kinesis-coroutines-workshop",
     private val configuredShardId: String = KinesisWorkshopProperties.DEFAULT_SHARD_ID,
-) : KinesisOperations {
+): KinesisOperations {
 
     private val created = AtomicBoolean(false)
     private val nextSequence = AtomicLong(1)
@@ -62,6 +63,9 @@ class LocalKinesisOperations(
 
     /** local fake는 공유 AWS client를 소유하지 않으므로 항상 닫히지 않은 상태로 남습니다. */
     val closed: Boolean = false
+
+    override val client: KinesisAsyncClient
+        get() = error("Not supported Async Client. Only local test")
 
     override suspend fun createStream(streamName: String, shardCount: Int): CreateStreamResponse {
         requireStream(streamName)
@@ -155,7 +159,7 @@ class LocalKinesisOperations(
             ShardIteratorType.LATEST -> records.size
             ShardIteratorType.AT_SEQUENCE_NUMBER,
             ShardIteratorType.AFTER_SEQUENCE_NUMBER,
-            -> indexForSequence(request.startingSequenceNumber, request.type)
+                 -> indexForSequence(request.startingSequenceNumber, request.type)
             else -> 0
         }
         return GetShardIteratorResponse.builder().shardIterator(iterator(index)).build()
@@ -215,7 +219,7 @@ class LocalKinesisOperations(
         return when {
             index >= 0 && type == ShardIteratorType.AFTER_SEQUENCE_NUMBER -> index + 1
             index >= 0 -> index
-            else -> records.size
+            else       -> records.size
         }
     }
 
@@ -253,16 +257,16 @@ class LocalKinesisOperations(
     }
 
     private fun KinesisStartingPosition.iteratorType(): ShardIteratorType = when (this) {
-        KinesisStartingPosition.TrimHorizon -> ShardIteratorType.TRIM_HORIZON
-        KinesisStartingPosition.Latest -> ShardIteratorType.LATEST
+        KinesisStartingPosition.TrimHorizon         -> ShardIteratorType.TRIM_HORIZON
+        KinesisStartingPosition.Latest              -> ShardIteratorType.LATEST
         is KinesisStartingPosition.AtSequenceNumber -> ShardIteratorType.AT_SEQUENCE_NUMBER
         is KinesisStartingPosition.AfterSequenceNumber -> ShardIteratorType.AFTER_SEQUENCE_NUMBER
-        is KinesisStartingPosition.AtTimestamp -> ShardIteratorType.AT_TIMESTAMP
+        is KinesisStartingPosition.AtTimestamp      -> ShardIteratorType.AT_TIMESTAMP
     }
 
     private fun KinesisStartingPosition.startingSequenceNumber(): String? = when (this) {
         is KinesisStartingPosition.AtSequenceNumber -> sequenceNumber
         is KinesisStartingPosition.AfterSequenceNumber -> sequenceNumber
-        else -> null
+        else                                        -> null
     }
 }

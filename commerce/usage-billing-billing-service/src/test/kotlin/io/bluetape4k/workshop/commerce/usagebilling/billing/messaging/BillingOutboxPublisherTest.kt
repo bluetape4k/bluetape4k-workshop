@@ -1,13 +1,19 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.messaging
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 
 class BillingOutboxPublisherTest {
+
+    private companion object: KLogging() {
+        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
+    }
+
     private val journal = InMemoryBillingOutboxJournal()
     private val transport = RecordingBillingEventTransport()
     private val publisher = BillingOutboxPublisher(journal, transport, Clock.fixed(NOW, ZoneOffset.UTC))
@@ -33,15 +39,20 @@ class BillingOutboxPublisherTest {
     }
 
     private fun event(): BillingOutboxLease =
-        BillingOutboxLease(UUID.randomUUID(), "tenant-a|BillingPeriod|period-1", "{\"event\":\"ChargeRated\"}")
+        BillingOutboxLease(
+            eventId = UUID.randomUUID(),
+            partitionKey = "tenant-a|BillingPeriod|period-1",
+            payload = "{\"event\":\"ChargeRated\"}"
+        )
 
-    private class InMemoryBillingOutboxJournal : BillingOutboxJournal {
+    private class InMemoryBillingOutboxJournal: BillingOutboxJournal {
         val events = mutableListOf<BillingOutboxLease>()
         private val statusByEvent = mutableMapOf<UUID, BillingOutboxStatus>()
         private val ownerByEvent = mutableMapOf<UUID, String>()
 
         override fun claim(owner: String, now: Instant, limit: Int): List<BillingOutboxLease> =
-            events.filter { statusOf(it.eventId) == BillingOutboxStatus.PENDING }
+            events
+                .filter { statusOf(it.eventId) == BillingOutboxStatus.PENDING }
                 .take(limit)
                 .onEach { event ->
                     statusByEvent[event.eventId] = BillingOutboxStatus.CLAIMED
@@ -49,22 +60,26 @@ class BillingOutboxPublisherTest {
                 }
 
         override fun markPublished(eventId: UUID, owner: String, now: Instant): Boolean =
-            ownerByEvent[eventId]?.takeIf { it == owner }?.let {
-                statusByEvent[eventId] = BillingOutboxStatus.PUBLISHED
-                true
-            } ?: false
+            ownerByEvent[eventId]
+                ?.takeIf { it == owner }
+                ?.let {
+                    statusByEvent[eventId] = BillingOutboxStatus.PUBLISHED
+                    true
+                } ?: false
 
         override fun markRetryWait(eventId: UUID, owner: String, now: Instant): Boolean =
-            ownerByEvent[eventId]?.takeIf { it == owner }?.let {
-                statusByEvent[eventId] = BillingOutboxStatus.RETRY_WAIT
-                true
-            } ?: false
+            ownerByEvent[eventId]
+                ?.takeIf { it == owner }
+                ?.let {
+                    statusByEvent[eventId] = BillingOutboxStatus.RETRY_WAIT
+                    true
+                } ?: false
 
         fun statusOf(eventId: UUID): BillingOutboxStatus =
             statusByEvent[eventId] ?: BillingOutboxStatus.PENDING
     }
 
-    private class RecordingBillingEventTransport : BillingEventTransport {
+    private class RecordingBillingEventTransport: BillingEventTransport {
         val keys = mutableListOf<String>()
         var failure: BillingEventTransportFailure? = null
 
@@ -72,9 +87,5 @@ class BillingOutboxPublisherTest {
             failure?.let { throw it }
             keys += partitionKey
         }
-    }
-
-    private companion object {
-        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
     }
 }

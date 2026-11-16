@@ -4,14 +4,19 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.order.domain.AggregateType
 import io.bluetape4k.workshop.commerce.order.domain.OrderStatus
 import io.bluetape4k.workshop.commerce.order.domain.PaymentStatus
 import io.bluetape4k.workshop.commerce.order.domain.ProviderMode
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 internal class LifecycleRepositoryTest {
+
+    companion object: KLogging()
+
     private val orders = OrderRepository()
     private val payments = PaymentAttemptRepository()
     private val audits = LifecycleAuditRepository()
@@ -32,6 +37,7 @@ internal class LifecycleRepositoryTest {
                 )
             )
             payments.save(PaymentAttemptRecord(paymentId, orderId, PaymentStatus.CREATED))
+                .also { log.debug { "PaymentAttemptRecord=$it" } }
 
             orders.transition(orderId, 0, OrderStatus.SUBMITTED, OrderStatus.ACCEPTED).shouldBeTrue()
             payments.transition(paymentId, 0, PaymentStatus.CREATED, PaymentStatus.AUTHORIZING).shouldBeTrue()
@@ -52,7 +58,8 @@ internal class LifecycleRepositoryTest {
                     reasonCode = null,
                     actorType = "PROVIDER"
                 )
-            )
+            ).also { log.debug { "LifecycleAuditRecord=$it" } }
+            
             audits.findByOrderId(orderId).single().revision shouldBeEqualTo 2L
         }
     }

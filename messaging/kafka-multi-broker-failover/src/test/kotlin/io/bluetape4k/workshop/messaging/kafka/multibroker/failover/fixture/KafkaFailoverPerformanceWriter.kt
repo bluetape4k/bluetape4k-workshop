@@ -1,14 +1,16 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import tools.jackson.databind.json.JsonMapper
 import java.nio.channels.FileChannel
-import java.nio.charset.StandardCharsets
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentHashMap.KeySetView
 
 /** 18-field evidence와 분리해 보관하는 허용 목록 timing/counter observation입니다. */
 data class KafkaFailoverPerformance(
@@ -66,7 +68,7 @@ data class KafkaFailoverPerformance(
 class KafkaFailoverPerformanceWriter(
     private val runId: String,
     root: Path = Path.of("build/reports/kafka-failover"),
-) : AutoCloseable {
+): AutoCloseable {
     private val runDirectory: Path
     private val target: Path
     private var closed = false
@@ -89,7 +91,7 @@ class KafkaFailoverPerformanceWriter(
 
         val line = observation.toJsonLine() + "\n"
         val previous = if (Files.exists(target)) Files.readAllBytes(target) else ByteArray(0)
-        val next = previous + line.toByteArray(StandardCharsets.UTF_8)
+        val next = previous + line.toUtf8Bytes()
         val temporary = tempPath()
         try {
             FileChannel.open(
@@ -122,9 +124,10 @@ class KafkaFailoverPerformanceWriter(
 
     private fun tempPath(): Path = runDirectory.resolve("performance.jsonl.tmp")
 
-    private companion object {
+    private companion object: KLogging() {
         val RUN_ID_PATTERN = Regex("[A-Za-z0-9._-]{1,128}")
+
         /** test JVM마다 한 번 run을 비운 뒤 독립적인 scenario stream을 추가합니다. */
-        val INITIALIZED_TARGETS = ConcurrentHashMap.newKeySet<Path>()
+        val INITIALIZED_TARGETS: KeySetView<Path?, Boolean?> = ConcurrentHashMap.newKeySet<Path>()
     }
 }

@@ -1,18 +1,17 @@
 package io.bluetape4k.workshop.webflux
 
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.webflux.model.Event
 import io.bluetape4k.workshop.webflux.model.Quote
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,7 +25,7 @@ import java.math.BigDecimal
 class WebsocketApplicationTest(
     @param:Autowired val context: ApplicationContext,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val client by lazy {
         WebTestClient.bindToApplicationContext(context).build()
@@ -38,14 +37,13 @@ class WebsocketApplicationTest(
     }
 
     @Test
-    fun `get quotes`() = runSuspendIO {
+    fun `get events`() = runSuspendIO {
         client.httpGet("/quotes")
             .expectStatus().is2xxSuccessful
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .returnResult<Event>().responseBody
             .asFlow().log("Events")
             .onEach { event ->
-                log.debug { "received event=$event" }
                 event.data.all { it.price > BigDecimal.ZERO }.shouldBeTrue()
             }
             .collect()
@@ -53,13 +51,12 @@ class WebsocketApplicationTest(
 
     @Test
     fun `fetch quotes by flow`() = runSuspendIO {
-        client.httpGet("/quotes/100")
+        client.httpGet("/quotes/50")
             .expectStatus().is2xxSuccessful
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .returnResult<Quote>().responseBody
             .asFlow().log("Quotes")
             .onEach { quote ->
-                log.debug { "received quote=$quote" }
                 quote.price shouldBeGreaterThan BigDecimal.ZERO
             }
             .collect()

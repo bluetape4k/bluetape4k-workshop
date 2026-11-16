@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.gradle.api.tasks.testing.Test
 
 plugins {
     id("io.bluetape4k.workshop.high-contention-profile")
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    kotlin("kapt")
 }
 
 java {
@@ -34,7 +34,7 @@ dependencies {
     testImplementation(project(":shared"))
 
     implementation(libs.bluetape4k.core)
-    implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.jdbc)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.micrometer)

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.mongodb.imperative
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.mongodb.Process
 import io.bluetape4k.workshop.mongodb.State
 import kotlinx.atomicfu.atomic
@@ -18,7 +19,7 @@ class TransitionService(
     private val repository: ProcessRepository,
     private val operations: MongoOperations,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val counter = atomic(0)
 
@@ -54,6 +55,7 @@ class TransitionService(
             .matching(query)
             .apply(update)
             .first()
+            .let { log.debug { "update result=$it" } }
     }
 
     fun verify(process: Process) {
@@ -70,5 +72,6 @@ class TransitionService(
             .matching(query)
             .apply(update)
             .first()
+            .let { log.debug { "update result=$it" } }
     }
 }

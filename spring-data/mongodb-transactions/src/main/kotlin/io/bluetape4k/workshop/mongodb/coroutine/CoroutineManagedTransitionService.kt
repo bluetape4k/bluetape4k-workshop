@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.mongodb.coroutine
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.mongodb.Process
 import io.bluetape4k.workshop.mongodb.State
@@ -20,7 +21,7 @@ class CoroutineManagedTransitionService(
     private val repository: CoroutineProcessRepository,
     private val operations: ReactiveMongoOperations,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val counter = atomic(0)
 
@@ -58,6 +59,7 @@ class CoroutineManagedTransitionService(
             .apply(update)
             .first()
             .awaitSingle()
+            .let { log.debug { "update result=$it" } }
     }
 
     suspend fun verify(process: Process) {
@@ -75,5 +77,6 @@ class CoroutineManagedTransitionService(
             .apply(update)
             .first()
             .awaitSingle()
+            .let { log.debug { "update result=$it" } }
     }
 }

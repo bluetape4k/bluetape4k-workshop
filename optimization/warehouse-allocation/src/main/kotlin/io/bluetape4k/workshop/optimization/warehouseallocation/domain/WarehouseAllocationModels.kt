@@ -33,6 +33,7 @@ internal data class SkuStockSnapshot(
         require(reservedQuantity in 0..onHandQuantity)
         require(stockRevision >= 0 && sourceEventRevision >= 0)
     }
+
     @get:JsonIgnore
     val availableQuantity: Int get() = onHandQuantity - reservedQuantity
 }
@@ -59,7 +60,9 @@ internal data class Order(
     val status: OrderStatus = OrderStatus.OPEN,
     val revision: Long = 0,
 ) {
-    init { require(lines.isNotEmpty()); require(revision >= 0) }
+    init {
+        require(lines.isNotEmpty()); require(revision >= 0)
+    }
 }
 
 internal data class PickWave(
@@ -72,7 +75,9 @@ internal data class PickWave(
     val revision: Long = 0,
     val status: PickWaveStatus = PickWaveStatus.OPEN,
 ) {
-    init { require(maxLines >= 0); require(warehouseCapacityRevision >= 0); require(revision >= 0) }
+    init {
+        require(maxLines >= 0); require(warehouseCapacityRevision >= 0); require(revision >= 0)
+    }
 }
 
 internal data class CommittedAllocationPin(
@@ -84,7 +89,9 @@ internal data class CommittedAllocationPin(
     val createdBy: String = "system",
     val status: PinStatus = PinStatus.ACTIVE,
 ) {
-    init { require(quantity in 1..WarehouseAllocationLimits.MAX_QUANTITY); require(pinRevision >= 0) }
+    init {
+        require(quantity in 1..WarehouseAllocationLimits.MAX_QUANTITY); require(pinRevision >= 0)
+    }
 }
 
 internal data class Allocation(
@@ -93,7 +100,9 @@ internal data class Allocation(
     val waveId: WaveId,
     val quantity: Int,
 ) {
-    init { require(quantity in 1..WarehouseAllocationLimits.MAX_QUANTITY) }
+    init {
+        require(quantity in 1..WarehouseAllocationLimits.MAX_QUANTITY)
+    }
 }
 
 internal data class ScoreSummary(val hard: Int, val medium: Int, val soft: Int) {

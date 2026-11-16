@@ -32,7 +32,7 @@ data class FollowRecommendation(
     val mutualFollowCount: Int,
     /** 중간 정점입니다. seed 사용자의 follow 대상 중 [person]도 follow하는 User입니다. */
     val mutualFollows: List<GraphVertex>,
-) : Serializable {
+): Serializable {
     init {
         mutualFollowCount.requirePositiveNumber("mutualFollowCount")
         mutualFollows.size.requireEquals(mutualFollowCount, "mutualFollows.size")

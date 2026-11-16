@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.fallback.api
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.messaging.fallback.domain.PlaceOrderUseCase
 import io.bluetape4k.workshop.messaging.fallback.domain.TransactionalOrderWriter
 import jakarta.validation.Valid
@@ -21,6 +22,8 @@ class OrderController(
     private val placeOrderUseCase: PlaceOrderUseCase,
     private val transactionalOrderWriter: TransactionalOrderWriter,
 ) {
+
+    companion object: KLogging()
 
     @PostMapping
     fun placeOrder(@Valid @RequestBody request: OrderRequest): ResponseEntity<OrderResponse> {

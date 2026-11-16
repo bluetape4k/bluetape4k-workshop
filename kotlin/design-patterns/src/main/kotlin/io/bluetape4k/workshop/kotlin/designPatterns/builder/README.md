@@ -3,8 +3,7 @@
 [한국어](README.ko.md) | English
 
 Builder separates required identity from optional construction steps. In this package, `Hero.Builder`
-requires `profession` and `name`, then optional fluent methods add hair, armor, and weapon choices
-before `build()` creates the immutable `Hero`.
+requires `profession` and `name`, then optional fluent methods add hair, armor, and weapon choices before `build()` creates the immutable `Hero`.
 
 ## Architecture
 
@@ -12,12 +11,12 @@ before `build()` creates the immutable `Hero`.
 
 ## Source map
 
-| source | role |
-|---|---|
-| `Hero` | target object with a private constructor |
-| `Hero.Builder` | fluent builder for optional fields |
-| `Enums.kt` | `Profession`, `HairType`, `HairColor`, `Armor`, `Weapon` option sets |
-| `HeroDataClass` | Kotlin alternative using default nullable properties |
+| source          | role                                                                 |
+|-----------------|----------------------------------------------------------------------|
+| `Hero`          | target object with a private constructor                             |
+| `Hero.Builder`  | fluent builder for optional fields                                   |
+| `Enums.kt`      | `Profession`, `HairType`, `HairColor`, `Armor`, `Weapon` option sets |
+| `HeroDataClass` | Kotlin alternative using default nullable properties                 |
 
 ## Usage
 
@@ -28,5 +27,4 @@ val mage = Hero.Builder(Profession.MAGE, "Riobard")
     .build()
 ```
 
-For simple data holders, `HeroDataClass` may be clearer than a builder. Use the builder when creation
-has named steps, validation points, or more complex invariants.
+For simple data holders, `HeroDataClass` may be clearer than a builder. Use the builder when creation has named steps, validation points, or more complex invariants.

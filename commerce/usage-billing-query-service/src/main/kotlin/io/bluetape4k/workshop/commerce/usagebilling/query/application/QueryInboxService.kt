@@ -1,9 +1,10 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.application
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.commerce.usagebilling.query.config.QueryMetrics
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryApplyResult
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
-import io.bluetape4k.workshop.commerce.usagebilling.query.config.QueryMetrics
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -12,6 +13,9 @@ class QueryInboxService(
     private val journal: QueryProjectionJournal,
     private val metrics: QueryMetrics,
 ) {
+
+    companion object: KLogging()
+
     @Transactional
     fun apply(event: QueryInboxEvent): QueryApplyResult {
         if (journal.hasEvent(event.eventId)) {
@@ -20,6 +24,7 @@ class QueryInboxService(
         }
         journal.apply(event)
         metrics.inboxOutcome("APPLIED", event.eventType)
+
         return QueryApplyResult(applied = true)
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 enum class MeterOutboxStatus {
     PENDING,
@@ -23,7 +23,7 @@ data class MeterOutboxLease(
     val payload: String,
     val status: MeterOutboxStatus,
     val claimOwner: String? = null,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -33,7 +33,7 @@ data class MeterOutboxPublishResult(
     val claimed: Int = 0,
     val published: Int = 0,
     val retryWait: Int = 0,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -51,7 +51,7 @@ interface MeterEventTransport {
     fun publish(partitionKey: String, payload: String)
 }
 
-class MeterEventTransportFailure(cause: Exception) : RuntimeException("meter_event_transport_failure", cause)
+class MeterEventTransportFailure(cause: Exception): RuntimeException("meter_event_transport_failure", cause)
 
 @Component
 class MeterOutboxPublisher(
@@ -80,7 +80,7 @@ class MeterOutboxPublisher(
         return MeterOutboxPublishResult(claimed.size, published, retryWait)
     }
 
-    private companion object : KLogging() {
+    private companion object: KLogging() {
         const val DEFAULT_BATCH_SIZE = 100
     }
 }

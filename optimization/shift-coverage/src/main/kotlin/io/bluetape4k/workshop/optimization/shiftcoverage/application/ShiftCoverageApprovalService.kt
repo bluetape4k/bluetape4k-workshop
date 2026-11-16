@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
-import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftAssignment
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlanId
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftAssignment
 import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.AssignmentChange
 import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.ShiftCoverageAssignmentStore
 import java.util.concurrent.locks.ReentrantLock
@@ -12,11 +14,15 @@ class ShiftCoverageApprovalService(
     private val plans: ShiftCoveragePlanStore,
     private val assignments: ShiftCoverageAssignmentStore,
 ) {
+
+    companion object: KLogging()
+
     private val mutationLock = ReentrantLock()
 
     fun approve(planId: PlanId, revision: Long): Boolean = mutationLock.withLock {
         val stored = plans.find(planId, revision) ?: return@withLock false
         if (stored.state != ShiftCoveragePlanState.DRAFT || stored.proposal.revision != revision) return@withLock false
+
         val changes = stored.proposal.assignments.map { planned ->
             val current = assignments.findAssignment(planned.assignmentId)
             val replacement = ShiftAssignment(
@@ -31,8 +37,11 @@ class ShiftCoverageApprovalService(
             AssignmentChange(current?.revision, replacement)
         }
         val materializable = changes.filterNotNull()
+        log.debug { "materializable=$materializable" }
+
         if (materializable.size != stored.proposal.assignments.size) return@withLock false
         if (materializable.isNotEmpty() && !assignments.compareAndSetBatch(materializable)) return@withLock false
+
         plans.approveIfDraft(planId, revision)
     }
 }

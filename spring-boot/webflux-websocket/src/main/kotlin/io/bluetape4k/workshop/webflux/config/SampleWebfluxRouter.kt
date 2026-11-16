@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.webflux.config
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.webflux.service.QuoteGenerator
@@ -13,7 +14,6 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import org.springframework.web.reactive.function.server.coRouter
-import java.time.Duration
 
 /**
  * `@RestController` 가 아닌 Functional router 로 router를 정의
@@ -24,7 +24,7 @@ class SampleWebfluxRouter(
     @Value("classpath:/static/index.html")
     private val indexHtml: Resource,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Bean
     fun getIndex(): RouterFunction<ServerResponse> = coRouter {
@@ -43,9 +43,10 @@ class SampleWebfluxRouter(
                 .bodyAndAwait(quoteGenerator.getQuotes())
         }
         GET("/quotes/{duration}") { request ->
-            val durationMillis = request.pathVariable("duration").toLong()
+            val duration = request.pathVariable("duration").toLong()
                 .requirePositiveNumber("duration")
-            val duration = Duration.ofMillis(durationMillis)
+                .millis()
+
             // 여러 개의 JSON 객체를 보낼 때에는 `application/x-ndjson` 을 사용해야 합니다.
             // https://www.devopsschool.com/blog/what-is-difference-between-application-x-ndjson-and-application-json/
             ServerResponse.ok()

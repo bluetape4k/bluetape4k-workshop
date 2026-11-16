@@ -1,17 +1,17 @@
 package io.bluetape4k.workshop.mongodb.domain
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,7 +28,7 @@ class FlowAndCoroutineTest(
     @param:Autowired private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {
@@ -39,8 +39,15 @@ class FlowAndCoroutineTest(
     fun `find - the coroutine way`() = runSuspendIO {
         val person = operations.insert<Person>().one(newPerson()).awaitSingle()
 
-        val query = Query(Criteria.where(Person::firstname.name).isEqualTo(person.firstname.shouldNotBeNull()))
+        val query = Query(
+            Criteria
+                .where(Person::firstname.name)
+                .isEqualTo(person.firstname.shouldNotBeNull())
+        )
+
         val loaded = operations.find<Person>(query).awaitSingle()
+
+        log.debug { "loaded=$loaded" }
         loaded shouldBeEqualTo person
     }
 

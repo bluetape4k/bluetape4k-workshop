@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.optimization.planning.web
 
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContainIgnoringCase
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.planning.PlanningContractsApplication
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAggregateTable
@@ -30,6 +34,17 @@ internal class PlanningControllerTest @Autowired constructor(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper,
 ) {
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { postgres.password.shouldNotBeNull() }
+        }
+    }
 
     @BeforeEach
     fun resetSchema() {
@@ -63,7 +78,9 @@ internal class PlanningControllerTest @Autowired constructor(
             .andExpect(status().isAccepted)
             .andExpect(jsonPath("$.status").value("QUEUED"))
             .andReturn()
+
         val requestId = objectMapper.readTree(createResult.response.contentAsString)["id"].stringValue()
+        log.debug { "requestId=$requestId" }
 
         mockMvc.perform(post("/api/planning/process"))
             .andExpect(status().isOk)
@@ -87,8 +104,10 @@ internal class PlanningControllerTest @Autowired constructor(
             .andReturn()
             .response
             .contentAsString
+
+        log.debug { "queryBody=$queryBody" }
         listOf("payload", "signature", "secret", "password", "jdbc:").forEach { forbidden ->
-            check(!queryBody.contains(forbidden, ignoreCase = true)) { "response leaked $forbidden" }
+            queryBody shouldNotContainIgnoringCase forbidden
         }
 
         mockMvc.perform(post("/api/planning/requests/$requestId/commands"))
@@ -117,17 +136,5 @@ internal class PlanningControllerTest @Autowired constructor(
         )
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("invalid request"))
-    }
-
-    companion object {
-        private val postgres = PostgreSQLServer.Launcher.postgres
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
-            registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
-        }
     }
 }

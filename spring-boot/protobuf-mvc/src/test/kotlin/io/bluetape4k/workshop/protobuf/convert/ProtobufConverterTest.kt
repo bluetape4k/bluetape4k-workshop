@@ -1,20 +1,20 @@
 package io.bluetape4k.workshop.protobuf.convert
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.protobuf.School.Course
 import io.bluetape4k.workshop.protobuf.School.Student
 import io.bluetape4k.workshop.protobuf.StudentKt.phoneNumber
 import io.bluetape4k.workshop.protobuf.course
 import io.bluetape4k.workshop.protobuf.student
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 
 class ProtobufConverterTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     private val course = course {
         id = 2
@@ -160,12 +160,13 @@ class ProtobufConverterTest {
     @Test
     fun `convert protobuf to json and parse as message`() {
         val json = course.toJson()
-        log.debug { "json=$json" }
+        log.debug { "json=\n$json" }
         json.shouldNotBeEmpty()
 
         val message = messageFromJson(json)
-        log.debug { "message=$message" }
+
         message.toString().apply {
+            log.debug { "message=\n$this" }
             this shouldContain "string_value: \"Spring Boot Programming\""
             this shouldContain "string_value: \"jane.doe@example.com\""
         }

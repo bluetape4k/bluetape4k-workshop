@@ -17,12 +17,13 @@ import org.neo4j.driver.GraphDatabase
  * Neo4j Testcontainer가 뒷받침하는 [AbstractKnowledgeGraphTest]입니다.
  *
  * Docker가 필요합니다. 실행: `./gradlew :graph-knowledge-graph:integrationTest`
- */
 @Tag("integration")
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class Neo4jKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
-    companion object : KLogging() {
-        private val neo4j = Neo4jServer.Launcher.neo4j
+class Neo4jKnowledgeGraphTest: AbstractKnowledgeGraphTest() {
+
+    companion object: KLogging() {
+        private val neo4j by lazy { Neo4jServer.Launcher.neo4j }
     }
 
     override val graphName: String = "neo4j_knowledge"
@@ -37,8 +38,11 @@ class Neo4jKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown" }
+        }
     }
 }
 
@@ -49,9 +53,10 @@ class Neo4jKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class Neo4jKnowledgeGraphSuspendTest : AbstractKnowledgeGraphSuspendTest() {
-    companion object : KLogging() {
-        private val neo4j = Neo4jServer.Launcher.neo4j
+class Neo4jKnowledgeGraphSuspendTest: AbstractKnowledgeGraphSuspendTest() {
+
+    companion object: KLogging() {
+        private val neo4j by lazy { Neo4jServer.Launcher.neo4j }
     }
 
     override val graphName: String = "neo4j_knowledge_suspend"
@@ -66,7 +71,10 @@ class Neo4jKnowledgeGraphSuspendTest : AbstractKnowledgeGraphSuspendTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown" }
+        }
     }
 }

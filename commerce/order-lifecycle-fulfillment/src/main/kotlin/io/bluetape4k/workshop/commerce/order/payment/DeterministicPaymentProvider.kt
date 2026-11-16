@@ -13,36 +13,30 @@ internal interface PaymentProvider {
 }
 
 @Component
-internal class DeterministicPaymentProvider : PaymentProvider {
+internal class DeterministicPaymentProvider: PaymentProvider {
+
+    companion object: KLogging()
+
     override fun authorize(event: OrderSubmitted): List<PaymentProviderEvent> {
         val authorizing = event.providerEvent("authorizing", ProviderEventKind.AUTHORIZING)
         val success = event.providerEvent("success", ProviderEventKind.SUCCEEDED)
         val failure = event.providerEvent("decline", ProviderEventKind.FAILED)
+
         return when (event.providerMode) {
-            ProviderMode.SUCCESS -> {
-                listOf(authorizing, success)
-            }
-            ProviderMode.DECLINE -> {
-                listOf(authorizing, failure)
-            }
-            ProviderMode.DELAYED_SUCCESS -> {
-                listOf(authorizing)
-            }
-            ProviderMode.OUT_OF_ORDER -> {
-                listOf(
-                    authorizing,
-                    success,
-                    authorizing.copy(providerEventId = "${authorizing.providerEventId}-late")
-                )
-            }
-            ProviderMode.DUPLICATE_SUCCESS -> {
-                listOf(authorizing, success, success)
-            }
+            ProviderMode.SUCCESS           -> listOf(authorizing, success)
+            ProviderMode.DECLINE           -> listOf(authorizing, failure)
+            ProviderMode.DELAYED_SUCCESS   -> listOf(authorizing)
+            ProviderMode.OUT_OF_ORDER      -> listOf(
+                authorizing,
+                success,
+                authorizing.copy(providerEventId = "${authorizing.providerEventId}-late")
+            )
+            ProviderMode.DUPLICATE_SUCCESS -> listOf(authorizing, success, success)
         }.also { events ->
             log.debug {
                 "deterministic_provider_authorize orderId=${event.orderId} " +
-                    "paymentAttemptId=${event.paymentAttemptId} " +
-                    "mode=${event.providerMode} eventKinds=${events.joinToString(",") { it.kind.name }}"
+                        "paymentAttemptId=${event.paymentAttemptId} " +
+                        "mode=${event.providerMode} eventKinds=${events.joinToString(",") { it.kind.name }}"
             }
         }
     }
@@ -50,12 +44,11 @@ internal class DeterministicPaymentProvider : PaymentProvider {
     private fun OrderSubmitted.providerEvent(
         suffix: String,
         kind: ProviderEventKind,
-    ) = PaymentProviderEvent(
-        providerEventId = "fake-$paymentAttemptId-$suffix",
-        paymentAttemptId = paymentAttemptId,
-        kind = kind,
-        occurredAt = occurredAt
-    )
-
-    companion object : KLogging()
+    ): PaymentProviderEvent =
+        PaymentProviderEvent(
+            providerEventId = "fake-$paymentAttemptId-$suffix",
+            paymentAttemptId = paymentAttemptId,
+            kind = kind,
+            occurredAt = occurredAt
+        )
 }

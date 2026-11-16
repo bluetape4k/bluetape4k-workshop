@@ -14,9 +14,9 @@ import org.springframework.transaction.annotation.Transactional
  * Kafka-first outbox fallback 예제가 사용하는 workshop table 을 생성합니다.
  */
 @Component
-class ExposedConfig : ApplicationRunner {
+class ExposedConfig: ApplicationRunner {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Transactional
     override fun run(args: ApplicationArguments) {

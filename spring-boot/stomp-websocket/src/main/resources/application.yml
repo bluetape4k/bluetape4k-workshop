@@ -1,11 +1,11 @@
 server:
-    port: 8080
-    compression:
-        enabled: true
+  port: 8080
+  compression:
+    enabled: true
 
 spring:
-    application:
-        name: Stomp WebSocket Appliation
+  application:
+    name: Stomp WebSocket Appliation
 
-    aot:
-        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
+  aot:
+    enabled: true  # AOT (Ahead Of Time) 컴파일 활성화

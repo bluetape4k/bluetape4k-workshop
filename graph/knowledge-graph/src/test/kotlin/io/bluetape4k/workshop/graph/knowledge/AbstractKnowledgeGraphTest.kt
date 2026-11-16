@@ -2,15 +2,17 @@ package io.bluetape4k.workshop.graph.knowledge
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.schema.schemaManager
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.graph.knowledge.schema.KnowledgeGraphSchema
 import io.bluetape4k.workshop.graph.knowledge.seed.KnowledgeGraphSeed
 import io.bluetape4k.workshop.graph.knowledge.seed.seedKnowledgeGraph
-import io.bluetape4k.workshop.graph.knowledge.schema.KnowledgeGraphSchema
 import io.bluetape4k.workshop.graph.knowledge.service.KnowledgeGraphService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -43,7 +45,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractKnowledgeGraphTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     protected abstract val graphName: String
     protected abstract val ops: GraphOperations
@@ -67,6 +69,7 @@ abstract class AbstractKnowledgeGraphTest {
     @Test
     fun `findMentionedEntities returns entities mentioned by a document`() {
         val entityIds = service.findMentionedEntities(seed.docKotlinGuide.id)
+            .onEach { log.debug { "Mentioned entity=$it" } }
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-kotlin"
@@ -76,6 +79,7 @@ abstract class AbstractKnowledgeGraphTest {
     @Test
     fun `findMentionedEntities for spring guide returns spring and kotlin`() {
         val entityIds = service.findMentionedEntities(seed.docSpringGuide.id)
+            .onEach { log.debug { "Mentioned entity=$it" } }
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-spring"
@@ -89,6 +93,7 @@ abstract class AbstractKnowledgeGraphTest {
     @Test
     fun `findRelatedEntities returns direct neighbours at depth 1`() {
         val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 1)
+            .onEach { log.debug { "Related entity=$it" } }
             .map { it.properties["entityId"] }
 
         entityIds.shouldNotBeEmpty()
@@ -99,6 +104,7 @@ abstract class AbstractKnowledgeGraphTest {
     @Test
     fun `findRelatedEntities at depth 2 includes transitively reachable entities`() {
         val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 2)
+            .onEach { log.debug { "Related entity=$it" } }
             .map { it.properties["entityId"] }
 
         entityIds.shouldNotBeEmpty()
@@ -123,6 +129,7 @@ abstract class AbstractKnowledgeGraphTest {
     @Test
     fun `findConceptsForEntity returns framework concept for spring entity`() {
         val conceptIds = service.findConceptsForEntity(seed.entitySpring.id)
+            .onEach { log.debug { "Concepts entity=$it" } }
             .map { it.properties["conceptId"] }
 
         conceptIds.shouldNotBeEmpty()
@@ -140,7 +147,8 @@ abstract class AbstractKnowledgeGraphTest {
             seed.entitySpring.id,
             maxDepth = 3,
             maxPaths = 5,
-        )
+        ).onEach { log.debug { "Path=$it" } }
+
 
         paths.shouldNotBeEmpty()
         val vertexIds = paths.first().vertices.map { it.properties["entityId"] }
@@ -155,7 +163,7 @@ abstract class AbstractKnowledgeGraphTest {
             seed.entityJvm.id,
             maxDepth = 4,
             maxPaths = 1,
-        )
+        ).onEach { log.debug { "Path=$it" } }
 
         // 최대 path 1개만 반환합니다.
         paths.size shouldBeEqualTo 1
@@ -171,6 +179,7 @@ abstract class AbstractKnowledgeGraphTest {
         service.relateEntities(seed.entityKotlin.id, gradle.id, relationType = "uses")
 
         val entityIds = service.findRelatedEntities(seed.entityKotlin.id)
+            .onEach { log.debug { "Related entity=$it" } }
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-gradle"
@@ -183,6 +192,7 @@ abstract class AbstractKnowledgeGraphTest {
         service.classify(gradle.id, buildTool.id)
 
         val conceptIds = service.findConceptsForEntity(gradle.id)
+            .onEach { log.debug { "Concepts entity=$it" } }
             .map { it.properties["conceptId"] }
 
         conceptIds shouldContain "concept-build-tool"
@@ -195,6 +205,7 @@ abstract class AbstractKnowledgeGraphTest {
         service.mention(doc.id, gradle.id, confidence = 90)
 
         val entityIds = service.findMentionedEntities(doc.id)
+            .onEach { log.debug { "Mentioned entity=$it" } }
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-gradle"
@@ -305,7 +316,7 @@ abstract class AbstractKnowledgeGraphTest {
         val second = service.planSchema()
 
         first shouldBeEqualTo second
-        first.options.dryRun shouldBeEqualTo true
+        first.options.dryRun.shouldBeTrue()
         KnowledgeGraphSchema.desiredSchema().indexes.size shouldBeEqualTo 3
         KnowledgeGraphSchema.desiredSchema().constraints.size shouldBeEqualTo 3
         manager.listIndexes() shouldBeEqualTo indexesBefore

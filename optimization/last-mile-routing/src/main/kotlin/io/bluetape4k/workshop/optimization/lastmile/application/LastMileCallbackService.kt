@@ -26,6 +26,8 @@ internal class LastMileCallbackService(
     private val clock: Clock,
 ) {
 
+    companion object: KLogging()
+
     @Transactional
     fun handle(callback: RoutingCallback): CallbackDecision {
         if (!RoutingCallbackCanonicalizer.matches(callback)) {
@@ -63,14 +65,14 @@ internal class LastMileCallbackService(
         val existing = repository.loadProposal(proposal.planId, proposal.planRevision)
         val decision = when {
             existing?.providerRevision != null &&
-                existing.providerRevision.value >= callback.providerRevision.value -> CallbackDecision.STALE_PROVIDER_REVISION
+                    existing.providerRevision.value >= callback.providerRevision.value -> CallbackDecision.STALE_PROVIDER_REVISION
 
-            existing == null -> {
+            existing == null                                                           -> {
                 repository.saveProposal(proposal.copy(providerRevision = callback.providerRevision))
                 CallbackDecision.ACCEPTED
             }
 
-            existing.providerRevision != null -> {
+            existing.providerRevision != null                                          -> {
                 check(
                     repository.updateProposalProviderRevision(
                         planId = proposal.planId,
@@ -82,7 +84,7 @@ internal class LastMileCallbackService(
                 CallbackDecision.ACCEPTED
             }
 
-            else -> {
+            else                                                                       -> {
                 // A proposal without a provider revision is a local deterministic result.
                 // Do not overwrite its route history with an external callback.
                 CallbackDecision.STALE_PROVIDER_REVISION
@@ -112,6 +114,4 @@ internal class LastMileCallbackService(
         }
         return decision
     }
-
-    companion object : KLogging()
 }

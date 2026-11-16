@@ -2,10 +2,8 @@
 
 [한국어](README.ko.md) | English
 
-This module shows duplicate-safe order creation with the **Idempotency-Key** header.
-The first successful `POST /api/orders` stores its response in a Redisson `RMapCache`
-for 5 minutes; retries with the same key return the original response body instead
-of creating another order.
+This module shows duplicate-safe order creation with the **Idempotency-Key** header. The first successful `POST /api/orders` stores its response in a Redisson `RMapCache`
+for 5 minutes; retries with the same key return the original response body instead of creating another order.
 
 ## Architecture
 
@@ -17,15 +15,15 @@ of creating another order.
 
 ## Core Features
 
-| Feature | Detail |
-|---|---|
-| **Duplicate detection** | `Idempotency-Key` request header matched against Redis cache |
-| **Storage backend** | Redisson `RMapCache` — atomic `putIfAbsent` (SET NX semantics) |
-| **TTL** | 5 minutes per key |
-| **Concurrency** | First writer wins via `putIfAbsent`; concurrent late writers receive the cached response |
-| **Missing header** | HTTP 400 Bad Request |
-| **First creation** | HTTP 201 Created |
-| **Replay** | HTTP 200 OK with original response body |
+| Feature                 | Detail                                                                                   |
+|-------------------------|------------------------------------------------------------------------------------------|
+| **Duplicate detection** | `Idempotency-Key` request header matched against Redis cache                             |
+| **Storage backend**     | Redisson `RMapCache` — atomic `putIfAbsent` (SET NX semantics)                           |
+| **TTL**                 | 5 minutes per key                                                                        |
+| **Concurrency**         | First writer wins via `putIfAbsent`; concurrent late writers receive the cached response |
+| **Missing header**      | HTTP 400 Bad Request                                                                     |
+| **First creation**      | HTTP 201 Created                                                                         |
+| **Replay**              | HTTP 200 OK with original response body                                                  |
 
 ## Before / After
 
@@ -89,10 +87,10 @@ http POST :8080/api/orders productId=prod-001 quantity:=2 userId=user-123
 
 ## Configuration
 
-| Property | Default | Description |
-|---|---|---|
-| `spring.data.redis.host` | `localhost` | Redis host |
-| `spring.data.redis.port` | `6379` | Redis port |
+| Property                 | Default     | Description |
+|--------------------------|-------------|-------------|
+| `spring.data.redis.host` | `localhost` | Redis host  |
+| `spring.data.redis.port` | `6379`      | Redis port  |
 
 ## Running Tests
 

@@ -1,10 +1,9 @@
-package okio.samples
+package io.bluetape4k.okio
 
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.okio.readUtf8Lines
 import okio.buffer
 import okio.sink
 import okio.source

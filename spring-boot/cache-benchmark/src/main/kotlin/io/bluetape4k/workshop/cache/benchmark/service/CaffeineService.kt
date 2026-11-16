@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 /**
@@ -15,20 +16,22 @@ import org.springframework.stereotype.Service
  * cache 는 local(in-JVM)이므로 read 는 매우 빠르지만 instance 사이에 공유되지 않습니다.
  */
 @Service
-class CaffeineService(private val productRepository: ProductRepository) : ProductCacheService {
-    companion object : KLoggingChannel() {
+class CaffeineService(private val productRepository: ProductRepository): ProductCacheService {
+    companion object: KLoggingChannel() {
         const val CACHE_NAME = "products-caffeine"
     }
 
     @Cacheable(cacheNames = [CACHE_NAME], key = "#id")
-    override fun findById(id: Long): Product? = productRepository.findById(id).orElse(null)
+    override fun findById(id: Long): Product? = productRepository.findByIdOrNull(id)
 
     @CachePut(cacheNames = [CACHE_NAME], key = "#result.id")
     override fun save(product: Product): Product = productRepository.save(product)
 
     @CacheEvict(cacheNames = [CACHE_NAME], key = "#id")
-    override fun evict(id: Long) {}
+    override fun evict(id: Long) {
+    }
 
     @CacheEvict(cacheNames = [CACHE_NAME], allEntries = true)
-    override fun clearAll() {}
+    override fun clearAll() {
+    }
 }

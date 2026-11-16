@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.shared.web
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpDelete
@@ -15,19 +15,18 @@ import io.bluetape4k.spring.tests.httpOptions
 import io.bluetape4k.spring.tests.httpPatch
 import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.spring.tests.httpPut
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
-import org.springframework.web.reactive.function.client.awaitBodilessEntity
 
-class WebClientExtensionsTest : AbstractSpringTest() {
+class WebClientExtensionsTest: AbstractSpringTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val client: WebClient = WebClient
         .builder()
@@ -38,8 +37,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
     inner class Get {
         @Test
         fun `httpGet httpbin`() = runSuspendIO {
-            val response = client.httpGet("/get")
-                .awaitBody<String>()
+            val response = client.httpGet("/get").awaitBody<String>()
 
             log.debug { "response=$response" }
             response shouldContain "$baseUrl/get"
@@ -47,8 +45,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
 
         @Test
         fun `httpGet httpbin anything`() = runSuspendIO {
-            val response = client.httpGet("/anything")
-                .awaitBody<String>()
+            val response = client.httpGet("/anything").awaitBody<String>()
 
             log.debug { "response=$response" }
             response shouldContain "$baseUrl/anything"
@@ -57,11 +54,8 @@ class WebClientExtensionsTest : AbstractSpringTest() {
         @Test
         fun `httpGet httpbin not found`() = runSuspendIO {
             assertFailsWith<WebClientResponseException.NotFound> {
-                val response = client.httpGet("/not-existing")
-                    .awaitBodyOrNull<String>()
-
+                val response = client.httpGet("/not-existing").awaitBodyOrNull<String>()
                 log.debug { "response=$response" }
-
             }
         }
     }
@@ -70,8 +64,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
     inner class Post {
         @Test
         fun `httpPost httpbin`() = runSuspendIO {
-            val response = client.httpPost("/post")
-                .awaitBody<String>()
+            val response = client.httpPost("/post").awaitBody<String>()
 
             log.debug { "response=$response" }
             response shouldContain "$baseUrl/post"
@@ -79,8 +72,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
 
         @Test
         fun `httpPost httpbin with body`() = runSuspendIO {
-            val response = client.httpPost("/post", "Hello, World!")
-                .awaitBody<String>()
+            val response = client.httpPost("/post", "Hello, World!").awaitBody<String>()
 
             log.debug { "response=$response" }
             response shouldContain "$baseUrl/post"
@@ -89,7 +81,8 @@ class WebClientExtensionsTest : AbstractSpringTest() {
 
         @Test
         fun `httpPost httpbin with flow`() = runSuspendIO {
-            val response = client.httpPost("/post", flowOf("Hello", ", ", "World!"))
+            val response = client
+                .httpPost("/post", flowOf("Hello", ", ", "World!"))
                 .awaitBody<String>()
 
             log.debug { "response=$response" }
@@ -126,8 +119,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
     inner class Put {
         @Test
         fun `httpPut httpbin`() = runSuspendIO {
-            val response = client.httpPut("/put")
-                .awaitBody<String>()
+            val response = client.httpPut("/put").awaitBody<String>()
 
             log.debug { "response=$response" }
             response shouldContain "$baseUrl/put"
@@ -135,8 +127,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
 
         @Test
         fun `httpPut httpbin with body`() = runSuspendIO {
-            val response = client.httpPut("/put", "Hello, World!")
-                .awaitBody<String>()
+            val response = client.httpPut("/put", "Hello, World!").awaitBody<String>()
 
             log.debug { "response=$response" }
             response shouldContain "$baseUrl/put"
@@ -145,7 +136,8 @@ class WebClientExtensionsTest : AbstractSpringTest() {
 
         @Test
         fun `httpPut httpbin with flow`() = runSuspendIO {
-            val response = client.httpPut("/put", flowOf("Hello", ", ", "World!"))
+            val response = client
+                .httpPut("/put", flowOf("Hello", ", ", "World!"))
                 .awaitBody<String>()
 
             log.debug { "response=$response" }
@@ -158,8 +150,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
     inner class Delete {
         @Test
         fun `httpDelete httpbin`() = runSuspendIO {
-            val response = client.httpDelete("/delete")
-                .awaitBodyOrNull<String>()
+            val response = client.httpDelete("/delete").awaitBodyOrNull<String>()
 
             log.debug { "response=$response" }
             response.shouldNotBeNull() shouldContain "$baseUrl/delete"
@@ -170,7 +161,8 @@ class WebClientExtensionsTest : AbstractSpringTest() {
     inner class Head {
         @Test
         fun `httpHead httpbin`() = runSuspendIO {
-            client.httpHead("/get").awaitBodilessEntity().statusCode.is2xxSuccessful.shouldBeTrue()
+            client.httpHead("/get").awaitBodilessEntity()
+                .statusCode.is2xxSuccessful.shouldBeTrue()
         }
     }
 

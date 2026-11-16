@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.signal
 
+import io.bluetape4k.logging.KLogging
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import java.util.UUID
@@ -7,6 +8,11 @@ import java.util.UUID
 class LettuceCancelSignal(
     redisUri: String,
 ) : CancelSignal, AutoCloseable {
+
+    companion object: KLogging() {
+        const val CHANNEL: String = "job-console:cancel"
+    }
+
     private val client: RedisClient = RedisClient.create(redisUri)
     private val connection: StatefulRedisConnection<String, String> = client.connect()
 
@@ -18,9 +24,5 @@ class LettuceCancelSignal(
     override fun close() {
         connection.close()
         client.shutdown()
-    }
-
-    companion object {
-        const val CHANNEL: String = "job-console:cancel"
     }
 }

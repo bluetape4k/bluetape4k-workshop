@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.elasticsearch.repository
 
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchTest
 import io.bluetape4k.workshop.elasticsearch.model.Conference
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +22,7 @@ class ElasticsearchOperationsTest @Autowired constructor(
     private val repository: ConferenceRepository,
 ): AbstractElasticsearchTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `search all conference`() {

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 abstract class AbstractRetryTest: AbstractResilienceTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val FAILED_WITH_RETRY = "failed_with_retry"
         const val SUCCESSFUL_WITHOUT_RETRY = "successful_without_retry"
     }
@@ -24,7 +24,7 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
         return when (kind) {
             FAILED_WITH_RETRY -> metrics.numberOfFailedCallsWithRetryAttempt.toFloat()
             SUCCESSFUL_WITHOUT_RETRY -> metrics.numberOfSuccessfulCallsWithoutRetryAttempt.toFloat()
-            else -> 0F
+            else              -> 0F
         }.apply {
             log.debug { "Current Count=$this" }
         }
@@ -45,7 +45,9 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
      */
     protected fun checkMetrics(kind: String, serviceName: String, count: Float) {
         val actual = getCurrentCount(kind, serviceName)
-        log.debug { "checkMetrics kind=$kind service=$serviceName expected=$count actual=$actual asserting=${metricsAssertionEnabled()}" }
+        log.debug {
+            "checkMetrics kind=$kind service=$serviceName expected=$count actual=$actual asserting=${metricsAssertionEnabled()}"
+        }
         if (metricsAssertionEnabled()) {
             actual shouldBeEqualTo count
         }
@@ -57,5 +59,5 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
      * metric update 가 asynchronous 한 subclass(reactive Mono/Flux, CompletableFuture, coroutine)에서는
      * `false` 를 반환하도록 override 합니다.
      */
-    protected open fun metricsAssertionEnabled(): Boolean = true
+    protected fun metricsAssertionEnabled(): Boolean = true
 }

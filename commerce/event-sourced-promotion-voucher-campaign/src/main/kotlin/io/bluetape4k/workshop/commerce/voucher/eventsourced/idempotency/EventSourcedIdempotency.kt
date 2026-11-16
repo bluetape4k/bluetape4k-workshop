@@ -1,17 +1,17 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency
 
-import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireBeTrue
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import java.io.Serializable
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Instant
-import java.util.HexFormat
-import java.util.UUID
+import java.util.*
 
 private const val SHA_256_DIGEST_LENGTH = 64
 private const val OWNER_TOKEN_BYTES = 32
@@ -22,17 +22,20 @@ private const val MAX_HTTP_STATUS = 599
 @JvmInline
 internal value class ReceiptDigest private constructor(
     val value: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
         /** persistence 전에 이미 검증된 canonical digest를 재구성합니다. */
-        fun of(value: String): ReceiptDigest = ReceiptDigest(value)
+        operator fun invoke(value: String): ReceiptDigest = ReceiptDigest(value.requireNotBlank("value"))
+
+        /** persistence 전에 이미 검증된 canonical digest를 재구성합니다. */
+        fun of(value: String): ReceiptDigest = ReceiptDigest(value.requireNotBlank("value"))
 
         fun sha256(value: String): ReceiptDigest =
             value
                 .requireNotBlank("digestMaterial")
-                .toByteArray(UTF_8)
+                .toUtf8Bytes()
                 .let { MessageDigest.getInstance("SHA-256").digest(it) }
                 .let(HexFormat.of()::formatHex)
                 .let(::ReceiptDigest)
@@ -40,7 +43,7 @@ internal value class ReceiptDigest private constructor(
 
     init {
         value.length.requireEquals(SHA_256_DIGEST_LENGTH, "digest.length")
-        value.all { it in '0'..'9' || it in 'a'..'f' }.requireEquals(true, "digest.lowercaseHex")
+        value.all { it in '0'..'9' || it in 'a'..'f' }.requireBeTrue("digest.lowercaseHex")
     }
 }
 
@@ -48,7 +51,7 @@ internal value class ReceiptDigest private constructor(
 @JvmInline
 internal value class ReceiptOwnerToken private constructor(
     private val value: String,
-) : Serializable {
+): Serializable {
     fun digest(): ReceiptDigest = ReceiptDigest.sha256("voucher-receipt-owner-v1\u0000$value")
 
     companion object {
@@ -72,7 +75,7 @@ internal data class ReceiptScope private constructor(
     val operation: String,
     val resourceId: String,
     val keyDigest: ReceiptDigest,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -98,7 +101,7 @@ internal data class TerminalKeyVersions private constructor(
     val hmac: Int,
     val generationKeyVersion: Int?,
     val verificationKeyVersion: Int?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -108,8 +111,9 @@ internal data class TerminalKeyVersions private constructor(
             verificationKeyVersion: Int? = null,
         ): TerminalKeyVersions {
             val validHmac = hmac.requirePositiveNumber("hmacKeyVersion")
-            ((generationKeyVersion == null) == (verificationKeyVersion == null))
-                .requireEquals(true, "keyVersions.storedTogether")
+            require((generationKeyVersion == null) == (verificationKeyVersion == null)) {
+                "generationKeyVersion and verificationKeyVersion 둘 다 null 이거나, 둘 다 not null 이어야합니다."
+            }
             return TerminalKeyVersions(
                 hmac = validHmac,
                 generationKeyVersion = generationKeyVersion?.requirePositiveNumber("generationKeyVersion"),
@@ -128,7 +132,7 @@ internal data class TerminalDescriptor private constructor(
     val allocationId: UUID?,
     val observedAt: Instant?,
     val streamPosition: Long?,
-) : Serializable {
+): Serializable {
     val hmacKeyVersion: Int get() = keyVersions.hmac
     val generationKeyVersion: Int? get() = keyVersions.generationKeyVersion
     val verificationKeyVersion: Int? get() = keyVersions.verificationKeyVersion
@@ -143,8 +147,10 @@ internal data class TerminalDescriptor private constructor(
             allocationId: UUID? = null,
         ): TerminalDescriptor {
             val validStatus = status.requireInRange(MIN_HTTP_STATUS, MAX_HTTP_STATUS, "status")
-            (keyVersions.generationKeyVersion == null || allocationId != null)
-                .requireEquals(true, "keyVersions.haveAllocationIdentity")
+            require(keyVersions.generationKeyVersion == null || allocationId != null) {
+                "keyVersions.generationKeyVersion 이 null 이거나 allocationId 가 not null 이어야 합니다."
+            }
+
             return TerminalDescriptor(outcome, validStatus, keyVersions, allocationId, null, null)
         }
     }
@@ -209,20 +215,20 @@ internal enum class ReceiptStatus {
 }
 
 internal sealed interface TerminalReplay {
-    data class Replay(val descriptor: TerminalDescriptor) : TerminalReplay
+    data class Replay(val descriptor: TerminalDescriptor): TerminalReplay
 
-    data object KeyUnavailable : TerminalReplay
+    data object KeyUnavailable: TerminalReplay
 }
 
 internal sealed interface ReceiptAcquireResult {
     data class Owner(
         val token: ReceiptOwnerToken,
         val leaseDeadline: java.time.Instant,
-    ) : ReceiptAcquireResult
+    ): ReceiptAcquireResult
 
-    data class Replay(val descriptor: TerminalDescriptor) : ReceiptAcquireResult
+    data class Replay(val descriptor: TerminalDescriptor): ReceiptAcquireResult
 
-    data class InProgress(val retryAfter: java.time.Duration) : ReceiptAcquireResult
+    data class InProgress(val retryAfter: java.time.Duration): ReceiptAcquireResult
 
-    data object FingerprintConflict : ReceiptAcquireResult
+    data object FingerprintConflict: ReceiptAcquireResult
 }

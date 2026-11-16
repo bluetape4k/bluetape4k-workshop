@@ -1,39 +1,77 @@
 package io.bluetape4k.workshop.commerce.voucher.application
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.ZoneOffset
 
-internal class ReviewCommandServiceTest : VoucherCommandTestSupport() {
+internal class ReviewCommandServiceTest: VoucherCommandTestSupport() {
+
+    companion object: KLogging()
+
     @Test
     fun `allocation review approval reserves capacity and reconstructs the opaque code`() {
         createCampaign()
-        val pending = allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "user-1", RiskSignal.REVIEW))
-        val review = jdbc.foregroundTransaction { checkNotNull(reviews.findOpen(TENANT_ID, pending.claim.claimId)) }
-
-        val approved =
-            reviewCommands.approve(
-                ReviewDecisionCommand(TENANT_ID, CAMPAIGN_ID, pending.claim.claimId, review.id, 0, 0),
+        val pending = allocation.allocate(
+            AllocateVoucherCommand(
+                tenantId = TENANT_ID,
+                campaignId = CAMPAIGN_ID,
+                userRef = "user-1",
+                riskSignal = RiskSignal.REVIEW
             )
+        )
+        val review = jdbc.foregroundTransaction {
+            reviews.findOpen(TENANT_ID, pending.claim.claimId).shouldNotBeNull()
+        }
+
+        val approved = reviewCommands.approve(
+            ReviewDecisionCommand(
+                tenantId = TENANT_ID,
+                campaignId = CAMPAIGN_ID,
+                claimId = pending.claim.claimId,
+                reviewId = review.id,
+                expectedReviewRevision = 0,
+                expectedClaimRevision = 0
+            ),
+        )
 
         approved.claim.state shouldBeEqualTo ClaimState.ALLOCATED
-        approved.oneTimeCode?.startsWith("V7-") shouldBeEqualTo true
+        approved.oneTimeCode?.startsWith("V7-").shouldBeTrue()
         campaignSnapshot().allocatedCount shouldBeEqualTo 1
     }
 
     @Test
     fun `allocation review rejection is terminal without consuming capacity`() {
         createCampaign()
-        val pending = allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "user-1", RiskSignal.REVIEW))
-        val review = jdbc.foregroundTransaction { checkNotNull(reviews.findOpen(TENANT_ID, pending.claim.claimId)) }
-
-        val rejected =
-            reviewCommands.reject(
-                ReviewDecisionCommand(TENANT_ID, CAMPAIGN_ID, pending.claim.claimId, review.id, 0, 0),
+        val pending = allocation.allocate(
+            AllocateVoucherCommand(
+                tenantId = TENANT_ID,
+                campaignId = CAMPAIGN_ID,
+                userRef = "user-1",
+                riskSignal = RiskSignal.REVIEW
             )
+        )
+        val review = jdbc.foregroundTransaction {
+            reviews.findOpen(TENANT_ID, pending.claim.claimId).shouldNotBeNull()
+        }
+
+        val rejected = reviewCommands.reject(
+            ReviewDecisionCommand(
+                tenantId = TENANT_ID,
+                campaignId = CAMPAIGN_ID,
+                claimId = pending.claim.claimId,
+                reviewId = review.id,
+                expectedReviewRevision = 0,
+                expectedClaimRevision = 0
+            ),
+        )
 
         rejected.claim.state shouldBeEqualTo ClaimState.REJECTED
         rejected.oneTimeCode.shouldBeNull()
@@ -43,23 +81,36 @@ internal class ReviewCommandServiceTest : VoucherCommandTestSupport() {
     @Test
     fun `redemption review rejection returns to allocated without changing capacity`() {
         createCampaign()
-        val allocated = allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "user-1"))
-        val pending =
-            claimCommands.redeem(
-                RedeemVoucherCommand(
-                    TENANT_ID,
-                    checkNotNull(allocated.oneTimeCode),
-                    0,
-                    "order-1",
-                    RiskSignal.REVIEW,
-                ),
+        val allocated = allocation.allocate(
+            AllocateVoucherCommand(
+                tenantId = TENANT_ID,
+                campaignId = CAMPAIGN_ID,
+                userRef = "user-1"
             )
-        val review = jdbc.foregroundTransaction { checkNotNull(reviews.findOpen(TENANT_ID, pending.claimId)) }
+        )
+        val pending = claimCommands.redeem(
+            RedeemVoucherCommand(
+                tenantId = TENANT_ID,
+                code = allocated.oneTimeCode.shouldNotBeNull(),
+                expectedRevision = 0,
+                redemptionReference = "order-1",
+                riskSignal = RiskSignal.REVIEW,
+            ),
+        )
+        val review = jdbc.foregroundTransaction {
+            reviews.findOpen(TENANT_ID, pending.claimId).shouldNotBeNull()
+        }
 
-        val rejected =
-            reviewCommands.reject(
-                ReviewDecisionCommand(TENANT_ID, CAMPAIGN_ID, pending.claimId, review.id, 0, pending.revision),
-            )
+        val rejected = reviewCommands.reject(
+            ReviewDecisionCommand(
+                tenantId = TENANT_ID,
+                campaignId = CAMPAIGN_ID,
+                claimId = pending.claimId,
+                reviewId = review.id,
+                expectedReviewRevision = 0,
+                expectedClaimRevision = pending.revision
+            ),
+        )
 
         rejected.claim.state shouldBeEqualTo ClaimState.ALLOCATED
         campaignSnapshot().allocatedCount shouldBeEqualTo 1
@@ -68,23 +119,37 @@ internal class ReviewCommandServiceTest : VoucherCommandTestSupport() {
     @Test
     fun `expired redemption review cannot be approved`() {
         createCampaign()
-        val allocated = allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "user-1"))
-        val pending =
-            claimCommands.redeem(
-                RedeemVoucherCommand(
-                    TENANT_ID,
-                    checkNotNull(allocated.oneTimeCode),
-                    0,
-                    "order-1",
-                    RiskSignal.REVIEW,
-                ),
+        val allocated = allocation.allocate(
+            AllocateVoucherCommand(
+                tenantId = TENANT_ID,
+                campaignId = CAMPAIGN_ID,
+                userRef = "user-1"
             )
-        val review = jdbc.foregroundTransaction { checkNotNull(reviews.findOpen(TENANT_ID, pending.claimId)) }
-        configureCommandRuntime(serviceClock = Clock.fixed(NOW.plusSeconds(3_601), ZoneOffset.UTC))
+        )
+        val pending = claimCommands.redeem(
+            RedeemVoucherCommand(
+                tenantId = TENANT_ID,
+                code = allocated.oneTimeCode.shouldNotBeNull(),
+                expectedRevision = 0,
+                redemptionReference = "order-1",
+                riskSignal = RiskSignal.REVIEW,
+            ),
+        )
+        val review = jdbc.foregroundTransaction {
+            reviews.findOpen(TENANT_ID, pending.claimId).shouldNotBeNull()
+        }
+        configureCommandRuntime(serviceClock = Clock.fixed(NOW + 3_601.seconds(), ZoneOffset.UTC))
 
-        io.bluetape4k.assertions.assertFailsWith<VoucherCommandException> {
+        assertFailsWith<VoucherCommandException> {
             reviewCommands.approve(
-                ReviewDecisionCommand(TENANT_ID, CAMPAIGN_ID, pending.claimId, review.id, 0, pending.revision),
+                ReviewDecisionCommand(
+                    tenantId = TENANT_ID,
+                    campaignId = CAMPAIGN_ID,
+                    claimId = pending.claimId,
+                    reviewId = review.id,
+                    expectedReviewRevision = 0,
+                    expectedClaimRevision = pending.revision
+                ),
             )
         }.code shouldBeEqualTo VoucherCommandFailure.VOUCHER_EXPIRED
     }

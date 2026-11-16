@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -92,7 +94,7 @@ class KafkaFailoverKafkaConfiguration(
         AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG to ADMIN_DEFAULT_API_TIMEOUT_MS,
     )
 
-    companion object {
+    companion object: KLogging() {
         const val GROUP_ID: String = "kafka-failover-reference-group"
 
         const val PRODUCER_RETRIES: Int = 3
@@ -130,7 +132,7 @@ class KafkaFailoverKafkaConfiguration(
         fun validateEndpoint(endpoint: String) {
             require(
                 endpoint.none { it == '/' || it == '?' || it == '#' || it == '@' } &&
-                    !endpoint.contains("://"),
+                        !endpoint.contains("://"),
             ) {
                 "bootstrapServers must contain plain host:port endpoints"
             }
@@ -149,9 +151,7 @@ class KafkaFailoverKafkaConfiguration(
                     "localhost must resolve only to loopback addresses"
                 }
             }
-            require(port in 1..65_535) {
-                "bootstrapServers port must be between 1 and 65535"
-            }
+            port.requireInRange(1, 65_535, "port")
         }
 
         fun parseEndpoint(endpoint: String): Pair<String, Int>? {

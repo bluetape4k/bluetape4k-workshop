@@ -58,7 +58,7 @@ class KnowledgeGraphService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         /** neighbor 조회와 path 조회에 허용하는 최대 순회 깊이입니다. */
         const val MAX_TRAVERSAL_DEPTH: Int = 10
     }
@@ -95,13 +95,12 @@ class KnowledgeGraphService(
         entityId.requireNotBlank("entityId")
         name.requireNotBlank("name")
         entityType.requireNotBlank("entityType")
+
         return ops.createVertex(
             EntityLabel.label,
-            mapOf(
-                EntityLabel.entityId.name to entityId,
-                EntityLabel.name.name to name,
-                EntityLabel.entityType.name to entityType,
-            )
+            EntityLabel.entityId.name to entityId,
+            EntityLabel.name.name to name,
+            EntityLabel.entityType.name to entityType,
         )
     }
 
@@ -115,13 +114,12 @@ class KnowledgeGraphService(
     fun addConcept(conceptId: String, name: String, domain: String = ""): GraphVertex {
         conceptId.requireNotBlank("conceptId")
         name.requireNotBlank("name")
+
         return ops.createVertex(
             ConceptLabel.label,
-            mapOf(
-                ConceptLabel.conceptId.name to conceptId,
-                ConceptLabel.name.name to name,
-                ConceptLabel.domain.name to domain,
-            )
+            ConceptLabel.conceptId.name to conceptId,
+            ConceptLabel.name.name to name,
+            ConceptLabel.domain.name to domain,
         )
     }
 
@@ -137,11 +135,9 @@ class KnowledgeGraphService(
         title.requireNotBlank("title")
         return ops.createVertex(
             DocumentLabel.label,
-            mapOf(
-                DocumentLabel.documentId.name to documentId,
-                DocumentLabel.title.name to title,
-                DocumentLabel.source.name to source,
-            )
+            DocumentLabel.documentId.name to documentId,
+            DocumentLabel.title.name to title,
+            DocumentLabel.source.name to source,
         )
     }
 
@@ -155,11 +151,12 @@ class KnowledgeGraphService(
         confidence.requireInRange(0, 100, "confidence")
         ops.requireEndpoint(documentId, DocumentLabel.label, "documentId")
         ops.requireEndpoint(entityId, EntityLabel.label, "entityId")
+
         ops.createEdge(
             documentId,
             entityId,
             MentionsLabel.label,
-            mapOf(MentionsLabel.confidence.name to confidence),
+            MentionsLabel.confidence.name to confidence,
         )
     }
 
@@ -181,7 +178,7 @@ class KnowledgeGraphService(
             fromEntityId,
             toEntityId,
             RelatedToLabel.label,
-            mapOf(RelatedToLabel.relationType.name to relationType),
+            RelatedToLabel.relationType.name to relationType,
         )
     }
 
@@ -241,11 +238,14 @@ class KnowledgeGraphService(
     ): List<GraphPath> {
         maxDepth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "maxDepth")
         maxPaths.requireInRange(1, Int.MAX_VALUE, "maxPaths")
-        return ops.allPaths(
-            fromEntityId,
-            toEntityId,
-            PathOptions(edgeLabel = RelatedToLabel.label, maxDepth = maxDepth),
-        ).take(maxPaths)
+
+        return ops
+            .allPaths(
+                fromEntityId,
+                toEntityId,
+                PathOptions(edgeLabel = RelatedToLabel.label, maxDepth = maxDepth),
+            )
+            .take(maxPaths)
     }
 
 }

@@ -22,6 +22,7 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
+import kotlin.time.Duration.Companion.milliseconds
 
 @Component
 class CoroutineHandler(
@@ -29,8 +30,8 @@ class CoroutineHandler(
     @Value("\${server.port:8080}") private val port: String,
 ): CoroutineScope by CoroutineScope(Dispatchers.IO + CoroutineName("handler")) {
 
-    companion object : KLoggingChannel() {
-        private const val DEFAULT_DELAY = 100L
+    companion object: KLoggingChannel() {
+        private val DEFAULT_DELAY = 100.milliseconds
     }
 
     // 응답용 객체
@@ -79,6 +80,7 @@ class CoroutineHandler(
                 emit(retrieveBanner())
             }
         }
+
         return ServerResponse.ok()
             .contentType(MediaType.APPLICATION_JSON)
             .bodyAndAwait(flow)

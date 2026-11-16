@@ -19,5 +19,5 @@ class TracingApplication {
 }
 
 fun main(vararg args: String) {
-    runApplication<TracingApplication>(*args) 
+    runApplication<TracingApplication>(*args)
 }

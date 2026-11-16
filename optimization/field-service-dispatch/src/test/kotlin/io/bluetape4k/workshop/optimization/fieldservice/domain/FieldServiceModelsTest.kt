@@ -3,9 +3,12 @@ package io.bluetape4k.workshop.optimization.fieldservice.domain
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class FieldServiceModelsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `ids and event keys reject blank or oversized values`() {
@@ -14,7 +17,7 @@ class FieldServiceModelsTest {
             EventKey("k".repeat(FieldServiceLimits.MAX_KEY_LENGTH + 1))
         }
         IdempotencyKey("a".repeat(FieldServiceLimits.MAX_KEY_LENGTH)).value.length shouldBeEqualTo
-            FieldServiceLimits.MAX_KEY_LENGTH
+                FieldServiceLimits.MAX_KEY_LENGTH
     }
 
     @Test
@@ -34,9 +37,16 @@ class FieldServiceModelsTest {
             EventDigest("a".repeat(64)),
             EventDigest("a".repeat(64)),
         ) shouldBeEqualTo EventDigestMatch.DUPLICATE
+
         FieldServiceEvents.compare(
             EventDigest("a".repeat(64)),
             EventDigest("b".repeat(64)),
         ) shouldBeEqualTo EventDigestMatch.EVENT_KEY_REUSED
+
+        FieldServiceEvents.compare(
+            EventDigest("c".repeat(64)),
+            EventDigest("d".repeat(64)),
+        ) shouldBeEqualTo EventDigestMatch.EVENT_KEY_REUSED
+
     }
 }

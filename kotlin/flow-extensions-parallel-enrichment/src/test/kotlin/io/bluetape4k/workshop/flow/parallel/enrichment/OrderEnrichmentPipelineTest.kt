@@ -1,21 +1,23 @@
 package io.bluetape4k.workshop.flow.parallel.enrichment
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.junit5.coroutines.withParallels
-import kotlinx.coroutines.flow.filter
+import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Test
 
 class OrderEnrichmentPipelineTest {
+
+    companion object: KLogging()
 
     private val profileService = CustomerProfileService(
         profiles = mapOf(
@@ -46,19 +48,21 @@ class OrderEnrichmentPipelineTest {
             )
 
             val enriched = pipeline.enrichInParallel(input, dispatchers.size) { dispatchers[it] }
+                .log("Parallel")
                 .toList()
 
             enriched shouldHaveSize 3
             val byId = enriched.associateBy { it.orderId }
+
             byId["O-1001"]?.let {
                 it.loyaltyGrade shouldBeEqualTo LoyaltyGrade.GOLD
                 it.discountPercent shouldBeEqualTo 10
                 it.fulfillable.shouldBeTrue()
                 it.unavailableSkus shouldHaveSize 0
             }.shouldNotBeNull()
-            byId["O-1002"]?.let {
-                it.fulfillable.shouldBeTrue()
-            }.shouldNotBeNull()
+
+            byId["O-1002"]?.fulfillable?.shouldBeTrue().shouldNotBeNull()
+
             byId["O-1003"]?.let {
                 it.fulfillable.shouldBeFalse()
                 it.unavailableSkus shouldBeEqualTo listOf("bag-01")
@@ -74,10 +78,13 @@ class OrderEnrichmentPipelineTest {
             OrderCommand("O-1003", "customer-1003", listOf(OrderItem("bag-01", 1)))
         )
 
-        val sequential = pipeline.enrichSequentially(input).toList()
+        val sequential = pipeline.enrichSequentially(input)
+            .log("Sequential")
+            .toList()
 
         withParallels(2) { dispatchers ->
             val parallel = pipeline.enrichInParallel(input, dispatchers.size) { dispatchers[it] }
+                .log("Parallel")
                 .toList()
 
             sequential.toSet() shouldBeEqualTo parallel.toSet()
@@ -93,7 +100,9 @@ class OrderEnrichmentPipelineTest {
             OrderCommand("O-OK", "customer-1001", listOf(OrderItem("suit-01", 1)))
         )
 
-        val enriched = pipeline.enrichSequentially(input).toList()
+        val enriched = pipeline.enrichSequentially(input)
+            .log("Sequential")
+            .toList()
 
         enriched.map { it.orderId } shouldBeEqualTo listOf("O-OK")
     }
@@ -105,7 +114,9 @@ class OrderEnrichmentPipelineTest {
         )
 
         assertFailsWith<IllegalArgumentException> {
-            pipeline.enrichInParallel(input, 0) { error("runOn should not be called") }.toList()
+            pipeline.enrichInParallel(input, 0) { error("runOn should not be called") }
+                .log("Parallel")
+                .toList()
         }
     }
 
@@ -117,7 +128,9 @@ class OrderEnrichmentPipelineTest {
 
         withParallels(1) { dispatchers ->
             assertFailsWith<UnknownCustomerException> {
-                pipeline.enrichInParallel(input, dispatchers.size) { dispatchers[it] }.toList()
+                pipeline.enrichInParallel(input, dispatchers.size) { dispatchers[it] }
+                    .log("Parallel")
+                    .toList()
             }
         }
     }
@@ -130,7 +143,9 @@ class OrderEnrichmentPipelineTest {
 
         withParallels(1) { dispatchers ->
             assertFailsWith<UnknownProductException> {
-                pipeline.enrichInParallel(input, dispatchers.size) { dispatchers[it] }.toList()
+                pipeline.enrichInParallel(input, dispatchers.size) { dispatchers[it] }
+                    .log("Parallel")
+                    .toList()
             }
         }
     }
@@ -145,6 +160,7 @@ class OrderEnrichmentPipelineTest {
         var result = emptyList<EnrichedOrder>()
         withParallels(2) { dispatchers ->
             result = pipeline.enrichInParallel(input, dispatchers.size) { dispatchers[it % dispatchers.size] }
+                .log("Parallel")
                 .toList()
         }
         val map = result.associateBy { it.orderId }
@@ -153,7 +169,7 @@ class OrderEnrichmentPipelineTest {
         val shortOrder = map["O-short"].shouldNotBeNull()
 
         fullOrder.fulfillable.shouldBeTrue()
-        fullOrder.unavailableSkus shouldBeEqualTo emptyList<String>()
+        fullOrder.unavailableSkus.shouldBeEmpty()
         shortOrder.fulfillable.shouldBeFalse()
         shortOrder.unavailableSkus shouldBeEqualTo listOf("bag-01")
     }

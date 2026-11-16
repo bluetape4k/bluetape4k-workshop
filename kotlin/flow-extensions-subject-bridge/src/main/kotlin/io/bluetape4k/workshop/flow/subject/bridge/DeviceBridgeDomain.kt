@@ -29,7 +29,7 @@ data class DeviceEvent(
     val deviceId: String,
     val type: DeviceEventType,
     val payload: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -42,7 +42,7 @@ data class DeviceState(
     val deviceId: String,
     val status: DeviceStatus,
     val lastEventId: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 2L
     }
@@ -55,7 +55,7 @@ data class WorkItem(
     val workId: String,
     val deviceId: String,
     val command: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 3L
     }

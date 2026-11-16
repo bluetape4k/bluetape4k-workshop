@@ -4,26 +4,27 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.dao.Entity
+import kotlin.reflect.KClass
 
 /** 이 예제에 필요한 Bluetape Spring Data repository delegate입니다. */
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class MeteringExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
-        ExposedEntityInformationImpl(domainClass),
-    )
+abstract class MeteringExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
+    ExposedEntityInformationImpl(domainClass.java),
+)
 
 /**
  * financial 및 source record에 대한 generic Spring Data mutation path를 차단합니다.
  * 대신 concrete repository가 좁게 이름 붙인 append/query operation을 노출합니다.
  */
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class AppendOnlyMeteringExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : MeteringExposedJdbcRepository<E, ID>(domainClass) {
-    final override fun <S : E> save(entity: S): S = immutableMutation()
+abstract class AppendOnlyMeteringExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): MeteringExposedJdbcRepository<E, ID>(domainClass) {
+    final override fun <S: E> save(entity: S): S = immutableMutation()
 
-    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+    final override fun <S: E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
 
     final override fun deleteById(id: ID): Unit = immutableMutation()
 

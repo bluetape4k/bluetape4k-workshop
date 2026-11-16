@@ -17,13 +17,13 @@ import org.neo4j.driver.GraphDatabase
  *
  * Docker가 필요합니다. 실행: `./gradlew :graph-social-network:integrationTest`
  * 기본 `:test` task는 `@Tag("integration")`으로 이 클래스를 제외합니다.
- */
 @Tag("integration")
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
+class Neo4jSocialNetworkTest: AbstractSocialNetworkTest() {
 
-    companion object : KLogging() {
-        private val neo4j = Neo4jServer.Launcher.neo4j
+    companion object: KLogging() {
+        private val neo4j by lazy { Neo4jServer.Launcher.neo4j }
     }
 
     override val graphName = "neo4j_social"
@@ -42,7 +42,10 @@ class Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown — possible resource leak" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown — possible resource leak" }
+        }
     }
 }

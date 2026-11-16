@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.leader
 
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.leader.job.LeaderGuardedJob
 import io.bluetape4k.workshop.leader.job.LeaderScheduledJobService
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -29,8 +29,8 @@ class LeaderElectionContextTest(
     @Autowired val jobService: LeaderScheduledJobService,
     @Autowired val jobs: List<LeaderGuardedJob>,
 ) {
-    companion object : KLogging() {
-        val redis = RedisServer.Launcher.redis
+    companion object: KLogging() {
+        val redis by lazy { RedisServer.Launcher.redis }
 
         @JvmStatic
         @DynamicPropertySource

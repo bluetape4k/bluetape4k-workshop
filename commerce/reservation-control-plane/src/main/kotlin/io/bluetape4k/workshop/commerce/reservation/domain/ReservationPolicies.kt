@@ -9,20 +9,23 @@ import java.time.Instant
  *
  * 성공 decision은 repository가 일치하는 PostgreSQL CAS를 적용할 때까지 advisory입니다.
  */
-object ReservationPolicies : KLogging() {
+object ReservationPolicies: KLogging() {
+
     fun confirm(
         hold: ReservationHoldSnapshot,
         ownerDigest: String,
         expectedRevision: Long,
         now: Instant,
-    ): TransitionOutcome = transition(hold, ownerDigest, expectedRevision, now, HoldState.CONFIRMED)
+    ): TransitionOutcome =
+        transition(hold, ownerDigest, expectedRevision, now, HoldState.CONFIRMED)
 
     fun cancel(
         hold: ReservationHoldSnapshot,
         ownerDigest: String,
         expectedRevision: Long,
         now: Instant,
-    ): TransitionOutcome = transition(hold, ownerDigest, expectedRevision, now, HoldState.CANCELLED)
+    ): TransitionOutcome =
+        transition(hold, ownerDigest, expectedRevision, now, HoldState.CANCELLED)
 
     fun extend(
         hold: ReservationHoldSnapshot,
@@ -43,6 +46,7 @@ object ReservationPolicies : KLogging() {
         }
         val extended = hold.copy(revision = hold.revision + 1, expiresAt = newExpiresAt)
         log.debug { "reservation_transition_applied holdId=${hold.id} revision=${extended.revision} state=EXTENDED" }
+
         return TransitionOutcome.Applied(extended)
     }
 
@@ -55,17 +59,17 @@ object ReservationPolicies : KLogging() {
         now: Instant,
         target: HoldState,
     ): TransitionOutcome {
-        val rejection =
-            when {
-                hold.ownerDigest != ownerDigest -> TransitionReason.OWNER_MISMATCH
-                hold.revision != expectedRevision -> TransitionReason.STALE_REVISION
-                hold.state == HoldState.CONFIRMED -> TransitionReason.ALREADY_CONFIRMED
-                hold.state == HoldState.CANCELLED -> TransitionReason.HOLD_CANCELLED
-                hold.state == HoldState.RELEASED_BY_OPERATOR -> TransitionReason.HOLD_RELEASED_BY_OPERATOR
-                hold.state != HoldState.HELD -> TransitionReason.INVALID_STATE
-                !now.isBefore(hold.expiresAt) -> TransitionReason.HOLD_EXPIRED
-                else -> null
-            }
+        val rejection = when {
+            hold.ownerDigest != ownerDigest              -> TransitionReason.OWNER_MISMATCH
+            hold.revision != expectedRevision            -> TransitionReason.STALE_REVISION
+            hold.state == HoldState.CONFIRMED            -> TransitionReason.ALREADY_CONFIRMED
+            hold.state == HoldState.CANCELLED            -> TransitionReason.HOLD_CANCELLED
+            hold.state == HoldState.RELEASED_BY_OPERATOR -> TransitionReason.HOLD_RELEASED_BY_OPERATOR
+            hold.state != HoldState.HELD                 -> TransitionReason.INVALID_STATE
+            !now.isBefore(hold.expiresAt)                -> TransitionReason.HOLD_EXPIRED
+            else                                         -> null
+        }
+        
         if (rejection != null) {
             log.debug {
                 "reservation_transition_rejected holdId=${hold.id} revision=${hold.revision} reason=$rejection"

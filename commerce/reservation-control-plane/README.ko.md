@@ -33,15 +33,15 @@
 
 ## Software stack
 
-| 관심사 | 선택 |
-|---|---|
-| Runtime | Java 25, Kotlin, virtual threads |
-| Web | Spring Boot MVC, embedded Tomcat |
-| Persistence | PostgreSQL, Exposed JDBC, `AbstractJdbcRepository` 패턴 |
-| Test database | `bluetape4k-testcontainers`의 `PostgreSQLServer` |
-| Advisory coordination | Lettuce 기반 Redis, `bluetape4k-leader` |
-| Observability | `bluetape4k-logging`, Actuator health, Prometheus registry |
-| Dependency authority | `bluetape4k-dependencies:2.1.0-SNAPSHOT`만 사용 |
+| 관심사                | 선택                                                       |
+|-----------------------|------------------------------------------------------------|
+| Runtime               | Java 25, Kotlin, virtual threads                           |
+| Web                   | Spring Boot MVC, embedded Tomcat                           |
+| Persistence           | PostgreSQL, Exposed JDBC, `AbstractJdbcRepository` 패턴    |
+| Test database         | `bluetape4k-testcontainers`의 `PostgreSQLServer`           |
+| Advisory coordination | Lettuce 기반 Redis, `bluetape4k-leader`                    |
+| Observability         | `bluetape4k-logging`, Actuator health, Prometheus registry |
+| Dependency authority  | `bluetape4k-dependencies:2.1.0-SNAPSHOT`만 사용            |
 
 이 모듈은 root dependency platform을 통해 `bluetape4k-exposed-jdbc`, `bluetape4k-exposed-jdbc-tests`, `bluetape4k-virtualthread-api`, `bluetape4k-virtualthread-jdk25`를 사용합니다. 개별 Bluetape BOM을 import하거나 Bluetape 모듈 버전을 직접 고정하지 않습니다.
 
@@ -71,39 +71,29 @@ export RESERVATION_REDIS_URI=redis://localhost:6379
 
 사용자 command endpoint에는 `X-Reservation-Owner`와 `Idempotency-Key`가 필요합니다. owner 전용 응답을 반환하는 query endpoint도 owner credential을 요구합니다.
 
-| Method | Path | 용도 |
-|---|---|---|
-| `GET` | `/api/resources` | resource 상태 조회 |
-| `POST` | `/api/resources/{id}/holds` | 만료 시간이 있는 hold 생성 |
-| `POST` | `/api/holds/{id}/confirm` | hold 확정 |
-| `POST` | `/api/holds/{id}/extend` | 유효한 hold 연장 |
-| `POST` | `/api/holds/{id}/cancel` | hold 취소 및 capacity 반환 |
-| `POST` | `/api/resources/{id}/waitlist` | FIFO waitlist 참여 |
-| `GET` | `/api/waitlist/{id}` | owner 범위 waitlist entry 조회 |
-| `POST` | `/api/waitlist/{id}/cancel` | waitlist entry 취소 |
-| `GET` | `/api/offers/{id}` | owner 범위 offer 조회 |
-| `POST` | `/api/offers/{id}/accept` | 유효한 offer 수락 |
-| `POST` | `/api/operator/holds/{id}/force-release` | operator mode에서 hold 강제 해제 |
-| `POST` | `/api/operator/sweep` | operator mode에서 제한된 sweep 한 번 실행 |
+| Method | Path                                     | 용도                                      |
+|--------|------------------------------------------|-------------------------------------------|
+| `GET`  | `/api/resources`                         | resource 상태 조회                        |
+| `POST` | `/api/resources/{id}/holds`              | 만료 시간이 있는 hold 생성                |
+| `POST` | `/api/holds/{id}/confirm`                | hold 확정                                 |
+| `POST` | `/api/holds/{id}/extend`                 | 유효한 hold 연장                          |
+| `POST` | `/api/holds/{id}/cancel`                 | hold 취소 및 capacity 반환                |
+| `POST` | `/api/resources/{id}/waitlist`           | FIFO waitlist 참여                        |
+| `GET`  | `/api/waitlist/{id}`                     | owner 범위 waitlist entry 조회            |
+| `POST` | `/api/waitlist/{id}/cancel`              | waitlist entry 취소                       |
+| `GET`  | `/api/offers/{id}`                       | owner 범위 offer 조회                     |
+| `POST` | `/api/offers/{id}/accept`                | 유효한 offer 수락                         |
+| `POST` | `/api/operator/holds/{id}/force-release` | operator mode에서 hold 강제 해제          |
+| `POST` | `/api/operator/sweep`                    | operator mode에서 제한된 sweep 한 번 실행 |
 
 동일한 idempotency key와 fingerprint는 원래 status와 body를 replay하고 `Idempotency-Replayed: true`를 반환합니다. fingerprint가 달라지면 `409 Conflict`, 처리 중인 명령이면 중복 실행 대신 retry 가능한 응답을 반환합니다.
 
 ### Idempotency digest threat model
 
 Production은 caller의 raw idempotency key를 저장하지 않습니다. Production
-`keyDigest`는 `ReservationCredentialService`가 생성한 keyed HMAC이며 이 credential
-경계는 변경하지 않습니다. `IdempotencyFingerprint.request`는 domain-separated,
-NUL-delimited operation과 canonical payload를 대상으로 하는 unkeyed SHA-256
-checksum입니다. Payload에는 이미 owner digest가 포함되며 용도는 replay 충돌
-탐지이지 비밀 보호나 인증이 아닙니다. `key` helper는 test와 fixture에서만
-사용합니다. 두 helper는 field order, separator, UTF-8 encoding, lowercase 64자
-저장 형식을 바꾸지 않고 `TinkDigesters.SHA256.digestHex`를 재사용합니다.
+`keyDigest`는 `ReservationCredentialService`가 생성한 keyed HMAC이며 이 credential 경계는 변경하지 않습니다. `IdempotencyFingerprint.request`는 domain-separated, NUL-delimited operation과 canonical payload를 대상으로 하는 unkeyed SHA-256 checksum입니다. Payload에는 이미 owner digest가 포함되며 용도는 replay 충돌 탐지이지 비밀 보호나 인증이 아닙니다. `key` helper는 test와 fixture에서만 사용합니다. 두 helper는 field order, separator, UTF-8 encoding, lowercase 64자 저장 형식을 바꾸지 않고 `TinkDigesters.SHA256.digestHex`를 재사용합니다.
 
-저장소 row를 얻은 공격자는 entropy가 낮은 unkeyed input을 offline enumeration할
-수 있으므로 raw credential이나 추측 가능한 secret을 request fingerprint에 넣으면
-안 됩니다. 향후 그런 값이 필요하면 key lifecycle, rotation, 저장 compatibility,
-backfill을 포함한 keyed migration을 별도로 검토해야 하며 persisted digest format을
-조용히 교체하지 않습니다.
+저장소 row를 얻은 공격자는 entropy가 낮은 unkeyed input을 offline enumeration할 수 있으므로 raw credential이나 추측 가능한 secret을 request fingerprint에 넣으면 안 됩니다. 향후 그런 값이 필요하면 key lifecycle, rotation, 저장 compatibility, backfill을 포함한 keyed migration을 별도로 검토해야 하며 persisted digest format을 조용히 교체하지 않습니다.
 
 ## 동시성과 timeout 예산
 
@@ -129,14 +119,14 @@ key는 `X-Operator-Key`로 전달합니다. 비교는 constant-time으로 수행
 
 ## Runbook
 
-| 증상 | 예상 동작 | 대응 |
-|---|---|---|
-| PostgreSQL 접속 불가 또는 pool 고갈 | command가 실패하며 Redis만으로 mutation하지 않음 | PostgreSQL 복구 후 Hikari acquisition latency를 점검하고 pool은 제한된 크기로 유지 |
-| Redis 접속 불가 | local bulkhead와 PostgreSQL을 통해 command는 계속 처리되고 leader-only 자동 sweep은 중단 | Redis 복구 후 leader 획득을 확인하고, 애플리케이션 시작 시점부터 Redis가 없었다면 예제를 재시작해 선택적 Redis bean을 다시 활성화 |
-| 프로세스 비정상 종료 후 Redis admission permit 잔류 | admission 성능이 저하될 수 있지만 DB 정합성은 유지 | reservation semaphore key 초기화 또는 전용 Redis 재시작 |
-| 만료 hold/offer 누적 | capacity가 일시적으로 반환되지 않을 수 있음 | leader와 PostgreSQL 상태를 확인하고 제한된 operator sweep 실행 |
-| notification delivery backlog 증가 | 예약 상태는 커밋되어 있으며 delivery는 별도 재시도 대상 | durable delivery row와 provider 오류를 확인한 뒤 재시도 |
-| hold가 운영상 고착 | 일반 owner transition으로 복구하지 못할 수 있음 | operator mode를 잠시 활성화하고 감사 가능한 reason code로 강제 해제 |
+| 증상                                                | 예상 동작                                                                                | 대응                                                                                                                              |
+|-----------------------------------------------------|------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| PostgreSQL 접속 불가 또는 pool 고갈                 | command가 실패하며 Redis만으로 mutation하지 않음                                         | PostgreSQL 복구 후 Hikari acquisition latency를 점검하고 pool은 제한된 크기로 유지                                                |
+| Redis 접속 불가                                     | local bulkhead와 PostgreSQL을 통해 command는 계속 처리되고 leader-only 자동 sweep은 중단 | Redis 복구 후 leader 획득을 확인하고, 애플리케이션 시작 시점부터 Redis가 없었다면 예제를 재시작해 선택적 Redis bean을 다시 활성화 |
+| 프로세스 비정상 종료 후 Redis admission permit 잔류 | admission 성능이 저하될 수 있지만 DB 정합성은 유지                                       | reservation semaphore key 초기화 또는 전용 Redis 재시작                                                                           |
+| 만료 hold/offer 누적                                | capacity가 일시적으로 반환되지 않을 수 있음                                              | leader와 PostgreSQL 상태를 확인하고 제한된 operator sweep 실행                                                                    |
+| notification delivery backlog 증가                  | 예약 상태는 커밋되어 있으며 delivery는 별도 재시도 대상                                  | durable delivery row와 provider 오류를 확인한 뒤 재시도                                                                           |
+| hold가 운영상 고착                                  | 일반 owner transition으로 복구하지 못할 수 있음                                          | operator mode를 잠시 활성화하고 감사 가능한 reason code로 강제 해제                                                               |
 
 예제는 notification delivery 의도를 영속화하고 fake provider로 retry/deduplication을 검증합니다. production provider 전용 worker는 포함하지 않습니다.
 

@@ -14,7 +14,7 @@ import org.springframework.cache.annotation.EnableCaching
 @SpringBootApplication(proxyBeanMethods = false)
 @EnableCaching
 class CaffeineApplication {
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 fun main(vararg args: String) {

@@ -1,26 +1,26 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.snapshot
 
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSnapshots
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
-import org.jetbrains.exposed.v1.jdbc.Database
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSnapshots
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.sql.SQLException
 import java.time.Instant
-import java.util.HexFormat
+import java.util.*
 
 internal const val SNAPSHOT_THRESHOLD = 250L
 internal const val MAX_SNAPSHOT_BYTES = 1024 * 1024
@@ -45,7 +45,7 @@ internal class EventSnapshot(
     val createdAt: Instant = Instant.now(),
 ) {
     init {
-        canonicalState.toByteArray(UTF_8).size.requireLe(MAX_SNAPSHOT_BYTES, "snapshot.bytes")
+        canonicalState.toUtf8Bytes().size.requireLe(MAX_SNAPSHOT_BYTES, "snapshot.bytes")
         canonicalDigest.requireEquals(snapshotDigest(canonicalState), "canonicalDigest")
     }
 }
@@ -73,20 +73,19 @@ internal class EventSnapshotRepository {
             .selectAll()
             .where {
                 (EventSnapshots.tenantId eq stream.tenantId.value) and
-                    (EventSnapshots.streamType eq stream.streamType) and
-                    (EventSnapshots.streamId eq stream.streamId)
+                        (EventSnapshots.streamType eq stream.streamType) and
+                        (EventSnapshots.streamId eq stream.streamId)
             }.orderBy(EventSnapshots.streamVersion to SortOrder.DESC)
             .limit(1)
             .singleOrNull()
             ?.let { row ->
                 EventSnapshot(
                     stream = stream,
-                    metadata =
-                        SnapshotMetadata(
-                            streamVersion = row[EventSnapshots.streamVersion],
-                            schemaVersion = row[EventSnapshots.schemaVersion],
-                            keyVersion = row[EventSnapshots.keyVersion],
-                        ),
+                    metadata = SnapshotMetadata(
+                        streamVersion = row[EventSnapshots.streamVersion],
+                        schemaVersion = row[EventSnapshots.schemaVersion],
+                        keyVersion = row[EventSnapshots.keyVersion],
+                    ),
                     canonicalState = row[EventSnapshots.payload],
                     canonicalDigest = row[EventSnapshots.canonicalDigest],
                     createdAt = row[EventSnapshots.createdAt],
@@ -102,7 +101,7 @@ internal interface SnapshotTransactionRunner {
 
 internal class ExposedSnapshotTransactionRunner(
     private val database: Database,
-) : SnapshotTransactionRunner {
+): SnapshotTransactionRunner {
     override fun <T> inTransaction(block: () -> T): T = transaction(database) { block() }
 }
 
@@ -119,7 +118,7 @@ internal class SnapshotWriter(
             false
         }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 internal fun shouldWriteSnapshot(streamVersion: Long): Boolean =
@@ -128,5 +127,5 @@ internal fun shouldWriteSnapshot(streamVersion: Long): Boolean =
 private fun snapshotDigest(value: String): String =
     MessageDigest
         .getInstance("SHA-256")
-        .digest(value.toByteArray(UTF_8))
+        .digest(value.toUtf8Bytes())
         .let(HexFormat.of()::formatHex)

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -9,6 +10,9 @@ import java.sql.Connection
 import javax.sql.DataSource
 
 internal class VoucherHealthIndicatorsTest {
+
+    companion object: KLogging()
+
     @Test
     fun `PostgreSQL alone controls authoritative readiness`() {
         val connection = mockk<Connection>(relaxed = true)
@@ -19,6 +23,7 @@ internal class VoucherHealthIndicatorsTest {
         VoucherDatabaseHealthIndicator(dataSource).health().status shouldBeEqualTo Status.UP
 
         every { dataSource.connection } throws IllegalStateException("database unavailable")
+
         VoucherDatabaseHealthIndicator(dataSource).health().status shouldBeEqualTo Status.DOWN
     }
 

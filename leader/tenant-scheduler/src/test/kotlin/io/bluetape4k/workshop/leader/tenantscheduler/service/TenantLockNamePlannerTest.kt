@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.service
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantJobName
 import org.junit.jupiter.api.Test
@@ -8,6 +9,8 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TenantLockNamePlannerTest {
+
+    companion object: KLogging()
 
     private val planner = TenantLockNamePlanner()
 

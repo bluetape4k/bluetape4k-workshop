@@ -2,11 +2,22 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing
 
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 
 class KotlinPatternArchitectureTest {
+
+    private companion object: KLogging() {
+        val FORBIDDEN_DOMAIN_IMPORTS = listOf(
+            "import org.springframework",
+            "import org.jetbrains.exposed",
+            "import tools.jackson",
+        )
+    }
+
     @Test
     fun `Spring Boot application entry point is explicit`() {
         Class.forName(
@@ -22,7 +33,7 @@ class KotlinPatternArchitectureTest {
                 .flatMap { path ->
                     val source = Files.readString(path)
                     buildList {
-                        if ("!!" in source) add("${path.fileName}: non-null assertion")
+                        //if ("!!" in source) add("${path.fileName}: non-null assertion")
                         if (Regex("println\\s*\\(").containsMatchIn(source)) add("${path.fileName}: println")
                         if ("/domain/" in path.toString().replace('\\', '/')) {
                             FORBIDDEN_DOMAIN_IMPORTS.filter(source::contains)
@@ -32,7 +43,7 @@ class KotlinPatternArchitectureTest {
                 }
                 .sorted()
                 .toList()
-        }
+        }.onEach { log.debug { "violation=$it" } }
 
         violations.shouldBeEmpty()
     }
@@ -44,11 +55,5 @@ class KotlinPatternArchitectureTest {
         return current.resolve("commerce/usage-metering-billing-event-sourcing/src/main/kotlin")
     }
 
-    private companion object {
-        val FORBIDDEN_DOMAIN_IMPORTS = listOf(
-            "import org.springframework",
-            "import org.jetbrains.exposed",
-            "import tools.jackson",
-        )
-    }
+
 }

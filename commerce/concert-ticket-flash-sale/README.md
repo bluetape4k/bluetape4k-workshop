@@ -134,30 +134,30 @@ Inventory may be returned only when both sides are conclusively safe:
 
 Check signals in this order:
 
-| Signal | Healthy reading | Warning | Action | Recovery check |
-|---|---|---|---|---|
-| Migration readiness | `UP` | checksum/lock failure | stop rollout, compare immutable migration | readiness returns `UP` after a clean restart |
-| Redis readiness | `UP` | `redis_unavailable` | reject new admission; keep recovery online | lease acquire/validate/release probe passes |
-| Payment unknown age | bounded by provider SLA | oldest age grows | run bounded lookup reconciliation | stable IDs reach conclusive outcomes |
-| Refund backlog | stable or draining | `REFUND_PENDING` grows | verify provider lookup then retry | refund receipts converge without duplicates |
-| Ticket quarantine | zero | any quarantined effect | inspect provider receipt and repair adapter | disposition becomes `REVOKED` or known safe |
-| DB bulkhead | low rejection ratio | sustained foreground rejection | reduce ingress before raising pool size | transaction p99 and permit use normalize |
+| Signal              | Healthy reading         | Warning                        | Action                                      | Recovery check                               |
+|---------------------|-------------------------|--------------------------------|---------------------------------------------|----------------------------------------------|
+| Migration readiness | `UP`                    | checksum/lock failure          | stop rollout, compare immutable migration   | readiness returns `UP` after a clean restart |
+| Redis readiness     | `UP`                    | `redis_unavailable`            | reject new admission; keep recovery online  | lease acquire/validate/release probe passes  |
+| Payment unknown age | bounded by provider SLA | oldest age grows               | run bounded lookup reconciliation           | stable IDs reach conclusive outcomes         |
+| Refund backlog      | stable or draining      | `REFUND_PENDING` grows         | verify provider lookup then retry           | refund receipts converge without duplicates  |
+| Ticket quarantine   | zero                    | any quarantined effect         | inspect provider receipt and repair adapter | disposition becomes `REVOKED` or known safe  |
+| DB bulkhead         | low rejection ratio     | sustained foreground rejection | reduce ingress before raising pool size     | transaction p99 and permit use normalize     |
 
 Do not run unbounded reconciliation. The operator API limits each request to 50 items, requires a reason, has an independent permit, and stops at the configured deadline. Metrics use low-cardinality result codes; buyer, IP, attempt, and provider IDs belong only in access-controlled diagnostics.
 
 ## State mapping: internal state to customer action
 
-| Internal state | Customer message | Allowed action |
-|---|---|---|
-| `INVENTORY_HELD` | Inventory is temporarily held | wait; do not start another purchase |
-| `PAYMENT_AUTHORIZING` | Payment is processing | retry snapshot with the same attempt ID |
-| `RECONCILIATION_REQUIRED` | Payment result is being confirmed | wait or request cancellation; never repay |
-| `CANCELLATION_REQUESTED` | Cancellation is converging | wait for final provider lookup |
-| `APPROVED` | Purchase approved | use ticket only after ticket state is `ISSUED` |
-| `DECLINED`, `CANCELLED`, `EXPIRED` | Purchase did not complete | a new admission may be attempted |
-| `REFUND_PENDING` | Refund is processing | keep the attempt ID; contact support only after SLA |
-| `REFUNDED` | Refund complete | no further action |
-| `REFUND_QUARANTINED` | Manual review required | operator investigation; no automatic restock |
+| Internal state                     | Customer message                  | Allowed action                                      |
+|------------------------------------|-----------------------------------|-----------------------------------------------------|
+| `INVENTORY_HELD`                   | Inventory is temporarily held     | wait; do not start another purchase                 |
+| `PAYMENT_AUTHORIZING`              | Payment is processing             | retry snapshot with the same attempt ID             |
+| `RECONCILIATION_REQUIRED`          | Payment result is being confirmed | wait or request cancellation; never repay           |
+| `CANCELLATION_REQUESTED`           | Cancellation is converging        | wait for final provider lookup                      |
+| `APPROVED`                         | Purchase approved                 | use ticket only after ticket state is `ISSUED`      |
+| `DECLINED`, `CANCELLED`, `EXPIRED` | Purchase did not complete         | a new admission may be attempted                    |
+| `REFUND_PENDING`                   | Refund is processing              | keep the attempt ID; contact support only after SLA |
+| `REFUNDED`                         | Refund complete                   | no further action                                   |
+| `REFUND_QUARANTINED`               | Manual review required            | operator investigation; no automatic restock        |
 
 The browser always renders a text label and an icon with an accessible name. Color is supplementary, never the only state signal.
 
@@ -165,14 +165,14 @@ The browser always renders a text label and an icon with an accessible name. Col
 
 ![Redis and PostgreSQL authority](../../docs/images/readme-diagrams/commerce-concert-ticket-flash-sale-authority-01.png)
 
-| Concern | Redis | PostgreSQL |
-|---|---|---|
-| Waiting-room lease | primary temporary coordinator | optional durable audit/reference |
-| USER/IP duplicate suppression | fast atomic lease | durable unique guard and recovery authority |
-| Inventory | never authoritative | locked counters and invariant owner |
-| Payment/refund | never authoritative | stable operation, claim, outcome, receipt |
-| Ticket issue/revoke | never authoritative | effect claim, receipt, disposition |
-| HTTP idempotency | optional edge optimization | fingerprint and replay authority |
+| Concern                       | Redis                         | PostgreSQL                                  |
+|-------------------------------|-------------------------------|---------------------------------------------|
+| Waiting-room lease            | primary temporary coordinator | optional durable audit/reference            |
+| USER/IP duplicate suppression | fast atomic lease             | durable unique guard and recovery authority |
+| Inventory                     | never authoritative           | locked counters and invariant owner         |
+| Payment/refund                | never authoritative           | stable operation, claim, outcome, receipt   |
+| Ticket issue/revoke           | never authoritative           | effect claim, receipt, disposition          |
+| HTTP idempotency              | optional edge optimization    | fingerprint and replay authority            |
 
 The reusable two-key Lua lease is intentionally local pending promotion to `bluetape4k-lettuce`; follow-up is tracked in [bluetape4k-projects #1065](https://github.com/bluetape4k/bluetape4k-projects/issues/1065).
 
@@ -220,8 +220,7 @@ node scripts/validate-sequence-diagrams.mjs
 
 ![High-contention profile runner architecture](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
 
-Run the Ticket and Job Console profiles with a running Docker daemon, JDK 25,
-and at least 4 GiB of memory available to Gradle and the containers:
+Run the Ticket and Job Console profiles with a running Docker daemon, JDK 25, and at least 4 GiB of memory available to Gradle and the containers:
 
 ```bash
 CI_RUN_ID=developer-ci-001
@@ -231,13 +230,6 @@ REFERENCE_RUN_ID=developer-reference-001
 ```
 
 The correctness gate is `highContentionCi`. `highContentionLocalReference`
-records environment-specific execution observations; it does not rank
-frameworks and does not establish production capacity. Canonical reports are
-written under `build/reports/high-contention/<run-id>/`. Use a new run ID for
-every command; local-reference execution also requires a clean worktree.
+records environment-specific execution observations; it does not rank frameworks and does not establish production capacity. Canonical reports are written under `build/reports/high-contention/<run-id>/`. Use a new run ID for every command; local-reference execution also requires a clean worktree.
 
-The Ticket adapter uses Spring-managed HikariCP pools, but PostgreSQL remains
-authoritative for inventory, purchase fencing, payment reconciliation,
-deduplication, and receipts. Toxiproxy cuts and restores the Redis admission
-path for both old and newly opened connections; it does not replace PostgreSQL
-authority or prove broker, database, or host failover.
+The Ticket adapter uses Spring-managed HikariCP pools, but PostgreSQL remains authoritative for inventory, purchase fencing, payment reconciliation, deduplication, and receipts. Toxiproxy cuts and restores the Redis admission path for both old and newly opened connections; it does not replace PostgreSQL authority or prove broker, database, or host failover.

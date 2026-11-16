@@ -14,8 +14,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractMvcJdbcTest {
 
-    companion object : KLogging() {
-        private val testDB = TestDB.POSTGRESQL
+    companion object: KLogging() {
+        private val testDB by lazy { TestDB.POSTGRESQL }
 
         @JvmStatic
         @DynamicPropertySource

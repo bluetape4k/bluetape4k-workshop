@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class RedissonConfig {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Bean(destroyMethod = "shutdown")
     fun redissonClient(
@@ -24,7 +24,7 @@ class RedissonConfig {
                 .setAddress("redis://$redisHost:$port")
                 .setConnectionPoolSize(64)
                 .setConnectionMinimumIdleSize(16)
-                .setTimeout(5000)
+                .setTimeout(5_000)
                 .setRetryAttempts(3)
         }
         return Redisson.create(config)

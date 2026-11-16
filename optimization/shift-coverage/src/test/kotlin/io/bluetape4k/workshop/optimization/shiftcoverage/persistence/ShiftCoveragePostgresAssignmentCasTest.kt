@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.persistence
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.AssignmentId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftAssignment
@@ -20,17 +22,26 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ShiftCoveragePostgresAssignmentCasTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private val repository = ShiftCoveragePostgresAssignmentRepository()
-    private val assignment = ShiftAssignment(AssignmentId("assignment-pg"), SiteId("site-pg"), ShiftId("shift-pg"), WorkerId("worker-a"))
+    private val assignment = ShiftAssignment(
+        AssignmentId("assignment-pg"),
+        SiteId("site-pg"),
+        ShiftId("shift-pg"),
+        WorkerId("worker-a")
+    )
 
     @BeforeAll
     fun connectPostgres() {
         Database.connect(
             url = postgres.jdbcUrl,
             driver = "org.postgresql.Driver",
-            user = requireNotNull(postgres.username),
-            password = requireNotNull(postgres.password),
+            user = postgres.username.shouldNotBeNull(),
+            password = postgres.password.shouldNotBeNull(),
         )
     }
 
@@ -44,7 +55,9 @@ class ShiftCoveragePostgresAssignmentCasTest {
 
     @AfterAll
     fun dropSchema() {
-        transaction { SchemaUtils.drop(ShiftCoverageAssignmentsTable) }
+        transaction {
+            SchemaUtils.drop(ShiftCoverageAssignmentsTable)
+        }
     }
 
     @Test

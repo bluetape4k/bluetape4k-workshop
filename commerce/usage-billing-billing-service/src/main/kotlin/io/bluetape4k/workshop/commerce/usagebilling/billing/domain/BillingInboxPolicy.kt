@@ -5,7 +5,7 @@ import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class BillingInboxEvent(
     val eventId: UUID,
@@ -17,7 +17,8 @@ data class BillingInboxEvent(
     val meterCode: String,
     val currency: String = "USD",
     val quantity: BigDecimal = BigDecimal.ONE,
-) : Serializable {
+): Serializable {
+    
     init {
         tenantId.requireNotBlank("tenantId")
         aggregateType.requireNotBlank("aggregateType")
@@ -40,7 +41,7 @@ data class BillingPriceEvidence(
     val currency: String,
     val unitPrice: BigDecimal,
     val effectiveAt: Instant,
-) : Serializable {
+): Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         meterCode.requireNotBlank("meterCode")
@@ -57,7 +58,7 @@ data class BillingPriceEvidenceEvent(
     val eventId: UUID,
     val payloadDigest: String,
     val evidence: BillingPriceEvidence,
-) : Serializable {
+): Serializable {
     init {
         payloadDigest.requireNotBlank("payloadDigest")
     }

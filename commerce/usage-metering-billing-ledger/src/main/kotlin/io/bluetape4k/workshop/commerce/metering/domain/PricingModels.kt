@@ -9,8 +9,7 @@ import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
-import java.util.Currency
-import java.util.UUID
+import java.util.*
 
 private const val MAX_USAGE_DECIMAL_SCALE = 6
 
@@ -50,12 +49,16 @@ data class Money(
         require(currency == other.currency) { "currency mismatch: $currency != ${other.currency}" }
         val total = moneyOf(amount, currencyUnitOf(currency.currencyCode))
             .add(moneyOf(other.amount, currencyUnitOf(other.currency.currencyCode)))
+
         return Money(total.bigDecimalValue, currency).normalized()
     }
 }
 
 fun charge(quantity: UsageQuantity, unitPrice: UnitPrice, currency: Currency): Money =
-    Money(quantity.value.multiply(unitPrice.value), currency).normalized()
+    Money(
+        amount = quantity.value.multiply(unitPrice.value),
+        currency = currency
+    ).normalized()
 
 data class PriceWindow(
     val effectiveFrom: Instant,

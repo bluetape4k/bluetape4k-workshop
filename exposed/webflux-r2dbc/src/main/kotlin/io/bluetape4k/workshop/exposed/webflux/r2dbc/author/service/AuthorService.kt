@@ -16,7 +16,7 @@ class AuthorService(
     private val bookRepo: BookRepository,
     private val db: R2dbcDatabase,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     suspend fun findAll(): List<AuthorDTO> = suspendTransaction(db = db) {
         authorRepo.findAll().toList()
@@ -36,6 +36,7 @@ class AuthorService(
     suspend fun update(id: Long, req: CreateAuthorRequest): AuthorDTO = suspendTransaction(db = db) {
         val rows = authorRepo.update(id, req)
         if (rows == 0) throw NoSuchElementException("Author $id not found")
+
         authorRepo.findByIdOrNull(id)
             ?: throw NoSuchElementException("Author $id not found after update")
     }

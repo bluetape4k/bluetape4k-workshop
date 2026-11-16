@@ -190,7 +190,7 @@ Expected: `FieldServiceRuntimeContractTest` PASS.
 ```kotlin
 @Test
 fun `canonicalizer rejects duplicate object keys before digest`() {
-    val body = "{\"visitId\":\"visit-1\",\"visitId\":\"visit-2\"}".toByteArray()
+    val body = "{\"visitId\":\"visit-1\",\"visitId\":\"visit-2\"}".toUtf8Bytes()
     shouldThrow<InvalidFieldServiceInput> { canonicalizer.digest(body) }
 }
 ```

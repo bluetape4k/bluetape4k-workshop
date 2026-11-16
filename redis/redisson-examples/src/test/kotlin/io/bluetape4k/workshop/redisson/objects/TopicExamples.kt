@@ -1,17 +1,19 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import io.bluetape4k.assertions.shouldBeEqualTo
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
 import org.junit.jupiter.api.Test
 import org.redisson.api.RReliableTopic
 import org.redisson.api.RTopic
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Topic examples
@@ -50,7 +52,9 @@ class TopicExamples: AbstractRedissonTest() {
         topic.publishAsync("message-2").await()
 
         // topic 에 listener가 2개, 메시지 2개 전송
-        await until { receivedCounter.get() >= 2 * 2 }
+        await atMost 3.seconds until {
+            receivedCounter.get() >= 2 * 2
+        }
 
         topic.removeAllListenersAsync().await()
     }
@@ -92,7 +96,9 @@ class TopicExamples: AbstractRedissonTest() {
         topic2.publishAsync("message-2").await()
 
         // topic 에 listener가 2개, 메시지 2개 전송
-        await until { receivedCounter.get() >= 2 * 2 }
+        await atMost 3.seconds until {
+            receivedCounter.get() >= 2 * 2
+        }
 
         topic1.removeAllListenersAsync().await()
         topic2.removeAllListenersAsync().await()

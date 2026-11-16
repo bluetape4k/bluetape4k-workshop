@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.salecontrol.internal
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.ticket.domain.SaleState
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction
@@ -15,38 +16,44 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.io.Serial
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-sealed class SaleAdmissionFailure(code: String) : IllegalStateException(code) {
+sealed class SaleAdmissionFailure(code: String): IllegalStateException(code) {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
     }
 }
 
-class SaleNotStarted : SaleAdmissionFailure("sale_not_started")
-class SaleClosed : SaleAdmissionFailure("sale_closed")
-class SaleNotOpen : SaleAdmissionFailure("sale_not_open")
-class StaleSalePolicy : SaleAdmissionFailure("stale_sale_policy")
+class SaleNotStarted: SaleAdmissionFailure("sale_not_started")
+class SaleClosed: SaleAdmissionFailure("sale_closed")
+class SaleNotOpen: SaleAdmissionFailure("sale_not_open")
+class StaleSalePolicy: SaleAdmissionFailure("stale_sale_policy")
 
 /** Bluetape4k Exposed JDBC repository로 구현한 sale authority입니다. */
-class TicketSaleRepository : TicketExposedJdbcRepository<TicketSaleEntity, UUID>(TicketSaleEntity::class.java) {
+class TicketSaleRepository: TicketExposedJdbcRepository<TicketSaleEntity, UUID>(TicketSaleEntity::class) {
+
+    companion object: KLogging()
+
     fun requireOpen(
         transaction: TicketJdbcTransaction,
         expected: SalePolicySnapshot,
         now: Instant,
     ): SalePurchasePolicy = with(transaction) {
         acquire(TicketLockRank.SALE)
+
         val sale = TicketSales.selectAll()
             .where { TicketSales.id eq expected.saleId }
             .forUpdate()
             .singleOrNull()
             ?: throw SaleClosed()
+
         val policyVersion = sale[TicketSales.currentPolicyVersion]
+
         TicketSalePolicies.selectAll()
             .where {
                 (TicketSalePolicies.saleId eq expected.saleId) and
-                    (TicketSalePolicies.policyVersion eq policyVersion)
+                        (TicketSalePolicies.policyVersion eq policyVersion)
             }
             .forUpdate()
             .singleOrNull()
@@ -57,6 +64,7 @@ class TicketSaleRepository : TicketExposedJdbcRepository<TicketSaleEntity, UUID>
                 if (now.isBefore(expected.opensAt) || now.isBefore(opensAt)) throw SaleNotStarted()
                 if (!now.isBefore(closesAt)) throw SaleClosed()
                 if (sale[TicketSales.state] != SaleState.OPEN.code) throw SaleNotOpen()
+
                 SalePurchasePolicy(
                     saleId = expected.saleId,
                     policyVersion = policyVersion,
@@ -72,10 +80,14 @@ class TicketSaleRepository : TicketExposedJdbcRepository<TicketSaleEntity, UUID>
 /** purchase transaction 안에서 sale window와 immutable policy를 다시 검증합니다. */
 class SaleService(
     private val sales: TicketSaleRepository = TicketSaleRepository(),
-) : SalePurchaseAuthority {
+): SalePurchaseAuthority {
+
+    companion object: KLogging()
+
     override fun requireOpen(
         transaction: TicketJdbcTransaction,
         expected: SalePolicySnapshot,
         now: Instant,
-    ): SalePurchasePolicy = sales.requireOpen(transaction, expected, now)
+    ): SalePurchasePolicy =
+        sales.requireOpen(transaction, expected, now)
 }

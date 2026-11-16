@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.config
 
+import io.bluetape4k.logging.KLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -22,6 +23,12 @@ import java.io.Serializable
 @EnableKafka
 @EnableConfigurationProperties(UsageKafkaProperties::class)
 class UsageKafkaMessagingConfiguration {
+
+    private companion object: KLogging() {
+        const val PRODUCER_FAILURE_TIMEOUT_MS = 5_000
+        const val PRODUCER_REQUEST_TIMEOUT_MS = 3_000
+    }
+
     @Bean
     fun usageProducerFactory(properties: UsageKafkaProperties): ProducerFactory<String, String> =
         DefaultKafkaProducerFactory(
@@ -59,15 +66,11 @@ class UsageKafkaMessagingConfiguration {
     fun usageKafkaListenerContainerFactory(
         usageConsumerFactory: ConsumerFactory<String, String>,
     ): ConcurrentKafkaListenerContainerFactory<String, String> =
-        ConcurrentKafkaListenerContainerFactory<String, String>().also { factory ->
-            factory.setConsumerFactory(usageConsumerFactory)
-            factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
-        }
-
-    private companion object {
-        const val PRODUCER_FAILURE_TIMEOUT_MS = 5_000
-        const val PRODUCER_REQUEST_TIMEOUT_MS = 3_000
-    }
+        ConcurrentKafkaListenerContainerFactory<String, String>()
+            .also { factory ->
+                factory.setConsumerFactory(usageConsumerFactory)
+                factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
+            }
 }
 
 @ConfigurationProperties("usage-billing.usage.kafka")
@@ -75,7 +78,7 @@ data class UsageKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val consumerGroup: String = "usage-billing-usage-service",
     val producerClientId: String = "usage-billing-usage-service",
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

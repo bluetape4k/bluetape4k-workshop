@@ -1,10 +1,14 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 
 internal class EventSourcedBrowserContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `browser keeps the last verified projection while pending and bounds GET retries`() {
         val script = staticText("app.js")
@@ -58,6 +62,7 @@ internal class EventSourcedBrowserContractTest {
             "id=\"expected-generation-token\"",
             "id=\"poison-event-id\"",
         ).all(html::contains).shouldBeTrue()
+
         listOf(":focus-visible", ".sr-only", "content: \"Status: \"").all(styles::contains).shouldBeTrue()
     }
 

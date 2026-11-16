@@ -3,24 +3,43 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.messaging
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryApplyResult
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.HexFormat
+import java.util.*
 
 class QueryKafkaConsumerTest {
+
+    private companion object: KLogging() {
+        const val PAYLOAD = "{\"invoiceNumber\":\"INV-1\"}"
+    }
+
     private val decoder = QueryInboundEventDecoder()
+
+    private val inbox = mockk<QueryInboxService>(relaxed = true)
+    private val quarantine = mockk<QueryQuarantineService>(relaxed = true)
+
+    @BeforeEach
+    fun beforeEach() {
+        clearMocks(inbox, quarantine)
+    }
+
 
     @Test
     fun `decodes supported upstream event into Query-owned projection input`() {
         val event = decoder.decode(envelope("InvoiceIssued"))
 
+        log.debug { "event=$event" }
         event.tenantId shouldBeEqualTo "tenant-a"
         event.aggregateType shouldBeEqualTo "Invoice"
         event.aggregateId shouldBeEqualTo "invoice-1"
@@ -31,6 +50,7 @@ class QueryKafkaConsumerTest {
     fun `decodes additive schema v2 through the compatibility boundary`() {
         val event = decoder.decode(envelope("InvoiceIssued", schemaVersion = 2))
 
+        log.debug { "event=$event" }
         event.eventType shouldBeEqualTo "InvoiceIssued"
         event.aggregateVersion shouldBeEqualTo 1L
     }
@@ -41,6 +61,7 @@ class QueryKafkaConsumerTest {
             decoder.decode(envelope("InvoiceIssued", schemaVersion = 99))
         }
 
+        log.debug { "failure=$failure" }
         failure.quarantine.eventType shouldBeEqualTo "InvoiceIssued"
         failure.quarantine.reason shouldBeEqualTo "unsupported_schema:99"
     }
@@ -51,14 +72,13 @@ class QueryKafkaConsumerTest {
             decoder.decode(envelope("InvoiceIssued", payloadDigest = "0".repeat(64)))
         }
 
+        log.debug { "failure=$failure" }
         failure.quarantine.eventType shouldBeEqualTo "InvoiceIssued"
         failure.quarantine.reason shouldBeEqualTo "invalid_payload_digest"
     }
 
     @Test
     fun `listener returns only after a valid event reaches the durable inbox service`() {
-        val inbox = mockk<QueryInboxService>()
-        val quarantine = mockk<QueryQuarantineService>(relaxed = true)
         every { inbox.apply(any()) } returns QueryApplyResult(applied = true)
         val listener = KafkaQueryIntegrationListener(decoder, inbox, quarantine)
 
@@ -70,8 +90,6 @@ class QueryKafkaConsumerTest {
 
     @Test
     fun `listener durably quarantines permanent decode failure instead of retrying forever`() {
-        val inbox = mockk<QueryInboxService>(relaxed = true)
-        val quarantine = mockk<QueryQuarantineService>(relaxed = true)
         val listener = KafkaQueryIntegrationListener(decoder, inbox, quarantine)
 
         listener.consume(envelope("UnknownEvent"))
@@ -84,8 +102,6 @@ class QueryKafkaConsumerTest {
 
     @Test
     fun `listener propagates transient inbox failure for Kafka redelivery`() {
-        val inbox = mockk<QueryInboxService>()
-        val quarantine = mockk<QueryQuarantineService>(relaxed = true)
         every { inbox.apply(any()) } throws IllegalStateException("database unavailable")
         val listener = KafkaQueryIntegrationListener(decoder, inbox, quarantine)
 
@@ -116,10 +132,7 @@ class QueryKafkaConsumerTest {
             ),
         )
 
+    @Suppress("SameParameterValue")
     private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
-
-    private companion object {
-        const val PAYLOAD = "{\"invoiceNumber\":\"INV-1\"}"
-    }
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 }

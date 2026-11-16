@@ -1,6 +1,8 @@
 package io.bluetape4k.okio.coroutines
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
 import io.bluetape4k.okio.asBufferedSink
 import io.bluetape4k.okio.asBufferedSource
@@ -13,10 +15,11 @@ import okio.BufferedSource
 import okio.Sink
 import okio.Source
 import okio.Timeout
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class SuspendInteropTest: AbstractOkioTest() {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `Buffer suspendReadAll은 모든 바이트를 SuspendedSink에 쓴다`() = runSuspendIO {

@@ -3,9 +3,10 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.persistence
 import io.bluetape4k.exposed.core.auditable.Auditable
 import io.bluetape4k.exposed.core.auditable.UserContext
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.support.requireMatches
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** UUID PK와 audit metadata를 함께 보존하는 plan aggregate record입니다. */
 data class ShiftCoverageAggregateRecord(
@@ -19,11 +20,14 @@ data class ShiftCoverageAggregateRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable, Serializable {
+): Auditable, Serializable {
     init {
         require(siteId.isNotBlank() && planId.isNotBlank()) { "plan aggregate scope must not be blank" }
         require(revision >= 0L) { "plan revision must be non-negative" }
-        require(snapshotDigest.matches(Regex("[0-9a-f]{64}"))) { "snapshot digest must be lowercase SHA-256" }
+        snapshotDigest.requireMatches(Regex("[0-9a-f]{64}"), "snapshotDigest")
     }
-    companion object { private const val serialVersionUID: Long = 1L }
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

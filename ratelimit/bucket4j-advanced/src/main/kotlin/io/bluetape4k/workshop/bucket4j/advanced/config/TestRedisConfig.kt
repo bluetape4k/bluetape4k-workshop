@@ -19,8 +19,8 @@ import org.springframework.core.annotation.Order
 @Order(0)
 class TestRedisConfig {
 
-    companion object : KLoggingChannel() {
-        val redis: RedisServer = RedisServer.Launcher.redis
+    companion object: KLoggingChannel() {
+        val redis: RedisServer by lazy { RedisServer.Launcher.redis }
 
         init {
             System.setProperty("testcontainers.redis.url", redis.url)

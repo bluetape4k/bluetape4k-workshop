@@ -11,7 +11,7 @@ data class Member(
     val email: String,
     @Id
     val id: Long? = null,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

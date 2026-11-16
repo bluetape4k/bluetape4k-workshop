@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 @Component
 class PongHandler {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @KafkaListener(groupId = "pong", topics = [PongApplication.TOPIC_PINGPONG])
     @SendTo // use default replyTo expression

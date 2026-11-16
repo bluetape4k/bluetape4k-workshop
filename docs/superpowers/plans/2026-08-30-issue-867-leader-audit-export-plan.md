@@ -265,9 +265,9 @@ fun `encoded payload excludes token raw identity tenant customer and exception`(
 @Test
 fun `store retains only serialized bytes and evicts by exact byte budget`() {
     val store = BoundedAuditPayloadStore(maxEntries = 2, maxBytes = 8)
-    store.add("1234".toByteArray())
-    store.add("5678".toByteArray())
-    store.add("90".toByteArray())
+    store.add("1234".toUtf8Bytes())
+    store.add("5678".toUtf8Bytes())
+    store.add("90".toUtf8Bytes())
     store.snapshot().map { it.decodeToString() } shouldBeEqualTo listOf("5678", "90")
     store.retainedBytes shouldBeEqualTo 6
 }
@@ -438,7 +438,7 @@ fun `memory and https retain the same sanitized payload contract`(transport: Aud
         fixture.fakeClient.awaitRequestCount(1, timeout = 5.seconds)
     }
     report.recentEvents shouldBeEqualTo expected.recentEvents
-    report.recentEvents.sumOf { it.toString().toByteArray().size } shouldBeLessThanOrEqualTo 512 * 1024
+    report.recentEvents.sumOf { it.toString().toUtf8Bytes().size } shouldBeLessThanOrEqualTo 512 * 1024
 }
 
 @Test

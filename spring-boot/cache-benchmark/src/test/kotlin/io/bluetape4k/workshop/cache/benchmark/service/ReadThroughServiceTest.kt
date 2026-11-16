@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.cache.benchmark.service
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.cache.benchmark.AbstractCacheBenchmarkTest
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
@@ -13,12 +15,16 @@ import java.math.BigDecimal
 class ReadThroughServiceTest(
     @Autowired private val service: ReadThroughService,
     @Autowired private val productRepository: ProductRepository,
-) : AbstractCacheBenchmarkTest() {
+): AbstractCacheBenchmarkTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `findById reads through to DB on first access`() {
         val existing = productRepository.findAll().first()
         val result = service.findById(existing.id)
+
+        log.debug { "result=$result" }
         result shouldBeEqualTo existing
     }
 
@@ -38,12 +44,14 @@ class ReadThroughServiceTest(
 
     @Test
     fun `findById cache hit is served from Redisson map after loader miss`() {
-        val existing =
-            productRepository.save(Product(name = "RTLoaded", category = "Test", price = BigDecimal("5.99"), stock = 4))
+        val product = Product(name = "RTLoaded", category = "Test", price = BigDecimal("5.99"), stock = 4)
+        val existing = productRepository.save(product)
+        log.debug { "existing=$existing" }
 
         service.evict(existing.id)
         service.findById(existing.id) shouldBeEqualTo existing
 
+        // ReadThrough 에서는 삭제 시 캐시에서만 삭제된다.
         productRepository.deleteById(existing.id)
         service.findById(existing.id) shouldBeEqualTo existing
     }

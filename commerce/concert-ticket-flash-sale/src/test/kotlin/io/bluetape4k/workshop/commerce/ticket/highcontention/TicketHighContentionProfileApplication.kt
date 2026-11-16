@@ -2,35 +2,42 @@ package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.jdbc.sql.singleLong
+import io.bluetape4k.jdbc.sql.singleString
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireZeroOrPositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
-import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
+import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigration
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigrationRunner
 import io.bluetape4k.workshop.commerce.ticket.config.TicketProperties
 import io.bluetape4k.workshop.commerce.ticket.config.TicketPublicationConfiguration
 import io.bluetape4k.workshop.commerce.ticket.config.TicketRedisConfiguration
 import io.bluetape4k.workshop.commerce.ticket.config.TicketRedisResources
-import io.bluetape4k.workshop.commerce.ticket.payment.internal.FakePaymentProvider
-import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
+import io.bluetape4k.workshop.commerce.ticket.domain.SaleState
 import io.bluetape4k.workshop.commerce.ticket.idempotency.HttpIdempotencyRepository
 import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyDecision
 import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyFingerprint
 import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyScope
-import io.bluetape4k.workshop.commerce.ticket.domain.SaleState
+import io.bluetape4k.workshop.commerce.ticket.payment.internal.FakePaymentProvider
+import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.AuthorizationRequested
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.StartPurchase
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.PurchaseEventPublisher
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.PurchaseService
+import io.bluetape4k.workshop.commerce.ticket.redis.ForegroundLeaseGate
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.api.SalePolicySnapshot
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.internal.SaleService
-import io.bluetape4k.workshop.commerce.ticket.redis.ForegroundLeaseGate
 import io.bluetape4k.workshop.commerce.ticket.ticketing.internal.FakeTicketProvider
 import io.bluetape4k.workshop.commerce.ticket.ticketing.internal.TicketEffectWorker
 import org.springframework.beans.factory.SmartInitializingSingleton
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
@@ -47,35 +54,45 @@ import java.sql.DriverManager
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 import javax.sql.DataSource
 
+@Suppress("SqlSourceToSinkFlow")
 internal class TicketHighContentionProfileApplication private constructor(
     private var applicationContext: ConfigurableApplicationContext,
     private val schema: String,
     private val redisUri: String,
     private val databasePermitTimeout: Duration,
-    private val events: MutableList<AuthorizationRequested>,
-) : AutoCloseable {
+    private val events: Queue<AuthorizationRequested>,
+): AutoCloseable {
+
     val dataSource: HikariDataSource
-        get() = applicationContext.getBean(DataSource::class.java) as HikariDataSource
+        get() = applicationContext.getBean<DataSource>() as HikariDataSource
+
     val jdbc: TicketJdbcExecutor
-        get() = applicationContext.getBean(TicketJdbcExecutor::class.java)
+        get() = applicationContext.getBean<TicketJdbcExecutor>()
+
     val purchases: PurchaseService
-        get() = applicationContext.getBean(PurchaseService::class.java)
+        get() = applicationContext.getBean<PurchaseService>()
+
     val paymentWorker: PaymentWorker
-        get() = applicationContext.getBean(PaymentWorker::class.java)
+        get() = applicationContext.getBean<PaymentWorker>()
+
     val paymentProvider: FakePaymentProvider
-        get() = applicationContext.getBean(FakePaymentProvider::class.java)
+        get() = applicationContext.getBean<FakePaymentProvider>()
+
     val ticketWorker: TicketEffectWorker
-        get() = applicationContext.getBean(TicketEffectWorker::class.java)
+        get() = applicationContext.getBean<TicketEffectWorker>()
+
     val ticketProvider: FakeTicketProvider
-        get() = applicationContext.getBean(FakeTicketProvider::class.java)
+        get() = applicationContext.getBean<FakeTicketProvider>()
+
     val redisResources: TicketRedisResources
-        get() = applicationContext.getBean(TicketRedisResources::class.java)
+        get() = applicationContext.getBean<TicketRedisResources>()
+
     val foregroundLeaseGate: ForegroundLeaseGate
-        get() = applicationContext.getBean(ForegroundLeaseGate::class.java)
+        get() = applicationContext.getBean<ForegroundLeaseGate>()
 
     fun capturedEvents(): List<AuthorizationRequested> = events.toList()
 
@@ -88,6 +105,8 @@ internal class TicketHighContentionProfileApplication private constructor(
         val saleId = stableUuid("$namespace:sale")
         val sharedIp = stableUuid("$namespace:shared-ip")
         val now = Instant.now()
+
+        // HINT: 왜 Exposed SQL DSL 을 쓰지 않고, Raw SQL 을 썼나?
         execute(
             """
             INSERT INTO ticket_sales(sale_id, state, current_policy_version, opens_at, closes_at)
@@ -107,12 +126,15 @@ internal class TicketHighContentionProfileApplication private constructor(
         attemptOrdinal: Int = 0,
         shareIp: Boolean = false,
     ): StartPurchase {
-        require(identityOrdinal >= 0) { "identityOrdinal must be non-negative" }
-        require(attemptOrdinal >= 0) { "attemptOrdinal must be non-negative" }
+        identityOrdinal.requireZeroOrPositiveNumber { "identityOrdinal must be non-negative" }
+        attemptOrdinal.requireZeroOrPositiveNumber { "attemptOrdinal must be non-negative" }
+
         val buyer = stableUuid("${sale.namespace}:buyer:$identityOrdinal")
         val ip = if (shareIp) sale.sharedIp else stableUuid("${sale.namespace}:ip:$identityOrdinal")
         val attemptId = stableUuid("${sale.namespace}:attempt:$identityOrdinal:$attemptOrdinal")
         val grantNonce = stableUuid("${sale.namespace}:grant:$identityOrdinal:$attemptOrdinal")
+
+        // HINT: 왜 Exposed SQL DSL 을 쓰지 않고, Raw SQL 을 썼나?
         execute(
             """
             INSERT INTO ticket_identity_subjects(subject_id, identity_kind)
@@ -123,21 +145,23 @@ internal class TicketHighContentionProfileApplication private constructor(
             VALUES ('${sale.saleId}', '$grantNonce', '$buyer', 1, '${sale.now.plusSeconds(300)}');
             """.trimIndent(),
         )
-        val owner = HttpIdempotencyRepository(jdbc).acquire(
-            IdempotencyScope(
-                principalSubjectId = buyer,
-                httpMethod = "POST",
-                canonicalRoute = "/api/v1/sales/{saleId}/purchase-attempts",
-                resourceId = sale.saleId.toString(),
-                operation = "purchase",
-                keyDigest = IdempotencyFingerprint.key(
-                    ByteArray(32) { 0x52 },
-                    "${sale.namespace}:key:$identityOrdinal:$attemptOrdinal",
+        val owner = HttpIdempotencyRepository(jdbc)
+            .acquire(
+                IdempotencyScope(
+                    principalSubjectId = buyer,
+                    httpMethod = "POST",
+                    canonicalRoute = "/api/v1/sales/{saleId}/purchase-attempts",
+                    resourceId = sale.saleId.toString(),
+                    operation = "purchase",
+                    keyDigest = IdempotencyFingerprint.key(
+                        secret = ByteArray(32) { 0x52 },
+                        rawKey = "${sale.namespace}:key:$identityOrdinal:$attemptOrdinal",
+                    ),
                 ),
-            ),
-            IdempotencyFingerprint.request("POST", "/purchase", "{\"grade\":\"GENERAL\",\"quantity\":1}"),
-            sale.now,
-        ) as IdempotencyDecision.Owner
+                IdempotencyFingerprint.request("POST", "/purchase", "{\"grade\":\"GENERAL\",\"quantity\":1}"),
+                sale.now,
+            ) as IdempotencyDecision.Owner
+
         return StartPurchase(
             attemptId = attemptId,
             authorizationOperationId = stableUuid("${sale.namespace}:payment:$identityOrdinal:$attemptOrdinal"),
@@ -148,11 +172,11 @@ internal class TicketHighContentionProfileApplication private constructor(
             quantity = 1,
             grant = ConsumeGrant(sale.saleId, grantNonce, buyer, 1, attemptId),
             policy = SalePolicySnapshot(
-                sale.saleId,
-                SaleState.OPEN,
-                1,
-                sale.now.minusSeconds(60),
-                sale.now.plusSeconds(3600),
+                saleId = sale.saleId,
+                state = SaleState.OPEN,
+                policyVersion = 1,
+                opensAt = sale.now.minusSeconds(60),
+                closesAt = sale.now.plusSeconds(3600),
             ),
         )
     }
@@ -167,8 +191,7 @@ internal class TicketHighContentionProfileApplication private constructor(
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
                 statement.executeQuery(sql).use { result ->
-                    check(result.next())
-                    result.getLong(1)
+                    result.singleLong()
                 }
             }
         }
@@ -177,8 +200,7 @@ internal class TicketHighContentionProfileApplication private constructor(
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
                 statement.executeQuery(sql).use { result ->
-                    check(result.next())
-                    result.getString(1)
+                    result.singleString()!!
                 }
             }
         }
@@ -206,21 +228,22 @@ internal class TicketHighContentionProfileApplication private constructor(
         }
     }
 
-    internal companion object {
+    internal companion object: KLogging() {
+
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         fun start(
             redisUri: String,
-            databasePermitTimeout: Duration = Duration.ofMillis(250),
+            databasePermitTimeout: Duration = 250.millis(),
         ): TicketHighContentionProfileApplication {
             val validRedisUri = redisUri.requireNotBlank("redisUri")
             val validDatabasePermitTimeout =
-                databasePermitTimeout.requireGt(Duration.ZERO, "databasePermitTimeout")
+                databasePermitTimeout.requirePositiveDuration("databasePermitTimeout")
             val schema = "ticket_hc_${Base58.randomString(8).lowercase()}"
             adminConnection().use { connection ->
                 connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
             }
-            val events = CopyOnWriteArrayList<AuthorizationRequested>()
+            val events = ConcurrentLinkedQueue<AuthorizationRequested>()
             return try {
                 TicketHighContentionProfileApplication(
                     applicationContext = startContext(
@@ -244,7 +267,7 @@ internal class TicketHighContentionProfileApplication private constructor(
             schema: String,
             redisUri: String,
             databasePermitTimeout: Duration,
-            events: MutableList<AuthorizationRequested>,
+            events: Queue<AuthorizationRequested>,
         ): ConfigurableApplicationContext =
             SpringApplicationBuilder(ProfileSpringApplication::class.java)
                 .web(WebApplicationType.NONE)
@@ -279,7 +302,7 @@ internal class TicketHighContentionProfileApplication private constructor(
             )
 
         private fun stableUuid(value: String): UUID =
-            UUID.nameUUIDFromBytes(value.toByteArray(Charsets.UTF_8))
+            UUID.nameUUIDFromBytes(value.toUtf8Bytes())
 
         private const val PROFILE_EVENTS_BEAN = "ticketHighContentionCapturedEvents"
     }

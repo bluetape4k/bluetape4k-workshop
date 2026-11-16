@@ -21,7 +21,7 @@ data class AbuserAlgorithmExecution(
     val path: GraphAlgorithmExecutionPath,
     /** JVM fallback을 선택한 이유이며 native 실행에는 존재하지 않습니다. */
     val fallbackReason: GraphAlgorithmFallbackReason?,
-) : Serializable {
+): Serializable {
     init {
         require(PROVIDER_ID.matches(providerId)) {
             "providerId must match ${PROVIDER_ID.pattern}"

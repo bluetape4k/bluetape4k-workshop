@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.web
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketDatabasePermitUnavailable
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.ActivePurchaseExists
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.InventoryUnavailable
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.io.Serial
 import java.io.Serializable
 import java.time.Instant
-import io.bluetape4k.idgenerators.uuid.Uuid
 
 data class TicketProblem(
     val code: String,
@@ -25,7 +25,7 @@ data class TicketProblem(
     val retryAt: Instant? = null,
     val nextAction: String? = null,
     val correlationId: String,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -35,8 +35,10 @@ data class TicketProblem(
 /** 안정적인 allowlist problem response입니다. exception message와 raw input은 HTTP boundary를 넘지 않습니다. */
 @RestControllerAdvice
 class ApiExceptionHandler {
+
     @ExceptionHandler(PurchaseNotFound::class)
-    fun notFound(request: HttpServletRequest) = problem(request, HttpStatus.NOT_FOUND, "purchase_not_found", false)
+    fun notFound(request: HttpServletRequest) =
+        problem(request, HttpStatus.NOT_FOUND, "purchase_not_found", false)
 
     @ExceptionHandler(AdmissionTemporarilyUnavailable::class, TicketDatabasePermitUnavailable::class)
     fun unavailable(request: HttpServletRequest) =
@@ -47,13 +49,16 @@ class ApiExceptionHandler {
         problem(request, HttpStatus.CONFLICT, "purchase_approval_in_progress", true, "wait_for_current_attempt")
 
     @ExceptionHandler(InventoryUnavailable::class)
-    fun soldOut(request: HttpServletRequest) = problem(request, HttpStatus.CONFLICT, "inventory_unavailable", false)
+    fun soldOut(request: HttpServletRequest) =
+        problem(request, HttpStatus.CONFLICT, "inventory_unavailable", false)
 
     @ExceptionHandler(PurchaseLimitExceeded::class)
-    fun limit(request: HttpServletRequest) = problem(request, HttpStatus.CONFLICT, "purchase_limit_exceeded", false)
+    fun limit(request: HttpServletRequest) =
+        problem(request, HttpStatus.CONFLICT, "purchase_limit_exceeded", false)
 
     @ExceptionHandler(MethodArgumentNotValidException::class, IllegalArgumentException::class)
-    fun invalid(request: HttpServletRequest) = problem(request, HttpStatus.BAD_REQUEST, "invalid_request", false)
+    fun invalid(request: HttpServletRequest) =
+        problem(request, HttpStatus.BAD_REQUEST, "invalid_request", false)
 
     private fun problem(
         request: HttpServletRequest,
@@ -61,9 +66,18 @@ class ApiExceptionHandler {
         code: String,
         retryable: Boolean,
         nextAction: String? = null,
-    ): ResponseEntity<TicketProblem> = ResponseEntity.status(status).body(
-        TicketProblem(code, status.value(), retryable, nextAction = nextAction, correlationId = correlationId(request)),
-    )
+    ): ResponseEntity<TicketProblem> =
+        ResponseEntity
+            .status(status)
+            .body(
+                TicketProblem(
+                    code = code,
+                    status = status.value(),
+                    retryable = retryable,
+                    nextAction = nextAction,
+                    correlationId = correlationId(request)
+                ),
+            )
 
     private fun correlationId(request: HttpServletRequest): String =
         request.getHeader("X-Correlation-Id")
@@ -71,6 +85,11 @@ class ApiExceptionHandler {
             ?: Uuid.V7.nextId().toString()
 
     companion object {
-        private val CORRELATION_CHARACTERS = (('a'..'z') + ('A'..'Z') + ('0'..'9') + listOf('-', '_')).toSet()
+        private val CORRELATION_CHARACTERS = buildList {
+            addAll('a'..'z')
+            addAll('A'..'Z')
+            addAll('0'..'9')
+            addAll(listOf('-', '_'))
+        }.toSet()
     }
 }

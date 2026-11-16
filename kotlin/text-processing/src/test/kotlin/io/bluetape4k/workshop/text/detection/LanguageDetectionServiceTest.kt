@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LanguageDetectionServiceTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     // shared detector 는 생성 비용이 크므로 이 class 의 모든 test 에서 재사용합니다.
     private val service = LanguageDetectionService()

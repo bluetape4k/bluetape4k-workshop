@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- @formatter:off -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5p) %magenta(${PID:- }) --- [%25.25t] %cyan(%-40.40logger{39}):%4.4line : %m%n"/>
 
-        <immediateFlush>true</immediateFlush>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
         <encoder>
-            <!-- @formatter:off -->
-            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%blue(%24.24t)] %yellow(%logger{36}):%line: %msg%n%throwable</pattern>
-            <!-- @formatter:on -->
-            <charset>UTF-8</charset>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
         </encoder>
     </appender>
+    <!-- formatter:on -->
 
     <logger name="io.bluetape4k.workshop" level="DEBUG"/>
     <logger name="io.bluetape4k" level="DEBUG"/>
 
     <root level="INFO">
-        <appender-ref ref="Console"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
 
 </configuration>

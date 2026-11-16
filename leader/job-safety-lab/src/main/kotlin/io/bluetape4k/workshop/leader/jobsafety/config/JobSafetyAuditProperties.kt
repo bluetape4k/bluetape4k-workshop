@@ -1,10 +1,15 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8Bytes
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.net.URI
 import java.time.Duration
-import java.util.Locale
+import java.util.*
 
 private const val AUDIT_DEFAULT_QUEUE_CAPACITY: Int = 32
 private const val AUDIT_DEFAULT_MAX_IN_FLIGHT: Int = 4
@@ -34,14 +39,14 @@ data class JobSafetyAuditProperties(
     val queueCapacity: Int = AUDIT_DEFAULT_QUEUE_CAPACITY,
     val maxInFlight: Int = AUDIT_DEFAULT_MAX_IN_FLIGHT,
     val maxAttempts: Int = AUDIT_DEFAULT_MAX_ATTEMPTS,
-    val attemptTimeout: Duration = Duration.ofSeconds(2),
-    val initialBackoff: Duration = Duration.ofMillis(100),
-    val maxBackoff: Duration = Duration.ofSeconds(1),
+    val attemptTimeout: Duration = 2.seconds(),
+    val initialBackoff: Duration = 100.millis(),
+    val maxBackoff: Duration = 1.seconds(),
     val maxPayloadBytes: Int = AUDIT_DEFAULT_MAX_PAYLOAD_BYTES,
     val recentHistoryLimit: Int = AUDIT_DEFAULT_RECENT_HISTORY_LIMIT,
     val recentHistoryByteBudget: Long = AUDIT_DEFAULT_RECENT_HISTORY_BYTE_BUDGET,
     val maxBufferedBytes: Long = AUDIT_DEFAULT_MAX_BUFFERED_BYTES,
-    val shutdownTimeout: Duration = Duration.ofSeconds(2),
+    val shutdownTimeout: Duration = 2.seconds(),
 ) {
     /** endpoint host를 DNS canonical form으로 반환한다. MEMORY transport에서는 null이다. */
     val endpointHost: String? = endpoint?.let {
@@ -110,10 +115,10 @@ data class JobSafetyAuditProperties(
 
     override fun toString(): String =
         "JobSafetyAuditProperties(transport=$transport, queueCapacity=$queueCapacity, " +
-            "maxInFlight=$maxInFlight, maxAttempts=$maxAttempts, attemptTimeout=$attemptTimeout, " +
-            "initialBackoff=$initialBackoff, maxBackoff=$maxBackoff, maxPayloadBytes=$maxPayloadBytes, " +
-            "recentHistoryLimit=$recentHistoryLimit, recentHistoryByteBudget=$recentHistoryByteBudget, " +
-            "maxBufferedBytes=$maxBufferedBytes, shutdownTimeout=$shutdownTimeout)"
+                "maxInFlight=$maxInFlight, maxAttempts=$maxAttempts, attemptTimeout=$attemptTimeout, " +
+                "initialBackoff=$initialBackoff, maxBackoff=$maxBackoff, maxPayloadBytes=$maxPayloadBytes, " +
+                "recentHistoryLimit=$recentHistoryLimit, recentHistoryByteBudget=$recentHistoryByteBudget, " +
+                "maxBufferedBytes=$maxBufferedBytes, shutdownTimeout=$shutdownTimeout)"
 
     private fun validateExportBounds() {
         require(queueCapacity in 1..MAX_QUEUE_CAPACITY) {
@@ -146,7 +151,7 @@ data class JobSafetyAuditProperties(
         shutdownTimeout.requirePositiveAtMost("shutdownTimeout", MAX_SHUTDOWN_TIMEOUT)
     }
 
-    companion object {
+    companion object: KLogging() {
         const val DEFAULT_QUEUE_CAPACITY: Int = AUDIT_DEFAULT_QUEUE_CAPACITY
         const val DEFAULT_MAX_IN_FLIGHT: Int = AUDIT_DEFAULT_MAX_IN_FLIGHT
         const val DEFAULT_MAX_ATTEMPTS: Int = AUDIT_DEFAULT_MAX_ATTEMPTS
@@ -161,9 +166,9 @@ data class JobSafetyAuditProperties(
         const val MAX_RECENT_HISTORY_LIMIT: Int = 4_096
         const val MAX_RECENT_HISTORY_BYTE_BUDGET: Long = 1024L * 1024
         const val MAX_BUFFERED_BYTES: Long = 128L * 1024 * 1024
-        val MAX_ATTEMPT_TIMEOUT: Duration = Duration.ofMinutes(5)
-        val MAX_BACKOFF: Duration = Duration.ofMinutes(1)
-        val MAX_SHUTDOWN_TIMEOUT: Duration = Duration.ofSeconds(30)
+        val MAX_ATTEMPT_TIMEOUT: Duration = 5.minutes()
+        val MAX_BACKOFF: Duration = 1.minutes()
+        val MAX_SHUTDOWN_TIMEOUT: Duration = 30.seconds()
 
         /** aggregate audit reservation을 checked `Long` 산술로 계산한다. */
         @JvmStatic
@@ -205,7 +210,7 @@ class AuditHeaders(private val authorization: String? = null) {
             require(!value.containsHttpControlCharacter()) {
                 "authorization must not contain control characters"
             }
-            require(value.toByteArray(Charsets.UTF_8).size <= MAX_AUTHORIZATION_BYTES) {
+            require(value.toUtf8Bytes().size <= MAX_AUTHORIZATION_BYTES) {
                 "authorization must be at most $MAX_AUTHORIZATION_BYTES UTF-8 bytes"
             }
         }
@@ -226,7 +231,7 @@ class AuditHeaders(private val authorization: String? = null) {
 
     override fun hashCode(): Int = if (authorization == null) 0 else 1
 
-    private companion object {
+    private companion object: KLogging() {
         const val MAX_AUTHORIZATION_BYTES: Int = 8 * 1024
     }
 }

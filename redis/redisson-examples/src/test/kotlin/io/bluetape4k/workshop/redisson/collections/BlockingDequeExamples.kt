@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -7,11 +10,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.redisson.api.RBlockingDeque
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 
 /**
@@ -71,17 +73,17 @@ class BlockingDequeExamples: AbstractRedissonTest() {
             // deque의 마지막 요소를 deque2의 첫번째 요소로 이동
             deque.takeLastAndOfferFirstToAsync(deque2.name).await() shouldBeEqualTo 4
             yield()
-        }
+        }.log("Rerieve")
 
         deque.putLastAsync(1).await()
         deque.putLastAsync(2).await()
         deque.putLastAsync(3).await()
-        delay(10)
+        delay(10.milliseconds)
 
         deque2.takeFirstAsync().await() shouldBeEqualTo 3
 
         deque.putLastAsync(4).await()
-        delay(10)
+        delay(10.milliseconds)
 
         deque2.takeFirstAsync().await() shouldBeEqualTo 4
 

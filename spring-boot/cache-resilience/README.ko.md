@@ -51,12 +51,12 @@ Integration test는 전체 상태 머신을 직접 구동합니다. Redis가 정
 
 ## 사용된 Bluetape4k 기능
 
-| 모듈 | 기능 | 사용 위치 |
-|------|------|---------|
-| `bluetape4k-logging` | `KLoggingChannel()` | 서비스와 테스트의 코루틴 안전 구조화 로깅 |
-| `bluetape4k-resilience4j` | `SuspendDecorators` | suspend 함수를 위한 프로그래매틱 CB + 폴백 체인 |
-| `bluetape4k-testcontainers` | `ToxiproxyServer`, `RedisServer` | 통합 테스트에서 실제 네트워크 장애 주입 |
-| `bluetape4k-junit5` | `runSuspendIO { }` | suspend 기반 통합 테스트 실행기 |
+| 모듈                        | 기능                             | 사용 위치                                       |
+|-----------------------------|----------------------------------|-------------------------------------------------|
+| `bluetape4k-logging`        | `KLoggingChannel()`              | 서비스와 테스트의 코루틴 안전 구조화 로깅       |
+| `bluetape4k-resilience4j`   | `SuspendDecorators`              | suspend 함수를 위한 프로그래매틱 CB + 폴백 체인 |
+| `bluetape4k-testcontainers` | `ToxiproxyServer`, `RedisServer` | 통합 테스트에서 실제 네트워크 장애 주입         |
+| `bluetape4k-junit5`         | `runSuspendIO { }`               | suspend 기반 통합 테스트 실행기                 |
 
 ## 소스 맵
 

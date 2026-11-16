@@ -3,9 +3,9 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.support.toUtf8Bytes
 import java.io.Serializable
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.UUID
+import java.util.*
 
 /** voucher-pool workshop을 위한 bounded HTTP 및 local-demo authentication 설정입니다. */
 internal data class VoucherPoolHttpProperties(
@@ -20,15 +20,17 @@ internal data class VoucherPoolHttpProperties(
     val operatorGuard: String,
     val allowedHosts: Set<String> = setOf("127.0.0.1", "localhost", "::1"),
     val demoAuthEnabled: Boolean = true,
-) : Serializable {
+): Serializable {
     override fun toString(): String =
         "VoucherPoolHttpProperties(maxTenantLength=$maxTenantLength,maxPrincipalLength=$maxPrincipalLength," +
-            "maxScalarBytes=$maxScalarBytes,maxCursorBytes=$maxCursorBytes,maxPayloadBytes=$maxPayloadBytes," +
-            "minIdempotencyKeyLength=$minIdempotencyKeyLength,maxIdempotencyKeyLength=$maxIdempotencyKeyLength," +
-            "operatorSecret=[REDACTED],operatorGuard=[REDACTED],allowedHosts=$allowedHosts," +
-            "demoAuthEnabled=$demoAuthEnabled)"
+                "maxScalarBytes=$maxScalarBytes,maxCursorBytes=$maxCursorBytes,maxPayloadBytes=$maxPayloadBytes," +
+                "minIdempotencyKeyLength=$minIdempotencyKeyLength,maxIdempotencyKeyLength=$maxIdempotencyKeyLength," +
+                "operatorSecret=[REDACTED],operatorGuard=[REDACTED],allowedHosts=$allowedHosts," +
+                "demoAuthEnabled=$demoAuthEnabled)"
 
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class ApiError(
@@ -37,8 +39,10 @@ internal data class ApiError(
     val requestId: String,
     val retryAfterSeconds: Long? = null,
     val effectId: UUID? = null,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal class VoucherPoolApiException(
@@ -47,7 +51,7 @@ internal class VoucherPoolApiException(
     val safeReason: String,
     val retryAfterSeconds: Long? = null,
     val effectId: UUID? = null,
-) : RuntimeException(stableCode)
+): RuntimeException(stableCode)
 
 internal fun invalidRequest(): VoucherPoolApiException =
     VoucherPoolApiException("INVALID_REQUEST", 400, "request validation failed")
@@ -68,7 +72,7 @@ internal fun requireBoundedAscii(
 }
 
 internal fun requireBoundedUtf8(value: String, maxBytes: Int): String {
-    if (value.toByteArray(UTF_8).size > maxBytes || value.any(Character::isISOControl)) {
+    if (value.toUtf8Bytes().size > maxBytes || value.any(Character::isISOControl)) {
         throw invalidRequest()
     }
     return value

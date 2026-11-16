@@ -20,13 +20,13 @@
 
 **Protocol Buffers(Protobuf)**는 Google이 개발한 언어 및 플랫폼 중립 바이너리 직렬화 형식입니다.
 
-| 기능 | JSON | Protobuf |
-|------|------|----------|
-| 형식 | 텍스트 | 바이너리 |
-| 스키마 | 선택 사항 | `.proto` 파일로 강제 |
-| 페이로드 크기 | 상대적으로 큼 | 3-10배 더 작음 |
-| Content-Type | `application/json` | `application/x-protobuf` |
-| 코드 생성 | 필요 없음 | `protoc` 컴파일러로 자동 생성 |
+| 기능          | JSON               | Protobuf                      |
+|---------------|--------------------|-------------------------------|
+| 형식          | 텍스트             | 바이너리                      |
+| 스키마        | 선택 사항          | `.proto` 파일로 강제          |
+| 페이로드 크기 | 상대적으로 큼      | 3-10배 더 작음                |
+| Content-Type  | `application/json` | `application/x-protobuf`      |
+| 코드 생성     | 필요 없음          | `protoc` 컴파일러로 자동 생성 |
 
 Spring Boot에서는 `ProtobufHttpMessageConverter` 빈을 등록하면 `application/x-protobuf` Content-Type 요청과 응답을 자동으로 처리합니다.
 
@@ -59,19 +59,19 @@ Kotlin DSL 빌더(`course { }`, `student { }`, `phoneNumber { }`)로 Protobuf �
 
 ## 주요 기능
 
-| 기능 | 구현 위치 | 설명 |
-|------|----------|------|
-| Protobuf 컨버터 등록 | `ConurceConfig` | `ProtobufHttpMessageConverter` 빈 등록 |
-| Course 조회 | `CourseController.course()` | `GET /courses/{id}` — Protobuf 직렬화 응답 |
-| JSON 변환 유틸리티 | `ProtobufConverter` | `MessageOrBuilder.toJson()`, `messageFromJsonOrNull<T>()` |
+| 기능                       | 구현 위치                     | 설명                                                             |
+|----------------------------|-------------------------------|------------------------------------------------------------------|
+| Protobuf 컨버터 등록       | `ConurceConfig`               | `ProtobufHttpMessageConverter` 빈 등록                           |
+| Course 조회                | `CourseController.course()`   | `GET /courses/{id}` — Protobuf 직렬화 응답                       |
+| JSON 변환 유틸리티         | `ProtobufConverter`           | `MessageOrBuilder.toJson()`, `messageFromJsonOrNull<T>()`        |
 | caller-owned buffer 직렬화 | `ProtobufByteBufferConverter` | `Message`를 재사용 가능한 heap/direct `ByteBuffer` target에 기록 |
-| 인메모리 저장소 | `CourseRepository` | `Map<Int, Course>` 기반 단순 저장소 |
+| 인메모리 저장소            | `CourseRepository`            | `Map<Int, Course>` 기반 단순 저장소                              |
 
 ## API 엔드포인트
 
-| 메서드 | 경로 | 설명 | Content-Type |
-|--------|------|------|-------------|
-| `GET` | `/courses/{id}` | 특정 course를 조회합니다. | `application/x-protobuf` |
+| 메서드 | 경로            | 설명                      | Content-Type             |
+|--------|-----------------|---------------------------|--------------------------|
+| `GET`  | `/courses/{id}` | 특정 course를 조회합니다. | `application/x-protobuf` |
 
 ## 사용 예제
 
@@ -119,8 +119,7 @@ val course: Course? = messageFromJsonOrNull<Course>(json)
 ### Caller-owned `ByteBuffer` 직렬화
 
 root `bluetape4k-dependencies:2.1.0-SNAPSHOT` BOM은 versionless `bluetape4k-protobuf` alias를
-`2.1.0-SNAPSHOT`으로 해석합니다. `serializeTo` extension은 `ProtobufSerializer.serializeTo`에 위임하며
-caller가 heap 또는 direct buffer를 재사용하게 합니다.
+`2.1.0-SNAPSHOT`으로 해석합니다. `serializeTo` extension은 `ProtobufSerializer.serializeTo`에 위임하며 caller가 heap 또는 direct buffer를 재사용하게 합니다.
 
 ```kotlin
 val target = ByteBuffer.allocateDirect(4 * 1024)
@@ -131,11 +130,7 @@ val envelope = ByteArray(written).also(target::get)
 target.clear() // buffer 재사용과 lifecycle은 caller가 소유합니다.
 ```
 
-반환 byte는 allocating `ProtobufSerializer.serialize` API와 같은 Protobuf `Any` envelope이며
-raw `Course.toByteArray()` byte가 아닙니다. 성공하면 target position이 `written`만큼 전진합니다.
-capacity 부족과 read-only target은 각각 `BufferOverflowException`, `ReadOnlyBufferException`을
-던지며 새 position을 commit하지 않습니다. 이 예제는 allocation 또는 throughput benchmark
-수치를 주장하지 않습니다.
+반환 byte는 allocating `ProtobufSerializer.serialize` API와 같은 Protobuf `Any` envelope이며 raw `Course.toUtf8Bytes()` byte가 아닙니다. 성공하면 target position이 `written`만큼 전진합니다. capacity 부족과 read-only target은 각각 `BufferOverflowException`, `ReadOnlyBufferException`을 던지며 새 position을 commit하지 않습니다. 이 예제는 allocation 또는 throughput benchmark 수치를 주장하지 않습니다.
 
 ## 빌드 설정
 

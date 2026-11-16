@@ -2,14 +2,16 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.logging.KLogging
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
-import org.springframework.http.ResponseEntity
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -20,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** customer-owned reservation 및 allocation HTTP workflow입니다. */
 @RestController
@@ -29,6 +31,9 @@ internal class CustomerVoucherPoolController(
     private val commands: VoucherPoolHttpCommandExecutor,
     private val streams: VoucherPoolEventStream,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping("/campaigns/{campaignId}/reservations")
     fun reserve(
         principal: TenantPrincipal,
@@ -38,7 +43,14 @@ internal class CustomerVoucherPoolController(
         @Valid @RequestBody request: ReserveVoucherRequest,
         servletRequest: HttpServletRequest,
     ): ResponseEntity<ReservationResponse> =
-        commands.reserve(principal, campaignId, idempotencyKey, ifNoneMatch, request, servletRequest.requestId())
+        commands.reserve(
+            principal = principal,
+            campaignId = campaignId,
+            idempotencyKey = idempotencyKey,
+            ifNoneMatch = ifNoneMatch,
+            request = request,
+            requestId = servletRequest.requestId()
+        )
 
     @GetMapping("/reservations/{reservationId}")
     fun reservation(
@@ -46,7 +58,11 @@ internal class CustomerVoucherPoolController(
         @PathVariable reservationId: UUID,
         servletRequest: HttpServletRequest,
     ): ResponseEntity<ReservationResponse> =
-        commands.reservation(principal, reservationId, servletRequest.requestId())
+        commands.reservation(
+            principal = principal,
+            reservationId = reservationId,
+            requestId = servletRequest.requestId()
+        )
 
     @PostMapping("/reservations/{reservationId}/allocate")
     fun allocate(
@@ -56,7 +72,13 @@ internal class CustomerVoucherPoolController(
         @RequestHeader("If-Match") expectedRevision: String,
         servletRequest: HttpServletRequest,
     ): ResponseEntity<AllocationResponse> =
-        commands.allocate(principal, reservationId, idempotencyKey, expectedRevision, servletRequest.requestId())
+        commands.allocate(
+            principal = principal,
+            reservationId = reservationId,
+            idempotencyKey = idempotencyKey,
+            expectedRevision = expectedRevision,
+            requestId = servletRequest.requestId()
+        )
 
     @PostMapping("/allocations/{allocationId}/code-reveals")
     fun reveal(
@@ -66,7 +88,13 @@ internal class CustomerVoucherPoolController(
         @RequestHeader("If-Match") expectedRevision: String,
         servletRequest: HttpServletRequest,
     ): ResponseEntity<RevealResponse> =
-        commands.reveal(principal, allocationId, idempotencyKey, expectedRevision, servletRequest.requestId())
+        commands.reveal(
+            principal = principal,
+            allocationId = allocationId,
+            idempotencyKey = idempotencyKey,
+            expectedRevision = expectedRevision,
+            requestId = servletRequest.requestId()
+        )
 
     @GetMapping("/allocations/{allocationId}")
     fun allocation(
@@ -74,7 +102,11 @@ internal class CustomerVoucherPoolController(
         @PathVariable allocationId: UUID,
         servletRequest: HttpServletRequest,
     ): ResponseEntity<AllocationResponse> =
-        commands.allocation(principal, allocationId, servletRequest.requestId())
+        commands.allocation(
+            principal = principal,
+            allocationId = allocationId,
+            requestId = servletRequest.requestId()
+        )
 
     @PostMapping("/allocations/{allocationId}/replacements")
     fun replaceLostReveal(
@@ -86,12 +118,12 @@ internal class CustomerVoucherPoolController(
         servletRequest: HttpServletRequest,
     ): ResponseEntity<ReservationResponse> =
         commands.replaceLostReveal(
-            principal,
-            allocationId,
-            idempotencyKey,
-            expectedRevision,
-            request,
-            servletRequest.requestId(),
+            principal = principal,
+            allocationId = allocationId,
+            idempotencyKey = idempotencyKey,
+            expectedRevision = expectedRevision,
+            request = request,
+            requestId = servletRequest.requestId(),
         )
 
     @PostMapping("/allocations/{allocationId}/redeem")
@@ -103,7 +135,14 @@ internal class CustomerVoucherPoolController(
         @Valid @RequestBody request: RedeemVoucherRequest,
         servletRequest: HttpServletRequest,
     ): ResponseEntity<AllocationResponse> =
-        commands.redeem(principal, allocationId, idempotencyKey, expectedRevision, request, servletRequest.requestId())
+        commands.redeem(
+            principal = principal,
+            allocationId = allocationId,
+            idempotencyKey = idempotencyKey,
+            expectedRevision = expectedRevision,
+            request = request,
+            requestId = servletRequest.requestId()
+        )
 
     @PostMapping("/allocations/{allocationId}/release")
     fun release(
@@ -113,14 +152,24 @@ internal class CustomerVoucherPoolController(
         @RequestHeader("If-Match") expectedRevision: String,
         servletRequest: HttpServletRequest,
     ): ResponseEntity<AllocationResponse> =
-        commands.release(principal, allocationId, idempotencyKey, expectedRevision, servletRequest.requestId())
+        commands.release(
+            principal = principal,
+            allocationId = allocationId,
+            idempotencyKey = idempotencyKey,
+            expectedRevision = expectedRevision,
+            requestId = servletRequest.requestId()
+        )
 
     @GetMapping("/snapshots")
     fun snapshots(
         principal: TenantPrincipal,
         servletRequest: HttpServletRequest,
     ): VoucherPoolSnapshotResponse =
-        streams.customerSnapshot(principal.tenantId, principal.principalId, servletRequest.requestId())
+        streams.customerSnapshot(
+            tenantId = principal.tenantId,
+            principalId = principal.principalId,
+            requestId = servletRequest.requestId()
+        )
 
     @GetMapping("/events", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun events(
@@ -130,9 +179,9 @@ internal class CustomerVoucherPoolController(
         response: HttpServletResponse,
     ) {
         val subscription = streams.openCustomer(
-            principal.tenantId,
-            principal.principalId,
-            resolveEventCursor(cursor, lastEventId),
+            tenantId = principal.tenantId,
+            principalId = principal.principalId,
+            cursor = resolveEventCursor(cursor, lastEventId),
         )
         response.contentType = MediaType.TEXT_EVENT_STREAM_VALUE
         streams.write(subscription, response.outputStream)
@@ -140,7 +189,7 @@ internal class CustomerVoucherPoolController(
 }
 
 /** reservation 생성을 위한 닫힌 JSON object입니다. */
-internal class ReserveVoucherRequest : Serializable {
+internal class ReserveVoucherRequest: Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -150,7 +199,7 @@ internal class ReserveVoucherRequest : Serializable {
 internal data class ReplaceLostRevealRequest(
     @field:AssertTrue
     val confirmLostReveal: Boolean,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -161,7 +210,7 @@ internal data class RedeemVoucherRequest(
     @field:NotBlank
     @field:Size(max = 512)
     val code: String,
-) : Serializable {
+): Serializable {
     override fun toString(): String = "RedeemVoucherRequest(code=[REDACTED])"
 
     companion object {
@@ -183,7 +232,7 @@ internal data class ReservationResponse(
     val observedAt: Instant,
     val requestId: String,
     val nextAction: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -204,7 +253,7 @@ internal data class AllocationResponse(
     val observedAt: Instant,
     val requestId: String,
     val nextAction: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -222,12 +271,20 @@ internal data class RevealResponse(
     val safeRequestId: String,
     val replacementAvailable: Boolean,
     val nextAction: String,
-) : Serializable {
+): Serializable {
     override fun toString(): String =
-        "RevealResponse(allocationId=$allocationId,outcome=$outcome,revision=$revision," +
-            "codeAvailable=$codeAvailable,code=[REDACTED],observedAt=$observedAt," +
-            "requestId=$requestId,safeRequestId=$safeRequestId," +
-            "replacementAvailable=$replacementAvailable,nextAction=$nextAction)"
+        ToStringBuilder(this)
+            .add("allocationId", allocationId)
+            .add("outcome", outcome)
+            .add("revision", revision)
+            .add("codeAvailable", codeAvailable)
+            .add("code", "[REDACTED]")
+            .add("observedAt", observedAt)
+            .add("requestId", requestId)
+            .add("safeRequestId", safeRequestId)
+            .add("replacementAvailable", replacementAvailable)
+            .add("nextAction", nextAction)
+            .toString()
 
     companion object {
         private const val serialVersionUID: Long = 1L

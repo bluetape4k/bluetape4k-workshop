@@ -3,6 +3,8 @@ package io.bluetape4k.okio.coroutines
 import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okio.Buffer
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
@@ -44,6 +46,6 @@ class SuspendedFileChannelSource(
     override suspend fun close() {
         if (!channel.isOpen) return
         log.debug { "Closing AsynchronousFileChannel[$channel]" }
-        channel.close()
+        withContext(Dispatchers.IO) { channel.close() }
     }
 }

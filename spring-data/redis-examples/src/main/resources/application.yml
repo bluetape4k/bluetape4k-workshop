@@ -1,15 +1,15 @@
 spring:
-    aot:
-        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
-    data:
-        redis:
-            repositories:
-                enabled: true
-            host: ${testcontainers.redis.host}
-            port: ${testcontainers.redis.port}
+  aot:
+    enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
+  data:
+    redis:
+      repositories:
+        enabled: true
+      host: ${testcontainers.redis.host}
+      port: ${testcontainers.redis.port}
 
-            lettuce:
-                pool:
-                    enabled: true
-                    max-active: 16
-                    max-idle: 8
+      lettuce:
+        pool:
+          enabled: true
+          max-active: 16
+          max-idle: 8

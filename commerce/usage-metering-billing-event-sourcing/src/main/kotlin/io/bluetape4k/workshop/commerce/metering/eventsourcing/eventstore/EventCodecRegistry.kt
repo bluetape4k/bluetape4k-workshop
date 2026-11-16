@@ -1,9 +1,16 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+
 class UnknownEventSchemaException(eventType: String, version: Int) :
     IllegalStateException("unknown_event_schema:$eventType:$version")
 
 class EventCodecRegistry {
+
+    companion object: KLogging()
+
     private data class Decoder(val latestVersion: Int, val decode: (String) -> Any)
     private data class UpcasterKey(val eventType: String, val fromVersion: Int)
 
@@ -11,8 +18,9 @@ class EventCodecRegistry {
     private val upcasters = linkedMapOf<UpcasterKey, (String) -> String>()
 
     fun register(eventType: String, latestVersion: Int, decoder: (String) -> Any): EventCodecRegistry = apply {
-        require(eventType.isNotBlank()) { "event_type_invalid" }
-        require(latestVersion > 0) { "schema_version_invalid" }
+        eventType.requireNotBlank { "event_type_invalid" }
+        latestVersion.requirePositiveNumber { "schema_version_invalid" }
+
         check(decoders.putIfAbsent(eventType, Decoder(latestVersion, decoder)) == null) {
             "duplicate_event_decoder:$eventType"
         }
@@ -23,7 +31,7 @@ class EventCodecRegistry {
         fromVersion: Int,
         upcaster: (String) -> String,
     ): EventCodecRegistry = apply {
-        require(fromVersion > 0) { "schema_version_invalid" }
+        fromVersion.requirePositiveNumber { "schema_version_invalid" }
         check(upcasters.putIfAbsent(UpcasterKey(eventType, fromVersion), upcaster) == null) {
             "duplicate_event_upcaster:$eventType:$fromVersion"
         }
@@ -46,11 +54,13 @@ class EventCodecRegistry {
         }
         var currentPayload = payload
         var currentVersion = schemaVersion
+
         while (currentVersion < decoder.latestVersion) {
             val upcaster = upcasterFor(eventType, currentVersion)
             currentPayload = upcaster(currentPayload)
             currentVersion += 1
         }
+
         return decoder.decode(currentPayload)
     }
 
@@ -58,5 +68,6 @@ class EventCodecRegistry {
         decoders[eventType] ?: throw UnknownEventSchemaException(eventType, version)
 
     private fun upcasterFor(eventType: String, version: Int): (String) -> String =
-        upcasters[UpcasterKey(eventType, version)] ?: throw UnknownEventSchemaException(eventType, version)
+        upcasters[UpcasterKey(eventType, version)]
+            ?: throw UnknownEventSchemaException(eventType, version)
 }

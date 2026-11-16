@@ -5,44 +5,41 @@
 ## 이 예제가 보여 주는 것
 
 이 모듈은 같은 `Banner` 계약을 반환하는 두 가지 Spring WebFlux coroutine 스타일을 비교합니다.
-`/controller/{default|io|vt}` 아래의 annotation controller와 root path의 functional `coRouter` endpoint가
-나란히 있으며, 핵심 차이는 HTTP 모델이 아니라 coroutine dispatcher와 Flow 처리 방식입니다.
+`/controller/{default|io|vt}` 아래의 annotation controller와 root path의 functional `coRouter` endpoint가 나란히 있으며, 핵심 차이는 HTTP 모델이 아니라 coroutine dispatcher와 Flow 처리 방식입니다.
 
 ## 아키텍처 다이어그램
 
 ![Spring WebFlux coroutine architecture](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-architecture-01.png)
 
-아키텍처는 controller 계열, functional handler, flow 예제가 사용하는 shared `WebClient` loopback,
-그리고 튜닝된 Reactor Netty resource를 나누어 보여 줍니다.
+아키텍처는 controller 계열, functional handler, flow 예제가 사용하는 shared `WebClient` loopback, 그리고 튜닝된 Reactor Netty resource를 나누어 보여 줍니다.
 
 ## Coroutine 흐름
 
 ![Spring WebFlux coroutine sequence](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-sequence-01.png)
 
 이 예제는 Spring WebFlux 환경에서 Kotlin coroutines를 사용합니다. bluetape4k `Dispatchers.VT`,
-`Flow<T>.async`, `Runtimex`, shared `WebClient` helper를 보여 주되, 각 요청을 받는 controller style을
-숨기지 않습니다.
+`Flow<T>.async`, `Runtimex`, shared `WebClient` helper를 보여 주되, 각 요청을 받는 controller style을 숨기지 않습니다.
 
 ## 구현 전략 비교
 
 세 컨트롤러는 dispatcher 전략의 차이를 보여 줍니다.
 
-| 컨트롤러 | Dispatcher 전략 | 설명 |
-|---|---|---|
-| `DefaultCoroutineController` | `Dispatchers.IO` | 기본 I/O dispatcher로 blocking 작업을 처리합니다 |
-| `IOCoroutineController` | `Dispatchers.IO` (명시적) | I/O 중심 작업에 맞게 최적화했습니다 |
-| `VTCoroutineController` | `Dispatchers.VT` | bluetape4k Virtual Thread CoroutineDispatcher |
-| `CoroutineHandler` | `coRouter` DSL | 함수형 endpoint 스타일 |
+| 컨트롤러                     | Dispatcher 전략           | 설명                                             |
+|------------------------------|---------------------------|--------------------------------------------------|
+| `DefaultCoroutineController` | `Dispatchers.IO`          | 기본 I/O dispatcher로 blocking 작업을 처리합니다 |
+| `IOCoroutineController`      | `Dispatchers.IO` (명시적) | I/O 중심 작업에 맞게 최적화했습니다              |
+| `VTCoroutineController`      | `Dispatchers.VT`          | bluetape4k Virtual Thread CoroutineDispatcher    |
+| `CoroutineHandler`           | `coRouter` DSL            | 함수형 endpoint 스타일                           |
 
 ## 사용된 bluetape4k 기능
 
-| 기능 | Artifact | 코드 위치 | 이점 |
-|---|---|---|---|
-| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | controller work에 사용할 virtual-thread 기반 `CoroutineDispatcher` |
-| `Flow<T>.async { }` | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Flow element를 병렬로 변환하는 operator |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | coroutine context를 포함하는 structured logging |
-| `Base58.randomString()` | `bluetape4k-io` | `Banner.kt` | URL-safe random string 생성 |
-| `Runtimex.availableProcessors` | `bluetape4k-core` | `NettyConfig.kt` | CPU core 수를 기준으로 event loop 크기 계산 |
+| 기능                           | Artifact                | 코드 위치                                | 이점                                                               |
+|--------------------------------|-------------------------|------------------------------------------|--------------------------------------------------------------------|
+| `Dispatchers.VT`               | `bluetape4k-coroutines` | `VTCoroutineController`                  | controller work에 사용할 virtual-thread 기반 `CoroutineDispatcher` |
+| `Flow<T>.async { }`            | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Flow element를 병렬로 변환하는 operator                            |
+| `KLoggingChannel`              | `bluetape4k-logging`    | 모든 companion object                    | coroutine context를 포함하는 structured logging                    |
+| `Base58.randomString()`        | `bluetape4k-io`         | `Banner.kt`                              | URL-safe random string 생성                                        |
+| `Runtimex.availableProcessors` | `bluetape4k-core`       | `NettyConfig.kt`                         | CPU core 수를 기준으로 event loop 크기 계산                        |
 
 ## bluetape4k Before / After
 

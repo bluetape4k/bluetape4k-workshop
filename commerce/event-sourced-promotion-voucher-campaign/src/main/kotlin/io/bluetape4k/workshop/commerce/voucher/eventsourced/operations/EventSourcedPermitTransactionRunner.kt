@@ -12,8 +12,11 @@ internal class EventSourcedPermitTransactionRunner(
     private val permits: EventSourcedDatabasePermitGate,
     private val lane: EventSourcedDatabaseLane,
 ) {
-    fun <T> inTransaction(block: () -> T): T =
-        permits.withPermit(lane) {
-            transaction(database) { block() }
+    inline fun <T> inTransaction(crossinline block: () -> T): T {
+        return permits.withPermit(lane) {
+            transaction(database) {
+                block()
+            }
         }
+    }
 }

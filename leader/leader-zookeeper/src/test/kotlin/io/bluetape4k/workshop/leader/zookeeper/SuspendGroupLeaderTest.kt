@@ -1,14 +1,16 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.concurrent.await
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 import kotlin.math.max
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * T5 - [GroupLeaderTest]의 suspend 변형이다.
@@ -40,17 +42,16 @@ class SuspendGroupLeaderTest: AbstractLeaderZookeeperTest() {
 
         // 중요: orchestrator는 SuspendedJobTester.run() 전에 반드시 시작해야 한다.
         // T4와 같은 deadlock 위험이 있다. 그렇지 않으면 worker가 releaseLatch.await에서 영원히 막힌다.
-        val orchestrator = Thread {
-            check(enteredLatch.await(5, TimeUnit.SECONDS)) {
+        val orchestrator = thread {
+            check(enteredLatch.await(5.seconds)) {
                 "Not enough coroutines entered — CI too slow or maxLeaders not reached"
             }
             releaseLatch.countDown()
         }
-        orchestrator.start()
 
         SuspendedJobTester()
             .workers(WORKERS)
-            .rounds(MAX_LEADERS)
+            .rounds(WORKERS * MAX_LEADERS)
             .add {
                 groupElector.runIfLeader(lockName) {
                     val c = current.incrementAndGet()
@@ -59,7 +60,7 @@ class SuspendGroupLeaderTest: AbstractLeaderZookeeperTest() {
                         enteredLatch.countDown()
                         // CountDownLatch.await는 carrier thread를 블로킹하지만,
                         // 하위 코루틴이 전용 스레드로 dispatch되므로 이 작업 본문 안에서는 허용된다.
-                        check(releaseLatch.await(3, TimeUnit.SECONDS)) { "releaseLatch timeout" }
+                        check(releaseLatch.await(3.seconds)) { "releaseLatch timeout" }
                     } finally {
                         current.decrementAndGet()
                     }

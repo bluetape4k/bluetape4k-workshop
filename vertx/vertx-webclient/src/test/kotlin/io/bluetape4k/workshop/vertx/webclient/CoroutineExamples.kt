@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.vertx.webclient
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.vertx.tests.withSuspendTestContext
@@ -12,17 +11,18 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.coAwait
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(VertxExtension::class)
 class CoroutineExamples {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val port: Int = 9988
     }
 
-    class CoroutineServer : CoroutineVerticle() {
+    class CoroutineServer: CoroutineVerticle() {
         override suspend fun start() {
             vertx.createHttpServer()
                 .requestHandler { req ->
@@ -34,7 +34,7 @@ class CoroutineExamples {
     }
 
     @Test
-    fun `use webclient to simple server`(vertx: Vertx, testContext: VertxTestContext) = runSuspendTest {
+    fun `use webclient to simple server`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         vertx.withSuspendTestContext(testContext) {
             vertx.deployVerticle(CoroutineServer()).coAwait()
 
@@ -45,6 +45,7 @@ class CoroutineExamples {
                 .coAwait()
 
             log.debug { "Response body=${response.body()}" }
+            response.statusCode() shouldBeEqualTo 200
             response.body() shouldBeEqualTo "Hello Coroutines!"
         }
     }

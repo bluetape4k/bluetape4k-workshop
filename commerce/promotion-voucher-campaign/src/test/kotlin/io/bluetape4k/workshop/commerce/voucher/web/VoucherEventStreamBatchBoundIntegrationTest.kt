@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
@@ -19,7 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import tools.jackson.databind.ObjectMapper
 import java.time.Instant
 
-internal class VoucherEventStreamBatchBoundIntegrationTest : AbstractVoucherIntegrationTest() {
+internal class VoucherEventStreamBatchBoundIntegrationTest: AbstractVoucherIntegrationTest() {
+
+    private companion object: KLogging() {
+        private const val SSE_FRAME_BYTES = 32
+    }
+
     @Autowired
     private lateinit var jdbc: VoucherJdbcExecutor
 
@@ -45,17 +51,20 @@ internal class VoucherEventStreamBatchBoundIntegrationTest : AbstractVoucherInte
         val rowBound = rowBoundSource.poll(tenant, campaignId, 0)
         rowBound.events.size shouldBeEqualTo 3
 
-        val oneEncodedEventBytes =
-            rowBound.events.first().let { (cursor, event) ->
+        val oneEncodedEventBytes = rowBound.events.first()
+            .let { (cursor, event) ->
                 mapper.writeValueAsBytes(event).size + cursor.toString().length + SSE_FRAME_BYTES
             }
         val payloadLimit = oneEncodedEventBytes * 2 + oneEncodedEventBytes / 2
-        val payloadBound = source(maxRows = 200, maxPayloadBytes = payloadLimit).poll(tenant, campaignId, 0)
+        val payloadBound = source(maxRows = 200, maxPayloadBytes = payloadLimit)
+            .poll(tenant, campaignId, 0)
 
         payloadBound.events.size shouldBeEqualTo 2
-        (payloadBound.events.sumOf { (cursor, event) ->
+        val payloadSum = payloadBound.events.sumOf { (cursor, event) ->
             mapper.writeValueAsBytes(event).size + cursor.toString().length + SSE_FRAME_BYTES
-        } <= payloadLimit).shouldBeTrue()
+        }
+        payloadSum shouldBeLessOrEqualTo payloadLimit
+
         permits.availablePermits(DatabaseLane.SSE_MAINTENANCE) shouldBeEqualTo 3
         permits.availablePermits(DatabaseLane.WORKER) shouldBeEqualTo 1
     }
@@ -69,10 +78,9 @@ internal class VoucherEventStreamBatchBoundIntegrationTest : AbstractVoucherInte
             campaigns = campaigns,
             audits = audits,
             mapper = mapper,
-            properties =
-                VoucherProperties(
-                    sse = VoucherSseProperties(maxRows = maxRows, maxPayloadBytes = maxPayloadBytes),
-                ),
+            properties = VoucherProperties(
+                sse = VoucherSseProperties(maxRows = maxRows, maxPayloadBytes = maxPayloadBytes),
+            ),
         )
 
     private fun seedCampaignWithAudits(
@@ -115,9 +123,5 @@ internal class VoucherEventStreamBatchBoundIntegrationTest : AbstractVoucherInte
                 )
             }
         }
-    }
-
-    private companion object {
-        private const val SSE_FRAME_BYTES = 32
     }
 }

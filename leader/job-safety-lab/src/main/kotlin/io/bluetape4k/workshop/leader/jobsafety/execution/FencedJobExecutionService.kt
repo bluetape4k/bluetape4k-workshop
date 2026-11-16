@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.execution
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobExecutionState
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobRejectionReason
@@ -16,7 +17,7 @@ import java.time.Instant
 data class FencedJobRequest(
     val run: JobRunRequest,
     val fencingToken: FencingToken,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -26,13 +27,16 @@ class FencedJobExecutionService(
     private val jdbc: JobSafetyJdbcExecutor,
     private val repositories: JobSafetyRepositories,
 ) {
+
+    companion object: KLogging()
+
     fun execute(request: FencedJobRequest): JobRunResult =
         jdbc.transaction {
             val run = request.run
             val assignment = repositories.assignment.findCurrent(this, run.tenantId)
-            val currentRollout =
-                repositories.rollout.findCurrent(this)
-                    ?: return@transaction reject(this, request, JobRejectionReason.INCOMPATIBLE_VERSION)
+            val currentRollout = repositories.rollout.findCurrent(this)
+                ?: return@transaction reject(this, request, JobRejectionReason.INCOMPATIBLE_VERSION)
+
             val preconditionFailure = authorityFailure(run, assignment, currentRollout)
             if (preconditionFailure != null) {
                 return@transaction reject(this, request, preconditionFailure)
@@ -83,11 +87,13 @@ class FencedJobExecutionService(
                 JobRejectionReason.WRONG_REGION
 
             request.contractVersion.value < rollout.minimumWriterVersion.value ||
-                request.contractVersion.value < rollout.checkpointSchemaVersion ->
+                    request.contractVersion.value < rollout.checkpointSchemaVersion                  ->
                 JobRejectionReason.INCOMPATIBLE_VERSION
 
-            rollout.namespaceEpoch != request.namespaceEpoch -> JobRejectionReason.STALE_NAMESPACE
-            else -> null
+            rollout.namespaceEpoch != request.namespaceEpoch                                         ->
+                JobRejectionReason.STALE_NAMESPACE
+            else                                                                                     ->
+                null
         }
 
     private fun reject(

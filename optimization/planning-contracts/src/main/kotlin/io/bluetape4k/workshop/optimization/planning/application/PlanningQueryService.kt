@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.optimization.planning.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
+import java.util.*
 
 internal data class PlanningReadModel(
     val id: UUID,
@@ -23,6 +24,9 @@ internal data class PlanningReadModel(
 internal class PlanningQueryService(
     private val requestRepository: PlanningRequestRepository,
 ) {
+
+    companion object: KLogging()
+
     @Transactional(readOnly = true)
     fun find(requestId: UUID): PlanningReadModel {
         val request = requestRepository.findById(requestId)

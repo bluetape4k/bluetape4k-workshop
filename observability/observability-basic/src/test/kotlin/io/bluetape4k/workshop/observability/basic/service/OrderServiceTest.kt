@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.observability.basic.service
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.observability.basic.AbstractBasicTest
 import io.bluetape4k.workshop.observability.basic.TestObservationConfig
 import io.bluetape4k.workshop.observability.basic.model.Order
@@ -16,19 +18,22 @@ import mockwebserver3.MockResponse
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
 @Import(TestObservationConfig::class)
-class OrderServiceTest : AbstractBasicTest() {
+class OrderServiceTest: AbstractBasicTest() {
+
+    companion object: KLoggingChannel()
 
     @Autowired
-    private lateinit var orderService: OrderService
+    private val orderService: OrderService = uninitialized()
 
     @Autowired
-    private lateinit var testRegistry: TestObservationRegistry
+    private val testRegistry: TestObservationRegistry = uninitialized()
 
     @BeforeEach
     fun clearRegistry() {
@@ -55,9 +60,7 @@ class OrderServiceTest : AbstractBasicTest() {
         )
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("order.service.fetch")
-            .that()
-            .hasBeenStarted()
-            .hasBeenStopped()
+            .that().hasBeenStarted().hasBeenStopped()
     }
 
     @Test
@@ -75,9 +78,7 @@ class OrderServiceTest : AbstractBasicTest() {
         result.shouldBeNull()
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("order.service.fetch")
-            .that()
-            .hasBeenStarted()
-            .hasBeenStopped()
+            .that().hasBeenStarted().hasBeenStopped()
     }
 
     @Test
@@ -92,6 +93,7 @@ class OrderServiceTest : AbstractBasicTest() {
 
         try {
             orderService.getOrder(1L)
+            fail("예외가 발생해야 합니다.")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -100,10 +102,7 @@ class OrderServiceTest : AbstractBasicTest() {
 
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("order.service.fetch")
-            .that()
-            .hasBeenStarted()
-            .hasBeenStopped()
-            .hasError()
+            .that().hasBeenStarted().hasBeenStopped().hasError()
     }
 
     @Test

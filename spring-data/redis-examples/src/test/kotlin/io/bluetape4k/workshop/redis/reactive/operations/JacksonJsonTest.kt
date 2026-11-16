@@ -1,8 +1,14 @@
 package io.bluetape4k.workshop.redis.reactive.operations
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.io.getBytes
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8ByteBuffer
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
@@ -10,11 +16,6 @@ import io.bluetape4k.workshop.redis.reactive.model.EmailAddress
 import io.bluetape4k.workshop.redis.reactive.model.Person
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeInstanceOf
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +26,7 @@ class JacksonJsonTest @Autowired constructor(
     private val genericOperations: ReactiveRedisOperations<String, Any>,
 ): AbstractReactiveRedisTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {
@@ -62,6 +63,7 @@ class JacksonJsonTest @Autowired constructor(
             .map { buffer -> buffer.getBytes().toUtf8String() }
             .awaitSingle()
 
+        log.debug { "value=$value" }
         value shouldBeEqualTo """{"firstname":"Homer","lastname":"Simpson"}"""
 
         // Value 를 Person 객체로 가져오기  
@@ -89,6 +91,7 @@ class JacksonJsonTest @Autowired constructor(
             .map { buffer -> buffer.toUtf8String() }
             .awaitSingle()
 
+        log.debug { "value=$value" }
         value shouldBeEqualTo """{"@class":"io.bluetape4k.workshop.redis.reactive.model.Person","firstname":"Homer","lastname":"Simpson"}"""
 
         // Value 를 @class 에 있는 class 정보를 바탕으로 객체로 가져오기
@@ -119,6 +122,7 @@ class JacksonJsonTest @Autowired constructor(
             .map { buffer -> buffer.toUtf8String() }
             .awaitSingle()
 
+        log.debug { "value=$value" }
         value shouldBeEqualTo """{"@class":"io.bluetape4k.workshop.redis.reactive.model.EmailAddress","address":"homer@the-simpson.com"}"""
 
         genericOperations.opsForValue().get("mail").awaitSingle() shouldBeEqualTo email

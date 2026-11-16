@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.leader.job
 
-import io.bluetape4k.logging.*
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.stereotype.Component
 import java.time.Duration
@@ -18,7 +20,7 @@ import java.time.Duration
  *   `List<LeaderGuardedJob>`를 통해 [LeaderScheduledJobService]에 주입됩니다.
  */
 @Component
-class CacheWarmupJob : LeaderGuardedJob {
+class CacheWarmupJob: LeaderGuardedJob {
 
     override val lockName = "leader:cache-warmup"
 
@@ -33,7 +35,7 @@ class CacheWarmupJob : LeaderGuardedJob {
         log.info { "[CacheWarmupJob] Cache warmup complete" }
     }
 
-    companion object : KLogging() {
-        private val WARMUP_DURATION: Duration = Duration.ofMillis(50)
+    companion object: KLogging() {
+        private val WARMUP_DURATION: Duration = 50.millis()
     }
 }

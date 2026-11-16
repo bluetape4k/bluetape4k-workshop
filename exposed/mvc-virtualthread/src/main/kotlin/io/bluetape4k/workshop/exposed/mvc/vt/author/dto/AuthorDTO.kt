@@ -10,7 +10,7 @@ data class AuthorDTO(
     val firstName: String = "",
     val lastName: String = "",
     val email: String = "",
-) : Serializable {
+): Serializable {
     companion object {
         const val serialVersionUID = 1L
     }
@@ -21,7 +21,7 @@ data class BookDTO(
     val title: String = "",
     val publishDate: String = "",
     val authorId: Long = 0,
-) : Serializable {
+): Serializable {
     companion object {
         const val serialVersionUID = 1L
     }
@@ -30,7 +30,7 @@ data class BookDTO(
 data class AuthorWithBooksDTO(
     val author: AuthorDTO,
     val books: List<BookDTO> = emptyList(),
-) : Serializable {
+): Serializable {
     companion object {
         const val serialVersionUID = 1L
     }
@@ -40,7 +40,7 @@ data class CreateAuthorRequest(
     @field:NotBlank val firstName: String = "",
     @field:NotBlank val lastName: String = "",
     @field:NotBlank @field:Email val email: String = "",
-) : Serializable {
+): Serializable {
     companion object {
         const val serialVersionUID = 1L
     }
@@ -50,7 +50,7 @@ data class CreateBookRequest(
     @field:NotBlank val title: String = "",
     val publishDate: String = "",
     @field:Positive val authorId: Long = 0,
-) : Serializable {
+): Serializable {
     companion object {
         const val serialVersionUID = 1L
     }

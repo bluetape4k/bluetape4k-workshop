@@ -1,10 +1,17 @@
 package io.bluetape4k.workshop.commerce.voucher.admission
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.assertions.shouldStartWith
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
 import org.junit.jupiter.api.Test
 
 internal class RiskSignalServiceTest {
+
+    companion object: KLogging()
+
     @Test
     fun `versioned HMAC keys are deterministic and never expose raw identity`() {
         val keys = keys()
@@ -13,9 +20,9 @@ internal class RiskSignalServiceTest {
         val second = keys.rateKey("tenant-a", "user@example.com", "allocate")
 
         first shouldBeEqualTo second
-        first.startsWith("v7:") shouldBeEqualTo true
-        first.contains("tenant-a") shouldBeEqualTo false
-        first.contains("user@example.com") shouldBeEqualTo false
+        first shouldStartWith "v7:"
+        first shouldNotContain "tenant-a"
+        first shouldNotContain "user@example.com"
     }
 
     @Test
@@ -24,14 +31,14 @@ internal class RiskSignalServiceTest {
         val service = RiskSignalService(keys(), backend)
 
         service.assess("tenant-a", "subject-1") shouldBeEqualTo RiskSignal.CLEAR
-        service.remember("tenant-a", "subject-1") shouldBeEqualTo true
+        service.remember("tenant-a", "subject-1").shouldBeTrue()
         service.assess("tenant-a", "subject-1") shouldBeEqualTo RiskSignal.REVIEW
 
         backend.failure = IllegalStateException("redis unavailable")
         service.assess("tenant-a", "subject-1") shouldBeEqualTo RiskSignal.UNKNOWN
     }
 
-    private class RecordingRiskBackend : VoucherRiskBackend {
+    private class RecordingRiskBackend: VoucherRiskBackend {
         private val values = mutableSetOf<String>()
         var failure: RuntimeException? = null
 
@@ -46,7 +53,7 @@ internal class RiskSignalServiceTest {
         }
     }
 
-    private fun keys() =
+    private fun keys(): VoucherAdmissionKeyFactory =
         VoucherAdmissionKeyFactory(
             version = 7,
             rateKey = ByteArray(32) { 0x31 },

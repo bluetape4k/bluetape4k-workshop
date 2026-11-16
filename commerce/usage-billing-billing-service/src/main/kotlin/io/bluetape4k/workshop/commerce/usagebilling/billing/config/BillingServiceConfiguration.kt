@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.config
 
+import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.context.annotation.Bean
@@ -9,6 +10,9 @@ import javax.sql.DataSource
 
 @Configuration(proxyBeanMethods = false)
 class BillingServiceConfiguration {
+
+    companion object: KLogging()
+
     @Bean("springTransactionManager")
     fun springTransactionManager(dataSource: DataSource): PlatformTransactionManager =
         SpringTransactionManager(dataSource, DatabaseConfig {}, false)

@@ -18,9 +18,9 @@ import org.junit.jupiter.api.TestInstance
  * 그래프는 base [cleanGraph] 설정으로 각 테스트 전에 정리하고 다시 초기화합니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AbuserDetectionTinkerGraphTest : AbstractAbuserDetectionTest() {
+class AbuserDetectionTinkerGraphTest: AbstractAbuserDetectionTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override val graphName = "test_abuser"
     override val ops: GraphOperations = TinkerGraphOperations()

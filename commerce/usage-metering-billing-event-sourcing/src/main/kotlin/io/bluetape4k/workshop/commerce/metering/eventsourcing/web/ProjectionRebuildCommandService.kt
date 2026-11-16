@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency.CommandAcquireResult
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency.CommandFingerprint
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency.CommandReceiptService
@@ -19,11 +20,17 @@ class ProjectionRebuildCommandService(
     private val mapper: ObjectMapper,
     private val clock: Clock,
 ) {
+
+    private companion object: KLogging() {
+        const val OPERATOR_SCOPE = "operator-control"
+    }
+
     fun begin(projectionName: String, key: String, actorId: String): ResponseEntity<Any> {
         val scope = CommandScope(OPERATOR_SCOPE, "projection-rebuild:$projectionName", CommandFingerprint.key(key))
         val fingerprint = CommandFingerprint.request("projection-rebuild", mapOf("projection" to projectionName))
+
         return when (val acquired = receipts.acquire(scope, fingerprint, clock.instant())) {
-            is CommandAcquireResult.Owned -> beginOwned(projectionName, actorId, acquired)
+            is CommandAcquireResult.Owned  -> beginOwned(projectionName, actorId, acquired)
             is CommandAcquireResult.Replay -> ResponseEntity.status(acquired.httpStatus)
                 .header("Idempotency-Replayed", "true")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -31,7 +38,7 @@ class ProjectionRebuildCommandService(
             is CommandAcquireResult.InProgress -> ResponseEntity.status(HttpStatus.CONFLICT)
                 .header("Retry-After", acquired.retryAfter.seconds.coerceAtLeast(1).toString())
                 .body(ApiError("command_in_progress", "command_in_progress"))
-            CommandAcquireResult.Conflict -> ResponseEntity.status(HttpStatus.CONFLICT)
+            CommandAcquireResult.Conflict  -> ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiError("idempotency_conflict", "idempotency_conflict"))
         }
     }
@@ -44,28 +51,26 @@ class ProjectionRebuildCommandService(
         receipts.requireOwnership(owned, clock.instant())
         val generation = rebuilder.beginNext(projectionName, clock.instant())
         val response = ProjectionStatusResponse(
-            projectionName,
-            generation.generation,
-            generation.state.name,
-            generation.checkpoint,
-            generation.highWatermark,
-            (generation.highWatermark - generation.checkpoint).coerceAtLeast(0),
-            false,
-            null,
-            null,
-            actorId,
+            name = projectionName,
+            generation = generation.generation,
+            state = generation.state.name,
+            checkpoint = generation.checkpoint,
+            highWatermark = generation.highWatermark,
+            lag = (generation.highWatermark - generation.checkpoint).coerceAtLeast(0),
+            quarantined = false,
+            failedPosition = null,
+            failureAttempts = null,
+            actorId = actorId,
         )
         val completed = receipts.succeed(
-            owned,
-            HttpStatus.ACCEPTED.value(),
-            mapper.writeValueAsString(response),
-            clock.instant(),
+            owned = owned,
+            httpStatus = HttpStatus.ACCEPTED.value(),
+            response = mapper.writeValueAsString(response),
+            now = clock.instant(),
         )
         check(completed) { "command_receipt_owner_lost" }
+
         return ResponseEntity.accepted().body(response)
     }
 
-    private companion object {
-        const val OPERATOR_SCOPE = "operator-control"
-    }
 }

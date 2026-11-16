@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.optimization.planning.domain
 
 import java.io.Serializable
-import java.util.UUID
+import java.util.*
 
 @JvmInline
 internal value class DatasetId(val value: String): Serializable {

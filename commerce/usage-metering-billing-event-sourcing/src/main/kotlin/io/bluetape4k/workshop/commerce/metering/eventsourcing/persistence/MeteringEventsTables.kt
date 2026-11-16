@@ -2,12 +2,12 @@
 
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 
-object EventStreamHeads : UUIDTable("metering_event_stream_heads", "head_id") {
+object EventStreamHeads: TimebasedUUIDTable("metering_event_stream_heads", "head_id") {
     val tenantId = varchar("tenant_id", 64)
     val streamType = varchar("stream_type", 64)
     val streamId = varchar("stream_id", 128)
@@ -21,7 +21,7 @@ object EventStreamHeads : UUIDTable("metering_event_stream_heads", "head_id") {
     }
 }
 
-object DomainEvents : UUIDTable("metering_domain_events", "event_id") {
+object DomainEvents: TimebasedUUIDTable("metering_domain_events", "event_id") {
     val tenantId = varchar("tenant_id", 64)
     val streamType = varchar("stream_type", 64)
     val streamId = varchar("stream_id", 128)
@@ -44,7 +44,7 @@ object DomainEvents : UUIDTable("metering_domain_events", "event_id") {
     }
 }
 
-object CommandReceipts : UUIDTable("metering_command_receipts", "receipt_id") {
+object CommandReceipts: TimebasedUUIDTable("metering_command_receipts", "receipt_id") {
     val tenantId = varchar("tenant_id", 64)
     val operation = varchar("operation", 64)
     val keyDigest = varchar("key_digest", 64)
@@ -65,7 +65,7 @@ object CommandReceipts : UUIDTable("metering_command_receipts", "receipt_id") {
     }
 }
 
-object AggregateSnapshots : UUIDTable("metering_aggregate_snapshots", "snapshot_id") {
+object AggregateSnapshots: TimebasedUUIDTable("metering_aggregate_snapshots", "snapshot_id") {
     val tenantId = varchar("tenant_id", 64)
     val streamType = varchar("stream_type", 64)
     val streamId = varchar("stream_id", 128)
@@ -81,13 +81,13 @@ object AggregateSnapshots : UUIDTable("metering_aggregate_snapshots", "snapshot_
     }
 }
 
-object ProjectionAliases : UUIDTable("metering_projection_aliases", "alias_id") {
+object ProjectionAliases: TimebasedUUIDTable("metering_projection_aliases", "alias_id") {
     val projectionName = varchar("projection_name", 96).uniqueIndex()
     val activeGeneration = integer("active_generation")
     val updatedAt = timestamp("updated_at")
 }
 
-object ProjectionGenerations : UUIDTable("metering_projection_generations", "projection_generation_id") {
+object ProjectionGenerations: TimebasedUUIDTable("metering_projection_generations", "projection_generation_id") {
     val projectionName = varchar("projection_name", 96)
     val generation = integer("generation")
     val state = varchar("state", 16)
@@ -106,7 +106,7 @@ object ProjectionGenerations : UUIDTable("metering_projection_generations", "pro
     }
 }
 
-object ProjectionAppliedEvents : UUIDTable("metering_projection_applied_events", "marker_id") {
+object ProjectionAppliedEvents: TimebasedUUIDTable("metering_projection_applied_events", "marker_id") {
     val projectionName = varchar("projection_name", 96)
     val generation = integer("generation")
     val eventId = javaUUID("event_id")
@@ -119,7 +119,7 @@ object ProjectionAppliedEvents : UUIDTable("metering_projection_applied_events",
     }
 }
 
-object BillingReadModels : UUIDTable("metering_billing_read_models", "read_model_id") {
+object BillingReadModels: TimebasedUUIDTable("metering_billing_read_models", "read_model_id") {
     val projectionName = varchar("projection_name", 96)
     val generation = integer("generation")
     val tenantId = varchar("tenant_id", 64)
@@ -139,7 +139,7 @@ object BillingReadModels : UUIDTable("metering_billing_read_models", "read_model
     }
 }
 
-object ProjectionFailures : UUIDTable("metering_projection_failures", "failure_id") {
+object ProjectionFailures: TimebasedUUIDTable("metering_projection_failures", "failure_id") {
     val projectionName = varchar("projection_name", 96)
     val generation = integer("generation")
     val eventId = javaUUID("event_id")
@@ -156,7 +156,7 @@ object ProjectionFailures : UUIDTable("metering_projection_failures", "failure_i
     }
 }
 
-val METERING_EVENT_TABLES = arrayOf(
+val METERING_EVENT_TABLES: Array<TimebasedUUIDTable> = arrayOf(
     EventStreamHeads,
     DomainEvents,
     CommandReceipts,

@@ -2,25 +2,26 @@ package io.bluetape4k.workshop.operations.jobconsole.fixture
 
 import io.bluetape4k.junit5.http.idempotency.BoundedWaitHttpIdempotencyAdapter
 import io.bluetape4k.junit5.http.idempotency.BoundedWaitHttpIdempotencyConformanceConfig
+import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyQuiescence
 import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyRequest
 import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyResponse
-import io.bluetape4k.junit5.http.idempotency.HttpIdempotencyQuiescence
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.AbandonReason
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.CleanupReport
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.InterruptibleWaitStrategy
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionClock
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCommand
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyCoordinator
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyPolicy
-import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnerAction
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnerAction
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnership
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionSnapshotPolicy
-import io.bluetape4k.workshop.operations.jobconsole.idempotency.PreparedJobSubmission
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.PollResult
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.PreparedJobSubmission
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.ReplayableJobSubmission
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.Reservation
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.WaiterRegistration
@@ -35,6 +36,7 @@ import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
+import okio.withLock
 import tools.jackson.core.StreamReadFeature
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
@@ -46,7 +48,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.sql.Connection
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -54,6 +56,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -65,7 +68,7 @@ import kotlin.coroutines.coroutineContext
  */
 class BoundedWaitHttpIdempotencyFixture(
     private val config: BoundedWaitHttpIdempotencyConformanceConfig,
-) : BoundedWaitHttpIdempotencyAdapter, AutoCloseable {
+): BoundedWaitHttpIdempotencyAdapter, AutoCloseable {
     private val policy =
         JobSubmissionIdempotencyPolicy(
             ownerLease = Duration.ofMinutes(2),
@@ -173,7 +176,11 @@ class BoundedWaitHttpIdempotencyFixture(
     }
 
     override suspend fun abandonOwner(request: HttpIdempotencyRequest, outcome: HttpIdempotencyResponse) {
-        (activeOwnerControls[keyOf(request)] ?: control(request)).completion.complete(OwnerSignal.Abandon(sanitizeTransient(outcome)))
+        (activeOwnerControls[keyOf(request)] ?: control(request)).completion.complete(
+            OwnerSignal.Abandon(
+                sanitizeTransient(outcome)
+            )
+        )
         waitStrategy.signal()
     }
 
@@ -238,7 +245,9 @@ class BoundedWaitHttpIdempotencyFixture(
     private suspend fun exchangeInternal(request: HttpIdempotencyRequest, ownerJob: Job?): HttpIdempotencyResponse {
         val scope = resolveScope(request.authenticationProfile) ?: return unauthorized(request.authenticationProfile)
         val rawKey = request.idempotencyKeys.singleOrNull() ?: return invalidRequest()
-        if (rawKey.isEmpty() || rawKey.hasUnpairedSurrogate() || rawKey.any { it.code !in 0x21..0x7e } || rawKey.contains(',') ||
+        if (rawKey.isEmpty() || rawKey.hasUnpairedSurrogate() || rawKey.any { it.code !in 0x21..0x7e } || rawKey.contains(
+                ','
+            ) ||
             rawKey.toByteArray(UTF_8).size > config.maxIdempotencyKeyBytes
         ) {
             return invalidRequest()
@@ -292,7 +301,7 @@ class BoundedWaitHttpIdempotencyFixture(
         commandRequest: SubmitJobRequest,
         ownerJob: Job?,
     ): JobSubmissionOwnerAction =
-        object : JobSubmissionOwnerAction {
+        object: JobSubmissionOwnerAction {
             override fun prepare(ownership: JobSubmissionOwnership): PreparedJobSubmission {
                 val control = controls[key] ?: error("owner control missing")
                 activeOwnerControls[key] = control
@@ -311,23 +320,29 @@ class BoundedWaitHttpIdempotencyFixture(
                 }
             }
 
-        override fun commit(
+            override fun commit(
                 connection: Connection,
                 ownership: JobSubmissionOwnership,
                 prepared: PreparedJobSubmission,
-        ): ReplayableJobSubmission {
-            val finalized = repository.finalizeOwner(connection, ownership, prepared, virtualClock.databaseNow())
-            val control = activeOwnerControls[key] ?: controls[key] ?: return finalized
-            control.finalized.complete(Unit)
-            control.awaitDeliveryIfHeld()
-            activeOwnerControls.remove(key, control)
-            return finalized
+            ): ReplayableJobSubmission {
+                val finalized = repository.finalizeOwner(connection, ownership, prepared, virtualClock.databaseNow())
+                val control = activeOwnerControls[key] ?: controls[key] ?: return finalized
+                control.finalized.complete(Unit)
+                control.awaitDeliveryIfHeld()
+                activeOwnerControls.remove(key, control)
+                return finalized
             }
         }
 
     private fun abandonCancelledOwner(ownerJob: Job) {
         val ownership = ownerOwnerships.remove(ownerJob) ?: return
-        activeOwnerControls.remove(CommandKey(ownership.scope.tenantId, ownership.scope.submitterHash, ownership.keyHash))
+        activeOwnerControls.remove(
+            CommandKey(
+                ownership.scope.tenantId,
+                ownership.scope.submitterHash,
+                ownership.keyHash
+            )
+        )
         repository.abandon(ownership, AbandonReason.CANCELLED, virtualClock.databaseNow())
     }
 
@@ -335,14 +350,15 @@ class BoundedWaitHttpIdempotencyFixture(
         response.headers["content-type"].orEmpty().let { contentTypeValues ->
             val validContentType = contentTypeValues.singleOrNull()?.takeIf { value ->
                 value.toByteArray(UTF_8).size <= policy.maxHeaderValueBytes &&
-                    ("content-type".toByteArray(UTF_8).size + value.toByteArray(UTF_8).size) <= policy.maxAggregateHeaderBytes &&
-                    value.all { it.code in 0x20..0x7e }
+                        ("content-type".toByteArray(UTF_8).size + value.toByteArray(UTF_8).size) <= policy.maxAggregateHeaderBytes &&
+                        value.all { it.code in 0x20..0x7e }
             }
             PreparedJobSubmission(
                 request = request,
                 responseStatus = response.statusCode,
                 responseBody = response.body.toByteArray(UTF_8),
-                responseContentType = validContentType ?: if (contentTypeValues.isEmpty()) "application/json" else "invalid-content-type",
+                responseContentType = validContentType
+                    ?: if (contentTypeValues.isEmpty()) "application/json" else "invalid-content-type",
                 responseHeaders = response.headers.filterKeys { it != "content-type" && it != "idempotency-replayed" },
             )
         }
@@ -350,14 +366,26 @@ class BoundedWaitHttpIdempotencyFixture(
     private fun mapOutcome(outcome: JobSubmissionOutcome, key: CommandKey): HttpIdempotencyResponse =
         when (outcome) {
             is JobSubmissionOutcome.OwnerCompleted -> snapshotResponse(outcome.snapshot, false, key)
-            is JobSubmissionOutcome.Replayed -> snapshotResponse(outcome.snapshot, true, key)
-            JobSubmissionOutcome.Conflict -> problem(409, "idempotency_key_reused")
-            JobSubmissionOutcome.InFlightTimeout -> problem(409, "idempotency_in_flight", config.inFlightRetryAfter.seconds)
-            JobSubmissionOutcome.WaiterOverflow -> problem(429, "idempotency_waiters_exceeded", config.overflowRetryAfter.seconds)
-            JobSubmissionOutcome.Abandoned -> transientFailure()
+            is JobSubmissionOutcome.Replayed     -> snapshotResponse(outcome.snapshot, true, key)
+            JobSubmissionOutcome.Conflict        -> problem(409, "idempotency_key_reused")
+            JobSubmissionOutcome.InFlightTimeout -> problem(
+                409,
+                "idempotency_in_flight",
+                config.inFlightRetryAfter.seconds
+            )
+            JobSubmissionOutcome.WaiterOverflow  -> problem(
+                429,
+                "idempotency_waiters_exceeded",
+                config.overflowRetryAfter.seconds
+            )
+            JobSubmissionOutcome.Abandoned       -> transientFailure()
         }
 
-    private fun snapshotResponse(snapshot: ReplayableJobSubmission, replayed: Boolean, key: CommandKey): HttpIdempotencyResponse =
+    private fun snapshotResponse(
+        snapshot: ReplayableJobSubmission,
+        replayed: Boolean,
+        key: CommandKey,
+    ): HttpIdempotencyResponse =
         HttpIdempotencyResponse(
             statusCode = snapshot.responseStatus,
             body = snapshot.responseBody.toString(UTF_8),
@@ -396,7 +424,9 @@ class BoundedWaitHttpIdempotencyFixture(
             "tenant-a-principal" -> DemoCallerScope("tenant-a", "principal-a")
             "tenant-b-principal" -> DemoCallerScope("tenant-b", "principal-b")
             "unauthenticated", "tenant-a-read-only" -> null
-            else -> DemoCallerScope("tenant-a", profile.take(64).ifBlank { "principal-a" })
+            else -> DemoCallerScope(
+                "tenant-a",
+                profile.take(64).ifBlank { "principal-a" })
         }
 
     private fun unauthorized(profile: String): HttpIdempotencyResponse =
@@ -464,16 +494,18 @@ class BoundedWaitHttpIdempotencyFixture(
 
     private fun canonicalNode(node: JsonNode): String =
         when {
-            node.isObject -> node.properties().asSequence().sortedBy { it.key }.joinToString(prefix = "{", postfix = "}") {
-                "\"${escape(it.key)}\":${canonicalNode(it.value)}"
-            }
-            node.isArray -> node.iterator().asSequence().joinToString(prefix = "[", postfix = "]", separator = ",") { canonicalNode(it) }
+            node.isObject -> node.properties().asSequence().sortedBy { it.key }
+                .joinToString(prefix = "{", postfix = "}") {
+                    "\"${escape(it.key)}\":${canonicalNode(it.value)}"
+                }
+            node.isArray  -> node.iterator().asSequence()
+                .joinToString(prefix = "[", postfix = "]", separator = ",") { canonicalNode(it) }
             node.isString() -> node.asString().let { value ->
                 require(!value.hasUnpairedSurrogate()) { "JSON string contains an unpaired surrogate" }
                 "\"${escape(value)}\""
             }
             node.isNumber -> node.decimalValue().stripTrailingZeros().toPlainString()
-            else -> node.toString()
+            else          -> node.toString()
         }
 
     private fun escape(value: String): String =
@@ -500,18 +532,20 @@ class BoundedWaitHttpIdempotencyFixture(
     private data class CommandKey(val tenant: String, val submitter: String, val keyHash: String)
 
     private sealed interface OwnerSignal {
-        data class Complete(val response: HttpIdempotencyResponse) : OwnerSignal
-        data class Abandon(val response: HttpIdempotencyResponse) : OwnerSignal
+        data class Complete(val response: HttpIdempotencyResponse): OwnerSignal
+        data class Abandon(val response: HttpIdempotencyResponse): OwnerSignal
     }
 
-    private class FixtureAbandon(val response: HttpIdempotencyResponse) : RuntimeException()
+    private class FixtureAbandon(val response: HttpIdempotencyResponse): RuntimeException()
 
     private class OwnerControl {
         val started = CompletableDeferred<Unit>()
         val finalized = CompletableDeferred<Unit>()
         val completion = BlockingSignal<OwnerSignal>()
         private val delivery = CountDownLatch(1)
-        @Volatile var holdDelivery: Boolean = false
+
+        @Volatile
+        var holdDelivery: Boolean = false
 
         fun awaitDeliveryIfHeld() {
             if (!holdDelivery) return
@@ -529,7 +563,9 @@ class BoundedWaitHttpIdempotencyFixture(
 
     private class BlockingSignal<T> {
         private val latch = CountDownLatch(1)
-        @Volatile private var value: T? = null
+
+        @Volatile
+        private var value: T? = null
 
         fun complete(next: T): Boolean {
             if (latch.count == 0L) return false
@@ -546,7 +582,7 @@ class BoundedWaitHttpIdempotencyFixture(
         fun isDone(): Boolean = latch.count == 0L
     }
 
-    private class FixtureClock : JobSubmissionClock {
+    private class FixtureClock: JobSubmissionClock {
         private val nanos = AtomicLong()
         private val epoch = Instant.parse("2026-08-16T00:00:00Z")
 
@@ -566,7 +602,7 @@ class BoundedWaitHttpIdempotencyFixture(
     private class FixtureRepository(
         private val policy: JobSubmissionIdempotencyPolicy,
         private val clock: FixtureClock,
-    ) : io.bluetape4k.workshop.operations.jobconsole.persistence.JobSubmissionIdempotencyRepository {
+    ): io.bluetape4k.workshop.operations.jobconsole.persistence.JobSubmissionIdempotencyRepository {
         var onMutation: () -> Unit = {}
         private val rows = linkedMapOf<CommandKey, Row>()
         private val connection = Proxy.newProxyInstance(
@@ -611,7 +647,10 @@ class BoundedWaitHttpIdempotencyFixture(
         }
 
         @Synchronized
-        override fun registerWaiter(ownership: io.bluetape4k.workshop.operations.jobconsole.idempotency.InFlightOwnership, now: Instant): WaiterRegistration =
+        override fun registerWaiter(
+            ownership: io.bluetape4k.workshop.operations.jobconsole.idempotency.InFlightOwnership,
+            now: Instant,
+        ): WaiterRegistration =
             registerWaiter(ownership, now, policy.waiterTimeout, now.plus(policy.waiterTimeout))
 
         @Synchronized
@@ -621,7 +660,11 @@ class BoundedWaitHttpIdempotencyFixture(
             waiterTtl: Duration,
             deadlineAt: Instant,
         ): WaiterRegistration {
-            val key = CommandKey(ownership.ownership.scope.tenantId, ownership.ownership.scope.submitterHash, ownership.ownership.keyHash)
+            val key = CommandKey(
+                ownership.ownership.scope.tenantId,
+                ownership.ownership.scope.submitterHash,
+                ownership.ownership.keyHash
+            )
             val row = rows[key] ?: return WaiterRegistration.DeadlineExceeded
             if (row.state != State.IN_FLIGHT || row.generation != ownership.ownership.generation) return WaiterRegistration.DeadlineExceeded
             if (row.waiters.size >= policy.maxWaitersPerKey) return WaiterRegistration.Overflow
@@ -632,14 +675,21 @@ class BoundedWaitHttpIdempotencyFixture(
         }
 
         @Synchronized
-        override fun removeWaiter(scope: DemoCallerScope, keyHash: String, generation: Long, waiterToken: UUID): Boolean =
+        override fun removeWaiter(
+            scope: DemoCallerScope,
+            keyHash: String,
+            generation: Long,
+            waiterToken: UUID,
+        ): Boolean =
             rows[CommandKey(scope.tenantId, scope.submitterHash, keyHash)]?.waiters?.remove(waiterToken)?.also {
                 onMutation()
             } != null
 
         @Synchronized
         override fun poll(scope: DemoCallerScope, keyHash: String, generation: Long, now: Instant): PollResult {
-            val row = rows[CommandKey(scope.tenantId, scope.submitterHash, keyHash)] ?: return PollResult.Abandoned(generation)
+            val row = rows[CommandKey(scope.tenantId, scope.submitterHash, keyHash)] ?: return PollResult.Abandoned(
+                generation
+            )
             row.waiters.entries.removeIf { (_, expiresAt) -> expiresAt <= now }
             if (row.generation != generation) return PollResult.Abandoned(generation)
             return when (row.state) {
@@ -652,11 +702,20 @@ class BoundedWaitHttpIdempotencyFixture(
         override fun <T> withTransaction(block: (Connection) -> T): T = block(connection)
 
         @Synchronized
-        override fun finalizeOwner(ownership: JobSubmissionOwnership, prepared: PreparedJobSubmission, now: Instant): ReplayableJobSubmission =
+        override fun finalizeOwner(
+            ownership: JobSubmissionOwnership,
+            prepared: PreparedJobSubmission,
+            now: Instant,
+        ): ReplayableJobSubmission =
             finalizeOwner(connection, ownership, prepared, now)
 
         @Synchronized
-        override fun finalizeOwner(connection: Connection, ownership: JobSubmissionOwnership, prepared: PreparedJobSubmission, now: Instant): ReplayableJobSubmission {
+        override fun finalizeOwner(
+            connection: Connection,
+            ownership: JobSubmissionOwnership,
+            prepared: PreparedJobSubmission,
+            now: Instant,
+        ): ReplayableJobSubmission {
             val key = CommandKey(ownership.scope.tenantId, ownership.scope.submitterHash, ownership.keyHash)
             val row = rows[key]
             require(row?.state == State.IN_FLIGHT && row.ownership?.ownerToken == ownership.ownerToken) { "owner lease lost" }
@@ -689,8 +748,11 @@ class BoundedWaitHttpIdempotencyFixture(
             return true
         }
 
-        override fun cleanupExpired(now: Instant, batchSize: Int): io.bluetape4k.workshop.operations.jobconsole.idempotency.CleanupReport =
-            io.bluetape4k.workshop.operations.jobconsole.idempotency.CleanupReport(0, 0)
+        override fun cleanupExpired(
+            now: Instant,
+            batchSize: Int,
+        ): CleanupReport =
+            CleanupReport(0, 0)
 
         @Synchronized
         fun waiterCount(key: CommandKey): Int {
@@ -717,13 +779,17 @@ class BoundedWaitHttpIdempotencyFixture(
             val waiters: MutableMap<UUID, Instant> = linkedMapOf(),
         )
 
-        private enum class State { IN_FLIGHT, TERMINAL, ABANDONED }
+        private enum class State {
+            IN_FLIGHT,
+            TERMINAL,
+            ABANDONED
+        }
     }
 
     private companion object {
         fun defaultValue(type: Class<*>): Any? =
             when {
-                !type.isPrimitive -> null
+                !type.isPrimitive                    -> null
                 type == Boolean::class.javaPrimitiveType -> false
                 type == Byte::class.javaPrimitiveType -> 0.toByte()
                 type == Short::class.javaPrimitiveType -> 0.toShort()
@@ -732,7 +798,7 @@ class BoundedWaitHttpIdempotencyFixture(
                 type == Float::class.javaPrimitiveType -> 0f
                 type == Double::class.javaPrimitiveType -> 0.0
                 type == Char::class.javaPrimitiveType -> '\u0000'
-                else -> null
+                else                                 -> null
             }
     }
 }
@@ -746,8 +812,9 @@ class BoundedWaitHttpIdempotencyFixture(
  */
 class FixtureVirtualWaitStrategy(
     private val monotonicNanos: () -> Long,
-) : InterruptibleWaitStrategy {
-    private val wakeup = java.util.concurrent.locks.ReentrantLock()
+): InterruptibleWaitStrategy {
+
+    private val wakeup = ReentrantLock()
     private val wakeupCondition = wakeup.newCondition()
     private val mutationEpoch = AtomicLong()
     private val observedEpoch = ThreadLocal<Long?>()
@@ -770,17 +837,14 @@ class FixtureVirtualWaitStrategy(
         }
     }
 
-    override fun await(interval: Duration) {
+    override fun await(interval: java.time.Duration) {
         val deadline = Math.addExact(monotonicNanos(), interval.toNanos())
         val baseline = observedEpoch.get() ?: mutationEpoch.get()
-        wakeup.lock()
-        try {
+        wakeup.withLock {
             while (monotonicNanos() < deadline && mutationEpoch.get() == baseline) {
                 wakeupCondition.await(25L, TimeUnit.MILLISECONDS)
             }
             observedEpoch.set(mutationEpoch.get())
-        } finally {
-            wakeup.unlock()
         }
     }
 }

@@ -29,8 +29,8 @@ class R2dbcPostgresConfigurationTest {
             registry.add("spring.r2dbc.url") {
                 "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(PostgreSQLServer.PORT)}/${postgres.databaseName}"
             }
-            registry.add("spring.r2dbc.username") { checkNotNull(postgres.username) }
-            registry.add("spring.r2dbc.password") { checkNotNull(postgres.password) }
+            registry.add("spring.r2dbc.username") { postgres.username!! }
+            registry.add("spring.r2dbc.password") { postgres.password!! }
             registry.add("spring.sql.init.mode") { "always" }
         }
     }

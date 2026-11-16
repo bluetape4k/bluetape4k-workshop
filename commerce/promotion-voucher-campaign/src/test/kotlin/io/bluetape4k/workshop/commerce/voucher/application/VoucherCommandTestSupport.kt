@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.application
 
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherCompatibilityTestSupport
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherMigrationResult
@@ -23,10 +26,17 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
-internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupport() {
+internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSupport() {
+
+    protected companion object: KLogging() {
+        const val TENANT_ID = "tenant-a"
+        val CAMPAIGN_ID: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
+        val NOW: Instant = Instant.parse("2026-07-19T10:00:00Z")
+    }
+
     private val exposedDatabases = mutableListOf<Database>()
     private var previousDefaultDatabase: Database? = null
 
@@ -47,7 +57,12 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
     @BeforeEach
     fun createCommandRuntime() {
         previousDefaultDatabase = TransactionManager.defaultDatabase
-        check(migrationRunner().migrate() in setOf(VoucherMigrationResult.APPLIED, VoucherMigrationResult.ALREADY_APPLIED))
+        check(
+            migrationRunner().migrate() in setOf(
+                VoucherMigrationResult.APPLIED,
+                VoucherMigrationResult.ALREADY_APPLIED
+            )
+        )
         configureCommandRuntime()
     }
 
@@ -62,39 +77,35 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
     protected fun configureCommandRuntime(
         foregroundPermits: Int = 12,
         workerPermits: Int = 1,
-        acquireTimeout: Duration = Duration.ofSeconds(2),
-        lockTimeout: Duration = Duration.ofSeconds(5),
+        acquireTimeout: Duration = 2.seconds(),
+        lockTimeout: Duration = 5.seconds(),
         serviceClock: Clock = clock,
         runtimeDataSource: DataSource = dataSource,
     ) {
-        gate =
-            DatabasePermitGate(
-                foregroundPermits = foregroundPermits,
-                workerPermits = workerPermits,
-                sseMaintenancePermits = 3,
-                acquireTimeout = acquireTimeout,
-            )
+        gate = DatabasePermitGate(
+            foregroundPermits = foregroundPermits,
+            workerPermits = workerPermits,
+            sseMaintenancePermits = 3,
+            acquireTimeout = acquireTimeout,
+        )
         val transactionManager = SpringTransactionManager(runtimeDataSource, DatabaseConfig {}, false)
-        exposedDatabases +=
-            checkNotNull(
-                TransactionTemplate(transactionManager).execute {
-                    TransactionManager.current().db
-                },
-            )
+        exposedDatabases += TransactionTemplate(transactionManager).execute {
+            TransactionManager.current().db
+        }.shouldNotBeNull()
+
         jdbc = VoucherJdbcExecutor(gate, transactionManager, lockTimeout)
         campaigns = CampaignRepository(gate)
         claims = ClaimRepository(gate)
         reviews = ReviewRepository(gate)
         audits = AuditRepository(gate)
-        codes =
-            VoucherCodeService(
-                VoucherCodeKeyRing(
-                    currentGenerationVersion = 5,
-                    currentVerificationVersion = 7,
-                    generationKeys = mapOf(5 to ByteArray(32) { 0x15 }),
-                    verificationKeys = mapOf(7 to ByteArray(32) { 0x27 }),
-                ),
-            )
+        codes = VoucherCodeService(
+            VoucherCodeKeyRing(
+                currentGenerationVersion = 5,
+                currentVerificationVersion = 7,
+                generationKeys = mapOf(5 to ByteArray(32) { 0x15 }),
+                verificationKeys = mapOf(7 to ByteArray(32) { 0x27 }),
+            ),
+        )
         campaignCommands = CampaignCommandService(jdbc, campaigns, audits, serviceClock)
         allocation = AllocationService(jdbc, campaigns, claims, reviews, audits, codes, serviceClock)
         claimCommands = ClaimCommandService(jdbc, campaigns, claims, reviews, audits, codes, serviceClock)
@@ -127,11 +138,8 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
         }
 
     protected fun campaignSnapshot(campaignId: UUID = CAMPAIGN_ID): CampaignRecord =
-        jdbc.foregroundTransaction { checkNotNull(campaigns.findPublic(TENANT_ID, campaignId)) }
+        jdbc.foregroundTransaction {
+            campaigns.findPublic(TENANT_ID, campaignId).shouldNotBeNull()
+        }
 
-    protected companion object {
-        val NOW: Instant = Instant.parse("2026-07-19T10:00:00Z")
-        const val TENANT_ID = "tenant-a"
-        val CAMPAIGN_ID: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
-    }
 }

@@ -17,7 +17,7 @@ data class OrderRequest(
     val productId: String,
     val quantity: Int,
     val userId: String,
-) : Serializable {
+): Serializable {
     init {
         productId.requireNotBlank("productId")
         quantity.requirePositiveNumber("quantity")
@@ -40,7 +40,7 @@ data class OrderResponse(
     val orderId: String,
     val status: String,
     val processedAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -56,7 +56,7 @@ data class OrderResponse(
 data class CachedResponse(
     val httpStatus: Int,
     val response: OrderResponse,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

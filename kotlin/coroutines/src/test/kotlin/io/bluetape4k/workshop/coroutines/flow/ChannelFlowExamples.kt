@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.coroutines.flow
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -14,9 +16,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.seconds
 
 class ChannelFlowExamples {
 
@@ -33,7 +34,7 @@ class ChannelFlowExamples {
         private val pageSize = 3
 
         override suspend fun takePage(pageNumber: Int): Flow<User> {
-            delay(1000)
+            delay(1.seconds)
             return users.asFlow()
                 .drop(pageSize * pageNumber)
                 .take(pageSize)
@@ -59,7 +60,7 @@ class ChannelFlowExamples {
 
         val user = users
             .firstOrNull {
-                delay(100)
+                delay(100.seconds)
                 it.name == "User3"
             }
 
@@ -90,11 +91,10 @@ class ChannelFlowExamples {
         val api = FakeUserApi()
         val users = allUsersByCannelFlow(api).log("channel")
 
-        val user = users
-            .firstOrNull {
-                delay(100)
-                it.name == "User3"
-            }
+        val user = users.firstOrNull {
+            delay(100.seconds)
+            it.name == "User3"
+        }
 
         user.shouldNotBeNull()
         user.name shouldBeEqualTo "User3"

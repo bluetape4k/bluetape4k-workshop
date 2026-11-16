@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.config
 
+import io.bluetape4k.logging.KLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -17,6 +18,9 @@ import java.io.Serializable
 @EnableKafka
 @EnableConfigurationProperties(QueryKafkaProperties::class)
 class QueryKafkaMessagingConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun queryConsumerFactory(properties: QueryKafkaProperties): ConsumerFactory<String, String> =
         DefaultKafkaConsumerFactory(
@@ -34,17 +38,18 @@ class QueryKafkaMessagingConfiguration {
     fun queryKafkaListenerContainerFactory(
         queryConsumerFactory: ConsumerFactory<String, String>,
     ): ConcurrentKafkaListenerContainerFactory<String, String> =
-        ConcurrentKafkaListenerContainerFactory<String, String>().also { factory ->
-            factory.setConsumerFactory(queryConsumerFactory)
-            factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
-        }
+        ConcurrentKafkaListenerContainerFactory<String, String>()
+            .also { factory ->
+                factory.setConsumerFactory(queryConsumerFactory)
+                factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
+            }
 }
 
 @ConfigurationProperties("usage-billing.query.kafka")
 data class QueryKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val consumerGroup: String = "usage-billing-query-service",
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

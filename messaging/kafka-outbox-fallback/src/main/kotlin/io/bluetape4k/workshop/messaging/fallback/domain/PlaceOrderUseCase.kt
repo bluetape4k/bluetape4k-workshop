@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.messaging.fallback.domain
 
-import io.bluetape4k.workshop.messaging.fallback.api.OrderPublicationStatus
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.fallback.api.OrderRequest
 import io.bluetape4k.workshop.messaging.fallback.api.OrderResponse
 import io.bluetape4k.workshop.messaging.fallback.publication.OrderEventPublisher
@@ -17,7 +18,8 @@ class PlaceOrderUseCase(
     private val transactionalOrderWriter: TransactionalOrderWriter,
     private val orderEventPublisher: OrderEventPublisher,
 ) {
-
+    companion object: KLogging()
+    
     fun placeOrder(request: OrderRequest): OrderResponse {
         val order = transactionalOrderWriter.saveOrder(
             customerId = request.customerId,
@@ -26,6 +28,8 @@ class PlaceOrderUseCase(
         )
         val event = OrderPlacedEvent.from(order)
         val publicationStatus = orderEventPublisher.publishDirectOrFallback(event)
+
+        log.debug { "Place order. order=$order publicationStatus=$publicationStatus" }
         return OrderResponse.from(order, publicationStatus)
     }
 }

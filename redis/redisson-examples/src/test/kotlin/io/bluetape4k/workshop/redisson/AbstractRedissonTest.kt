@@ -2,16 +2,17 @@ package io.bluetape4k.workshop.redisson
 
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.redis.redisson.codec.RedissonCodecs
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.utils.ShutdownQueue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.future.await
@@ -21,12 +22,11 @@ import org.redisson.Redisson
 import org.redisson.api.RFuture
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
-import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 abstract class AbstractRedissonTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
 
@@ -42,7 +42,7 @@ abstract class AbstractRedissonTest {
                     .setIdleConnectionTimeout(100_000)  // idle connection을 100초 동안 유지합니다.
                     .setTimeout(5000)
                     .setRetryAttempts(3)
-                    .setRetryDelay { attempt -> Duration.ofMillis((attempt + 1) * 10L) }
+                    .setRetryDelay { attempt -> ((attempt + 1) * 10L).millis() }
 
                     .setDnsMonitoringInterval(5000)  // cloud 환경의 DNS 변경을 감지합니다.
 

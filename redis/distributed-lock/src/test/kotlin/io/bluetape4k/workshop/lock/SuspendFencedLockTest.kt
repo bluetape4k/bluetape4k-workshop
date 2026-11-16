@@ -5,6 +5,8 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.lock.domain.DeductionResult.LockNotAcquired
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Rejected
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Success
@@ -12,16 +14,19 @@ import io.bluetape4k.workshop.lock.domain.Inventory
 import io.bluetape4k.workshop.lock.service.SuspendingFencedInventoryService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * [SuspendingFencedInventoryService]의 정확성과 취소 안전성을 검증합니다.
  */
-class SuspendFencedLockTest : AbstractDistributedLockTest() {
+class SuspendFencedLockTest: AbstractDistributedLockTest() {
 
     private val inventoryId = 1L
 
@@ -37,8 +42,7 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
         // workers(20).rounds(20): totalUnits = rounds * blockCount = 20 * 1 = 20회 시도입니다.
         // stock=100, qty=10이면 정확히 10회 성공하고 10회는 InsufficientStock이 됩니다.
         SuspendedJobTester()
-            .workers(20)
-            .rounds(20)
+            .rounds(Runtimex.availableProcessors * 4)
             .add {
                 val result = suspendingService.deduct(inventoryId, 10, waitMs = 5000L, leaseMs = 5000L)
                 if (result is Success) successCount.incrementAndGet()
@@ -61,11 +65,11 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
             redisson = redisson,
             store = store,
             fencedResources = fencedResources,
-            beforeWork = { delay(500) },
+            beforeWork = { delay(500.milliseconds) },
         )
 
         val job = launch { slowService.deduct(999L, 10) }
-        delay(50)        // 500ms beforeWork 창 중에 실행되므로 lock이 보유되어 있습니다.
+        delay(50.milliseconds)        // 500ms beforeWork 창 중에 실행되므로 lock이 보유되어 있습니다.
         job.cancel()
         job.join()
 
@@ -81,7 +85,8 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
 
         val result = suspendingService.deduct(inventoryId, 10, waitMs = 2000L, leaseMs = 5000L)
 
-        result shouldBeInstanceOf Rejected::class
+        log.debug { "result=$result" }
+        result.shouldBeInstanceOf<Rejected>()
     }
 
     @Test
@@ -89,26 +94,31 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
         // RFencedLock은 reentrant이므로 coroutine의 획득을 막으려면 다른 thread에서 보유해야 합니다.
         val lockName = "inventory:sfenced:$inventoryId"
         val holderLock = redisson.getFencedLock(lockName)
-        val acquireLatch = java.util.concurrent.CountDownLatch(1)
-        val releaseLatch = java.util.concurrent.CountDownLatch(1)
+        val acquireLatch = CountDownLatch(1)
+        val releaseLatch = CountDownLatch(1)
 
         val holder = Thread {
             val token = holderLock.tryLockAndGetToken(1000, 10_000, MILLISECONDS)
             acquireLatch.countDown()
             if (token != null) {
                 releaseLatch.await()
-                runCatching { holderLock.unlock() }
+                holderLock.unlock()
             }
         }
         holder.start()
-        acquireLatch.await()  // holder thread가 lock을 보유할 때까지 기다립니다.
+        runInterruptible {
+            acquireLatch.await()  // holder thread가 lock을 보유할 때까지 기다립니다.
+        }
 
         try {
             val result = suspendingService.deduct(inventoryId, 10, waitMs = 0L, leaseMs = 1000L)
-            result shouldBeInstanceOf LockNotAcquired::class
+            log.debug { "result=$result" }
+            result.shouldBeInstanceOf<LockNotAcquired>()
         } finally {
             releaseLatch.countDown()
-            holder.join(2000)
+            runInterruptible {
+                holder.join(2000)
+            }
         }
     }
 }

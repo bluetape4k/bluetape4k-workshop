@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 enum class BillingOutboxStatus {
     PENDING,
@@ -21,7 +21,7 @@ data class BillingOutboxLease(
     val eventId: UUID,
     val partitionKey: String,
     val payload: String,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -31,7 +31,7 @@ data class BillingOutboxPublishResult(
     val claimed: Int = 0,
     val published: Int = 0,
     val retryWait: Int = 0,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -47,7 +47,7 @@ interface BillingEventTransport {
     fun publish(partitionKey: String, payload: String)
 }
 
-class BillingEventTransportFailure(cause: Exception) : RuntimeException("billing_event_transport_failure", cause)
+class BillingEventTransportFailure(cause: Exception): RuntimeException("billing_event_transport_failure", cause)
 
 @Component
 class BillingOutboxPublisher(
@@ -55,11 +55,17 @@ class BillingOutboxPublisher(
     private val transport: BillingEventTransport,
     private val clock: Clock,
 ) {
+
+    private companion object: KLogging() {
+        const val DEFAULT_BATCH_SIZE = 100
+    }
+    
     fun publishPending(limit: Int = DEFAULT_BATCH_SIZE): BillingOutboxPublishResult {
         val owner = Uuid.V7.nextId().toString()
         val claimed = journal.claim(owner, clock.instant(), limit)
         var published = 0
         var retryWait = 0
+
         claimed.forEach { event ->
             try {
                 transport.publish(event.partitionKey, event.payload)
@@ -67,13 +73,11 @@ class BillingOutboxPublisher(
             } catch (failure: BillingEventTransportFailure) {
                 journal.markRetryWait(event.eventId, owner, clock.instant())
                 retryWait += 1
-                log.warn(failure) { "billing.outbox.publish.retry_wait eventId=${event.eventId}" }
+                log.warn(failure) {
+                    "billing.outbox.publish.retry_wait eventId=${event.eventId}"
+                }
             }
         }
         return BillingOutboxPublishResult(claimed.size, published, retryWait)
-    }
-
-    private companion object : KLogging() {
-        const val DEFAULT_BATCH_SIZE = 100
     }
 }

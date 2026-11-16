@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.springframework.boot.health.contributor.Health
 import org.springframework.boot.health.contributor.HealthIndicator
 import org.springframework.boot.health.contributor.Status
@@ -38,35 +40,43 @@ internal class VoucherDegradationState(
 @Component("voucherDatabaseHealthIndicator")
 internal class VoucherDatabaseHealthIndicator(
     private val dataSource: DataSource,
-) : HealthIndicator {
+): HealthIndicator {
+
+    private companion object: KLogging() {
+        private const val VALIDATION_TIMEOUT_SECONDS = 1
+    }
+
     override fun health(): Health =
         try {
-            val valid = dataSource.connection.use { it.isValid(VALIDATION_TIMEOUT_SECONDS) }
+            val valid = dataSource.connection.use { conn ->
+                conn.isValid(VALIDATION_TIMEOUT_SECONDS)
+            }
+            log.debug { "connections is valid: $valid" }
             if (valid) Health.up().build() else Health.down().build()
         } catch (_: Exception) {
             Health.down().build()
         }
-
-    private companion object {
-        private const val VALIDATION_TIMEOUT_SECONDS = 1
-    }
 }
 
 /** Redis는 advisory로 유지됩니다. 손실은 DEGRADED로 표시하지만 HTTP health는 성공으로 유지합니다. */
 @Component("redisHealthIndicator")
 internal class VoucherRedisHealthIndicator(
     private val state: VoucherDegradationState,
-) : HealthIndicator {
-    override fun health(): Health = state.health(VoucherDegradedComponent.REDIS)
+): HealthIndicator {
+    override fun health(): Health =
+        state.health(VoucherDegradedComponent.REDIS)
 }
 
 /** leader election 손실은 scheduled work를 일시 중지하지만 PostgreSQL readiness를 제거하지 않습니다. */
 @Component("leaderHealthIndicator")
 internal class VoucherLeaderHealthIndicator(
     private val state: VoucherDegradationState,
-) : HealthIndicator {
-    override fun health(): Health = state.health(VoucherDegradedComponent.LEADER)
+): HealthIndicator {
+
+    override fun health(): Health =
+        state.health(VoucherDegradedComponent.LEADER)
 }
 
 private fun VoucherDegradationState.health(component: VoucherDegradedComponent): Health =
-    if (isDegraded(component)) Health.status(VOUCHER_DEGRADED_STATUS).build() else Health.up().build()
+    if (isDegraded(component)) Health.status(VOUCHER_DEGRADED_STATUS).build()
+    else Health.up().build()

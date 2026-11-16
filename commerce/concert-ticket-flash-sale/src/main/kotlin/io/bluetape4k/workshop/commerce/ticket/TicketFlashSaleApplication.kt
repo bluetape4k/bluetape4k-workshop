@@ -10,7 +10,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 @ConfigurationPropertiesScan
 class TicketFlashSaleApplication {
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 /** concert ticket flash-sale 예제를 시작합니다. */

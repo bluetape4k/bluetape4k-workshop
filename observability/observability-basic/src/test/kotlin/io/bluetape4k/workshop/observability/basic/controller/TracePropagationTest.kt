@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.observability.basic.controller
 
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.observability.basic.AbstractBasicTest
 import org.junit.jupiter.api.Test
 import org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfigureTracing
@@ -16,7 +18,9 @@ import java.util.concurrent.TimeUnit
  * - 이 class 는 `@AutoConfigureTracing` 으로 전체 Micrometer + OpenTelemetry tracing bridge 가 활성화되도록 보장하며, 이를 통해 outbound WebClient request 에 traceparent 를 inject 할 수 있습니다.
  */
 @AutoConfigureTracing
-class TracePropagationTest : AbstractBasicTest() {
+class TracePropagationTest: AbstractBasicTest() {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `GET orders id - traceparent header propagated to downstream`() = runSuspendIO {
@@ -28,6 +32,7 @@ class TracePropagationTest : AbstractBasicTest() {
             .expectStatus().isOk
 
         val request = mockServer.takeRequest(2, TimeUnit.SECONDS)
+        log.debug { "request=$request" }
         request.shouldNotBeNull()
         request.headers["traceparent"].shouldNotBeNull()
     }

@@ -263,7 +263,7 @@ fun `consumes Floci pagination sorts matches and closes returned streams`() {
             "s3://$bucket/config/application.yml",
         ).single()
         exact.exists().shouldBeTrue()
-        exact.contentLength() shouldBeEqualTo "key=config/application.yml\n".toByteArray().size.toLong()
+        exact.contentLength() shouldBeEqualTo "key=config/application.yml\n".toUtf8Bytes().size.toLong()
         (exact.lastModified() > 0).shouldBeTrue()
         (exact is S3Resource).shouldBeTrue()
         exact.inputStream.use { it.bufferedReader().readText() } shouldBeEqualTo

@@ -13,9 +13,7 @@ class NumberService(
     @param:Autowired private val operations: StringRedisTemplate,
 ) {
 
-    companion object : KLoggingChannel() {
-        private val CURRENT_CHARSET = Charsets.UTF_8
-    }
+    companion object: KLoggingChannel()
 
     fun multiplyAndSave(number: Int) {
         log.debug { "multiply and save: number=$number" }

@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.domain.repository
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.concurrent.virtualthread.awaitAll
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -7,10 +11,6 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.AbstractDomainTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberSearchCondition
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.toMemberDTO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
@@ -20,7 +20,7 @@ class MemberRepositoryTest(
     @param:Autowired private val memberRepo: MemberRepository,
 ): AbstractDomainTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

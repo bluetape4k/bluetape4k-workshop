@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.spring.modulith.ddd.audit.fulfillment
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.spring.modulith.ddd.audit.AbstractDddOrderAuditTest
@@ -15,6 +16,7 @@ import io.bluetape4k.workshop.spring.modulith.ddd.audit.orders.PlaceOrderCommand
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.ApplicationEventPublisher
@@ -24,7 +26,8 @@ import org.springframework.modulith.events.IncompleteEventPublications
 import org.springframework.modulith.events.ResubmissionOptions
 import org.springframework.modulith.events.core.EventPublicationRepository
 import java.math.BigDecimal
-import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class FulfillmentPublicationTest(
     private val commandService: OrderCommandService,
@@ -44,7 +47,9 @@ class FulfillmentPublicationTest(
         orderRepository.deleteAll()
 
         val publicationIds = EventPublication.Status.entries
-            .flatMap { status -> eventPublicationRepository.findByStatus(status).map { it.identifier } }
+            .flatMap { status ->
+                eventPublicationRepository.findByStatus(status).map { it.identifier }
+            }
         if (publicationIds.isNotEmpty()) {
             eventPublicationRepository.deletePublications(publicationIds)
         }
@@ -55,7 +60,7 @@ class FulfillmentPublicationTest(
         val placed = commandService.place(validPlaceOrderCommand())
         val approved = commandService.approve(ApproveOrderCommand(placed.id, approvedBy = "ops-user"))
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             reservationRepository.existsById(approved.id.value).shouldBeTrue()
             reservationRepository.count() shouldBeEqualTo 1L
         }
@@ -68,8 +73,8 @@ class FulfillmentPublicationTest(
 
         val approved = commandService.approve(ApproveOrderCommand(placed.id, approvedBy = "ops-user"))
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
-            reservationRepository.existsById(approved.id.value) shouldBeEqualTo false
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
+            reservationRepository.existsById(approved.id.value).shouldBeFalse()
             eventPublicationRepository.countByStatus(EventPublication.Status.FAILED) shouldBeGreaterThan 0
         }
 
@@ -83,7 +88,7 @@ class FulfillmentPublicationTest(
             publication.event is OrderApproved
         }
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             reservationRepository.existsById(approved.id.value).shouldBeTrue()
             reservationRepository.count() shouldBeEqualTo 1L
         }
@@ -94,7 +99,7 @@ class FulfillmentPublicationTest(
         val placed = commandService.place(validPlaceOrderCommand())
         val approved = commandService.approve(ApproveOrderCommand(placed.id, approvedBy = "ops-user"))
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             reservationRepository.existsById(approved.id.value).shouldBeTrue()
         }
 
@@ -105,7 +110,7 @@ class FulfillmentPublicationTest(
             ),
         )
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             reservationRepository.count() shouldBeEqualTo 1L
         }
     }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxOutcome
@@ -13,11 +14,15 @@ class PriceEvidenceService(
     private val priceEvidence: UsagePriceEvidenceRepository,
     private val inbox: UsagePriceEvidenceInboxRepository,
 ) {
+
+    companion object: KLogging()
+
     @Transactional
     fun record(evidence: PriceEvidence) {
         priceEvidence.append(evidence)
     }
 
     @Transactional
-    fun record(event: PriceEvidenceInboxEvent): PriceEvidenceInboxOutcome = inbox.record(event)
+    fun record(event: PriceEvidenceInboxEvent): PriceEvidenceInboxOutcome =
+        inbox.record(event)
 }

@@ -4,7 +4,7 @@ import io.bluetape4k.leader.history.LeaderHistoryKey
 import io.bluetape4k.leader.history.LeaderHistorySink
 import io.bluetape4k.leader.history.LeaderLockHistoryRecord
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * `SafeLeaderHistoryRecorder`에 audit event admission만 제공하는 workshop sink입니다.
@@ -14,7 +14,7 @@ import java.util.UUID
  * 않습니다. completion/failure는 upstream `ExportingLeaderHistorySink`가 exporter로
  * 전달할 수 있도록 no-op으로 처리합니다.
  */
-internal class AdmissionOnlyLeaderHistorySink : LeaderHistorySink {
+internal class AdmissionOnlyLeaderHistorySink: LeaderHistorySink {
 
     override fun recordAcquired(record: LeaderLockHistoryRecord): LeaderHistoryKey = LeaderHistoryKey(
         historyId = UUID.randomUUID().toString(),

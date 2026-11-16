@@ -2,7 +2,11 @@ package io.bluetape4k.workshop.commerce.order.web
 
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.order.AbstractOrderLifecycleIntegrationTest
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.ignoreExceptionsInstanceOf
 import org.awaitility.kotlin.untilAsserted
@@ -10,40 +14,55 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.ObjectMapper
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 internal class OrderLifecycleWebIntegrationTest(
     private val objectMapper: ObjectMapper,
-) : AbstractOrderLifecycleIntegrationTest() {
+): AbstractOrderLifecycleIntegrationTest() {
+
+    companion object: KLogging() {
+        private const val IDEMPOTENCY_HEADER = "Idempotency-Key"
+        private const val IDEMPOTENCY_KEY = "order-key-0001"
+        private val ORDER_JSON =
+            """
+            {
+              "tenantId": "tenant-web",
+              "customerReference": "web-ref",
+              "providerMode": "SUCCESS",
+              "lines": [
+                {"sku": "sku-a", "quantity": 1, "unitPrice": 10.00},
+                {"sku": "sku-b", "quantity": 2, "unitPrice": 20.00}
+              ]
+            }
+            """.trimIndent()
+    }
+
     @Test
     fun `browser console is served from the application root`() {
-        val root =
-            webTestClient
-                .get()
-                .uri("/")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectHeader()
-                .contentTypeCompatibleWith(MediaType.TEXT_HTML)
-                .expectBody(String::class.java)
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
+        val root = webTestClient
+            .get()
+            .uri("/")
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
+            .expectBody<String>()
+            .returnResult().responseBody.shouldNotBeNull()
+
+        log.debug { "root=$root" }
         root shouldContain "Order Lifecycle Console"
 
-        val script =
-            webTestClient
-                .get()
-                .uri("/app.js")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody(String::class.java)
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
+        val script = webTestClient
+            .get()
+            .uri("/app.js")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody<String>()
+            .returnResult().responseBody.shouldNotBeNull()
+
+        log.debug { "script=$script" }
         script shouldContain "advanceFulfillment"
         script shouldContain "cancelLine"
         script shouldContain "cancellableQuantity"
@@ -52,79 +71,63 @@ internal class OrderLifecycleWebIntegrationTest(
 
     @Test
     fun `same idempotency key replays response and conflicting payload is rejected`() {
-        val first =
-            submitOrder(IDEMPOTENCY_KEY, ORDER_JSON)
-                .expectStatus()
-                .isCreated
-                .expectHeader()
-                .valueEquals("Idempotency-Replayed", "false")
-                .expectBody(String::class.java)
-                .returnResult()
+        val first = submitOrder(IDEMPOTENCY_KEY, ORDER_JSON)
+            .expectStatus().isCreated
+            .expectHeader().valueEquals("Idempotency-Replayed", "false")
+            .expectBody<String>()
+            .returnResult()
+
         val firstBody = first.responseBody.shouldNotBeNull()
         val orderId = objectMapper.readTree(firstBody).get("orderId").asString()
 
         submitOrder(IDEMPOTENCY_KEY, ORDER_JSON)
-            .expectStatus()
-            .isCreated
-            .expectHeader()
-            .valueEquals("Idempotency-Replayed", "true")
+            .expectStatus().isCreated
+            .expectHeader().valueEquals("Idempotency-Replayed", "true")
             .expectBody()
             .json(firstBody)
 
         submitOrder(IDEMPOTENCY_KEY, ORDER_JSON.replace("sku-a", "sku-conflict"))
-            .expectStatus()
-            .isEqualTo(409)
+            .expectStatus().isEqualTo(409)
             .expectBody()
-            .jsonPath("$.code")
-            .isEqualTo("IDEMPOTENCY_FINGERPRINT_CONFLICT")
+            .jsonPath("$.code").isEqualTo("IDEMPOTENCY_FINGERPRINT_CONFLICT")
 
-        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
-            .atMost(Duration.ofSeconds(60))
-            .untilAsserted {
+        await ignoreExceptionsInstanceOf IllegalStateException::class atMost 60.seconds untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", orderId)
                 .exchange()
-                .expectStatus()
-                .isOk
+                .expectStatus().isOk
                 .expectBody()
-                .jsonPath("$.order.id")
-                .isEqualTo(orderId)
-                .jsonPath("$.order.status")
-                .isEqualTo("FULFILLMENT_IN_PROGRESS")
-                .jsonPath("$.payment.revision")
-                .isEqualTo(2)
-                .jsonPath("$.fulfillments.length()")
-                .isEqualTo(2)
+                .jsonPath("$.order.id").isEqualTo(orderId)
+                .jsonPath("$.order.status").isEqualTo("FULFILLMENT_IN_PROGRESS")
+                .jsonPath("$.payment.revision").isEqualTo(2)
+                .jsonPath("$.fulfillments.length()").isEqualTo(2)
         }
     }
 
     @Test
     fun `browser commands reconcile delayed payment and keep cancellation separate from refund`() {
-        val delayed =
-            submitOrder(
-                "delayed-key-0001",
-                ORDER_JSON.replace("web-ref", "delayed-ref").replace("SUCCESS", "DELAYED_SUCCESS")
-            ).expectStatus()
-                .isCreated
-                .expectBody(String::class.java)
-                .returnResult()
+        val delayed = submitOrder(
+            "delayed-key-0001",
+            ORDER_JSON.replace("web-ref", "delayed-ref").replace("SUCCESS", "DELAYED_SUCCESS")
+        )
+            .expectStatus()
+            .isCreated
+            .expectBody<String>()
+            .returnResult()
+
         val delayedBody = objectMapper.readTree(delayed.responseBody.shouldNotBeNull())
         val delayedOrderId = delayedBody.get("orderId").asString()
         val paymentAttemptId = delayedBody.get("paymentAttemptId").asString()
 
-        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
-            .atMost(Duration.ofSeconds(60))
-            .untilAsserted {
+        await ignoreExceptionsInstanceOf IllegalStateException::class atMost 60.seconds untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
                 .exchange()
-                .expectStatus()
-                .isOk
+                .expectStatus().isOk
                 .expectBody()
-                .jsonPath("$.payment.status")
-                .isEqualTo("AUTHORIZING")
+                .jsonPath("$.payment.status").isEqualTo("AUTHORIZING")
         }
 
         webTestClient
@@ -132,24 +135,18 @@ internal class OrderLifecycleWebIntegrationTest(
             .uri("/api/v1/operations/payments/{paymentAttemptId}/reconcile-delayed", paymentAttemptId)
             .header(OrderController.WORKSHOP_OPERATOR_HEADER, OrderController.WORKSHOP_OPERATOR_VALUE)
             .exchange()
-            .expectStatus()
-            .isAccepted
+            .expectStatus().isAccepted
             .expectBody()
-            .jsonPath("$.disposition")
-            .isEqualTo("APPLIED")
+            .jsonPath("$.disposition").isEqualTo("APPLIED")
 
-        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
-            .atMost(Duration.ofSeconds(60))
-            .untilAsserted {
+        await ignoreExceptionsInstanceOf IllegalStateException::class atMost 60.seconds untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
                 .exchange()
-                .expectStatus()
-                .isOk
+                .expectStatus().isOk
                 .expectBody()
-                .jsonPath("$.payment.status")
-                .isEqualTo("SUCCEEDED")
+                .jsonPath("$.payment.status").isEqualTo("SUCCEEDED")
         }
 
         val snapshot =
@@ -157,49 +154,37 @@ internal class OrderLifecycleWebIntegrationTest(
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
                 .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody(String::class.java)
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
-        val lineId =
-            objectMapper
-                .readTree(snapshot)
-                .get("lines")
-                .get(1)
-                .get("lineId")
-                .asString()
+                .expectStatus().isOk
+                .expectBody<String>()
+                .returnResult().responseBody.shouldNotBeNull()
+
+        val lineId = objectMapper.readTree(snapshot)
+            .get("lines")
+            .get(1)
+            .get("lineId")
+            .asString()
+
         webTestClient
             .post()
             .uri("/api/v1/orders/{orderId}/lines/{lineId}/cancel", delayedOrderId, lineId)
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""{"quantity":1,"reasonCode":"CUSTOMER_REQUEST"}""")
             .exchange()
-            .expectStatus()
-            .isOk
+            .expectStatus().isOk
             .expectBody()
-            .jsonPath("$.cancellationCaseId")
-            .isNotEmpty
-            .jsonPath("$.refundCaseId")
-            .isNotEmpty
+            .jsonPath("$.cancellationCaseId").isNotEmpty
+            .jsonPath("$.refundCaseId").isNotEmpty
 
-        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
-            .atMost(Duration.ofSeconds(60))
-            .untilAsserted {
+        await ignoreExceptionsInstanceOf IllegalStateException::class atMost 60.seconds untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
                 .exchange()
-                .expectStatus()
-                .isOk
+                .expectStatus().isOk
                 .expectBody()
-                .jsonPath("$.lines[1].cancelledQuantity")
-                .isEqualTo(1)
-                .jsonPath("$.cancellations[0].status")
-                .isEqualTo("APPROVED")
-                .jsonPath("$.refunds[0].status")
-                .isEqualTo("SUCCEEDED")
+                .jsonPath("$.lines[1].cancelledQuantity").isEqualTo(1)
+                .jsonPath("$.cancellations[0].status").isEqualTo("APPROVED")
+                .jsonPath("$.refunds[0].status").isEqualTo("SUCCEEDED")
         }
     }
 
@@ -209,62 +194,50 @@ internal class OrderLifecycleWebIntegrationTest(
             .post()
             .uri("/api/v1/operations/publications/replay-failed?batchSize=1")
             .exchange()
-            .expectStatus()
-            .isBadRequest
+            .expectStatus().isBadRequest
             .expectBody()
-            .jsonPath("$.code")
-            .isEqualTo("INVALID_REQUEST")
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
 
         webTestClient
             .post()
             .uri("/api/v1/operations/publications/replay-failed?batchSize=1")
             .header(OrderController.WORKSHOP_OPERATOR_HEADER, "wrong")
             .exchange()
-            .expectStatus()
-            .isBadRequest
+            .expectStatus().isBadRequest
             .expectBody()
-            .jsonPath("$.code")
-            .isEqualTo("INVALID_REQUEST")
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
     }
 
     @Test
     fun `event stream starts asynchronously with snapshot first and accepts audit cursor`() {
-        val created =
-            submitOrder("sse-key-0001", ORDER_JSON.replace("web-ref", "sse-ref"))
-                .expectStatus()
-                .isCreated
-                .expectBody(String::class.java)
-                .returnResult()
+        val created = submitOrder("sse-key-0001", ORDER_JSON.replace("web-ref", "sse-ref"))
+            .expectStatus().isCreated
+            .expectBody<String>()
+            .returnResult()
+
         val orderId = objectMapper.readTree(created.responseBody.shouldNotBeNull()).get("orderId").asString()
 
-        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
-            .atMost(Duration.ofSeconds(60))
-            .untilAsserted {
+        await ignoreExceptionsInstanceOf IllegalStateException::class atMost 60.seconds untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", orderId)
                 .exchange()
-                .expectStatus()
-                .isOk
+                .expectStatus().isOk
                 .expectBody()
-                .jsonPath("$.order.status")
-                .isEqualTo("FULFILLMENT_IN_PROGRESS")
+                .jsonPath("$.order.status").isEqualTo("FULFILLMENT_IN_PROGRESS")
         }
 
-        val firstEvent =
-            webTestClient
+        val firstEvent = webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}/events", orderId)
                 .header("Last-Event-ID", "0")
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .exchange()
-                .expectStatus()
-                .isOk
-                .expectHeader()
-                .contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM)
-                .returnResult(String::class.java)
+            .expectStatus().isOk
+            .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM)
+            .returnResult<String>()
                 .responseBody
-                .blockFirst(Duration.ofSeconds(5))
+            .blockFirst(5.seconds())
                 .shouldNotBeNull()
         firstEvent shouldContain orderId
     }
@@ -282,20 +255,4 @@ internal class OrderLifecycleWebIntegrationTest(
             .bodyValue(json)
             .exchange()
 
-    companion object {
-        private const val IDEMPOTENCY_HEADER = "Idempotency-Key"
-        private const val IDEMPOTENCY_KEY = "order-key-0001"
-        private val ORDER_JSON =
-            """
-            {
-              "tenantId": "tenant-web",
-              "customerReference": "web-ref",
-              "providerMode": "SUCCESS",
-              "lines": [
-                {"sku": "sku-a", "quantity": 1, "unitPrice": 10.00},
-                {"sku": "sku-b", "quantity": 2, "unitPrice": 20.00}
-              ]
-            }
-            """.trimIndent()
-    }
 }

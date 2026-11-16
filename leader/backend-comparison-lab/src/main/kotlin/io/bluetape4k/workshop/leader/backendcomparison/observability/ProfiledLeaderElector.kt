@@ -31,7 +31,7 @@ class ProfiledLeaderElector(
     properties: LeaderBackendDiagnosticsProperties,
     private val delegate: LeaderElector = LocalLeaderElector(),
     private val cancellation: CancellationException = CancellationException("diagnostics probe cancelled"),
-) : LeaderElector by delegate, LeaderBackendDiagnosticsProvider {
+): LeaderElector by delegate, LeaderBackendDiagnosticsProvider {
 
     private val profile: BackendProfile = catalog.findById(properties.backendId)
     private val probeOutcome: ProbeOutcome = properties.probeOutcome
@@ -45,11 +45,11 @@ class ProfiledLeaderElector(
             unknownReason = probeOutcome.unknownReason(),
         ) {
             when (probeOutcome) {
-                ProbeOutcome.UP -> LeaderBackendConnectivityStatus.UP
+                ProbeOutcome.UP   -> LeaderBackendConnectivityStatus.UP
                 ProbeOutcome.DOWN -> LeaderBackendConnectivityStatus.DOWN
                 ProbeOutcome.UNKNOWN,
                 ProbeOutcome.UNSUPPORTED,
-                -> LeaderBackendConnectivityStatus.UNKNOWN
+                                  -> LeaderBackendConnectivityStatus.UNKNOWN
                 ProbeOutcome.EXCEPTION -> throw IllegalStateException("simulated provider failure")
                 ProbeOutcome.CANCELLED -> throw cancellation
             }
@@ -67,7 +67,7 @@ private fun BackendProfile.toDiagnosticsDescriptor(): LeaderBackendDescriptor =
         backendId = id,
         displayName = displayName,
         capabilities = when (id) {
-            "redis-lettuce" -> LeaderBackendCapabilities(
+            "redis-lettuce"    -> LeaderBackendCapabilities(
                 singleExecutionModels = NativeExecutionModels,
                 groupExecutionModels = NativeExecutionModels,
                 leaseExtension = SupportedModes,
@@ -94,7 +94,7 @@ private fun BackendProfile.toDiagnosticsDescriptor(): LeaderBackendDescriptor =
                 clockSource = LeaderBackendClockSource.PROCESS,
                 ttlMode = LeaderBackendTtlMode.CLIENT_LEASE,
             )
-            else -> error("Unsupported workshop leader profile: $id")
+            else               -> error("Unsupported workshop leader profile: $id")
         },
     )
 

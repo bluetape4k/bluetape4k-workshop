@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/coroutines")
 class CoroutineController {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val RESPONSE_BODY = "Hello World"
     }
 

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.leader.jobsafety.config
 import io.bluetape4k.leader.LeaderLeaseExtensionObservers
 import io.bluetape4k.leader.micrometer.LeaderObservationOptions
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderLeaseExtensionObserver
+import io.bluetape4k.logging.KLogging
 import io.micrometer.observation.ObservationRegistry
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -17,7 +18,9 @@ class JobSafetyLeaseExtensionObservation(
     registry: ObservationRegistry,
     options: LeaderObservationOptions,
     enabled: Boolean = true,
-) : AutoCloseable {
+): AutoCloseable {
+
+    companion object: KLogging()
 
     private val registration =
         if (enabled && !registry.isNoop) {

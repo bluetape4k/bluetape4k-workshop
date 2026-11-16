@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitMetrics
 import io.micrometer.core.instrument.Counter
@@ -23,7 +24,15 @@ internal enum class VoucherLeaderState(val metricValue: Int) {
 @Component
 internal class VoucherMetrics(
     private val registry: MeterRegistry,
-) : DatabasePermitMetrics {
+): DatabasePermitMetrics {
+
+    private companion object: KLogging() {
+        private val BOUNDED_VALUE = Regex("[A-Z][A-Z0-9_]{0,31}")
+
+        fun bounded(value: String): String =
+            value.uppercase().takeIf(BOUNDED_VALUE::matches) ?: "UNKNOWN"
+    }
+
     private val commandTimers = ConcurrentHashMap<MetricKey, Timer>()
     private val databaseRejections = ConcurrentHashMap<String, Counter>()
     private val redisDegradations = ConcurrentHashMap<String, Counter>()
@@ -36,16 +45,20 @@ internal class VoucherMetrics(
     private val leaderState = AtomicInteger(VoucherLeaderState.UNKNOWN.metricValue)
 
     init {
-        Gauge.builder("voucher.review.open", openReviews) { it.get().toDouble() }.register(registry)
+        Gauge.builder("voucher.review.open", openReviews) { it.get().toDouble() }
+            .register(registry)
         Gauge.builder("voucher.backlog.oldest.age", oldestBacklogSeconds) { it.get().toDouble() }
             .baseUnit("seconds")
             .register(registry)
         Gauge.builder("voucher.worker.last.success", workerLastSuccessEpochSeconds) { it.get().toDouble() }
             .baseUnit("seconds")
             .register(registry)
-        Gauge.builder("voucher.worker.attempts", workerAttempts) { it.get().toDouble() }.register(registry)
-        Gauge.builder("voucher.sse.active", activeSse) { it.get().toDouble() }.register(registry)
-        Gauge.builder("voucher.leader.state", leaderState) { it.get().toDouble() }.register(registry)
+        Gauge.builder("voucher.worker.attempts", workerAttempts) { it.get().toDouble() }
+            .register(registry)
+        Gauge.builder("voucher.sse.active", activeSse) { it.get().toDouble() }
+            .register(registry)
+        Gauge.builder("voucher.leader.state", leaderState) { it.get().toDouble() }
+            .register(registry)
     }
 
     fun recordCommand(
@@ -54,6 +67,7 @@ internal class VoucherMetrics(
         duration: Duration,
     ) {
         val key = MetricKey(bounded(operation), bounded(outcome))
+
         commandTimers.computeIfAbsent(key) {
             Timer.builder("voucher.command.duration")
                 .tag("operation", key.operation)
@@ -119,10 +133,4 @@ internal class VoucherMetrics(
     }
 
     private data class MetricKey(val operation: String, val outcome: String)
-
-    private companion object {
-        private val BOUNDED_VALUE = Regex("[A-Z][A-Z0-9_]{0,31}")
-
-        fun bounded(value: String): String = value.uppercase().takeIf(BOUNDED_VALUE::matches) ?: "UNKNOWN"
-    }
 }

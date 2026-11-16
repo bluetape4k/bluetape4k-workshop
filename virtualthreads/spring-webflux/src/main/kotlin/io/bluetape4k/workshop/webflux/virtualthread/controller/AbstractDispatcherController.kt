@@ -25,14 +25,15 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import tools.jackson.databind.JsonNode
+import kotlin.time.Duration.Companion.milliseconds
 
 @RestController
 abstract class AbstractDispatcherController {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         protected val faker = Faker()
 
-        protected const val DEFAULT_DELAY = 100L
+        protected val DEFAULT_DELAY = 100.milliseconds
         protected const val FLOW_SIZE = 4
     }
 

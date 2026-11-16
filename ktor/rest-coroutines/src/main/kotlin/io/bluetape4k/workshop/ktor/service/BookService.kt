@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
  */
 class BookService(private val repository: BookRepository) {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val MAX_ID_LENGTH = 128
         const val MAX_TITLE_LENGTH = 500
         const val MAX_AUTHOR_LENGTH = 200

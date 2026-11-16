@@ -1,14 +1,21 @@
 package io.bluetape4k.workshop.leader.jobsafety.audit
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.leader.LockIdentity
 import io.bluetape4k.leader.history.LeaderHistoryStatus
 import io.bluetape4k.leader.history.LeaderLockHistoryRecord
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 internal class AdmissionOnlyLeaderHistorySinkTest {
+
+    private companion object: KLogging() {
+        val ACQUIRED_AT: Instant = Instant.parse("2026-08-30T00:00:00Z")
+        val FINISHED_AT: Instant = Instant.parse("2026-08-30T00:00:01Z")
+    }
 
     @Test
     fun `admission sink returns lifecycle key without persistence`() {
@@ -41,7 +48,7 @@ internal class AdmissionOnlyLeaderHistorySinkTest {
 
         first.historyId.shouldNotBeNull()
         second.historyId.shouldNotBeNull()
-        (first.historyId == second.historyId) shouldBeEqualTo false
+        first.historyId shouldNotBeEqualTo second.historyId
     }
 
     private fun record(): LeaderLockHistoryRecord = LeaderLockHistoryRecord(
@@ -53,9 +60,4 @@ internal class AdmissionOnlyLeaderHistorySinkTest {
         status = LeaderHistoryStatus.ACQUIRED,
         slotId = "slot-a",
     )
-
-    private companion object {
-        val ACQUIRED_AT: Instant = Instant.parse("2026-08-30T00:00:00Z")
-        val FINISHED_AT: Instant = Instant.parse("2026-08-30T00:00:01Z")
-    }
 }

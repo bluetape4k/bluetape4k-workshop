@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Coroutines 에 대해서는 기본적으로 Observation 이 적용되지 않습니다.
@@ -30,9 +31,11 @@ class CoroutineController(
     @GetMapping("/todos/{id}")
     suspend fun getTodo(@PathVariable(required = true) id: Int): Todo? {
         log.debug { "Get todo[$id] in coroutines" }
-        delay(100)
-        return coroutineService.getTodo(id).apply {
-            delay(100)
-        }
+        delay(100.milliseconds)
+
+        return coroutineService.getTodo(id)
+            .apply {
+                delay(100.milliseconds)
+            }
     }
 }

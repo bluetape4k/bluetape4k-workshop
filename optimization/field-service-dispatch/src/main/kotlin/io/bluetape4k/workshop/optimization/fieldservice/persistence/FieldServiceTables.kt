@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.persistence
 
+import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEventType
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
@@ -13,6 +14,7 @@ object FieldServiceWorkersTable : Table("field_service_workers") {
     val version = long("version")
     val workerScheduleRevision = long("worker_schedule_revision")
     val unavailable = bool("unavailable")
+
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -22,6 +24,7 @@ object FieldServiceVisitsTable : Table("field_service_visits") {
     val visitId = varchar("visit_id", FieldServiceLimits.MAX_STRING_LENGTH).uniqueIndex()
     val payload = text("payload")
     val version = long("version")
+
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -33,10 +36,12 @@ object FieldServiceTravelTimesTable : Table("field_service_travel_times") {
     val toCoordinateId = varchar("to_coordinate_id", FieldServiceLimits.MAX_STRING_LENGTH)
     val travelSeconds = long("travel_seconds")
     val updatedAt = timestamp("updated_at")
+
     init {
         uniqueIndex(matrixRevision, fromCoordinateId, toCoordinateId)
         index(false, fromCoordinateId, toCoordinateId, matrixRevision)
     }
+
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -52,6 +57,7 @@ object FieldServicePlansTable : LongIdTable("field_service_plans") {
     val providerRevision = long("provider_revision").nullable()
     val requestGeneration = long("request_generation")
     val createdAt = timestamp("created_at")
+
     init {
         uniqueIndex(planId, planRevision)
         index(false, state, planRevision)
@@ -70,10 +76,12 @@ object FieldServicePlanAssignmentsTable : Table("field_service_plan_assignments"
     val workerVersion = long("worker_version")
     val workerScheduleRevision = long("worker_schedule_revision")
     val stale = bool("stale")
+
     init {
         uniqueIndex(planId, planRevision, workerId, routeOrder)
         index(false, workerId, workerScheduleRevision, routeOrder)
     }
+
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -86,6 +94,7 @@ object FieldServiceDispatchAssignmentsTable : Table("field_service_dispatch_assi
     val planRevision = long("plan_revision")
     val routeOrder = integer("route_order")
     val committedAt = timestamp("committed_at")
+
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -95,17 +104,19 @@ object FieldServiceEventsTable : Table("field_service_events") {
     val aggregateType = varchar("aggregate_type", 64)
     val aggregateId = varchar("aggregate_id", FieldServiceLimits.MAX_STRING_LENGTH)
     val eventKey = varchar("event_key", FieldServiceLimits.MAX_KEY_LENGTH)
-    val eventType = enumerationByName<io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEventType>("event_type", 32)
+    val eventType = enumerationByName<FieldServiceEventType>("event_type", 32)
     val digest = varchar("digest", 64)
     val payloadSummary = varchar("payload_summary", 240)
     val aggregateVersion = long("aggregate_version")
     val sequenceVersion = long("sequence_version")
     val createdAt = timestamp("created_at")
+
     init {
         uniqueIndex(aggregateType, aggregateId, eventKey)
         uniqueIndex(aggregateType, aggregateId, sequenceVersion)
         index(false, aggregateType, aggregateId, digest)
     }
+
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -118,6 +129,7 @@ object FieldServiceAuditsTable : Table("field_service_audits") {
     val planRevision = long("plan_revision").nullable()
     val summary = varchar("summary", 240)
     val createdAt = timestamp("created_at")
+
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -134,9 +146,11 @@ object FieldServiceOutboxTable : Table("field_service_outbox") {
     val leaseExpiresAt = timestamp("lease_expires_at").nullable()
     val lastError = varchar("last_error", 240).nullable()
     val createdAt = timestamp("created_at")
+
     init {
         index(false, status, nextAttemptAt, id)
     }
+
     override val primaryKey = PrimaryKey(id)
 }
 

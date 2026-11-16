@@ -1,16 +1,21 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireLt
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventHashMaterial
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.PersistedEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.CanonicalEventHash
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OccurredEventCursor
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.StreamAppend
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -24,23 +29,33 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 
 @Repository
 class EventStoreRepository(
     private val clock: Clock = Clock.systemUTC(),
-) : AppendOnlyEventSourcingExposedJdbcRepository<DomainEventEntity, UUID>(DomainEventEntity::class.java), EventStore {
+): AppendOnlyEventSourcingExposedJdbcRepository<DomainEventEntity, UUID>(DomainEventEntity::class),
+   EventStore {
+
+    private companion object: KLogging() {
+        const val MAX_EVENT_PAGE_SIZE = 1_000
+    }
 
     override fun appendAll(appends: List<StreamAppend>): List<PersistedEvent> {
-        require(appends.isNotEmpty()) { "appends_empty" }
+        appends.requireNotEmpty("appends")
         require(appends.map(StreamAppend::stream).distinct().size == appends.size) { "duplicate_stream_append" }
-        return appends.sortedBy(StreamAppend::stream)
-            .flatMap { append -> append(append.stream, append.expectedVersion, append.events) }
+
+        return appends
+            .sortedBy(StreamAppend::stream)
+            .flatMap { append ->
+                append(append.stream, append.expectedVersion, append.events)
+            }
     }
 
     override fun append(stream: StreamKey, expectedVersion: Long, events: List<NewEvent>): List<PersistedEvent> {
-        require(expectedVersion >= 0) { "expected_version_invalid" }
-        require(events.isNotEmpty()) { "events_empty" }
+        expectedVersion.requireZeroOrPositiveNumber("expectedVersion")
+        events.requireNotEmpty("events")
+
         val now = clock.instant()
         val head = lockHead(stream, now)
         if (head.version != expectedVersion) {
@@ -48,11 +63,22 @@ class EventStoreRepository(
         }
 
         var previousHash = head.latestHash
-        val appended = events.mapIndexed { index, event ->
-            insertEvent(stream, expectedVersion + index + 1L, event, previousHash)
-                .also { previousHash = it.eventHash }
-        }
-        updateHead(stream, expectedVersion, events.size, previousHash, now)
+        val appended = events
+            .mapIndexed { index, event ->
+                insertEvent(
+                    stream = stream,
+                    version = expectedVersion + index + 1L,
+                    event = event,
+                    previousHash = previousHash
+                ).also { previousHash = it.eventHash }
+            }
+        updateHead(
+            stream = stream,
+            expectedVersion = expectedVersion,
+            appendedCount = events.size,
+            latestHash = previousHash,
+            now = now
+        )
         return appended
     }
 
@@ -67,12 +93,20 @@ class EventStoreRepository(
             it[createdAt] = now
             it[updatedAt] = now
         }
-        val head = EventStreamHeads.selectAll().where {
-            (EventStreamHeads.tenantId eq stream.tenantId) and
-                (EventStreamHeads.streamType eq stream.streamType) and
-                (EventStreamHeads.streamId eq stream.streamId)
-        }.forUpdate().single()
-        return LockedHead(head[EventStreamHeads.streamVersion], head[EventStreamHeads.latestEventHash])
+        val head = EventStreamHeads
+            .selectAll()
+            .where {
+                (EventStreamHeads.tenantId eq stream.tenantId) and
+                        (EventStreamHeads.streamType eq stream.streamType) and
+                        (EventStreamHeads.streamId eq stream.streamId)
+            }
+            .forUpdate()
+            .single()
+
+        return LockedHead(
+            version = head[EventStreamHeads.streamVersion],
+            latestHash = head[EventStreamHeads.latestEventHash]
+        )
     }
 
     private fun insertEvent(
@@ -83,10 +117,16 @@ class EventStoreRepository(
     ): PersistedEvent {
         val hash = CanonicalEventHash.sha256(
             EventHashMaterial(
-                stream, version, event.event.eventType, event.event.schemaVersion,
-                event.payload, event.metadata, previousHash,
+                stream = stream,
+                streamVersion = version,
+                eventType = event.event.eventType,
+                schemaVersion = event.event.schemaVersion,
+                payload = event.payload,
+                metadata = event.metadata,
+                previousHash = previousHash,
             ),
         )
+
         val insert = DomainEvents.insert {
             it[id] = event.eventId
             it[tenantId] = stream.tenantId
@@ -101,13 +141,24 @@ class EventStoreRepository(
             it[eventHash] = hash
             it[occurredAt] = event.occurredAt
         }
-        val recordedAt = DomainEvents.selectAll()
+        val recordedAt = DomainEvents
+            .selectAll()
             .where { DomainEvents.id eq event.eventId }
             .single()[DomainEvents.recordedAt]
+
         return PersistedEvent(
-            event.eventId, stream, version, insert[DomainEvents.globalPosition],
-            event.event.eventType, event.event.schemaVersion, event.payload, event.metadata,
-            previousHash, hash, event.occurredAt, recordedAt,
+            eventId = event.eventId,
+            stream = stream,
+            streamVersion = version,
+            globalPosition = insert[DomainEvents.globalPosition],
+            eventType = event.event.eventType,
+            schemaVersion = event.event.schemaVersion,
+            payload = event.payload,
+            metadata = event.metadata,
+            previousHash = previousHash,
+            eventHash = hash,
+            occurredAt = event.occurredAt,
+            recordedAt = recordedAt,
         )
     }
 
@@ -121,25 +172,27 @@ class EventStoreRepository(
         val updated = EventStreamHeads.update(
             where = {
                 (EventStreamHeads.tenantId eq stream.tenantId) and
-                    (EventStreamHeads.streamType eq stream.streamType) and
-                    (EventStreamHeads.streamId eq stream.streamId) and
-                    (EventStreamHeads.streamVersion eq expectedVersion)
+                        (EventStreamHeads.streamType eq stream.streamType) and
+                        (EventStreamHeads.streamId eq stream.streamId) and
+                        (EventStreamHeads.streamVersion eq expectedVersion)
             },
         ) {
             it[streamVersion] = expectedVersion + appendedCount
             it[latestEventHash] = latestHash
             it[updatedAt] = now
         }
+
         check(updated == 1) { "stream_head_fencing_failed" }
     }
 
     override fun load(stream: StreamKey, afterVersion: Long): List<PersistedEvent> =
-        DomainEvents.selectAll()
+        DomainEvents
+            .selectAll()
             .where {
                 (DomainEvents.tenantId eq stream.tenantId) and
-                    (DomainEvents.streamType eq stream.streamType) and
-                    (DomainEvents.streamId eq stream.streamId) and
-                    (DomainEvents.streamVersion greater afterVersion)
+                        (DomainEvents.streamType eq stream.streamType) and
+                        (DomainEvents.streamId eq stream.streamId) and
+                        (DomainEvents.streamVersion greater afterVersion)
             }
             .orderBy(DomainEvents.streamVersion to SortOrder.ASC)
             .map { row ->
@@ -159,25 +212,29 @@ class EventStoreRepository(
                 )
             }
 
-    override fun latestGlobalPosition(): Long = DomainEvents.selectAll()
-        .orderBy(DomainEvents.globalPosition to SortOrder.DESC)
-        .limit(1)
-        .singleOrNull()
-        ?.get(DomainEvents.globalPosition)
-        ?: 0L
+    override fun latestGlobalPosition(): Long =
+        DomainEvents
+            .selectAll()
+            .orderBy(DomainEvents.globalPosition to SortOrder.DESC)
+            .limit(1)
+            .singleOrNull()
+            ?.get(DomainEvents.globalPosition)
+            ?: 0L
 
     override fun loadAfterGlobalPosition(afterPosition: Long, limit: Int): List<PersistedEvent> {
-        require(afterPosition >= 0) { "global_position_invalid" }
-        require(limit in 1..MAX_EVENT_PAGE_SIZE) { "event_page_size_invalid" }
-        return DomainEvents.selectAll()
+        afterPosition.requireZeroOrPositiveNumber("afterPosition")
+        limit.requireInRange(1, MAX_EVENT_PAGE_SIZE, "limit")
+
+        return DomainEvents
+            .selectAll()
             .where { DomainEvents.globalPosition greater afterPosition }
             .orderBy(DomainEvents.globalPosition to SortOrder.ASC)
             .limit(limit)
             .map { row ->
                 val stream = StreamKey(
-                    row[DomainEvents.tenantId],
-                    row[DomainEvents.streamType],
-                    row[DomainEvents.streamId],
+                    tenantId = row[DomainEvents.tenantId],
+                    streamType = row[DomainEvents.streamType],
+                    streamId = row[DomainEvents.streamId],
                 )
                 PersistedEvent(
                     eventId = row[DomainEvents.id].value,
@@ -198,19 +255,21 @@ class EventStoreRepository(
 
     override fun loadByType(query: EventTypeQuery): List<PersistedEvent> {
         require(query.startsAt < query.endsAt) { "event_range_invalid" }
-        require(query.limit in 1..MAX_EVENT_PAGE_SIZE) { "event_page_size_invalid" }
+        query.startsAt.requireLt(query.endsAt) { "query.startsAt must be less than endsAt" }
+        query.limit.requireInRange(1, MAX_EVENT_PAGE_SIZE, "query.limit")
+
         val cursor = query.after?.let {
             (DomainEvents.occurredAt greater it.occurredAt) or
-                ((DomainEvents.occurredAt eq it.occurredAt) and
-                    (DomainEvents.id greater it.eventId))
+                    ((DomainEvents.occurredAt eq it.occurredAt) and
+                            (DomainEvents.id greater it.eventId))
         }
         return DomainEvents.selectAll()
             .where {
                 (DomainEvents.tenantId eq query.tenantId) and
-                    (DomainEvents.eventType eq query.eventType) and
-                    (DomainEvents.occurredAt greaterEq query.startsAt) and
-                    (DomainEvents.occurredAt less query.endsAt) and
-                    (cursor ?: org.jetbrains.exposed.v1.core.Op.TRUE)
+                        (DomainEvents.eventType eq query.eventType) and
+                        (DomainEvents.occurredAt greaterEq query.startsAt) and
+                        (DomainEvents.occurredAt less query.endsAt) and
+                        (cursor ?: Op.TRUE)
             }
             .orderBy(
                 DomainEvents.occurredAt to SortOrder.ASC,
@@ -221,26 +280,30 @@ class EventStoreRepository(
     }
 
     private fun toPersistedEvent(row: org.jetbrains.exposed.v1.core.ResultRow): PersistedEvent {
-        val stream = StreamKey(row[DomainEvents.tenantId], row[DomainEvents.streamType], row[DomainEvents.streamId])
+        val stream = StreamKey(
+            tenantId = row[DomainEvents.tenantId],
+            streamType = row[DomainEvents.streamType],
+            streamId = row[DomainEvents.streamId]
+        )
+
         return PersistedEvent(
-            row[DomainEvents.id].value,
-            stream,
-            row[DomainEvents.streamVersion],
-            row[DomainEvents.globalPosition],
-            row[DomainEvents.eventType],
-            row[DomainEvents.schemaVersion],
-            row[DomainEvents.payload],
-            row[DomainEvents.metadata],
-            row[DomainEvents.previousHash],
-            row[DomainEvents.eventHash],
-            row[DomainEvents.occurredAt],
-            row[DomainEvents.recordedAt],
+            eventId = row[DomainEvents.id].value,
+            stream = stream,
+            streamVersion = row[DomainEvents.streamVersion],
+            globalPosition = row[DomainEvents.globalPosition],
+            eventType = row[DomainEvents.eventType],
+            schemaVersion = row[DomainEvents.schemaVersion],
+            payload = row[DomainEvents.payload],
+            metadata = row[DomainEvents.metadata],
+            previousHash = row[DomainEvents.previousHash],
+            eventHash = row[DomainEvents.eventHash],
+            occurredAt = row[DomainEvents.occurredAt],
+            recordedAt = row[DomainEvents.recordedAt],
         )
     }
 
-    private data class LockedHead(val version: Long, val latestHash: String?)
-
-    private companion object {
-        const val MAX_EVENT_PAGE_SIZE = 1_000
-    }
+    private data class LockedHead(
+        val version: Long,
+        val latestHash: String?,
+    )
 }

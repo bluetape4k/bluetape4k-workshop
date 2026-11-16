@@ -35,7 +35,8 @@ internal data class LastMileReplanReceipt(
     val result: RoutingResult?,
 )
 
-internal class LastMileProviderUnavailableException : IllegalStateException(LastMileFailureCode.PROVIDER_UNAVAILABLE.name)
+internal class LastMileProviderUnavailableException:
+    IllegalStateException(LastMileFailureCode.PROVIDER_UNAVAILABLE.name)
 
 /** provider 호출과 proposal 저장 사이의 normalized lifecycle 경계입니다. */
 @Service
@@ -45,6 +46,8 @@ internal class LastMileReplanService(
     private val outboxRepository: LastMileOutboxRepository,
     private val clock: Clock,
 ) {
+    companion object: KLogging()
+    
     private val submissions = ConcurrentHashMap<String, RoutingSubmission>()
 
     @Transactional
@@ -59,6 +62,7 @@ internal class LastMileReplanService(
         }
         val existing = submissions.putIfAbsent(command.requestId, submission)
         if (existing != null) return existing
+
         outboxRepository.save(
             LastMileOutboxRecord(
                 eventType = "ROUTING_SUBMITTED",
@@ -108,5 +112,4 @@ internal class LastMileReplanService(
 
     fun submission(requestId: String): RoutingSubmission? = submissions[requestId]
 
-    companion object : KLogging()
 }

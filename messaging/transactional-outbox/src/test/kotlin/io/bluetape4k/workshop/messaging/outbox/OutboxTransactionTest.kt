@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.completableFutureOf
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.outbox.api.OrderRequest
@@ -16,6 +17,7 @@ import io.bluetape4k.workshop.messaging.outbox.domain.OrderStatus
 import io.bluetape4k.workshop.messaging.outbox.domain.OutboxEventTable
 import io.bluetape4k.workshop.messaging.outbox.outbox.OutboxPublisher
 import io.bluetape4k.workshop.messaging.outbox.outbox.OutboxStatus
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -28,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.support.SendResult
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.concurrent.CompletableFuture
 
@@ -45,8 +48,9 @@ import java.util.concurrent.CompletableFuture
  * 6. max-retry exceeded → status 가 DEAD_LETTER 로 transition 합니다.
  * 7. duplicate publish call → idempotent 합니다. false 를 반환하고 status 는 바뀌지 않습니다.
  */
-class OutboxTransactionTest : AbstractOutboxTest() {
-    companion object : KLogging()
+class OutboxTransactionTest: AbstractOutboxTest() {
+
+    companion object: KLogging()
 
     @Autowired
     private lateinit var orderService: OrderService
@@ -60,11 +64,13 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @MockkBean(relaxed = true)
     private lateinit var kafkaTemplate: KafkaTemplate<String, String>
 
+    private val sendResult = mockk<SendResult<String, String>>()
+
     @BeforeEach
     fun stubSuccessfulSend() {
         // 기본값: Kafka send 는 성공합니다.
-        val successFuture: CompletableFuture<SendResult<String, String>> =
-            CompletableFuture.completedFuture(mockk())
+        clearMocks(sendResult)
+        val successFuture: CompletableFuture<SendResult<String, String>> = completableFutureOf(sendResult)
         every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns successFuture
     }
 
@@ -73,13 +79,13 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @Test
     fun `placeOrder creates order and outbox event in same transaction`() {
         val order = orderService.placeOrder(
-            customerId = faker.name().username(),
+            customerId = faker.credentials().username(),
             product = faker.commerce().productName(),
             quantity = faker.number().numberBetween(1, 10),
         )
 
         order.shouldNotBeNull()
-        order.id.shouldBeGreaterThan(0L)
+        order.id shouldBeGreaterThan 0L
         order.status shouldBeEqualTo OrderStatus.PENDING
 
         val eventCount = transactionTemplate.execute {
@@ -96,7 +102,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @Test
     fun `POST api-orders creates order and returns 201`() {
         val request = OrderRequest(
-            customerId = faker.name().username(),
+            customerId = faker.credentials().username(),
             product = faker.commerce().productName(),
             quantity = 3,
         )
@@ -106,8 +112,8 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             .bodyValue(request)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(OrderResponse::class.java)
-            .value { it.shouldNotBeNull().id.shouldBeGreaterThan(0L) }
+            .expectBody<OrderResponse>()
+            .value { it.shouldNotBeNull().id shouldBeGreaterThan 0L }
     }
 
     @Test
@@ -124,11 +130,13 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             .exchange()
             .expectStatus().isBadRequest
 
+        // @formatter:off
         webTestClient.post().uri("/api/orders")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""{"customerId":"compat-user","product":"compat-product","quantity":1,}""")
             .exchange()
             .expectStatus().isBadRequest
+        // @formatter:on
     }
 
     // ── 3. HTTP PUT ───────────────────────────────────────────────────────────
@@ -136,7 +144,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @Test
     fun `PUT api-orders-id-status updates order status`() {
         val order = orderService.placeOrder(
-            customerId = faker.name().username(),
+            customerId = faker.credentials().username(),
             product = faker.commerce().productName(),
             quantity = 2,
         )
@@ -146,7 +154,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             .bodyValue(UpdateStatusRequest(status = OrderStatus.CONFIRMED))
             .exchange()
             .expectStatus().isOk
-            .expectBody(OrderResponse::class.java)
+            .expectBody<OrderResponse>()
             .value { it.shouldNotBeNull().status shouldBeEqualTo OrderStatus.CONFIRMED }
     }
 
@@ -155,7 +163,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @Test
     fun `publishEvent publishes to Kafka and marks event PUBLISHED`() {
         val order = orderService.placeOrder(
-            customerId = faker.name().username(),
+            customerId = faker.credentials().username(),
             product = faker.commerce().productName(),
             quantity = 1,
         )
@@ -196,6 +204,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
         event[OutboxEventTable.payload] shouldBeEqualTo expectedPayload
 
         outboxPublisher.publishEvent(event[OutboxEventTable.id].value).shouldBeTrue()
+
         verify(exactly = 1) {
             kafkaTemplate.send(any<String>(), order.id.toString(), match { it == expectedPayload })
         }
@@ -206,7 +215,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @Test
     fun `failed publish increments retry count and sets status FAILED`() {
         val order = orderService.placeOrder(
-            customerId = faker.name().username(),
+            customerId = faker.credentials().username(),
             product = faker.commerce().productName(),
             quantity = 1,
         )
@@ -240,7 +249,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @Test
     fun `event exceeding max retries moves to DEAD_LETTER`() {
         val order = orderService.placeOrder(
-            customerId = faker.name().username(),
+            customerId = faker.credentials().username(),
             product = faker.commerce().productName(),
             quantity = 1,
         )
@@ -280,7 +289,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
     @Test
     fun `duplicate publish call is idempotent`() {
         val order = orderService.placeOrder(
-            customerId = faker.name().username(),
+            customerId = faker.credentials().username(),
             product = faker.commerce().productName(),
             quantity = 1,
         )

@@ -1,15 +1,29 @@
-@file:Suppress("MaxLineLength")
+@file:Suppress("MaxLineLength", "SqlResolve")
 
 package io.bluetape4k.workshop.commerce.voucherpool.idempotency
 
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeInstanceOf
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.jdbc.sql.singleInt
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.database.getHikariDataSource
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigrationRunner
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
@@ -27,70 +41,97 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
-import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 internal class VoucherPoolIdempotencyIntegrationTest {
-    private val schema = "voucher_idempotency_${Base58.randomString(8).lowercase()}"
-    private val dataSource = PGSimpleDataSource().apply {
-        setURL(postgres.jdbcUrl)
-        user = postgres.username ?: PostgreSQLServer.USERNAME
-        password = postgres.password ?: PostgreSQLServer.PASSWORD
-        currentSchema = schema
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+
+        private val LEASE = 30.seconds()
+        private val COMMAND_TIMEOUT = 1.minutes()
+        private val RETENTION = 24.hours()
     }
+
+    private val voucherSchema = "voucher_idempotency_${Base58.randomString(8).lowercase()}"
+
+    private val dataSource: HikariDataSource = postgres.getHikariDataSource {
+        schema = voucherSchema
+    }
+
     private lateinit var database: Database
     private lateinit var repository: JdbcVoucherPoolIdempotencyRepository
 
     @BeforeAll
     fun migrate() {
-        adminConnection().use { connection -> connection.createStatement().execute("CREATE SCHEMA $schema") }
+        adminConnection().use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.execute("CREATE SCHEMA $voucherSchema")
+            }
+        }
         VoucherPoolMigrationRunner(
-            dataSource,
-            VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
-            537005L,
+            dataSource = dataSource,
+            migration = VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
+            advisoryLockKey = 537005L,
         ).migrate()
-        dataSource.connection.use { connection ->
-            connection.createStatement().execute(
-                "CREATE TABLE voucher_pool_test_effects(effect_id UUID PRIMARY KEY, marker VARCHAR(64) NOT NULL)",
-            )
+
+        dataSource.connection.use { conn ->
+            conn.createStatement().use { stmt ->
+                stmt.execute(
+                    "CREATE TABLE voucher_pool_test_effects(" + "effect_id UUID PRIMARY KEY, " + "marker VARCHAR(64) NOT NULL" + ")",
+                )
+            }
         }
         database = Database.connect(dataSource)
-        repository = JdbcVoucherPoolIdempotencyRepository(digestService(), LEASE, COMMAND_TIMEOUT, RETENTION)
+        repository = JdbcVoucherPoolIdempotencyRepository(
+            digests = digestService(), lease = LEASE, commandTimeout = COMMAND_TIMEOUT, descriptorRetention = RETENTION
+        )
     }
 
     @AfterAll
     fun cleanup() {
-        adminConnection().use { connection -> connection.createStatement().execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
+        adminConnection().use { conn ->
+            conn.createStatement().execute("DROP SCHEMA IF EXISTS $voucherSchema CASCADE")
+        }
+
+        dataSource.close()
     }
 
     @BeforeEach
     fun resetIdempotencyFixtures() {
         dataSource.connection.use { connection ->
-            connection.createStatement().execute(
-                "TRUNCATE voucher_pool_http_idempotency,voucher_pool_command_tombstones,voucher_pool_test_effects",
-            )
+            connection.createStatement().use { stmt ->
+                stmt.execute(
+                    "TRUNCATE voucher_pool_http_idempotency,voucher_pool_command_tombstones,voucher_pool_test_effects",
+                )
+            }
         }
     }
 
     @Test
     fun `same key and fingerprint replays while a different fingerprint conflicts`() {
         val fixture = fixture("same-replay")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val owner =
+            tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
         val descriptor = descriptor(fixture.effectId)
 
-        tx { repository.finalize(owner.owner, descriptor, EffectReference.effect(fixture.effectId)) }.shouldBeTrue()
-        tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) } shouldBeEqualTo
-            IdempotencyDecision.Replay(descriptor)
+        tx {
+            repository.finalize(owner.owner, descriptor, EffectReference.effect(fixture.effectId))
+        }.shouldBeTrue()
+
+        tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        } shouldBeEqualTo IdempotencyDecision.Replay(descriptor)
+
         tx {
             repository.acquire(
                 fixture.scope,
@@ -103,14 +144,20 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     @Test
     fun `active owner blocks duplicate execution and stale owner is taken over`() {
         val fixture = fixture("stale-takeover")
-        val first = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val first = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
 
         val active = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
-        (active as IdempotencyDecision.InProgress).retryAfter.isNegative.shouldBeFalse()
-        expireLease(first.owner)
-        val second = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        active.shouldBeInstanceOf<IdempotencyDecision.InProgress>().retryAfter.isNegative.shouldBeFalse()
 
-        (first.owner == second.owner).shouldBeFalse()
+        expireLease(first.owner)
+        val second = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
+        first.owner shouldNotBeEqualTo second.owner
+
         assertFailsWith<IdempotencyOwnershipLostException> {
             tx {
                 insertEffect(fixture.effectId, "stale-owner-must-rollback")
@@ -127,10 +174,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     @Test
     fun `retryable release allows the same fingerprint to acquire a fresh owner`() {
         val fixture = fixture("retryable-release")
-        val first = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val first =
+            tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
 
         tx { repository.releaseRetryable(first.owner) }.shouldBeTrue()
-        val second = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val second =
+            tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
 
         (first.owner == second.owner).shouldBeFalse()
     }
@@ -138,7 +187,9 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     @Test
     fun `business marker descriptor and tombstone commit atomically`() {
         val fixture = fixture("same-transaction")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
 
         tx {
             repository.lockOwnerForExecution(owner.owner)
@@ -148,14 +199,18 @@ internal class VoucherPoolIdempotencyIntegrationTest {
 
         effectCount(fixture.effectId) shouldBeEqualTo 1
         tombstoneCount(owner.owner) shouldBeEqualTo 1
-        tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) } shouldBeEqualTo
-            IdempotencyDecision.Replay(descriptor(fixture.effectId))
+
+        tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        } shouldBeEqualTo IdempotencyDecision.Replay(descriptor(fixture.effectId))
     }
 
     @Test
     fun `commit loss rolls back business marker descriptor and tombstone together`() {
         val fixture = fixture("commit-loss")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
 
         assertFailsWith<SimulatedCommitLoss> {
             tx {
@@ -169,22 +224,24 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         effectCount(fixture.effectId) shouldBeEqualTo 0
         tombstoneCount(owner.owner) shouldBeEqualTo 0
         descriptorCount(owner.owner) shouldBeEqualTo 0
-        tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
-            .let { it is IdempotencyDecision.InProgress }.shouldBeTrue()
+
+        tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.InProgress>()
     }
 
     @Test
     fun `elapsed deadline inside one business transaction rejects finalize and rolls back its marker`() {
         val shortRepository = JdbcVoucherPoolIdempotencyRepository(
-            digestService(),
-            lease = Duration.ofMillis(250),
-            commandTimeout = Duration.ofMillis(400),
-            descriptorRetention = Duration.ofSeconds(1),
+            digests = digestService(),
+            lease = 250.millis(),
+            commandTimeout = 400.millis(),
+            descriptorRetention = 1.seconds(),
         )
         val fixture = fixture("elapsed-deadline")
         val owner = tx {
-            shortRepository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute
-        }
+            shortRepository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
 
         assertFailsWith<IdempotencyOwnershipLostException> {
             tx {
@@ -207,18 +264,24 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     @Test
     fun `descriptor purge retains a replay fence and existing effect reference`() {
         val fixture = fixture("purge-fence")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
-        tx { repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId)) }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
+        tx {
+            repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
+        }
         expireDescriptor(owner.owner)
 
         tx { repository.purgeDescriptors(limit = 1) } shouldBeEqualTo 1
-        tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) } shouldBeEqualTo
-            IdempotencyDecision.Expired(fixture.effectId, null)
+        tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        } shouldBeEqualTo IdempotencyDecision.Expired(fixture.effectId, null)
         tx {
             repository.acquire(
-                fixture.scope,
-                fixture.rawKey,
-                VoucherPoolFingerprint.command("reserve", mapOf("campaign" to "changed")),
+                scope = fixture.scope,
+                rawKey = fixture.rawKey,
+                fingerprint = VoucherPoolFingerprint.command("reserve", mapOf("campaign" to "changed")),
             )
         } shouldBeEqualTo IdempotencyDecision.FingerprintConflict
     }
@@ -226,7 +289,10 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     @Test
     fun `purge refuses descriptor deletion when a completed row has no durable tombstone`() {
         val fixture = fixture("missing-tombstone")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
         completeWithoutTombstone(owner.owner, descriptorJson(fixture.effectId))
 
         tx { repository.purgeDescriptors(limit = 1) } shouldBeEqualTo 0
@@ -236,22 +302,32 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     @Test
     fun `command tombstones reject update and delete for tenant lifetime`() {
         val fixture = fixture("immutable-tombstone")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
-        tx { repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId)) }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
+        tx {
+            repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
+        }
 
         assertFailsWith<SQLException> {
             mutateTombstone(owner.owner, "UPDATE voucher_pool_command_tombstones SET key_version=key_version+1")
         }
+
         assertFailsWith<SQLException> {
             mutateTombstone(owner.owner, "DELETE FROM voucher_pool_command_tombstones")
         }
+
         tombstoneCount(owner.owner) shouldBeEqualTo 1
     }
 
     @Test
     fun `tombstone key version mismatch fails closed during finalize lookup and purge`() {
         val fixture = fixture("wrong-key-version")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
         insertTombstone(owner.owner, fixture.effectId, owner.owner.keyVersion + 1)
 
         val finalizeFailure = assertFailsWith<IdempotencyTombstoneKeyVersionException> {
@@ -261,10 +337,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
                 repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
             }
         }
-        finalizeFailure.message.orEmpty() shouldNotContain owner.owner.keyVersion.toString()
+        log.debug { "finalizeFailure: $finalizeFailure" }
+        finalizeFailure.message shouldNotContain owner.owner.keyVersion.toString()
         effectCount(fixture.effectId) shouldBeEqualTo 0
 
         completeWithoutTombstone(owner.owner, descriptorJson(fixture.effectId))
+
         assertFailsWith<IdempotencyTombstoneKeyVersionException> {
             tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
         }
@@ -287,23 +365,36 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         malformed.forEachIndexed { index, json ->
             val fixture = fixture("malformed-descriptor-$index")
             val owner = tx {
-                repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute
+                repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+            }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
+            tx {
+                repository.finalize(
+                    owner = owner.owner,
+                    descriptor = descriptor(fixture.effectId),
+                    effect = EffectReference.effect(fixture.effectId)
+                )
             }
-            tx { repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId)) }
             replaceDescriptor(owner.owner, json)
 
             val failure = assertFailsWith<IdempotencyDescriptorCorruptedException> {
                 tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
             }
-            failure.message.orEmpty() shouldNotContain "must-not-leak"
+            log.debug { "failure: $failure" }
+            failure.message shouldNotContain "must-not-leak"
         }
     }
 
     @Test
     fun `purge skips a descriptor while its tombstone row is locked`() {
         val fixture = fixture("locked-tombstone")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
-        tx { repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId)) }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
+        tx {
+            repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
+        }
         expireDescriptor(owner.owner)
 
         dataSource.connection.use { lockingConnection ->
@@ -312,7 +403,9 @@ internal class VoucherPoolIdempotencyIntegrationTest {
                 "SELECT 1 FROM voucher_pool_command_tombstones WHERE tenant_id=? AND operation=? AND scoped_key_digest=? FOR UPDATE",
             ).use { statement ->
                 owner.owner.bindScope(statement)
-                statement.executeQuery().use { result -> result.next().shouldBeTrue() }
+                statement.executeQuery().use { result ->
+                    result.next().shouldBeTrue()
+                }
             }
             tx { repository.purgeDescriptors(limit = 1) } shouldBeEqualTo 0
             lockingConnection.commit()
@@ -325,15 +418,16 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     fun `concurrent first acquire grants exactly one owner`() {
         val fixture = fixture("concurrent-acquire")
         val barrier = CyclicBarrier(9)
+
         val decisions = Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-            val futures = (1..8).map {
+            val futures = List(8) {
                 executor.submit<IdempotencyDecision> {
-                    barrier.await(5, TimeUnit.SECONDS)
+                    barrier.await(5.seconds)
                     tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
                 }
             }
-            barrier.await(5, TimeUnit.SECONDS)
-            futures.map { it.get(10, TimeUnit.SECONDS) }
+            barrier.await(5.seconds)
+            futures.map { it.get(10.seconds) }
         }
 
         decisions.count { it is IdempotencyDecision.Execute } shouldBeEqualTo 1
@@ -343,36 +437,50 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     @Test
     fun `concurrent purge and retry never grants a second execution`() {
         val fixture = fixture("concurrent-purge")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
-        tx { repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId)) }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
+        tx {
+            repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
+        }
         expireDescriptor(owner.owner)
         val barrier = CyclicBarrier(3)
 
         val retry = Executors.newVirtualThreadPerTaskExecutor().use { executor ->
             val purge = executor.submit<Int> {
-                barrier.await(5, TimeUnit.SECONDS)
+                barrier.await(5.seconds)
                 tx { repository.purgeDescriptors(limit = 1) }
             }
             val acquire = executor.submit<IdempotencyDecision> {
-                barrier.await(5, TimeUnit.SECONDS)
+                barrier.await(5.seconds)
                 tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
             }
-            barrier.await(5, TimeUnit.SECONDS)
-            val decision = acquire.get(10, TimeUnit.SECONDS)
-            purge.get(10, TimeUnit.SECONDS)
+            barrier.await(5.seconds)
+            val decision = acquire.get(10.seconds)
+            purge.get(10.seconds)
             decision
         }
 
-        (retry is IdempotencyDecision.Execute).shouldBeFalse()
+        retry.shouldNotBeInstanceOf<IdempotencyDecision.Execute>()
+
         tx { repository.purgeDescriptors(limit = 1) }
-        tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) } shouldBeEqualTo
-            IdempotencyDecision.Expired(fixture.effectId, null)
+        tx {
+            repository.acquire(
+                scope = fixture.scope,
+                rawKey = fixture.rawKey,
+                fingerprint = fixture.fingerprint
+            )
+        } shouldBeEqualTo IdempotencyDecision.Expired(fixture.effectId, null)
     }
 
     @Test
     fun `terminal error replay fence retains only bounded code after descriptor purge`() {
         val fixture = fixture("terminal-error")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
+
         val terminal = VoucherPoolErrorCode.POOL_EXHAUSTED
         tx {
             repository.finalize(
@@ -384,23 +492,38 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         expireDescriptor(owner.owner)
         tx { repository.purgeDescriptors(limit = 1) }
 
-        tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) } shouldBeEqualTo
-            IdempotencyDecision.Expired(null, terminal)
+        tx {
+            repository.acquire(
+                fixture.scope,
+                fixture.rawKey,
+                fixture.fingerprint
+            )
+        } shouldBeEqualTo IdempotencyDecision.Expired(null, terminal)
     }
 
     @Test
     fun `storage excludes raw keys owner capabilities and arbitrary response bodies`() {
         val fixture = fixture("raw-storage", rawKey = "never-store-this-idempotency-key")
-        val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
-        tx { repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId)) }
+        val owner = tx {
+            repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint)
+        }.shouldBeInstanceOf<IdempotencyDecision.Execute>()
 
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "SELECT descriptor::text,encode(scoped_key_digest,'hex'),encode(owner_token_digest,'hex') FROM voucher_pool_http_idempotency WHERE tenant_id=? AND operation=?",
-            ).use { statement ->
-                statement.setString(1, fixture.scope.tenantId)
-                statement.setString(2, fixture.scope.operation)
-                statement.executeQuery().use { result ->
+        tx {
+            repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
+        }
+
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(
+                """
+                SELECT descriptor::text, encode(scoped_key_digest,'hex'),encode(owner_token_digest,'hex') 
+                FROM voucher_pool_http_idempotency 
+                WHERE tenant_id=? AND operation=?
+                """.trimIndent(),
+            ).use { stmt ->
+                stmt.setString(1, fixture.scope.tenantId)
+                stmt.setString(2, fixture.scope.operation)
+
+                stmt.executeQuery().use { result ->
                     result.next()
                     result.getString(1) shouldNotContain fixture.rawKey
                     result.getString(2) shouldNotContain fixture.rawKey
@@ -408,6 +531,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
                 }
             }
         }
+        log.debug { "owner: ${owner.owner}" }
         owner.owner.toString() shouldNotContain "never-store"
     }
 
@@ -446,56 +570,81 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     private fun descriptor(effectId: UUID): SafeResponseDescriptor =
         SafeResponseDescriptor.success(status = 201, outcome = "RESERVED", effectId = effectId, revision = 1)
 
-    private fun expireLease(owner: IdempotencyOwner) = updateOwnerRow(
-        owner,
-        "UPDATE voucher_pool_http_idempotency SET lease_until=transaction_timestamp()-interval '1 second' WHERE tenant_id=? AND operation=? AND scoped_key_digest=?",
-    )
+    private fun expireLease(owner: IdempotencyOwner) {
+        updateOwnerRow(
+            owner,
+            """
+            UPDATE voucher_pool_http_idempotency 
+            SET lease_until=transaction_timestamp()-interval '1 second' 
+            WHERE tenant_id=? 
+              AND operation=? 
+              AND scoped_key_digest=?
+            """.trimIndent(),
+        )
+    }
 
-    private fun expireDescriptor(owner: IdempotencyOwner) = updateOwnerRow(
-        owner,
-        "UPDATE voucher_pool_http_idempotency SET expires_at=transaction_timestamp()-interval '1 second' WHERE tenant_id=? AND operation=? AND scoped_key_digest=?",
-    )
+    private fun expireDescriptor(owner: IdempotencyOwner) {
+        updateOwnerRow(
+            owner,
+            """
+            UPDATE voucher_pool_http_idempotency 
+               SET expires_at=transaction_timestamp()-interval '1 second' 
+             WHERE tenant_id=? 
+               AND operation=? 
+               AND scoped_key_digest=?
+            """.trimIndent(),
+        )
+    }
 
     private fun completeWithoutTombstone(owner: IdempotencyOwner, descriptorJson: String) {
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """UPDATE voucher_pool_http_idempotency
-                    SET status='COMPLETED',owner_token_digest=NULL,lease_until=NULL,descriptor=?::jsonb,
-                        expires_at=statement_timestamp()-interval '1 second'
-                    WHERE tenant_id=? AND operation=? AND scoped_key_digest=?""",
-            ).use { statement ->
-                statement.setString(1, descriptorJson)
-                owner.bindScope(statement, start = 2)
-                statement.executeUpdate() shouldBeEqualTo 1
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(
+                """
+                UPDATE voucher_pool_http_idempotency
+                   SET status='COMPLETED',
+                       owner_token_digest=NULL,
+                       lease_until=NULL,
+                       descriptor=?::jsonb,
+                       expires_at=statement_timestamp()-interval '1 second'
+                WHERE tenant_id=? 
+                  AND operation=? 
+                  AND scoped_key_digest=?
+                """.trimIndent(),
+            ).use { stmt ->
+                stmt.setString(1, descriptorJson)
+                owner.bindScope(stmt, start = 2)
+                stmt.executeUpdate() shouldBeEqualTo 1
             }
         }
     }
 
     private fun mutateTombstone(owner: IdempotencyOwner, mutation: String) {
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(
                 "$mutation WHERE tenant_id=? AND operation=? AND scoped_key_digest=?",
-            ).use { statement ->
-                owner.bindScope(statement)
-                statement.executeUpdate()
+            ).use { stmt ->
+                owner.bindScope(stmt)
+                stmt.executeUpdate()
             }
         }
     }
 
     private fun insertTombstone(owner: IdempotencyOwner, effectId: UUID, keyVersion: Int) {
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """INSERT INTO voucher_pool_command_tombstones
-                    (tenant_id,operation,key_version,scoped_key_digest,fingerprint,effect_id,terminal_code)
-                    VALUES (?,?,?,?,?,?,NULL)""",
-            ).use { statement ->
-                statement.setString(1, owner.scope.tenantId)
-                statement.setString(2, owner.scope.operation)
-                statement.setInt(3, keyVersion)
-                statement.setBytes(4, owner.copyScopedKeyDigest())
-                statement.setBytes(5, owner.fingerprint.copyBytes())
-                statement.setObject(6, effectId)
-                statement.executeUpdate() shouldBeEqualTo 1
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(
+                """
+                INSERT INTO voucher_pool_command_tombstones
+                (tenant_id,operation,key_version,scoped_key_digest,fingerprint,effect_id,terminal_code)
+                VALUES (?,?,?,?,?,?,NULL)
+                """.trimIndent(),
+            ).use { stmt ->
+                stmt.setString(1, owner.scope.tenantId)
+                stmt.setString(2, owner.scope.operation)
+                stmt.setInt(3, keyVersion)
+                stmt.setBytes(4, owner.copyScopedKeyDigest())
+                stmt.setBytes(5, owner.fingerprint.copyBytes())
+                stmt.setObject(6, effectId)
+                stmt.executeUpdate() shouldBeEqualTo 1
             }
         }
     }
@@ -503,9 +652,17 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     private fun replaceDescriptor(owner: IdempotencyOwner, descriptorJson: String) {
         updateOwnerRow(
             owner,
-            "UPDATE voucher_pool_http_idempotency SET descriptor=?::jsonb WHERE tenant_id=? AND operation=? AND scoped_key_digest=?",
+            """
+            UPDATE voucher_pool_http_idempotency 
+               SET descriptor=?::jsonb 
+             WHERE tenant_id=? 
+               AND operation=? 
+               AND scoped_key_digest=?
+               """.trimIndent(),
             scopeStart = 2,
-        ) { statement -> statement.setString(1, descriptorJson) }
+        ) { stmt ->
+            stmt.setString(1, descriptorJson)
+        }
     }
 
     private fun descriptorJson(effectId: UUID): String =
@@ -517,11 +674,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         scopeStart: Int = 1,
         bindPrefix: (java.sql.PreparedStatement) -> Unit = {},
     ) {
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(sql).use { statement ->
-                bindPrefix(statement)
-                owner.bindScope(statement, start = scopeStart)
-                statement.executeUpdate() shouldBeEqualTo 1
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                bindPrefix(stmt)
+                owner.bindScope(stmt, start = scopeStart)
+
+                stmt.executeUpdate() shouldBeEqualTo 1
             }
         }
     }
@@ -533,60 +691,93 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     private fun insertEffect(effectId: UUID, marker: String) {
-        val connection = currentConnection()
-        connection.prepareStatement("INSERT INTO voucher_pool_test_effects(effect_id,marker) VALUES (?,?)").use {
-            it.setObject(1, effectId)
-            it.setString(2, marker)
-            it.executeUpdate()
+        val sql = "INSERT INTO voucher_pool_test_effects(effect_id,marker) VALUES (?,?)"
+
+        val conn = currentConnection()
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setObject(1, effectId)
+            stmt.setString(2, marker)
+            stmt.executeUpdate()
         }
     }
 
-    private fun currentConnection(): Connection = TransactionManager.current().connection.connection as Connection
+    private fun currentConnection(): Connection =
+        TransactionManager.currentOrNull()
+            ?.connection
+            ?.connection as? Connection ?: error("Expected a connection")
 
-    private fun effectCount(effectId: UUID): Int = scalarCount(
-        "SELECT count(*) FROM voucher_pool_test_effects WHERE effect_id=?",
-    ) { it.setObject(1, effectId) }
+    private fun effectCount(effectId: UUID): Int {
+        val sql = "SELECT count(*) FROM voucher_pool_test_effects WHERE effect_id=?"
+        return scalarCount(sql) {
+            it.setObject(1, effectId)
+        }
+    }
 
-    private fun tombstoneCount(owner: IdempotencyOwner): Int = scalarCount(
-        "SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id=? AND operation=? AND scoped_key_digest=?",
-    ) { statement -> owner.bindScope(statement) }
+    private fun tombstoneCount(owner: IdempotencyOwner): Int {
+        val sql =
+            "SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id=? AND operation=? AND scoped_key_digest=?"
+        return scalarCount(sql) { stmt ->
+            owner.bindScope(stmt)
+        }
+    }
 
-    private fun descriptorCount(owner: IdempotencyOwner): Int = scalarCount(
-        "SELECT count(*) FROM voucher_pool_http_idempotency WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND descriptor IS NOT NULL",
-    ) { statement -> owner.bindScope(statement) }
+    private fun descriptorCount(owner: IdempotencyOwner): Int {
+        val sql = """
+            SELECT count(*) 
+              FROM voucher_pool_http_idempotency 
+             WHERE tenant_id=? 
+               AND operation=? 
+               AND scoped_key_digest=? 
+               AND descriptor IS NOT NULL
+            """.trimIndent()
 
-    private fun idempotencyCount(): Int = scalarCount(
-        "SELECT count(*) FROM voucher_pool_http_idempotency",
-    ) { }
+        return scalarCount(sql) { stmt ->
+            owner.bindScope(stmt)
+        }
+    }
 
-    private fun scalarCount(sql: String, bind: (java.sql.PreparedStatement) -> Unit): Int =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(sql).use { statement ->
-                bind(statement)
-                statement.executeQuery().use { result -> result.next(); result.getInt(1) }
+    private fun idempotencyCount(): Int {
+        return scalarCount("SELECT count(*) FROM voucher_pool_http_idempotency")
+    }
+
+    private inline fun scalarCount(sql: String, bind: (java.sql.PreparedStatement) -> Unit = {}): Int {
+        return dataSource.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                bind(stmt)
+                stmt.executeQuery().use { result ->
+                    result.singleInt()
+                }
             }
         }
+    }
 
-    private fun <T> tx(block: () -> T): T = transaction(database) { block() }
+    private inline fun <T> tx(crossinline block: () -> T): T {
+        return transaction(database) {
+            block()
+        }
+    }
 
-    private fun digestService(): VoucherDigestService = VoucherDigestService(
-        stableDedupKey = DigestKey.of(7, keyBytes(7)),
-        commandTombstoneKey = DigestKey.of(4, keyBytes(4)),
-        rotatingKeys = mapOf(
-            DigestPurpose.VERIFICATION to DigestKeyRing.of(DigestKey.of(1, keyBytes(1))),
-            DigestPurpose.USER_IDENTITY to DigestKeyRing.of(DigestKey.of(2, keyBytes(2))),
-            DigestPurpose.REDIS_SIGNAL to DigestKeyRing.of(DigestKey.of(3, keyBytes(3))),
-            DigestPurpose.AUDIT to DigestKeyRing.of(DigestKey.of(5, keyBytes(5))),
-        ),
-    )
+    private fun digestService(): VoucherDigestService =
+        VoucherDigestService(
+            stableDedupKey = DigestKey.of(7, keyBytes(7)),
+            commandTombstoneKey = DigestKey.of(4, keyBytes(4)),
+            rotatingKeys = mapOf(
+                DigestPurpose.VERIFICATION to DigestKeyRing.of(DigestKey.of(1, keyBytes(1))),
+                DigestPurpose.USER_IDENTITY to DigestKeyRing.of(DigestKey.of(2, keyBytes(2))),
+                DigestPurpose.REDIS_SIGNAL to DigestKeyRing.of(DigestKey.of(3, keyBytes(3))),
+                DigestPurpose.AUDIT to DigestKeyRing.of(DigestKey.of(5, keyBytes(5))),
+            ),
+        )
 
-    private fun keyBytes(seed: Int) = ByteArray(32) { (seed + it).toByte() }
+    private fun keyBytes(seed: Int): ByteArray =
+        ByteArray(32) { (seed + it).toByte() }
 
-    private fun adminConnection() = DriverManager.getConnection(
-        postgres.jdbcUrl,
-        postgres.username ?: PostgreSQLServer.USERNAME,
-        postgres.password ?: PostgreSQLServer.PASSWORD,
-    )
+    private fun adminConnection(): Connection =
+        DriverManager.getConnection(
+            postgres.jdbcUrl,
+            postgres.username ?: PostgreSQLServer.USERNAME,
+            postgres.password ?: PostgreSQLServer.PASSWORD,
+        )
 
     private data class Fixture(
         val scope: CommandScope,
@@ -595,12 +786,6 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         val effectId: UUID,
     )
 
-    private class SimulatedCommitLoss : RuntimeException()
+    private class SimulatedCommitLoss: RuntimeException()
 
-    companion object {
-        private val postgres = PostgreSQLServer.Launcher.postgres
-        private val LEASE = Duration.ofSeconds(30)
-        private val COMMAND_TIMEOUT = Duration.ofMinutes(1)
-        private val RETENTION = Duration.ofHours(24)
-    }
 }

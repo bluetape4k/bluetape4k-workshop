@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.optimization.planning.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.planning.PlanningContractsApplication
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
@@ -22,7 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @SpringBootTest(
     classes = [PlanningContractsApplication::class],
@@ -33,6 +36,19 @@ internal class PlanningRequestServiceTest @Autowired constructor(
     private val requestRepository: PlanningRequestRepository,
     private val outboxRepository: PlanningOutboxRepository,
 ) {
+
+    companion object: KLogging() {
+        private val postgres = PostgreSQLServer.Launcher.postgres
+        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { postgres.password.shouldNotBeNull() }
+        }
+    }
 
     @BeforeEach
     fun resetSchema() {
@@ -57,8 +73,9 @@ internal class PlanningRequestServiceTest @Autowired constructor(
     @Test
     fun `request and outbox are committed together`() {
         val created = service.create(command(), REQUEST_ID)
-
+        log.debug { "created=$created" }
         created.id shouldBeEqualTo REQUEST_ID
+
         transaction {
             requestRepository.count() shouldBeEqualTo 1L
             outboxRepository.count() shouldBeEqualTo 1L
@@ -99,24 +116,12 @@ internal class PlanningRequestServiceTest @Autowired constructor(
         }
     }
 
-    private fun command() = CreatePlanningRequest(
-        aggregateId = "roster-42",
-        aggregateVersion = 7,
-        datasetId = "dataset-42",
-        parentRevision = null,
-        provider = PlanningProvider.FAKE,
-    )
-
-    companion object {
-        private val postgres = PostgreSQLServer.Launcher.postgres
-        private val REQUEST_ID = UUID.fromString("019c6b9e-4dc0-7e73-9cf8-84ecfda3fd8b")
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
-            registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
-        }
-    }
+    private fun command(): CreatePlanningRequest =
+        CreatePlanningRequest(
+            aggregateId = "roster-42",
+            aggregateVersion = 7,
+            datasetId = "dataset-42",
+            parentRevision = null,
+            provider = PlanningProvider.FAKE,
+        )
 }

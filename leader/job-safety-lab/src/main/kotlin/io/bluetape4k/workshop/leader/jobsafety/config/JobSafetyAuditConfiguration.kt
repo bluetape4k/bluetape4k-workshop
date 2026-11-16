@@ -12,6 +12,7 @@ import io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions
 import io.bluetape4k.leader.audit.http.LeaderAuditTrustedHttpsEndpoint
 import io.bluetape4k.leader.history.SafeLeaderHistoryRecorder
 import io.bluetape4k.leader.micrometer.audit.MicrometerLeaderAuditExporter
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.audit.AdmissionOnlyLeaderHistorySink
 import io.bluetape4k.workshop.leader.jobsafety.audit.BoundedAuditPayloadStore
 import io.bluetape4k.workshop.leader.jobsafety.audit.InMemoryAuditHttpClient
@@ -40,6 +41,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JobSafetyAuditProperties::class)
 class JobSafetyAuditConfiguration {
+
+    companion object: KLogging()
 
     @Bean
     fun jobSafetyAuditPayloadStore(properties: JobSafetyAuditProperties): BoundedAuditPayloadStore =

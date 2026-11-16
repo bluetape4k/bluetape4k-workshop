@@ -4,9 +4,13 @@ import io.bluetape4k.exposed.core.auditable.Auditable
 import io.bluetape4k.exposed.core.auditable.AuditableLongIdTable
 import io.bluetape4k.exposed.core.auditable.UserContext
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
@@ -27,7 +31,7 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal enum class IdempotencyStatus {
     IN_PROGRESS,
@@ -86,7 +90,7 @@ internal data class StoredHttpResponse(
     val aggregateRevision: Long,
     val generationKeyVersion: Int?,
     val verificationKeyVersion: Int?,
-) : Serializable {
+): Serializable {
     init {
         require(status in 100..599) { "response status must be a valid HTTP status" }
         require(aggregateRevision >= 0) { "aggregateRevision must not be negative" }
@@ -99,19 +103,18 @@ internal data class StoredHttpResponse(
 
     companion object {
         private const val MAX_HEADERS = 4
-        private val ALLOWED_RESPONSE_HEADERS =
-            setOf(
-                "Content-Type",
-                "ETag",
-                "Location",
-                "Retry-After",
-                "X-Workshop-Campaign-Descriptor",
-                "X-Workshop-Claim-Descriptor",
-                "X-Workshop-Allocation-Descriptor",
-                "X-Workshop-Reconciliation-Result",
-                "X-Workshop-Fixture-Evidence",
-                "X-Workshop-Fixture-Reset-Result",
-            )
+        private val ALLOWED_RESPONSE_HEADERS = setOf(
+            "Content-Type",
+            "ETag",
+            "Location",
+            "Retry-After",
+            "X-Workshop-Campaign-Descriptor",
+            "X-Workshop-Claim-Descriptor",
+            "X-Workshop-Allocation-Descriptor",
+            "X-Workshop-Reconciliation-Result",
+            "X-Workshop-Fixture-Evidence",
+            "X-Workshop-Fixture-Reset-Result",
+        )
         private const val serialVersionUID: Long = 1L
     }
 }
@@ -122,7 +125,7 @@ internal data class IdempotencyScope(
     val operation: String,
     val resourceId: String,
     val keyDigest: Digest,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -142,31 +145,33 @@ internal data class IdempotencyRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
 
-internal sealed interface IdempotencyAcquireResult : Serializable {
+internal sealed interface IdempotencyAcquireResult: Serializable {
     data class Owner(
         val ownerToken: OwnerToken,
         val leaseUntil: Instant,
-    ) : IdempotencyAcquireResult
+    ): IdempotencyAcquireResult
 
     data class Replay(
         val response: StoredHttpResponse,
-    ) : IdempotencyAcquireResult
+    ): IdempotencyAcquireResult
 
     data class InProgress(
         val retryAfter: Duration,
-    ) : IdempotencyAcquireResult
+    ): IdempotencyAcquireResult
 
-    data object FingerprintConflict : IdempotencyAcquireResult
+    data object FingerprintConflict: IdempotencyAcquireResult {
+        private fun readResolve(): Any = FingerprintConflict
+    }
 }
 
-internal object HttpIdempotencyTable : AuditableLongIdTable("voucher_http_idempotency") {
+internal object HttpIdempotencyTable: AuditableLongIdTable("voucher_http_idempotency") {
     val tenantId = varchar("tenant_id", 64)
     val principalDigest = char("principal_digest", 43)
     val operation = varchar("operation", 64)
@@ -240,8 +245,8 @@ internal interface VoucherIdempotencyStore {
 @Repository
 internal class HttpIdempotencyRepository(
     private val gate: DatabasePermitGate,
-) : LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable>,
-    VoucherIdempotencyStore {
+): LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable>,
+   VoucherIdempotencyStore {
     override val table = HttpIdempotencyTable
 
     override fun extractId(entity: IdempotencyRecord): Long = entity.id
@@ -265,14 +270,13 @@ internal class HttpIdempotencyRepository(
             }
         return IdempotencyRecord(
             id = this[table.id].value,
-            scope =
-                IdempotencyScope(
-                    tenantId = this[table.tenantId],
-                    principalDigest = Digest.of(decodeBase64Url(this[table.principalDigest])),
-                    operation = this[table.operation],
-                    resourceId = this[table.resourceId],
-                    keyDigest = Digest.of(decodeBase64Url(this[table.keyDigest])),
-                ),
+            scope = IdempotencyScope(
+                tenantId = this[table.tenantId],
+                principalDigest = Digest.of(decodeBase64Url(this[table.principalDigest])),
+                operation = this[table.operation],
+                resourceId = this[table.resourceId],
+                keyDigest = Digest.of(decodeBase64Url(this[table.keyDigest])),
+            ),
             requestFingerprint = Digest.of(decodeBase64Url(this[table.requestFingerprint])),
             status = persistedStatus,
             ownerTokenDigest = this[table.ownerTokenDigest]?.let { Digest.of(decodeBase64Url(it)) },
@@ -293,7 +297,9 @@ internal class HttpIdempotencyRepository(
     ): IdempotencyAcquireResult? {
         gate.requireHeld()
         val current = find(scope) ?: return null
-        if (current.requestFingerprint != fingerprint) return IdempotencyAcquireResult.FingerprintConflict
+        if (current.requestFingerprint != fingerprint) {
+            return IdempotencyAcquireResult.FingerprintConflict
+        }
         return current.response?.let(IdempotencyAcquireResult::Replay)
     }
 
@@ -310,20 +316,19 @@ internal class HttpIdempotencyRepository(
         validate(scope, lease, commandTimeout, retention)
         val ownerDigest = ownerToken.digest()
         val leaseUntil = now.plus(lease)
-        val inserted =
-            table.insertIgnore {
-                it[tenantId] = scope.tenantId
-                it[principalDigest] = scope.principalDigest.base64Url
-                it[operation] = scope.operation
-                it[resourceId] = scope.resourceId
-                it[keyDigest] = scope.keyDigest.base64Url
-                it[requestFingerprint] = fingerprint.base64Url
-                it[status] = IdempotencyStatus.IN_PROGRESS
-                it[ownerTokenDigest] = ownerDigest.base64Url
-                it[HttpIdempotencyTable.leaseUntil] = leaseUntil
-                it[commandDeadline] = now.plus(commandTimeout)
-                it[expiresAt] = now.plus(retention)
-            }.insertedCount == 1
+        val inserted = table.insertIgnore {
+            it[tenantId] = scope.tenantId
+            it[principalDigest] = scope.principalDigest.base64Url
+            it[operation] = scope.operation
+            it[resourceId] = scope.resourceId
+            it[keyDigest] = scope.keyDigest.base64Url
+            it[requestFingerprint] = fingerprint.base64Url
+            it[status] = IdempotencyStatus.IN_PROGRESS
+            it[ownerTokenDigest] = ownerDigest.base64Url
+            it[HttpIdempotencyTable.leaseUntil] = leaseUntil
+            it[commandDeadline] = now.plus(commandTimeout)
+            it[expiresAt] = now.plus(retention)
+        }.insertedCount == 1
 
         var current = find(scope) ?: error("idempotency row was not persisted")
         if (inserted) {
@@ -335,26 +340,26 @@ internal class HttpIdempotencyRepository(
             return IdempotencyAcquireResult.FingerprintConflict
         }
         current.response?.let { return IdempotencyAcquireResult.Replay(it) }
-        val currentLease = requireNotNull(current.leaseUntil)
+        val currentLease = current.leaseUntil.requireNotNull("current.leaseUntil")
         if (currentLease.isAfter(now)) {
             return IdempotencyAcquireResult.InProgress(Duration.between(now, currentLease))
         }
 
         val previousOwner = requireNotNull(current.ownerTokenDigest)
-        val reclaimed =
-            auditedUpdateAll(
-                predicate = {
-                    (table.id eq current.id) and
+        val reclaimed = auditedUpdateAll(
+            predicate = {
+                (table.id eq current.id) and
                         (table.status eq IdempotencyStatus.IN_PROGRESS) and
                         (table.ownerTokenDigest eq previousOwner.base64Url) and
                         (table.leaseUntil eq currentLease)
-                },
-            ) {
-                it[ownerTokenDigest] = ownerDigest.base64Url
-                it[HttpIdempotencyTable.leaseUntil] = leaseUntil
-                it[commandDeadline] = now.plus(commandTimeout)
-                it[expiresAt] = now.plus(retention)
-            } == 1
+            },
+        ) {
+            it[ownerTokenDigest] = ownerDigest.base64Url
+            it[HttpIdempotencyTable.leaseUntil] = leaseUntil
+            it[commandDeadline] = now.plus(commandTimeout)
+            it[expiresAt] = now.plus(retention)
+        } == 1
+
         if (reclaimed) {
             log.warn { "voucher_idempotency_lease_taken_over scope=${scope.logScope()}" }
             return IdempotencyAcquireResult.Owner(ownerToken, leaseUntil)
@@ -362,6 +367,7 @@ internal class HttpIdempotencyRepository(
 
         current = find(scope) ?: error("idempotency row disappeared")
         current.response?.let { return IdempotencyAcquireResult.Replay(it) }
+
         return IdempotencyAcquireResult.InProgress(
             Duration.between(now, requireNotNull(current.leaseUntil)).coerceAtLeast(Duration.ZERO),
         )
@@ -378,11 +384,13 @@ internal class HttpIdempotencyRepository(
             .selectAll()
             .where {
                 scopePredicate(scope) and
-                    (table.status eq IdempotencyStatus.IN_PROGRESS) and
-                    (table.ownerTokenDigest eq ownerDigest) and
-                    (table.leaseUntil greaterEq now) and
-                    (table.commandDeadline greaterEq now)
-            }.count() == 1L
+                        (table.status eq IdempotencyStatus.IN_PROGRESS) and
+                        (table.ownerTokenDigest eq ownerDigest) and
+                        (table.leaseUntil greaterEq now) and
+                        (table.commandDeadline greaterEq now)
+            }
+            .limit(1)
+            .any()
     }
 
     override fun finalize(
@@ -394,29 +402,30 @@ internal class HttpIdempotencyRepository(
         gate.requireHeld()
         val encodedHeaders = encodeHeaders(response.headers)
         require(encodedHeaders.length <= MAX_RESPONSE_HEADERS) { "stored response headers are too large" }
-        val finalized =
-            auditedUpdateAll(
-                predicate = {
-                    scopePredicate(scope) and
+
+        val finalized = auditedUpdateAll(
+            predicate = {
+                scopePredicate(scope) and
                         (table.status eq IdempotencyStatus.IN_PROGRESS) and
                         (table.ownerTokenDigest eq ownerToken.digest().base64Url) and
                         (table.leaseUntil greaterEq now) and
                         (table.commandDeadline greaterEq now)
-                },
-            ) {
-                it[status] =
-                    if (response.status < 400) IdempotencyStatus.SUCCEEDED else IdempotencyStatus.FAILED
-                it[responseKind] = response.responseKind
-                it[responseStatus] = response.status
-                it[responseHeaders] = encodedHeaders
-                it[aggregateId] = response.aggregateId
-                it[allocationId] = response.allocationId
-                it[aggregateRevision] = response.aggregateRevision
-                it[generationKeyVersion] = response.generationKeyVersion
-                it[verificationKeyVersion] = response.verificationKeyVersion
-                it[ownerTokenDigest] = null
-                it[leaseUntil] = null
-            } == 1
+            },
+        ) {
+            it[status] =
+                if (response.status < 400) IdempotencyStatus.SUCCEEDED else IdempotencyStatus.FAILED
+            it[responseKind] = response.responseKind
+            it[responseStatus] = response.status
+            it[responseHeaders] = encodedHeaders
+            it[aggregateId] = response.aggregateId
+            it[allocationId] = response.allocationId
+            it[aggregateRevision] = response.aggregateRevision
+            it[generationKeyVersion] = response.generationKeyVersion
+            it[verificationKeyVersion] = response.verificationKeyVersion
+            it[ownerTokenDigest] = null
+            it[leaseUntil] = null
+        } == 1
+
         log.debug { "voucher_idempotency_finalized scope=${scope.logScope()} finalized=$finalized" }
         return finalized
     }
@@ -426,12 +435,11 @@ internal class HttpIdempotencyRepository(
         ownerToken: OwnerToken,
     ): Boolean {
         gate.requireHeld()
-        val released =
-            table.deleteWhere {
-                scopePredicate(scope) and
+        val released = table.deleteWhere {
+            scopePredicate(scope) and
                     (table.status eq IdempotencyStatus.IN_PROGRESS) and
                     (table.ownerTokenDigest eq ownerToken.digest().base64Url)
-            } == 1
+        } == 1
         log.debug { "voucher_idempotency_owner_released scope=${scope.logScope()} released=$released" }
         return released
     }
@@ -447,13 +455,14 @@ internal class HttpIdempotencyRepository(
     ): Int {
         gate.requireHeld()
         require(limit in 1..MAX_CLEANUP_BATCH) { "cleanup limit must be between 1 and $MAX_CLEANUP_BATCH" }
-        val ids =
-            table
-                .select(table.id)
-                .where { (table.status neq IdempotencyStatus.IN_PROGRESS) and (table.expiresAt lessEq now) }
-                .orderBy(table.id)
-                .limit(limit)
-                .map { it[table.id] }
+
+        val ids = table
+            .select(table.id)
+            .where { (table.status neq IdempotencyStatus.IN_PROGRESS) and (table.expiresAt lessEq now) }
+            .orderBy(table.id)
+            .limit(limit)
+            .map { it[table.id] }
+
         return if (ids.isEmpty()) 0 else table.deleteWhere { table.id inList ids }
     }
 
@@ -462,10 +471,10 @@ internal class HttpIdempotencyRepository(
 
     private fun scopePredicate(scope: IdempotencyScope) =
         (table.tenantId eq scope.tenantId) and
-            (table.principalDigest eq scope.principalDigest.base64Url) and
-            (table.operation eq scope.operation) and
-            (table.resourceId eq scope.resourceId) and
-            (table.keyDigest eq scope.keyDigest.base64Url)
+                (table.principalDigest eq scope.principalDigest.base64Url) and
+                (table.operation eq scope.operation) and
+                (table.resourceId eq scope.resourceId) and
+                (table.keyDigest eq scope.keyDigest.base64Url)
 
     private fun validate(
         scope: IdempotencyScope,
@@ -483,10 +492,10 @@ internal class HttpIdempotencyRepository(
     private fun IdempotencyScope.logScope(): String =
         "operation=$operation resourceId=$resourceId keyDigestPrefix=${keyDigest.base64Url.take(LOG_DIGEST_PREFIX)}"
 
-    companion object : KLogging() {
-        val DEFAULT_LEASE: Duration = Duration.ofSeconds(90)
-        val DEFAULT_COMMAND_TIMEOUT: Duration = Duration.ofSeconds(60)
-        val DEFAULT_RETENTION: Duration = Duration.ofHours(24)
+    companion object: KLogging() {
+        val DEFAULT_LEASE: Duration = 90.seconds()
+        val DEFAULT_COMMAND_TIMEOUT: Duration = 60.seconds()
+        val DEFAULT_RETENTION: Duration = 24.hours()
         private const val MAX_RESPONSE_HEADERS = 512
         private const val MAX_CLEANUP_BATCH = 1_000
         private const val LOG_DIGEST_PREFIX = 12
@@ -511,7 +520,7 @@ private fun decodeHeaders(encoded: String): Map<String, String> =
 
 private fun urlEncode(value: String): String =
     buildString {
-        value.toByteArray(UTF_8).forEach { byte ->
+        value.toUtf8Bytes().forEach { byte ->
             val unsigned = byte.toInt() and 0xff
             if (
                 unsigned in 'a'.code..'z'.code ||
@@ -531,6 +540,7 @@ private fun urlEncode(value: String): String =
 
 private fun urlDecode(value: String): String = URLDecoder.decode(value, UTF_8)
 
-private fun decodeBase64Url(value: String): ByteArray = java.util.Base64.getUrlDecoder().decode(value)
+private fun decodeBase64Url(value: String): ByteArray =
+    java.util.Base64.getUrlDecoder().decode(value)
 
 private const val HEX = "0123456789ABCDEF"

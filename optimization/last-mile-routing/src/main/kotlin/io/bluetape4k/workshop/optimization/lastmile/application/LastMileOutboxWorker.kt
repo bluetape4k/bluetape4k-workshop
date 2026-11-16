@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.optimization.lastmile.application
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileOutboxRecord
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileOutboxRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -28,8 +30,20 @@ internal class LastMileOutboxWorker(
     @Qualifier("lastMileExecutor") private val executor: ExecutorService,
     private val clock: Clock,
 ) {
+
+    companion object: KLogging() {
+        private const val WORKER_ID = "last-mile-outbox"
+        private const val DEFAULT_BATCH_SIZE = 16
+        private const val MAX_BATCH_SIZE = 64
+        private const val MAX_ATTEMPTS = 3
+        private val LEASE_DURATION = 30.seconds()
+        private val RETRY_DELAY = 5.seconds()
+        private val REQUEST_ID_PATTERN = Regex("[A-Za-z0-9._:-]{1,96}")
+    }
+
     fun processDue(batchSize: Int = DEFAULT_BATCH_SIZE): List<Future<LastMileOutboxProcessStatus>> {
-        require(batchSize in 1..MAX_BATCH_SIZE) { "outbox batch size is out of bounds" }
+        batchSize.requireInRange(1, MAX_BATCH_SIZE, "batchSize")
+
         val claimed = transaction {
             buildList {
                 repeat(batchSize) {
@@ -37,7 +51,9 @@ internal class LastMileOutboxWorker(
                 }
             }
         }
-        return claimed.map { record -> executor.submit<LastMileOutboxProcessStatus> { process(record) } }
+        return claimed.map { record ->
+            executor.submit<LastMileOutboxProcessStatus> { process(record) }
+        }
     }
 
     fun processNext(): LastMileOutboxProcessStatus {
@@ -58,7 +74,7 @@ internal class LastMileOutboxWorker(
             }
 
             "ROUTE_COMMITTED" -> Unit
-            else -> error("unsupported last-mile outbox event")
+            else              -> error("unsupported last-mile outbox event")
         }
         check(transaction { outboxRepository.markCompleted(record.id, WORKER_ID) }) {
             "last-mile outbox lease was lost"
@@ -78,16 +94,8 @@ internal class LastMileOutboxWorker(
                 maxAttempts = MAX_ATTEMPTS,
             )
         }
-        if (terminal) LastMileOutboxProcessStatus.DEAD_LETTER else LastMileOutboxProcessStatus.RETRYABLE
-    }
 
-    companion object : KLogging() {
-        private const val WORKER_ID = "last-mile-outbox"
-        private const val DEFAULT_BATCH_SIZE = 16
-        private const val MAX_BATCH_SIZE = 64
-        private const val MAX_ATTEMPTS = 3
-        private val LEASE_DURATION = Duration.ofSeconds(30)
-        private val RETRY_DELAY = Duration.ofSeconds(5)
-        private val REQUEST_ID_PATTERN = Regex("[A-Za-z0-9._:-]{1,96}")
+        if (terminal) LastMileOutboxProcessStatus.DEAD_LETTER
+        else LastMileOutboxProcessStatus.RETRYABLE
     }
 }

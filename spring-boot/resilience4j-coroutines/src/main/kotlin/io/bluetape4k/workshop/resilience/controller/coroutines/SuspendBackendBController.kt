@@ -13,8 +13,10 @@ import io.github.resilience4j.kotlin.timelimiter.timeLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.retry.RetryRegistry
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -31,7 +33,7 @@ class SuspendBackendBController(
     rateLimiterRegistry: RateLimiterRegistry,
     timeLimiterRegistry: TimeLimiterRegistry,
 ) {
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_B = "backendB"
     }
 
@@ -57,17 +59,24 @@ class SuspendBackendBController(
     @GetMapping("suspendTimeout")
     suspend fun suspendTimeout(): String = executeWithFallback(serviceB::suspendTimeout, ::fallback)
 
+    //
+    // NOTE: Flow 반환 시 flowOn(Dispatchers.IO) 를 지정해줘야 Resilience4j 가 제대로 수행된다.
+    // 
+
     @GetMapping("flowSuccess")
-    fun flowSuccess(): Flow<String> = executeFlow { serviceB.flowSuccess() }
+    fun flowSuccess(): Flow<String> =
+        executeFlow { serviceB.flowSuccess() }.flowOn(Dispatchers.IO)
 
     @GetMapping("flowFailure")
-    fun flowFailure(): Flow<String> = executeFlow { serviceB.flowFailure() }
+    fun flowFailure(): Flow<String> =
+        executeFlow { serviceB.flowFailure() }.flowOn(Dispatchers.IO)
 
     @GetMapping("flowTimeout")
-    fun flowTimeout(): Flow<String> = executeFlowWithFallback(serviceB::flowTimeout, ::fallback)
+    fun flowTimeout(): Flow<String> =
+        executeFlowWithFallback(serviceB::flowTimeout, ::fallback).flowOn(Dispatchers.IO)
 
-    private suspend fun <T> execute(block: suspend () -> T): T {
-        return SuspendDecorators.ofSupplier(block)
+    private suspend inline fun <T> execute(crossinline block: suspend () -> T): T {
+        return SuspendDecorators.ofSupplier { block() }
             .withCircuitBreaker(circuitBreaker)
             .withBulkhead(bulkhead)
             .withRetry(retry)
@@ -84,17 +93,17 @@ class SuspendBackendBController(
             .get()
     }
 
-    private fun <T> executeFlow(block: () -> Flow<T>): Flow<T> {
+    private inline fun <T> executeFlow(block: () -> Flow<T>): Flow<T> {
         return block()
-            .bulkhead(bulkhead)
             .circuitBreaker(circuitBreaker)
+            .bulkhead(bulkhead)
             .retry(retry)
     }
 
     private fun <T> executeFlowWithFallback(block: () -> Flow<T>, fallback: (Throwable?) -> T): Flow<T> {
         return block()
-            .bulkhead(bulkhead)
             .circuitBreaker(circuitBreaker)
+            .bulkhead(bulkhead)
             .retry(retry)
             .timeLimiter(timeLimiter)
             .catch { emit(fallback(it)) }

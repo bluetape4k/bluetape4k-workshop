@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.bucket4j.advanced.filter
 
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedSuspendRateLimiter
+import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
@@ -18,7 +19,6 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
-import java.util.concurrent.TimeUnit
 
 /**
  * `/api/authenticated/` 요청에 user ID 기반 rate limiting을 적용하는 [WebFilter]입니다.
@@ -35,9 +35,9 @@ import java.util.concurrent.TimeUnit
 class UserRateLimitWebFilter(
     @Qualifier("userRateLimiter")
     private val rateLimiter: DistributedSuspendRateLimiter,
-) : WebFilter {
+): WebFilter {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val TARGET_PATH_PREFIX = "/api/authenticated"
     }
 
@@ -62,16 +62,13 @@ class UserRateLimitWebFilter(
                             HeaderConstants.X_RATELIMIT_REMAINING,
                             result.availableTokens.toString()
                         )
-                        val resetSecs =
-                            TimeUnit.NANOSECONDS.toSeconds(result.diagnostics.nanosToWaitForReset).coerceAtLeast(0)
+                        val resetSecs = result.diagnostics.nanosToWaitForReset.nanos().toSeconds().coerceAtLeast(0)
                         exchange.response.headers.set(HeaderConstants.X_RATELIMIT_RESET, resetSecs.toString())
                         if (result.isConsumed) {
                             log.trace { "User bucket[$key] consumed, remaining=${result.availableTokens}" }
                             chain.filter(exchange).awaitSingleOrNull()
                         } else {
-                            val retryAfterSecs = result.retryAfter
-                                ?.let { TimeUnit.NANOSECONDS.toSeconds(it.toNanos()).coerceAtLeast(1) }
-                                ?: 1L
+                            val retryAfterSecs = result.retryAfter?.toSeconds()?.coerceAtLeast(1) ?: 1L
                             exchange.response.headers.set(HeaderConstants.RETRY_AFTER, retryAfterSecs.toString())
                             log.warn { "User rate limit exceeded for $key. retryAfter=${retryAfterSecs}s" }
                             exchange.response.statusCode = HttpStatus.TOO_MANY_REQUESTS

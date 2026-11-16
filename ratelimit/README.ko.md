@@ -18,24 +18,24 @@
 
 ## 모듈
 
-| Module | 볼 내용 | Stack | Store | Identity |
-|---|---|---|---|---|
-| `bucker4j-bluetape4k-webflux` | 권장 bluetape4k WebFlux limiter | WebFlux + coroutines | Redis (Lettuce) | User token 또는 IP |
-| `bucket4j-advanced` | IP, user, combined-key 정책 비교 | WebFlux + coroutines | Redis (Lettuce) | IP, user, combined |
-| `bucket4j-redis` | 분산 token 상태를 쓰는 Bucket4j starter | WebFlux + Reactor/coroutines | Redis (Lettuce) | URL/IP 중심 starter rule |
-| `bucket4j-caffeine-web` | Redis 없는 로컬 starter 동작 | Spring WebMVC | Caffeine JCache | URL/IP 중심 starter rule |
+| Module                        | 볼 내용                                 | Stack                        | Store           | Identity                 |
+|-------------------------------|-----------------------------------------|------------------------------|-----------------|--------------------------|
+| `bucker4j-bluetape4k-webflux` | 권장 bluetape4k WebFlux limiter         | WebFlux + coroutines         | Redis (Lettuce) | User token 또는 IP       |
+| `bucket4j-advanced`           | IP, user, combined-key 정책 비교        | WebFlux + coroutines         | Redis (Lettuce) | IP, user, combined       |
+| `bucket4j-redis`              | 분산 token 상태를 쓰는 Bucket4j starter | WebFlux + Reactor/coroutines | Redis (Lettuce) | URL/IP 중심 starter rule |
+| `bucket4j-caffeine-web`       | Redis 없는 로컬 starter 동작            | Spring WebMVC                | Caffeine JCache | URL/IP 중심 starter rule |
 
 ## 공통 개념
 
 모든 모듈은 token bucket 판단을 보여줍니다.
 
-| 개념 | 의미 |
-|---|---|
-| Bucket capacity | 한 window에서 사용할 수 있는 최대 token 수 |
-| Refill | Token이 bucket으로 돌아오는 방식과 주기 |
-| Key resolver | Caller별 bucket을 분리하는 기준값 |
-| Store | Bucket 상태 저장 위치: local Caffeine 또는 shared Redis |
-| Exhausted bucket | Token이 없으면 `429 Too Many Requests`로 거절 |
+| 개념             | 의미                                                    |
+|------------------|---------------------------------------------------------|
+| Bucket capacity  | 한 window에서 사용할 수 있는 최대 token 수              |
+| Refill           | Token이 bucket으로 돌아오는 방식과 주기                 |
+| Key resolver     | Caller별 bucket을 분리하는 기준값                       |
+| Store            | Bucket 상태 저장 위치: local Caffeine 또는 shared Redis |
+| Exhausted bucket | Token이 없으면 `429 Too Many Requests`로 거절           |
 
 bluetape4k WebFlux 예제는 모듈에 따라 `X-Bluetape4k-Remaining-Token` 또는 표준 `X-RateLimit-Remaining` / `Retry-After` response header도 보여줍니다.
 

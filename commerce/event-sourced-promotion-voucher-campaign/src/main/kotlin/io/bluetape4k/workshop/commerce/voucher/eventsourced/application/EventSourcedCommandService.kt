@@ -2,22 +2,23 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.application
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkBeTrue
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.EventSourcedIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptAcquireResult
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalReplay
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptScope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalDescriptor
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.AppendResult
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStorePort
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExpectedAppend
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalReplay
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.AppendResult
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStorePort
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExpectedAppend
 import org.jetbrains.exposed.v1.jdbc.Database
-import java.time.Instant
 import java.time.Duration
+import java.time.Instant
 import kotlin.time.TimeSource
 import kotlin.time.toJavaDuration
 
@@ -29,9 +30,12 @@ internal interface CommandTransactionRunner {
 internal class ExposedCommandTransactionRunner(
     database: Database,
     permits: EventSourcedDatabasePermitGate,
-) : CommandTransactionRunner {
-    private val transactions =
-        EventSourcedPermitTransactionRunner(database, permits, EventSourcedDatabaseLane.FOREGROUND)
+): CommandTransactionRunner {
+    private val transactions = EventSourcedPermitTransactionRunner(
+        database,
+        permits,
+        EventSourcedDatabaseLane.FOREGROUND
+    )
 
     override fun <T> inTransaction(block: () -> T): T = transactions.inTransaction(block)
 }
@@ -52,15 +56,15 @@ internal sealed interface CommandExecutionResult {
     class Executed(
         val append: AppendResult.Appended?,
         val descriptor: TerminalDescriptor,
-    ) : CommandExecutionResult
+    ): CommandExecutionResult
 
-    class Replayed(val descriptor: TerminalDescriptor) : CommandExecutionResult
+    class Replayed(val descriptor: TerminalDescriptor): CommandExecutionResult
 
-    class InProgress : CommandExecutionResult
+    data object InProgress: CommandExecutionResult
 
-    class FingerprintConflict : CommandExecutionResult
+    data object FingerprintConflict: CommandExecutionResult
 
-    class KeyUnavailable : CommandExecutionResult
+    data object KeyUnavailable: CommandExecutionResult
 }
 
 internal class EventSourcedCommandService(
@@ -77,17 +81,18 @@ internal class EventSourcedCommandService(
                 receipts.acquire(command.scope, command.fingerprint, command.acquiredAt)
             }
         val result = when (acquired) {
-            is ReceiptAcquireResult.Owner -> completeOwner(command, acquired)
-            is ReceiptAcquireResult.Replay ->
+            is ReceiptAcquireResult.Owner            -> completeOwner(command, acquired)
+            is ReceiptAcquireResult.Replay           ->
                 when (val replay = acquired.descriptor.replayWith(keyVersionAvailable)) {
-                    is TerminalReplay.Replay -> CommandExecutionResult.Replayed(replay.descriptor)
-                    TerminalReplay.KeyUnavailable -> CommandExecutionResult.KeyUnavailable()
+                    is TerminalReplay.Replay      -> CommandExecutionResult.Replayed(replay.descriptor)
+                    TerminalReplay.KeyUnavailable -> CommandExecutionResult.KeyUnavailable
                 }
-            is ReceiptAcquireResult.InProgress -> CommandExecutionResult.InProgress()
-            ReceiptAcquireResult.FingerprintConflict -> CommandExecutionResult.FingerprintConflict()
+            is ReceiptAcquireResult.InProgress       -> CommandExecutionResult.InProgress
+            ReceiptAcquireResult.FingerprintConflict -> CommandExecutionResult.FingerprintConflict
         }
         val duration = started.elapsedNow().toJavaDuration()
         metrics.commandTerminal(result.status(), duration)
+
         if (result is CommandExecutionResult.Executed && result.append != null) {
             val eventCount = result.append.lastGlobalPosition - result.append.firstGlobalPosition + 1
             metrics.appendCommitted(eventCount.toInt(), duration)
@@ -104,20 +109,22 @@ internal class EventSourcedCommandService(
                 "receipt ownership was lost before append"
             }
             val decision = command.decideAfterRehydrate()
-            val append =
-                if (decision.appends.isEmpty()) {
-                    null
-                } else {
-                    eventStore.appendAll(decision.appends)
-                }
-            val descriptor =
-                when (append) {
-                    is AppendResult.Appended -> decision.descriptor.withStreamPosition(append.lastGlobalPosition)
-                    is AppendResult.Conflict, is AppendResult.DuplicateEvent -> concurrentModificationDescriptor()
-                    null -> decision.descriptor
-                }
+            val append = if (decision.appends.isEmpty()) {
+                null
+            } else {
+                eventStore.appendAll(decision.appends)
+            }
+            val descriptor = when (append) {
+                is AppendResult.Appended ->
+                    decision.descriptor.withStreamPosition(append.lastGlobalPosition)
+                is AppendResult.Conflict,
+                is AppendResult.DuplicateEvent,
+                                         -> concurrentModificationDescriptor()
+                null                     -> decision.descriptor
+            }
             finalize(command, owner, descriptor)
             log.debug { "voucher_command_executed operation=${command.scope.operation}" }
+
             CommandExecutionResult.Executed(append as? AppendResult.Appended, descriptor)
         }
     }
@@ -127,18 +134,17 @@ internal class EventSourcedCommandService(
         owner: ReceiptAcquireResult.Owner,
         descriptor: TerminalDescriptor,
     ) {
-        check(receipts.finalize(command.scope, command.fingerprint, owner.token, command.acquiredAt, descriptor)) {
-            "receipt ownership was lost before terminal finalize"
-        }
+        receipts.finalize(command.scope, command.fingerprint, owner.token, command.acquiredAt, descriptor)
+            .checkBeTrue { "receipt ownership was lost before terminal finalize" }
     }
 
-    private fun concurrentModificationDescriptor() =
+    private fun concurrentModificationDescriptor(): TerminalDescriptor =
         TerminalDescriptor(
             outcome = ReceiptOutcome.CONCURRENT_MODIFICATION,
             status = CONFLICT_STATUS,
         )
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val CONFLICT_STATUS = 409
     }
 }
@@ -155,26 +161,25 @@ internal interface EventSourcedCommandMetrics {
     )
 
     companion object {
-        val NONE =
-            object : EventSourcedCommandMetrics {
-                override fun commandTerminal(
-                    status: Int,
-                    duration: Duration,
-                ) = Unit
+        val NONE: EventSourcedCommandMetrics = object: EventSourcedCommandMetrics {
+            override fun commandTerminal(
+                status: Int,
+                duration: Duration,
+            ) = Unit
 
-                override fun appendCommitted(
-                    eventCount: Int,
-                    duration: Duration,
-                ) = Unit
-            }
+            override fun appendCommitted(
+                eventCount: Int,
+                duration: Duration,
+            ) = Unit
+        }
     }
 }
 
 private fun CommandExecutionResult.status(): Int =
     when (this) {
-        is CommandExecutionResult.Executed -> descriptor.status
-        is CommandExecutionResult.Replayed -> descriptor.status
-        is CommandExecutionResult.InProgress -> CONFLICT_STATUS
+        is CommandExecutionResult.Executed       -> descriptor.status
+        is CommandExecutionResult.Replayed       -> descriptor.status
+        is CommandExecutionResult.InProgress     -> CONFLICT_STATUS
         is CommandExecutionResult.FingerprintConflict -> CONFLICT_STATUS
         is CommandExecutionResult.KeyUnavailable -> UNAVAILABLE_STATUS
     }

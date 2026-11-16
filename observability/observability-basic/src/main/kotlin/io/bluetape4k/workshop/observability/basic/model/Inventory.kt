@@ -13,7 +13,7 @@ import java.io.Serializable
 data class Inventory(
     val itemId: Long,
     val available: Int,
-) : Serializable {
+): Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L

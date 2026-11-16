@@ -2,7 +2,9 @@ package io.bluetape4k.workshop.leader.tenantscheduler.service
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeBlank
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantJobName
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantNodeId
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TenantIdentifierValidationTest {
+
+    companion object: KLogging()
 
     @Test
     fun `tenant id canonicalizes safe aliases`() {
@@ -55,10 +59,10 @@ class TenantIdentifierValidationTest {
                 TenantId(raw)
             }
 
-            val message = error.message.orEmpty()
-            message.isNotBlank().shouldBeTrue()
+            val message = error.message.shouldNotBeBlank()
+            
             if (raw in sensitiveSamples) {
-                (!message.contains(raw)).shouldBeTrue()
+                message shouldNotContain raw
             }
         }
     }

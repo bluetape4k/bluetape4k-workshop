@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.CampaignProjectionReadModels
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionReadModels
@@ -16,36 +17,42 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
  * fencing token, generation number, timestamp는 의도적으로 제외합니다.
  */
 internal class ProjectionGenerationDigest {
+
+    private companion object: KLogging() {
+        const val DIGEST_VERSION = "voucher-projection-digest-v1"
+        const val DIGEST_FIELD_SEPARATOR = "\u001f"
+        const val DIGEST_ROW_SEPARATOR = "\u001e"
+    }
+
     fun compute(key: ProjectionKey): ReceiptDigest {
         TransactionManager.current()
-        val streamRows =
-            ProjectionReadModels
-                .selectAll()
-                .where {
-                    (ProjectionReadModels.projection eq key.projection) and
+        val streamRows = ProjectionReadModels
+            .selectAll()
+            .where {
+                (ProjectionReadModels.projection eq key.projection) and
                         (ProjectionReadModels.generation eq key.generation)
-                }.orderBy(
-                    ProjectionReadModels.tenantId to SortOrder.ASC,
-                    ProjectionReadModels.streamType to SortOrder.ASC,
-                    ProjectionReadModels.streamId to SortOrder.ASC,
-                ).map { row ->
-                    listOf(
-                        "stream",
-                        row[ProjectionReadModels.tenantId],
-                        row[ProjectionReadModels.streamType],
-                        row[ProjectionReadModels.streamId],
-                        row[ProjectionReadModels.streamVersion],
-                        row[ProjectionReadModels.globalPosition],
-                        row[ProjectionReadModels.eventType],
-                        row[ProjectionReadModels.payloadDigest],
-                    ).joinToString(DIGEST_FIELD_SEPARATOR)
-                }
-        val campaignRows =
-            CampaignProjectionReadModels
+            }.orderBy(
+                ProjectionReadModels.tenantId to SortOrder.ASC,
+                ProjectionReadModels.streamType to SortOrder.ASC,
+                ProjectionReadModels.streamId to SortOrder.ASC,
+            ).map { row ->
+                listOf(
+                    "stream",
+                    row[ProjectionReadModels.tenantId],
+                    row[ProjectionReadModels.streamType],
+                    row[ProjectionReadModels.streamId],
+                    row[ProjectionReadModels.streamVersion],
+                    row[ProjectionReadModels.globalPosition],
+                    row[ProjectionReadModels.eventType],
+                    row[ProjectionReadModels.payloadDigest],
+                ).joinToString(DIGEST_FIELD_SEPARATOR)
+            }
+
+        val campaignRows = CampaignProjectionReadModels
                 .selectAll()
                 .where {
                     (CampaignProjectionReadModels.projection eq key.projection) and
-                        (CampaignProjectionReadModels.generation eq key.generation)
+                            (CampaignProjectionReadModels.generation eq key.generation)
                 }.orderBy(
                     CampaignProjectionReadModels.tenantId to SortOrder.ASC,
                     CampaignProjectionReadModels.campaignId to SortOrder.ASC,
@@ -66,14 +73,9 @@ internal class ProjectionGenerationDigest {
                         row[CampaignProjectionReadModels.endsAt],
                     ).joinToString(DIGEST_FIELD_SEPARATOR)
                 }
+
         return ReceiptDigest.sha256(
             (listOf(DIGEST_VERSION) + streamRows + campaignRows).joinToString(DIGEST_ROW_SEPARATOR),
         )
-    }
-
-    private companion object {
-        const val DIGEST_VERSION = "voucher-projection-digest-v1"
-        const val DIGEST_FIELD_SEPARATOR = "\u001f"
-        const val DIGEST_ROW_SEPARATOR = "\u001e"
     }
 }

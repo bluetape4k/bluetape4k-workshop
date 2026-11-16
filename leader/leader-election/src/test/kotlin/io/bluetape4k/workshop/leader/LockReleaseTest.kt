@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.leader
 
-import io.bluetape4k.leader.LeaderElectionOptions
-import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeEqualTo
-import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.leader.LeaderElectionOptions
+import io.bluetape4k.logging.KLogging
+import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -19,7 +19,9 @@ import kotlin.time.Duration.Companion.seconds
  *
  * 참고: `connection.close()`는 Redis key를 삭제하지 않습니다. key 제거를 기대하고 호출하면 안 됩니다.
  */
-class LockReleaseTest : AbstractLeaderElectionTest() {
+class LockReleaseTest: AbstractLeaderElectionTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `lock is released immediately after action completes, enabling instant re-acquisition`() {
@@ -38,6 +40,6 @@ class LockReleaseTest : AbstractLeaderElectionTest() {
         // elector2는 즉시 획득할 수 있습니다. 30초 TTL 대기가 없습니다.
         val result = elector2.runIfLeader(lockName) { "reacquired" }
 
-        result.shouldNotBeNull() shouldBeEqualTo "reacquired"
+        result shouldBeEqualTo "reacquired"
     }
 }

@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.optimization.lastmile.provider
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.lastmile.domain.ProviderRevision
+import io.bluetape4k.workshop.optimization.lastmile.planner.DeterministicLastMilePlanner
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -8,13 +10,19 @@ import java.util.concurrent.ConcurrentHashMap
  * 입력 digest와 matrix revision이 같으면 같은 결과를 반환합니다.
  */
 class DeterministicRoutingProvider(
-    private val planner: io.bluetape4k.workshop.optimization.lastmile.planner.DeterministicLastMilePlanner =
-        io.bluetape4k.workshop.optimization.lastmile.planner.DeterministicLastMilePlanner(),
-) : RoutingProvider {
+    private val planner: DeterministicLastMilePlanner =
+        DeterministicLastMilePlanner(),
+): RoutingProvider {
+
+    companion object: KLogging() {
+        const val NAME = "deterministic"
+    }
+
     private val results = ConcurrentHashMap<String, RoutingResult>()
 
     override fun submit(request: RoutingRequest): RoutingSubmission {
         val proposal = planner.plan(request.input)
+
         results.putIfAbsent(
             request.requestId,
             RoutingResult(
@@ -27,7 +35,8 @@ class DeterministicRoutingProvider(
         return RoutingSubmission(NAME, request.requestId, request.input.requestGeneration)
     }
 
-    override fun poll(submission: RoutingSubmission): RoutingResult? = results[submission.requestId]
+    override fun poll(submission: RoutingSubmission): RoutingResult? =
+        results[submission.requestId]
 
     override fun acceptCallback(callback: RoutingCallback): CallbackDecision =
         if (callback.provider == NAME && callback.result.provider == NAME) {
@@ -35,8 +44,4 @@ class DeterministicRoutingProvider(
         } else {
             CallbackDecision.DIGEST_CONFLICT
         }
-
-    companion object {
-        const val NAME = "deterministic"
-    }
 }

@@ -22,7 +22,7 @@ private var searchJob: Job? = null
 fun onQuery(text: String) {
     searchJob?.cancel()
     searchJob = scope.launch {
-        delay(150)
+        delay(150.milliseconds)
         val settings = currentSettings()
         val result = adapter.search(SearchRequest(SearchQuery(text), settings))
         render(result)

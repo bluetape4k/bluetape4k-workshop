@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.optimization.shiftcoverage.adapter.ShiftCoverageProvider
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.EventId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.GenerationId
@@ -14,28 +16,38 @@ class ShiftCoverageEventService(
     private val generations: ShiftCoverageGenerationStore? = null,
     private val clock: Clock = Clock.systemUTC(),
 ) {
+
+    companion object: KLogging()
+
     fun receive(
         type: ShiftCoverageEventType,
         provider: ShiftCoverageProvider,
         eventId: EventId,
         digest: String,
         providerRevision: Long,
-    ): ShiftCoverageInboxRecord = inbox.claim(
-        ShiftCoverageInboxEvent(provider, eventId, digest, providerRevision),
-    ).also {
-        require(type.wireName.isNotBlank()) { "event type must have a wire name" }
-    }
+    ): ShiftCoverageInboxRecord =
+        inbox.claim(
+            ShiftCoverageInboxEvent(provider, eventId, digest, providerRevision),
+        ).also {
+            type.wireName.requireNotBlank { "event type must have a wire name" }
+        }
 
     fun receive(event: ShiftCoverageDomainEvent): ShiftCoverageEventResult {
         val record = receive(event.type, event.provider, event.eventId, event.digest, event.providerRevision)
         val firstDelivery = record.status == ShiftCoverageInboxStatus.RECEIVED
         val planStaled = firstDelivery && (plans?.markStale(event.planId, event.planRevision) == true)
+
         val generationStaled = if (firstDelivery) {
             generations?.find(event.generationId)?.let {
-                generations.markStale(event.generationId, clock.instant(), "${event.type.wireName} changed source state")
+                generations.markStale(
+                    event.generationId,
+                    clock.instant(),
+                    "${event.type.wireName} changed source state"
+                )
                 true
             } ?: false
         } else false
+
         return ShiftCoverageEventResult(record, planStaled, generationStaled)
     }
 }

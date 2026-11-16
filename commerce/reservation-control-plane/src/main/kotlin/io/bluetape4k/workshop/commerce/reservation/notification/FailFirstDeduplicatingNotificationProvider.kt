@@ -31,6 +31,7 @@ internal class FailFirstDeduplicatingNotificationProvider(
 
             val attempt = attempts.getOrDefault(delivery.deliveryId, 0) + 1
             attempts[delivery.deliveryId] = attempt
+
             if (attempt <= failFirstAttempts) {
                 log.warn {
                     "fake_notification_failed deliveryId=${delivery.deliveryId} attempt=$attempt code=$TRANSIENT_CODE"
@@ -48,7 +49,7 @@ internal class FailFirstDeduplicatingNotificationProvider(
             if (deliveryId in accepted) 1 else 0
         }
 
-    private companion object : KLogging() {
+    private companion object: KLogging() {
         val TRANSIENT_CODE = NotificationFailureCode.FAKE_TRANSIENT
     }
 }

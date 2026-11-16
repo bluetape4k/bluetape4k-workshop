@@ -1,15 +1,16 @@
 package io.bluetape4k.workshop.mongodb.reactive
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.domain.Person
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.CollectionOptions
@@ -23,37 +24,37 @@ abstract class AbstractReactiveMongoTest(
     @param:Autowired private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
-    fun beforeEach() {
-        runSuspendIO {
-            // NOTE: [@Tailable] 을 지원하려면 Collection이 capped 인 놈만 가능합니다.
-            //
-            val collectionOptions = CollectionOptions.empty()
-                .size(1024 * 1024L)
-                .maxDocuments(1000)
-                .capped()
+    fun beforeEach() = runSuspendIO {
+        // NOTE: [@Tailable] 을 지원하려면 Collection이 capped 인 놈만 가능합니다.
+        //
+        val collectionOptions = CollectionOptions.empty()
+            .size(1024 * 1024L)
+            .maxDocuments(1000)
+            .capped()
 
-            val collection = operations.collectionExists<Person>()
-                .flatMap { exists ->
-                    if (exists) operations.dropCollection<Person>()
-                    else Mono.empty()
-                }
-                .then(operations.createCollection<Person>(collectionOptions))
+        val collection = operations.collectionExists<Person>()
+            .flatMap { exists ->
+                if (exists) operations.dropCollection<Person>()
+                else Mono.empty()
+            }
+            .then(operations.createCollection<Person>(collectionOptions))
 
-            val documents = collection.awaitSingle()
-            documents.countDocuments().awaitSingle() shouldBeEqualTo 0
+        val documents = collection.awaitSingle()
+        documents.countDocuments().awaitSingle() shouldBeEqualTo 0
 
-            val persons = listOf(
-                Person("Walter", "White", 50),
-                Person("Skyler", "White", 45),
-                Person("Saul", "Goodman", 42),
-                Person("Jesse", "Pinkman", 27)
-            )
+        val persons = listOf(
+            Person("Walter", "White", 50),
+            Person("Skyler", "White", 45),
+            Person("Saul", "Goodman", 42),
+            Person("Jesse", "Pinkman", 27)
+        )
 
-            val insertedPersons = operations.insertAll(persons).asFlow().toList()
-            insertedPersons shouldHaveSize 4
-        }
+        val insertedPersons = operations.insertAll(persons)
+            .asFlow().log("INSERT")
+            .toList()
+        insertedPersons shouldHaveSize 4
     }
 }

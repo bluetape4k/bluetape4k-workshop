@@ -1,7 +1,12 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingPricingEvidenceService
@@ -20,12 +25,26 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 @SpringBootTest
 @Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class BillingInboxPostgresIntegrationTest {
+
+    private companion object: KLogging() {
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
+            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
+            registry.add("management.datadog.metrics.export.enabled") { false }
+        }
+    }
+
     @Autowired
     private lateinit var pricingEvidence: BillingPricingEvidenceService
 
@@ -50,13 +69,27 @@ class BillingInboxPostgresIntegrationTest {
     @Test
     fun `accepted usage event creates one append-only charge and one pending outbox event`() {
         val meterCode = "api_calls_${UUID.randomUUID()}"
+
         pricingEvidence.record(
-            BillingPriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), Instant.EPOCH),
+            BillingPriceEvidence(
+                tenantId = "tenant-a",
+                meterCode = meterCode,
+                currency = "USD",
+                unitPrice = BigDecimal("0.10"),
+                effectiveAt = Instant.EPOCH
+            ),
         )
         val chargeCount = transaction { charges.findAll().count() }
         val outboxCount = transaction { outbox.findAll().count() }
+
         val event = BillingInboxEvent(
-            UUID.randomUUID(), "tenant-a", "Usage", "usage-1", 1, "digest-a", meterCode,
+            eventId = UUID.randomUUID(),
+            tenantId = "tenant-a",
+            aggregateType = "Usage",
+            aggregateId = "usage-1",
+            aggregateVersion = 1,
+            payloadDigest = "digest-a",
+            meterCode = meterCode,
             quantity = BigDecimal.TWO,
         )
 
@@ -67,9 +100,12 @@ class BillingInboxPostgresIntegrationTest {
         transaction { charges.findAll().last().amount } shouldBeEqualTo BigDecimal("0.20")
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount + 1
         transaction { outbox.findAll().last().status } shouldBeEqualTo "PENDING"
+
         val payload = transaction { outbox.findAll().last().payload }
-        requireNotNull(Jackson.defaultJsonMapper.readTree(payload).get("eventType")).asString() shouldBeEqualTo
-            "ChargeRated"
+
+        log.debug { "payload=$payload" }
+        Jackson.defaultJsonMapper.readTree(payload)
+            .get("eventType")!!.asString() shouldBeEqualTo "ChargeRated"
     }
 
     @Test
@@ -88,45 +124,50 @@ class BillingInboxPostgresIntegrationTest {
 
         pricingEvidence.record(event) shouldBeEqualTo BillingPriceEvidenceOutcome.APPLIED
         pricingEvidence.record(event) shouldBeEqualTo BillingPriceEvidenceOutcome.DUPLICATE
-        pricingEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo
-            BillingPriceEvidenceOutcome.QUARANTINED
+        pricingEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo BillingPriceEvidenceOutcome.QUARANTINED
+        
         transaction { priceEvidenceInbox.findAll().count() } shouldBeEqualTo 1
     }
 
     @Test
     fun `Billing outbox claim and published mark remain fenced by owner`() {
         val meterCode = "compute_${UUID.randomUUID()}"
+
         pricingEvidence.record(
-            BillingPriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.30"), Instant.EPOCH),
+            BillingPriceEvidence(
+                tenantId = "tenant-a",
+                meterCode = meterCode,
+                currency = "USD",
+                unitPrice = BigDecimal("0.30"),
+                effectiveAt = Instant.EPOCH
+            ),
         )
         inbox.handle(
             BillingInboxEvent(
-                UUID.randomUUID(), "tenant-a", "Usage", UUID.randomUUID().toString(), 1,
-                "digest-${UUID.randomUUID()}", meterCode,
+                eventId = UUID.randomUUID(),
+                tenantId = "tenant-a",
+                aggregateType = "Usage",
+                aggregateId = UUID.randomUUID().toString(),
+                aggregateVersion = 1,
+                payloadDigest = "digest-${UUID.randomUUID()}",
+                meterCode = meterCode,
             ),
         ) shouldBeEqualTo BillingInboxOutcome.APPLIED
+
         val eventId = transaction { outbox.findAll().last().eventId }
         val now = Instant.now()
 
-        outboxJournal.claim("billing-publisher-a", now, 100).any { it.eventId == eventId } shouldBeEqualTo true
-        outboxJournal.markPublished(eventId, "billing-publisher-b", now) shouldBeEqualTo false
-        outboxJournal.markPublished(eventId, "billing-publisher-a", now) shouldBeEqualTo true
-        transaction { outbox.findAll().last { it.eventId == eventId }.status } shouldBeEqualTo "PUBLISHED"
+        outboxJournal.claim("billing-publisher-a", now, 100).any { it.eventId == eventId }.shouldBeTrue()
+        outboxJournal.markPublished(eventId, "billing-publisher-b", now).shouldBeFalse()
+        outboxJournal.markPublished(eventId, "billing-publisher-a", now).shouldBeTrue()
+
+        transaction {
+            outbox.findAll().last { it.eventId == eventId }.status
+        } shouldBeEqualTo "PUBLISHED"
     }
 
-    private fun <T : Any> transaction(block: () -> T): T =
-        requireNotNull(TransactionTemplate(transactionManager).execute { block() })
+    private inline fun <T: Any> transaction(crossinline block: () -> T): T =
+        TransactionTemplate(transactionManager)
+            .execute { block() }.shouldNotBeNull()
 
-    private companion object {
-        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
-            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
-            registry.add("management.datadog.metrics.export.enabled") { false }
-        }
-    }
 }

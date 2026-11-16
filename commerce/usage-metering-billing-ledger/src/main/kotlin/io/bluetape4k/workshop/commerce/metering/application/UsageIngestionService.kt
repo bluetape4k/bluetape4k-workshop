@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.MeterCode
 import io.bluetape4k.workshop.commerce.metering.domain.SourceEventId
@@ -11,12 +12,12 @@ import io.bluetape4k.workshop.commerce.metering.idempotency.Sha256Digest
 import io.bluetape4k.workshop.commerce.metering.persistence.MeterRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.UsageEventRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.UsageEvents
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class UsageIngestionCommand(
     val tenantId: TenantId,
@@ -46,9 +47,12 @@ class UsageIngestionService(
     @Transactional
     fun ingest(command: UsageIngestionCommand): UsageEventView {
         val now = clock.instant()
-        require(command.occurredAt >= now.minus(properties.occurredAtRetention)) { "occurred_at_too_old" }
-        require(command.occurredAt <= now.plus(properties.occurredAtFutureSkew)) { "occurred_at_in_future" }
-        val meter = requireNotNull(meters.find(command.tenantId.value, command.meterCode.value)) { "meter_not_found" }
+        require(command.occurredAt >= now - properties.occurredAtRetention) { "occurred_at_too_old" }
+        require(command.occurredAt <= now + properties.occurredAtFutureSkew) { "occurred_at_in_future" }
+
+        val meter = meters.find(command.tenantId.value, command.meterCode.value)
+            .requireNotNull { "meter_not_found" }
+
         val id = Uuid.V7.nextId()
         val inserted = UsageEvents.insertIgnore {
             it[UsageEvents.id] = id
@@ -63,12 +67,20 @@ class UsageIngestionService(
             it[acceptedActor] = command.actor
             it[correlationId] = command.correlationId
         }.insertedCount == 1
-        val usage = requireNotNull(
-            usageEvents.findSource(command.tenantId.value, command.sourceSystem.value, command.sourceEventId.value),
-        )
+
+        val usage = usageEvents.findSource(
+            tenantId = command.tenantId.value,
+            sourceSystem = command.sourceSystem.value,
+            sourceEventId = command.sourceEventId.value
+        ) ?: error("Source event not found")
+
         if (!inserted) {
-            require(usage.requestFingerprint == command.requestFingerprint.value) { "source_event_conflict" }
+            check(usage.requestFingerprint == command.requestFingerprint.value) { "source_event_conflict" }
         }
-        return UsageEventView(usage.id.value, usage.receivedAt, replayedProducerEvent = !inserted)
+        return UsageEventView(
+            id = usage.id.value,
+            receivedAt = usage.receivedAt,
+            replayedProducerEvent = !inserted
+        )
     }
 }

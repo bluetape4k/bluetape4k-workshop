@@ -17,7 +17,7 @@ import tools.jackson.databind.ObjectMapper
  */
 class Jackson3Support {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         val objectMapper: ObjectMapper = Jackson.defaultJsonMapper
     }
 
@@ -27,7 +27,7 @@ class Jackson3Support {
      * @param channel 쓸 대상 [ByteWriteChannel] 입니다. 일반적으로 `respondBytesWriter` 에서 받습니다.
      * @param items line 마다 하나씩 serialize 할 object 입니다.
      */
-    suspend fun <T : Any> writeNdjson(channel: ByteWriteChannel, items: Iterable<T>) {
+    suspend fun <T: Any> writeNdjson(channel: ByteWriteChannel, items: Iterable<T>) {
         for (item in items) {
             val line = objectMapper.writeValueAsString(item) + "\n"
             channel.writeStringUtf8(line)

@@ -18,24 +18,24 @@ Start with the key you need. User-token or mixed identity work belongs in the bl
 
 ## Modules
 
-| Module | Use it for | Stack | Store | Identity |
-|---|---|---|---|---|
-| `bucker4j-bluetape4k-webflux` | Recommended bluetape4k WebFlux limiter | WebFlux + coroutines | Redis (Lettuce) | User token or IP |
-| `bucket4j-advanced` | Comparing IP, user, and combined-key policies | WebFlux + coroutines | Redis (Lettuce) | IP, user, combined |
-| `bucket4j-redis` | Bucket4j starter with distributed token state | WebFlux + Reactor/coroutines | Redis (Lettuce) | URL/IP-oriented starter rules |
-| `bucket4j-caffeine-web` | Local starter behavior without Redis | Spring WebMVC | Caffeine JCache | URL/IP-oriented starter rules |
+| Module                        | Use it for                                    | Stack                        | Store           | Identity                      |
+|-------------------------------|-----------------------------------------------|------------------------------|-----------------|-------------------------------|
+| `bucker4j-bluetape4k-webflux` | Recommended bluetape4k WebFlux limiter        | WebFlux + coroutines         | Redis (Lettuce) | User token or IP              |
+| `bucket4j-advanced`           | Comparing IP, user, and combined-key policies | WebFlux + coroutines         | Redis (Lettuce) | IP, user, combined            |
+| `bucket4j-redis`              | Bucket4j starter with distributed token state | WebFlux + Reactor/coroutines | Redis (Lettuce) | URL/IP-oriented starter rules |
+| `bucket4j-caffeine-web`       | Local starter behavior without Redis          | Spring WebMVC                | Caffeine JCache | URL/IP-oriented starter rules |
 
 ## Shared Concepts
 
 All modules demonstrate token bucket decisions:
 
-| Concept | Meaning |
-|---|---|
-| Bucket capacity | Maximum tokens available in a window |
-| Refill | How and when tokens return to the bucket |
-| Key resolver | The value used to isolate one caller's bucket from another |
-| Store | Where bucket state is held: local Caffeine or shared Redis |
-| Exhausted bucket | Request is rejected with `429 Too Many Requests` |
+| Concept          | Meaning                                                    |
+|------------------|------------------------------------------------------------|
+| Bucket capacity  | Maximum tokens available in a window                       |
+| Refill           | How and when tokens return to the bucket                   |
+| Key resolver     | The value used to isolate one caller's bucket from another |
+| Store            | Where bucket state is held: local Caffeine or shared Redis |
+| Exhausted bucket | Request is rejected with `429 Too Many Requests`           |
 
 The bluetape4k WebFlux examples also expose response headers such as `X-Bluetape4k-Remaining-Token` or standard `X-RateLimit-Remaining` / `Retry-After`, depending on the module.
 

@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.observability.basic.client
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.basic.model.Inventory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitExchangeOrNull
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
+import org.springframework.web.reactive.function.client.awaitExchangeOrNull
 import org.springframework.web.reactive.function.client.createExceptionAndAwait
 
 /**
@@ -24,7 +25,7 @@ class InventoryClient(
     builder: WebClient.Builder,
     @Value("\${workshop.observability.inventory.base-url}") private val baseUrl: String,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val client: WebClient = builder.baseUrl(baseUrl).build()
 
@@ -44,7 +45,10 @@ class InventoryClient(
                     else -> response.awaitBodyOrNull<Inventory>()
                 }
             }
-        if (result == null) warn { "fetchInventory returned null for itemId=$validItemId" }
+
+        if (result == null) {
+            log.warn { "fetchInventory returned null for itemId=$validItemId" }
+        }
         return result
     }
 }

@@ -26,7 +26,7 @@ class LockedInventoryService(
     private val store: InventoryStore,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     fun deduct(
         id: Long,

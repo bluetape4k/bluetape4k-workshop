@@ -1,12 +1,11 @@
 package io.bluetape4k.workshop.commerce.metering.persistence
 
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
-import java.util.UUID
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
 
-class CommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<CommandReceiptEntity>(CommandReceipts)
+class CommandReceiptEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<CommandReceiptEntity>(CommandReceipts)
 
     var tenantId by CommandReceipts.tenantId
     var operation by CommandReceipts.operation
@@ -23,8 +22,8 @@ class CommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by CommandReceipts.updatedAt
 }
 
-class MeterEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<MeterEntity>(Meters)
+class MeterEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<MeterEntity>(Meters)
 
     var tenantId by Meters.tenantId
     var meterCode by Meters.meterCode
@@ -34,8 +33,8 @@ class MeterEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by Meters.createdAt
 }
 
-class PricingScheduleEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<PricingScheduleEntity>(PricingSchedules)
+class PricingScheduleEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<PricingScheduleEntity>(PricingSchedules)
 
     var tenantId by PricingSchedules.tenantId
     var meterId by PricingSchedules.meterId
@@ -43,8 +42,8 @@ class PricingScheduleEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by PricingSchedules.createdAt
 }
 
-class PriceVersionEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<PriceVersionEntity>(PriceVersions)
+class PriceVersionEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<PriceVersionEntity>(PriceVersions)
 
     var tenantId by PriceVersions.tenantId
     var scheduleId by PriceVersions.scheduleId
@@ -56,8 +55,8 @@ class PriceVersionEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by PriceVersions.createdAt
 }
 
-class UsageEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UsageEventEntity>(UsageEvents)
+class UsageEventEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<UsageEventEntity>(UsageEvents)
 
     var tenantId by UsageEvents.tenantId
     var sourceSystem by UsageEvents.sourceSystem
@@ -71,16 +70,16 @@ class UsageEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var correlationId by UsageEvents.correlationId
 }
 
-class BillingCalendarEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<BillingCalendarEntity>(BillingCalendars)
+class BillingCalendarEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<BillingCalendarEntity>(BillingCalendars)
 
     var tenantId by BillingCalendars.tenantId
     var currency by BillingCalendars.currency
     var createdAt by BillingCalendars.createdAt
 }
 
-class BillingPeriodEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<BillingPeriodEntity>(BillingPeriods)
+class BillingPeriodEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<BillingPeriodEntity>(BillingPeriods)
 
     var tenantId by BillingPeriods.tenantId
     var calendarId by BillingPeriods.calendarId
@@ -97,8 +96,8 @@ class BillingPeriodEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by BillingPeriods.createdAt
 }
 
-class CloseRunEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<CloseRunEntity>(CloseRuns)
+class CloseRunEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<CloseRunEntity>(CloseRuns)
 
     var tenantId by CloseRuns.tenantId
     var periodId by CloseRuns.periodId
@@ -115,8 +114,8 @@ class CloseRunEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by CloseRuns.updatedAt
 }
 
-class LedgerEntryEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<LedgerEntryEntity>(LedgerEntries)
+class LedgerEntryEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<LedgerEntryEntity>(LedgerEntries)
 
     var tenantId by LedgerEntries.tenantId
     var postingPeriodId by LedgerEntries.postingPeriodId
@@ -136,8 +135,8 @@ class LedgerEntryEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by LedgerEntries.createdAt
 }
 
-class InvoiceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<InvoiceEntity>(Invoices)
+class InvoiceEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<InvoiceEntity>(Invoices)
 
     var tenantId by Invoices.tenantId
     var periodId by Invoices.periodId
@@ -147,8 +146,8 @@ class InvoiceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var contentDigest by Invoices.contentDigest
 }
 
-class InvoiceLineEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<InvoiceLineEntity>(InvoiceLines)
+class InvoiceLineEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<InvoiceLineEntity>(InvoiceLines)
 
     var tenantId by InvoiceLines.tenantId
     var invoiceId by InvoiceLines.invoiceId
@@ -160,16 +159,16 @@ class InvoiceLineEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var currency by InvoiceLines.currency
 }
 
-class InvoiceLineEntryEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<InvoiceLineEntryEntity>(InvoiceLineEntries)
+class InvoiceLineEntryEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<InvoiceLineEntryEntity>(InvoiceLineEntries)
 
     var tenantId by InvoiceLineEntries.tenantId
     var invoiceLineId by InvoiceLineEntries.invoiceLineId
     var ledgerEntryId by InvoiceLineEntries.ledgerEntryId
 }
 
-class ReconciliationRunEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<ReconciliationRunEntity>(ReconciliationRuns)
+class ReconciliationRunEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<ReconciliationRunEntity>(ReconciliationRuns)
 
     var tenantId by ReconciliationRuns.tenantId
     var scope by ReconciliationRuns.scope
@@ -179,8 +178,8 @@ class ReconciliationRunEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var findingCount by ReconciliationRuns.findingCount
 }
 
-class ReconciliationFindingEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<ReconciliationFindingEntity>(ReconciliationFindings)
+class ReconciliationFindingEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<ReconciliationFindingEntity>(ReconciliationFindings)
 
     var tenantId by ReconciliationFindings.tenantId
     var runId by ReconciliationFindings.runId

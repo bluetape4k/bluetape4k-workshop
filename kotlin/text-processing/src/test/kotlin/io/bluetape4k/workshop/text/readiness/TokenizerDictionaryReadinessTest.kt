@@ -3,9 +3,11 @@ package io.bluetape4k.workshop.text.readiness
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.coroutines.runSuspendDefault
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.text.search.CoroutineMultilingualSearchIndex
 import io.bluetape4k.workshop.text.search.MultilingualSearchIndex
 import io.bluetape4k.workshop.text.search.SearchDocument
@@ -23,6 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class TokenizerDictionaryReadinessTest {
 
+    companion object: KLogging()
+
     @Test
     fun `readiness 전에는 요청 block을 실행하지 않는다`() = runSuspendDefault {
         val readiness = testReadiness()
@@ -34,7 +38,7 @@ class TokenizerDictionaryReadinessTest {
         }
 
         invoked.shouldBeFalse()
-        (result is DictionaryReadyResult.NotReady).shouldBeTrue()
+        result.shouldBeInstanceOf<DictionaryReadyResult.NotReady>()
         result.readiness shouldBeEqualTo DictionaryReadinessSnapshot.notReady()
     }
 
@@ -63,7 +67,7 @@ class TokenizerDictionaryReadinessTest {
                 "partial-result"
             }
             requestInvoked.shouldBeFalse()
-            (loadingResult is DictionaryReadyResult.NotReady).shouldBeTrue()
+            loadingResult.shouldBeInstanceOf<DictionaryReadyResult.NotReady>()
             loadingResult.readiness.status shouldBeEqualTo DictionaryReadinessStatus.LOADING
             releaseKorean.complete(Unit)
             callers.awaitAll()
@@ -155,10 +159,9 @@ class TokenizerDictionaryReadinessTest {
         val coroutineIndex = CoroutineMultilingualSearchIndex.indexOf(documents)
         val result = readiness.runWhenReady { coroutineIndex.search("서울 카페") }
 
-        (result is DictionaryReadyResult.Ready).shouldBeTrue()
-        val ready = result as DictionaryReadyResult.Ready
-        ready.value shouldBeEqualTo syncIndex.search("서울 카페")
-        ready.readiness shouldBeEqualTo DictionaryReadinessSnapshot.ready(attempt = 1)
+        result.shouldBeInstanceOf<DictionaryReadyResult.Ready<*>>()
+        result.value shouldBeEqualTo syncIndex.search("서울 카페")
+        result.readiness shouldBeEqualTo DictionaryReadinessSnapshot.ready(attempt = 1)
     }
 
     @Test

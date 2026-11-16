@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.leader
 
-import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.assertions.shouldBeEqualTo
-import org.junit.jupiter.api.Test
-import io.bluetape4k.codec.Base58
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.logging.KLogging
+import org.junit.jupiter.api.Test
 
 /**
  * T3: job 실패 뒤 leader re-election입니다.
@@ -12,7 +12,9 @@ import io.bluetape4k.assertions.assertFailsWith
  * job이 예외를 던질 때 lock이 `runImpl.finally { lock.unlock() }`로 release되어
  * 직후 다른 instance가 lock을 획득할 수 있는지 검증합니다.
  */
-class LeaderElectionJobRecoveryTest : AbstractLeaderElectionTest() {
+class LeaderElectionJobRecoveryTest: AbstractLeaderElectionTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `lock is released after job throws exception, allowing re-election`() {
@@ -30,6 +32,6 @@ class LeaderElectionJobRecoveryTest : AbstractLeaderElectionTest() {
         // elector2는 lock을 즉시 획득할 수 있습니다(leaseTime 대기 불필요).
         val recovered = elector2.runIfLeader(lockName) { "recovered" }
 
-        recovered.shouldNotBeNull() shouldBeEqualTo "recovered"
+        recovered shouldBeEqualTo "recovered"
     }
 }

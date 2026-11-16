@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.bucket4j.filter
 
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedSuspendRateLimiter
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
@@ -26,9 +27,9 @@ class AsyncUserRateLimitWebFilter(
     private val keyResolver: UserKeyResolver,
     private val rateLimiter: DistributedSuspendRateLimiter,
     private val targetProvider: RateLimitTargetProvider,
-) : WebFilter {
+): WebFilter {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         return doFilter(exchange, chain)
@@ -46,8 +47,9 @@ class AsyncUserRateLimitWebFilter(
                     val rateLimitKey = key.requireNotBlank("key")
                     val result = rateLimiter.consume(rateLimitKey, 1L)
                     writeRateLimitHeaders(exchange, result.availableTokens)
+                    log.debug { "Bucket[$rateLimitKey] remains token=${result.availableTokens}" }
+                    
                     if (result.consumedTokens > 0L) {
-                        log.trace { "Bucket[$rateLimitKey] remains token=${result.availableTokens}" }
                         chain.filter(exchange).awaitSingleOrNull()
                     } else {
                         sendErrorResponse(exchange)

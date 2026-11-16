@@ -26,7 +26,7 @@ class FulfillmentReservationHandler(
     fun on(event: OrderApproved) {
         val orderId = event.aggregateId
         if (failureSwitch.failNext(orderId)) {
-            throw IllegalStateException("fulfillment failed for orderId=$orderId")
+            error("fulfillment failed for orderId=$orderId")
         }
         if (!reservations.existsById(orderId)) {
             reservations.save(FulfillmentReservation.forOrder(orderId))

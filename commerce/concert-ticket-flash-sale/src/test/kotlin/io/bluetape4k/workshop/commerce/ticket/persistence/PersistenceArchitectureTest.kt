@@ -1,16 +1,18 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
 import io.bluetape4k.assertions.shouldBeEmpty
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.TicketAdmissionGrantRepository
 import io.bluetape4k.workshop.commerce.ticket.idempotency.HttpIdempotencyRepository
 import io.bluetape4k.workshop.commerce.ticket.identity.IdentityAliasRepository
 import io.bluetape4k.workshop.commerce.ticket.identity.IdentitySubjectRepository
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentOperationClaimRepository
-import io.bluetape4k.workshop.commerce.ticket.purchase.internal.TicketPurchaseRepository
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.RefundOperationRepository
+import io.bluetape4k.workshop.commerce.ticket.purchase.internal.TicketPurchaseRepository
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.TicketRefundRepository
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.internal.TicketSaleRepository
 import io.bluetape4k.workshop.commerce.ticket.ticketing.internal.TicketEffectRepository
@@ -69,10 +71,10 @@ internal class PersistenceArchitectureTest {
             .substringAfter("fun seedAuthority(")
             .substringBefore("\n    fun seedSale(")
 
-        seedAuthority.contains("executor.transaction").shouldBeTrue()
-        seedAuthority.contains("TicketSaleEntity.new").shouldBeTrue()
-        seedAuthority.contains("INSERT INTO").shouldBeFalse()
-        seedAuthority.contains("execute(").shouldBeFalse()
+        seedAuthority shouldContain "executor.transaction"
+        seedAuthority shouldContain "TicketSaleEntity.new"
+        seedAuthority shouldNotContain "INSERT INTO"
+        seedAuthority shouldNotContain "execute("
     }
 
     private fun locateSourceRoot(): Path {
@@ -89,7 +91,7 @@ internal class PersistenceArchitectureTest {
         return current.resolve("commerce/concert-ticket-flash-sale/src/test/kotlin")
     }
 
-    companion object {
+    companion object: KLogging() {
         private val RAW_JDBC_MARKERS = listOf(
             ".prepareStatement(",
             ".createStatement(",

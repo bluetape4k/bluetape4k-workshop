@@ -5,6 +5,10 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.multitenant.domain.InvoiceRecord
 import io.bluetape4k.workshop.multitenant.domain.InvoiceStatus
 import io.bluetape4k.workshop.multitenant.domain.TenantId
@@ -18,7 +22,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.math.BigDecimal
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -29,6 +32,9 @@ class TenantIsolationTest @Autowired constructor(
     private val lockRegistry: TenantLockRegistry,
     private val metrics: TenantMetrics,
 ) {
+
+    companion object: KLogging()
+
     @BeforeEach
     fun reset() {
         service.resetWorkshopState()
@@ -37,11 +43,17 @@ class TenantIsolationTest @Autowired constructor(
     @Test
     fun `baseline repository and cache leak when tenant scope is omitted`() {
         val alphaInvoice = service.createInvoice(invoice(TenantId.ALPHA, "Alpha Hospital"))
+        log.debug { "alphaInvoice=$alphaInvoice" }
 
         val leaked = service.unsafeFindInvoiceForBaseline(TenantId.BETA, alphaInvoice.id)
+        val unsafeInvoiceCacheKey = keyFactory.unsafeInvoiceCacheKey(alphaInvoice.id)
 
-        leaked?.tenantId shouldBeEqualTo TenantId.ALPHA
-        cache.keys().any { it == keyFactory.unsafeInvoiceCacheKey(alphaInvoice.id) }.shouldBeTrue()
+        log.debug { "leaked=$leaked" }
+        log.debug { "unsafeInvoiceCacheKey=$unsafeInvoiceCacheKey" }
+        log.debug { "cache.keys()=${cache.keys()}" }
+
+        leaked.shouldNotBeNull().tenantId shouldBeEqualTo TenantId.ALPHA
+        cache.keys().any { it == unsafeInvoiceCacheKey }.shouldBeTrue()
     }
 
     @Test
@@ -55,7 +67,8 @@ class TenantIsolationTest @Autowired constructor(
         service.markPaid(TenantId.ALPHA, alphaInvoice.id).shouldBeTrue()
 
         val alphaAfterWrite = service.findInvoice(TenantId.ALPHA, alphaInvoice.id)
-        alphaAfterWrite?.status shouldBeEqualTo InvoiceStatus.PAID
+        log.debug { "alphaAfterWrite=$alphaAfterWrite" }
+        alphaAfterWrite.shouldNotBeNull().status shouldBeEqualTo InvoiceStatus.PAID
     }
 
     @Test
@@ -65,12 +78,11 @@ class TenantIsolationTest @Autowired constructor(
         service.findInvoice(TenantId.ALPHA, alphaInvoice.id)?.id shouldBeEqualTo alphaInvoice.id
         service.findInvoice(TenantId.BETA, alphaInvoice.id).shouldBeNull()
 
-        cache.keys().any {
-            it == keyFactory.invoiceCacheKey(TenantId.ALPHA, alphaInvoice.id)
-        }.shouldBeTrue()
-        cache.keys().any {
-            it == keyFactory.invoiceCacheKey(TenantId.BETA, alphaInvoice.id)
-        }.shouldBeFalse()
+        val unsafeInvoiceCacheKeyAlpha = keyFactory.invoiceCacheKey(TenantId.ALPHA, alphaInvoice.id)
+        cache.keys().any { it == unsafeInvoiceCacheKeyAlpha }.shouldBeTrue()
+
+        val unsafeInvoiceCacheKeyBeta = keyFactory.invoiceCacheKey(TenantId.BETA, alphaInvoice.id)
+        cache.keys().any { it == unsafeInvoiceCacheKeyBeta }.shouldBeFalse()
     }
 
     @Test
@@ -82,7 +94,9 @@ class TenantIsolationTest @Autowired constructor(
 
         alphaLockKey shouldBeEqualTo keyFactory.invoiceLockKey(TenantId.ALPHA, alphaInvoice.id)
         betaLockKey shouldBeEqualTo keyFactory.invoiceLockKey(TenantId.BETA, alphaInvoice.id)
-        lockRegistry.keys().size shouldBeEqualTo 2
+
+        lockRegistry.keys() shouldHaveSize 2
+        lockRegistry.keys().forEach { log.debug { "lockKey=$it" } }
 
         val alphaFirst = service.tryRateLimit(TenantId.ALPHA, "reader", limit = 1)
         val alphaSecond = service.tryRateLimit(TenantId.ALPHA, "reader", limit = 1)
@@ -108,6 +122,6 @@ class TenantIsolationTest @Autowired constructor(
         InvoiceRecord(
             tenantId = tenantId,
             customerName = customerName,
-            amount = BigDecimal("125.50"),
+            amount = 125.50.toBigDecimal(),
         )
 }

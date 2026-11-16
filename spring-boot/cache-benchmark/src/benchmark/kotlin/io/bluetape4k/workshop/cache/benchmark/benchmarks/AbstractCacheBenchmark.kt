@@ -24,7 +24,7 @@ import org.springframework.context.ConfigurableApplicationContext
  * 같은 JVM 의 모든 benchmark 가 container 를 공유합니다.
  */
 abstract class AbstractCacheBenchmark {
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         /** 전체 JVM 에서 한 번 시작되는 공유 Redis container 입니다. */
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
     }

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.messaging.fallback.config
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.annotation.EnableKafka
@@ -17,10 +18,13 @@ import tools.jackson.databind.ObjectMapper
 @EnableKafka
 class KafkaConfig {
 
+    companion object: KLogging()
+
     @Bean
     fun objectMapper(): ObjectMapper =
         Jackson.createDefaultJsonMapper()
             .rebuild()
+            .findAndAddModules()
             .disable(JsonReadFeature.ALLOW_TRAILING_COMMA)
             .build()
 }

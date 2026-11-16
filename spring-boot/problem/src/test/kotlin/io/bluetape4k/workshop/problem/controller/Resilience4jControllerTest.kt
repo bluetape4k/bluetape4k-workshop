@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.problem.controller
 
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.problem.AbstractProblemTest
@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpStatus
 
-class Resilience4jControllerTest(context: ApplicationContext) : AbstractProblemTest(context) {
+class Resilience4jControllerTest(context: ApplicationContext): AbstractProblemTest(context) {
 
-    companion object : KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * circuit breaker 가 open 되면 call not permitted exception 을 반환합니다.

@@ -1,13 +1,17 @@
 package io.bluetape4k.workshop.commerce.reservation.persistence
 
-import io.bluetape4k.exposed.tests.TestDB
-import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.exposed.tests.TestDB
+import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class CapacityResourceRepositoryTest {
+
+    companion object: KLogging()
+
     @Test
     fun `capacity CAS admits once and rejects stale revision on PostgreSQL`() {
         withTables(TestDB.POSTGRESQL, *reservationTables) {

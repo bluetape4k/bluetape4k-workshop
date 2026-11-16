@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component
  * 워크숍 실행 중 metric을 확인할 수 있게 합니다.
  */
 @Component
-class DebugMetricHandler : MetricHandler {
+class DebugMetricHandler: MetricHandler {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override fun handle(
         type: MetricType,

@@ -14,6 +14,9 @@ import io.bluetape4k.ktor.core.installBluetape4kKtorCore
 import io.bluetape4k.ktor.testing.bluetape4kJsonClient
 import io.bluetape4k.ktor.testing.decodeJsonBody
 import io.bluetape4k.ktor.testing.shouldHaveStatus
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -29,6 +32,10 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class KtorExposedSelectiveHealthTest {
+
+    companion object: KLoggingChannel() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
 
     @Test
     fun `core readiness route enforces one bounded deadline without a backend adapter`() = testApplication {
@@ -47,6 +54,7 @@ class KtorExposedSelectiveHealthTest {
             .shouldHaveStatus(HttpStatusCode.ServiceUnavailable)
             .decodeJsonBody<HealthResponse>()
 
+        log.debug { "readiness=$readiness" }
         readiness shouldBeEqualTo HealthResponse.down(mapOf("slow" to "TIMEOUT"))
     }
 
@@ -72,13 +80,14 @@ class KtorExposedSelectiveHealthTest {
             .shouldHaveStatus(HttpStatusCode.InternalServerError)
             .bodyAsText()
 
+        log.debug { "body=$body" }
         body shouldNotContain "jdbc:postgresql://db.internal"
         body shouldNotContain "top-secret"
         body shouldNotContain "select * from accounts"
         body shouldNotContain "admin"
     }
 
-    private object SlowProbe : ExposedKtorCooperativeReadinessProbe {
+    private object SlowProbe: ExposedKtorCooperativeReadinessProbe {
         override val component: String = "slow"
         override val backend: ExposedKtorReadinessBackend = ExposedKtorReadinessBackend.JDBC
 

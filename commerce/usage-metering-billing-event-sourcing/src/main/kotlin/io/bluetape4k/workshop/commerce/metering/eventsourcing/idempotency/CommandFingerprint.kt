@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
-import java.nio.charset.StandardCharsets.UTF_8
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8Bytes
 import java.security.MessageDigest
-import java.util.Locale
+import java.util.*
 
 @JvmInline
 value class CommandDigest(val value: String) {
@@ -22,7 +23,7 @@ object CommandFingerprint {
     }
 
     fun request(operation: String, fields: Map<String, String>): CommandDigest {
-        require(operation.isNotBlank()) { "operation_invalid" }
+        operation.requireNotBlank { "operation_invalid" }
         val canonical = buildString {
             append("billing-command-request-v1\n").append(operation.trim()).append('\n')
             fields.toSortedMap().forEach { (name, value) -> append(name).append('=').append(value).append('\n') }
@@ -31,7 +32,7 @@ object CommandFingerprint {
     }
 
     private fun sha256(value: String): CommandDigest = CommandDigest(
-        MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8))
+        MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes())
             .joinToString("") { "%02x".format(Locale.ROOT, it) },
     )
 

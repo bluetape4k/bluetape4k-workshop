@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.cache.redis.config
 
+import io.bluetape4k.javatimes.days
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.redis.serializer.RedisBinarySerializers
 import org.springframework.beans.factory.annotation.Value
@@ -16,7 +17,6 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
-import java.time.Duration
 
 @Configuration(proxyBeanMethods = false)
 @EnableCaching
@@ -34,7 +34,7 @@ class LettuceRedisCacheConfiguration {
     fun cacheManager(connectionFactory: RedisConnectionFactory): CacheManager {
         return RedisCacheManager.builder(connectionFactory)
             .transactionAware()
-            .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(1)))
+            .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig().entryTtl(1.days()))
             .build()
     }
 
@@ -53,9 +53,9 @@ class LettuceRedisCacheConfiguration {
     fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<Any, Any> {
         return RedisTemplate<Any, Any>().apply {
             setConnectionFactory(connectionFactory)
-            setDefaultSerializer(RedisBinarySerializers.LZ4Kryo)
+            defaultSerializer = RedisBinarySerializers.LZ4FastFory
             keySerializer = StringRedisSerializer.UTF_8
-            valueSerializer = RedisBinarySerializers.LZ4Kryo
+            valueSerializer = RedisBinarySerializers.LZ4FastFory
         }
     }
 }

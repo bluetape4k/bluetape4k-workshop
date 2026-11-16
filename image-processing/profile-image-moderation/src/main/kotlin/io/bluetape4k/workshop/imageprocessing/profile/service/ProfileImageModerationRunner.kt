@@ -6,17 +6,18 @@ import io.bluetape4k.workshop.imageprocessing.profile.config.ProfileImageModerat
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationRequest
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeout
 import org.springframework.stereotype.Component
+import kotlin.time.toKotlinDuration
 
 @Component
 /**
@@ -30,6 +31,8 @@ class ProfileImageModerationRunner(
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
 
+    private companion object: KLogging()
+
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val semaphore = Semaphore(properties.moderationConcurrency)
 
@@ -39,7 +42,7 @@ class ProfileImageModerationRunner(
             var resultTag = "failure"
             try {
                 semaphore.withPermit {
-                    val result = withTimeout(properties.moderationTimeout.toMillis()) {
+                    val result = withTimeout(properties.moderationTimeout.toKotlinDuration()) {
                         provider.moderate(request)
                     }
                     val changed = repository.completeModeration(request.userId, request.uploadId, result)
@@ -56,7 +59,11 @@ class ProfileImageModerationRunner(
                 throw e
             } catch (e: Exception) {
                 resultTag = "failed"
-                val changed = repository.failModeration(request.userId, request.uploadId, e.message ?: e.javaClass.simpleName)
+                val changed = repository.failModeration(
+                    request.userId,
+                    request.uploadId,
+                    e.message ?: e.javaClass.simpleName
+                )
                 metrics.transition("failed", if (changed) "updated" else "stale")
                 log.warn(e) { "Profile image moderation failed" }
             } finally {
@@ -69,6 +76,4 @@ class ProfileImageModerationRunner(
     fun shutdown() {
         scope.cancel("profile image moderation runner shutdown")
     }
-
-    companion object : KLogging()
 }

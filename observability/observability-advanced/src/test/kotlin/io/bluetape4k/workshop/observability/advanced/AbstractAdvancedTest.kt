@@ -24,8 +24,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractAdvancedTest {
 
-    companion object : KLogging() {
-        val redis = RedisServer.Launcher.redis
+    companion object: KLogging() {
+        val redis by lazy { RedisServer.Launcher.redis }
 
         @JvmStatic
         @DynamicPropertySource

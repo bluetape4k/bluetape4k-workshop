@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.AbandonReason
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.CleanupReport
@@ -290,7 +293,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             val deadlineNanos = Math.addExact(System.nanoTime(), statementTimeout.toNanos())
             inTransaction(
                 statementTimeout = statementTimeout,
-                connectionTimeout = minDuration(policy.connectionAcquireTimeout, statementTimeout),
+                connectionTimeout = minOf(policy.connectionAcquireTimeout, statementTimeout),
                 deadlineNanos = deadlineNanos,
             ) { connection ->
                 val request = loadRequest(connection, scope, keyHash, forUpdate = false) ?: return@inTransaction PollResult.StillInFlight
@@ -723,7 +726,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     override fun <T> withTransaction(block: (Connection) -> T): T =
         inTransaction(connectionTimeout = policy.connectionAcquireTimeout, block = block)
 
-    private fun <T> inTransaction(
+    private inline fun <T> inTransaction(
         statementTimeout: Duration = policy.statementTimeout,
         connectionTimeout: Duration? = null,
         deadlineNanos: Long? = null,
@@ -736,7 +739,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             } else {
                 val remaining = deadlineNanos - System.nanoTime()
                 if (remaining <= 0L) throw TransactionDeadlineExceeded()
-                minDuration(connectionTimeout, Duration.ofNanos(remaining))
+                minOf(connectionTimeout, remaining.nanos())
             }
         val connection =
             if (acquisitionTimeout == null) {
@@ -758,23 +761,23 @@ internal class JdbcJobSubmissionIdempotencyRepository(
                     } else {
                         val remaining = deadlineNanos - System.nanoTime()
                         if (remaining <= 0L) throw TransactionDeadlineExceeded()
-                        minDuration(statementTimeout, Duration.ofNanos(remaining))
+                        minOf(statementTimeout, remaining.nanos())
                     }
                 if (effectiveStatementTimeout.toMillis() <= 0L) throw TransactionDeadlineExceeded()
                 setNetworkTimeout(connection, effectiveStatementTimeout)
                 applyStatementTimeout(connection, effectiveStatementTimeout)
                 if (deadlineNanos != null) {
                     val remainingAfterSetup = deadlineNanos - System.nanoTime()
-                    if (remainingAfterSetup <= 0L || Duration.ofNanos(remainingAfterSetup).toMillis() <= 0L) {
+                    if (remainingAfterSetup <= 0L || remainingAfterSetup.nanos().toMillis() <= 0L) {
                         throw TransactionDeadlineExceeded()
                     }
-                    setNetworkTimeout(connection, Duration.ofNanos(remainingAfterSetup))
+                    setNetworkTimeout(connection, remainingAfterSetup.nanos())
                 }
                 val result = block(connection)
                 if (deadlineNanos != null) {
                     val remaining = deadlineNanos - System.nanoTime()
                     if (remaining <= 0L) throw TransactionDeadlineExceeded()
-                    setNetworkTimeout(connection, Duration.ofNanos(remaining))
+                    setNetworkTimeout(connection, remaining.nanos())
                 }
                 connection.commit()
                 afterCommit(connection, result)
@@ -839,7 +842,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     ): T? {
         val remaining = deadlineNanos - System.nanoTime()
         if (remaining <= 0L) return null
-        val connection = boundedConnectionAcquirer.acquire(Duration.ofNanos(remaining)) ?: return null
+        val connection = boundedConnectionAcquirer.acquire(remaining.nanos()) ?: return null
         return connection.use {
             it.autoCommit = false
             try {
@@ -869,14 +872,13 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     private fun configureRegistrationBudget(connection: Connection, deadlineNanos: Long): Long {
         val remaining = deadlineNanos - System.nanoTime()
         if (remaining < MIN_REGISTRATION_STATEMENT_BUDGET_NANOS) throw RegistrationDeadlineExceeded()
-        val statementBudgetNanos =
-            minOf(
+        val statementBudgetNanos = minOf(
                 remaining / REGISTRATION_STATEMENT_COUNT,
                 policy.statementTimeout.toNanos(),
             )
         if (statementBudgetNanos <= 0L) throw RegistrationDeadlineExceeded()
         refreshNetworkTimeout(connection, deadlineNanos, statementBudgetNanos)
-        val perStatementTimeout = Duration.ofNanos(statementBudgetNanos)
+        val perStatementTimeout = statementBudgetNanos.nanos()
         applyStatementTimeout(connection, perStatementTimeout)
         return statementBudgetNanos
     }
@@ -889,9 +891,9 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         val remaining = deadlineNanos - System.nanoTime()
         if (remaining <= 0L) throw RegistrationDeadlineExceeded()
         val timeoutNanos = minOf(remaining, maximumTimeoutNanos)
-        val timeoutMillis = Duration.ofNanos(timeoutNanos).toMillis().coerceAtMost(Int.MAX_VALUE.toLong())
+        val timeoutMillis = timeoutNanos.nanos().toMillis().coerceAtMost(Int.MAX_VALUE.toLong())
         if (timeoutMillis <= 0L) throw RegistrationDeadlineExceeded()
-        setNetworkTimeout(connection, Duration.ofMillis(timeoutMillis))
+        setNetworkTimeout(connection, timeoutMillis.millis())
     }
 
     private fun setNetworkTimeout(connection: Connection, timeout: Duration) {
@@ -941,7 +943,9 @@ internal class JdbcJobSubmissionIdempotencyRepository(
                             throw IllegalArgumentException("response header values must be string arrays")
                         }
                         val strings = buildList<String> {
-                            for (value in values) add(value.stringValue())
+                            for (value in values) {
+                                add(value.stringValue())
+                            }
                         }
                         put(name, strings)
                     }
@@ -979,13 +983,13 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     private class TransactionDeadlineExceeded : RuntimeException()
     private class RegistrationDeadlineExceeded : RuntimeException()
 
-    private companion object {
+    private companion object: KLogging() {
         const val UNIQUE_VIOLATION_SQL_STATE = "23505"
         const val QUERY_CANCELED_SQL_STATE = "57014"
         const val MAX_RESERVE_RETRIES = 2
         const val REGISTRATION_STATEMENT_COUNT = 5
         const val MIN_REGISTRATION_STATEMENT_BUDGET_NANOS = REGISTRATION_STATEMENT_COUNT * 1_000_000L
-        val MIN_REGISTRATION_TTL: Duration = Duration.ofMillis(25)
+        val MIN_REGISTRATION_TTL: Duration = 25.millis()
         val jsonMapper = Jackson.defaultJsonMapper
 
         fun normalizedSubmitterHash(value: String): String =
@@ -994,7 +998,5 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             } else {
                 MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)).toHexString()
             }
-
-        fun minDuration(left: Duration, right: Duration): Duration = if (left <= right) left else right
     }
 }

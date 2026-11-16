@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.idgenerators.uuid.Uuid
-import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.workshop.operations.jobconsole.api.EtaConfidence
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
-import io.bluetape4k.workshop.operations.jobconsole.api.EtaConfidence
 import io.bluetape4k.workshop.operations.jobconsole.api.QueueProjection
+import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobLease
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobSignal
@@ -19,7 +23,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 data class DemoCallerScope(
@@ -81,13 +85,19 @@ data class CancelJobResult(
 
 class JobRepositoryException(
     val code: JobProblemCode,
-) : RuntimeException(code.name)
+): RuntimeException(code.name)
 
 class JobRepository(
     internal val dataSource: DataSource,
 ) {
+
+    companion object: KLogging() {
+        const val MAX_DURATION_SAMPLES: Int = 100
+    }
+
     fun runnableTenantIds(limit: Int): List<String> {
-        require(limit in 1..100) { "limit must be between 1 and 100" }
+        limit.requireInRange(1, 100, "limit")
+
         return dataSource.connection.use { connection ->
             connection.prepareStatement(
                 """
@@ -104,19 +114,19 @@ class JobRepository(
                 statement.setString(2, JobState.RUNNING.wireValue)
                 statement.setString(3, JobState.CANCEL_REQUESTED.wireValue)
                 statement.setInt(4, limit)
-                statement.executeQuery().use { result -> buildList { while (result.next()) add(result.getString("tenant_id")) } }
+                statement.executeQuery()
+                    .use { result -> buildList { while (result.next()) add(result.getString("tenant_id")) } }
             }
         }
     }
 
-    fun databaseReady(): Boolean =
-        runCatching {
-            dataSource.connection.use { connection ->
-                connection.prepareStatement("SELECT 1").use { statement ->
-                    statement.executeQuery().use { result -> result.next() && result.getInt(1) == 1 }
-                }
+    fun databaseReady(): Boolean = runCatching {
+        dataSource.connection.use { connection ->
+            connection.prepareStatement("SELECT 1").use { statement ->
+                statement.executeQuery().use { result -> result.next() && result.getInt(1) == 1 }
             }
-        }.getOrDefault(false)
+        }
+    }.getOrDefault(false)
 
     fun submit(
         scope: DemoCallerScope,
@@ -124,8 +134,9 @@ class JobRepository(
         request: SubmitJobRequest,
         now: Instant,
     ): SubmitJobResult {
-        require(idempotencyKey.isNotBlank()) { "Idempotency-Key must not be blank" }
-        require(request.workUnits in 1..10_000) { "workUnits must be between 1 and 10000" }
+        idempotencyKey.requireNotBlank("idempotencyKey")
+        request.workUnits.requireInRange(1, 10_000, "request.workUnits")
+
         val keyHash = sha256("${scope.tenantId}:${scope.submitterHash}:$idempotencyKey")
         val fingerprint = sha256("${request.jobType.wireValue}:${request.workUnits}:${request.failureMode.wireValue}")
 
@@ -138,7 +149,11 @@ class JobRepository(
                         throw JobRepositoryException(JobProblemCode.IDEMPOTENCY_KEY_REUSED)
                     }
                     connection.commit()
-                    return@use SubmitJobResult(existing.jobId, enqueueSequence(connection, existing.jobId), replayed = true)
+                    return@use SubmitJobResult(
+                        existing.jobId,
+                        enqueueSequence(connection, existing.jobId),
+                        replayed = true
+                    )
                 }
 
                 val jobId = Uuid.V7.nextId()
@@ -168,13 +183,11 @@ class JobRepository(
         return InsertedSubmittedJob(jobId, sequence)
     }
 
-    fun claimNext(tenantId: String, leaseDuration: Duration): ClaimedJob? =
-        inTransaction { connection ->
-            advisoryLock(connection, "claim:$tenantId")
-            if (hasActiveLease(connection, tenantId)) return@inTransaction null
-            val candidate =
-                connection.prepareStatement(
-                    """
+    fun claimNext(tenantId: String, leaseDuration: Duration): ClaimedJob? = inTransaction { connection ->
+        advisoryLock(connection, "claim:$tenantId")
+        if (hasActiveLease(connection, tenantId)) return@inTransaction null
+        val candidate = connection.prepareStatement(
+            """
                     SELECT job_id, job_type, failure_mode, work_units, enqueue_sequence, version
                     FROM jobs
                     WHERE tenant_id = ? AND state = ?
@@ -182,21 +195,21 @@ class JobRepository(
                     FOR UPDATE SKIP LOCKED
                     LIMIT 1
                     """.trimIndent(),
-                ).use { statement ->
-                    statement.setString(1, tenantId)
-                    statement.setString(2, JobState.QUEUED.wireValue)
-                    statement.executeQuery().use { result -> if (result.next()) ClaimCandidate.from(result) else null }
-                } ?: return@inTransaction null
-            activateLease(connection, tenantId, candidate, leaseDuration, JobState.QUEUED)
-        }
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setString(2, JobState.QUEUED.wireValue)
+            statement.executeQuery().use { result -> if (result.next()) ClaimCandidate.from(result) else null }
+        } ?: return@inTransaction null
+        activateLease(connection, tenantId, candidate, leaseDuration, JobState.QUEUED)
+    }
 
     fun reclaimExpired(tenantId: String, leaseDuration: Duration): ClaimedJob? =
         inTransaction { connection ->
             advisoryLock(connection, "claim:$tenantId")
             if (cancelExpiredLease(connection, tenantId)) return@inTransaction null
-            val candidate =
-                connection.prepareStatement(
-                    """
+
+            val candidate = connection.prepareStatement(
+                """
                     SELECT job_id, job_type, failure_mode, work_units, enqueue_sequence, version
                     FROM jobs
                     WHERE tenant_id = ?
@@ -206,11 +219,11 @@ class JobRepository(
                     FOR UPDATE
                     LIMIT 1
                     """.trimIndent(),
-                ).use { statement ->
-                    statement.setString(1, tenantId)
-                    statement.setString(2, JobState.RUNNING.wireValue)
-                    statement.executeQuery().use { result -> if (result.next()) ClaimCandidate.from(result) else null }
-                } ?: return@inTransaction null
+            ).use { statement ->
+                statement.setString(1, tenantId)
+                statement.setString(2, JobState.RUNNING.wireValue)
+                statement.executeQuery().use { result -> if (result.next()) ClaimCandidate.from(result) else null }
+            } ?: return@inTransaction null
             activateLease(connection, tenantId, candidate, leaseDuration, null)
         }
 
@@ -226,15 +239,13 @@ class JobRepository(
             val leaseState = currentLeaseState(connection, lease)
             val state = leaseState.state
             val effectiveLease = lease.copy(revision = leaseState.version)
-            val nextState =
-                if (state == JobState.CANCEL_REQUESTED) {
-                    JobTransitions.next(state, JobSignal.CHECKPOINT)
-                } else {
-                    state
-                }
-            val updated =
-                connection.prepareStatement(
-                    """
+            val nextState = if (state == JobState.CANCEL_REQUESTED) {
+                JobTransitions.next(state, JobSignal.CHECKPOINT)
+            } else {
+                state
+            }
+            val updated = connection.prepareStatement(
+                """
                     UPDATE jobs
                     SET state = ?, progress = ?, version = version + 1, queue_version = queue_version + 1,
                         updated_at = CURRENT_TIMESTAMP,
@@ -245,22 +256,22 @@ class JobRepository(
                       AND lease_expires_at > CURRENT_TIMESTAMP
                     RETURNING version, lease_expires_at
                     """.trimIndent(),
-                ).use { statement ->
-                    val terminal = nextState.terminal
-                    statement.setString(1, nextState.wireValue)
-                    statement.setInt(2, progress)
-                    statement.setBoolean(3, terminal)
-                    statement.setBoolean(4, terminal)
-                    statement.setLong(5, renewalDuration.toMillis())
-                    statement.setObject(6, effectiveLease.jobId)
-                    statement.setObject(7, effectiveLease.token)
-                    statement.setLong(8, effectiveLease.revision)
-                    statement.executeQuery().use { result ->
-                        if (!result.next()) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
-                        val expiresAt = result.getTimestamp("lease_expires_at")?.toInstant() ?: lease.expiresAt
-                        effectiveLease.copy(revision = result.getLong("version"), expiresAt = expiresAt)
-                    }
+            ).use { statement ->
+                val terminal = nextState.terminal
+                statement.setString(1, nextState.wireValue)
+                statement.setInt(2, progress)
+                statement.setBoolean(3, terminal)
+                statement.setBoolean(4, terminal)
+                statement.setLong(5, renewalDuration.toMillis())
+                statement.setObject(6, effectiveLease.jobId)
+                statement.setObject(7, effectiveLease.token)
+                statement.setLong(8, effectiveLease.revision)
+                statement.executeQuery().use { result ->
+                    if (!result.next()) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
+                    val expiresAt = result.getTimestamp("lease_expires_at")?.toInstant() ?: lease.expiresAt
+                    effectiveLease.copy(revision = result.getLong("version"), expiresAt = expiresAt)
                 }
+            }
             upsertCheckpoint(connection, lease.jobId, lease.token, completedChunk, progress)
             appendTransition(connection, lease.jobId, state, nextState, "checkpoint", updated.revision)
             CheckpointResult(updated, completedChunk, progress, nextState)
@@ -334,34 +345,32 @@ class JobRepository(
             }
         }
 
-    fun cancel(scope: DemoCallerScope, jobId: UUID): CancelJobResult =
-        inTransaction { connection ->
-            val row =
-                connection.prepareStatement(
-                    "SELECT tenant_id, submitter_hash, state, version FROM jobs WHERE job_id = ? FOR UPDATE",
-                ).use { statement ->
-                    statement.setObject(1, jobId)
-                    statement.executeQuery().use { result ->
-                        if (!result.next()) throw JobRepositoryException(JobProblemCode.JOB_NOT_FOUND)
-                        CancelRow(
-                            tenantId = result.getString("tenant_id"),
-                            submitterHash = result.getString("submitter_hash").trim(),
-                            state = JobState.entries.single { it.wireValue == result.getString("state") },
-                            version = result.getLong("version"),
-                        )
-                    }
+    fun cancel(scope: DemoCallerScope, jobId: UUID): CancelJobResult = inTransaction { connection ->
+        val row =
+            connection.prepareStatement(
+                "SELECT tenant_id, submitter_hash, state, version FROM jobs WHERE job_id = ? FOR UPDATE",
+            ).use { statement ->
+                statement.setObject(1, jobId)
+                statement.executeQuery().use { result ->
+                    if (!result.next()) throw JobRepositoryException(JobProblemCode.JOB_NOT_FOUND)
+                    CancelRow(
+                        tenantId = result.getString("tenant_id"),
+                        submitterHash = result.getString("submitter_hash").trim(),
+                        state = JobState.entries.single { it.wireValue == result.getString("state") },
+                        version = result.getLong("version"),
+                    )
                 }
-            if (row.tenantId != scope.tenantId || row.submitterHash != normalizedSubmitterHash(scope.submitterHash)) {
-                throw JobRepositoryException(JobProblemCode.SCOPE_DENIED)
             }
-            if (row.state.terminal || row.state == JobState.CANCEL_REQUESTED) {
-                return@inTransaction CancelJobResult(jobId, row.state, row.state == JobState.CANCEL_REQUESTED)
-            }
+        if (row.tenantId != scope.tenantId || row.submitterHash != normalizedSubmitterHash(scope.submitterHash)) {
+            throw JobRepositoryException(JobProblemCode.SCOPE_DENIED)
+        }
+        if (row.state.terminal || row.state == JobState.CANCEL_REQUESTED) {
+            return@inTransaction CancelJobResult(jobId, row.state, row.state == JobState.CANCEL_REQUESTED)
+        }
 
-            val next = JobTransitions.next(row.state, JobSignal.CANCEL)
-            val version =
-                connection.prepareStatement(
-                    """
+        val next = JobTransitions.next(row.state, JobSignal.CANCEL)
+        val version = connection.prepareStatement(
+            """
                     UPDATE jobs
                     SET state = ?, version = version + 1, queue_version = queue_version + 1,
                         updated_at = CURRENT_TIMESTAMP,
@@ -370,20 +379,20 @@ class JobRepository(
                     WHERE job_id = ? AND version = ?
                     RETURNING version
                     """.trimIndent(),
-                ).use { statement ->
-                    statement.setString(1, next.wireValue)
-                    statement.setBoolean(2, next.terminal)
-                    statement.setBoolean(3, next.terminal)
-                    statement.setObject(4, jobId)
-                    statement.setLong(5, row.version)
-                    statement.executeQuery().use { result ->
-                        if (!result.next()) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
-                        result.getLong("version")
-                    }
-                }
-            appendTransition(connection, jobId, row.state, next, "cancel_requested", version)
-            CancelJobResult(jobId, next, next == JobState.CANCEL_REQUESTED)
+        ).use { statement ->
+            statement.setString(1, next.wireValue)
+            statement.setBoolean(2, next.terminal)
+            statement.setBoolean(3, next.terminal)
+            statement.setObject(4, jobId)
+            statement.setLong(5, row.version)
+            statement.executeQuery().use { result ->
+                if (!result.next()) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
+                result.getLong("version")
+            }
         }
+        appendTransition(connection, jobId, row.state, next, "cancel_requested", version)
+        CancelJobResult(jobId, next, next == JobState.CANCEL_REQUESTED)
+    }
 
     fun queueRows(tenantId: String, afterSequence: Long?, limit: Int): List<QueueRow> =
         queryQueueRows(tenantId, afterSequence, limit.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE))
@@ -576,15 +585,19 @@ class JobRepository(
             statement.setString(2, normalizedSubmitterHash(scope.submitterHash))
             statement.setString(3, keyHash)
             statement.executeQuery().use { result ->
-                if (result.next()) ExistingRequest(result.getString(1).trim(), result.getObject(2, UUID::class.java)) else null
+                if (result.next()) ExistingRequest(
+                    result.getString(1).trim(),
+                    result.getObject(2, UUID::class.java)
+                ) else null
             }
         }
 
     private fun nextEnqueueSequence(connection: Connection, tenantId: String): Long =
-        connection.prepareStatement("SELECT COALESCE(MAX(enqueue_sequence), 0) + 1 FROM jobs WHERE tenant_id = ?").use { statement ->
-            statement.setString(1, tenantId)
-            statement.executeQuery().use { result -> result.next(); result.getLong(1) }
-        }
+        connection.prepareStatement("SELECT COALESCE(MAX(enqueue_sequence), 0) + 1 FROM jobs WHERE tenant_id = ?")
+            .use { statement ->
+                statement.setString(1, tenantId)
+                statement.executeQuery().use { result -> result.next(); result.getLong(1) }
+            }
 
     private fun enqueueSequence(connection: Connection, jobId: UUID): Long =
         connection.prepareStatement("SELECT enqueue_sequence FROM jobs WHERE job_id = ?").use { statement ->
@@ -698,7 +711,10 @@ class JobRepository(
                 statement.setString(1, tenantId)
                 statement.setString(2, JobState.CANCEL_REQUESTED.wireValue)
                 statement.executeQuery().use { result ->
-                    if (result.next()) result.getObject("job_id", UUID::class.java) to result.getLong("version") else null
+                    if (result.next()) result.getObject(
+                        "job_id",
+                        UUID::class.java
+                    ) to result.getLong("version") else null
                 }
             } ?: return false
         val nextVersion =
@@ -797,7 +813,7 @@ class JobRepository(
     private fun currentLeaseState(connection: Connection, lease: JobLease): LeaseState =
         connection.prepareStatement(
             "SELECT state, version, retry_budget FROM jobs " +
-                "WHERE job_id = ? AND lease_token = ? AND lease_expires_at > CURRENT_TIMESTAMP FOR UPDATE",
+                    "WHERE job_id = ? AND lease_token = ? AND lease_expires_at > CURRENT_TIMESTAMP FOR UPDATE",
         ).use { statement ->
             statement.setObject(1, lease.jobId)
             statement.setObject(2, lease.token)
@@ -830,10 +846,11 @@ class JobRepository(
     }
 
     private fun checkpointChunk(connection: Connection, jobId: UUID): Long =
-        connection.prepareStatement("SELECT COALESCE((SELECT completed_chunk FROM job_checkpoints WHERE job_id = ?), 0)").use { statement ->
-            statement.setObject(1, jobId)
-            statement.executeQuery().use { result -> result.requireNext(); result.getLong(1) }
-        }
+        connection.prepareStatement("SELECT COALESCE((SELECT completed_chunk FROM job_checkpoints WHERE job_id = ?), 0)")
+            .use { statement ->
+                statement.setObject(1, jobId)
+                statement.executeQuery().use { result -> result.requireNext(); result.getLong(1) }
+            }
 
     private fun appendTransition(
         connection: Connection,
@@ -898,7 +915,7 @@ class JobRepository(
             updatedAt = getTimestamp("updated_at").toInstant(),
         )
 
-    private fun <T> inTransaction(block: (Connection) -> T): T =
+    private inline fun <T> inTransaction(block: (Connection) -> T): T =
         dataSource.connection.use { connection ->
             connection.autoCommit = false
             try {
@@ -920,7 +937,7 @@ class JobRepository(
         if (value.matches(Regex("[0-9a-f]{64}"))) value else sha256(value)
 
     private fun sha256(value: String): String =
-        MessageDigest.getInstance("SHA-256").digest(value.toByteArray()).toHexString()
+        MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()).toHexString()
 
     private fun ResultSet.requireNext() {
         check(next()) { "expected one database row" }
@@ -956,9 +973,5 @@ class JobRepository(
                     version = result.getLong("version"),
                 )
         }
-    }
-
-    companion object {
-        const val MAX_DURATION_SAMPLES: Int = 100
     }
 }

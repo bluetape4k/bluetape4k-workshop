@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.snapshot
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference
@@ -14,21 +16,26 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Expected
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class BoundedRehydratorTest {
-    private val stream =
-        StreamKey(
-            TenantId("tenant-a"),
-            "campaign",
-            UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc001"),
-        )
+
+    companion object: KLogging() {
+        private val NOW = Instant.parse("2026-07-23T12:00:00Z")
+    }
+
+    private val stream = StreamKey(
+        TenantId("tenant-a"),
+        "campaign",
+        UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc001"),
+    )
     private val events = (1L..4L).map(::event)
 
     @Test
     fun `no snapshot replays the complete event stream`() {
         val result = rehydrator(null).rehydrate(request())
 
+        log.debug { "result: $result" }
         result.state shouldBeEqualTo 4
         result.snapshotVersion shouldBeEqualTo 0L
     }
@@ -37,6 +44,7 @@ internal class BoundedRehydratorTest {
     fun `valid snapshot replays only its tail`() {
         val result = rehydrator(snapshot(2, "2")).rehydrate(request())
 
+        log.debug { "result: $result" }
         result.state shouldBeEqualTo 4
         result.snapshotVersion shouldBeEqualTo 2L
         result.replayedEvents shouldBeEqualTo 2
@@ -47,7 +55,10 @@ internal class BoundedRehydratorTest {
         val corrupt = BoundedRehydrator(FakeStore(events), { throw IllegalArgumentException("corrupt") })
         corrupt.rehydrate(request()).snapshotVersion shouldBeEqualTo 0L
 
-        val retired = rehydrator(snapshot(2, "2", keyVersion = 2)).rehydrate(request(keyAvailable = { false }))
+        val retired = rehydrator(snapshot(2, "2", keyVersion = 2))
+            .rehydrate(request(keyAvailable = { false }))
+
+        log.debug { "retired: $retired" }
         retired.snapshotVersion shouldBeEqualTo 0L
     }
 
@@ -58,6 +69,7 @@ internal class BoundedRehydratorTest {
 
         // 실행
         val result = rehydrator(stale).rehydrate(request())
+        log.debug { "result: $result" }
 
         // 검증
         result.state shouldBeEqualTo 4
@@ -71,13 +83,13 @@ internal class BoundedRehydratorTest {
         }
     }
 
-    private fun rehydrator(snapshot: EventSnapshot?) =
+    private fun rehydrator(snapshot: EventSnapshot?): BoundedRehydrator =
         BoundedRehydrator(
             eventStore = FakeStore(events),
             snapshotLoader = { snapshot },
         )
 
-    private fun request(keyAvailable: (Int) -> Boolean = { true }) =
+    private fun request(keyAvailable: (Int) -> Boolean = { true }): RehydrationRequest<Int> =
         RehydrationRequest(
             stream = stream,
             emptyState = { 0 },
@@ -86,8 +98,13 @@ internal class BoundedRehydratorTest {
             keyVersionAvailable = keyAvailable,
         )
 
-    private fun snapshot(version: Long, state: String, keyVersion: Int = 1) =
-        EventSnapshot(stream, SnapshotMetadata(version, 1, keyVersion), state, createdAt = NOW)
+    private fun snapshot(version: Long, state: String, keyVersion: Int = 1): EventSnapshot =
+        EventSnapshot(
+            stream = stream,
+            metadata = SnapshotMetadata(version, 1, keyVersion),
+            canonicalState = state,
+            createdAt = NOW
+        )
 
     private fun event(version: Long) =
         EventEnvelope(
@@ -105,16 +122,15 @@ internal class BoundedRehydratorTest {
             payload = EventPayload("{}"),
         )
 
-    private class FakeStore(private val events: List<EventEnvelope>) : EventStorePort {
+    private class FakeStore(private val events: List<EventEnvelope>): EventStorePort {
         override fun load(read: EventStoreRead): EventPage {
             val page = events.filter { it.stream.version > read.afterVersion }.take(read.limit)
-            return EventPage(page, events.lastOrNull()?.stream?.version ?: 0)
+            return EventPage(
+                events = page,
+                committedHead = events.lastOrNull()?.stream?.version ?: 0
+            )
         }
 
         override fun appendAll(appends: List<ExpectedAppend>): AppendResult = error("not used")
-    }
-
-    companion object {
-        private val NOW = Instant.parse("2026-07-23T12:00:00Z")
     }
 }

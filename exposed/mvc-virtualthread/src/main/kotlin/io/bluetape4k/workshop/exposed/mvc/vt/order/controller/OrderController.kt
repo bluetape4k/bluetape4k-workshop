@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.vt.order.controller
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.OrderDTO
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.OrderLineDTO
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.PlaceOrderRequest
@@ -19,6 +20,8 @@ import java.math.BigDecimal
 @RestController
 @RequestMapping("/api/v1/orders")
 class OrderController(private val orderService: OrderService) {
+
+    companion object: KLogging()
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.graalvm.native)
     alias(libs.plugins.gatling.plugin)
+    alias(libs.plugins.kotlin.jvm)
+    kotlin("kapt")
 }
 
 springBoot {
@@ -59,4 +61,8 @@ dependencies {
 
     // Gatling Scenario에서 bluetape4k-io 를 사용하려고 추가
     gatling(libs.bluetape4k.io)
+    testImplementation(kotlin("test"))
+}
+repositories {
+    mavenCentral()
 }

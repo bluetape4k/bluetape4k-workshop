@@ -4,11 +4,14 @@ import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.toBigInt
+import io.bluetape4k.support.toUtf8Bytes
 import java.math.BigInteger
 import java.security.MessageDigest
-import java.util.Arrays
+import java.util.*
 
 internal object TicketDeterministicSchedule {
+
     fun generate(vector: TicketScheduleVector): List<TicketScheduleToken> {
         vector.name.requireNotBlank("vector.name")
         vector.seed.requireNotBlank("vector.seed")
@@ -29,7 +32,7 @@ internal object TicketDeterministicSchedule {
         val canonical = tokens.joinToString(separator = "\n", postfix = "\n") {
             "${it.offsetNanos}:${it.stableOrdinal}:${it.identityOrdinal}:${it.attemptOrdinal}:${it.authorityOrdinal}"
         }
-        return sha256(canonical.toByteArray()).toHex()
+        return sha256(canonical.toUtf8Bytes()).toHex()
     }
 
     private fun burst(vector: TicketScheduleVector): List<TicketScheduleToken> {
@@ -75,20 +78,23 @@ internal object TicketDeterministicSchedule {
 
     private fun retryStorm(vector: TicketScheduleVector): List<TicketScheduleToken> {
         require(vector.epochs.isEmpty()) { "retry-storm schedule cannot declare epochs" }
+
         val retry = requireNotNull(vector.retryShape) { "retry-storm schedule requires retryShape" }
         retry.identityCount.requirePositiveNumber("retryShape.identityCount")
         retry.attemptsPerIdentity.requirePositiveNumber("retryShape.attemptsPerIdentity")
         Math.multiplyExact(retry.identityCount, retry.attemptsPerIdentity)
             .requireEquals(vector.operationCount, "retry operation count")
 
-        val ranked = (0 until retry.identityCount)
-            .map { RankedIdentity(it, rankDigest(vector, IDENTITY_KIND, it)) }
-            .sortedWith { left, right ->
-                Arrays.compareUnsigned(left.digest, right.digest).takeIf { it != 0 }
-                    ?: left.ordinal.compareTo(right.ordinal)
-            }
+        val ranked = List(retry.identityCount) {
+            RankedIdentity(it, rankDigest(vector, IDENTITY_KIND, it))
+        }.sortedWith { left, right ->
+            Arrays.compareUnsigned(left.digest, right.digest).takeIf { it != 0 }
+                ?: left.ordinal.compareTo(right.ordinal)
+        }
+
         val rankByIdentity = ranked.mapIndexed { rank, identity -> identity.ordinal to rank }.toMap()
         var stableOrdinal = 0
+
         return buildList(vector.operationCount) {
             ranked.forEach { identity ->
                 repeat(retry.attemptsPerIdentity) { attemptOrdinal ->
@@ -129,9 +135,11 @@ internal object TicketDeterministicSchedule {
 
     private fun selectAuthority(vector: TicketScheduleVector, identityOrdinal: Int): Int {
         val totalWeight = vector.authorityWeights.sumOf(Int::toLong)
-        val position = BigInteger(1, rankDigest(vector, AUTHORITY_KIND, identityOrdinal).copyOfRange(0, Long.SIZE_BYTES))
-            .mod(BigInteger.valueOf(totalWeight))
-            .toLong()
+        val position = BigInteger(
+            1,
+            rankDigest(vector, AUTHORITY_KIND, identityOrdinal).copyOfRange(0, Long.SIZE_BYTES)
+        ).mod(totalWeight.toBigInt()).toLong()
+
         var upperExclusive = 0L
         vector.authorityWeights.forEachIndexed { ordinal, weight ->
             upperExclusive = Math.addExact(upperExclusive, weight.toLong())
@@ -143,19 +151,23 @@ internal object TicketDeterministicSchedule {
     }
 
     private fun rankDigest(vector: TicketScheduleVector, kind: String, ordinal: Int): ByteArray =
-        sha256("${vector.profileSchemaVersion}:${vector.seed}:$kind:$ordinal".toByteArray())
+        sha256("${vector.profileSchemaVersion}:${vector.seed}:$kind:$ordinal".toUtf8Bytes())
 
     private fun scaledOffset(ordinal: Int, durationNanos: Long, operationCount: Int): Long =
         BigInteger.valueOf(ordinal.toLong())
-            .multiply(BigInteger.valueOf(durationNanos))
-            .divide(BigInteger.valueOf(operationCount.toLong()))
+            .multiply(durationNanos.toBigInt())
+            .divide(operationCount.toLong().toBigInt())
             .longValueExact()
 
-    private fun sha256(value: ByteArray): ByteArray = MessageDigest.getInstance("SHA-256").digest(value)
+    private fun sha256(value: ByteArray): ByteArray =
+        MessageDigest.getInstance("SHA-256").digest(value)
 
     private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
-    private data class RankedIdentity(val ordinal: Int, val digest: ByteArray)
+    private data class RankedIdentity(
+        val ordinal: Int,
+        val digest: ByteArray,
+    )
 
     private const val IDENTITY_KIND = "identity"
     private const val AUTHORITY_KIND = "authority"

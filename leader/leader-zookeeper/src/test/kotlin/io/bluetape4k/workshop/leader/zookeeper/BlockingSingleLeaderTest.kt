@@ -2,12 +2,15 @@ package io.bluetape4k.workshop.leader.zookeeper
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.completableFutureOf
 import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.zookeeper.ZooKeeperLeaderElector
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -19,15 +22,16 @@ import kotlin.time.Duration.Companion.milliseconds
  * - 첫 번째 elector가 lock을 보유 중이라 두 번째 elector가 자신의 `waitTime` 안에 획득하지 못하면
  *   `runIfLeader`는 `null`을 반환한다.
  */
-class BlockingSingleLeaderTest : AbstractLeaderZookeeperTest() {
+class BlockingSingleLeaderTest: AbstractLeaderZookeeperTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `runIfLeader returns done when a single elector acquires the lock`() {
         val elector = newElector()
 
         val result = elector.runIfLeader(randomLockName()) { "done" }
-
-        result.shouldNotBeNull() shouldBeEqualTo "done"
+        result shouldBeEqualTo "done"
     }
 
     @Test
@@ -35,14 +39,11 @@ class BlockingSingleLeaderTest : AbstractLeaderZookeeperTest() {
         val elector = newElector()
         val executor = VirtualThreadExecutor
 
-        val future: CompletableFuture<Int?> = elector.runAsyncIfLeader(
-            lockName = randomLockName(),
-            executor = executor,
-        ) {
-            CompletableFuture.completedFuture(42)
+        val future: CompletableFuture<Int?> = elector.runAsyncIfLeader(randomLockName(), executor) {
+            completableFutureOf(42)
         }
 
-        future.join().shouldNotBeNull() shouldBeEqualTo 42
+        future.join() shouldBeEqualTo 42
     }
 
     @Test
@@ -59,18 +60,17 @@ class BlockingSingleLeaderTest : AbstractLeaderZookeeperTest() {
             LeaderElectionOptions(waitTime = 0.milliseconds)
         )
 
-        val result2Ref = java.util.concurrent.atomic.AtomicReference<String?>("not-set")
+        val result2Ref = AtomicReference<String?>("not-set")
         val result1 = elector1.runIfLeader(lockName) {
             // elector2가 elector1의 lock을 재진입으로 소유하지 않도록 별도 스레드에서 실행한다.
-            val follower = Thread {
+            val follower = thread {
                 result2Ref.set(elector2.runIfLeader(lockName) { "follower" })
             }
-            follower.start()
             follower.join()
             "leader"
         }
 
-        result1.shouldNotBeNull() shouldBeEqualTo "leader"
+        result1 shouldBeEqualTo "leader"
         result2Ref.get().shouldBeNull()
     }
 }

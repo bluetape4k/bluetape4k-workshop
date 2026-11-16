@@ -7,7 +7,7 @@ import java.io.Serializable
  */
 data class ModerationRequest(
     val text: String = "",
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -22,7 +22,7 @@ data class ModerationResponse(
     val matchedTerms: List<String>,
     val maskedText: String,
     val warnings: List<String>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -35,7 +35,7 @@ data class ModerationErrorResponse(
     val status: Int,
     val error: String,
     val message: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

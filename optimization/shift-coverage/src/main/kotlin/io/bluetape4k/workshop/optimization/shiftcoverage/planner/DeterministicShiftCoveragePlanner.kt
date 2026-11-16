@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.planner
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.AssignmentId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.CoverageScore
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlannedShift
@@ -8,8 +11,8 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.Shift
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageLimits
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePlanProposal
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePlannerFailure
-import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageSnapshot
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageReason
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageSnapshot
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftWorker
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.SiteId
@@ -20,20 +23,24 @@ import java.time.Duration
 import java.time.Instant
 
 /** nanoTime을 주입해 wall-clock을 planner correctness gate로 만들지 않는 경계입니다. */
-fun interface PlannerClock { fun nanoTime(): Long }
+fun interface PlannerClock {
+    fun nanoTime(): Long
+}
 
-object SystemPlannerClock : PlannerClock { override fun nanoTime(): Long = System.nanoTime() }
+object SystemPlannerClock: PlannerClock {
+    override fun nanoTime(): Long = System.nanoTime()
+}
 
 /** planner의 candidate step budget입니다. 정확히 deadline에 도달하면 timeout입니다. */
 class StepBudget(
     private val clock: PlannerClock,
-    private val budget: Duration = Duration.ofMillis(ShiftCoverageLimits.MAX_PLANNER_MILLIS),
+    budget: Duration = ShiftCoverageLimits.MAX_PLANNER_MILLIS.millis(),
 ) {
     private val startedAt = clock.nanoTime()
     private val budgetNanos = budget.toNanos()
 
     init {
-        require(!budget.isNegative && !budget.isZero) { "planner budget must be positive" }
+        budget.requirePositiveDuration("budget")
     }
 
     fun check() {
@@ -48,7 +55,7 @@ class StepBudget(
 class DeterministicShiftCoveragePlanner(
     private val canonicalizer: ShiftCoverageCanonicalizer = ShiftCoverageCanonicalizer(),
     private val clock: PlannerClock = SystemPlannerClock,
-    private val minimumRest: Duration = Duration.ofMinutes(30),
+    private val minimumRest: Duration = 30.minutes(),
 ) {
     fun plan(snapshot: ShiftCoverageSnapshot): ShiftCoveragePlanProposal {
         val budget = StepBudget(clock)
@@ -59,7 +66,10 @@ class DeterministicShiftCoveragePlanner(
         budget.check()
         val candidateCount = snapshot.workers.size.toLong() * snapshot.shifts.sumOf { it.demand.toLong() }
         if (candidateCount > ShiftCoverageLimits.MAX_CANDIDATES) {
-            throw ShiftCoveragePlannerFailure(PlannerFailureCode.PLANNER_LIMIT_EXCEEDED, "candidate count exceeds planner limit")
+            throw ShiftCoveragePlannerFailure(
+                PlannerFailureCode.PLANNER_LIMIT_EXCEEDED,
+                "candidate count exceeds planner limit"
+            )
         }
 
         val workers = snapshot.workers.sortedBy { it.workerId.value }
@@ -88,17 +98,26 @@ class DeterministicShiftCoveragePlanner(
                 }
             } else {
                 shift.pinnedWorkerId?.let { workerId ->
-                    assignments += PlannedShift(shift.shiftId, workerId, deterministicSlotAssignmentId(shift.shiftId, 0), pinned = true)
+                    assignments += PlannedShift(
+                        shift.shiftId,
+                        workerId,
+                        deterministicSlotAssignmentId(shift.shiftId, 0),
+                        pinned = true
+                    )
                     assignedIntervals.getOrPut(workerId) { mutableListOf() }.add(shift)
                     fixedCount++
                 }
             }
             if (fixedCount < shift.demand) {
-                unassigned += UnassignedShift(shift.shiftId, if (shift.isStarted) ShiftCoverageReason.STARTED_SHIFT else ShiftCoverageReason.PINNED)
+                unassigned += UnassignedShift(
+                    shift.shiftId,
+                    if (shift.isStarted) ShiftCoverageReason.STARTED_SHIFT else ShiftCoverageReason.PINNED
+                )
             }
         }
 
-        val orderedOpenShifts = shifts.filterNot { it.shiftId in fixedShiftIds }
+        val orderedOpenShifts = shifts
+            .filterNot { it.shiftId in fixedShiftIds }
             .map { shift ->
                 val existingCount = currentAssignments[shift.shiftId].orEmpty().size
                 ShiftOrder(
@@ -120,6 +139,7 @@ class DeterministicShiftCoveragePlanner(
                 val existingAssignmentIds = currentAssignments[shift.shift.shiftId].orEmpty()
                     .sortedBy { it.assignmentId.value }
                     .map { it.assignmentId }
+
                 var assignedSlots = 0
                 var failureReason: ShiftCoverageReason? = null
                 for (slotIndex in 0 until shift.shift.demand) {
@@ -182,18 +202,24 @@ class DeterministicShiftCoveragePlanner(
                             ?: deterministicSlotAssignmentId(shift.shift.shiftId, slotIndex),
                         pinned = false,
                     )
-                    assignedIntervals.getOrPut(selected.worker.workerId) { mutableListOf() }.add(shift.shift)
+                    assignedIntervals.computeIfAbsent(selected.worker.workerId) { mutableListOf() }.add(shift.shift)
                     assignedSlots++
                 }
                 if (assignedSlots < shift.shift.demand) {
-                    unassigned += UnassignedShift(shift.shift.shiftId, failureReason ?: ShiftCoverageReason.NO_CANDIDATE)
+                    unassigned += UnassignedShift(
+                        shift.shift.shiftId,
+                        failureReason ?: ShiftCoverageReason.NO_CANDIDATE
+                    )
                 }
             }
 
-        val orderedAssignments = assignments.sortedWith(compareBy({ it.shiftId.value }, { it.workerId.value }, { it.assignmentId.value }))
+        val orderedAssignments = assignments.sortedWith(
+            compareBy({ it.shiftId.value }, { it.workerId.value }, { it.assignmentId.value })
+        )
         val orderedUnassigned = unassigned.sortedBy { it.shiftId.value }
         val assignedByWorker = orderedAssignments.groupingBy { it.workerId }.eachCount()
-        val fairness = assignedByWorker.values.sumOf { count -> -count.toLong() * count.toLong() }
+        val fairness = assignedByWorker.values.sumOf { -it.toLong() * it.toLong() }
+        
         return ShiftCoveragePlanProposal(
             planId = snapshot.planId,
             generationId = snapshot.generationId,
@@ -212,14 +238,18 @@ class DeterministicShiftCoveragePlanner(
 
     private fun isBaseCandidate(worker: ShiftWorker, shift: Shift, siteId: SiteId): Boolean =
         worker.siteId == siteId &&
-            !worker.sickCalled &&
-            worker.skills.containsAll(shift.requiredSkills) &&
-            covers(worker.availability, shift.startAt, shift.endAt)
+                !worker.sickCalled &&
+                worker.skills.containsAll(shift.requiredSkills) &&
+                covers(worker.availability, shift.startAt, shift.endAt)
 
     private fun covers(windows: List<TimeInterval>, start: Instant, end: Instant): Boolean =
-        windows.any { !start.isBefore(it.startAt) && !end.isAfter(it.endAt) }
+        windows.any {
+            !start.isBefore(it.startAt) &&
+                    !end.isAfter(it.endAt)
+        }
 
-    private fun overlaps(first: Shift, second: Shift): Boolean = first.startAt < second.endAt && second.startAt < first.endAt
+    private fun overlaps(first: Shift, second: Shift): Boolean =
+        first.startAt < second.endAt && second.startAt < first.endAt
 
     private fun violatesRest(first: Shift, second: Shift): Boolean {
         val gap = when {
@@ -230,7 +260,11 @@ class DeterministicShiftCoveragePlanner(
         return gap < minimumRest
     }
 
-    private data class ShiftOrder(val shift: Shift, val coverageGap: Int, val eligibleCandidates: Int)
+    private data class ShiftOrder(
+        val shift: Shift,
+        val coverageGap: Int,
+        val eligibleCandidates: Int,
+    )
 
     private data class Candidate(
         val worker: ShiftWorker,

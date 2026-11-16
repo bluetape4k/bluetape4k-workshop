@@ -27,13 +27,13 @@ internal class ReservationQueryService(
         return ResourceSnapshotResponse(observedAt, snapshots)
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 internal data class ResourceSnapshotResponse(
     val observedAt: Instant,
     val resources: List<ResourceSnapshot>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -50,13 +50,13 @@ internal data class ResourceSnapshot(
     val policyVersion: Long,
     val timezone: String,
     val localObservedAt: OffsetDateTime,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
 }
 
-private fun CapacityResourceRecord.toSnapshot(observedAt: Instant) =
+private fun CapacityResourceRecord.toSnapshot(observedAt: Instant): ResourceSnapshot =
     ResourceSnapshot(
         id = id,
         code = code,

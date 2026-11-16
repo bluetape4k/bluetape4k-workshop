@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.idempotency.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.idempotency.model.OrderRequest
 import io.bluetape4k.workshop.idempotency.model.OrderResponse
 import io.bluetape4k.workshop.idempotency.service.IdempotencyResult
@@ -29,7 +28,7 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/api/orders")
 class OrderController(private val idempotencyService: IdempotencyService) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val IDEMPOTENCY_KEY_HEADER = "Idempotency-Key"
     }
 
@@ -65,6 +64,6 @@ class OrderController(private val idempotencyService: IdempotencyService) {
                 "Header '$IDEMPOTENCY_KEY_HEADER' is required and must not be blank",
             )
         }
-        return key.requireNotBlank(IDEMPOTENCY_KEY_HEADER)
+        return key
     }
 }

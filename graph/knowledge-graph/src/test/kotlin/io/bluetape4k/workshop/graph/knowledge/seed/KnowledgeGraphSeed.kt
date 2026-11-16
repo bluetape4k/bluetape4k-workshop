@@ -51,7 +51,7 @@ data class KnowledgeGraphSeed(
     val conceptFramework: GraphVertex,
     val conceptLibrary: GraphVertex,
     val conceptPlatform: GraphVertex,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

@@ -9,6 +9,8 @@
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignPolicy
@@ -37,11 +39,9 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherCryptoExcepti
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherEnvelopeCrypto
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import org.postgresql.util.PSQLException
 import org.postgresql.util.ServerErrorMessage
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.sql.Connection
@@ -54,9 +54,12 @@ import java.util.IdentityHashMap
 import java.util.Locale
 import java.util.UUID
 
-internal enum class BatchSourceKind { IMPORTED, GENERATED }
+internal enum class BatchSourceKind {
+    IMPORTED,
+    GENERATED
+}
 
-internal fun releaseRetryableOwner(release: () -> Unit) {
+internal inline fun releaseRetryableOwner(release: () -> Unit) {
     var lastTimeout: VoucherPoolJdbcTimeoutException? = null
     repeat(MAX_OWNER_RELEASE_ATTEMPTS) {
         try {
@@ -70,7 +73,7 @@ internal fun releaseRetryableOwner(release: () -> Unit) {
     throw checkNotNull(lastTimeout)
 }
 
-private const val MAX_OWNER_RELEASE_ATTEMPTS = 8
+internal const val MAX_OWNER_RELEASE_ATTEMPTS = 8
 
 internal enum class BatchCommandFailure {
     SCOPE_NOT_FOUND,
@@ -88,18 +91,18 @@ internal enum class BatchCommandFailure {
     VALIDATION_REJECTED,
 }
 
-internal open class BatchCommandException(val reason: BatchCommandFailure) : IllegalStateException(reason.name)
+internal open class BatchCommandException(val reason: BatchCommandFailure): IllegalStateException(reason.name)
 
 internal class PreparedChunkRejectedException(
     val evidenceCode: String,
     val rejectedCount: Long,
     val nextSourceOrdinal: Long,
-) : BatchCommandException(BatchCommandFailure.VALIDATION_REJECTED)
+): BatchCommandException(BatchCommandFailure.VALIDATION_REJECTED)
 
 internal sealed interface MutationResult<out T> {
-    data class Applied<T>(val value: T) : MutationResult<T>
-    data class Replay(val descriptor: SafeResponseDescriptor) : MutationResult<Nothing>
-    data class Expired(val effectId: UUID?, val terminalCode: VoucherPoolErrorCode?) : MutationResult<Nothing>
+    data class Applied<T>(val value: T): MutationResult<T>
+    data class Replay(val descriptor: SafeResponseDescriptor): MutationResult<Nothing>
+    data class Expired(val effectId: UUID?, val terminalCode: VoucherPoolErrorCode?): MutationResult<Nothing>
 }
 
 internal enum class VoucherPoolRuntimeProfile(val permitsDeterministicGeneration: Boolean) {
@@ -255,7 +258,7 @@ internal interface GeneratedVoucherCodeSource {
     fun nextCode(): String
 }
 
-internal class SecureRandomVoucherCodeSource(private val random: SecureRandom = SecureRandom()) :
+internal class SecureRandomVoucherCodeSource(private val random: SecureRandom = SecureRandom()):
     GeneratedVoucherCodeSource {
     override val deterministic: Boolean = false
 
@@ -295,83 +298,91 @@ internal class JdbcCampaignBatchCommandService(
     private val crypto: VoucherEnvelopeCrypto,
     private val generatedCodes: GeneratedVoucherCodeSource = SecureRandomVoucherCodeSource(),
     runtimeProfile: VoucherPoolRuntimeProfile = VoucherPoolRuntimeProfile.PRODUCTION,
-) : CampaignBatchCommandService {
+): CampaignBatchCommandService {
+
+    companion object: KLogging()
+
     init {
         require(!generatedCodes.deterministic || runtimeProfile.permitsDeterministicGeneration) {
             "deterministic voucher generation is restricted to loopback test or demo mode"
         }
     }
 
-    override fun createCampaign(command: CreateCampaignCommand): MutationResult<CampaignSnapshot> = executeIdempotent(
-        command.tenantId,
-        command.idempotencyKey,
-        OP_CREATE_CAMPAIGN,
-        command.fingerprint(),
-        command.campaignId,
-        HTTP_CREATED,
-        "CAMPAIGN_CREATED",
-        MutationLane.OPERATOR,
-        failureMapper = ::classifyIntegrityFailure,
-        createRecovery = { connection ->
-            repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
-                ?.takeIf { it.sameCreateAuthority(requestedCampaign(command)) }
-                ?.snapshot()
-        },
-    ) { connection ->
-        val requested = requestedCampaign(command)
-        repository.lockCampaignForUpdate(command.tenantId, command.campaignId)?.let { existing ->
-            if (!existing.sameCreateAuthority(requested)) fail(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
-            return@executeIdempotent existing.snapshot()
+    override fun createCampaign(command: CreateCampaignCommand): MutationResult<CampaignSnapshot> =
+        executeIdempotent(
+            tenantId = command.tenantId,
+            rawKey = command.idempotencyKey,
+            operation = OP_CREATE_CAMPAIGN,
+            fingerprint = command.fingerprint(),
+            effectId = command.campaignId,
+            status = HTTP_CREATED,
+            outcome = "CAMPAIGN_CREATED",
+            lane = MutationLane.OPERATOR,
+            failureMapper = ::classifyIntegrityFailure,
+            createRecovery = { connection ->
+                repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
+                    ?.takeIf { it.sameCreateAuthority(requestedCampaign(command)) }
+                    ?.snapshot()
+            },
+        ) { connection ->
+            val requested = requestedCampaign(command)
+            repository.lockCampaignForUpdate(command.tenantId, command.campaignId)?.let { existing ->
+                if (!existing.sameCreateAuthority(requested)) fail(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
+                return@executeIdempotent existing.snapshot()
+            }
+            repository.createCampaign(requested).snapshot()
         }
-        repository.createCampaign(requested).snapshot()
-    }
 
-    override fun updatePolicy(command: UpdateCampaignPolicyCommand): MutationResult<CampaignSnapshot> = executeIdempotent(
-        command.tenantId,
-        command.idempotencyKey,
-        OP_UPDATE_CAMPAIGN_POLICY,
-        command.fingerprint(),
-        command.campaignId,
-        HTTP_OK,
-        "CAMPAIGN_POLICY_UPDATED",
-        MutationLane.OPERATOR,
-    ) { connection ->
-        val current = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
-            ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
-        requireRevision(current.revision, command.expectedRevision)
-        if (current.state !in setOf(CampaignState.DRAFT, CampaignState.PAUSED)) {
-            fail(BatchCommandFailure.INVALID_STATE)
+    override fun updatePolicy(command: UpdateCampaignPolicyCommand): MutationResult<CampaignSnapshot> =
+        executeIdempotent(
+            tenantId = command.tenantId,
+            rawKey = command.idempotencyKey,
+            operation = OP_UPDATE_CAMPAIGN_POLICY,
+            fingerprint = command.fingerprint(),
+            effectId = command.campaignId,
+            status = HTTP_OK,
+            outcome = "CAMPAIGN_POLICY_UPDATED",
+            lane = MutationLane.OPERATOR,
+        ) { connection ->
+            val current = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
+                ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
+            requireRevision(current.revision, command.expectedRevision)
+            if (current.state !in setOf(CampaignState.DRAFT, CampaignState.PAUSED)) {
+                fail(BatchCommandFailure.INVALID_STATE)
+            }
+            repository.updateCampaign(
+                current.copy(
+                    perUserLimit = command.policy.perUserLimit,
+                    reservationTtlSeconds = command.policy.reservationTtl.inWholeSeconds,
+                    allocationTtlSeconds = command.policy.allocationTtl.inWholeSeconds,
+                    replacementAllowance = command.policy.replacementAllowance,
+                    policyVersion = current.policyVersion + 1,
+                ),
+                current.revision,
+            ).snapshot()
         }
-        repository.updateCampaign(
-            current.copy(
-                perUserLimit = command.policy.perUserLimit,
-                reservationTtlSeconds = command.policy.reservationTtl.inWholeSeconds,
-                allocationTtlSeconds = command.policy.allocationTtl.inWholeSeconds,
-                replacementAllowance = command.policy.replacementAllowance,
-                policyVersion = current.policyVersion + 1,
-            ),
-            current.revision,
-        ).snapshot()
-    }
 
-    override fun activateCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot> = executeIdempotent(
-        command.tenantId,
-        command.idempotencyKey,
-        OP_ACTIVATE_CAMPAIGN,
-        command.fingerprint(OP_ACTIVATE_CAMPAIGN),
-        command.campaignId,
-        HTTP_OK,
-        "CAMPAIGN_ACTIVATED",
-        MutationLane.OPERATOR,
-    ) { connection ->
-        val current = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
-            ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
-        requireRevision(current.revision, command.expectedRevision)
-        if (!CampaignPolicy.canTransition(current.state, CampaignState.ACTIVE)) {
-            fail(BatchCommandFailure.INVALID_STATE)
+    override fun activateCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot> =
+        executeIdempotent(
+            tenantId = command.tenantId,
+            rawKey = command.idempotencyKey,
+            operation = OP_ACTIVATE_CAMPAIGN,
+            fingerprint = command.fingerprint(OP_ACTIVATE_CAMPAIGN),
+            effectId = command.campaignId,
+            status = HTTP_OK,
+            outcome = "CAMPAIGN_ACTIVATED",
+            lane = MutationLane.OPERATOR,
+        ) { connection ->
+            val current = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
+                ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
+
+            requireRevision(current.revision, command.expectedRevision)
+
+            if (!CampaignPolicy.canTransition(current.state, CampaignState.ACTIVE)) {
+                fail(BatchCommandFailure.INVALID_STATE)
+            }
+            repository.updateCampaign(current.copy(state = CampaignState.ACTIVE), current.revision).snapshot()
         }
-        repository.updateCampaign(current.copy(state = CampaignState.ACTIVE), current.revision).snapshot()
-    }
 
     override fun pauseCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot> =
         transitionCampaign(command, CampaignState.PAUSED, OP_PAUSE_CAMPAIGN, "CAMPAIGN_PAUSED")
@@ -381,15 +392,16 @@ internal class JdbcCampaignBatchCommandService(
 
     override fun createImportBatch(command: CreateImportBatchCommand): MutationResult<BatchSnapshot> {
         val prepared = prepare(command.tenantId, command.campaignId, command.batchId, 0, command.initialCodes)
+
         return executeIdempotent(
-            command.tenantId,
-            command.idempotencyKey,
-            OP_CREATE_BATCH,
-            command.fingerprint(prepared),
-            command.batchId,
-            HTTP_CREATED,
-            "BATCH_CREATED",
-            MutationLane.OPERATOR,
+            tenantId = command.tenantId,
+            rawKey = command.idempotencyKey,
+            operation = OP_CREATE_BATCH,
+            fingerprint = command.fingerprint(prepared),
+            effectId = command.batchId,
+            status = HTTP_CREATED,
+            outcome = "BATCH_CREATED",
+            lane = MutationLane.OPERATOR,
             failureMapper = ::classifyIntegrityFailure,
             terminalEffect = { _, failure ->
                 markTerminalBatchFailure(
@@ -406,39 +418,41 @@ internal class JdbcCampaignBatchCommandService(
                 repository.lockBatchForUpdate(command.tenantId, command.batchId)
                     ?.takeIf { existing ->
                         existing.sameCreateAuthority(requestedBatch(command, campaign.policyVersion)) &&
-                            (prepared.totalCount == 0 || committedReplayExact(existing, prepared))
+                                (prepared.totalCount == 0 || committedReplayExact(existing, prepared))
                     }
                     ?.snapshot()
             },
         ) { connection ->
-                val campaign = repository.lockCampaignForShare(command.tenantId, command.campaignId)
-                if (campaign.state != CampaignState.ACTIVE) fail(BatchCommandFailure.INVALID_STATE)
-                val requested = requestedBatch(command, campaign.policyVersion)
-                repository.lockBatchForUpdate(command.tenantId, command.batchId)?.let { existing ->
-                    if (!existing.sameCreateAuthority(requested)) fail(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
-                    if (prepared.totalCount > 0) replayCommitted(existing, prepared)
-                    return@executeIdempotent existing.snapshot()
-                }
-                var batch = repository.createBatch(requested)
-                if (prepared.totalCount > 0) {
-                    batch = commitPrepared(batch, command.manifestDigest, prepared)
-                }
-                batch.snapshot()
+            val campaign = repository.lockCampaignForShare(command.tenantId, command.campaignId)
+            if (campaign.state != CampaignState.ACTIVE) fail(BatchCommandFailure.INVALID_STATE)
+            val requested = requestedBatch(command, campaign.policyVersion)
+            repository.lockBatchForUpdate(command.tenantId, command.batchId)?.let { existing ->
+                if (!existing.sameCreateAuthority(requested)) fail(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
+                if (prepared.totalCount > 0) replayCommitted(existing, prepared)
+                return@executeIdempotent existing.snapshot()
+            }
+            var batch = repository.createBatch(requested)
+            if (prepared.totalCount > 0) {
+                batch = commitPrepared(batch, command.manifestDigest, prepared)
+            }
+            batch.snapshot()
         }
     }
 
     override fun importChunk(command: ImportChunkCommand): MutationResult<BatchSnapshot> {
-        val prepared = prepare(command.tenantId, command.campaignId, command.batchId, command.firstOrdinal, command.codes)
+        val prepared =
+            prepare(command.tenantId, command.campaignId, command.batchId, command.firstOrdinal, command.codes)
+
         return ingest(
-            command.tenantId,
-            command.campaignId,
-            command.batchId,
-            command.expectedRevision,
-            command.idempotencyKey,
-            command.fingerprint(prepared),
-            command.manifestDigest,
-            prepared,
-            BatchSourceKind.IMPORTED,
+            tenantId = command.tenantId,
+            campaignId = command.campaignId,
+            batchId = command.batchId,
+            expectedRevision = command.expectedRevision,
+            idempotencyKey = command.idempotencyKey,
+            fingerprint = command.fingerprint(prepared),
+            manifestDigest = command.manifestDigest,
+            prepared = prepared,
+            expectedSource = BatchSourceKind.IMPORTED,
         )
     }
 
@@ -446,50 +460,51 @@ internal class JdbcCampaignBatchCommandService(
         val codes = List(command.count) { generatedCodes.nextCode() }
         val prepared = prepare(command.tenantId, command.campaignId, command.batchId, command.firstOrdinal, codes)
         return ingest(
-            command.tenantId,
-            command.campaignId,
-            command.batchId,
-            command.expectedRevision,
-            command.idempotencyKey,
-            command.fingerprint(),
-            command.manifestDigest,
-            prepared,
-            BatchSourceKind.GENERATED,
+            tenantId = command.tenantId,
+            campaignId = command.campaignId,
+            batchId = command.batchId,
+            expectedRevision = command.expectedRevision,
+            idempotencyKey = command.idempotencyKey,
+            fingerprint = command.fingerprint(),
+            manifestDigest = command.manifestDigest,
+            prepared = prepared,
+            expectedSource = BatchSourceKind.GENERATED,
         )
     }
 
-    override fun activateBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot> = executeIdempotent(
-        command.tenantId,
-        command.idempotencyKey,
-        OP_ACTIVATE_BATCH,
-        command.fingerprint(),
-        command.batchId,
-        HTTP_OK,
-        "BATCH_ACTIVATED",
-        MutationLane.OPERATOR,
-    ) { connection ->
-        val campaign = repository.lockCampaignForShare(command.tenantId, command.campaignId)
-        if (campaign.state != CampaignState.ACTIVE) fail(BatchCommandFailure.INVALID_STATE)
-        val batch = repository.lockBatchForUpdate(command.tenantId, command.batchId)
-            ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
-        requireBatchScope(batch, command.campaignId)
-        requireRevision(batch.revision, command.expectedRevision)
-        val coverage = repository.batchOrdinalCoverage(command.tenantId, command.batchId)
-        val canonicalCheckpoint = canonicalCheckpoint(batch, batch.expectedCount)
-        val complete = batch.state == BatchState.STAGING &&
-            batch.nextSourceOrdinal == batch.expectedCount &&
-            batch.acceptedCount == batch.expectedCount &&
-            batch.rejectedCount == 0L &&
-            batch.lastFailureCode == null &&
-            coverage.entryCount == batch.expectedCount &&
-            coverage.minimumOrdinal == 0L &&
-            coverage.maximumOrdinal == batch.expectedCount - 1 &&
-            batch.checkpointDigest?.secureEquals(canonicalCheckpoint) == true
-        if (!complete || !BatchPolicy.canTransition(batch.state, BatchState.ACTIVE)) {
-            fail(BatchCommandFailure.ACTIVATION_INCOMPLETE)
+    override fun activateBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot> =
+        executeIdempotent(
+            tenantId = command.tenantId,
+            rawKey = command.idempotencyKey,
+            operation = OP_ACTIVATE_BATCH,
+            fingerprint = command.fingerprint(),
+            effectId = command.batchId,
+            status = HTTP_OK,
+            outcome = "BATCH_ACTIVATED",
+            lane = MutationLane.OPERATOR,
+        ) { connection ->
+            val campaign = repository.lockCampaignForShare(command.tenantId, command.campaignId)
+            if (campaign.state != CampaignState.ACTIVE) fail(BatchCommandFailure.INVALID_STATE)
+            val batch = repository.lockBatchForUpdate(command.tenantId, command.batchId)
+                ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
+            requireBatchScope(batch, command.campaignId)
+            requireRevision(batch.revision, command.expectedRevision)
+            val coverage = repository.batchOrdinalCoverage(command.tenantId, command.batchId)
+            val canonicalCheckpoint = canonicalCheckpoint(batch, batch.expectedCount)
+            val complete = batch.state == BatchState.STAGING &&
+                    batch.nextSourceOrdinal == batch.expectedCount &&
+                    batch.acceptedCount == batch.expectedCount &&
+                    batch.rejectedCount == 0L &&
+                    batch.lastFailureCode == null &&
+                    coverage.entryCount == batch.expectedCount &&
+                    coverage.minimumOrdinal == 0L &&
+                    coverage.maximumOrdinal == batch.expectedCount - 1 &&
+                    batch.checkpointDigest?.secureEquals(canonicalCheckpoint) == true
+            if (!complete || !BatchPolicy.canTransition(batch.state, BatchState.ACTIVE)) {
+                fail(BatchCommandFailure.ACTIVATION_INCOMPLETE)
+            }
+            repository.activateBatch(batch).snapshot()
         }
-        repository.activateBatch(batch).snapshot()
-    }
 
     override fun pauseBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot> =
         transitionBatch(command, BatchState.PAUSED, OP_PAUSE_BATCH, "BATCH_PAUSED")
@@ -502,46 +517,48 @@ internal class JdbcCampaignBatchCommandService(
         target: CampaignState,
         operation: String,
         outcome: String,
-    ): MutationResult<CampaignSnapshot> = executeIdempotent(
-        command.tenantId,
-        command.idempotencyKey,
-        operation,
-        command.fingerprint(operation),
-        command.campaignId,
-        HTTP_OK,
-        outcome,
-        MutationLane.OPERATOR,
-    ) { connection ->
-        val campaign = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
-            ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
-        requireRevision(campaign.revision, command.expectedRevision)
-        if (!CampaignPolicy.canTransition(campaign.state, target)) fail(BatchCommandFailure.INVALID_STATE)
-        repository.updateCampaign(campaign.copy(state = target), campaign.revision).snapshot()
-    }
+    ): MutationResult<CampaignSnapshot> =
+        executeIdempotent(
+            tenantId = command.tenantId,
+            rawKey = command.idempotencyKey,
+            operation = operation,
+            fingerprint = command.fingerprint(operation),
+            effectId = command.campaignId,
+            status = HTTP_OK,
+            outcome = outcome,
+            lane = MutationLane.OPERATOR,
+        ) { connection ->
+            val campaign = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
+                ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
+            requireRevision(campaign.revision, command.expectedRevision)
+            if (!CampaignPolicy.canTransition(campaign.state, target)) fail(BatchCommandFailure.INVALID_STATE)
+            repository.updateCampaign(campaign.copy(state = target), campaign.revision).snapshot()
+        }
 
     private fun transitionBatch(
         command: BatchRevisionCommand,
         target: BatchState,
         operation: String,
         outcome: String,
-    ): MutationResult<BatchSnapshot> = executeIdempotent(
-        command.tenantId,
-        command.idempotencyKey,
-        operation,
-        command.fingerprint(operation),
-        command.batchId,
-        HTTP_OK,
-        outcome,
-        MutationLane.OPERATOR,
-    ) { connection ->
-        repository.lockCampaignForShare(command.tenantId, command.campaignId)
-        val batch = repository.lockBatchForUpdate(command.tenantId, command.batchId)
-            ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
-        requireBatchScope(batch, command.campaignId)
-        requireRevision(batch.revision, command.expectedRevision)
-        if (!BatchPolicy.canTransition(batch.state, target)) fail(BatchCommandFailure.INVALID_STATE)
-        repository.updateBatchState(batch, target).snapshot()
-    }
+    ): MutationResult<BatchSnapshot> =
+        executeIdempotent(
+            tenantId = command.tenantId,
+            rawKey = command.idempotencyKey,
+            operation = operation,
+            fingerprint = command.fingerprint(operation),
+            effectId = command.batchId,
+            status = HTTP_OK,
+            outcome = outcome,
+            lane = MutationLane.OPERATOR,
+        ) { connection ->
+            repository.lockCampaignForShare(command.tenantId, command.campaignId)
+            val batch = repository.lockBatchForUpdate(command.tenantId, command.batchId)
+                ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
+            requireBatchScope(batch, command.campaignId)
+            requireRevision(batch.revision, command.expectedRevision)
+            if (!BatchPolicy.canTransition(batch.state, target)) fail(BatchCommandFailure.INVALID_STATE)
+            repository.updateBatchState(batch, target).snapshot()
+        }
 
     private fun ingest(
         tenantId: String,
@@ -553,27 +570,28 @@ internal class JdbcCampaignBatchCommandService(
         manifestDigest: DigestValue,
         prepared: PreparedChunk,
         expectedSource: BatchSourceKind,
-    ): MutationResult<BatchSnapshot> = executeIdempotent(
-        tenantId,
-        idempotencyKey,
-        if (expectedSource == BatchSourceKind.IMPORTED) OP_IMPORT_CHUNK else OP_GENERATE_CHUNK,
-        fingerprint,
-        batchId,
-        HTTP_OK,
-        "BATCH_CHECKPOINTED",
-        MutationLane.WORKER,
-        failureMapper = ::classifyIntegrityFailure,
-        terminalEffect = { _, failure ->
-            markTerminalBatchFailure(
-                tenantId,
-                campaignId,
-                batchId,
-                failure,
-                manifestDigest,
-                prepared.firstOrdinal,
-            )
-        },
-    ) {
+    ): MutationResult<BatchSnapshot> =
+        executeIdempotent(
+            tenantId = tenantId,
+            rawKey = idempotencyKey,
+            operation = if (expectedSource == BatchSourceKind.IMPORTED) OP_IMPORT_CHUNK else OP_GENERATE_CHUNK,
+            fingerprint = fingerprint,
+            effectId = batchId,
+            status = HTTP_OK,
+            outcome = "BATCH_CHECKPOINTED",
+            lane = MutationLane.WORKER,
+            failureMapper = ::classifyIntegrityFailure,
+            terminalEffect = { _, failure ->
+                markTerminalBatchFailure(
+                    tenantId,
+                    campaignId,
+                    batchId,
+                    failure,
+                    manifestDigest,
+                    prepared.firstOrdinal,
+                )
+            },
+        ) {
             repository.lockCampaignForShare(tenantId, campaignId)
             val batch = repository.lockBatchForUpdate(tenantId, batchId)
                 ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
@@ -581,7 +599,7 @@ internal class JdbcCampaignBatchCommandService(
             requireRevision(batch.revision, expectedRevision)
             if (batch.sourceKind != expectedSource.name) fail(BatchCommandFailure.INVALID_STATE)
             commitPrepared(batch, manifestDigest, prepared).snapshot()
-    }
+        }
 
     private fun commitPrepared(
         batch: BatchRecord,
@@ -605,9 +623,10 @@ internal class JdbcCampaignBatchCommandService(
             )
         }
         repository.insertPreparedEntries(prepared.entries)
-        val nextCheckpoint = prepared.entries.fold(batch.checkpointDigest ?: initialCheckpoint(batch)) { previous, entry ->
-            advanceCheckpoint(previous, entry.sourceOrdinal, entry.stableDedupDigest)
-        }
+        val nextCheckpoint = prepared.entries
+            .fold(batch.checkpointDigest ?: initialCheckpoint(batch)) { previous, entry ->
+                advanceCheckpoint(previous, entry.sourceOrdinal, entry.stableDedupDigest)
+            }
         return repository.updateBatchCheckpoint(
             batch = batch,
             nextSourceOrdinal = chunkEnd,
@@ -634,10 +653,14 @@ internal class JdbcCampaignBatchCommandService(
             prepared.firstOrdinal,
             prepared.totalCount,
         )
-        return stored.size == prepared.entries.size && stored.zip(prepared.entries).all { (authority, candidate) ->
-            authority.sourceOrdinal == candidate.sourceOrdinal &&
-                MessageDigest.isEqual(authority.stableDedupDigest.copyBytes(), candidate.stableDedupDigest.copyBytes())
-        }
+        return stored.size == prepared.entries.size &&
+                stored.zip(prepared.entries).all { (authority, candidate) ->
+                    authority.sourceOrdinal == candidate.sourceOrdinal &&
+                            MessageDigest.isEqual(
+                                authority.stableDedupDigest.copyBytes(),
+                                candidate.stableDedupDigest.copyBytes()
+                            )
+                }
     }
 
     private fun prepare(
@@ -651,25 +674,27 @@ internal class JdbcCampaignBatchCommandService(
         val rejections = ArrayList<RejectedVoucherEntryRecord>()
         codes.forEachIndexed { index, rawCode ->
             val ordinal = firstOrdinal + index
-            val payloadDigest = DigestValue.of(digests.audit(tenantId, INVALID_CODE_AUDIT_OPERATION, rawCode).copyBytes())
+            val payloadDigest =
+                DigestValue.of(digests.audit(tenantId, INVALID_CODE_AUDIT_OPERATION, rawCode).copyBytes())
+
             try {
                 val code = CanonicalVoucherCode.of(rawCode)
                 val stable = digests.stableDedup(tenantId, code)
                 val entryId = Uuid.V7.nextId()
                 val encrypted = crypto.encrypt(EntryIdentity(tenantId, campaignId, batchId, entryId, ordinal), code)
                 entries += PreparedVoucherEntryRecord(
-                    tenantId,
-                    campaignId,
-                    batchId,
-                    entryId,
-                    ordinal,
-                    DigestValue.of(stable.copyBytes()),
-                    stable.keyVersion,
-                    DigestValue.of(encrypted.copyCodeCiphertext()),
-                    DigestValue.of(encrypted.copyCodeNonce()),
-                    DigestValue.of(encrypted.copyWrappedDek()),
-                    DigestValue.of(encrypted.copyWrapNonce()),
-                    encrypted.kekVersion,
+                    tenantId = tenantId,
+                    campaignId = campaignId,
+                    batchId = batchId,
+                    entryId = entryId,
+                    sourceOrdinal = ordinal,
+                    stableDedupDigest = DigestValue.of(stable.copyBytes()),
+                    stableDedupKeyVersion = stable.keyVersion,
+                    codeCiphertext = DigestValue.of(encrypted.copyCodeCiphertext()),
+                    codeNonce = DigestValue.of(encrypted.copyCodeNonce()),
+                    wrappedDek = DigestValue.of(encrypted.copyWrappedDek()),
+                    wrapNonce = DigestValue.of(encrypted.copyWrapNonce()),
+                    kekVersion = encrypted.kekVersion,
                 )
             } catch (_: IllegalArgumentException) {
                 rejections += RejectedVoucherEntryRecord(ordinal, "INVALID_CODE", payloadDigest)
@@ -707,16 +732,17 @@ internal class JdbcCampaignBatchCommandService(
     }
 
     private fun initialCheckpoint(batch: BatchRecord): DigestValue {
-        val digest = MessageDigest.getInstance("SHA-256")
-        digest.update(FINAL_CHECKPOINT_DOMAIN.toByteArray(UTF_8))
-        digest.update(batch.provenanceDigest.copyBytes())
-        digest.update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(batch.expectedCount).array())
+        val digest = MessageDigest.getInstance("SHA-256").apply {
+            update(FINAL_CHECKPOINT_DOMAIN.toUtf8Bytes())
+            update(batch.provenanceDigest.copyBytes())
+            update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(batch.expectedCount).array())
+        }
         return DigestValue.of(digest.digest())
     }
 
     private fun advanceCheckpoint(previous: DigestValue, ordinal: Long, stableDigest: DigestValue): DigestValue {
         val digest = MessageDigest.getInstance("SHA-256")
-        digest.update(CHECKPOINT_STEP_DOMAIN.toByteArray(UTF_8))
+        digest.update(CHECKPOINT_STEP_DOMAIN.toUtf8Bytes())
         digest.update(previous.copyBytes())
         digest.update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(ordinal).array())
         digest.update(stableDigest.copyBytes())
@@ -739,8 +765,9 @@ internal class JdbcCampaignBatchCommandService(
     ): MutationResult<T> {
         requireIdempotencyKey(rawKey)
         val scope = CommandScope(tenantId, operation)
+
         return when (val decision = transaction(lane) { idempotency.acquire(scope, rawKey, fingerprint) }) {
-            is IdempotencyDecision.Execute -> executeOwned(
+            is IdempotencyDecision.Execute    -> executeOwned(
                 decision.owner,
                 effectId,
                 status,
@@ -751,8 +778,8 @@ internal class JdbcCampaignBatchCommandService(
                 createRecovery,
                 effect,
             )
-            is IdempotencyDecision.Replay -> MutationResult.Replay(decision.descriptor)
-            is IdempotencyDecision.Expired -> MutationResult.Expired(decision.effectId, decision.terminalCode)
+            is IdempotencyDecision.Replay     -> MutationResult.Replay(decision.descriptor)
+            is IdempotencyDecision.Expired    -> MutationResult.Expired(decision.effectId, decision.terminalCode)
             is IdempotencyDecision.InProgress -> fail(BatchCommandFailure.COMMAND_IN_PROGRESS)
             IdempotencyDecision.FingerprintConflict -> fail(BatchCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT)
         }
@@ -768,29 +795,42 @@ internal class JdbcCampaignBatchCommandService(
         terminalEffect: (Connection, BatchCommandException) -> Unit,
         createRecovery: ((Connection) -> T?)?,
         effect: (Connection) -> T,
-    ): MutationResult<T> = try {
-        val applied = transaction(lane) {
-            idempotency.lockOwnerForExecution(owner)
-            val value = effect(currentConnection())
-            idempotency.finalize(
-                owner,
-                SafeResponseDescriptor.success(status, outcome, effectId, aggregateRevision(value as Any)),
-                EffectReference.effect(effectId),
-            )
-            value
+    ): MutationResult<T> =
+        try {
+            val applied = transaction(lane) {
+                idempotency.lockOwnerForExecution(owner)
+                val value = effect(currentConnection())
+                idempotency.finalize(
+                    owner,
+                    SafeResponseDescriptor.success(status, outcome, effectId, aggregateRevision(value as Any)),
+                    EffectReference.effect(effectId),
+                )
+                value
+            }
+            MutationResult.Applied(applied)
+        } catch (@Suppress("TooGenericExceptionCaught") failure: RuntimeException) {
+            val mapped = failureMapper(failure)
+            if (mapped is BatchCommandException && mapped.reason == BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT && createRecovery != null) {
+                recoverCreate(
+                    owner,
+                    effectId,
+                    status,
+                    outcome,
+                    lane,
+                    createRecovery
+                )?.let { return MutationResult.Applied(it) }
+            }
+            when {
+                mapped is BatchCommandException && mapped.reason.isTerminal() -> finalizeTerminal(
+                    owner,
+                    lane,
+                    mapped,
+                    terminalEffect
+                )
+                mapped.isRetryableMutationFailure()                           -> releaseRetryable(owner, lane)
+            }
+            throw mapped
         }
-        MutationResult.Applied(applied)
-    } catch (@Suppress("TooGenericExceptionCaught") failure: RuntimeException) {
-        val mapped = failureMapper(failure)
-        if (mapped is BatchCommandException && mapped.reason == BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT && createRecovery != null) {
-            recoverCreate(owner, effectId, status, outcome, lane, createRecovery)?.let { return MutationResult.Applied(it) }
-        }
-        when {
-            mapped is BatchCommandException && mapped.reason.isTerminal() -> finalizeTerminal(owner, lane, mapped, terminalEffect)
-            mapped.isRetryableMutationFailure() -> releaseRetryable(owner, lane)
-        }
-        throw mapped
-    }
 
     private fun <T> recoverCreate(
         owner: IdempotencyOwner,
@@ -803,9 +843,9 @@ internal class JdbcCampaignBatchCommandService(
         idempotency.lockOwnerForExecution(owner)
         val recovered = recovery(currentConnection()) ?: return@transaction null
         idempotency.finalize(
-            owner,
-            SafeResponseDescriptor.success(status, outcome, effectId, aggregateRevision(recovered)),
-            EffectReference.effect(effectId),
+            owner = owner,
+            descriptor = SafeResponseDescriptor.success(status, outcome, effectId, aggregateRevision(recovered)),
+            effect = EffectReference.effect(effectId),
         )
         recovered
     }
@@ -813,7 +853,7 @@ internal class JdbcCampaignBatchCommandService(
     private fun aggregateRevision(value: Any): Long = when (value) {
         is CampaignSnapshot -> value.revision
         is BatchSnapshot -> value.revision
-        else -> error("idempotent mutation result requires an aggregate revision")
+        else             -> error("idempotent mutation result requires an aggregate revision")
     }
 
     private fun finalizeTerminal(
@@ -826,9 +866,9 @@ internal class JdbcCampaignBatchCommandService(
             idempotency.lockOwnerForExecution(owner)
             terminalEffect(currentConnection(), failure)
             idempotency.finalize(
-                owner,
-                SafeResponseDescriptor.terminal(HTTP_CONFLICT, VoucherPoolErrorCode.BATCH_FAILED_TERMINAL),
-                EffectReference.terminal(VoucherPoolErrorCode.BATCH_FAILED_TERMINAL),
+                owner = owner,
+                descriptor = SafeResponseDescriptor.terminal(HTTP_CONFLICT, VoucherPoolErrorCode.BATCH_FAILED_TERMINAL),
+                effect = EffectReference.terminal(VoucherPoolErrorCode.BATCH_FAILED_TERMINAL),
             )
         }
     }
@@ -853,7 +893,10 @@ internal class JdbcCampaignBatchCommandService(
         expectedFirstOrdinal: Long,
         missingBatchFactory: ((CampaignRecord) -> BatchRecord)? = null,
     ) {
-        if (failure.reason !in setOf(BatchCommandFailure.DUPLICATE_CODE, BatchCommandFailure.VALIDATION_REJECTED)) return
+        if (failure.reason !in setOf(
+                BatchCommandFailure.DUPLICATE_CODE,
+                BatchCommandFailure.VALIDATION_REJECTED
+            )) return
         val campaign = repository.lockCampaignForShare(tenantId, campaignId)
         val requestedBatch = missingBatchFactory?.invoke(campaign)
         val existingBatch = repository.lockBatchForUpdate(tenantId, batchId)
@@ -865,9 +908,10 @@ internal class JdbcCampaignBatchCommandService(
                 expectedManifest,
                 expectedFirstOrdinal,
                 requestedBatch,
-            ) -> return
+            )    -> return
             else -> existingBatch
         }
+
         lockedBatch?.let { batch ->
             if (batch.state == BatchState.STAGING) {
                 val rejected = failure as? PreparedChunkRejectedException
@@ -904,9 +948,9 @@ internal class JdbcCampaignBatchCommandService(
         return when (failure.postgresConstraintName()) {
             in STABLE_DEDUP_CONSTRAINTS -> BatchCommandException(BatchCommandFailure.DUPLICATE_CODE)
             in RETRYABLE_COLLISION_CONSTRAINTS -> BatchCommandException(BatchCommandFailure.RETRYABLE_INTEGRITY_COLLISION)
-            in CREATE_CONSTRAINTS -> BatchCommandException(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
-            in ORDINAL_CONSTRAINTS -> BatchCommandException(BatchCommandFailure.CHUNK_FINGERPRINT_CONFLICT)
-            else -> failure
+            in CREATE_CONSTRAINTS       -> BatchCommandException(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
+            in ORDINAL_CONSTRAINTS      -> BatchCommandException(BatchCommandFailure.CHUNK_FINGERPRINT_CONFLICT)
+            else                        -> failure
         }
     }
 
@@ -922,76 +966,82 @@ internal class JdbcCampaignBatchCommandService(
         if (actual != expected) fail(BatchCommandFailure.STALE_REVISION)
     }
 
-    private fun CampaignRecord.snapshot() = CampaignSnapshot(tenantId, campaignId, state, policyVersion, revision)
+    private fun CampaignRecord.snapshot(): CampaignSnapshot =
+        CampaignSnapshot(tenantId, campaignId, state, policyVersion, revision)
 
-    private fun BatchRecord.snapshot() = BatchSnapshot(
-        tenantId,
-        batchId,
-        campaignId,
-        state,
-        nextSourceOrdinal,
-        expectedCount,
-        acceptedCount,
-        rejectedCount,
-        checkpointDigest,
-        lastFailureCode,
-        revision,
-    )
+    private fun BatchRecord.snapshot(): BatchSnapshot =
+        BatchSnapshot(
+            tenantId,
+            batchId,
+            campaignId,
+            state,
+            nextSourceOrdinal,
+            expectedCount,
+            acceptedCount,
+            rejectedCount,
+            checkpointDigest,
+            lastFailureCode,
+            revision,
+        )
 
-    private fun requestedCampaign(command: CreateCampaignCommand) = CampaignRecord(
-        tenantId = command.tenantId,
-        campaignId = command.campaignId,
-        state = CampaignState.DRAFT,
-        startsAt = command.startsAt,
-        endsAt = command.endsAt,
-        perUserLimit = command.policy.perUserLimit,
-        reservationTtlSeconds = command.policy.reservationTtl.inWholeSeconds,
-        allocationTtlSeconds = command.policy.allocationTtl.inWholeSeconds,
-        replacementAllowance = command.policy.replacementAllowance,
-        userIdentityKeyVersion = digests.currentUserIdentityKeyVersion,
-        policyVersion = 1,
-        revision = 0,
-    )
+    private fun requestedCampaign(command: CreateCampaignCommand): CampaignRecord =
+        CampaignRecord(
+            tenantId = command.tenantId,
+            campaignId = command.campaignId,
+            state = CampaignState.DRAFT,
+            startsAt = command.startsAt,
+            endsAt = command.endsAt,
+            perUserLimit = command.policy.perUserLimit,
+            reservationTtlSeconds = command.policy.reservationTtl.inWholeSeconds,
+            allocationTtlSeconds = command.policy.allocationTtl.inWholeSeconds,
+            replacementAllowance = command.policy.replacementAllowance,
+            userIdentityKeyVersion = digests.currentUserIdentityKeyVersion,
+            policyVersion = 1,
+            revision = 0,
+        )
 
-    private fun requestedBatch(command: CreateImportBatchCommand, existingPolicyVersion: Long) = BatchRecord(
-        tenantId = command.tenantId,
-        batchId = command.batchId,
-        campaignId = command.campaignId,
-        state = BatchState.STAGING,
-        sourceKind = command.sourceKind.name,
-        provenanceDigest = command.manifestDigest,
-        requestFingerprint = command.requestFingerprint,
-        policyVersion = existingPolicyVersion,
-        activatesAt = command.activatesAt,
-        expiresAt = command.expiresAt,
-        expectedCount = command.expectedCount,
-        revision = 0,
-    )
+    private fun requestedBatch(command: CreateImportBatchCommand, existingPolicyVersion: Long): BatchRecord =
+        BatchRecord(
+            tenantId = command.tenantId,
+            batchId = command.batchId,
+            campaignId = command.campaignId,
+            state = BatchState.STAGING,
+            sourceKind = command.sourceKind.name,
+            provenanceDigest = command.manifestDigest,
+            requestFingerprint = command.requestFingerprint,
+            policyVersion = existingPolicyVersion,
+            activatesAt = command.activatesAt,
+            expiresAt = command.expiresAt,
+            expectedCount = command.expectedCount,
+            revision = 0,
+        )
 
-    private fun CreateCampaignCommand.fingerprint(): CommandFingerprint = VoucherPoolFingerprint.command(
-        OP_CREATE_CAMPAIGN,
-        mapOf(
-            "campaignId" to campaignId.toString(),
-            "startsAt" to startsAt.toString(),
-            "endsAt" to endsAt.toString(),
-            "perUserLimit" to policy.perUserLimit.toString(),
-            "reservationTtlSeconds" to policy.reservationTtl.inWholeSeconds.toString(),
-            "allocationTtlSeconds" to policy.allocationTtl.inWholeSeconds.toString(),
-            "replacementAllowance" to policy.replacementAllowance.toString(),
-        ),
-    )
+    private fun CreateCampaignCommand.fingerprint(): CommandFingerprint =
+        VoucherPoolFingerprint.command(
+            OP_CREATE_CAMPAIGN,
+            mapOf(
+                "campaignId" to campaignId.toString(),
+                "startsAt" to startsAt.toString(),
+                "endsAt" to endsAt.toString(),
+                "perUserLimit" to policy.perUserLimit.toString(),
+                "reservationTtlSeconds" to policy.reservationTtl.inWholeSeconds.toString(),
+                "allocationTtlSeconds" to policy.allocationTtl.inWholeSeconds.toString(),
+                "replacementAllowance" to policy.replacementAllowance.toString(),
+            ),
+        )
 
-    private fun UpdateCampaignPolicyCommand.fingerprint(): CommandFingerprint = VoucherPoolFingerprint.command(
-        OP_UPDATE_CAMPAIGN_POLICY,
-        mapOf(
-            "campaignId" to campaignId.toString(),
-            "expectedRevision" to expectedRevision.toString(),
-            "perUserLimit" to policy.perUserLimit.toString(),
-            "reservationTtlSeconds" to policy.reservationTtl.inWholeSeconds.toString(),
-            "allocationTtlSeconds" to policy.allocationTtl.inWholeSeconds.toString(),
-            "replacementAllowance" to policy.replacementAllowance.toString(),
-        ),
-    )
+    private fun UpdateCampaignPolicyCommand.fingerprint(): CommandFingerprint =
+        VoucherPoolFingerprint.command(
+            OP_UPDATE_CAMPAIGN_POLICY,
+            mapOf(
+                "campaignId" to campaignId.toString(),
+                "expectedRevision" to expectedRevision.toString(),
+                "perUserLimit" to policy.perUserLimit.toString(),
+                "reservationTtlSeconds" to policy.reservationTtl.inWholeSeconds.toString(),
+                "allocationTtlSeconds" to policy.allocationTtl.inWholeSeconds.toString(),
+                "replacementAllowance" to policy.replacementAllowance.toString(),
+            ),
+        )
 
     private fun CampaignRevisionCommand.fingerprint(operation: String): CommandFingerprint =
         VoucherPoolFingerprint.command(
@@ -1015,43 +1065,45 @@ internal class JdbcCampaignBatchCommandService(
             ),
         )
 
-    private fun ImportChunkCommand.fingerprint(prepared: PreparedChunk): CommandFingerprint = VoucherPoolFingerprint.command(
-        OP_IMPORT_CHUNK,
-        mapOf(
-            "batchId" to batchId.toString(),
-            "campaignId" to campaignId.toString(),
-            "firstOrdinal" to firstOrdinal.toString(),
-            "manifestDigest" to manifestDigest.copyBytes().toHex(),
-            "chunk" to prepared.requestDigest(),
-            "expectedRevision" to expectedRevision.toString(),
-        ),
-    )
+    private fun ImportChunkCommand.fingerprint(prepared: PreparedChunk): CommandFingerprint =
+        VoucherPoolFingerprint.command(
+            OP_IMPORT_CHUNK,
+            mapOf(
+                "batchId" to batchId.toString(),
+                "campaignId" to campaignId.toString(),
+                "firstOrdinal" to firstOrdinal.toString(),
+                "manifestDigest" to manifestDigest.copyBytes().toHex(),
+                "chunk" to prepared.requestDigest(),
+                "expectedRevision" to expectedRevision.toString(),
+            ),
+        )
 
-    private fun GenerateChunkCommand.fingerprint(): CommandFingerprint = VoucherPoolFingerprint.command(
-        OP_GENERATE_CHUNK,
-        mapOf(
-            "batchId" to batchId.toString(),
-            "campaignId" to campaignId.toString(),
-            "firstOrdinal" to firstOrdinal.toString(),
-            "manifestDigest" to manifestDigest.copyBytes().toHex(),
-            "count" to count.toString(),
-            "expectedRevision" to expectedRevision.toString(),
-        ),
-    )
+    private fun GenerateChunkCommand.fingerprint(): CommandFingerprint =
+        VoucherPoolFingerprint.command(
+            OP_GENERATE_CHUNK,
+            mapOf(
+                "batchId" to batchId.toString(),
+                "campaignId" to campaignId.toString(),
+                "firstOrdinal" to firstOrdinal.toString(),
+                "manifestDigest" to manifestDigest.copyBytes().toHex(),
+                "count" to count.toString(),
+                "expectedRevision" to expectedRevision.toString(),
+            ),
+        )
 
     private fun BatchRevisionCommand.fingerprint(operation: String = OP_ACTIVATE_BATCH): CommandFingerprint =
         VoucherPoolFingerprint.command(
-        operation,
-        mapOf(
-            "batchId" to batchId.toString(),
-            "campaignId" to campaignId.toString(),
-            "expectedRevision" to expectedRevision.toString(),
-        ),
-    )
+            operation,
+            mapOf(
+                "batchId" to batchId.toString(),
+                "campaignId" to campaignId.toString(),
+                "expectedRevision" to expectedRevision.toString(),
+            ),
+        )
 
     private fun PreparedChunk.requestDigest(): String {
         val digest = MessageDigest.getInstance("SHA-256")
-        digest.update(CHUNK_FINGERPRINT_DOMAIN.toByteArray(UTF_8))
+        digest.update(CHUNK_FINGERPRINT_DOMAIN.toUtf8Bytes())
         digest.update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(firstOrdinal).array())
         entries.forEach {
             digest.update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(it.sourceOrdinal).array())
@@ -1071,7 +1123,10 @@ internal class JdbcCampaignBatchCommandService(
         val rejections: List<RejectedVoucherEntryRecord>,
     )
 
-    private enum class MutationLane { OPERATOR, WORKER }
+    private enum class MutationLane {
+        OPERATOR,
+        WORKER
+    }
 }
 
 private fun RejectedVoucherEntryRecord.evidenceCode(): String =
@@ -1081,6 +1136,7 @@ private fun RejectedVoucherEntryRecord.evidenceCode(): String =
 private fun Throwable.sqlState(): String? {
     val pending = ArrayDeque<Throwable>().apply { add(this@sqlState) }
     val visited = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
+
     repeat(MAX_EXCEPTION_CHAIN) {
         val candidate = pending.pollFirst() ?: return null
         if (!visited.add(candidate)) return@repeat
@@ -1094,6 +1150,7 @@ private fun Throwable.sqlState(): String? {
 internal fun Throwable.postgresConstraintName(): String? {
     val pending = ArrayDeque<Throwable>().apply { add(this@postgresConstraintName) }
     val visited = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
+
     repeat(MAX_EXCEPTION_CHAIN) {
         val candidate = pending.pollFirst() ?: return null
         if (!visited.add(candidate)) return@repeat
@@ -1110,24 +1167,24 @@ internal fun Throwable.postgresConstraintName(): String? {
 
 private fun Throwable.isRetryableMutationFailure(): Boolean =
     (this is BatchCommandException && reason in RELEASE_COMMAND_FAILURES) ||
-        sqlState() in RETRYABLE_SQL_STATES ||
-        this::class.simpleName in RETRYABLE_FAILURE_TYPES
+            sqlState() in RETRYABLE_SQL_STATES ||
+            this::class.simpleName in RETRYABLE_FAILURE_TYPES
 
 private fun BatchCommandFailure.isTerminal(): Boolean = this in TERMINAL_COMMAND_FAILURES
 
 private fun CampaignRecord.sameCreateAuthority(other: CampaignRecord): Boolean =
     tenantId == other.tenantId && campaignId == other.campaignId && state == CampaignState.DRAFT &&
-        startsAt.sameDatabaseInstant(other.startsAt) && endsAt.sameDatabaseInstant(other.endsAt) &&
-        perUserLimit == other.perUserLimit &&
-        reservationTtlSeconds == other.reservationTtlSeconds && allocationTtlSeconds == other.allocationTtlSeconds &&
-        replacementAllowance == other.replacementAllowance
+            startsAt.sameDatabaseInstant(other.startsAt) && endsAt.sameDatabaseInstant(other.endsAt) &&
+            perUserLimit == other.perUserLimit &&
+            reservationTtlSeconds == other.reservationTtlSeconds && allocationTtlSeconds == other.allocationTtlSeconds &&
+            replacementAllowance == other.replacementAllowance
 
 private fun BatchRecord.sameCreateAuthority(other: BatchRecord): Boolean =
     tenantId == other.tenantId && batchId == other.batchId && campaignId == other.campaignId &&
-        sourceKind == other.sourceKind && provenanceDigest.secureEquals(other.provenanceDigest) &&
-        requestFingerprint.secureEquals(other.requestFingerprint) && policyVersion == other.policyVersion &&
-        activatesAt.sameDatabaseInstant(other.activatesAt) && expiresAt.sameDatabaseInstant(other.expiresAt) &&
-        expectedCount == other.expectedCount
+            sourceKind == other.sourceKind && provenanceDigest.secureEquals(other.provenanceDigest) &&
+            requestFingerprint.secureEquals(other.requestFingerprint) && policyVersion == other.policyVersion &&
+            activatesAt.sameDatabaseInstant(other.activatesAt) && expiresAt.sameDatabaseInstant(other.expiresAt) &&
+            expectedCount == other.expectedCount
 
 private fun BatchRecord.hasNoProgress(): Boolean =
     acceptedCount == 0L && rejectedCount == 0L && checkpointDigest == null && lastFailureCode == null
@@ -1150,7 +1207,7 @@ private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(Locale.
 private fun validateChunkPayload(codes: List<String>, allowEmpty: Boolean = false) {
     if (!allowEmpty) require(codes.isNotEmpty()) { "chunk must not be empty" }
     require(codes.size <= MAX_CHUNK_ENTRIES) { "chunk must contain at most $MAX_CHUNK_ENTRIES entries" }
-    val payloadBytes = codes.sumOf { it.toByteArray(UTF_8).size.toLong() }
+    val payloadBytes = codes.sumOf { it.toUtf8Bytes().size.toLong() }
     require(payloadBytes <= MAX_JSON_PAYLOAD_BYTES) { "chunk payload exceeds $MAX_JSON_PAYLOAD_BYTES bytes" }
 }
 
@@ -1197,7 +1254,7 @@ private const val OP_GENERATE_CHUNK = "batch-generate-chunk"
 private const val OP_ACTIVATE_BATCH = "batch-activate"
 private const val OP_PAUSE_BATCH = "batch-pause"
 private const val OP_RESUME_BATCH = "batch-resume"
-private val STABLE_DEDUP_CONSTRAINTS = setOf(
+private val STABLE_DEDUP_CONSTRAINTS: Set<String> = setOf(
     "pk_voucher_pool_code_dedup",
     "uq_voucher_pool_dedup",
     "uq_voucher_pool_entry_stable_dedup",
@@ -1213,16 +1270,16 @@ private val CREATE_CONSTRAINTS = setOf(
     "pk_voucher_pool_batches",
     "uq_voucher_pool_batch_identity",
 )
-private val ORDINAL_CONSTRAINTS = setOf("uq_voucher_pool_entry_batch_ordinal")
-private val RETRYABLE_SQL_STATES = setOf("40001", "40P01", "55P03", "57014")
-private val RETRYABLE_FAILURE_TYPES = setOf("PoolBusyException", "VoucherPoolJdbcTimeoutException")
-private val TERMINAL_COMMAND_FAILURES = setOf(
+private val ORDINAL_CONSTRAINTS: Set<String> = setOf("uq_voucher_pool_entry_batch_ordinal")
+private val RETRYABLE_SQL_STATES: Set<String> = setOf("40001", "40P01", "55P03", "57014")
+private val RETRYABLE_FAILURE_TYPES: Set<String> = setOf("PoolBusyException", "VoucherPoolJdbcTimeoutException")
+private val TERMINAL_COMMAND_FAILURES: Set<BatchCommandFailure> = setOf(
     BatchCommandFailure.DUPLICATE_CODE,
     BatchCommandFailure.CHUNK_FINGERPRINT_CONFLICT,
     BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT,
     BatchCommandFailure.VALIDATION_REJECTED,
 )
-private val RELEASE_COMMAND_FAILURES = setOf(
+private val RELEASE_COMMAND_FAILURES: Set<BatchCommandFailure> = setOf(
     BatchCommandFailure.SCOPE_NOT_FOUND,
     BatchCommandFailure.STALE_REVISION,
     BatchCommandFailure.INVALID_STATE,

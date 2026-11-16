@@ -4,20 +4,21 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.dao.Entity
+import kotlin.reflect.KClass
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class EventSourcingExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
-        ExposedEntityInformationImpl(domainClass),
-    )
+abstract class EventSourcingExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
+    ExposedEntityInformationImpl(domainClass.java),
+)
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class AppendOnlyEventSourcingExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : EventSourcingExposedJdbcRepository<E, ID>(domainClass) {
-    final override fun <S : E> save(entity: S): S = immutableMutation()
-    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+abstract class AppendOnlyEventSourcingExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): EventSourcingExposedJdbcRepository<E, ID>(domainClass) {
+    final override fun <S: E> save(entity: S): S = immutableMutation()
+    final override fun <S: E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
     final override fun deleteById(id: ID): Unit = immutableMutation()
     final override fun delete(entity: E): Unit = immutableMutation()
     final override fun deleteAllById(ids: Iterable<ID>): Unit = immutableMutation()

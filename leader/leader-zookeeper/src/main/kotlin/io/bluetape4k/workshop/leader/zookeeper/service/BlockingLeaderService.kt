@@ -24,7 +24,7 @@ class BlockingLeaderService(
     private val elector: ZooKeeperLeaderElector,
     @Suppress("unused") private val props: LeaderZookeeperProperties,
 ) {
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val LOCK_NAME = "workshop:blocking-job"
     }
 
@@ -38,6 +38,7 @@ class BlockingLeaderService(
      */
     fun runLeaderWork(lockName: String = LOCK_NAME): String? {
         lockName.requireNotBlank("lockName")
+
         return elector.runIfLeader(lockName) {
             executionCount.incrementAndGet()
             log.info { "[LEADER] BlockingLeaderService running work (total=${executionCount.get()})" }

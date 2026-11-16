@@ -2,6 +2,10 @@ package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleScenario
 import org.junit.jupiter.api.Test
 import java.net.URI
@@ -13,8 +17,11 @@ import java.time.Duration
 import java.util.Optional
 import java.util.concurrent.atomic.AtomicInteger
 import javax.net.ssl.SSLSession
+import kotlin.collections.ArrayDeque
 
 class KtorJobConsoleHttpClientRetryTest {
+
+    companion object: KLogging()
 
     @Test
     fun `submission retry evidence records transient statuses and bounded delay`() {
@@ -33,16 +40,19 @@ class KtorJobConsoleHttpClientRetryTest {
         )
 
         val snapshot = client.submit(JobConsoleScenario())
-
+        log.debug { "snapshot=$snapshot" }
         snapshot.retryAttempts shouldBeEqualTo 2
         snapshot.retryStatuses shouldBeEqualTo listOf(429, 503, 202)
-        snapshot.retryDelay shouldBeEqualTo Duration.ofSeconds(2).plusMillis(100)
-        delays shouldBeEqualTo listOf(Duration.ofSeconds(2), Duration.ofMillis(100))
+        snapshot.retryDelay shouldBeEqualTo 2.seconds() + 100.millis()
+        delays shouldBeEqualTo listOf(2.seconds(), 100.millis())
 
-        client.retrySummary().requestCount shouldBeEqualTo 1
-        client.retrySummary().retryCount shouldBeEqualTo 2
-        client.retrySummary().statusCounts shouldBeEqualTo mapOf(429 to 1, 503 to 1)
-        client.retrySummary().cumulativeDelay shouldBeEqualTo Duration.ofSeconds(2).plusMillis(100)
+        client.retrySummary().let {
+            log.debug { "client retry summary=$it" }
+            it.requestCount shouldBeEqualTo 1
+            it.retryCount shouldBeEqualTo 2
+            it.statusCounts shouldBeEqualTo mapOf(429 to 1, 503 to 1)
+            it.cumulativeDelay shouldBeEqualTo 2.seconds() + 100.millis()
+        }
     }
 
     @Test
@@ -86,9 +96,11 @@ class KtorJobConsoleHttpClientRetryTest {
         val fallback = client.submit(JobConsoleScenario())
         val capped = client.submit(JobConsoleScenario(idempotencyKey = "second-key"))
 
-        fallback.retryDelay shouldBeEqualTo Duration.ofSeconds(2)
-        capped.retryDelay shouldBeEqualTo Duration.ofSeconds(30)
-        delays shouldBeEqualTo listOf(Duration.ofSeconds(2), Duration.ofSeconds(30))
+        log.debug { "fallback=$fallback" }
+        log.debug { "capped=$capped" }
+        fallback.retryDelay shouldBeEqualTo 2.seconds()
+        capped.retryDelay shouldBeEqualTo 30.seconds()
+        delays shouldBeEqualTo listOf(2.seconds(), 30.seconds())
     }
 
     private fun response(
@@ -96,7 +108,7 @@ class KtorJobConsoleHttpClientRetryTest {
         retryAfter: String? = null,
     ): HttpResponse<String> {
         val headers = retryAfter?.let { mapOf("Retry-After" to listOf(it)) }.orEmpty()
-        return object : HttpResponse<String> {
+        return object: HttpResponse<String> {
             override fun statusCode(): Int = status
 
             override fun request(): HttpRequest? = null

@@ -2,9 +2,13 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class UploadImageValidatorTest {
+
+    private companion object: KLogging()
 
     private val validator = UploadImageValidator(testProperties(maxInputBytes = 4))
 
@@ -12,6 +16,7 @@ class UploadImageValidatorTest {
     fun `validator accepts supported image content type`() {
         val options = validator.validate("image/jpeg", SAMPLE_JPEG_BYTES)
 
+        log.debug { "options=$options" }
         options.contentType shouldBeEqualTo "image/jpeg"
     }
 

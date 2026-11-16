@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.checkBeTrue
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.time.Instant
@@ -12,15 +13,13 @@ internal sealed interface ProjectionRebuildPollResult {
         val appliedEventCount: Int,
         val position: Long,
         val lag: Long,
-    ) : ProjectionRebuildPollResult
+    ): ProjectionRebuildPollResult
 
-    data object Idle : ProjectionRebuildPollResult
+    data object Idle: ProjectionRebuildPollResult
 
-    data object StaleWorker : ProjectionRebuildPollResult
+    data object StaleWorker: ProjectionRebuildPollResult
 
-    data class Degraded(
-        val reasonClass: String,
-    ) : ProjectionRebuildPollResult
+    data class Degraded(val reasonClass: String): ProjectionRebuildPollResult
 }
 
 /**
@@ -55,8 +54,10 @@ internal class ProjectionRebuildWorker(
         now: Instant,
     ): ProjectionRebuildPollResult {
         TransactionManager.current()
-        val events = reader.loadAfter(candidate.currentPosition).events.takeUntil(candidate.targetPosition)
+        val events: List<EventEnvelope> =
+            reader.loadAfter(candidate.currentPosition).events.takeUntil(candidate.targetPosition)
         if (events.isEmpty()) return ProjectionRebuildPollResult.Idle
+
         return verifyEvents(key, lease, events, now) ?: applyCandidate(key, lease, candidate, events, now)
     }
 
@@ -89,20 +90,20 @@ internal class ProjectionRebuildWorker(
     ): ProjectionRebuildPollResult.Applied {
         val applied = projections.applyBatch(key, lease, events, now)
         val position = events.last().globalPosition
-        check(
-            rebuilds.advance(
-                key = key,
-                cursor =
-                    ProjectionRebuildCursor(
-                        fencingToken = candidate.fencingToken,
-                        cancellationRevision = candidate.cancellationRevision,
-                        expectedPosition = candidate.currentPosition,
-                        position = position,
-                    ),
-                now = now,
+
+        rebuilds.advance(
+            key = key,
+            cursor = ProjectionRebuildCursor(
+                fencingToken = candidate.fencingToken,
+                cancellationRevision = candidate.cancellationRevision,
+                expectedPosition = candidate.currentPosition,
+                position = position,
             ),
-        ) { "candidate generation changed while its row lock was held" }
+            now = now,
+        ).checkBeTrue { "candidate generation changed while its row lock was held" }
+
         log.debug { "voucher_rebuild_projection_applied projection=${key.projection} generation=${key.generation}" }
+
         return ProjectionRebuildPollResult.Applied(
             appliedEventCount = applied.appliedEventCount,
             position = position,
@@ -110,8 +111,10 @@ internal class ProjectionRebuildWorker(
         )
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 private fun List<EventEnvelope>.takeUntil(targetPosition: Long): List<EventEnvelope> =
-    takeWhile { event -> event.globalPosition <= targetPosition }
+    takeWhile { event ->
+        event.globalPosition <= targetPosition
+    }

@@ -12,7 +12,11 @@ internal enum class Armor(val title: String) {
 
 internal enum class HairColor {
 
-    WHITE, BLOND, RED, BROWN, BLACK;
+    WHITE,
+    BLOND,
+    RED,
+    BROWN,
+    BLACK;
 
     override fun toString(): String = name.lowercase()
 }
@@ -30,14 +34,21 @@ internal enum class HairType(val title: String) {
 
 internal enum class Profession {
 
-    WARRIOR, THIEF, MAGE, PRIEST;
+    WARRIOR,
+    THIEF,
+    MAGE,
+    PRIEST;
 
     override fun toString(): String = name.lowercase()
 }
 
 internal enum class Weapon {
 
-    DAGGER, SWORD, AXE, WAR_HAMMER, BOW;
+    DAGGER,
+    SWORD,
+    AXE,
+    WAR_HAMMER,
+    BOW;
 
     override fun toString(): String = name.lowercase()
 }

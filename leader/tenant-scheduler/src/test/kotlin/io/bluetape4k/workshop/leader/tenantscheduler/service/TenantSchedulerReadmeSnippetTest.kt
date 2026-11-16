@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.leader.tenantscheduler.service
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantJobName
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantLogicalTick
@@ -14,6 +16,8 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TenantSchedulerReadmeSnippetTest {
+
+    companion object: KLogging()
 
     @Test
     fun `readme tenant scheduler snippet stays executable`() {
@@ -39,6 +43,7 @@ class TenantSchedulerReadmeSnippetTest {
             ),
         )
 
+        log.debug { "report=$report" }
         report.eventRows.map { it.outcome } shouldBeEqualTo listOf(
             TenantRunOutcome.EXECUTED,
             TenantRunOutcome.FAILED,
@@ -50,6 +55,7 @@ class TenantSchedulerReadmeSnippetTest {
         val tags = TenantMetricTagPolicy(maxTenantTagValues = policy.maxTenantTagValues)
             .decide(policy.tenants)
 
+        log.debug { "tags=$tags" }
         tags.cardinalityLimited.shouldBeFalse()
         tags.metricRows.map { it.tags } shouldBeEqualTo listOf(
             mapOf("tenant" to "tenant-a"),

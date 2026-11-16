@@ -31,7 +31,7 @@ import java.time.LocalDateTime
 class OutboxPublisher(
     private val kafkaTemplate: KafkaTemplate<String, String>,
 ) {
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val TOPIC = "order-events"
         const val MAX_RETRY = 3
     }
@@ -47,8 +47,8 @@ class OutboxPublisher(
         val pendingIds = OutboxEventTable.selectAll()
             .where {
                 ((OutboxEventTable.status eq OutboxStatus.PENDING) or
-                    (OutboxEventTable.status eq OutboxStatus.FAILED)) and
-                    (OutboxEventTable.retryCount less MAX_RETRY)
+                        (OutboxEventTable.status eq OutboxStatus.FAILED)) and
+                        (OutboxEventTable.retryCount less MAX_RETRY)
             }
             .map { it[OutboxEventTable.id].value }
 
@@ -56,6 +56,7 @@ class OutboxPublisher(
 
         pendingIds.forEach { id ->
             try {
+                log.debug { "publish pending event: $id" }
                 publishEvent(id)
             } catch (e: Exception) {
                 log.warn(e) { "Unexpected error while publishing outbox event id=$id" }

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.javers.persistence
 import io.bluetape4k.javers.latestSnapshotOrNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import org.javers.core.Javers
 import org.javers.core.diff.Diff
@@ -61,8 +62,7 @@ class OrderAuditService(
         author.requireNotBlank("author")
         orderId.requireNotBlank("orderId")
 
-        val current = findCurrent(orderId)
-            ?: throw IllegalArgumentException("Order was not found. orderId=$orderId")
+        val current = findCurrent(orderId) ?: throw IllegalArgumentException("Order was not found. orderId=$orderId")
         val paid = current.copy(status = OrderStatus.PAID)
 
         javers.commit(author, paid)
@@ -106,6 +106,7 @@ class OrderAuditService(
         require(limit in 1..MAX_HISTORY_LIMIT) {
             "limit must be between 1 and $MAX_HISTORY_LIMIT."
         }
+
         val query = QueryBuilder.byInstanceId(orderId, Order::class.java)
             .limit(limit)
             .build()
@@ -133,8 +134,7 @@ class OrderAuditService(
         author.requireNotBlank("author")
         orderId.requireNotBlank("orderId")
 
-        val current = findCurrent(orderId)
-            ?: throw IllegalArgumentException("Order was not found. orderId=$orderId")
+        val current = findCurrent(orderId) ?: throw IllegalArgumentException("Order was not found. orderId=$orderId")
 
         javers.commitShallowDelete(author, current)
         transaction {

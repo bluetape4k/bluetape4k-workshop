@@ -59,7 +59,7 @@ class BridgeRedisProperties {
     var url: String = ""
 }
 
-private val contextServer = object : PropertyExportingServer {
+private val contextServer = object: PropertyExportingServer {
     override val propertyNamespace: String = "redis"
 
     override fun propertyKeys(): Set<String> = setOf("host", "port", "url")

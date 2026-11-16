@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.mongodb.examples
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
-import io.bluetape4k.workshop.mongodb.domain.Person
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
+import io.bluetape4k.workshop.mongodb.domain.Person
 import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,7 +29,7 @@ class MongoTemplateExamples(
     @param:Autowired private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {
@@ -46,11 +46,11 @@ class MongoTemplateExamples(
     fun `should insert and find person in a fluent API style`() {
         val person = operations.insert<Person>().inCollection("person").one(newPerson())
 
+        val query = Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
         val persons = operations.query<Person>()
-            .matching(
-                Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
-            )
+            .matching(query)
             .all()
+            .onEach { log.debug { "person=$it" } }
 
         persons.size shouldBeEqualTo 1
         persons.single() shouldBeEqualTo person
@@ -60,14 +60,13 @@ class MongoTemplateExamples(
     fun `should insert and project query results`() {
         val person = operations.insert<Person>().inCollection("person").one(newPerson())
 
+        val query = Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
         val people = operations.query<Person>()
             .asType<FirstnameOnly>()
-            .matching(
-                Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
-            )
+            .matching(query)
             .oneValue()
+            .shouldNotBeNull()
 
-        people.shouldNotBeNull()
         people.getFirstname() shouldBeEqualTo person.firstname
     }
 
@@ -75,10 +74,9 @@ class MongoTemplateExamples(
     fun `should insert and count objects in a fluent API style`() {
         val person = operations.insert<Person>().inCollection("person").one(newPerson())
 
+        val query = Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
         val count = operations.query<Person>()
-            .matching(
-                Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
-            )
+            .matching(query)
             .count()
 
         count shouldBeEqualTo 1
@@ -89,7 +87,7 @@ class MongoTemplateExamples(
         val person = operations.insert(newPerson())
 
         val query = Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
-        val persons = operations.find<Person>(query)
+        val persons = operations.find<Person>(query).onEach { log.debug { "person=$it" } }
 
         persons.size shouldBeEqualTo 1
         persons.single() shouldBeEqualTo person
@@ -101,25 +99,19 @@ class MongoTemplateExamples(
             .inCollection("person")
             .one(Document("lastname", "White"))
 
+        val query = Query.query(where(Person::lastname.name).isEqualTo(document["lastname"]))
         val persons = operations.query<Person>()
-            .matching(
-                Query.query(where(Person::lastname.name).isEqualTo(document["lastname"]))
-            )
+            .matching(query)
             .firstValue()
-            .let { checkNotNull(it) { "person document must exist." } }
+            .shouldNotBeNull()
 
         log.debug { "Load person=$persons" }
         persons.firstname shouldBeEqualTo "Walter" // Default 값을 사용합니다.
         persons.lastname shouldBeEqualTo document["lastname"]
 
-        val walter = operations
-            .findOne<Document>(
-                Query.query(where(Person::lastname.name).isEqualTo(document["lastname"])),
-                "person"
-            )
+        val walter = operations.findOne<Document>(query, "person").shouldNotBeNull()
 
         log.debug { "Load walter=$walter" }
-        walter.shouldNotBeNull()
         walter["lastname"] shouldBeEqualTo document["lastname"]
         walter.containsKey("_id").shouldBeTrue()
         walter.containsKey("firstname").shouldBeFalse()

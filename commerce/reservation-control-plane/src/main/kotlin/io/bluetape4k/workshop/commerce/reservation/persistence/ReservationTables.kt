@@ -12,7 +12,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /** capacity authority입니다. `revision`과 `occupiedCount`는 같은 SQL CAS로 update됩니다. */
-internal object CapacityResourceTable : AuditableLongIdTable("reservation_capacity_resources") {
+internal object CapacityResourceTable: AuditableLongIdTable("reservation_capacity_resources") {
     val code = varchar("code", 80).uniqueIndex()
     val state = enumerationByName<ResourceState>("state", 16).default(ResourceState.OPEN)
     val capacity = integer("capacity")
@@ -23,7 +23,7 @@ internal object CapacityResourceTable : AuditableLongIdTable("reservation_capaci
 }
 
 /** bounded sweeper discovery를 위해 expiry로 index된 durable hold state입니다. */
-internal object ReservationHoldTable : AuditableLongIdTable("reservation_holds") {
+internal object ReservationHoldTable: AuditableLongIdTable("reservation_holds") {
     val resourceId = reference("resource_id", CapacityResourceTable, onDelete = ReferenceOption.RESTRICT).index()
     val ownerDigest = char("owner_digest", 64)
     val state = enumerationByName<HoldState>("state", 32)
@@ -37,7 +37,7 @@ internal object ReservationHoldTable : AuditableLongIdTable("reservation_holds")
 }
 
 /** resource, state, sequence, stable id로 정렬되는 FIFO entry입니다. */
-internal object WaitlistEntryTable : AuditableLongIdTable("reservation_waitlist_entries") {
+internal object WaitlistEntryTable: AuditableLongIdTable("reservation_waitlist_entries") {
     val resourceId = reference("resource_id", CapacityResourceTable, onDelete = ReferenceOption.RESTRICT)
     val ownerDigest = char("owner_digest", 64)
     val state = enumerationByName<WaitlistState>("state", 24)
@@ -50,7 +50,7 @@ internal object WaitlistEntryTable : AuditableLongIdTable("reservation_waitlist_
 }
 
 /** waitlist entry당 하나의 expiring offer입니다. unique entry reference가 double promotion을 막습니다. */
-internal object ReservationOfferTable : AuditableLongIdTable("reservation_offers") {
+internal object ReservationOfferTable: AuditableLongIdTable("reservation_offers") {
     val resourceId = reference("resource_id", CapacityResourceTable, onDelete = ReferenceOption.RESTRICT).index()
     val entryId = reference("entry_id", WaitlistEntryTable, onDelete = ReferenceOption.RESTRICT).uniqueIndex()
     val ownerDigest = char("owner_digest", 64)
@@ -64,7 +64,7 @@ internal object ReservationOfferTable : AuditableLongIdTable("reservation_offers
 }
 
 /** aggregate identity와 revision으로 keying되는 append-only transition evidence입니다. */
-internal object ReservationAuditTable : Table("reservation_transition_audits") {
+internal object ReservationAuditTable: Table("reservation_transition_audits") {
     val aggregateType = varchar("aggregate_type", 32)
     val aggregateId = long("aggregate_id")
     val revision = long("revision")
@@ -75,13 +75,12 @@ internal object ReservationAuditTable : Table("reservation_transition_audits") {
 }
 
 /** bootstrap과 isolated PostgreSQL fixture에서 사용하는 완전한 application-owned schema입니다. */
-internal val reservationTables =
-    arrayOf(
-        CapacityResourceTable,
-        ReservationHoldTable,
-        WaitlistEntryTable,
-        ReservationOfferTable,
-        ReservationAuditTable,
-        reservationHttpIdempotencyTable,
-        reservationNotificationDeliveryTable
-    )
+internal val reservationTables: Array<Table> = arrayOf(
+    CapacityResourceTable,
+    ReservationHoldTable,
+    WaitlistEntryTable,
+    ReservationOfferTable,
+    ReservationAuditTable,
+    reservationHttpIdempotencyTable,
+    reservationNotificationDeliveryTable
+)

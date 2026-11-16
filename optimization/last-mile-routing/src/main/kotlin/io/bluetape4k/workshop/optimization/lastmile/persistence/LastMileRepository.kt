@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.lastmile.persistence
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.lastmile.domain.CarrierVersion
 import io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.lastmile.domain.DeliveryJob
@@ -10,6 +11,7 @@ import io.bluetape4k.workshop.optimization.lastmile.domain.JobId
 import io.bluetape4k.workshop.optimization.lastmile.domain.JobStatus
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileEvent
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileEventCanonicalizer
+import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileEventType
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanProposal
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileRoute
@@ -24,6 +26,7 @@ import io.bluetape4k.workshop.optimization.lastmile.domain.StartedStop
 import io.bluetape4k.workshop.optimization.lastmile.domain.StopKind
 import io.bluetape4k.workshop.optimization.lastmile.domain.TimeWindow
 import io.bluetape4k.workshop.optimization.lastmile.domain.Vehicle
+import io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId
 import org.springframework.stereotype.Component
 
 enum class LastMileEventAppendResult {
@@ -47,6 +50,9 @@ internal class LastMileRepository(
     private val unassigned: LastMileUnassignedRepository,
     private val events: LastMileEventRepository,
 ) {
+
+    companion object: KLogging()
+
     fun saveJob(job: DeliveryJob): JobId {
         jobs.save(job.toRecord())
         return job.jobId
@@ -75,7 +81,7 @@ internal class LastMileRepository(
         }
         proposal.routes.forEach { route ->
             route.stops.forEach { stop ->
-                stops.save(stop.toRecord(proposal.planId.value, proposal.planRevision, route.vehicleId.value))
+                stops.save(stop.toDomain(proposal.planId.value, proposal.planRevision, route.vehicleId.value))
             }
         }
         proposal.unassigned.forEach { item ->
@@ -92,20 +98,25 @@ internal class LastMileRepository(
 
     fun loadProposal(planId: LastMilePlanId, revision: Long): LastMilePlanProposal? {
         val plan = plans.findByPlan(planId.value, revision) ?: return null
-        val carrierVersions = carriers.findAllByPlan(planId.value, revision)
+        val carrierVersions = carriers
+            .findAllByPlan(planId.value, revision)
             .associate { JobId(it.jobId) to CarrierVersion(it.carrierVersion) }
+
         val routes = stops.findAllByPlan(planId.value, revision)
             .groupBy { it.vehicleId }
             .toSortedMap()
             .map { (vehicleId, routeStops) ->
                 LastMileRoute(
-                    vehicleId = io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId(vehicleId),
+                    vehicleId = VehicleId(vehicleId),
                     stops = routeStops.sortedBy { it.sequence }.map { it.toDomain() },
                 )
             }
-        val unassignedJobs = unassigned.findAllByPlan(planId.value, revision)
+
+        val unassignedJobs = unassigned
+            .findAllByPlan(planId.value, revision)
             .map { LastMileUnassignedJob(JobId(it.jobId), LastMileUnassignedReason.valueOf(it.reason)) }
             .sortedBy { it.jobId.value }
+
         return LastMilePlanProposal(
             planId = planId,
             planRevision = plan.planRevision,
@@ -129,12 +140,16 @@ internal class LastMileRepository(
     fun loadLatestProposal(planId: LastMilePlanId): LastMilePlanProposal? =
         plans.findLatestByPlan(planId.value)?.let { loadProposal(planId, it.planRevision) }
 
-    fun loadLatestProposalForVehicle(vehicleId: io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId): LastMilePlanProposal? =
+    fun loadLatestProposalForVehicle(vehicleId: VehicleId): LastMilePlanProposal? =
         stops.findPlanRevisionsByVehicle(vehicleId.value)
             .maxWithOrNull(compareBy<Pair<String, Long>> { it.second }.thenBy { it.first })
             ?.let { (planId, revision) -> loadProposal(LastMilePlanId(planId), revision) }
 
-    fun approveProposal(planId: LastMilePlanId, revision: Long, expectedState: PlanState = PlanState.PROPOSED): Boolean =
+    fun approveProposal(
+        planId: LastMilePlanId,
+        revision: Long,
+        expectedState: PlanState = PlanState.PROPOSED,
+    ): Boolean =
         plans.approveIfState(planId.value, revision, expectedState.name)
 
     fun commitProposal(planId: LastMilePlanId, revision: Long): Boolean =
@@ -179,124 +194,137 @@ internal class LastMileRepository(
     fun updateJobIfCarrierVersion(jobId: JobId, expected: CarrierVersion, nextStatus: JobStatus): Boolean =
         jobs.updateIfCarrierVersion(jobId.value, expected.value, nextStatus.name)
 
-    private fun DeliveryJob.toRecord() = LastMileJobRecord(
-        jobId = jobId.value,
-        pickupCoordinateId = pickupCoordinateId.value,
-        deliveryCoordinateId = deliveryCoordinateId.value,
-        demand = demand,
-        pickupWindowStart = pickupWindow.start,
-        pickupWindowEnd = pickupWindow.end,
-        deliveryWindowStart = deliveryWindow.start,
-        deliveryWindowEnd = deliveryWindow.end,
-        requiredSkill = requiredSkill,
-        priority = priority.name,
-        status = status.name,
-        carrierVersion = carrierVersion.value,
-    )
+    private fun DeliveryJob.toRecord(): LastMileJobRecord =
+        LastMileJobRecord(
+            jobId = jobId.value,
+            pickupCoordinateId = pickupCoordinateId.value,
+            deliveryCoordinateId = deliveryCoordinateId.value,
+            demand = demand,
+            pickupWindowStart = pickupWindow.start,
+            pickupWindowEnd = pickupWindow.end,
+            deliveryWindowStart = deliveryWindow.start,
+            deliveryWindowEnd = deliveryWindow.end,
+            requiredSkill = requiredSkill,
+            priority = priority.name,
+            status = status.name,
+            carrierVersion = carrierVersion.value,
+        )
 
-    private fun Vehicle.toRecord() = LastMileVehicleRecord(
-        vehicleId = vehicleId.value,
-        driverId = driverId.value,
-        depotCoordinateId = depotCoordinateId.value,
-        capacity = capacity,
-        skills = skills.sorted().joinToString(","),
-        availableAt = availableAt,
-        startedJobId = startedStop?.jobId?.value,
-        startedKind = startedStop?.kind?.name,
-        startedCoordinateId = startedStop?.coordinateId?.value,
-        startedSequence = startedStop?.sequence,
-        startedAt = startedStop?.startedAt,
-    )
+    private fun Vehicle.toRecord(): LastMileVehicleRecord =
+        LastMileVehicleRecord(
+            vehicleId = vehicleId.value,
+            driverId = driverId.value,
+            depotCoordinateId = depotCoordinateId.value,
+            capacity = capacity,
+            skills = skills.sorted().joinToString(","),
+            availableAt = availableAt,
+            startedJobId = startedStop?.jobId?.value,
+            startedKind = startedStop?.kind?.name,
+            startedCoordinateId = startedStop?.coordinateId?.value,
+            startedSequence = startedStop?.sequence,
+            startedAt = startedStop?.startedAt,
+        )
 
-    private fun LastMilePlanProposal.toRecord() = LastMilePlanRecord(
-        planId = planId.value,
-        planRevision = planRevision,
-        parentRevision = parentRevision,
-        requestGeneration = requestGeneration,
-        matrixRevision = matrixRevision,
-        providerRevision = providerRevision?.value,
-        state = state.name,
-        hardScore = score.hardScore,
-        softScore = score.softScore,
-        assignedJobs = score.assignedJobs,
-        unassignedJobs = score.unassignedJobs,
-    )
+    private fun LastMilePlanProposal.toRecord(): LastMilePlanRecord =
+        LastMilePlanRecord(
+            planId = planId.value,
+            planRevision = planRevision,
+            parentRevision = parentRevision,
+            requestGeneration = requestGeneration,
+            matrixRevision = matrixRevision,
+            providerRevision = providerRevision?.value,
+            state = state.name,
+            hardScore = score.hardScore,
+            softScore = score.softScore,
+            assignedJobs = score.assignedJobs,
+            unassignedJobs = score.unassignedJobs,
+        )
 
-    private fun LastMileRouteStop.toRecord(planId: String, planRevision: Long, vehicleId: String) = LastMilePlanStopRecord(
-        planId = planId,
-        planRevision = planRevision,
-        vehicleId = vehicleId,
-        jobId = jobId.value,
-        kind = kind.name,
-        coordinateId = coordinateId.value,
-        sequence = sequence,
-        eta = eta,
-        loadAfter = loadAfter,
-        pinned = pinned,
-    )
+    private fun LastMileRouteStop.toDomain(
+        planId: String,
+        planRevision: Long,
+        vehicleId: String,
+    ): LastMilePlanStopRecord =
+        LastMilePlanStopRecord(
+            planId = planId,
+            planRevision = planRevision,
+            vehicleId = vehicleId,
+            jobId = jobId.value,
+            kind = kind.name,
+            coordinateId = coordinateId.value,
+            sequence = sequence,
+            eta = eta,
+            loadAfter = loadAfter,
+            pinned = pinned,
+        )
 
-    private fun LastMileJobRecord.toDomain() = DeliveryJob(
-        jobId = JobId(jobId),
-        pickupCoordinateId = CoordinateId(pickupCoordinateId),
-        deliveryCoordinateId = CoordinateId(deliveryCoordinateId),
-        demand = demand,
-        pickupWindow = TimeWindow(pickupWindowStart, pickupWindowEnd),
-        deliveryWindow = TimeWindow(deliveryWindowStart, deliveryWindowEnd),
-        requiredSkill = requiredSkill,
-        priority = Priority.valueOf(priority),
-        carrierVersion = CarrierVersion(carrierVersion),
-        status = JobStatus.valueOf(status),
-    )
+    private fun LastMileJobRecord.toDomain(): DeliveryJob =
+        DeliveryJob(
+            jobId = JobId(jobId),
+            pickupCoordinateId = CoordinateId(pickupCoordinateId),
+            deliveryCoordinateId = CoordinateId(deliveryCoordinateId),
+            demand = demand,
+            pickupWindow = TimeWindow(pickupWindowStart, pickupWindowEnd),
+            deliveryWindow = TimeWindow(deliveryWindowStart, deliveryWindowEnd),
+            requiredSkill = requiredSkill,
+            priority = Priority.valueOf(priority),
+            carrierVersion = CarrierVersion(carrierVersion),
+            status = JobStatus.valueOf(status),
+        )
 
-    private fun LastMileVehicleRecord.toDomain() = Vehicle(
-        vehicleId = io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId(vehicleId),
-        driverId = DriverId(driverId),
-        depotCoordinateId = CoordinateId(depotCoordinateId),
-        capacity = capacity,
-        skills = skills.split(',').filter(String::isNotBlank).toSet(),
-        availableAt = availableAt,
-        startedStop = if (startedJobId != null && startedKind != null && startedCoordinateId != null &&
-            startedSequence != null && startedAt != null
-        ) {
-            StartedStop(
-                jobId = JobId(startedJobId),
-                kind = StopKind.valueOf(startedKind),
-                coordinateId = CoordinateId(startedCoordinateId),
-                sequence = startedSequence,
-                startedAt = startedAt,
-            )
-        } else {
-            null
-        },
-    )
+    private fun LastMileVehicleRecord.toDomain(): Vehicle =
+        Vehicle(
+            vehicleId = VehicleId(vehicleId),
+            driverId = DriverId(driverId),
+            depotCoordinateId = CoordinateId(depotCoordinateId),
+            capacity = capacity,
+            skills = skills.split(',').filter(String::isNotBlank).toSet(),
+            availableAt = availableAt,
+            startedStop = if (startedJobId != null && startedKind != null && startedCoordinateId != null &&
+                startedSequence != null && startedAt != null
+            ) {
+                StartedStop(
+                    jobId = JobId(startedJobId),
+                    kind = StopKind.valueOf(startedKind),
+                    coordinateId = CoordinateId(startedCoordinateId),
+                    sequence = startedSequence,
+                    startedAt = startedAt,
+                )
+            } else {
+                null
+            },
+        )
 
-    private fun LastMilePlanStopRecord.toDomain() = LastMileRouteStop(
-        jobId = JobId(jobId),
-        kind = StopKind.valueOf(kind),
-        coordinateId = CoordinateId(coordinateId),
-        sequence = sequence,
-        eta = eta,
-        loadAfter = loadAfter,
-        pinned = pinned,
-    )
+    private fun LastMilePlanStopRecord.toDomain(): LastMileRouteStop =
+        LastMileRouteStop(
+            jobId = JobId(jobId),
+            kind = StopKind.valueOf(kind),
+            coordinateId = CoordinateId(coordinateId),
+            sequence = sequence,
+            eta = eta,
+            loadAfter = loadAfter,
+            pinned = pinned,
+        )
 
-    private fun LastMileEvent.toRecord() = LastMileEventRecord(
-        eventId = eventId.value,
-        aggregateId = aggregateId,
-        eventKey = eventKey,
-        eventType = type.name,
-        occurredAt = occurredAt,
-        canonicalPayload = canonicalPayload,
-        digest = digest,
-    )
+    private fun LastMileEvent.toRecord(): LastMileEventRecord =
+        LastMileEventRecord(
+            eventId = eventId.value,
+            aggregateId = aggregateId,
+            eventKey = eventKey,
+            eventType = type.name,
+            occurredAt = occurredAt,
+            canonicalPayload = canonicalPayload,
+            digest = digest,
+        )
 
-    private fun LastMileEventRecord.toDomain() = LastMileEvent(
-        eventId = EventId(eventId),
-        type = io.bluetape4k.workshop.optimization.lastmile.domain.LastMileEventType.valueOf(eventType),
-        aggregateId = aggregateId,
-        eventKey = eventKey,
-        occurredAt = occurredAt,
-        canonicalPayload = canonicalPayload,
-        digest = digest,
-    )
+    private fun LastMileEventRecord.toDomain(): LastMileEvent =
+        LastMileEvent(
+            eventId = EventId(eventId),
+            type = LastMileEventType.valueOf(eventType),
+            aggregateId = aggregateId,
+            eventKey = eventKey,
+            occurredAt = occurredAt,
+            canonicalPayload = canonicalPayload,
+            digest = digest,
+        )
 }

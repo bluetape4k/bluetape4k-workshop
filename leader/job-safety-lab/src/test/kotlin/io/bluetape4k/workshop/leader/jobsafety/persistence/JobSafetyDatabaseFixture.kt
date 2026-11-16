@@ -1,17 +1,18 @@
 package io.bluetape4k.workshop.leader.jobsafety.persistence
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
-import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
-import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
+import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
+import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.MembershipRevision
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionEpoch
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionId
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.update
 import org.postgresql.ds.PGSimpleDataSource
 import java.time.Instant
@@ -26,7 +27,12 @@ internal data class JobAuthoritySeed(
     val checkpointSchemaVersion: Int,
 )
 
-internal class JobSafetyDatabaseFixture : AutoCloseable {
+internal class JobSafetyDatabaseFixture: AutoCloseable {
+
+    companion object: KLogging() {
+        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     val executor: JobSafetyJdbcExecutor
 
     init {
@@ -120,9 +126,5 @@ internal class JobSafetyDatabaseFixture : AutoCloseable {
         executor.transaction {
             SchemaUtils.drop(*JOB_SAFETY_TABLES.reversedArray())
         }
-    }
-
-    companion object {
-        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
     }
 }

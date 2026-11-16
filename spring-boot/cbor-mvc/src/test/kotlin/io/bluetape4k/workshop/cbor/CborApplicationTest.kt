@@ -6,9 +6,9 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.cbor.course.Course
 import io.bluetape4k.workshop.cbor.course.PhoneType
-import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -34,7 +34,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 )
 class CborApplicationTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val cborHttpMessageConverter = JacksonCborHttpMessageConverter()
     private val jacksonCborEncoder = JacksonCborEncoder()
@@ -96,7 +96,6 @@ class CborApplicationTest {
     fun `using restTemplate`() {
         val course1 = restTemplate.getForEntity<Course>("$baseUrl/courses/1").body
         course1.shouldNotBeNull()
-        log.debug { "course1: $course1" }
         assertCourse1(course1)
     }
 
@@ -107,7 +106,6 @@ class CborApplicationTest {
             .body<Course>()
             .shouldNotBeNull()
 
-        log.debug { "course1: $course1" }
         assertCourse1(course1)
     }
 
@@ -120,14 +118,12 @@ class CborApplicationTest {
             .awaitBody<Course>()
 
         course1.shouldNotBeNull()
-        log.debug { "course1: $course1" }
         assertCourse1(course1)
 
         val course2 = client
             .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
             .awaitBody<Course>()
 
-        log.debug { "course2: $course2" }
         assertCourse1(course2)
     }
 
@@ -146,6 +142,8 @@ class CborApplicationTest {
     }
 
     private fun assertCourse1(course: Course) {
+        log.debug { "course=$course" }
+
         course.id shouldBeEqualTo 1
         course.name shouldBeEqualTo "Kotlin Programming"
         course.students shouldHaveSize 3

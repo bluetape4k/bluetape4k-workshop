@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 interface ProductRepository: JpaRepository<Product, Long> {
+
     fun findByCategory(category: String): List<Product>
+
     fun findByNameContaining(name: String): List<Product>
 }

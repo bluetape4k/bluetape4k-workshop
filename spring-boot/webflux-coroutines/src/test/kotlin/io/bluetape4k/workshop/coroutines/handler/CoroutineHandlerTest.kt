@@ -1,16 +1,17 @@
 package io.bluetape4k.workshop.coroutines.handler
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
-import io.bluetape4k.workshop.coroutines.model.Banner
-import io.bluetape4k.spring.tests.httpGet
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitSingle
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
+import io.bluetape4k.workshop.coroutines.model.Banner
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,9 +21,9 @@ import org.springframework.test.web.reactive.server.returnResult
 
 class CoroutineHandlerTest @Autowired constructor(
     context: ApplicationContext,
-) : AbstractCoroutineApplicationTest(context) {
+): AbstractCoroutineApplicationTest(context) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun index() = runSuspendIO {
@@ -61,6 +62,7 @@ class CoroutineHandlerTest @Autowired constructor(
             .returnResult<Banner>().responseBody
             .shouldNotBeNull()
             .asFlow()
+            .log("Sequential")
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
@@ -72,6 +74,7 @@ class CoroutineHandlerTest @Autowired constructor(
             .returnResult<Banner>().responseBody
             .shouldNotBeNull()
             .asFlow()
+            .log("Concurrent")
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 

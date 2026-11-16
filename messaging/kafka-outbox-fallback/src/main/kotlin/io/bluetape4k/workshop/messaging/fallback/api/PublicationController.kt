@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.fallback.api
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
 import io.bluetape4k.workshop.messaging.fallback.publication.EventPublicationRelay
 import io.bluetape4k.workshop.messaging.fallback.publication.PublicationReconciler
@@ -20,6 +21,7 @@ class PublicationController(
     private val publicationReconciler: PublicationReconciler,
     private val properties: FallbackOutboxProperties,
 ) {
+    companion object: KLogging()
 
     @GetMapping
     fun listPublications(): List<PublicationResponse> =

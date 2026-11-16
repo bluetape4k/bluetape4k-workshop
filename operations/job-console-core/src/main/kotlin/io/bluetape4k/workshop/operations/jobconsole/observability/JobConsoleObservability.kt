@@ -18,5 +18,6 @@ data class JobConsoleReadiness(
 object JobConsoleObservability {
     private val allowedTagKeys = setOf("adapter", "operation", "state", "outcome")
 
-    fun safeTags(tags: Map<String, String>): Map<String, String> = tags.filterKeys(allowedTagKeys::contains)
+    fun safeTags(tags: Map<String, String>): Map<String, String> =
+        tags.filterKeys(allowedTagKeys::contains)
 }

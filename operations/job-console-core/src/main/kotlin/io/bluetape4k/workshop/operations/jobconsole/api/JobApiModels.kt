@@ -1,31 +1,29 @@
 package io.bluetape4k.workshop.operations.jobconsole.api
 
 import com.fasterxml.jackson.annotation.JsonValue
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-enum class JobType(
-    @get:JsonValue val wireValue: String,
-) {
+enum class JobType(@get:JsonValue val wireValue: String) {
     DOCUMENT_EXPORT("document_export"),
     REPORT_GENERATION("report_generation"),
 }
 
-enum class FailureMode(
-    @get:JsonValue val wireValue: String,
-) {
+enum class FailureMode(@get:JsonValue val wireValue: String) {
     NONE("none"),
     RETRY_ONCE("retry_once"),
     NON_RETRYABLE("non_retryable"),
     ALWAYS_RETRYABLE("always_retryable"),
 }
 
-enum class EtaConfidence(
-    @get:JsonValue val wireValue: String,
-) {
+enum class EtaConfidence(@get:JsonValue val wireValue: String) {
     HIGH("high"),
     MEDIUM("medium"),
     LOW("low"),
@@ -113,8 +111,8 @@ data class JobSubmissionHttpResponse(
     val replayed: Boolean,
 ) : Serializable {
     init {
-        require(status in 100..599) { "status must be between 100 and 599" }
-        require(contentType.isNotBlank()) { "contentType must not be blank" }
+        status.requireInRange(100, 599, "status")
+        contentType.requireNotBlank("contentType")
     }
 
     override fun equals(other: Any?): Boolean =
@@ -125,8 +123,16 @@ data class JobSubmissionHttpResponse(
             headers == other.headers &&
             replayed == other.replayed
 
-    override fun hashCode(): Int =
-        (((status * 31 + body.contentHashCode()) * 31 + contentType.hashCode()) * 31 + headers.hashCode()) * 31 + replayed.hashCode()
+    override fun hashCode(): Int = hashOf(status, body.contentHashCode(), contentType, headers, replayed)
+
+    override fun toString(): String =
+        ToStringBuilder(this)
+            .add("status", status)
+            .add("bodySize", body.size)
+            .add("contentType", contentType)
+            .add("headers", headers)
+            .add("replayed", replayed)
+            .toString()
 }
 
 /** Stable, redacted problem payload. */
@@ -142,9 +148,7 @@ data class JobProblem(
     }
 }
 
-enum class JobEventType(
-    @get:JsonValue val wireValue: String,
-) {
+enum class JobEventType(@get:JsonValue val wireValue: String) {
     JOB_UPDATED("job.updated"),
     QUEUE_UPDATED("queue.updated"),
     HEARTBEAT("heartbeat"),

@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.optimization.planning.persistence
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal enum class PlanningAuditDecision {
     ACCEPTED,

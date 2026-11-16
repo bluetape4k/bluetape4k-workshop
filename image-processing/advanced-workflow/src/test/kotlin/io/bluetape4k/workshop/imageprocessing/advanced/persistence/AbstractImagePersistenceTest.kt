@@ -31,9 +31,9 @@ import org.springframework.test.context.DynamicPropertySource
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractImagePersistenceTest {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
 
-        val postgres = PostgreSQLServer.Launcher.postgres
+        val postgres by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
         @DynamicPropertySource

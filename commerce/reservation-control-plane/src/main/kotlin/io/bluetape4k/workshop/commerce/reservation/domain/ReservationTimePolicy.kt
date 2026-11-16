@@ -9,13 +9,18 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 
-internal enum class LocalTimeRejection { DST_GAP, DST_OVERLAP, OFFSET_MISMATCH }
+internal enum class LocalTimeRejection {
+    DST_GAP,
+    DST_OVERLAP,
+    OFFSET_MISMATCH
+}
 
-internal sealed interface LocalTimeResolution : Serializable {
+internal sealed interface LocalTimeResolution: Serializable {
+
     data class Resolved(
         val instant: Instant,
         val offset: ZoneOffset,
-    ) : LocalTimeResolution {
+    ): LocalTimeResolution {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -23,7 +28,7 @@ internal sealed interface LocalTimeResolution : Serializable {
 
     data class Rejected(
         val reason: LocalTimeRejection,
-    ) : LocalTimeResolution {
+    ): LocalTimeResolution {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -31,11 +36,13 @@ internal sealed interface LocalTimeResolution : Serializable {
 }
 
 /** DST overlap 동안 명시적 offset을 요구해 local-time ambiguity가 reservation command에 들어오지 못하게 합니다. */
-internal object ReservationTimePolicy : KLogging() {
+internal object ReservationTimePolicy: KLogging() {
+
     fun project(
         instant: Instant,
         zoneId: ZoneId,
-    ): OffsetDateTime = instant.atZone(zoneId).toOffsetDateTime()
+    ): OffsetDateTime =
+        instant.atZone(zoneId).toOffsetDateTime()
 
     fun resolve(
         localDateTime: LocalDateTime,

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.scenario
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobExecutionState
@@ -7,6 +8,9 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.JobName
 
 /** production-safe 실행 서비스와 분리해 둔, 의도적으로 깨진 baseline입니다. */
 internal class UnsafeScenarioAdapter {
+
+    companion object: KLogging()
+
     fun crossJobCollision(conflictKey: ConflictKey): ScenarioDraft =
         ScenarioDraft(
             expectedSummary = 30L,
@@ -71,10 +75,18 @@ internal class UnsafeScenarioAdapter {
                 ),
             events =
                 listOf(
-                    event("TRIGGER_FROM_SNAPSHOT", JobExecutionState.REQUESTED, "worker trusts a stale scheduler snapshot"),
+                    event(
+                        "TRIGGER_FROM_SNAPSHOT",
+                        JobExecutionState.REQUESTED,
+                        "worker trusts a stale scheduler snapshot"
+                    ),
                     event(code, JobExecutionState.RUNNING, "authoritative topology changes before commit"),
                     event("SKIP_DB_RECHECK", JobExecutionState.RUNNING, "unsafe path never reloads current authority"),
-                    event("STALE_WRITE_COMMITTED", JobExecutionState.COMMITTED, "stale assumptions reach business state"),
+                    event(
+                        "STALE_WRITE_COMMITTED",
+                        JobExecutionState.COMMITTED,
+                        "stale assumptions reach business state"
+                    ),
                 ),
         )
 
@@ -95,7 +107,11 @@ internal class UnsafeScenarioAdapter {
             events =
                 listOf(
                     event("PROVIDER_REQUEST_1", JobExecutionState.EFFECT_PENDING, "provider applies the first request"),
-                    event("RESPONSE_TIMEOUT", JobExecutionState.RECONCILIATION_REQUIRED, "worker cannot observe the result"),
+                    event(
+                        "RESPONSE_TIMEOUT",
+                        JobExecutionState.RECONCILIATION_REQUIRED,
+                        "worker cannot observe the result"
+                    ),
                     event("NEW_OPERATION_CREATED", JobExecutionState.EFFECT_PENDING, "unsafe retry invents another id"),
                     event("DUPLICATE_EFFECT", JobExecutionState.FAILED, "provider applies both independent operations"),
                 ),

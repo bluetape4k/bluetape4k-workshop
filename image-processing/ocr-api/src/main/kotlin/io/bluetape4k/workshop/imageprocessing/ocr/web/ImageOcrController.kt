@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.web
 
 import io.bluetape4k.images.ocr.OcrStructuredDetail
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
@@ -55,7 +56,7 @@ class ImageOcrController(
         )
     }
 
-    companion object {
+    companion object: KLogging() {
         private val SUPPORTED_CONTENT_TYPES = setOf(
             "image/jpeg",
             "image/jpg",

@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.ListeningLeaderElector
+import io.bluetape4k.leader.history.SafeLeaderHistoryRecorder
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
 import io.bluetape4k.leader.micrometer.LeaderMetricTagOptions
@@ -10,7 +12,8 @@ import io.bluetape4k.leader.micrometer.LeaderMetricTagRule
 import io.bluetape4k.leader.micrometer.LeaderObservationOptions
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderAopMetricsRecorder
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderElectionListener
-import io.bluetape4k.leader.history.SafeLeaderHistoryRecorder
+import io.bluetape4k.leader.withListeners
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
 import io.bluetape4k.workshop.leader.jobsafety.coordination.JobRunCoordinator
 import io.bluetape4k.workshop.leader.jobsafety.coordination.LeaderElectionPort
@@ -40,12 +43,13 @@ import org.springframework.context.annotation.Configuration
 import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
-import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
-import io.bluetape4k.leader.withListeners
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JobSafetyProperties::class, JobSafetyLeaderObservationProperties::class)
 class JobSafetyConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     @ConditionalOnMissingBean(ObservationRegistry::class)
     fun jobSafetyLeaderObservationRegistry(): ObservationRegistry = ObservationRegistry.NOOP

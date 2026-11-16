@@ -28,10 +28,11 @@ abstract class AbstractJacksonTest {
             .build()
     }
 
-    private val jsonPathConfiguration: Configuration = Configuration.defaultConfiguration()
-        .addOptions(
-            Option.SUPPRESS_EXCEPTIONS
-        )
+    private val jsonPathConfiguration: Configuration =
+        Configuration.defaultConfiguration()
+            .addOptions(
+                Option.SUPPRESS_EXCEPTIONS
+            )
 
     protected fun String.toDocument(): DocumentContext =
         JsonPath.parse(this, jsonPathConfiguration)

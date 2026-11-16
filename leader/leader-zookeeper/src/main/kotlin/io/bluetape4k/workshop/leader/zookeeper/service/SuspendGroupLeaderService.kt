@@ -8,11 +8,13 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * [ZooKeeperSuspendLeaderGroupElector]를 사용하는 코루틴 네이티브 그룹 리더 워크숍 서비스이다.
@@ -30,7 +32,7 @@ class SuspendGroupLeaderService(
     private val elector: ZooKeeperSuspendLeaderGroupElector,
     @Suppress("unused") private val props: LeaderZookeeperProperties,
 ) {
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val LOCK_NAME = "workshop:suspend-group-job"
     }
 
@@ -44,10 +46,11 @@ class SuspendGroupLeaderService(
      */
     suspend fun runLeaderWork(lockName: String = LOCK_NAME): String? {
         lockName.requireNotBlank("lockName")
+
         return elector.runIfLeader(lockName) {
             executionCount.incrementAndGet()
             log.info { "[GROUP-LEADER] SuspendGroupLeaderService entered slot" }
-            delay(20) // 스레드를 블로킹하지 않는 비동기 I/O를 흉내 낸다.
+            delay(20.milliseconds) // 스레드를 블로킹하지 않는 비동기 I/O를 흉내 낸다.
             log.info { "[GROUP-LEADER] SuspendGroupLeaderService slot work complete (total=${executionCount.get()})" }
             "done"
         }.also {
@@ -64,7 +67,7 @@ class SuspendGroupLeaderService(
     @Scheduled(fixedDelayString = "\${leader.zookeeper.suspend-group-job-fixed-delay:PT18S}")
     fun runScheduled() {
         try {
-            runBlocking { runLeaderWork() }
+            runBlocking(Dispatchers.IO) { runLeaderWork() }
         } catch (e: CancellationException) {
             throw e // 반드시 다시 던진다. CLAUDE.md: never swallow CancellationException
         } catch (e: Exception) {

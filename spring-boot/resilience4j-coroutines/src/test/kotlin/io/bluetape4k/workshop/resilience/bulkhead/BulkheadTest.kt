@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.resilience.bulkhead
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -35,9 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired
  * - limit 을 넘는 call 은 [BulkheadFullException] 으로 거부됩니다.
  * - permit 을 release 하면 다음 caller 가 사용할 slot 이 생깁니다.
  */
-class BulkheadTest : AbstractResilienceTest() {
+class BulkheadTest: AbstractResilienceTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val MAX_CONCURRENT_CALLS_BACKEND_A = 10
         private const val MAX_CONCURRENT_CALLS_BACKEND_B = 20
     }
@@ -63,9 +63,11 @@ class BulkheadTest : AbstractResilienceTest() {
 
             // bulkhead 가 가득 찼으므로 다음 acquire 는 실패해야 합니다.
             bulkhead.tryAcquirePermission().shouldBeFalse()
-            log.debug { "Bulkhead correctly rejected call beyond maxConcurrentCalls=$maxCalls" }
+            log.debug { "Bulkhead correctly rejected call beyond maxConcurrentCalls=$maxCalls, acquired=$acquired" }
         } finally {
-            repeat(acquired) { bulkhead.releasePermission() }
+            repeat(acquired) {
+                bulkhead.releasePermission()
+            }
         }
 
         // release 후 permit 을 다시 사용할 수 있습니다.
@@ -94,7 +96,7 @@ class BulkheadTest : AbstractResilienceTest() {
 
             // 이제 bulkhead 가 가득 찼으므로 다음 acquire 는 실패해야 합니다.
             bulkhead.tryAcquirePermission().shouldBeFalse()
-            log.debug { "Bulkhead correctly rejected call beyond maxConcurrentCalls=$maxCalls" }
+            log.debug { "Bulkhead correctly rejected call beyond maxConcurrentCalls=$maxCalls, acquired=$acquired" }
         } finally {
             repeat(acquired) { bulkhead.releasePermission() }
         }

@@ -6,7 +6,8 @@ import io.bluetape4k.workshop.kotlin.designPatterns.abstractFactory.orc.OrcKingd
 object FactoryMaker {
 
     enum class KingdomType {
-        ELF, ORC
+        ELF,
+        ORC
     }
 
     fun makeFactory(type: KingdomType): KingdomFactory =

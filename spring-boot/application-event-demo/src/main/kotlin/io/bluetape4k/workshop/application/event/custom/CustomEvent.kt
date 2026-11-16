@@ -13,7 +13,7 @@ import java.io.Serializable
 data class CustomEvent(
     private val src: Any,
     val message: String,
-) : ApplicationEvent(src), Serializable {
+): ApplicationEvent(src), Serializable {
 
     init {
         message.requireNotBlank("message")

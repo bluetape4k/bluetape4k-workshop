@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.profile.service
 
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireMatches
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProfileImageKeys
 import org.springframework.stereotype.Component
@@ -11,9 +13,15 @@ import org.springframework.stereotype.Component
  */
 class ProfileImageKeyFactory {
 
+    private companion object: KLogging() {
+        private val USER_ID_REGEX = Regex("^[A-Za-z0-9._-]{1,80}$")
+        private const val DEFAULT_FILENAME = "upload.jpg"
+        private const val MAX_FILENAME_LENGTH = 120
+    }
+
     fun validateUserId(userId: String): String {
         userId.requireNotBlank("userId")
-        require(USER_ID_REGEX.matches(userId)) { "userId must match [A-Za-z0-9._-]{1,80}" }
+        userId.requireMatches(USER_ID_REGEX, "userId") { "userId must match [A-Za-z0-9._-]{1,80}" }
         return userId
     }
 
@@ -21,9 +29,12 @@ class ProfileImageKeyFactory {
         val safeUserId = validateUserId(userId)
         uploadId.requireNotBlank("uploadId")
         return ProfileImageKeys(
-            original = ImageObjectKey.of("profile-images/$safeUserId/$uploadId/private/original", sanitizeFilename(filename)),
-            pending = ImageObjectKey.of("profile-images/$safeUserId/$uploadId/pending", "blurred.jpg"),
-            approved = ImageObjectKey.of("profile-images/$safeUserId/$uploadId/public", "approved.jpg"),
+            original = ImageObjectKey(
+                "profile-images/$safeUserId/$uploadId/private/original",
+                sanitizeFilename(filename)
+            ),
+            pending = ImageObjectKey("profile-images/$safeUserId/$uploadId/pending", "blurred.jpg"),
+            approved = ImageObjectKey("profile-images/$safeUserId/$uploadId/public", "approved.jpg"),
         )
     }
 
@@ -38,11 +49,5 @@ class ProfileImageKeyFactory {
         }.joinToString("")
         val normalized = replaced.trim('.', '_', '-').ifBlank { DEFAULT_FILENAME }
         return if (normalized.length <= MAX_FILENAME_LENGTH) normalized else normalized.take(MAX_FILENAME_LENGTH)
-    }
-
-    companion object {
-        private val USER_ID_REGEX = Regex("^[A-Za-z0-9._-]{1,80}$")
-        private const val DEFAULT_FILENAME = "upload.jpg"
-        private const val MAX_FILENAME_LENGTH = 120
     }
 }

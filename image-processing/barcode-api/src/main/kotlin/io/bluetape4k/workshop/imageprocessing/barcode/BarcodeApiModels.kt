@@ -8,7 +8,7 @@ import java.io.Serializable
 internal data class BarcodeExtractionResponse(
     val count: Int,
     val results: List<BarcodeResultResponse>,
-) : Serializable {
+): Serializable {
 
     init {
         require(count == results.size) { "count must match results.size" }
@@ -23,7 +23,7 @@ internal data class BarcodeResultResponse(
     val text: String,
     val format: BarcodeFormat,
     val provider: String,
-) : Serializable {
+): Serializable {
 
     init {
         text.requireNotBlank("text")
@@ -39,7 +39,7 @@ internal data class BarcodeErrorResponse(
     val error: String,
     val reason: String? = null,
     val message: String,
-) : Serializable {
+): Serializable {
 
     init {
         error.requireNotBlank("error")
@@ -56,4 +56,4 @@ internal class BarcodeRequestException(
     val status: HttpStatus,
     val error: String,
     message: String,
-) : RuntimeException(message)
+): RuntimeException(message)

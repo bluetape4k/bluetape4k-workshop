@@ -5,12 +5,12 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.metering.domain.MeterCode
 import io.bluetape4k.workshop.commerce.metering.domain.TenantId
-import io.bluetape4k.workshop.commerce.metering.persistence.MeterRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.MeterInsert
+import io.bluetape4k.workshop.commerce.metering.persistence.MeterRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 
 data class MeterView(
     val id: UUID,
@@ -33,8 +33,16 @@ class MeterService(
         unit.requireNotBlank("unit")
         unit.length.requireInRange(1, UNIT_MAX_LENGTH, "unit.length")
         description?.length?.requireInRange(0, DESCRIPTION_MAX_LENGTH, "description.length")
+
         repository.createIfAbsent(
-            MeterInsert(Uuid.V7.nextId(), tenantId.value, code.value, unit, description, clock.instant()),
+            MeterInsert(
+                id = Uuid.V7.nextId(),
+                tenantId = tenantId.value,
+                meterCode = code.value,
+                unit = unit,
+                description = description,
+                now = clock.instant()
+            ),
         )
         val meter = requireNotNull(repository.find(tenantId.value, code.value))
         require(meter.unit == unit) { "meter_unit_conflict" }

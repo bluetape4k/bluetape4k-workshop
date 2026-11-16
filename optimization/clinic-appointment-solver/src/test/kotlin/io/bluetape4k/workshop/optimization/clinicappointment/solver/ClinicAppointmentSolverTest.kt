@@ -4,10 +4,16 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.optimization.clinicappointment.fixture.ClinicAppointmentFixtures
 import org.junit.jupiter.api.Test
+import java.time.LocalTime
 
 class ClinicAppointmentSolverTest {
+
+    companion object: KLogging()
+
     private val solver = ClinicAppointmentSolver()
 
     @Test
@@ -16,8 +22,7 @@ class ClinicAppointmentSolverTest {
         val second = solver.solve(ClinicAppointmentFixtures.snapshot())
 
         first shouldBeEqualTo second
-        first.assignments.map { it.requestId } shouldBeEqualTo
-            first.assignments.map { it.requestId }.sorted()
+        first.assignments.map { it.requestId } shouldBeEqualTo first.assignments.map { it.requestId }.sorted()
         first.hardScore shouldBeEqualTo second.hardScore
         first.softScore shouldBeEqualTo second.softScore
     }
@@ -28,10 +33,14 @@ class ClinicAppointmentSolverTest {
         val proposal = solver.solve(input)
         val pinned = proposal.assignments.first { it.requestId == "appointment-3" }
 
+        log.debug { "proposed=$proposal" }
+        log.debug { "pinned=$pinned" }
         pinned.providerId shouldBeEqualTo "provider-2"
         pinned.roomId shouldBeEqualTo "room-2"
         pinned.date shouldBeEqualTo input.dates.first()
-        pinned.startTime?.toString().shouldBeEqualTo("10:00")
+        pinned.startTime shouldBeEqualTo LocalTime.of(10, 0)
+        pinned.endTime shouldBeEqualTo LocalTime.of(10, 30)
+
         input.appointments.first { it.requestId == "appointment-1" }.providerId.shouldBeNull()
         proposal.feasible.shouldBeTrue()
     }
@@ -40,6 +49,8 @@ class ClinicAppointmentSolverTest {
     fun `empty input is rejected before building a solver`() {
         val empty = ClinicAppointmentFixtures.snapshot().copy(appointments = emptyList())
 
-        assertFailsWith<IllegalArgumentException> { solver.solve(empty) }
+        assertFailsWith<IllegalArgumentException> {
+            solver.solve(empty)
+        }
     }
 }

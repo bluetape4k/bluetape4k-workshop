@@ -496,7 +496,7 @@ fun `generated code has version payload checksum and a separate storage verifier
     val issued = service.issue(fixedGenerationInput())
     assertTrue(issued.code.matches(Regex("V7-[1-9A-HJ-NP-Za-km-z]{22}[1-9A-HJ-NP-Za-km-z]{2}")))
     assertTrue(service.verify(issued.code, issued.verifier, verificationKeyVersion = 7))
-    assertFalse(issued.verifier.contentEquals(issued.code.toByteArray()))
+    assertFalse(issued.verifier.contentEquals(issued.code.toUtf8Bytes()))
 }
 
 @ParameterizedTest
@@ -651,7 +651,7 @@ fun `claim storage contains only verifier and key versions`() {
         val columns = databaseColumns(ClaimTable.tableName)
         assertTrue(columns.containsAll(setOf("code_verifier", "generation_key_version", "verification_key_version")))
         assertFalse(columns.any { it in setOf("code", "token_material", "generation_digest") })
-        assertDatabaseBytesDoNotContain(issued.code.toByteArray())
+        assertDatabaseBytesDoNotContain(issued.code.toUtf8Bytes())
     }
 }
 

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.reservation.sweeper
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkBeTrue
 import io.bluetape4k.workshop.commerce.reservation.application.ReservationCapacityHandoffService
 import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
 import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
@@ -36,6 +37,9 @@ internal class ReservationResourceTransactionService(
     private val handoff: ReservationCapacityHandoffService,
     private val audits: ReservationAuditRepository,
 ) {
+
+    companion object: KLogging()
+
     /** deduplication과 batch limiting 전에 hold와 offer expiry stream을 전역적으로 병합합니다. */
     @Transactional(readOnly = true)
     fun expiredResourceIds(
@@ -58,21 +62,26 @@ internal class ReservationResourceTransactionService(
         var expired = 0
         var promoted = 0
         var stale = 0
+
         holds.expiredForResource(resourceId, now).forEach { hold ->
-            val transitioned =
-                holds.transition(
-                    id = hold.id,
-                    ownerDigest = hold.ownerDigest,
-                    expectedRevision = hold.revision,
-                    from = HoldState.HELD,
-                    to = HoldState.EXPIRED
-                )
+            val transitioned = holds.transition(
+                id = hold.id,
+                ownerDigest = hold.ownerDigest,
+                expectedRevision = hold.revision,
+                from = HoldState.HELD,
+                to = HoldState.EXPIRED
+            )
             if (!transitioned) {
                 stale += 1
                 return@forEach
             }
             expired += 1
-            audits.record("RESERVATION_HOLD", hold.id, hold.revision + 1, HoldState.EXPIRED.name)
+            audits.record(
+                aggregateType = "RESERVATION_HOLD",
+                aggregateId = hold.id,
+                revision = hold.revision + 1,
+                outcome = HoldState.EXPIRED.name
+            )
             if (handoff.promoteOrRelease(resourceId, now) != null) {
                 promoted += 1
             }
@@ -90,17 +99,26 @@ internal class ReservationResourceTransactionService(
                 return@forEach
             }
             val entry = waitlists.findById(offer.entryId)
-            check(
-                waitlists.transition(
-                    id = entry.id,
-                    ownerDigest = entry.ownerDigest,
-                    expectedRevision = entry.revision,
-                    from = WaitlistState.OFFERED,
-                    to = WaitlistState.EXPIRED
-                )
-            ) { "expired offer waitlist transition lost" }
-            audits.record("RESERVATION_OFFER", offer.id, offer.revision + 1, OfferState.EXPIRED.name)
-            audits.record("WAITLIST_ENTRY", entry.id, entry.revision + 1, WaitlistState.EXPIRED.name)
+            waitlists.transition(
+                id = entry.id,
+                ownerDigest = entry.ownerDigest,
+                expectedRevision = entry.revision,
+                from = WaitlistState.OFFERED,
+                to = WaitlistState.EXPIRED
+            ).checkBeTrue { "expired offer waitlist transition lost" }
+
+            audits.record(
+                aggregateType = "RESERVATION_OFFER",
+                aggregateId = offer.id,
+                revision = offer.revision + 1,
+                outcome = OfferState.EXPIRED.name
+            )
+            audits.record(
+                aggregateType = "WAITLIST_ENTRY",
+                aggregateId = entry.id,
+                revision = entry.revision + 1,
+                outcome = WaitlistState.EXPIRED.name
+            )
             if (handoff.promoteOrRelease(resourceId, now) != null) {
                 promoted += 1
             }
@@ -108,10 +126,13 @@ internal class ReservationResourceTransactionService(
         log.debug {
             "reservation_resource_finalized resourceId=$resourceId expired=$expired promoted=$promoted stale=$stale"
         }
-        return SweepBatchSummary(1, expired, promoted, stale)
+        return SweepBatchSummary(
+            scannedResources = 1,
+            expiredHolds = expired,
+            promotedEntries = promoted,
+            staleConflicts = stale
+        )
     }
-
-    companion object : KLogging()
 }
 
 /** background JDBC bulkhead 뒤에서 bounded PostgreSQL sweep work를 실행합니다. */
@@ -120,7 +141,10 @@ internal class PostgresReservationSweepWork(
     private val transactions: ReservationResourceTransactionService,
     private val bulkhead: NodeLocalDatabaseBulkhead,
     private val clock: Clock,
-) : ReservationSweepWork {
+): ReservationSweepWork {
+
+    companion object: KLogging()
+
     override fun sweep(
         maxResources: Int,
         budget: Duration,
@@ -147,11 +171,9 @@ internal class PostgresReservationSweepWork(
             }
         }
     }
-
-    companion object : KLogging()
 }
 
-private operator fun SweepBatchSummary.plus(other: SweepBatchSummary) =
+private operator fun SweepBatchSummary.plus(other: SweepBatchSummary): SweepBatchSummary =
     SweepBatchSummary(
         scannedResources + other.scannedResources,
         expiredHolds + other.expiredHolds,

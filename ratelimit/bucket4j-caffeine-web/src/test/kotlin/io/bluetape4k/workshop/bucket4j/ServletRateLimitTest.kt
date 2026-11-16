@@ -12,7 +12,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @ActiveProfiles("servlet")
 class ServletRateLimitTest {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val HELLO_PATH = "/hello"
         private const val WORLD_PATH = "/world"
         private const val REMAINING_HEADER = "X-Rate-Limit-Remaining"
@@ -61,6 +61,7 @@ class ServletRateLimitTest {
             .uri(url)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-            .expectBody().jsonPath("$.message").isEqualTo(TOO_MANY_REQUESTS_MESSAGE)
+            .expectBody()
+            .jsonPath("$.message").isEqualTo(TOO_MANY_REQUESTS_MESSAGE)
     }
 }

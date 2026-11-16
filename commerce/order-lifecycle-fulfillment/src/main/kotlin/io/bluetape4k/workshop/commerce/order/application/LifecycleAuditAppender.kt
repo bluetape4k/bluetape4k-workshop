@@ -7,12 +7,14 @@ import io.bluetape4k.workshop.commerce.order.domain.AggregateType
 import io.bluetape4k.workshop.commerce.order.persistence.LifecycleAuditRecord
 import io.bluetape4k.workshop.commerce.order.persistence.LifecycleAuditRepository
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 internal class LifecycleAuditAppender(
     private val repository: LifecycleAuditRepository,
 ) {
+    companion object: KLogging()
+
     fun append(
         orderId: UUID,
         aggregateType: AggregateType,
@@ -22,25 +24,24 @@ internal class LifecycleAuditAppender(
         to: Enum<*>,
         reason: String? = null,
         actor: String,
-    ) = repository
-        .append(
-            LifecycleAuditRecord(
-                eventId = Uuid.V7.nextId(),
-                orderId = orderId,
-                aggregateType = aggregateType,
-                aggregateId = aggregateId,
-                revision = revision,
-                fromStatus = from?.name,
-                toStatus = to.name,
-                reasonCode = reason?.take(80),
-                actorType = actor.take(40)
-            )
-        ).also {
+    ): LifecycleAuditRecord {
+        val auditRecord = LifecycleAuditRecord(
+            eventId = Uuid.V7.nextId(),
+            orderId = orderId,
+            aggregateType = aggregateType,
+            aggregateId = aggregateId,
+            revision = revision,
+            fromStatus = from?.name,
+            toStatus = to.name,
+            reasonCode = reason?.take(80),
+            actorType = actor.take(40)
+        )
+
+        return repository.append(auditRecord).also {
             log.debug {
                 "lifecycle_transition orderId=$orderId aggregateType=$aggregateType aggregateId=$aggregateId " +
-                    "revision=$revision from=${from?.name ?: "NONE"} to=${to.name} actor=$actor"
+                        "revision=$revision from=${from?.name ?: "NONE"} to=${to.name} actor=$actor"
             }
         }
-
-    companion object : KLogging()
+    }
 }

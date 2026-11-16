@@ -8,14 +8,16 @@
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
-import io.bluetape4k.workshop.commerce.voucherpool.idempotency.VoucherPoolIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.SafeResponseDescriptor
+import io.bluetape4k.workshop.commerce.voucherpool.idempotency.VoucherPoolIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.AllocationRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.LockedAllocationChain
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.ReservationRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
@@ -23,10 +25,10 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
 import io.bluetape4k.workshop.commerce.voucherpool.security.EntryIdentity
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherCryptoStorage
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherCryptoStorageOutcome
+import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigest
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
-import java.sql.Connection
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class AllocateVoucherCommand(
     val tenantId: String,
@@ -99,30 +101,32 @@ internal interface AllocationService {
 }
 
 internal class JdbcAllocationService(
-    executor: VoucherPoolJdbcExecutor,
+    private val executor: VoucherPoolJdbcExecutor,
     private val repository: VoucherPoolRepository,
     idempotency: VoucherPoolIdempotencyRepository,
     private val digests: VoucherDigestService,
     private val cryptoStorage: VoucherCryptoStorage,
-) : AllocationService {
-    private val executor = executor
+): AllocationService {
+
+    companion object: KLogging()
+
     private val mutations = LifecycleMutationExecutor(executor, idempotency)
 
     override fun allocate(command: AllocateVoucherCommand): MutationResult<AllocationSnapshot> =
         mutations.execute(
-            command.tenantId,
-            "voucher-allocate",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-allocate",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-allocate",
                 "campaignId" to command.campaignId,
                 "reservationId" to command.reservationId,
                 "canonicalUser" to command.canonicalUser,
                 "expectedRevision" to command.expectedRevision,
             ),
-            command.allocationId,
-            LIFECYCLE_HTTP_OK,
-            LifecycleLane.FOREGROUND,
+            effectId = command.allocationId,
+            successStatus = LIFECYCLE_HTTP_OK,
+            lane = LifecycleLane.FOREGROUND,
         ) { _, _ ->
             val userDigest = userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockReservationChain(
@@ -189,19 +193,19 @@ internal class JdbcAllocationService(
 
     override fun reveal(command: RevealVoucherCommand): MutationResult<RevealResult> {
         val result = mutations.execute(
-            command.tenantId,
-            "voucher-reveal",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-reveal",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-reveal",
                 "campaignId" to command.campaignId,
                 "allocationId" to command.allocationId,
                 "canonicalUser" to command.canonicalUser,
                 "expectedRevision" to command.expectedRevision,
             ),
-            command.allocationId,
-            LIFECYCLE_HTTP_OK,
-            LifecycleLane.FOREGROUND,
+            effectId = command.allocationId,
+            successStatus = LIFECYCLE_HTTP_OK,
+            lane = LifecycleLane.FOREGROUND,
         ) { _, _ ->
             val digest = userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockAllocationChain(command.tenantId, command.allocationId, digest.copyBytes())
@@ -254,37 +258,38 @@ internal class JdbcAllocationService(
             }
         }
         return when (result) {
-            is MutationResult.Replay -> if (result.descriptor.terminalCode == null) {
-                MutationResult.Replay(
-                    SafeResponseDescriptor.success(
-                        LIFECYCLE_HTTP_OK,
-                        VoucherPoolErrorCode.ALREADY_REVEALED.name,
-                        checkNotNull(result.descriptor.effectId),
-                        checkNotNull(result.descriptor.revision),
-                    ),
-                )
-            } else {
-                result
-            }
-            else -> result
+            is MutationResult.Replay ->
+                if (result.descriptor.terminalCode == null) {
+                    MutationResult.Replay(
+                        SafeResponseDescriptor.success(
+                            LIFECYCLE_HTTP_OK,
+                            VoucherPoolErrorCode.ALREADY_REVEALED.name,
+                            checkNotNull(result.descriptor.effectId),
+                            checkNotNull(result.descriptor.revision),
+                        ),
+                    )
+                } else {
+                    result
+                }
+            else                     -> result
         }
     }
 
     override fun replaceLostReveal(command: ReplaceLostRevealCommand): MutationResult<ReservationSnapshot> =
         mutations.execute(
-            command.tenantId,
-            "voucher-replace-lost-reveal",
-            command.idempotencyKey,
-            fingerprint(
+            tenantId = command.tenantId,
+            operation = "voucher-replace-lost-reveal",
+            rawKey = command.idempotencyKey,
+            fingerprint = fingerprint(
                 "voucher-replace-lost-reveal",
                 "campaignId" to command.campaignId,
                 "allocationId" to command.allocationId,
                 "canonicalUser" to command.canonicalUser,
                 "expectedRevision" to command.expectedRevision,
             ),
-            command.reservationId,
-            LIFECYCLE_HTTP_CREATED,
-            LifecycleLane.FOREGROUND,
+            effectId = command.reservationId,
+            successStatus = LIFECYCLE_HTTP_CREATED,
+            lane = LifecycleLane.FOREGROUND,
         ) { _, owner ->
             val digest = userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockReplacementChain(
@@ -297,7 +302,7 @@ internal class JdbcAllocationService(
                     original.allocation.allocationId,
                     original.allocation.revision,
                 )
-    }
+            }
 
             if (original.allocation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             requireCampaignUsable(original.campaign.state)
@@ -353,32 +358,35 @@ internal class JdbcAllocationService(
             replacement.snapshot()
         }
 
-    private fun userIdentity(tenantId: String, campaignId: UUID, canonicalUser: String) =
+    private fun userIdentity(tenantId: String, campaignId: UUID, canonicalUser: String): VoucherDigest =
         digests.userIdentity(
-            tenantId,
-            campaignId,
-            canonicalUser,
-            repository.userIdentityKeyVersion(tenantId, campaignId)
+            tenantId = tenantId,
+            campaignId = campaignId,
+            canonicalUser = canonicalUser,
+            keyVersion = repository.userIdentityKeyVersion(tenantId, campaignId)
                 ?: fail(VoucherPoolErrorCode.WRONG_OWNER),
         )
 }
 
 private fun requireCurrentPolicy(reservation: ReservationRecord, campaignPolicyVersion: Long) {
-    if (reservation.policyVersion != campaignPolicyVersion) fail(VoucherPoolErrorCode.STALE_REVISION)
+    if (reservation.policyVersion != campaignPolicyVersion) {
+        fail(VoucherPoolErrorCode.STALE_REVISION)
+    }
 }
 
-internal fun io.bluetape4k.workshop.commerce.voucherpool.persistence.LockedAllocationChain.snapshot() = AllocationSnapshot(
-    allocation.tenantId,
-    allocation.allocationId,
-    allocation.reservationId,
-    allocation.campaignId,
-    allocation.batchId,
-    allocation.entryId,
-    entry.sourceOrdinal,
-    entry.state,
-    allocation.expiresAt,
-    allocation.entitlementRootId,
-    allocation.replacementOrdinal,
-    allocation.policyVersion,
-    allocation.revision,
-)
+internal fun LockedAllocationChain.snapshot(): AllocationSnapshot =
+    AllocationSnapshot(
+        allocation.tenantId,
+        allocation.allocationId,
+        allocation.reservationId,
+        allocation.campaignId,
+        allocation.batchId,
+        allocation.entryId,
+        entry.sourceOrdinal,
+        entry.state,
+        allocation.expiresAt,
+        allocation.entitlementRootId,
+        allocation.replacementOrdinal,
+        allocation.policyVersion,
+        allocation.revision,
+    )

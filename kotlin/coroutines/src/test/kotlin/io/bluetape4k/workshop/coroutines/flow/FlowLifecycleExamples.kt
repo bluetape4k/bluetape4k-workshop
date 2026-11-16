@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.flow
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -20,11 +21,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.coroutines.coroutineContext
+import kotlin.time.Duration.Companion.seconds
 
 class FlowLifecycleExamples {
 
@@ -41,7 +41,7 @@ class FlowLifecycleExamples {
 
         flowOf(1, 2).log(2)
             .onEach {
-                delay(1000)
+                delay(1.seconds)
             }
             .collect {
                 log.debug { "collect $it" }
@@ -51,7 +51,7 @@ class FlowLifecycleExamples {
     @Test
     fun `onStart - starting flow`() = runTest {
         flowOf(1, 2)
-            .onEach { delay(1000) }
+            .onEach { delay(1.seconds) }
             .onStart { log.debug { "Starting" } }  // 한번만 호출된다
             .collect { log.debug { "Collect" } }
     }
@@ -59,7 +59,7 @@ class FlowLifecycleExamples {
     @Test
     fun `onCompletion - call on complete flow`() = runTest {
         flowOf(1, 2)
-            .onEach { delay(1000) }
+            .onEach { delay(1.seconds) }
             .onStart { log.debug { "Starting" } }  // 한번만 호출된다
             .onCompletion { log.debug { "Completed" } }
             .collect { log.debug { "Collect" } }
@@ -67,14 +67,14 @@ class FlowLifecycleExamples {
 
     @Test
     fun `onEmpty - call on not existing element`() = runTest {
-        val emitted = flow<List<Int>> { delay(1000) }
+        val emitted = flow<List<Int>> { delay(1.seconds) }
             .onEmpty { emit(emptyList()) }
             .toList()
 
         emitted shouldBeEqualTo listOf(emptyList())
 
         // Same action
-        val fallback = flow<List<Int>> { delay(1000) }
+        val fallback = flow<List<Int>> { delay(1.seconds) }
             .onEmpty { emit(emptyList()) }
             .toList()
 
@@ -136,7 +136,7 @@ class FlowLifecycleExamples {
         }
 
         private suspend fun present(place: String, message: String): String {
-            val name = coroutineContext[CoroutineName]?.name
+            val name = currentCoroutineContext()[CoroutineName]?.name
             return "[$name] $message on $place"
         }
 

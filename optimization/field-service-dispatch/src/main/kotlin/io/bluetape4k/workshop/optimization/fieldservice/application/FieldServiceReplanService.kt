@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
@@ -26,16 +29,34 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.toKotlinDuration
 
 /** CPU planner admission을 bounded하게 제어하며 worker 4개, queue 8개, aggregate별 flight 하나를 허용합니다. */
 class FieldServiceReplanService(
     private val planner: DeterministicFieldServicePlanner,
     private val snapshot: (AggregateId) -> PlannerInput,
     private val executor: ThreadPoolExecutor = boundedPlannerExecutor(),
-    private val timeout: Duration = Duration.ofSeconds(5),
+    private val timeout: Duration = 5.seconds(),
     private val blockingExecutor: ExecutorService = VirtualThreads.executorService(),
     private val closeBlockingExecutor: Boolean = true,
-) : AutoCloseable {
+): AutoCloseable {
+
+    companion object: KLogging() {
+        const val CPU_WORKERS: Int = 4
+        const val QUEUE_CAPACITY: Int = 8
+        private const val CLOSE_TIMEOUT_SECONDS = 30L
+
+        fun boundedPlannerExecutor(): ThreadPoolExecutor = ThreadPoolExecutor(
+            CPU_WORKERS,
+            CPU_WORKERS,
+            0L,
+            TimeUnit.MILLISECONDS,
+            ArrayBlockingQueue(QUEUE_CAPACITY),
+            ThreadPoolExecutor.AbortPolicy(),
+        )
+    }
+
     private val flights = ConcurrentHashMap<AggregateId, CompletableFuture<PlanProposal>>()
     private val tasks = ConcurrentHashMap<AggregateId, ReplanTask>()
     private val plannerPermits = Semaphore(
@@ -47,26 +68,32 @@ class FieldServiceReplanService(
 
     fun requestReplan(aggregateId: AggregateId): ReplanAdmission = admissionLock.withLock {
         if (!accepting.get()) return@withLock ReplanAdmission.Rejected("REPLAN_REJECTED")
+
         flights[aggregateId]?.let { existing ->
             if (!existing.isDone) return@withLock ReplanAdmission.Coalesced(existing)
             tasks[aggregateId]?.let { cleanup(aggregateId, it) }
                 ?: flights.remove(aggregateId, existing)
         }
-        if (!plannerPermits.tryAcquire()) return@withLock ReplanAdmission.Rejected("REPLAN_REJECTED")
+        if (!plannerPermits.tryAcquire()) {
+            return@withLock ReplanAdmission.Rejected("REPLAN_REJECTED")
+        }
+
         lateinit var task: ReplanTask
         val result = ReplanFuture {
             task.cancelStages(it)
             cleanup(aggregateId, task)
         }
+
         val snapshotLease = StageLease()
-        val snapshotTask = object : FutureTask<PlannerInput>(Callable {
+        val snapshotCallable = Callable {
             if (!snapshotLease.tryStart()) throw CancellationException("snapshot stage cancelled before start")
             try {
                 snapshot(aggregateId)
             } finally {
                 snapshotLease.finish()
             }
-        }) {
+        }
+        val snapshotTask = object: FutureTask<PlannerInput>(snapshotCallable) {
             override fun done() {
                 if (result.isDone) {
                     cleanup(aggregateId, task)
@@ -79,7 +106,7 @@ class FieldServiceReplanService(
                         cleanup(aggregateId, task)
                         return
                     }
-                    val planningTask = object : FutureTask<PlanProposal>(Callable {
+                    val planningCallable = Callable {
                         if (!planningLease.tryStart()) {
                             throw CancellationException("planning stage cancelled before start")
                         }
@@ -88,7 +115,8 @@ class FieldServiceReplanService(
                         } finally {
                             planningLease.finish()
                         }
-                    }) {
+                    }
+                    val planningTask = object: FutureTask<PlanProposal>(planningCallable) {
                         override fun done() {
                             if (result.isDone) {
                                 cleanup(aggregateId, task)
@@ -128,6 +156,7 @@ class FieldServiceReplanService(
         task = ReplanTask(result, snapshotTask, snapshotLease, plannerPermits)
         flights[aggregateId] = result
         tasks[aggregateId] = task
+
         return@withLock try {
             blockingExecutor.execute(snapshotTask)
             CompletableFuture.delayedExecutor(timeout.toMillis(), TimeUnit.MILLISECONDS).execute {
@@ -151,22 +180,23 @@ class FieldServiceReplanService(
         is ReplanAdmission.Rejected -> null
     }
 
-    private fun awaitFuture(future: Future<PlanProposal>): PlanProposal? = try {
-        future.get(timeout.toMillis(), TimeUnit.MILLISECONDS)
-    } catch (timeout: TimeoutException) {
-        cancelFuture(future)
-        throw timeout
-    } catch (interrupted: InterruptedException) {
-        Thread.currentThread().interrupt()
-        cancelFuture(future)
-        throw interrupted
-    } catch (failure: ExecutionException) {
-        if (unwrap(failure) is TimeoutException) {
+    private fun awaitFuture(future: Future<PlanProposal>): PlanProposal? =
+        try {
+            future.get(timeout.toKotlinDuration())
+        } catch (timeout: TimeoutException) {
             cancelFuture(future)
-            throw unwrap(failure)
+            throw timeout
+        } catch (interrupted: InterruptedException) {
+            Thread.currentThread().interrupt()
+            cancelFuture(future)
+            throw interrupted
+        } catch (failure: ExecutionException) {
+            if (unwrap(failure) is TimeoutException) {
+                cancelFuture(future)
+                throw unwrap(failure)
+            }
+            throw failure
         }
-        throw failure
-    }
 
     override fun close() {
         val shutdownDeadlineNanos = shutdownDeadlineNanos()
@@ -210,13 +240,13 @@ class FieldServiceReplanService(
 
     private fun shutdownDeadlineNanos(): Long {
         val now = System.nanoTime()
-        val timeoutNanos = TimeUnit.SECONDS.toNanos(CLOSE_TIMEOUT_SECONDS)
+        val timeoutNanos = CLOSE_TIMEOUT_SECONDS.seconds().toNanos()
         return if (now > Long.MAX_VALUE - timeoutNanos) Long.MAX_VALUE else now + timeoutNanos
     }
 
     private fun awaitTermination(executor: ExecutorService, deadlineNanos: Long): Boolean {
         val remainingNanos = (deadlineNanos - System.nanoTime()).coerceAtLeast(0L)
-        return remainingNanos > 0L && executor.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS)
+        return remainingNanos > 0L && executor.awaitTermination(remainingNanos.nanoseconds)
     }
 
     private fun cancelFuture(future: Future<PlanProposal>) {
@@ -290,7 +320,11 @@ class FieldServiceReplanService(
     }
 
     private class StageLease {
-        private enum class State { QUEUED, RUNNING, DONE }
+        private enum class State {
+            QUEUED,
+            RUNNING,
+            DONE
+        }
 
         private val state = AtomicReference(State.QUEUED)
 
@@ -318,32 +352,17 @@ class FieldServiceReplanService(
 
     private class ReplanFuture(
         private val onCancel: (Boolean) -> Unit,
-    ) : CompletableFuture<PlanProposal>() {
+    ): CompletableFuture<PlanProposal>() {
         override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
             val cancelled = super.cancel(mayInterruptIfRunning)
             if (cancelled) onCancel(mayInterruptIfRunning)
             return cancelled
         }
     }
-
-    companion object : KLogging() {
-        const val CPU_WORKERS: Int = 4
-        const val QUEUE_CAPACITY: Int = 8
-        private const val CLOSE_TIMEOUT_SECONDS = 30L
-
-        fun boundedPlannerExecutor(): ThreadPoolExecutor = ThreadPoolExecutor(
-            CPU_WORKERS,
-            CPU_WORKERS,
-            0L,
-            TimeUnit.MILLISECONDS,
-            ArrayBlockingQueue(QUEUE_CAPACITY),
-            ThreadPoolExecutor.AbortPolicy(),
-        )
-    }
 }
 
 sealed interface ReplanAdmission {
-    data class Accepted(val future: Future<PlanProposal>) : ReplanAdmission
-    data class Coalesced(val future: Future<PlanProposal>) : ReplanAdmission
-    data class Rejected(val code: String, val httpStatus: Int = 429) : ReplanAdmission
+    data class Accepted(val future: Future<PlanProposal>): ReplanAdmission
+    data class Coalesced(val future: Future<PlanProposal>): ReplanAdmission
+    data class Rejected(val code: String, val httpStatus: Int = 429): ReplanAdmission
 }

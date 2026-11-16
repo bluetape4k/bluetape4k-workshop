@@ -3,9 +3,12 @@ package io.bluetape4k.workshop.ktor.json
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class Jackson3SupportTest {
+
+    companion object: KLogging()
 
     @Test
     fun `NDJSON support reuses the bluetape Jackson3 mapper`() {
@@ -21,6 +24,6 @@ class Jackson3SupportTest {
         )
 
         Jackson3Support.objectMapper.writeValueAsString(value) shouldBeEqualTo
-            """{"unicode":"한글🙂","nullable":null,"items":["a","b"]}"""
+                """{"unicode":"한글🙂","nullable":null,"items":["a","b"]}"""
     }
 }

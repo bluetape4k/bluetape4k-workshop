@@ -4,10 +4,14 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class OrderDomainTest {
+
+    companion object: KLogging()
 
     @Test
     fun `rejects empty order lines`() {
@@ -20,6 +24,7 @@ class OrderDomainTest {
     fun `place creates immutable aggregate and safe domain event`() {
         val order = Order.place(validPlaceOrderCommand())
 
+        log.debug { "order=$order" }
         order.status shouldBeEqualTo OrderStatus.PLACED
         order.lines shouldHaveSize 1
         order.events shouldHaveSize 1
@@ -32,6 +37,7 @@ class OrderDomainTest {
         val order = Order.place(validPlaceOrderCommand())
         val approved = order.approve(ApproveOrderCommand(order.id, approvedBy = "ops-user"))
 
+        log.debug { "approved=$approved" }
         approved.status shouldBeEqualTo OrderStatus.APPROVED
         approved.events shouldHaveSize 1
         approved.events.single().shouldBeInstanceOf<OrderApproved>()

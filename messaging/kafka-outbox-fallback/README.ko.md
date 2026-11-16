@@ -2,28 +2,21 @@
 
 [English](README.md) | 한국어
 
-이 예제는 전통적인 transactional outbox를 그대로 쓰지 않고, 주문 저장
-트랜잭션의 부담을 줄이기 위해 Kafka를 먼저 시도하는 변형을 보여줍니다.
-주문 생성 트랜잭션은 `orders` 행만 저장합니다. 커밋 이후 `OrderPlaced`
-이벤트를 Kafka로 직접 발행하고, 실패하거나 timeout이 나거나 직접 발행이
-비활성화된 경우에만 `event_publications` fallback 테이블에 저장합니다.
+이 예제는 전통적인 transactional outbox를 그대로 쓰지 않고, 주문 저장 트랜잭션의 부담을 줄이기 위해 Kafka를 먼저 시도하는 변형을 보여줍니다. 주문 생성 트랜잭션은 `orders` 행만 저장합니다. 커밋 이후 `OrderPlaced`
+이벤트를 Kafka로 직접 발행하고, 실패하거나 timeout이 나거나 직접 발행이 비활성화된 경우에만 `event_publications` fallback 테이블에 저장합니다.
 
 ![Architecture](../../docs/images/readme-diagrams/kafka-outbox-fallback-readme-architecture-01.png)
 
 ## 무엇을 배우나
 
-| 전통적인 transactional outbox | Kafka-first fallback |
-|------------------------------|----------------------|
-| domain row와 outbox row를 같은 트랜잭션에 저장합니다. | 트랜잭션은 domain row만 저장합니다. |
-| relay가 항상 outbox 테이블을 읽어 나중에 발행합니다. | 커밋 이후 Kafka 직접 발행을 먼저 시도합니다. |
-| outbox 테이블이 모든 이벤트의 출처입니다. | fallback 테이블은 실패하거나 복구된 이벤트만 저장합니다. |
+| 전통적인 transactional outbox                            | Kafka-first fallback                                       |
+|----------------------------------------------------------|------------------------------------------------------------|
+| domain row와 outbox row를 같은 트랜잭션에 저장합니다.    | 트랜잭션은 domain row만 저장합니다.                        |
+| relay가 항상 outbox 테이블을 읽어 나중에 발행합니다.     | 커밋 이후 Kafka 직접 발행을 먼저 시도합니다.               |
+| outbox 테이블이 모든 이벤트의 출처입니다.                | fallback 테이블은 실패하거나 복구된 이벤트만 저장합니다.   |
 | 유실 위험은 낮지만 hot transaction의 쓰기 비용이 큽니다. | hot transaction 비용은 낮지만 중복과 복구 위험이 커집니다. |
 
-이 방식은 hot transaction 비용이 실제 병목이고, 소비자가 idempotent하게
-동작할 수 있을 때만 고려해야 합니다. Kafka 발행 timeout은 결과가
-불확실합니다. 호출자는 실패로 보지만 Kafka는 이미 레코드를 받았을 수
-있습니다. 그래서 이 예제는 `order-placed:{orderId}:v1` 형태의 결정적인
-event id를 계약으로 둡니다.
+이 방식은 hot transaction 비용이 실제 병목이고, 소비자가 idempotent하게 동작할 수 있을 때만 고려해야 합니다. Kafka 발행 timeout은 결과가 불확실합니다. 호출자는 실패로 보지만 Kafka는 이미 레코드를 받았을 수 있습니다. 그래서 이 예제는 `order-placed:{orderId}:v1` 형태의 결정적인 event id를 계약으로 둡니다.
 
 ## Jackson3 기준
 
@@ -46,14 +39,14 @@ Spring `ObjectMapper` bean은 `Jackson.createDefaultJsonMapper()`에서 시작�
 
 ![Fallback publication lifecycle](../../docs/images/readme-diagrams/kafka-outbox-fallback-readme-state-01.png)
 
-| 상태 | 의미 |
-|------|------|
-| `NO ROW` | Kafka 직접 발행이 성공했거나, 아직 reconciler가 누락 row를 복구하지 않은 상태입니다. |
-| `NOT_PUBLISHED` | 실패, 비활성화, timeout, 재구성 때문에 relay 대상이 된 상태입니다. |
-| `CLAIMED` | relay worker가 `claimedBy`, `claimedUntil`을 설정하고 전송 중입니다. |
-| `FAILED` | relay 전송은 실패했지만 `relayMaxRetries`에 아직 도달하지 않았습니다. |
-| `PUBLISHED` | Kafka가 relay 발행을 확인했고 `publishedAt`이 설정되었습니다. |
-| `DEAD_LETTER` | retry 한도에 도달했습니다. 운영자가 확인해야 합니다. |
+| 상태            | 의미                                                                                 |
+|-----------------|--------------------------------------------------------------------------------------|
+| `NO ROW`        | Kafka 직접 발행이 성공했거나, 아직 reconciler가 누락 row를 복구하지 않은 상태입니다. |
+| `NOT_PUBLISHED` | 실패, 비활성화, timeout, 재구성 때문에 relay 대상이 된 상태입니다.                   |
+| `CLAIMED`       | relay worker가 `claimedBy`, `claimedUntil`을 설정하고 전송 중입니다.                 |
+| `FAILED`        | relay 전송은 실패했지만 `relayMaxRetries`에 아직 도달하지 않았습니다.                |
+| `PUBLISHED`     | Kafka가 relay 발행을 확인했고 `publishedAt`이 설정되었습니다.                        |
+| `DEAD_LETTER`   | retry 한도에 도달했습니다. 운영자가 확인해야 합니다.                                 |
 
 `CLAIMED`는 enum 값이 아니라 nullable claim 컬럼으로 표현합니다.
 
@@ -84,12 +77,12 @@ curl -s -X POST http://localhost:8080/api/orders \
 
 `publicationStatus`는 호출자에게 보여주는 결과입니다.
 
-| 상태 | 의미 |
-|------|------|
-| `PUBLISHED_DIRECT` | 커밋 이후 Kafka 직접 발행이 성공했습니다. |
-| `FALLBACK_STORED` | 직접 발행이 비활성화되었거나, 실패하거나, timeout되어 fallback row를 저장했습니다. |
+| 상태                    | 의미                                                                                                             |
+|-------------------------|------------------------------------------------------------------------------------------------------------------|
+| `PUBLISHED_DIRECT`      | 커밋 이후 Kafka 직접 발행이 성공했습니다.                                                                        |
+| `FALLBACK_STORED`       | 직접 발행이 비활성화되었거나, 실패하거나, timeout되어 fallback row를 저장했습니다.                               |
 | `FALLBACK_STORE_FAILED` | 직접 발행도 실패했고 fallback 저장도 실패했습니다. 이후 reconciler가 `orders`에서 누락 row를 복구할 수 있습니다. |
-| `UNKNOWN` | 조회 API는 내부 publication 상태를 노출하지 않습니다. |
+| `UNKNOWN`               | 조회 API는 내부 publication 상태를 노출하지 않습니다.                                                            |
 
 payload 없이 fallback row 확인:
 
@@ -97,8 +90,7 @@ payload 없이 fallback row 확인:
 curl -s http://localhost:8080/api/publications
 ```
 
-publication 응답은 `payload` 컬럼을 빼고 `eventId`, `status`, retry count,
-sanitized error summary, timestamp 같은 안전한 metadata만 반환합니다.
+publication 응답은 `payload` 컬럼을 빼고 `eventId`, `status`, retry count, sanitized error summary, timestamp 같은 안전한 metadata만 반환합니다.
 
 Demo admin endpoint는 기본적으로 꺼져 있습니다.
 
@@ -108,16 +100,14 @@ workshop:
     demo-admin-endpoints-enabled: true
 ```
 
-활성화한 뒤에는 다음 호출로 relay와 reconciliation을 수동 실행할 수
-있습니다.
+활성화한 뒤에는 다음 호출로 relay와 reconciliation을 수동 실행할 수 있습니다.
 
 ```bash
 curl -s -X POST http://localhost:8080/api/publications/relay
 curl -s -X POST http://localhost:8080/api/publications/reconcile
 ```
 
-이 endpoint는 workshop demo용입니다. 운영 환경에서는 인증, 권한, rate
-limit 뒤에 두어야 합니다.
+이 endpoint는 workshop demo용입니다. 운영 환경에서는 인증, 권한, rate limit 뒤에 두어야 합니다.
 
 ## 설정
 
@@ -143,32 +133,25 @@ workshop:
 예제는 테스트와 다이어그램의 의미가 흔들리지 않도록 `topic`을
 `order-events`, `direct-publish-attempts`를 `3`으로 고정합니다.
 
-`direct-publish-enabled: false`로 설정하면 fallback-only 분기를 확인할 수
-있습니다. 이 모드에서 `OrderEventPublisher`는 `KafkaTemplate.send(...)`를
-건너뛰고, `DIRECT_DISABLED` 사유의 `NOT_PUBLISHED` row를 저장한 뒤
+`direct-publish-enabled: false`로 설정하면 fallback-only 분기를 확인할 수 있습니다. 이 모드에서 `OrderEventPublisher`는 `KafkaTemplate.send(...)`를 건너뛰고, `DIRECT_DISABLED` 사유의 `NOT_PUBLISHED` row를 저장한 뒤
 `FALLBACK_STORED`를 반환합니다.
 
 ## Metrics와 Health
 
 Micrometer counter:
 
-| Metric | Tags |
-|--------|------|
-| `workshop.outbox.direct.publish.attempts` | `result=success|timeout|failure` |
-| `workshop.outbox.fallback.stored` | `result=success|failure` |
-| `workshop.outbox.relay.events` | `result=published|failure|dead-letter` |
-| `workshop.outbox.reconciler.events` | `result=reconstructed` |
+| Metric                                    | Tags                   |
+|-------------------------------------------|------------------------|
+| `workshop.outbox.direct.publish.attempts` | `result=success        |timeout|failure` |
+| `workshop.outbox.fallback.stored`         | `result=success        |failure` |
+| `workshop.outbox.relay.events`            | `result=published      |failure|dead-letter` |
+| `workshop.outbox.reconciler.events`       | `result=reconstructed` |
 
-Actuator는 `health`, `info`, `prometheus`를 노출합니다. probe-aware 환경에서는
-readiness와 liveness health endpoint도 사용할 수 있습니다. 에러 응답에는
-거절된 요청 값, raw payload, stack trace, secret처럼 보이는 문자열을 그대로
-내보내지 않습니다.
+Actuator는 `health`, `info`, `prometheus`를 노출합니다. probe-aware 환경에서는 readiness와 liveness health endpoint도 사용할 수 있습니다. 에러 응답에는 거절된 요청 값, raw payload, stack trace, secret처럼 보이는 문자열을 그대로 내보내지 않습니다.
 
 ## 실행
 
-애플리케이션은 `src/main/resources/application.yml`의 PostgreSQL과 Kafka
-endpoint를 사용합니다. 테스트는 bluetape4k Testcontainers launcher로
-PostgreSQL과 Kafka를 시작합니다.
+애플리케이션은 `src/main/resources/application.yml`의 PostgreSQL과 Kafka endpoint를 사용합니다. 테스트는 bluetape4k Testcontainers launcher로 PostgreSQL과 Kafka를 시작합니다.
 
 ```bash
 ./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1

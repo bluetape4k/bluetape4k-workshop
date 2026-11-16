@@ -10,4 +10,8 @@ enum class EffectDeliveryState {
 }
 
 /** delivery, reconciliation, receipt가 공유하는 provider 결과 vocabulary입니다. */
-enum class ExternalEffectResult { CONFIRMED, DECLINED, UNKNOWN }
+enum class ExternalEffectResult {
+    CONFIRMED,
+    DECLINED,
+    UNKNOWN
+}

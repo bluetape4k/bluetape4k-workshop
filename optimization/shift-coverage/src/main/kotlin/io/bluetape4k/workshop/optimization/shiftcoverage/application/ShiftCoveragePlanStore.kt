@@ -1,11 +1,17 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlanId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePlanProposal
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-enum class ShiftCoveragePlanState { DRAFT, APPROVED, STALE, REJECTED }
+enum class ShiftCoveragePlanState {
+    DRAFT,
+    APPROVED,
+    STALE,
+    REJECTED
+}
 
 data class StoredShiftCoveragePlan(
     val proposal: ShiftCoveragePlanProposal,
@@ -14,6 +20,9 @@ data class StoredShiftCoveragePlan(
 
 /** proposal history를 immutable revision으로 보관하는 application seam입니다. */
 class ShiftCoveragePlanStore {
+
+    companion object: KLogging()
+
     private val plans = ConcurrentHashMap<Pair<PlanId, Long>, StoredShiftCoveragePlan>()
 
     fun save(plan: StoredShiftCoveragePlan): StoredShiftCoveragePlan {
@@ -21,10 +30,12 @@ class ShiftCoveragePlanStore {
         return plan
     }
 
-    fun find(planId: PlanId, revision: Long): StoredShiftCoveragePlan? = plans[planId to revision]
+    fun find(planId: PlanId, revision: Long): StoredShiftCoveragePlan? =
+        plans[planId to revision]
 
     fun approveIfDraft(planId: PlanId, revision: Long): Boolean {
         val changed = AtomicBoolean(false)
+
         plans.computeIfPresent(planId to revision) { _, current ->
             if (current.state == ShiftCoveragePlanState.DRAFT) {
                 changed.set(true)
@@ -36,8 +47,12 @@ class ShiftCoveragePlanStore {
 
     fun markStale(planId: PlanId, revision: Long): Boolean {
         val changed = AtomicBoolean(false)
+
         plans.computeIfPresent(planId to revision) { _, current ->
-            if (current.state == ShiftCoveragePlanState.DRAFT || current.state == ShiftCoveragePlanState.APPROVED) {
+            val draftOrApproved = current.state == ShiftCoveragePlanState.DRAFT ||
+                    current.state == ShiftCoveragePlanState.APPROVED
+
+            if (draftOrApproved) {
                 changed.set(true)
                 current.copy(state = ShiftCoveragePlanState.STALE)
             } else current

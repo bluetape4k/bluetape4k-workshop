@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotBlank
 import java.util.concurrent.TimeoutException
 import kotlin.math.min
 import kotlin.time.Duration
@@ -41,14 +43,14 @@ class KafkaFailoverDeadline private constructor(
      * 전달해야 하며, 이 함수는 그 경계에서 공통 만료 검사를 제공합니다.
      */
     fun <T> awaitBlocking(phase: String, operation: () -> T): T {
-        require(phase.isNotBlank()) { "phase must not be blank" }
+        phase.requireNotBlank("phase")
         if (remainingNanos() == 0L) {
             throw TimeoutException("phase=$phase deadline exhausted")
         }
         return operation()
     }
 
-    companion object {
+    companion object: KLogging() {
         val MODULE_TIMEOUT: Duration = 420.seconds
         val SCENARIO_TIMEOUT: Duration = 180.seconds
         val STARTUP_TIMEOUT: Duration = 45.seconds
@@ -62,6 +64,7 @@ class KafkaFailoverDeadline private constructor(
             val now = nowNanos()
             val delta = timeout.inWholeNanoseconds
             val deadline = if (delta > Long.MAX_VALUE - now) Long.MAX_VALUE else now + delta
+
             return KafkaFailoverDeadline(deadline, nowNanos)
         }
     }

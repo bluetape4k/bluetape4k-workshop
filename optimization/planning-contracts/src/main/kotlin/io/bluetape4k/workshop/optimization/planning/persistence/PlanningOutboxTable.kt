@@ -7,8 +7,7 @@ import org.jetbrains.exposed.v1.javatime.timestamp
 internal object PlanningOutboxTable: AuditableLongIdTable("planning_outbox") {
     val planningRequestId = javaUUID("planning_request_id").uniqueIndex()
     val payload = text("payload")
-    val status = enumerationByName<PlanningOutboxStatus>("status", 24)
-        .default(PlanningOutboxStatus.PENDING)
+    val status = enumerationByName<PlanningOutboxStatus>("status", 24).default(PlanningOutboxStatus.PENDING)
     val retryCount = integer("retry_count").default(0)
     val nextAttemptAt = timestamp("next_attempt_at")
     val claimedBy = varchar("claimed_by", 120).nullable()

@@ -1,20 +1,22 @@
 package io.bluetape4k.workshop.graph.abuser
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBePositive
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmFallbackReason
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmProviderPolicy
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
 import io.bluetape4k.workshop.graph.abuser.schema.DeviceLabel
@@ -34,6 +36,7 @@ import kotlinx.coroutines.launch
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * [AbuserDetectionSuspendService]용 추상 테스트 suite입니다.
@@ -43,6 +46,8 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractAbuserDetectionSuspendTest {
+
+    companion object: KLoggingChannel()
 
     protected abstract val graphName: String
     protected abstract val ops: GraphSuspendOperations
@@ -64,6 +69,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
     fun `addUser creates a new User vertex`() = runSuspendIO {
         val user = service.addUser("user-1", "KR")
 
+        log.debug { "user=$user" }
         user.label shouldBeEqualTo UserLabel.label
         user.properties[UserLabel.userId.name] shouldBeEqualTo "user-1"
         user.properties[UserLabel.country.name] shouldBeEqualTo "KR"
@@ -82,12 +88,14 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val second = service.addUser("user-1", "KR")
 
         first.id shouldBeEqualTo second.id
+        first shouldBeEqualTo second
     }
 
     @Test
     fun `addDevice creates a new Device vertex`() = runSuspendIO {
         val device = service.addDevice("device-1", "android")
 
+        log.debug { "device $device" }
         device.label shouldBeEqualTo DeviceLabel.label
         device.properties[DeviceLabel.deviceId.name] shouldBeEqualTo "device-1"
         device.properties[DeviceLabel.platform.name] shouldBeEqualTo "android"
@@ -97,6 +105,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
     fun `addIpAddress creates a new IpAddress vertex`() = runSuspendIO {
         val ip = service.addIpAddress("10.0.0.1")
 
+        log.debug { "ip=$ip" }
         ip.label shouldBeEqualTo IpAddressLabel.label
         ip.properties[IpAddressLabel.ip.name] shouldBeEqualTo "10.0.0.1"
     }
@@ -105,6 +114,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
     fun `addPhoneNumber creates a PhoneNumber vertex`() = runSuspendIO {
         val phone = service.addPhoneNumber("sha256-hashed-phone-value")
 
+        log.debug { "phone=$phone" }
         phone.label shouldBeEqualTo PhoneNumberLabel.label
         phone.properties[PhoneNumberLabel.phone.name] shouldBeEqualTo "sha256-hashed-phone-value"
     }
@@ -113,6 +123,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
     fun `addPaymentMethod creates a PaymentMethod vertex`() = runSuspendIO {
         val payment = service.addPaymentMethod("tok_visa_4242")
 
+        log.debug { "payment=$payment" }
         payment.label shouldBeEqualTo PaymentMethodLabel.label
         payment.properties[PaymentMethodLabel.paymentToken.name] shouldBeEqualTo "tok_visa_4242"
     }
@@ -126,9 +137,10 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val seed: AbuserDetectionSeed = seedSharedIdentifiers(service)
 
         val cluster = service.findAbuseCluster(seed.user1.id)
-
+        log.debug { "cluster=$cluster" }
         cluster.users.shouldNotBeEmpty()
-        val clusterUserIds = cluster.users.map { it.id }
+
+        val clusterUserIds = cluster.users.map { it.id }.onEach { log.debug { "ElementId=$it" } }
         clusterUserIds shouldContain seed.user2.id
         clusterUserIds shouldContain seed.user3.id
     }
@@ -138,8 +150,9 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val seed = seedSharedIdentifiers(service)
 
         val cluster = service.findAbuseCluster(seed.user1.id)
+        log.debug { "cluster=$cluster" }
 
-        val clusterUserIds = cluster.users.map { it.id }
+        val clusterUserIds = cluster.users.map { it.id }.onEach { log.debug { "ElementId=$it" } }
         clusterUserIds shouldNotContain seed.user1.id
     }
 
@@ -149,6 +162,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
 
         val cluster = service.findAbuseCluster(seed.user1.id)
 
+        log.debug { "cluster=$cluster" }
         cluster.sharedIdentifiers.shouldNotBeEmpty()
         cluster.sharedIdentifiers.map { it.id } shouldContain seed.deviceA.id
     }
@@ -158,7 +172,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val seed = seedSharedIdentifiers(service)
 
         val cluster = service.findAbuseCluster(seed.unrelatedUser.id)
-
+        log.debug { "cluster=$cluster" }
         cluster.users.shouldBeEmpty()
     }
 
@@ -167,7 +181,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val unknownId = GraphElementId("99999999")
 
         val cluster = service.findAbuseCluster(unknownId)
-
+        log.debug { "cluster=$cluster" }
         cluster.users.shouldBeEmpty()
         cluster.sharedIdentifiers.shouldBeEmpty()
     }
@@ -180,11 +194,11 @@ abstract class AbstractAbuserDetectionSuspendTest {
     fun `explainSuspicion flow emits AbusePaths for connected user`() = runSuspendIO {
         val seed = seedSharedIdentifiers(service)
 
-        val paths = service.explainSuspicion(seed.user1.id).toList()
+        val paths = service.explainSuspicion(seed.user1.id).log("Path").toList()
 
         // user1은 USES_DEVICE(deviceA)와 USES_IP(ipA) 간선을 가집니다.
         paths shouldHaveSize 2
-        val identifierIds = paths.map { it.identifierVertexId }
+        val identifierIds = paths.map { it.identifierVertexId }.onEach { log.debug { "identifier=$it" } }
         identifierIds shouldContain seed.deviceA.id
         identifierIds shouldContain seed.ipA.id
     }
@@ -193,9 +207,9 @@ abstract class AbstractAbuserDetectionSuspendTest {
     fun `explainSuspicion flow returns only outgoing private identifiers for isolated user`() = runSuspendIO {
         val seed = seedSharedIdentifiers(service)
 
-        val paths = service.explainSuspicion(seed.unrelatedUser.id).toList()
+        val paths = service.explainSuspicion(seed.unrelatedUser.id).log("Path").toList()
 
-        val identifierIds = paths.map { it.identifierVertexId }
+        val identifierIds = paths.map { it.identifierVertexId }.onEach { log.debug { "identifier=$it" } }
         identifierIds shouldNotContain seed.deviceA.id
         identifierIds shouldNotContain seed.ipA.id
     }
@@ -227,7 +241,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val cycles = service.detectReferralLoops().toList()
+        val cycles = service.detectReferralLoops().log("Cycle").toList()
 
         cycles.shouldNotBeEmpty()
     }
@@ -237,7 +251,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
         service.addUser("u-a", "KR")
         service.addUser("u-b", "KR")
 
-        val cycles = service.detectReferralLoops().toList()
+        val cycles = service.detectReferralLoops().log("Cycles").toList()
 
         cycles.shouldBeEmpty()
     }
@@ -251,7 +265,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val scores: List<SuspiciousUserScore> = service.rankSuspiciousUsers(limit = 10).toList()
+        val scores: List<SuspiciousUserScore> = service.rankSuspiciousUsers(limit = 10).log("Score").toList()
 
         scores.shouldNotBeEmpty()
         scores.forEachIndexed { index, score ->
@@ -266,7 +280,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val scores = service.rankSuspiciousUsers(limit = 2).toList()
+        val scores = service.rankSuspiciousUsers(limit = 2).log("Score").toList()
 
         scores shouldHaveSize 2
         scores.first().rank shouldBeEqualTo 1
@@ -278,7 +292,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val existingScores = service.rankSuspiciousUsers(limit = 10).toList()
+        val existingScores = service.rankSuspiciousUsers(limit = 10).log("Score").toList()
         val ranking = service.rankSuspiciousUsersWithExecution(
             limit = 10,
             policy = GraphAlgorithmProviderPolicy.AUTO,
@@ -314,11 +328,12 @@ abstract class AbstractAbuserDetectionSuspendTest {
 
         val collector = launch {
             service.rankSuspiciousUsers(limit = 10)
-                .onEach { delay(100) }
+                .onEach { delay(100.milliseconds) }
+                .log("Users")
                 .toList()
         }
 
-        delay(10)
+        delay(10.milliseconds)
         collector.cancelAndJoin()
 
         collector.isCancelled.shouldBeTrue()

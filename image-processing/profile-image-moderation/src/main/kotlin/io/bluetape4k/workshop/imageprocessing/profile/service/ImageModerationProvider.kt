@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.profile.service
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.imageprocessing.profile.config.ProfileImageModerationProperties
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationRequest
@@ -7,6 +8,7 @@ import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationResult
 import kotlinx.coroutines.delay
 import org.springframework.stereotype.Component
 import java.io.Serializable
+import kotlin.time.toKotlinDuration
 
 /**
  * 비동기 프로필 이미지 검수 결정 계약입니다.
@@ -27,21 +29,25 @@ interface ImageModerationProvider {
 @Component
 class ProfileImageModerationPolicyProvider(
     private val properties: ProfileImageModerationProperties,
-) : ImageModerationProvider {
+): ImageModerationProvider {
+
+    private companion object: KLogging()
 
     override suspend fun moderate(request: ModerationRequest): ModerationResult {
         if (!properties.decisionDelay.isZero) {
-            delay(properties.decisionDelay.toMillis())
+            delay(properties.decisionDelay.toKotlinDuration())
         }
 
         val detections = detect(request)
-        return detections.firstOrNull()?.let { detection ->
-            ModerationResult(ModerationDecision.REJECTED, detection.reason)
-        } ?: ModerationResult(ModerationDecision.APPROVED, "No banned profile-image content detected")
+        return detections.firstOrNull()
+            ?.let { detection ->
+                ModerationResult(ModerationDecision.REJECTED, detection.reason)
+            } ?: ModerationResult(ModerationDecision.APPROVED, "No banned profile-image content detected")
     }
 
     private fun detect(request: ModerationRequest): List<ProfileContentDetection> {
         val filename = request.originalFilename.orEmpty().lowercase()
+
         return buildList {
             if (filename.contains("nazi") || filename.contains(properties.rejectedFilenameMarker.lowercase())) {
                 add(ProfileContentDetection("HATE_SYMBOL", "Nazi Party", "profile image contains a banned hate symbol"))
@@ -53,10 +59,22 @@ class ProfileImageModerationPolicyProvider(
                 filename.contains("욱일기") ||
                 filename.contains("旭日旗")
             ) {
-                add(ProfileContentDetection("HATE_SYMBOL", "Rising Sun Flag", "profile image contains a banned hate symbol"))
+                add(
+                    ProfileContentDetection(
+                        "HATE_SYMBOL",
+                        "Rising Sun Flag",
+                        "profile image contains a banned hate symbol"
+                    )
+                )
             }
             if (filename.contains("hate-text") || filename.contains("hate-speech")) {
-                add(ProfileContentDetection("SENSITIVE_TEXT", "Hate Expression", "profile image contains banned hate expression text"))
+                add(
+                    ProfileContentDetection(
+                        "SENSITIVE_TEXT",
+                        "Hate Expression",
+                        "profile image contains banned hate expression text"
+                    )
+                )
             }
         }
     }
@@ -65,7 +83,7 @@ class ProfileImageModerationPolicyProvider(
         val category: String,
         val rawLabel: String,
         val reason: String,
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }

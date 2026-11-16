@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.codec.Base58
-import java.nio.charset.StandardCharsets.UTF_8
+import io.bluetape4k.support.toUtf8Bytes
 
 /** bounded demo HTTP surface입니다. 이 limit은 application service 실행 전에 강제됩니다. */
 internal data class VoucherHttpProperties(
@@ -26,7 +26,7 @@ internal class VoucherApiException(
     val status: Int,
     val safeReason: String,
     val retryAfterSeconds: Long? = null,
-) : RuntimeException(stableCode)
+): RuntimeException(stableCode)
 
 internal fun requireAsciiIdentifier(
     value: String?,
@@ -34,7 +34,7 @@ internal fun requireAsciiIdentifier(
     maxLength: Int = 64,
 ): String {
     val candidate = value ?: throw invalidRequest("$name is required")
-    if (candidate.length !in 1..maxLength || candidate.toByteArray(UTF_8).size != candidate.length) {
+    if (candidate.length !in 1..maxLength || candidate.toUtf8Bytes().size != candidate.length) {
         throw invalidRequest("$name must contain 1..$maxLength ASCII characters")
     }
     if (candidate.any { it.code !in 0x21..0x7e }) {

@@ -1,5 +1,13 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import com.github.dockerjava.api.model.ExposedPort
+import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.PortBinding
+import com.github.dockerjava.api.model.Ports
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.KafkaContainer
@@ -7,9 +15,6 @@ import org.testcontainers.lifecycle.Startable
 import org.testcontainers.lifecycle.Startables
 import org.testcontainers.utility.DockerImageName
 import java.net.InetAddress
-import java.time.Duration
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
@@ -26,7 +31,7 @@ enum class KafkaFailoverLifecycleState {
 }
 
 /** unit test가 Docker에 의존하지 않도록 만든 작은 network abstraction입니다. */
-interface KafkaFailoverNetwork : AutoCloseable {
+interface KafkaFailoverNetwork: AutoCloseable {
     val containerNetwork: Network?
 }
 
@@ -82,7 +87,7 @@ class KafkaFailoverClusterFixture(
         ::createBroker,
     private val startCoordinator: KafkaFailoverStartCoordinator = DefaultStartCoordinator,
     private val postStartValidator: (KafkaFailoverClusterFixture) -> Unit = { it.validateStartedCluster() },
-) : AutoCloseable {
+): AutoCloseable {
 
     private val ownerLock = ReentrantLock()
     private val brokerRegistry = linkedMapOf<Int, KafkaFailoverBroker>()
@@ -276,7 +281,7 @@ class KafkaFailoverClusterFixture(
         private fun defaultRunId(): String =
             (System.getProperty("KAFKA_FAILOVER_RUN_ID") ?: System.getenv("KAFKA_FAILOVER_RUN_ID"))
                 ?.takeIf(String::isNotBlank)
-                ?: "local-${System.currentTimeMillis()}-${Thread.currentThread().id}"
+                ?: "local-${System.currentTimeMillis()}-${Thread.currentThread().threadId()}"
 
         private fun createNetwork(): KafkaFailoverNetwork = TestcontainersNetwork(Network.newNetwork())
 
@@ -291,14 +296,14 @@ class KafkaFailoverClusterFixture(
         }
     }
 
-    private object DefaultStartCoordinator : KafkaFailoverStartCoordinator {
+    private object DefaultStartCoordinator: KafkaFailoverStartCoordinator {
         override fun start(
             brokers: Collection<KafkaFailoverBroker>,
             deadline: KafkaFailoverDeadline,
         ): KafkaFailoverStartHandle {
             val settled = brokers.associateWith { AtomicBoolean(false) }
             val startables = brokers.map { broker ->
-                object : Startable {
+                object: Startable {
                     override fun start() {
                         try {
                             broker.start()
@@ -311,12 +316,12 @@ class KafkaFailoverClusterFixture(
                 }
             }
             val future = Startables.deepStart(startables)
-            return object : KafkaFailoverStartHandle {
+            return object: KafkaFailoverStartHandle {
                 override fun await() {
                     val remaining = deadline.remainingNanos()
                     if (remaining <= 0L) throw TimeoutException("Kafka startup deadline exhausted")
                     try {
-                        future.get(remaining, TimeUnit.NANOSECONDS)
+                        future.get(remaining.nanoseconds)
                     } catch (error: java.util.concurrent.ExecutionException) {
                         throw (error.cause ?: error)
                     }
@@ -329,7 +334,12 @@ class KafkaFailoverClusterFixture(
                 override fun awaitQuiescence(deadline: KafkaFailoverDeadline): Boolean {
                     while (settled.values.any { !it.get() }) {
                         if (deadline.remainingNanos() <= 0L) return false
-                        Thread.sleep(minOf(10L, deadline.remainingNanos().nanoseconds.inWholeMilliseconds.coerceAtLeast(1L)))
+                        Thread.sleep(
+                            minOf(
+                                10L,
+                                deadline.remainingNanos().nanos().toMillis().coerceAtLeast(1L)
+                            )
+                        )
                     }
                     return true
                 }
@@ -340,7 +350,7 @@ class KafkaFailoverClusterFixture(
 
 private class TestcontainersNetwork(
     override val containerNetwork: Network,
-) : KafkaFailoverNetwork {
+): KafkaFailoverNetwork {
     override fun close() = containerNetwork.close()
 }
 
@@ -349,33 +359,37 @@ private class TestcontainersKafkaBroker(
     override val alias: String,
     runId: String,
     network: Network,
-) : KafkaFailoverBroker {
-    private val container = KafkaContainer(DockerImageName.parse(KafkaFailoverClusterFixture.IMAGE_REFERENCE)).apply {
-        withNetwork(network)
-        withNetworkAliases(alias)
-        withEnv(KafkaFailoverTopology.brokerEnvironment(nodeId))
-        withLabels(
-            mapOf(
-                KafkaFailoverClusterFixture.RUN_ID_LABEL to runId,
-                KafkaFailoverClusterFixture.NODE_ID_LABEL to nodeId.toString(),
-            ),
-        )
-        waitingFor(
-            Wait.forLogMessage(".*Transitioning from RECOVERY to RUNNING.*", 1)
-                .withStartupTimeout(Duration.ofSeconds(45)),
-        )
-        withCreateContainerCmdModifier { command ->
-            val hostConfig = command.hostConfig ?: com.github.dockerjava.api.model.HostConfig()
-            command.withHostConfig(
-                hostConfig.withPortBindings(
-                    com.github.dockerjava.api.model.PortBinding(
-                        com.github.dockerjava.api.model.Ports.Binding.bindIp("127.0.0.1"),
-                        com.github.dockerjava.api.model.ExposedPort.tcp(9092),
-                    ),
+): KafkaFailoverBroker {
+
+    companion object: KLogging()
+
+    private val container = KafkaContainer(DockerImageName.parse(KafkaFailoverClusterFixture.IMAGE_REFERENCE))
+        .apply {
+            withNetwork(network)
+            withNetworkAliases(alias)
+            withEnv(KafkaFailoverTopology.brokerEnvironment(nodeId))
+            withLabels(
+                mapOf(
+                    KafkaFailoverClusterFixture.RUN_ID_LABEL to runId,
+                    KafkaFailoverClusterFixture.NODE_ID_LABEL to nodeId.toString(),
                 ),
             )
+            waitingFor(
+                Wait.forLogMessage(".*Transitioning from RECOVERY to RUNNING.*", 1)
+                    .withStartupTimeout(45.seconds()),
+            )
+            withCreateContainerCmdModifier { command ->
+                val hostConfig = command.hostConfig ?: HostConfig()
+                command.withHostConfig(
+                    hostConfig.withPortBindings(
+                        PortBinding(
+                            Ports.Binding.bindIp("127.0.0.1"),
+                            ExposedPort.tcp(9092),
+                        ),
+                    ),
+                )
+            }
         }
-    }
 
     override val bootstrapServers: String
         get() = container.bootstrapServers
@@ -403,12 +417,14 @@ private class TestcontainersKafkaBroker(
         val bindings = info.hostConfig?.portBindings?.bindings?.values
             ?.flatMap { it.toList() }
             .orEmpty()
+
         bindings.forEach { binding ->
             require(binding.hostIp in setOf("127.0.0.1", "::1")) {
                 "Kafka host binding is not loopback-only"
             }
         }
         val host = container.host
+
         require(InetAddress.getAllByName(host).all(InetAddress::isLoopbackAddress)) {
             "Kafka container host is not loopback-resolvable"
         }

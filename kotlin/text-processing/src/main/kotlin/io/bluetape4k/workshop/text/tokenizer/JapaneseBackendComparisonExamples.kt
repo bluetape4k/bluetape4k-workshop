@@ -197,7 +197,7 @@ private fun unavailableSudachiObservation() = JapaneseBackendObservation(
     tokens = emptyList(),
     splitModes = emptyList(),
     statusMessage = "Sudachi dictionary is unavailable; run prepareSudachiDictionary and set " +
-        "bluetape4k.sudachi.system-dictionary.",
+            "bluetape4k.sudachi.system-dictionary.",
 )
 
 private fun sudachiSystemDictionaryPathOrNull(): Path? {

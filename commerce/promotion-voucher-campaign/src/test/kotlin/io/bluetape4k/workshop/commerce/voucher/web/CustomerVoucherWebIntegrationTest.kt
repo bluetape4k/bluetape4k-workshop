@@ -1,44 +1,58 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import org.springframework.test.web.reactive.server.expectBody
+import java.util.*
 
-internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTest() {
+internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest() {
+
+    companion object: KLogging()
+
     @Test
     fun `redemption review fixture is consumed only by redemption`() {
         val tenant = randomIdentifier()
         val principal = "principal-redemption-review"
         val campaignId = createActiveCampaign(tenant)
-        val allocated =
-            customerPost(
-                tenant,
-                principal,
-                "/api/v1/campaigns/$campaignId/claims",
-                randomIdentifier(),
-                mapOf("userRef" to principal),
-            ).exchange().expectStatus().isCreated
-                .expectBody(AllocationHttpResponse::class.java)
-                .returnResult().responseBody!!
+
+        val allocated = customerPost(
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody<AllocationHttpResponse>()
+            .returnResult().responseBody.shouldNotBeNull()
 
         operatorPost(
             tenant,
             "/operator/api/v1/fixtures/redemption-review/run",
             randomIdentifier(),
             mapOf("principalRef" to principal),
-        ).exchange().expectStatus().isOk
+        )
+            .exchange()
+            .expectStatus().isOk
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/claims/${allocated.claimId}/redeem",
-            randomIdentifier(),
-            mapOf(
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/claims/${allocated.claimId}/redeem",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf(
                 "code" to allocated.code,
                 "expectedRevision" to 0,
                 "redemptionReference" to randomIdentifier(),
             ),
-        ).exchange().expectStatus().isAccepted
+        )
+            .exchange()
+            .expectStatus().isAccepted
             .expectBody()
             .jsonPath("$.state").isEqualTo("REVIEW_REQUIRED")
             .jsonPath("$.revision").isEqualTo(1)
@@ -49,39 +63,48 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val principal = "principal-fixture-replay"
         val fixtureKey = randomIdentifier()
+
         operatorPost(
-            tenant,
-            "/operator/api/v1/fixtures/allocation-review/run",
-            fixtureKey,
-            mapOf("principalRef" to principal),
-        ).exchange().expectStatus().isOk
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/allocation-review/run",
+            idempotencyKey = fixtureKey,
+            body = mapOf("principalRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isOk
             .expectHeader().valueEquals("Idempotency-Replayed", "false")
 
         val firstCampaign = createActiveCampaign(tenant)
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$firstCampaign/claims",
-            randomIdentifier(),
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isAccepted
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$firstCampaign/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isAccepted
 
         operatorPost(
-            tenant,
-            "/operator/api/v1/fixtures/allocation-review/run",
-            fixtureKey,
-            mapOf("principalRef" to principal),
-        ).exchange().expectStatus().isOk
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/allocation-review/run",
+            idempotencyKey = fixtureKey,
+            body = mapOf("principalRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isOk
             .expectHeader().valueEquals("Idempotency-Replayed", "true")
 
         val secondCampaign = createActiveCampaign(tenant)
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$secondCampaign/claims",
-            randomIdentifier(),
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isCreated
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$secondCampaign/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isCreated
     }
 
     @Test
@@ -91,11 +114,13 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val campaignId = createActiveCampaign(tenant)
 
         operatorPost(
-            tenant,
-            "/operator/api/v1/fixtures/delayed-duplicate-out-of-order/run",
-            randomIdentifier(),
-            mapOf("principalRef" to principal, "campaignId" to campaignId),
-        ).exchange().expectStatus().isOk
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/delayed-duplicate-out-of-order/run",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("principalRef" to principal, "campaignId" to campaignId),
+        )
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.principalRef").isEqualTo(principal)
             .jsonPath("$.executionMode").isEqualTo("SERVER_EVENT")
@@ -109,29 +134,37 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val principal = "principal-operator-read"
         val campaignId = createActiveCampaign(tenant)
+
         operatorPost(
-            tenant,
-            "/operator/api/v1/fixtures/allocation-review/run",
-            randomIdentifier(),
-            mapOf("principalRef" to principal),
-        ).exchange().expectStatus().isOk
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/allocation-review/run",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("principalRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isOk
+
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$campaignId/claims",
-            randomIdentifier(),
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isAccepted
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isAccepted
 
         operatorGet(tenant, "/operator/api/v1/reviews?status=OPEN&limit=1")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.items[0].campaignId").isEqualTo(campaignId.toString())
             .jsonPath("$.items[0].status").isEqualTo("OPEN")
             .jsonPath("$.items[0].signalSummary").doesNotExist()
 
         operatorGet(tenant, "/operator/api/v1/reconciliation/backlog?limit=1")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.items").isArray
     }
@@ -141,40 +174,62 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val principal = "principal-fixture-reset"
         val deletedCampaignId = createActiveCampaign(tenant)
+
         operatorPost(
-            tenant,
-            "/operator/api/v1/fixtures/allocation-review/run",
-            randomIdentifier(),
-            mapOf("principalRef" to principal),
-        ).exchange().expectStatus().isOk
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/allocation-review/run",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("principalRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isOk
+
         val resetKey = randomIdentifier()
 
-        operatorPost(tenant, "/operator/api/v1/fixtures/reset", resetKey, emptyMap<String, String>())
-            .exchange().expectStatus().isOk
-            .expectHeader().valueEquals("Idempotency-Replayed", "false")
-            .expectBody()
-            .jsonPath("$.clearedSignals").isEqualTo(1)
-            .jsonPath("$.deletedRows").value<Int> { check(it > 0) }
-        operatorPost(tenant, "/operator/api/v1/fixtures/reset", resetKey, emptyMap<String, String>())
-            .exchange().expectStatus().isOk
-            .expectHeader().valueEquals("Idempotency-Replayed", "true")
+        operatorPost(
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/reset",
+            idempotencyKey = resetKey,
+            body = emptyMap<String, String>()
+        )
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader()
+            .valueEquals("Idempotency-Replayed", "false")
             .expectBody()
             .jsonPath("$.clearedSignals").isEqualTo(1)
             .jsonPath("$.deletedRows").value<Int> { check(it > 0) }
 
-        webTestClient.get().uri("/api/v1/campaigns/$deletedCampaignId")
+        operatorPost(
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/reset",
+            idempotencyKey = resetKey,
+            body = emptyMap<String, String>()
+        )
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader()
+            .valueEquals("Idempotency-Replayed", "true")
+            .expectBody()
+            .jsonPath("$.clearedSignals").isEqualTo(1)
+            .jsonPath("$.deletedRows").value<Int> { check(it > 0) }
+
+        webTestClient.get()
+            .uri("/api/v1/campaigns/$deletedCampaignId")
             .header(TENANT_HEADER, tenant)
             .header(PRINCIPAL_HEADER, principal)
             .exchange().expectStatus().isNotFound
 
         val campaignId = createActiveCampaign(tenant)
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$campaignId/claims",
-            randomIdentifier(),
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isCreated
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isCreated
     }
 
     @Test
@@ -183,49 +238,58 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val principal = "principal-a"
         val campaignId = createActiveCampaign(tenant)
         val key = randomIdentifier()
-        val first =
-            customerPost(
-                tenant,
-                principal,
-                "/api/v1/campaigns/$campaignId/claims",
-                key,
-                mapOf("userRef" to principal),
-            ).exchange().expectStatus().isCreated
-                .expectHeader().valueEquals("Idempotency-Replayed", "false")
-                .expectBody()
-                .jsonPath("$.claimId").value<String> { UUID.fromString(it) }
-                .jsonPath("$.code").isNotEmpty
-                .returnResult()
-        val body = String(first.responseBody!!)
+        val first = customerPost(
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = key,
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isCreated
+            .expectHeader().valueEquals("Idempotency-Replayed", "false")
+            .expectBody()
+            .jsonPath("$.claimId").value<String> { UUID.fromString(it) }
+            .jsonPath("$.code").isNotEmpty
+            .returnResult()
+
+        val body = first.responseBody.shouldNotBeNull().toUtf8String()
         val claimId = Regex("\\\"claimId\\\":\\\"([^\\\"]+)\\\"").find(body)!!.groupValues[1]
         val code = Regex("\\\"code\\\":\\\"([^\\\"]+)\\\"").find(body)!!.groupValues[1]
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$campaignId/claims",
-            key,
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isCreated
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = key,
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isCreated
             .expectHeader().valueEquals("Idempotency-Replayed", "true")
             .expectBody()
             .jsonPath("$.claimId").isEqualTo(claimId)
             .jsonPath("$.code").isEqualTo(code)
 
         repeat(2) {
-            webTestClient.get().uri("/api/v1/claims/$claimId")
+            webTestClient.get()
+                .uri("/api/v1/claims/$claimId")
                 .header(TENANT_HEADER, tenant)
                 .header(PRINCIPAL_HEADER, principal)
-                .exchange().expectStatus().isOk
+                .exchange()
+                .expectStatus().isOk
                 .expectBody()
                 .jsonPath("$.claimId").isEqualTo(claimId)
                 .jsonPath("$.code").doesNotExist()
         }
-        webTestClient.get().uri("/api/v1/claims/$claimId")
+        webTestClient.get()
+            .uri("/api/v1/claims/$claimId")
             .header(TENANT_HEADER, "other-$tenant")
             .header(PRINCIPAL_HEADER, principal)
-            .exchange().expectStatus().isNotFound
-            .expectBody().jsonPath("$.code").isEqualTo("CLAIM_NOT_FOUND")
+            .exchange()
+            .expectStatus().isNotFound
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("CLAIM_NOT_FOUND")
     }
 
     @Test
@@ -234,13 +298,16 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val campaignId = createActiveCampaign(tenant)
 
         customerPost(
-            tenant,
-            "principal-a",
-            "/api/v1/campaigns/$campaignId/claims",
-            randomIdentifier(),
-            mapOf("userRef" to "principal-a", "riskSignal" to "REVIEW"),
-        ).exchange().expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+            tenant = tenant,
+            principal = "principal-a",
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to "principal-a", "riskSignal" to "REVIEW"),
+        )
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
     }
 
     @Test
@@ -248,70 +315,86 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val principal = "principal-release"
         val campaignId = createActiveCampaign(tenant)
-        val claim =
-            customerPost(
-                tenant,
-                principal,
-                "/api/v1/campaigns/$campaignId/claims",
-                randomIdentifier(),
-                mapOf("userRef" to principal),
-            ).exchange().expectStatus().isCreated
-                .expectBody(AllocationHttpResponse::class.java)
-                .returnResult().responseBody!!
+        val claim = customerPost(
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody<AllocationHttpResponse>()
+            .returnResult().responseBody.shouldNotBeNull()
+
         val releaseKey = randomIdentifier()
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/claims/${claim.claimId}/release",
-            releaseKey,
-            mapOf("expectedRevision" to 0),
-        ).exchange().expectStatus().isOk
-            .expectHeader().valueEquals("Idempotency-Replayed", "false")
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/claims/${claim.claimId}/release",
+            idempotencyKey = releaseKey,
+            body = mapOf("expectedRevision" to 0),
+        )
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader()
+            .valueEquals("Idempotency-Replayed", "false")
             .expectBody()
             .jsonPath("$.state").isEqualTo("RELEASED")
             .jsonPath("$.revision").isEqualTo(1)
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/claims/${claim.claimId}/release",
-            releaseKey,
-            mapOf("expectedRevision" to 0),
-        ).exchange().expectStatus().isOk
-            .expectHeader().valueEquals("Idempotency-Replayed", "true")
-            .expectBody().jsonPath("$.state").isEqualTo("RELEASED")
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/claims/${claim.claimId}/release",
+            idempotencyKey = releaseKey,
+            body = mapOf("expectedRevision" to 0),
+        )
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader()
+            .valueEquals("Idempotency-Replayed", "true")
+            .expectBody()
+            .jsonPath("$.state").isEqualTo("RELEASED")
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/claims/${claim.claimId}/release",
-            releaseKey,
-            mapOf("expectedRevision" to 1),
-        ).exchange().expectStatus().isEqualTo(409)
-            .expectBody().jsonPath("$.code").isEqualTo("IDEMPOTENCY_FINGERPRINT_CONFLICT")
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/claims/${claim.claimId}/release",
+            idempotencyKey = releaseKey,
+            body = mapOf("expectedRevision" to 1),
+        )
+            .exchange()
+            .expectStatus().isEqualTo(409)
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("IDEMPOTENCY_FINGERPRINT_CONFLICT")
     }
 
     @Test
     fun `claim ownership is hidden across principals in the same tenant`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
-        val claim =
-            customerPost(
-                tenant,
-                "principal-owner",
-                "/api/v1/campaigns/$campaignId/claims",
-                randomIdentifier(),
-                mapOf("userRef" to "principal-owner"),
-            ).exchange().expectStatus().isCreated
-                .expectBody(AllocationHttpResponse::class.java)
-                .returnResult().responseBody!!
+        val claim = customerPost(
+            tenant = tenant,
+            principal = "principal-owner",
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to "principal-owner"),
+        )
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody<AllocationHttpResponse>()
+            .returnResult().responseBody.shouldNotBeNull()
 
-        webTestClient.get().uri("/api/v1/claims/${claim.claimId}")
+        webTestClient.get()
+            .uri("/api/v1/claims/${claim.claimId}")
             .header(TENANT_HEADER, tenant)
             .header(PRINCIPAL_HEADER, "principal-attacker")
-            .exchange().expectStatus().isNotFound
-            .expectBody().jsonPath("$.code").isEqualTo("CLAIM_NOT_FOUND")
+            .exchange()
+            .expectStatus().isNotFound
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("CLAIM_NOT_FOUND")
     }
 
     @Test
@@ -319,47 +402,57 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val principal = "principal-review"
         val campaignId = createActiveCampaign(tenant)
+
         operatorPost(
-            tenant,
-            "/operator/api/v1/fixtures/allocation-review/run",
-            randomIdentifier(),
-            mapOf("principalRef" to principal),
-        ).exchange().expectStatus().isOk
+            tenant = tenant,
+            path = "/operator/api/v1/fixtures/allocation-review/run",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("principalRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isOk
 
         val allocationKey = randomIdentifier()
-        val pending =
-            customerPost(
-                tenant,
-                principal,
-                "/api/v1/campaigns/$campaignId/claims",
-                allocationKey,
-                mapOf("userRef" to principal),
-            ).exchange().expectStatus().isAccepted
-                .expectBody(AllocationHttpResponse::class.java)
-                .returnResult().responseBody!!
-        val reviewId = checkNotNull(pending.reviewId)
-        check(pending.code == null)
+        val pending = customerPost(
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = allocationKey,
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isAccepted
+            .expectBody<AllocationHttpResponse>()
+            .returnResult().responseBody.shouldNotBeNull()
+
+        val reviewId = pending.reviewId.shouldNotBeNull()
+        pending.code.shouldBeNull()
 
         operatorPost(
-            tenant,
-            "/operator/api/v1/reviews/$reviewId/approve",
-            randomIdentifier(),
-            mapOf(
+            tenant = tenant,
+            path = "/operator/api/v1/reviews/$reviewId/approve",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf(
                 "campaignId" to campaignId,
                 "claimId" to pending.claimId,
                 "expectedReviewRevision" to 0,
                 "expectedClaimRevision" to 0,
             ),
-        ).exchange().expectStatus().isOk
+        )
+            .exchange()
+            .expectStatus().isOk
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$campaignId/claims",
-            allocationKey,
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isAccepted
-            .expectHeader().valueEquals("Idempotency-Replayed", "true")
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = allocationKey,
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isAccepted
+            .expectHeader()
+            .valueEquals("Idempotency-Replayed", "true")
             .expectBody()
             .jsonPath("$.state").isEqualTo("REVIEW_REQUIRED")
             .jsonPath("$.revision").isEqualTo(0)
@@ -367,41 +460,53 @@ internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTes
             .jsonPath("$.code").doesNotExist()
 
         val acknowledgementKey = randomIdentifier()
-        val first =
-            customerPost(
-                tenant,
-                principal,
-                "/api/v1/claims/${pending.claimId}/code-acknowledgements",
-                acknowledgementKey,
-                mapOf("expectedRevision" to 1),
-            ).exchange().expectStatus().isOk
-                .expectHeader().valueEquals("Idempotency-Replayed", "false")
-                .expectBody(VoucherCodeHttpResponse::class.java)
-                .returnResult().responseBody!!
+        val first = customerPost(
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/claims/${pending.claimId}/code-acknowledgements",
+            idempotencyKey = acknowledgementKey,
+            body = mapOf("expectedRevision" to 1),
+        )
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader()
+            .valueEquals("Idempotency-Replayed", "false")
+            .expectBody<VoucherCodeHttpResponse>()
+            .returnResult().responseBody.shouldNotBeNull()
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/claims/${pending.claimId}/code-acknowledgements",
-            acknowledgementKey,
-            mapOf("expectedRevision" to 1),
-        ).exchange().expectStatus().isOk
-            .expectHeader().valueEquals("Idempotency-Replayed", "true")
-            .expectBody().jsonPath("$.code").isEqualTo(first.code)
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/claims/${pending.claimId}/code-acknowledgements",
+            idempotencyKey = acknowledgementKey,
+            body = mapOf("expectedRevision" to 1),
+        )
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader()
+            .valueEquals("Idempotency-Replayed", "true")
+            .expectBody()
+            .jsonPath("$.code").isEqualTo(first.code)
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/claims/${pending.claimId}/code-acknowledgements",
-            randomIdentifier(),
-            mapOf("expectedRevision" to 2),
-        ).exchange().expectStatus().isEqualTo(409)
-            .expectBody().jsonPath("$.code").isEqualTo("CODE_ALREADY_ACKNOWLEDGED")
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/claims/${pending.claimId}/code-acknowledgements",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("expectedRevision" to 2),
+        )
+            .exchange()
+            .expectStatus().isEqualTo(409)
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("CODE_ALREADY_ACKNOWLEDGED")
 
-        webTestClient.get().uri("/api/v1/claims/${pending.claimId}")
+        webTestClient.get()
+            .uri("/api/v1/claims/${pending.claimId}")
             .header(TENANT_HEADER, tenant)
             .header(PRINCIPAL_HEADER, principal)
-            .exchange().expectStatus().isOk
-            .expectBody().jsonPath("$.code").doesNotExist()
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.code").doesNotExist()
     }
 }

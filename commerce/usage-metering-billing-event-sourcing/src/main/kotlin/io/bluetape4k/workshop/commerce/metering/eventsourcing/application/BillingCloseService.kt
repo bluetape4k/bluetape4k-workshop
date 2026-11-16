@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingCloseBatchRated
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodFinalized
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodReducer
@@ -34,6 +35,9 @@ class BillingCloseService(
     private val codec: DomainEventJsonCodec,
     private val metrics: BillingTelemetry? = null,
 ) {
+
+    companion object: KLogging()
+
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
     fun closeNextBatch(tenantId: String, periodId: String, batchSize: Int, now: Instant): BillingCloseBatchResult {
@@ -49,12 +53,15 @@ class BillingCloseService(
         val usages = eventStore.loadByType(
             EventTypeQuery(tenantId, "usage.accepted", closing.startsAt, closing.endsAt, cursor, batchSize),
         )
+
         return try {
             if (usages.isEmpty()) finalize(periodStream, period.streamVersion, closing, now)
             else rateBatch(periodStream, period.streamVersion, closing, usages, now)
         } catch (_: OptimisticConcurrencyException) {
             BillingCloseBatchResult.RETRY
-        }.also { metrics?.recordCloseBatch(it.metricValue, usages.size) }
+        }.also {
+            metrics?.recordCloseBatch(it.metricValue, usages.size)
+        }
     }
 
     private fun rateBatch(
@@ -66,34 +73,47 @@ class BillingCloseService(
     ): BillingCloseBatchResult {
         val rated = usages.map { persisted ->
             val usage = codec.registry.decode(
-                persisted.eventType,
-                persisted.schemaVersion,
-                persisted.payload,
+                eventType = persisted.eventType,
+                schemaVersion = persisted.schemaVersion,
+                payload = persisted.payload,
             ) as UsageAccepted
+
             val meterStream = StreamKey(persisted.stream.tenantId, "Meter", usage.meterCode)
             val meter = replay(meterStream, MeterState.Empty, MeterReducer, replayRuntime).state
             val price = meter.priceAt(usage.occurredAt)
             val amount = usage.quantity.multiply(price.unitPrice)
             val event = UsageRated(
-                persisted.eventId.toString(),
-                usage.meterCode,
-                usage.quantity,
-                price.unitPrice,
-                amount,
-                price.currency,
+                usageEventId = persisted.eventId.toString(),
+                meterCode = usage.meterCode,
+                quantity = usage.quantity,
+                unitPrice = price.unitPrice,
+                amount = amount,
+                currency = price.currency,
             )
             Triple(persisted, event, amount)
         }
         val last = rated.last().first
-        val batchTotal = rated.fold(BigDecimal.ZERO) { total, item -> total + item.third }
-        val progress = BillingCloseBatchRated(last.occurredAt, last.eventId.toString(), batchTotal, closing.currency)
+        val batchTotal = rated
+            .fold(BigDecimal.ZERO) { total, item ->
+                total + item.third
+            }
+        val progress = BillingCloseBatchRated(
+            throughOccurredAt = last.occurredAt,
+            throughEventId = last.eventId.toString(),
+            batchAmount = batchTotal,
+            currency = closing.currency
+        )
         val appends = rated.map { (persisted, event) ->
             StreamAppend(
                 StreamKey(periodStream.tenantId, "Rating", persisted.eventId.toString()),
                 0,
                 listOf(codec.encode(event, persisted.occurredAt)),
             )
-        } + StreamAppend(periodStream, periodVersion, listOf(codec.encode(progress, now)))
+        } + StreamAppend(
+            stream = periodStream,
+            expectedVersion = periodVersion,
+            events = listOf(codec.encode(progress, now))
+        )
         eventStore.appendAll(appends)
         return BillingCloseBatchResult.APPLIED
     }
@@ -105,7 +125,11 @@ class BillingCloseService(
         now: Instant,
     ): BillingCloseBatchResult {
         val event = BillingPeriodFinalized(closing.total, closing.currency)
-        eventStore.append(stream, version, listOf(codec.encode(event, now)))
+        eventStore.append(
+            stream = stream,
+            expectedVersion = version,
+            events = listOf(codec.encode(event, now))
+        )
         return BillingCloseBatchResult.FINALIZED
     }
 }

@@ -4,7 +4,12 @@ import eu.rekawek.toxiproxy.Proxy
 import eu.rekawek.toxiproxy.ToxiproxyClient
 import eu.rekawek.toxiproxy.model.Toxic
 import eu.rekawek.toxiproxy.model.ToxicDirection
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.support.checkNull
+import io.bluetape4k.support.checkStartsWith
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.infra.ToxiproxyServer
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.testcontainers.containers.Network
@@ -21,7 +26,7 @@ import java.time.Duration
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-internal interface TicketRedisProbeConnection : AutoCloseable {
+internal interface TicketRedisProbeConnection: AutoCloseable {
     fun ping(): String
 }
 
@@ -43,7 +48,7 @@ internal class TicketProxiedTopology private constructor(
     private val profileId: String,
     private val journal: TicketHighContentionJournal,
     private val cutpoint: TicketTopologyCutpoint,
-) : AutoCloseable {
+): AutoCloseable {
     private var network: Network? = null
     private var redis: RedisServer? = null
     private var toxiproxy: ToxiproxyServer? = null
@@ -59,8 +64,9 @@ internal class TicketProxiedTopology private constructor(
     fun routesOnlyThroughProxy(): Boolean {
         val redisServer = redis ?: return false
         val proxyServer = toxiproxy ?: return false
+
         return redisUri == "redis://${proxyServer.host}:${proxyServer.getMappedPort(PROXY_PORT)}" &&
-            redisUri != "redis://${redisServer.host}:${redisServer.port}"
+                redisUri != "redis://${redisServer.host}:${redisServer.port}"
     }
 
     fun openConnection(): TicketRedisProbeConnection = stateLock.withLock {
@@ -71,6 +77,7 @@ internal class TicketProxiedTopology private constructor(
             connect(InetSocketAddress(endpoint.host, endpoint.port), CLIENT_TIMEOUT.toMillis().toInt())
             soTimeout = CLIENT_TIMEOUT.toMillis().toInt()
         }
+
         return try {
             OwnedConnection(socket) { owned ->
                 stateLock.withLock {
@@ -84,22 +91,25 @@ internal class TicketProxiedTopology private constructor(
     }
 
     fun cutExistingConnections() = stateLock.withLock {
-        check(reset == null) { "existing connection cut is already active" }
-        reset = requireNotNull(proxy).toxics().resetPeer(
-            RESET_TOXIC,
-            ToxicDirection.DOWNSTREAM,
-            0,
-        )
+        reset.checkNull { "existing connection cut is already active" }
+
+        reset = proxy.requireNotNull("proxy")
+            .toxics()
+            .resetPeer(
+                RESET_TOXIC,
+                ToxicDirection.DOWNSTREAM,
+                0,
+            )
     }
 
     fun disableNewConnections() = stateLock.withLock {
-        requireNotNull(proxy).disable()
+        proxy.requireNotNull("proxy").disable()
     }
 
     fun recover() = stateLock.withLock {
         reset?.remove()
         reset = null
-        requireNotNull(proxy).enable()
+        proxy.requireNotNull("proxy").enable()
     }
 
     override fun close() {
@@ -131,10 +141,11 @@ internal class TicketProxiedTopology private constructor(
 
     private fun start() {
         network = createNetwork(resource("network", "network"))
-        redis = createRedis(resource("redis", "container"), requireNotNull(network))
-        toxiproxy = createToxiproxy(resource("toxiproxy", "container"), requireNotNull(network))
+        redis = createRedis(resource("redis", "container"), network.requireNotNull("network"))
+        toxiproxy = createToxiproxy(resource("toxiproxy", "container"), network.requireNotNull("network"))
         val proxyServer = requireNotNull(toxiproxy)
         val client = awaitClient(proxyServer)
+
         proxy = client.createProxy(
             PROXY_NAME,
             "0.0.0.0:$PROXY_PORT",
@@ -255,9 +266,9 @@ internal class TicketProxiedTopology private constructor(
         private const val PROXY_NAME = "ticket-redis-proxy"
         private const val PROXY_PORT = 8666
         private const val RESET_TOXIC = "ticket-reset-existing"
-        private val CLIENT_TIMEOUT = Duration.ofSeconds(2)
-        private val READINESS_TIMEOUT = Duration.ofSeconds(10)
-        private val READINESS_POLL = Duration.ofMillis(50)
+        private val CLIENT_TIMEOUT = 2.seconds()
+        private val READINESS_TIMEOUT = 10.seconds()
+        private val READINESS_POLL = 50.millis()
 
         fun start(
             runId: String,
@@ -307,7 +318,7 @@ internal data class TicketDockerResource(
     }
 }
 
-private object NoReadinessWait : WaitStrategy {
+private object NoReadinessWait: WaitStrategy {
     override fun waitUntilReady(waitStrategyTarget: WaitStrategyTarget) = Unit
 
     override fun withStartupTimeout(startupTimeout: Duration): WaitStrategy = this
@@ -316,7 +327,7 @@ private object NoReadinessWait : WaitStrategy {
 private class OwnedConnection(
     private val socket: Socket,
     private val onClosed: (OwnedConnection) -> Unit,
-) : TicketRedisProbeConnection {
+): TicketRedisProbeConnection {
     private val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
     private val writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
     private val lock = ReentrantLock()
@@ -326,8 +337,8 @@ private class OwnedConnection(
         check(!closed) { "Redis probe connection is closed" }
         writer.write("*1\r\n${'$'}4\r\nPING\r\n")
         writer.flush()
-        val response = requireNotNull(reader.readLine()) { "Redis closed without a PING response" }
-        check(response.startsWith("+")) { "Redis PING failed" }
+        val response = reader.readLine().requireNotNull { "Redis closed without a PING response" }
+        response.checkStartsWith("+") { "Redis PING failed" }
         return response.removePrefix("+")
     }
 

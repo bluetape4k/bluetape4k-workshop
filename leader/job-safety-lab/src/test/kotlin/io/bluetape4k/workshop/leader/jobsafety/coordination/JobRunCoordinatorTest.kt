@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.leader.jobsafety.coordination
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.ExtendOutcome
 import io.bluetape4k.leader.LeaderElectionListener
 import io.bluetape4k.leader.metrics.LeaderAopMetricsRecorder
@@ -10,6 +12,8 @@ import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderAopMetricsReco
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderElectionListener
 import io.bluetape4k.leader.micrometer.OBSERVATION_LEADER_AOP_EXECUTION
 import io.bluetape4k.leader.micrometer.OBSERVATION_TAG_OUTCOME
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
@@ -29,7 +33,6 @@ import io.micrometer.observation.Observation
 import io.micrometer.observation.ObservationHandler
 import io.micrometer.observation.ObservationRegistry
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.time.Instant
 import java.time.YearMonth
 import java.util.concurrent.CancellationException
@@ -37,6 +40,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
 
 internal class JobRunCoordinatorTest {
+
+    companion object: KLogging()
+
     @Test
     fun `leader is acquired before the resource fence and both are released`() {
         val events = mutableListOf<String>()
@@ -47,10 +53,12 @@ internal class JobRunCoordinatorTest {
             JobMutation.Committed
         }
 
+        log.debug { "result=$result" }
         result.state shouldBeEqualTo JobExecutionState.COMMITTED
         result.fencingToken?.value shouldBeEqualTo 42L
-        events shouldBeEqualTo
-            listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
+
+        log.debug { "events=$events" }
+        events shouldBeEqualTo listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
     }
 
     @Test
@@ -64,10 +72,18 @@ internal class JobRunCoordinatorTest {
             events += "execute"
             JobMutation.Committed
         }
-
+        log.debug { "result=$result" }
         result.state shouldBeEqualTo JobExecutionState.COMMITTED
-        events shouldBeEqualTo
-            listOf("leader.acquire", "fence.acquire", "leader.extend", "execute", "fence.release", "leader.release")
+
+        log.debug { "events=$events" }
+        events shouldBeEqualTo listOf(
+            "leader.acquire",
+            "fence.acquire",
+            "leader.extend",
+            "execute",
+            "fence.release",
+            "leader.release"
+        )
     }
 
     @Test
@@ -77,8 +93,11 @@ internal class JobRunCoordinatorTest {
 
         val result = coordinator.run(request()) { error("must not execute") }
 
+        log.debug { "result=$result" }
         result.state shouldBeEqualTo JobExecutionState.SKIPPED
         result.rejection shouldBeEqualTo JobRejectionReason.FENCE_CONTENDED
+
+        log.debug { "events=$events" }
         events shouldBeEqualTo listOf("leader.acquire", "fence.acquire", "leader.release")
     }
 
@@ -89,8 +108,11 @@ internal class JobRunCoordinatorTest {
 
         val result = coordinator.run(request()) { error("must not execute") }
 
+        log.debug { "result=$result" }
         result.state shouldBeEqualTo JobExecutionState.SKIPPED
         result.rejection shouldBeEqualTo JobRejectionReason.LEADER_CONTENDED
+
+        log.debug { "events=$events" }
         events shouldBeEqualTo listOf("leader.acquire")
     }
 
@@ -101,8 +123,11 @@ internal class JobRunCoordinatorTest {
 
         val result = coordinator.run(request()) { error("must not execute") }
 
+        log.debug { "result=$result" }
         result.state shouldBeEqualTo JobExecutionState.FAILED
         result.rejection shouldBeEqualTo JobRejectionReason.FENCE_BACKEND_FAILURE
+
+        log.debug { "events=$events" }
         events shouldBeEqualTo listOf("leader.acquire", "fence.acquire", "leader.release")
     }
 
@@ -115,11 +140,12 @@ internal class JobRunCoordinatorTest {
             events += "execute"
             error("domain failed")
         }
-
+        log.debug { "result=$result" }
         result.state shouldBeEqualTo JobExecutionState.FAILED
         result.rejection shouldBeEqualTo JobRejectionReason.DOMAIN_FAILURE
-        events shouldBeEqualTo
-            listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
+
+        log.debug { "events=$events" }
+        events shouldBeEqualTo listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
     }
 
     @Test
@@ -131,10 +157,11 @@ internal class JobRunCoordinatorTest {
             events += "execute"
             JobMutation.Committed
         }
-
+        log.debug { "result=$result" }
         result.state shouldBeEqualTo JobExecutionState.COMMITTED
-        events shouldBeEqualTo
-            listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
+
+        log.debug { "events=$events" }
+        events shouldBeEqualTo listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
     }
 
     @Test
@@ -149,9 +176,16 @@ internal class JobRunCoordinatorTest {
                     throw InterruptedException("cancelled")
                 }
             }
-            Thread.currentThread().isInterrupted shouldBeEqualTo true
-            events shouldBeEqualTo
-                listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
+            Thread.currentThread().isInterrupted.shouldBeTrue()
+
+            log.debug { "events=$events" }
+            events shouldBeEqualTo listOf(
+                "leader.acquire",
+                "fence.acquire",
+                "execute",
+                "fence.release",
+                "leader.release"
+            )
         } finally {
             Thread.interrupted()
         }
@@ -192,6 +226,7 @@ internal class JobRunCoordinatorTest {
         handler.executionOutcomes() shouldBeEqualTo listOf("success", "error", "cancelled", "error")
 
         val execution = handler.stopped.last { it.name == OBSERVATION_LEADER_AOP_EXECUTION }
+        log.debug { "execution=$execution" }
         execution.high["lock.name"] shouldBeEqualTo "redacted-lock"
         execution.high["leader.id"] shouldBeEqualTo "redacted-leader"
     }
@@ -214,7 +249,7 @@ internal class JobRunCoordinatorTest {
                 leaderExtensionOutcome,
             ),
             fencingLease = RecordingFencingLease(events, fenceOutcome, fenceReleaseFailure),
-            fencingTtl = Duration.ofSeconds(5),
+            fencingTtl = 5.seconds(),
             observationRecorder = recorder,
             observationListener = listener,
         )
@@ -234,9 +269,9 @@ internal class JobRunCoordinatorTest {
             nextValue = 100L,
         )
 
-    private object NoOpLeaderElectionListener : LeaderElectionListener
+    private object NoOpLeaderElectionListener: LeaderElectionListener
 
-    private class CollectingObservationHandler : ObservationHandler<Observation.Context> {
+    private class CollectingObservationHandler: ObservationHandler<Observation.Context> {
         val stopped = CopyOnWriteArrayList<Snapshot>()
 
         override fun supportsContext(context: Observation.Context): Boolean = true

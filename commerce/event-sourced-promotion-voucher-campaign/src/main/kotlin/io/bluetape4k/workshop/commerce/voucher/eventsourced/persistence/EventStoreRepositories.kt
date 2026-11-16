@@ -2,21 +2,29 @@
 
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignState
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptStatus
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditAction
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditOutcome
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonState
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
-import java.util.UUID
+import java.util.*
+import kotlin.reflect.KClass
 
 private const val DIGEST_LENGTH = 64
 
-internal object EventLog : UUIDTable("voucher_event_log", "event_id") {
+internal object EventLog: TimebasedUUIDTable("voucher_event_log", "event_id") {
     val tenantId = varchar("tenant_id", DIGEST_LENGTH)
     val streamType = varchar("stream_type", 64)
     val streamId = javaUUID("stream_id")
@@ -39,7 +47,7 @@ internal object EventLog : UUIDTable("voucher_event_log", "event_id") {
     }
 }
 
-internal object StreamHeads : UUIDTable("voucher_stream_head", "head_id") {
+internal object StreamHeads: TimebasedUUIDTable("voucher_stream_head", "head_id") {
     val streamId = javaUUID("stream_id")
     val tenantId = varchar("tenant_id", 64)
     val streamType = varchar("stream_type", 64)
@@ -51,30 +59,22 @@ internal object StreamHeads : UUIDTable("voucher_stream_head", "head_id") {
     }
 }
 
-internal object AppendFences : UUIDTable("voucher_append_fence", "fence_id") {
+internal object AppendFences: TimebasedUUIDTable("voucher_append_fence", "fence_id") {
     val nextGlobalPosition = long("next_global_position")
 }
 
-internal object IdempotencyReceipts : UUIDTable("voucher_idempotency_receipt", "receipt_id") {
+internal object IdempotencyReceipts: TimebasedUUIDTable("voucher_idempotency_receipt", "receipt_id") {
     val tenantId = varchar("tenant_id", 64)
     val principalDigest = varchar("principal_digest", 64)
     val operation = varchar("operation", 64)
     val resourceId = varchar("resource_id", 128)
     val keyDigest = varchar("key_digest", 64)
     val fingerprint = varchar("fingerprint", 64)
-    val status =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptStatus>(
-            "status",
-            24,
-        )
+    val status = enumerationByName<ReceiptStatus>("status", 24)
     val ownerTokenDigest = varchar("owner_token_digest", 64).nullable()
     val leaseDeadline = timestamp("lease_deadline").nullable()
     val commandDeadline = timestamp("command_deadline")
-    val terminalOutcome =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome>(
-            "terminal_outcome",
-            48,
-        ).nullable()
+    val terminalOutcome = enumerationByName<ReceiptOutcome>("terminal_outcome", 48).nullable()
     val terminalStatus = integer("terminal_status").nullable()
     val allocationId = javaUUID("allocation_id").nullable()
     val hmacKeyVersion = integer("hmac_key_version").nullable()
@@ -91,7 +91,7 @@ internal object IdempotencyReceipts : UUIDTable("voucher_idempotency_receipt", "
     }
 }
 
-internal object EventSnapshots : UUIDTable("voucher_event_snapshot", "snapshot_id") {
+internal object EventSnapshots: TimebasedUUIDTable("voucher_event_snapshot", "snapshot_id") {
     val tenantId = varchar("tenant_id", 64)
     val streamType = varchar("stream_type", 64)
     val streamId = javaUUID("stream_id")
@@ -107,7 +107,7 @@ internal object EventSnapshots : UUIDTable("voucher_event_snapshot", "snapshot_i
     }
 }
 
-internal object ProjectionCheckpoints : UUIDTable("voucher_projection_checkpoint", "checkpoint_id") {
+internal object ProjectionCheckpoints: TimebasedUUIDTable("voucher_projection_checkpoint", "checkpoint_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val position = long("position")
@@ -119,7 +119,7 @@ internal object ProjectionCheckpoints : UUIDTable("voucher_projection_checkpoint
     }
 }
 
-internal object ProjectionLeases : UUIDTable("voucher_projection_lease", "lease_id") {
+internal object ProjectionLeases: TimebasedUUIDTable("voucher_projection_lease", "lease_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val ownerDigest = varchar("owner_digest", DIGEST_LENGTH)
@@ -132,7 +132,7 @@ internal object ProjectionLeases : UUIDTable("voucher_projection_lease", "lease_
     }
 }
 
-internal object ProjectionProcessedEvents : UUIDTable("voucher_projection_processed_event", "processed_id") {
+internal object ProjectionProcessedEvents: TimebasedUUIDTable("voucher_projection_processed_event", "processed_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val eventId = javaUUID("event_id")
@@ -145,7 +145,7 @@ internal object ProjectionProcessedEvents : UUIDTable("voucher_projection_proces
     }
 }
 
-internal object ProjectionReadModels : UUIDTable("voucher_projection_read_model", "read_model_id") {
+internal object ProjectionReadModels: TimebasedUUIDTable("voucher_projection_read_model", "read_model_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val tenantId = varchar("tenant_id", 64)
@@ -164,16 +164,13 @@ internal object ProjectionReadModels : UUIDTable("voucher_projection_read_model"
     }
 }
 
-internal object CampaignProjectionReadModels : UUIDTable("voucher_campaign_projection", "campaign_projection_id") {
+internal object CampaignProjectionReadModels:
+    TimebasedUUIDTable("voucher_campaign_projection", "campaign_projection_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
-    val state =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignState>(
-            "state",
-            16,
-        )
+    val state = enumerationByName<CampaignState>("state", 16)
     val streamVersion = long("stream_version")
     val globalPosition = long("global_position")
     val policyVersion = long("policy_version")
@@ -192,7 +189,7 @@ internal object CampaignProjectionReadModels : UUIDTable("voucher_campaign_proje
     }
 }
 
-internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_event", "poison_id") {
+internal object ProjectionPoisonEvents: TimebasedUUIDTable("voucher_projection_poison_event", "poison_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val eventId = javaUUID("event_id")
@@ -200,11 +197,7 @@ internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_ev
     val eventType = varchar("event_type", 128)
     val reasonClass = varchar("reason_class", 64)
     val attempts = integer("attempts")
-    val state =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonState>(
-            "state",
-            16,
-        )
+    val state = enumerationByName<ProjectionPoisonState>("state", 16)
     val nextRetryAt = timestamp("next_retry_at")
     val resolvedAt = timestamp("resolved_at").nullable()
     val occurredAt = timestamp("occurred_at")
@@ -216,14 +209,10 @@ internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_ev
     }
 }
 
-internal object ProjectionGenerations : UUIDTable("voucher_projection_generation", "generation_id") {
+internal object ProjectionGenerations: TimebasedUUIDTable("voucher_projection_generation", "generation_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
-    val state =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState>(
-            "state",
-            16,
-        )
+    val state = enumerationByName<ProjectionGenerationState>("state", 16)
     val targetPosition = long("target_position")
     val currentPosition = long("current_position")
     val fencingToken = long("fencing_token")
@@ -239,7 +228,7 @@ internal object ProjectionGenerations : UUIDTable("voucher_projection_generation
     }
 }
 
-internal object ActiveProjectionGenerations : UUIDTable("voucher_active_projection_generation", "active_id") {
+internal object ActiveProjectionGenerations: TimebasedUUIDTable("voucher_active_projection_generation", "active_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val revision = long("revision")
@@ -250,35 +239,19 @@ internal object ActiveProjectionGenerations : UUIDTable("voucher_active_projecti
     }
 }
 
-internal object OperatorAudits : UUIDTable("voucher_operator_audit", "audit_id") {
+internal object OperatorAudits: TimebasedUUIDTable("voucher_operator_audit", "audit_id") {
     val actorDigest = varchar("actor_digest", DIGEST_LENGTH)
     val tenant = varchar("tenant", 64)
     val requestDigest = varchar("request_digest", DIGEST_LENGTH)
-    val action =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditAction>(
-            "action",
-            32,
-        )
+    val action = enumerationByName<OperatorAuditAction>("action", 32)
     val projection = varchar("projection", 64)
     val generation = long("generation")
     val expectedFencingToken = long("expected_fencing_token")
-    val beforeState =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState>(
-            "before_state",
-            16,
-        ).nullable()
-    val afterState =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState>(
-            "after_state",
-            16,
-        ).nullable()
+    val beforeState = enumerationByName<ProjectionGenerationState>("before_state", 16).nullable()
+    val afterState = enumerationByName<ProjectionGenerationState>("after_state", 16).nullable()
     val checkpointPosition = long("checkpoint_position")
     val streamPosition = long("stream_position")
-    val outcome =
-        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditOutcome>(
-            "outcome",
-            16,
-        )
+    val outcome = enumerationByName<OperatorAuditOutcome>("outcome", 16)
     val reasonClass = varchar("reason_class", 64).nullable()
     val occurredAt = timestamp("occurred_at")
 
@@ -288,24 +261,23 @@ internal object OperatorAudits : UUIDTable("voucher_operator_audit", "audit_id")
     }
 }
 
-internal class EventLogEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<EventLogEntity>(EventLog)
+internal class EventLogEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<EventLogEntity>(EventLog)
 }
 
 @Suppress("AbstractClassCanBeConcreteClass")
-internal abstract class EventSourcedExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
-        ExposedEntityInformationImpl(domainClass),
-    )
+internal abstract class EventSourcedExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass.java))
 
 @Suppress("AbstractClassCanBeConcreteClass")
-internal abstract class AppendOnlyEventSourcedRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : EventSourcedExposedJdbcRepository<E, ID>(domainClass) {
-    final override fun <S : E> save(entity: S): S = immutableMutation()
+internal abstract class AppendOnlyEventSourcedRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): EventSourcedExposedJdbcRepository<E, ID>(domainClass) {
 
-    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+    final override fun <S: E> save(entity: S): S = immutableMutation()
+
+    final override fun <S: E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
 
     final override fun deleteById(id: ID): Unit = immutableMutation()
 
@@ -321,5 +293,5 @@ internal abstract class AppendOnlyEventSourcedRepository<E : Entity<ID>, ID : An
         throw UnsupportedOperationException("append-only repository")
 }
 
-internal class EventLogRepository :
-    AppendOnlyEventSourcedRepository<EventLogEntity, UUID>(EventLogEntity::class.java)
+internal class EventLogRepository:
+    AppendOnlyEventSourcedRepository<EventLogEntity, UUID>(EventLogEntity::class)

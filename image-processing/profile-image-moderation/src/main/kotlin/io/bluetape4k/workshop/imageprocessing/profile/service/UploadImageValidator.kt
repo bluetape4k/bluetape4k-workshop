@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.profile.service
 
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.profile.config.ProfileImageModerationProperties
@@ -27,13 +28,13 @@ class UploadImageValidator(
         return UploadOptions(contentType = normalized)
     }
 
-    companion object {
+    companion object: KLogging() {
         private val MAGIC_BYTES = mapOf<String, (ByteArray) -> Boolean>(
             "image/jpeg" to { bytes -> bytes.size >= 3 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte() && bytes[2] == 0xFF.toByte() },
             "image/png" to { bytes ->
                 bytes.size >= 8 && bytes[0] == 0x89.toByte() && bytes[1] == 0x50.toByte() && bytes[2] == 0x4E.toByte() &&
-                    bytes[3] == 0x47.toByte() && bytes[4] == 0x0D.toByte() && bytes[5] == 0x0A.toByte() &&
-                    bytes[6] == 0x1A.toByte() && bytes[7] == 0x0A.toByte()
+                        bytes[3] == 0x47.toByte() && bytes[4] == 0x0D.toByte() && bytes[5] == 0x0A.toByte() &&
+                        bytes[6] == 0x1A.toByte() && bytes[7] == 0x0A.toByte()
             },
         )
     }

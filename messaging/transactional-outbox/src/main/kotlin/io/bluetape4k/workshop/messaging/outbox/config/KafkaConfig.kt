@@ -20,7 +20,7 @@ import tools.jackson.databind.ObjectMapper
 @EnableKafka
 class KafkaConfig {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Bean
     fun objectMapper(): ObjectMapper =

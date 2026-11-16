@@ -2,12 +2,14 @@ package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
-import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioDefinition
-import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioFixtures
+import io.bluetape4k.workshop.commerce.voucher.fixture.FixtureRiskOperation
 import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherFixtureResetResult
 import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherFixtureResetService
-import io.bluetape4k.workshop.commerce.voucher.fixture.FixtureRiskOperation
+import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioDefinition
+import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioFixtures
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import io.bluetape4k.workshop.commerce.voucher.reconciliation.DelayedVoucherEvent
@@ -25,8 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.UUID
+import java.util.*
 
 /** loopback demo와 integration-test profile에서만 사용하는 server-owned deterministic signal입니다. */
 @Component
@@ -36,6 +37,7 @@ internal class VoucherScenarioFixture(
     private val resetter: VoucherFixtureResetService,
     private val reconciliation: VoucherReconciliationService,
 ) {
+    companion object: KLogging()
 
     fun configureAllocationReview(
         tenantId: String,
@@ -52,29 +54,31 @@ internal class VoucherScenarioFixture(
         campaignId: UUID?,
     ): VoucherFixtureExecution {
         val definition = scenarios.configure(scenario, tenantId, principalRef)
-        val evidence =
-            if (scenario == "delayed-duplicate-out-of-order") {
-                val aggregateId = campaignId ?: throw IllegalArgumentException("campaignId is required for delayed events")
-                val eventId = UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000delayed".toByteArray(UTF_8))
-                val applied = DelayedVoucherEvent(tenantId, eventId, "CAMPAIGN", aggregateId, "a".repeat(64), 1)
-                listOf(
-                    reconciliation.accept(applied).outcome.name,
-                    reconciliation.accept(applied).outcome.name,
-                    reconciliation.accept(
-                        DelayedVoucherEvent(
-                            tenantId,
-                            UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000stale".toByteArray(UTF_8)),
-                            "CAMPAIGN",
-                            aggregateId,
-                            "b".repeat(64),
-                            0,
-                        ),
-                    ).outcome.name,
-                )
-            } else {
-                emptyList()
-            }
+
+        val evidence = if (scenario == "delayed-duplicate-out-of-order") {
+            val aggregateId =
+                campaignId ?: throw IllegalArgumentException("campaignId is required for delayed events")
+            val eventId = UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000delayed".toUtf8Bytes())
+            val applied = DelayedVoucherEvent(tenantId, eventId, "CAMPAIGN", aggregateId, "a".repeat(64), 1)
+            listOf(
+                reconciliation.accept(applied).outcome.name,
+                reconciliation.accept(applied).outcome.name,
+                reconciliation.accept(
+                    DelayedVoucherEvent(
+                        tenantId,
+                        UUID.nameUUIDFromBytes("$tenantId\u0000$aggregateId\u0000stale".toUtf8Bytes()),
+                        "CAMPAIGN",
+                        aggregateId,
+                        "b".repeat(64),
+                        0,
+                    ),
+                ).outcome.name,
+            )
+        } else {
+            emptyList()
+        }
         log.info { "voucher_fixture_configured scenario=${definition.slug}" }
+
         return VoucherFixtureExecution(definition, evidence)
     }
 
@@ -82,13 +86,19 @@ internal class VoucherScenarioFixture(
         tenantId: String,
         principalRef: String,
         operation: FixtureRiskOperation,
-    ): RiskSignal? = scenarios.consumeRiskSignal(tenantId, principalRef, operation)
+    ): RiskSignal? =
+        scenarios.consumeRiskSignal(
+            tenantId = tenantId,
+            principalRef = principalRef,
+            operation = operation
+        )
 
-    fun definition(scenario: String): VoucherScenarioDefinition = scenarios.definition(scenario)
+    fun definition(scenario: String): VoucherScenarioDefinition =
+        scenarios.definition(scenario)
 
-    fun reset(tenantId: String): VoucherFixtureResetResult = resetter.reset(tenantId)
+    fun reset(tenantId: String): VoucherFixtureResetResult =
+        resetter.reset(tenantId)
 
-    companion object : KLogging()
 }
 
 internal data class VoucherFixtureExecution(
@@ -120,6 +130,13 @@ internal class VoucherFixtureController(
     private val fixture: VoucherScenarioFixture,
     private val executor: VoucherHttpCommandExecutor,
 ) {
+
+    private companion object: KLogging() {
+        const val FIXTURE_PRINCIPAL = "workshop-fixture"
+        const val FIXTURE_EVIDENCE_DESCRIPTOR_HEADER = "X-Workshop-Fixture-Evidence"
+        const val FIXTURE_RESET_DESCRIPTOR_HEADER = "X-Workshop-Fixture-Reset-Result"
+    }
+
     @PostMapping("/{scenario}/run")
     fun run(
         @PathVariable scenario: String,
@@ -130,51 +147,49 @@ internal class VoucherFixtureController(
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val principal = requireAsciiIdentifier(body.principalRef, "principalRef")
-        val resourceId =
-            UUID.nameUUIDFromBytes(
-                "$tenant\u0000$principal\u0000$scenario\u0000${body.campaignId ?: "-"}".toByteArray(UTF_8),
-            )
+        val resourceId = UUID.nameUUIDFromBytes(
+            "$tenant\u0000$principal\u0000$scenario\u0000${body.campaignId ?: "-"}".toUtf8Bytes(),
+        )
         var configured: VoucherFixtureExecution? = null
-        val executed =
-            executor.execute(
-                tenant,
-                FIXTURE_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "FIXTURE_ALLOCATION_REVIEW",
-                resourceId,
-                principal,
-            ) {
-                val execution = fixture.configure(scenario, tenant, principal, body.campaignId)
-                configured = execution
-                StoredHttpResponse(
-                    VoucherResponseKind.FIXTURE_CONFIGURED,
-                    200,
-                    mapOf(FIXTURE_EVIDENCE_DESCRIPTOR_HEADER to execution.evidence.joinToString(",")),
-                    resourceId,
-                    null,
-                    0,
-                    null,
-                    null,
-                )
-            }
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = FIXTURE_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "FIXTURE_ALLOCATION_REVIEW",
+            resourceId = resourceId,
+            fingerprintMaterial = principal,
+        ) {
+            val execution = fixture.configure(scenario, tenant, principal, body.campaignId)
+            configured = execution
+            StoredHttpResponse(
+                responseKind = VoucherResponseKind.FIXTURE_CONFIGURED,
+                status = 200,
+                headers = mapOf(FIXTURE_EVIDENCE_DESCRIPTOR_HEADER to execution.evidence.joinToString(",")),
+                aggregateId = resourceId,
+                allocationId = null,
+                aggregateRevision = 0,
+                generationKeyVersion = null,
+                verificationKeyVersion = null,
+            )
+        }
         return executedResponse(executed, request) {
             val definition = configured?.definition ?: fixture.definition(scenario)
-            val evidence =
-                executed.response.headers[FIXTURE_EVIDENCE_DESCRIPTOR_HEADER]
-                    .orEmpty()
-                    .split(',')
-                    .filter(String::isNotBlank)
+            val evidence = executed.response.headers[FIXTURE_EVIDENCE_DESCRIPTOR_HEADER]
+                .orEmpty()
+                .split(',')
+                .filter(String::isNotBlank)
+
             VoucherFixtureResponse(
-                scenario,
-                principal,
-                when {
+                scenario = scenario,
+                principalRef = principal,
+                executionMode = when {
                     scenario == "delayed-duplicate-out-of-order" -> "SERVER_EVENT"
                     definition.riskOperation != null -> "SERVER_SIGNAL"
-                    else -> "CLIENT_CHOREOGRAPHY"
+                    else                             -> "CLIENT_CHOREOGRAPHY"
                 },
-                definition.riskOperation?.name,
-                evidence,
-                definition.expected,
+                preparedNextOperation = definition.riskOperation?.name,
+                evidence = evidence,
+                expected = definition.expected,
             )
         }
     }
@@ -186,39 +201,40 @@ internal class VoucherFixtureController(
         request: HttpServletRequest,
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
-        val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000fixture-reset".toByteArray(UTF_8))
+        val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000fixture-reset".toUtf8Bytes())
         var resetResult: VoucherFixtureResetResult? = null
-        val executed =
-            executor.execute(
-                tenant,
-                FIXTURE_PRINCIPAL,
-                idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
-                "FIXTURE_RESET",
-                resourceId,
-                tenant,
-            ) {
-                resetResult = fixture.reset(tenant)
-                val result = requireNotNull(resetResult)
-                StoredHttpResponse(
-                    VoucherResponseKind.FIXTURE_CONFIGURED,
-                    200,
-                    mapOf(FIXTURE_RESET_DESCRIPTOR_HEADER to "${result.clearedSignals}:${result.deletedRows}"),
-                    resourceId,
-                    null,
-                    0,
-                    null,
-                    null,
-                )
-            }
-        return executedResponse(executed, request) {
-            val values = requireNotNull(executed.response.headers[FIXTURE_RESET_DESCRIPTOR_HEADER]).split(':')
-            VoucherFixtureResetResponse(values[0].toInt(), values[1].toInt())
-        }
-    }
 
-    private companion object {
-        const val FIXTURE_PRINCIPAL = "workshop-fixture"
-        const val FIXTURE_EVIDENCE_DESCRIPTOR_HEADER = "X-Workshop-Fixture-Evidence"
-        const val FIXTURE_RESET_DESCRIPTOR_HEADER = "X-Workshop-Fixture-Reset-Result"
+        val executed = executor.execute(
+            tenantId = tenant,
+            principalRef = FIXTURE_PRINCIPAL,
+            rawIdempotencyKey = idempotencyHeader ?: throw invalidRequest("Idempotency-Key is required"),
+            operation = "FIXTURE_RESET",
+            resourceId = resourceId,
+            fingerprintMaterial = tenant,
+        ) {
+            resetResult = fixture.reset(tenant)
+            val result = resetResult.requireNotNull("resetResult")
+
+            StoredHttpResponse(
+                responseKind = VoucherResponseKind.FIXTURE_CONFIGURED,
+                status = 200,
+                headers = mapOf(FIXTURE_RESET_DESCRIPTOR_HEADER to "${result.clearedSignals}:${result.deletedRows}"),
+                aggregateId = resourceId,
+                allocationId = null,
+                aggregateRevision = 0,
+                generationKeyVersion = null,
+                verificationKeyVersion = null,
+            )
+        }
+        return executedResponse(executed, request) {
+            val values = executed.response.headers[FIXTURE_RESET_DESCRIPTOR_HEADER]
+                .requireNotNull("header[$FIXTURE_RESET_DESCRIPTOR_HEADER")
+                .split(':')
+
+            VoucherFixtureResetResponse(
+                clearedSignals = values[0].toInt(),
+                deletedRows = values[1].toInt()
+            )
+        }
     }
 }

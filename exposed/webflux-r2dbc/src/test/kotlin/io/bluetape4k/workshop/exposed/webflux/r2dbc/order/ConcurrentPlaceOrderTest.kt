@@ -14,14 +14,16 @@ import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.ProductDTO
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.test.web.reactive.server.returnResult
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
+class ConcurrentPlaceOrderTest: AbstractWebfluxR2dbcTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private fun createProduct(stock: Int): ProductDTO {
         val req = CreateProductRequest(
@@ -34,7 +36,7 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(ProductDTO::class.java)
+            .expectBody<ProductDTO>()
             .returnResult().responseBody.shouldNotBeNull()
     }
 
@@ -42,7 +44,7 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
         webTestClient.get().uri("/api/products/$id")
             .exchange()
             .expectStatus().isOk
-            .expectBody(ProductDTO::class.java)
+            .expectBody<ProductDTO>()
             .returnResult().responseBody.shouldNotBeNull()
 
     @Test
@@ -65,7 +67,7 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(req)
                     .exchange()
-                    .returnResult(String::class.java)
+                    .returnResult<String>()
                     .status
                     .value()
                 statuses.add(status)
@@ -79,6 +81,7 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
         successCount shouldBeEqualTo totalStock
         failCount shouldBeEqualTo concurrency - totalStock
         (successCount + failCount) shouldBeEqualTo concurrency
+
         findProduct(product.id).stock shouldBeEqualTo 0
     }
 

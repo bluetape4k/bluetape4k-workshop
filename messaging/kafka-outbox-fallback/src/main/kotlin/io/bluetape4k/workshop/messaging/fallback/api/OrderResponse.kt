@@ -17,7 +17,7 @@ data class OrderResponse(
     val publicationStatus: OrderPublicationStatus,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 

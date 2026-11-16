@@ -1,12 +1,13 @@
 package io.bluetape4k.workshop.leader
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.leader.LockExtender
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.job.LockExtenderJob
 import org.junit.jupiter.api.Test
-import io.bluetape4k.codec.Base58
 
 /**
  * [LockExtenderJob]과 [LockExtender] API의 테스트입니다.
@@ -16,7 +17,9 @@ import io.bluetape4k.codec.Base58
  * - [LockExtender.extendActiveLock]는 leader scope 밖에서 호출하면 `false`를 반환합니다.
  * - [LockExtenderJob.execute]는 elector가 scope 안에 있을 때 error 없이 완료됩니다.
  */
-class LockExtenderTest : AbstractLeaderElectionTest() {
+class LockExtenderTest: AbstractLeaderElectionTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `extendActiveLock returns true inside runIfLeader`() {
@@ -35,7 +38,7 @@ class LockExtenderTest : AbstractLeaderElectionTest() {
     fun `extendActiveLock returns false outside any leader scope`() {
         // runIfLeader 밖에서 호출하면 LockExtender에는 active handle이 없습니다.
         val extended = LockExtender.extendActiveLock(LockExtenderJob.EXTENSION_DURATION)
-        extended shouldBeEqualTo false
+        extended.shouldBeFalse()
     }
 
     @Test

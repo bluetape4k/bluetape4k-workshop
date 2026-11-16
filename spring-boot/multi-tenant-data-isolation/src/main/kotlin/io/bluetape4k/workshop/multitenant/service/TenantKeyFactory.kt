@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.multitenant.service
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.multitenant.domain.TenantId
 import org.springframework.stereotype.Component
 
@@ -8,6 +9,8 @@ import org.springframework.stereotype.Component
  */
 @Component
 class TenantKeyFactory {
+
+    companion object: KLogging()
 
     /**
      * tenant scope 를 포함하는 cache key 입니다.

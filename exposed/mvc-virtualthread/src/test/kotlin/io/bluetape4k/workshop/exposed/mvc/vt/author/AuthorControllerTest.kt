@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.exposed.mvc.vt.author
 
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.mvc.vt.AbstractMvcVirtualThreadTest
 import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.AuthorDTO
 import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.BookDTO
@@ -9,8 +11,12 @@ import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.CreateAuthorRequest
 import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.CreateBookRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.test.web.reactive.server.expectBodyList
 
-class AuthorControllerTest : AbstractMvcVirtualThreadTest() {
+class AuthorControllerTest: AbstractMvcVirtualThreadTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `GET authors returns list`() {
@@ -18,9 +24,11 @@ class AuthorControllerTest : AbstractMvcVirtualThreadTest() {
             .uri("/api/v1/authors")
             .exchange()
             .expectStatus().isOk
-            .expectBodyList(AuthorDTO::class.java)
+            .expectBodyList<AuthorDTO>()
             .returnResult()
+
         result.responseBody.shouldNotBeNull()
+            .onEach { log.debug { "author=$it" } }
     }
 
     @Test
@@ -36,10 +44,12 @@ class AuthorControllerTest : AbstractMvcVirtualThreadTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(AuthorDTO::class.java)
+            .expectBody<AuthorDTO>()
             .returnResult()
-        val body = result.responseBody.shouldNotBeNull()
-        body.id shouldBeGreaterOrEqualTo 1L
+
+        val author = result.responseBody.shouldNotBeNull()
+        log.debug { "author=$author" }
+        author.id shouldBeGreaterOrEqualTo 1L
     }
 
     @Test
@@ -79,8 +89,9 @@ class AuthorControllerTest : AbstractMvcVirtualThreadTest() {
             .uri("/api/v1/authors/$authorId/books")
             .exchange()
             .expectStatus().isOk
-            .expectBodyList(BookDTO::class.java)
+            .expectBodyList<BookDTO>()
             .returnResult()
-        result.responseBody.shouldNotBeNull()
+
+        result.responseBody.shouldNotBeNull().onEach { log.debug { "book=$it" } }
     }
 }

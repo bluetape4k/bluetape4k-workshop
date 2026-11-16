@@ -15,8 +15,10 @@ import io.bluetape4k.workshop.commerce.order.domain.FulfillmentStatus
 import io.bluetape4k.workshop.commerce.order.domain.OrderPolicy
 import io.bluetape4k.workshop.commerce.order.domain.OrderStatus
 import io.bluetape4k.workshop.commerce.order.domain.OrderSubmitted
+import io.bluetape4k.workshop.commerce.order.domain.PaymentStatus
 import io.bluetape4k.workshop.commerce.order.domain.RefundRequested
 import io.bluetape4k.workshop.commerce.order.domain.RefundStatus
+import io.bluetape4k.workshop.commerce.order.domain.ReservationStatus
 import io.bluetape4k.workshop.commerce.order.domain.SubmitOrder
 import io.bluetape4k.workshop.commerce.order.persistence.CancellationCaseRecord
 import io.bluetape4k.workshop.commerce.order.persistence.CancellationCaseRepository
@@ -38,12 +40,12 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class SubmittedOrderIds(
     val orderId: UUID,
     val paymentAttemptId: UUID,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -52,7 +54,7 @@ internal data class SubmittedOrderIds(
 internal data class LineCancellationResult(
     val cancellationCaseId: UUID,
     val refundCaseId: UUID,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -72,12 +74,27 @@ internal class OrderCommandService(
     private val events: ApplicationEventPublisher,
     private val clock: Clock,
 ) {
+
+    companion object: KLogging() {
+        private val IDENTIFIER = Regex("[A-Za-z0-9._:-]{1,120}")
+        private val REASON = Regex("[A-Z0-9_]{1,80}")
+        private val NON_CANCELLABLE_FULFILLMENT_STATUSES = setOf(
+            FulfillmentStatus.SHIPPED,
+            FulfillmentStatus.DELIVERED,
+            FulfillmentStatus.CANCELLED
+        )
+        private val ORDER_TERMINAL_FULFILLMENT_STATUSES = setOf(
+            FulfillmentStatus.DELIVERED,
+            FulfillmentStatus.CANCELLED
+        )
+    }
+
     @Transactional
     fun submit(command: SubmitOrder): SubmittedOrderIds {
         require(command.tenantId.matches(IDENTIFIER)) { "invalid tenantId" }
         require(command.customerReference.matches(IDENTIFIER)) { "invalid customerReference" }
-        command.lines.requireNotEmpty("lines")
-        command.lines.size.requireInRange(1, 50, "lines.size")
+        command.lines.requireNotEmpty("command.lines")
+        command.lines.size.requireInRange(1, 50, "command.lines.size")
         command.lines.forEach {
             require(it.sku.matches(IDENTIFIER))
             it.quantity.requireInRange(1, 1_000, "quantity")
@@ -87,35 +104,26 @@ internal class OrderCommandService(
         val orderId = Uuid.V7.nextId()
         val paymentId = Uuid.V7.nextId()
         val reservationId = Uuid.V7.nextId()
-        orders.save(
-            OrderRecord(
-                id = orderId,
-                tenantId = command.tenantId,
-                customerReference = command.customerReference,
-                status = OrderStatus.SUBMITTED,
-                providerMode = command.providerMode
-            )
+        val orderRecord = OrderRecord(
+            id = orderId,
+            tenantId = command.tenantId,
+            customerReference = command.customerReference,
+            status = OrderStatus.SUBMITTED,
+            providerMode = command.providerMode
         )
-        payments.save(
-            PaymentAttemptRecord(paymentId, orderId, io.bluetape4k.workshop.commerce.order.domain.PaymentStatus.CREATED)
-        )
-        reservations.save(
-            InventoryReservationRecord(
-                reservationId,
-                orderId,
-                io.bluetape4k.workshop.commerce.order.domain.ReservationStatus.HELD
-            )
-        )
+        orders.save(orderRecord)
+        payments.save(PaymentAttemptRecord(paymentId, orderId, PaymentStatus.CREATED))
+        reservations.save(InventoryReservationRecord(reservationId, orderId, ReservationStatus.HELD))
+
         command.lines.forEach { line ->
-            lines.save(
-                OrderLineRecord(
-                    lineId = Uuid.V7.nextId(),
-                    orderId = orderId,
-                    sku = line.sku,
-                    quantity = line.quantity,
-                    unitPrice = line.unitPrice
-                )
+            val orderLineRecord = OrderLineRecord(
+                lineId = Uuid.V7.nextId(),
+                orderId = orderId,
+                sku = line.sku,
+                quantity = line.quantity,
+                unitPrice = line.unitPrice
             )
+            lines.save(orderLineRecord)
         }
         audit.append(orderId, AggregateType.ORDER, orderId, 0, null, OrderStatus.SUBMITTED, actor = "CUSTOMER")
         audit.append(
@@ -124,7 +132,7 @@ internal class OrderCommandService(
             paymentId,
             0,
             null,
-            io.bluetape4k.workshop.commerce.order.domain.PaymentStatus.CREATED,
+            PaymentStatus.CREATED,
             actor = "SYSTEM"
         )
         audit.append(
@@ -133,7 +141,7 @@ internal class OrderCommandService(
             reservationId,
             0,
             null,
-            io.bluetape4k.workshop.commerce.order.domain.ReservationStatus.HELD,
+            ReservationStatus.HELD,
             actor = "SYSTEM"
         )
         events.publishEvent(
@@ -141,7 +149,7 @@ internal class OrderCommandService(
         )
         log.info {
             "order_submitted orderId=$orderId paymentAttemptId=$paymentId providerMode=${command.providerMode} " +
-                "lineCount=${command.lines.size}"
+                    "lineCount=${command.lines.size}"
         }
         return SubmittedOrderIds(orderId, paymentId)
     }
@@ -167,12 +175,12 @@ internal class OrderCommandService(
             finishOrderWhenFulfillmentTerminal(group.orderId)
             log.info {
                 "fulfillment_transition orderId=${group.orderId} groupId=$groupId from=${group.status} to=$target " +
-                    "revision=${group.revision + 1}"
+                        "revision=${group.revision + 1}"
             }
         } else {
             log.warn {
                 "fulfillment_transition_conflict orderId=${group.orderId} groupId=$groupId " +
-                    "expectedRevision=${group.revision} from=${group.status} to=$target"
+                        "expectedRevision=${group.revision} from=${group.status} to=$target"
             }
         }
         return updated
@@ -191,13 +199,14 @@ internal class OrderCommandService(
         check(line != null && line.orderId == orderId) { "order line not found" }
         val linkedLines = fulfillmentLines.findByLineId(lineId)
         val linkedGroups = linkedLines.map { fulfillments.findById(it.fulfillmentGroupId) }
-        val cancellableGroupIds =
-            linkedGroups
-                .filter { it.status !in NON_CANCELLABLE_FULFILLMENT_STATUSES }
-                .mapTo(linkedSetOf()) { it.id }
+
+        val cancellableGroupIds = linkedGroups
+            .filter { it.status !in NON_CANCELLABLE_FULFILLMENT_STATUSES }
+            .mapTo(linkedSetOf()) { it.id }
         val cancellableQuantity =
             linkedLines.filter { it.fulfillmentGroupId in cancellableGroupIds }.sumOf { it.quantity }
         check(cancellableQuantity >= quantity) { "requested quantity exceeds unshipped quantity" }
+
         val cancellationId = Uuid.V7.nextId()
         cancellations.save(
             CancellationCaseRecord(
@@ -232,6 +241,7 @@ internal class OrderCommandService(
                 CancellationStatus.APPROVED
             )
         ) { "cancellation approval conflict" }
+
         audit.append(
             orderId,
             AggregateType.CANCELLATION_CASE,
@@ -246,6 +256,7 @@ internal class OrderCommandService(
         finishOrderWhenFulfillmentTerminal(orderId)
         val refundId = Uuid.V7.nextId()
         refunds.save(RefundCaseRecord(refundId, orderId, RefundStatus.REQUESTED, reasonCode = reasonCode))
+
         audit.append(
             orderId,
             AggregateType.REFUND_CASE,
@@ -259,8 +270,9 @@ internal class OrderCommandService(
         events.publishEvent(RefundRequested(Uuid.V7.nextId(), orderId, refundId, reasonCode, Instant.now(clock)))
         log.info {
             "line_cancellation_approved orderId=$orderId lineId=$lineId quantity=$quantity " +
-                "cancellationCaseId=$cancellationId refundCaseId=$refundId reasonCode=$reasonCode"
+                    "cancellationCaseId=$cancellationId refundCaseId=$refundId reasonCode=$reasonCode"
         }
+
         return LineCancellationResult(cancellationId, refundId)
     }
 
@@ -299,12 +311,11 @@ internal class OrderCommandService(
         val groups = fulfillments.findByOrderId(orderId)
         if (groups.isNotEmpty() && groups.all { it.status in ORDER_TERMINAL_FULFILLMENT_STATUSES }) {
             val order = orders.findById(orderId)
-            val target =
-                if (groups.all { it.status == FulfillmentStatus.CANCELLED }) {
-                    OrderStatus.CANCELLED
-                } else {
-                    OrderStatus.COMPLETED
-                }
+            val target = if (groups.all { it.status == FulfillmentStatus.CANCELLED }) {
+                OrderStatus.CANCELLED
+            } else {
+                OrderStatus.COMPLETED
+            }
             OrderPolicy.transition(order.status, target)
             if (orders.transition(order.id, order.revision, order.status, target)) {
                 audit.append(
@@ -318,19 +329,11 @@ internal class OrderCommandService(
                 )
                 log.info {
                     "order_terminal orderId=$orderId status=$target revision=${order.revision + 1} " +
-                        "deliveredGroups=${groups.count { it.status == FulfillmentStatus.DELIVERED }} " +
-                        "cancelledGroups=${groups.count { it.status == FulfillmentStatus.CANCELLED }}"
+                            "deliveredGroups=${groups.count { it.status == FulfillmentStatus.DELIVERED }} " +
+                            "cancelledGroups=${groups.count { it.status == FulfillmentStatus.CANCELLED }}"
                 }
             }
         }
     }
 
-    companion object : KLogging() {
-        private val IDENTIFIER = Regex("[A-Za-z0-9._:-]{1,120}")
-        private val REASON = Regex("[A-Z0-9_]{1,80}")
-        private val NON_CANCELLABLE_FULFILLMENT_STATUSES =
-            setOf(FulfillmentStatus.SHIPPED, FulfillmentStatus.DELIVERED, FulfillmentStatus.CANCELLED)
-        private val ORDER_TERMINAL_FULFILLMENT_STATUSES =
-            setOf(FulfillmentStatus.DELIVERED, FulfillmentStatus.CANCELLED)
-    }
 }

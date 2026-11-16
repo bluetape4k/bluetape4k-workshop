@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.reservation.idempotency
 import io.bluetape4k.exposed.core.auditable.Auditable
 import io.bluetape4k.exposed.core.auditable.UserContext
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -15,15 +17,19 @@ import org.springframework.stereotype.Repository
 import java.io.Serializable
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-internal enum class IdempotencyStatus { IN_PROGRESS, SUCCEEDED, FAILED }
+internal enum class IdempotencyStatus {
+    IN_PROGRESS,
+    SUCCEEDED,
+    FAILED
+}
 
 internal data class IdempotencyScope(
     val tenantId: String,
     val operation: String,
     val keyDigest: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -43,18 +49,19 @@ internal data class IdempotencyRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
 
 /** new owner, expired-lease takeover, durable replay, retry conflict를 구분합니다. */
-internal sealed interface AcquireResult : Serializable {
+internal sealed interface AcquireResult: Serializable {
+
     data class New(
         val record: IdempotencyRecord,
-    ) : AcquireResult {
+    ): AcquireResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -62,7 +69,7 @@ internal sealed interface AcquireResult : Serializable {
 
     data class Takeover(
         val record: IdempotencyRecord,
-    ) : AcquireResult {
+    ): AcquireResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -72,17 +79,19 @@ internal sealed interface AcquireResult : Serializable {
         val status: Int,
         val body: String,
         val failed: Boolean,
-    ) : AcquireResult {
+    ): AcquireResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    data object FingerprintConflict : AcquireResult
+    data object FingerprintConflict: AcquireResult {
+        private fun readResolve(): Any = FingerprintConflict
+    }
 
     data class InProgress(
         val retryAfter: Duration,
-    ) : AcquireResult {
+    ): AcquireResult {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -96,7 +105,16 @@ internal sealed interface AcquireResult : Serializable {
  * 만료된 in-progress lease는 이전 token과 deadline이 단일 CAS에서 일치할 때만 reclaim할 수 있습니다.
  */
 @Repository
-internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable> {
+internal class HttpIdempotencyRepository: LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable> {
+
+    companion object: KLogging() {
+        val LEASE_DURATION: Duration = 90.seconds()
+        val DEFAULT_RETENTION: Duration = 24.hours()
+        const val MAX_RESPONSE_BODY: Int = 64 * 1024
+        private const val SHA256_HEX_LENGTH: Int = 64
+        private const val LOG_DIGEST_PREFIX: Int = 12
+    }
+
     override val table = HttpIdempotencyTable
 
     override fun extractId(entity: IdempotencyRecord): Long = entity.id
@@ -104,7 +122,11 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
     override fun ResultRow.toEntity(): IdempotencyRecord =
         IdempotencyRecord(
             id = this[table.id].value,
-            scope = IdempotencyScope(this[table.tenantId], this[table.operation], this[table.keyDigest]),
+            scope = IdempotencyScope(
+                tenantId = this[table.tenantId],
+                operation = this[table.operation],
+                keyDigest = this[table.keyDigest]
+            ),
             requestFingerprint = this[table.requestFingerprint],
             status = this[table.status],
             ownerToken = this[table.ownerToken],
@@ -127,32 +149,30 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
     ): AcquireResult {
         validate(scope, requestFingerprint, retention)
 
-        val inserted =
-            table
-                .insertIgnore {
-                    it[tenantId] = scope.tenantId
-                    it[operation] = scope.operation
-                    it[keyDigest] = scope.keyDigest
-                    it[HttpIdempotencyTable.requestFingerprint] = requestFingerprint
-                    it[status] = IdempotencyStatus.IN_PROGRESS
-                    it[HttpIdempotencyTable.ownerToken] = ownerToken
-                    it[leaseUntil] = now.plus(LEASE_DURATION)
-                    it[expiresAt] = now.plus(retention)
-                }.insertedCount == 1
+        val inserted = table
+            .insertIgnore {
+                it[tenantId] = scope.tenantId
+                it[operation] = scope.operation
+                it[keyDigest] = scope.keyDigest
+                it[HttpIdempotencyTable.requestFingerprint] = requestFingerprint
+                it[status] = IdempotencyStatus.IN_PROGRESS
+                it[HttpIdempotencyTable.ownerToken] = ownerToken
+                it[leaseUntil] = now.plus(LEASE_DURATION)
+                it[expiresAt] = now.plus(retention)
+            }.insertedCount == 1
 
         var current = findByScope(scope) ?: error("idempotency record was not persisted")
         if (inserted) {
             log.debug {
-                "idempotency_acquired_new operation=${scope.operation} keyDigestPrefix=${scope.keyDigest.take(
-                    LOG_DIGEST_PREFIX
-                )}"
+                "idempotency_acquired_new operation=${scope.operation}, " +
+                        "keyDigestPrefix=${scope.keyDigest.take(LOG_DIGEST_PREFIX)}"
             }
             return AcquireResult.New(current)
         }
         if (current.requestFingerprint != requestFingerprint) {
             log.warn {
                 "idempotency_fingerprint_conflict operation=${scope.operation} " +
-                    "keyDigestPrefix=${scope.keyDigest.take(LOG_DIGEST_PREFIX)}"
+                        "keyDigestPrefix=${scope.keyDigest.take(LOG_DIGEST_PREFIX)}"
             }
             return AcquireResult.FingerprintConflict
         }
@@ -168,29 +188,31 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
         }
 
         // 이전 owner token과 lease deadline을 모두 비교해 하나의 contender만 takeover할 수 있게 합니다.
-        val reclaimed =
-            auditedUpdateAll(
-                predicate = {
-                    (table.id eq current.id) and
+        val reclaimed = auditedUpdateAll(
+            predicate = {
+                (table.id eq current.id) and
                         (table.status eq IdempotencyStatus.IN_PROGRESS) and
                         (table.ownerToken eq current.ownerToken) and
                         (table.leaseUntil eq current.leaseUntil)
-                }
-            ) {
-                it[HttpIdempotencyTable.ownerToken] = ownerToken
-                it[leaseUntil] = now.plus(LEASE_DURATION)
-                it[expiresAt] = now.plus(retention)
-            } == 1
+            }
+        ) {
+            it[HttpIdempotencyTable.ownerToken] = ownerToken
+            it[leaseUntil] = now.plus(LEASE_DURATION)
+            it[expiresAt] = now.plus(retention)
+        } == 1
 
         current = findByScope(scope) ?: error("idempotency record disappeared")
         return if (reclaimed) {
             log.warn {
                 "idempotency_acquired_takeover operation=${scope.operation} " +
-                    "keyDigestPrefix=${scope.keyDigest.take(LOG_DIGEST_PREFIX)}"
+                        "keyDigestPrefix=${scope.keyDigest.take(LOG_DIGEST_PREFIX)}"
             }
             AcquireResult.Takeover(current)
         } else {
-            AcquireResult.InProgress(Duration.between(now, current.leaseUntil).coerceAtLeast(Duration.ZERO))
+            AcquireResult.InProgress(
+                Duration.between(now, current.leaseUntil)
+                    .coerceAtLeast(Duration.ZERO)
+            )
         }
     }
 
@@ -200,34 +222,36 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
         responseStatus: Int,
         responseBody: String,
         failed: Boolean,
-    ): Boolean =
-        (
-            auditedUpdateAll(
-                predicate = {
-                    (table.id eq id) and
+    ): Boolean {
+        val finalized = auditedUpdateAll(
+            predicate = {
+                (table.id eq id) and
                         (table.ownerToken eq ownerToken) and
                         (table.status eq IdempotencyStatus.IN_PROGRESS)
-                }
-            ) {
-                it[status] = if (failed) IdempotencyStatus.FAILED else IdempotencyStatus.SUCCEEDED
-                it[HttpIdempotencyTable.responseStatus] = responseStatus
-                it[HttpIdempotencyTable.responseBody] = responseBody.take(MAX_RESPONSE_BODY)
-            } == 1
-        ).also { finalized ->
+            }
+        ) {
+            it[status] = if (failed) IdempotencyStatus.FAILED else IdempotencyStatus.SUCCEEDED
+            it[HttpIdempotencyTable.responseStatus] = responseStatus
+            it[HttpIdempotencyTable.responseBody] = responseBody.take(MAX_RESPONSE_BODY)
+        } == 1
+
+        return finalized.also {
             log.debug {
                 "idempotency_finalized id=$id responseStatus=$responseStatus failed=$failed finalized=$finalized"
             }
         }
+    }
 
     fun findByScope(scope: IdempotencyScope): IdempotencyRecord? =
         table
             .selectAll()
             .where {
                 (table.tenantId eq scope.tenantId) and
-                    (table.operation eq scope.operation) and
-                    (table.keyDigest eq scope.keyDigest)
-            }.firstOrNull()
-            ?.let { with(this) { it.toEntity() } }
+                        (table.operation eq scope.operation) and
+                        (table.keyDigest eq scope.keyDigest)
+            }
+            .firstOrNull()
+            ?.toEntity()
 
     private fun validate(
         scope: IdempotencyScope,
@@ -243,11 +267,4 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
         require(retention > LEASE_DURATION) { "retention must outlive the idempotency lease" }
     }
 
-    companion object : KLogging() {
-        val LEASE_DURATION: Duration = Duration.ofSeconds(90)
-        val DEFAULT_RETENTION: Duration = Duration.ofHours(24)
-        const val MAX_RESPONSE_BODY: Int = 64 * 1024
-        private const val SHA256_HEX_LENGTH: Int = 64
-        private const val LOG_DIGEST_PREFIX: Int = 12
-    }
 }

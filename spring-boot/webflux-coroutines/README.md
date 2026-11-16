@@ -5,44 +5,41 @@
 ## What this example shows
 
 This module compares two Spring WebFlux coroutine styles that return the same `Banner` contract:
-annotation controllers under `/controller/{default|io|vt}` and functional `coRouter` endpoints at the
-root path. The interesting difference is the coroutine dispatcher and Flow strategy, not the HTTP model.
+annotation controllers under `/controller/{default|io|vt}` and functional `coRouter` endpoints at the root path. The interesting difference is the coroutine dispatcher and Flow strategy, not the HTTP model.
 
 ## Architecture Diagram
 
 ![Spring WebFlux coroutine architecture](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-architecture-01.png)
 
-The architecture highlights the controller families, the functional handler, the shared `WebClient` loopback
-used by flow examples, and the tuned Reactor Netty resources.
+The architecture highlights the controller families, the functional handler, the shared `WebClient` loopback used by flow examples, and the tuned Reactor Netty resources.
 
 ## Coroutine Flow
 
 ![Spring WebFlux coroutine sequence](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-sequence-01.png)
 
 This example uses Kotlin coroutines in a Spring WebFlux environment. It demonstrates bluetape4k
-`Dispatchers.VT`, `Flow<T>.async`, `Runtimex`, and shared `WebClient` helpers without hiding the
-controller style that receives each request.
+`Dispatchers.VT`, `Flow<T>.async`, `Runtimex`, and shared `WebClient` helpers without hiding the controller style that receives each request.
 
 ## Implementation Strategy Comparison
 
 Three controllers show the differences between dispatcher strategies:
 
-| Controller | Dispatcher Strategy | Description |
-|---|---|---|
-| `DefaultCoroutineController` | `Dispatchers.IO` | Handles blocking work with the default I/O dispatcher |
-| `IOCoroutineController` | `Dispatchers.IO` (explicit) | Optimized for I/O-intensive work |
-| `VTCoroutineController` | `Dispatchers.VT` | bluetape4k Virtual Thread CoroutineDispatcher |
-| `CoroutineHandler` | `coRouter` DSL | Functional endpoint style |
+| Controller                   | Dispatcher Strategy         | Description                                           |
+|------------------------------|-----------------------------|-------------------------------------------------------|
+| `DefaultCoroutineController` | `Dispatchers.IO`            | Handles blocking work with the default I/O dispatcher |
+| `IOCoroutineController`      | `Dispatchers.IO` (explicit) | Optimized for I/O-intensive work                      |
+| `VTCoroutineController`      | `Dispatchers.VT`            | bluetape4k Virtual Thread CoroutineDispatcher         |
+| `CoroutineHandler`           | `coRouter` DSL              | Functional endpoint style                             |
 
 ## bluetape4k Features Used
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | Virtual-thread based `CoroutineDispatcher` for controller work |
-| `Flow<T>.async { }` | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Operator that transforms Flow elements in parallel |
-| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
-| `Base58.randomString()` | `bluetape4k-io` | `Banner.kt` | Generates URL-safe random strings |
-| `Runtimex.availableProcessors` | `bluetape4k-core` | `NettyConfig.kt` | Calculates event loop size based on CPU core count |
+| Feature                        | Artifact                | Code Location                            | Benefit                                                        |
+|--------------------------------|-------------------------|------------------------------------------|----------------------------------------------------------------|
+| `Dispatchers.VT`               | `bluetape4k-coroutines` | `VTCoroutineController`                  | Virtual-thread based `CoroutineDispatcher` for controller work |
+| `Flow<T>.async { }`            | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Operator that transforms Flow elements in parallel             |
+| `KLoggingChannel`              | `bluetape4k-logging`    | All companion objects                    | Structured logging with coroutine context                      |
+| `Base58.randomString()`        | `bluetape4k-io`         | `Banner.kt`                              | Generates URL-safe random strings                              |
+| `Runtimex.availableProcessors` | `bluetape4k-core`       | `NettyConfig.kt`                         | Calculates event loop size based on CPU core count             |
 
 ## bluetape4k Before / After
 

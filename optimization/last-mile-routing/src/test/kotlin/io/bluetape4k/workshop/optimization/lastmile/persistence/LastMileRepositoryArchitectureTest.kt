@@ -2,9 +2,13 @@ package io.bluetape4k.workshop.optimization.lastmile.persistence
 
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.exposed.jdbc.repository.JdbcRepository
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class LastMileRepositoryArchitectureTest {
+
+    companion object: KLogging()
+
     @Test
     fun `durable last mile adapters use bluetape4k exposed jdbc repositories`() {
         listOf(

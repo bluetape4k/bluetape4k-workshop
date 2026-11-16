@@ -3,15 +3,18 @@ package io.bluetape4k.workshop.commerce.usagebilling.meter.integration
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class MeterEnvelopeCodecRegistryTest {
+
+    companion object: KLogging()
+
     @Test
     fun `meter event uses a tenant aggregate partition key`() {
         val envelope = meterEnvelope(eventType = "PriceActivated", schemaVersion = 1)
-
         envelope.partitionKey() shouldBeEqualTo "tenant-a|Meter|meter-api-calls"
     }
 
@@ -30,11 +33,12 @@ class MeterEnvelopeCodecRegistryTest {
 
         val wire = Jackson.defaultJsonMapper.readTree(envelope.wirePayload())
 
-        requireNotNull(wire.get("eventId")).asString() shouldBeEqualTo envelope.eventId.toString()
-        requireNotNull(wire.get("tenantId")).asString() shouldBeEqualTo "tenant-a"
-        requireNotNull(wire.get("payloadDigest")).asString() shouldBeEqualTo envelope.payloadDigest
+        wire.get("eventId")!!.asString() shouldBeEqualTo envelope.eventId.toString()
+        wire.get("tenantId")!!.asString() shouldBeEqualTo "tenant-a"
+        wire.get("payloadDigest")!!.asString() shouldBeEqualTo envelope.payloadDigest
     }
 
+    @Suppress("SameParameterValue")
     private fun meterEnvelope(eventType: String, schemaVersion: Int): MeterIntegrationEnvelope =
         MeterIntegrationEnvelope.create(
             eventId = UUID.fromString("018f4a40-7d3e-7b3a-8c5b-7f0f9b2e1a01"),

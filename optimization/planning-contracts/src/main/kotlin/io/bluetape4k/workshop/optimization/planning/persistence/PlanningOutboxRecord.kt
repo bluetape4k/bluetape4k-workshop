@@ -4,7 +4,7 @@ import io.bluetape4k.exposed.core.auditable.Auditable
 import io.bluetape4k.exposed.core.auditable.UserContext
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal enum class PlanningOutboxStatus {
     PENDING,

@@ -1,8 +1,6 @@
 package io.bluetape4k.workshop.vertx.webclient
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.error
@@ -16,17 +14,18 @@ import io.vertx.ext.web.codec.BodyCodec
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.coAwait
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(VertxExtension::class)
 class SimpleExamples {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val port: Int = 8080
     }
 
-    class SimpleServer : AbstractVerticle() {
+    class SimpleServer: AbstractVerticle() {
         override fun start(promise: Promise<Void>) {
             vertx.createHttpServer()
                 .requestHandler { req ->
@@ -45,7 +44,7 @@ class SimpleExamples {
     }
 
     @Test
-    fun `use webclient to simple server`(vertx: Vertx, testContext: VertxTestContext) = runSuspendTest {
+    fun `use webclient to simple server`(vertx: Vertx, testContext: VertxTestContext) = runTest {
         vertx.withSuspendTestContext(testContext) {
             vertx.deployVerticle(SimpleServer()).coAwait()
 
@@ -56,7 +55,7 @@ class SimpleExamples {
                 .coAwait()
 
             log.debug { "Response body=${response.body()}" }
-            response.body().shouldNotBeNull() shouldBeEqualTo "Hello World!"
+            response.body() shouldBeEqualTo "Hello World!"
         }
     }
 }

@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.observability.advanced.service
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.observability.advanced.AbstractAdvancedTest
 import io.bluetape4k.workshop.observability.advanced.TestObservationConfig
-import io.bluetape4k.workshop.observability.advanced.model.User
+import io.bluetape4k.workshop.observability.advanced.model.UserRecord
 import io.bluetape4k.workshop.observability.advanced.repository.UserCacheRepository
 import io.bluetape4k.workshop.observability.advanced.repository.UserRepository
 import io.micrometer.observation.tck.ObservationContextAssert
@@ -18,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 
 @Import(TestObservationConfig::class)
-class UserServiceTest : AbstractAdvancedTest() {
+class UserServiceTest: AbstractAdvancedTest() {
+
+    companion object: KLogging()
 
     @Autowired
     private lateinit var userService: UserService
@@ -32,7 +35,7 @@ class UserServiceTest : AbstractAdvancedTest() {
     @Autowired
     private lateinit var testRegistry: TestObservationRegistry
 
-    private val testUser = User(id = 1001L, name = "alice", email = "alice@example.com")
+    private val testUser = UserRecord(id = 1001L, name = "alice", email = "alice@example.com")
 
     // C17: @BeforeEach suspend setup 은 suspend fun 이 아니라 blocking wrapper 인 runSuspendIO {} 를 사용해야 합니다.
     @BeforeEach
@@ -53,20 +56,24 @@ class UserServiceTest : AbstractAdvancedTest() {
         repo.save(testUser)
 
         val result = userService.getById(testUser.id)
-
         result shouldBeEqualTo testUser
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
             .that().hasBeenStarted().hasBeenStopped()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.get")
             .that().hasBeenStarted().hasBeenStopped()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.db.find")
             .that().hasBeenStarted().hasBeenStopped()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.put")
             .that().hasBeenStarted().hasBeenStopped()
+
         assertParentObservation("user.cache.get", "user.service.get")
         assertParentObservation("user.db.find", "user.service.get")
         assertParentObservation("user.cache.put", "user.service.get")
@@ -78,15 +85,18 @@ class UserServiceTest : AbstractAdvancedTest() {
         testRegistry.clear()
 
         val result = userService.getById(testUser.id)
-
         result shouldBeEqualTo testUser
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
             .that().hasBeenStarted().hasBeenStopped()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.get")
             .that().hasBeenStarted().hasBeenStopped()
+
         assertParentObservation("user.cache.get", "user.service.get")
+
         // cache hit 에서는 DB span 이 없어야 합니다.
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasNumberOfObservationsWithNameEqualTo("user.db.find", 0)
@@ -95,8 +105,8 @@ class UserServiceTest : AbstractAdvancedTest() {
     @Test
     fun `getById - returns null for non-existent user`() = runSuspendIO {
         val result = userService.getById(99999L)
-
         result.shouldBeNull()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
             .that().hasBeenStarted().hasBeenStopped()
@@ -105,14 +115,16 @@ class UserServiceTest : AbstractAdvancedTest() {
     @Test
     fun `create - produces user service create and user db save observations`() = runSuspendIO {
         val result = userService.create(testUser)
-
         result shouldBeEqualTo testUser
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.create")
             .that().hasBeenStarted().hasBeenStopped()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.db.save")
             .that().hasBeenStarted().hasBeenStopped()
+
         assertParentObservation("user.db.save", "user.service.create")
     }
 
@@ -127,12 +139,15 @@ class UserServiceTest : AbstractAdvancedTest() {
 
         // DB fallback 이 성공하고 result 는 non-null 입니다.
         result shouldBeEqualTo testUser
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
             .that().hasBeenStarted().hasBeenStopped()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.db.find")
             .that().hasBeenStarted().hasBeenStopped()
+
         // DB fetch 이후 result 는 cache 에도 기록됩니다.
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.put")

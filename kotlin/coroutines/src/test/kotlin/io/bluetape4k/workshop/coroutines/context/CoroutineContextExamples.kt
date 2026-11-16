@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.coroutines.context
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.coroutines.context.PropertyCoroutineContext
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.coroutines.support.suspendLogging
@@ -9,15 +12,12 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 class CoroutineContextExamples {
 
@@ -153,7 +153,7 @@ class CoroutineContextExamples {
      * CoroutineScope 에서 [UuidProviderCoroutineContext] 가 있으면 새로운 Uuid 문자열을 제공합니다.
      */
     private suspend fun nextUuid(): String =
-        coroutineContext[UuidProviderCoroutineContext]?.nextUuid()
+        currentCoroutineContext()[UuidProviderCoroutineContext]?.nextUuid()
             ?: error("UuidProviderCoroutineContext not present")
 
     data class User(val id: String, val name: String)

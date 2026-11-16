@@ -22,7 +22,7 @@ class FlowExamples {
     inner class Flow35 {
 
         private fun events(): Flow<Int> =
-            (1..3).asFlow().onEach { delay(Random.nextLong(100)) }
+            (1..3).asFlow().onEach { delay(timeMillis = Random.nextLong(100)) }
 
         @Test
         fun `collect without any code`() = runTest {
@@ -38,7 +38,7 @@ class FlowExamples {
     inner class Flow36 {
 
         private fun events(): Flow<Int> =
-            (1..3).asFlow().onEach { delay(Random.nextLong(100)) }
+            (1..3).asFlow().onEach { delay(timeMillis = Random.nextLong(100)) }
 
         @Test
         fun `launch flow in a separate coroutine scope`() = runTest {

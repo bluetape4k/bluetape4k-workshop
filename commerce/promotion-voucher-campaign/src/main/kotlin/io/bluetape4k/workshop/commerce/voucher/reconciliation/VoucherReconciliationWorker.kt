@@ -6,12 +6,13 @@ import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
-import io.bluetape4k.workshop.commerce.voucher.config.VoucherWorkerProperties
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradationState
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradedComponent
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherLeaderState
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherWorkerProperties
 import org.springframework.scheduling.annotation.Scheduled
+import java.io.Serializable
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -23,7 +24,7 @@ internal fun interface VoucherLeaderRunner {
 internal class LettuceVoucherLeaderRunner(
     private val electorProvider: () -> LettuceLeaderElector?,
     instanceId: String,
-) : VoucherLeaderRunner {
+): VoucherLeaderRunner {
     private val slot = LeaderSlot(LEADER_LOCK_NAME, instanceId)
 
     override fun run(action: () -> ReconciliationResult): LeaderRunResult<ReconciliationResult> {
@@ -31,28 +32,37 @@ internal class LettuceVoucherLeaderRunner(
         return elector.runIfLeaderResult(slot, action)
     }
 
-    private class LeaderBackendUnavailableException : IllegalStateException("leader backend unavailable")
+    private class LeaderBackendUnavailableException: IllegalStateException("leader backend unavailable")
 
-    companion object {
+    companion object: KLogging() {
         private const val LEADER_LOCK_NAME = "voucher-reconciliation"
     }
 }
 
-internal sealed interface WorkerRunResult {
+internal sealed interface WorkerRunResult: Serializable {
+
     data class Elected(
         val result: ReconciliationResult,
         val leaderId: String?,
-    ) : WorkerRunResult
+    ): WorkerRunResult
 
-    data class Manual(val result: ReconciliationResult) : WorkerRunResult
+    data class Manual(val result: ReconciliationResult): WorkerRunResult
 
-    data object LeaderSkipped : WorkerRunResult
+    data object LeaderSkipped: WorkerRunResult {
+        private fun readResolve(): Any = LeaderSkipped
+    }
 
-    data object LeaderBackendUnavailable : WorkerRunResult
+    data object LeaderBackendUnavailable: WorkerRunResult {
+        private fun readResolve(): Any = LeaderBackendUnavailable
+    }
 
-    data object LeaderActionFailed : WorkerRunResult
+    data object LeaderActionFailed: WorkerRunResult {
+        private fun readResolve(): Any = LeaderActionFailed
+    }
 
-    data object LocalRunInProgress : WorkerRunResult
+    data object LocalRunInProgress: WorkerRunResult {
+        private fun readResolve(): Any = LocalRunInProgress
+    }
 }
 
 /** scheduled 실행과 operator-triggered 실행 사이에서 local single-flight guard 하나를 공유합니다. */
@@ -65,45 +75,47 @@ internal class VoucherReconciliationWorker(
 ) {
     private val running = AtomicBoolean()
 
-    fun runScheduled(): WorkerRunResult =
-        singleFlight {
-            try {
-                when (val result = leader.run(::runService)) {
-                    is LeaderRunResult.Elected -> {
-                        degradation?.recover(VoucherDegradedComponent.LEADER)
-                        metrics?.leaderState(VoucherLeaderState.ELECTED)
-                        WorkerRunResult.Elected(checkNotNull(result.value), result.leaderId).also {
-                            recordSuccess(it.result)
-                        }
+    fun runScheduled(): WorkerRunResult = singleFlight {
+        try {
+            when (val result = leader.run(::runService)) {
+                is LeaderRunResult.Elected      -> {
+                    degradation?.recover(VoucherDegradedComponent.LEADER)
+                    metrics?.leaderState(VoucherLeaderState.ELECTED)
+                    WorkerRunResult.Elected(checkNotNull(result.value), result.leaderId).also {
+                        recordSuccess(it.result)
                     }
-                    LeaderRunResult.Skipped -> {
-                        degradation?.recover(VoucherDegradedComponent.LEADER)
-                        metrics?.leaderState(VoucherLeaderState.SKIPPED)
-                        WorkerRunResult.LeaderSkipped
-                    }
-                    is LeaderRunResult.ActionFailed -> {
-                        degradation?.degrade(VoucherDegradedComponent.LEADER)
-                        metrics?.leaderState(VoucherLeaderState.DEGRADED)
-                        log.warn {
-                            "voucher_reconciliation_leader_action_failed " +
+                }
+                LeaderRunResult.Skipped         -> {
+                    degradation?.recover(VoucherDegradedComponent.LEADER)
+                    metrics?.leaderState(VoucherLeaderState.SKIPPED)
+                    WorkerRunResult.LeaderSkipped
+                }
+                is LeaderRunResult.ActionFailed -> {
+                    degradation?.degrade(VoucherDegradedComponent.LEADER)
+                    metrics?.leaderState(VoucherLeaderState.DEGRADED)
+                    log.warn {
+                        "voucher_reconciliation_leader_action_failed " +
                                 "failure=${result.cause.javaClass.simpleName}"
-                        }
-                        WorkerRunResult.LeaderActionFailed
                     }
+                    WorkerRunResult.LeaderActionFailed
                 }
-            } catch (failure: Exception) {
-                degradation?.degrade(VoucherDegradedComponent.LEADER)
-                metrics?.leaderState(VoucherLeaderState.DEGRADED)
-                log.warn {
-                    "voucher_reconciliation_leader_unavailable fallback=MANUAL " +
-                        "failure=${failure.javaClass.simpleName}"
-                }
-                WorkerRunResult.LeaderBackendUnavailable
             }
+        } catch (failure: Exception) {
+            degradation?.degrade(VoucherDegradedComponent.LEADER)
+            metrics?.leaderState(VoucherLeaderState.DEGRADED)
+            log.warn {
+                "voucher_reconciliation_leader_unavailable fallback=MANUAL " +
+                        "failure=${failure.javaClass.simpleName}"
+            }
+            WorkerRunResult.LeaderBackendUnavailable
         }
+    }
 
     fun runManual(): WorkerRunResult =
-        singleFlight { WorkerRunResult.Manual(runService()).also { recordSuccess(it.result) } }
+        singleFlight {
+            WorkerRunResult.Manual(runService())
+                .also { recordSuccess(it.result) }
+        }
 
     private fun recordSuccess(result: ReconciliationResult) {
         metrics?.workerSucceeded(
@@ -115,7 +127,7 @@ internal class VoucherReconciliationWorker(
     private fun runService(): ReconciliationResult =
         reconciliation.runBatch(properties.batchSize, properties.runDeadline)
 
-    private fun singleFlight(action: () -> WorkerRunResult): WorkerRunResult {
+    private inline fun singleFlight(action: () -> WorkerRunResult): WorkerRunResult {
         if (!running.compareAndSet(false, true)) {
             log.info { "voucher_reconciliation_skipped reason=LOCAL_RUN_IN_PROGRESS" }
             return WorkerRunResult.LocalRunInProgress
@@ -127,7 +139,7 @@ internal class VoucherReconciliationWorker(
         }
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 /** Spring Java 25 virtual-thread scheduler에서 공유 single-flight worker path를 trigger합니다. */
@@ -141,7 +153,9 @@ internal class VoucherReconciliationScheduler(
         initialDelayString = "\${workshop.voucher.worker.initial-delay:5s}",
     )
     fun tick() {
-        if (running.get()) worker.runScheduled()
+        if (running.get()) {
+            worker.runScheduled()
+        }
     }
 
     fun stop() {

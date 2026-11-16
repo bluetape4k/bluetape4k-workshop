@@ -1,5 +1,15 @@
 package io.bluetape4k.workshop.r2dbc.service
 
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
@@ -9,15 +19,6 @@ import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEmpty
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -31,7 +32,7 @@ class UserServiceTest(
     @param:Autowired private val repository: UserRepository,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     @Order(1)
@@ -44,29 +45,24 @@ class UserServiceTest(
     @Test
     @Order(2)
     fun `find all users`() = runSuspendIO {
-        val users = service.findAll().toList()
-        users.forEach {
-            log.debug { it }
-        }
+        val users = service.findAll().log("Users").toList()
         users.shouldNotBeEmpty()
     }
 
     @Test
     @Order(3)
     fun `find user by id`() = runSuspendIO {
-        val expected = service.findAll().toList().random()
+        val expected = service.findAll().log("Users").toList().random()
 
-        val expectedId = checkNotNull(expected.id) { "expected user id must not be null." }
-        val actual = service.findById(expectedId)
-        log.debug { actual }
-        actual.shouldNotBeNull() shouldBeEqualTo expected
+        val expectedId = expected.id.shouldNotBeNull()
+        val actual = service.findById(expectedId).shouldNotBeNull()
+        actual shouldBeEqualTo expected
     }
 
     @Test
     @Order(4)
     fun `find user by invalid id`() = runSuspendIO {
-        val actual = service.findById(-1)
-        actual.shouldBeNull()
+        service.findById(-1).shouldBeNull()
     }
 
     @Test
@@ -82,7 +78,7 @@ class UserServiceTest(
     @Test
     @Order(6)
     fun `find user by invalid email`() = runSuspendIO {
-        val notFounds = service.findByEmail("not-exists@example.com").toList()
+        val notFounds = service.findByEmail("not-exists@example.com").log("Email").toList()
         notFounds.shouldBeEmpty()
     }
 
@@ -90,9 +86,8 @@ class UserServiceTest(
     @Order(7)
     fun `add new user`() = runSuspendIO {
         val newUser = createUserDTO()
-        val savedUser = service.addUser(newUser)
+        val savedUser = service.addUser(newUser).shouldNotBeNull()
 
-        savedUser.shouldNotBeNull()
         savedUser.id.shouldNotBeNull()
         savedUser.toDto() shouldBeEqualTo newUser
     }
@@ -100,10 +95,11 @@ class UserServiceTest(
     @Test
     @Order(8)
     fun `update existing user`() = runSuspendIO {
-        val user = service.findAll().toList().random()
+        val user = service.findAll().log("FindAll").toList().random()
 
-        val userId = checkNotNull(user.id) { "user id must not be null." }
+        val userId = user.id.shouldNotBeNull()
         val updated = service.updateUser(userId, user.copy(avatar = "updated-avatar.jpg").toDto())
+
         log.debug { "Updated=$updated" }
         updated.shouldNotBeNull()
         updated.id shouldBeEqualTo user.id

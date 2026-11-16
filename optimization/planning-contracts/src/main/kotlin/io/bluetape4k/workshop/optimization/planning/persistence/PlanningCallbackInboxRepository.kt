@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.optimization.planning.persistence
 
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -12,23 +14,26 @@ import java.time.Instant
 internal class PlanningCallbackInboxRepository:
     LongAuditableJdbcRepository<PlanningCallbackInboxRecord, PlanningCallbackInboxTable> {
 
+    companion object: KLogging()
+
     override val table = PlanningCallbackInboxTable
 
     override fun extractId(entity: PlanningCallbackInboxRecord) = entity.id
 
-    override fun ResultRow.toEntity() = PlanningCallbackInboxRecord(
-        id = this[PlanningCallbackInboxTable.id].value,
-        provider = this[PlanningCallbackInboxTable.provider],
-        eventId = this[PlanningCallbackInboxTable.eventId],
-        planningRequestId = this[PlanningCallbackInboxTable.planningRequestId],
-        providerRevision = this[PlanningCallbackInboxTable.providerRevision],
-        outcome = this[PlanningCallbackInboxTable.outcome],
-        processedAt = this[PlanningCallbackInboxTable.processedAt],
-        createdBy = this[PlanningCallbackInboxTable.createdBy],
-        createdAt = this[PlanningCallbackInboxTable.createdAt],
-        updatedBy = this[PlanningCallbackInboxTable.updatedBy],
-        updatedAt = this[PlanningCallbackInboxTable.updatedAt],
-    )
+    override fun ResultRow.toEntity(): PlanningCallbackInboxRecord =
+        PlanningCallbackInboxRecord(
+            id = this[PlanningCallbackInboxTable.id].value,
+            provider = this[PlanningCallbackInboxTable.provider],
+            eventId = this[PlanningCallbackInboxTable.eventId],
+            planningRequestId = this[PlanningCallbackInboxTable.planningRequestId],
+            providerRevision = this[PlanningCallbackInboxTable.providerRevision],
+            outcome = this[PlanningCallbackInboxTable.outcome],
+            processedAt = this[PlanningCallbackInboxTable.processedAt],
+            createdBy = this[PlanningCallbackInboxTable.createdBy],
+            createdAt = this[PlanningCallbackInboxTable.createdAt],
+            updatedBy = this[PlanningCallbackInboxTable.updatedBy],
+            updatedAt = this[PlanningCallbackInboxTable.updatedAt],
+        )
 
     fun insertIfAbsent(record: PlanningCallbackInboxRecord): Boolean {
         val statement = PlanningCallbackInboxTable.insertIgnore {
@@ -43,17 +48,18 @@ internal class PlanningCallbackInboxRepository:
     }
 
     fun markProcessed(
-        provider: io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider,
+        provider: PlanningProvider,
         eventId: String,
         outcome: CallbackOutcome,
         processedAt: Instant,
-    ): Boolean = auditedUpdateAll(
-        predicate = {
-            (PlanningCallbackInboxTable.provider eq provider) and
-                (PlanningCallbackInboxTable.eventId eq eventId)
-        },
-    ) {
-        it[PlanningCallbackInboxTable.outcome] = outcome
-        it[PlanningCallbackInboxTable.processedAt] = processedAt
-    } == 1
+    ): Boolean =
+        auditedUpdateAll(
+            predicate = {
+                (PlanningCallbackInboxTable.provider eq provider) and
+                        (PlanningCallbackInboxTable.eventId eq eventId)
+            },
+        ) {
+            it[PlanningCallbackInboxTable.outcome] = outcome
+            it[PlanningCallbackInboxTable.processedAt] = processedAt
+        } == 1
 }

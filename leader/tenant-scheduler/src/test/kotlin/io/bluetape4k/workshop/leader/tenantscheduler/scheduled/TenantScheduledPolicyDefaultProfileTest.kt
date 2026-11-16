@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.scheduled
 
-import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.leader.spring.scheduling.LeaderScheduledPolicyBeanPostProcessor
 import io.bluetape4k.leader.spring.scheduling.LeaderScheduledPolicyRegistry
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.tenantscheduler.TenantSchedulerLabApp
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.getBeansOfType
@@ -18,15 +21,21 @@ class TenantScheduledPolicyDefaultProfileTest(
     private val applicationContext: ApplicationContext,
 ) {
 
+    companion object: KLogging()
+
     @Test
     fun `default profile has no scheduled policy infrastructure or fixture task`() {
-        applicationContext.getBeansOfType<LeaderScheduledPolicyRegistry>().isEmpty().shouldBeTrue()
-        applicationContext.getBeansOfType<LeaderScheduledPolicyBeanPostProcessor>().isEmpty().shouldBeTrue()
+        applicationContext.getBeansOfType<LeaderScheduledPolicyRegistry>().shouldBeEmpty()
+        applicationContext.getBeansOfType<LeaderScheduledPolicyBeanPostProcessor>().shouldBeEmpty()
+
         applicationContext.getBeansOfType<ScheduledTaskHolder>().values
             .flatMap { it.scheduledTasks }
             .mapNotNull { it.task.runnable as? ScheduledMethodRunnable }
             .none { it.method.declaringClass == TenantScheduledPolicyFixture::class.java }
             .shouldBeTrue()
-        applicationContext.environment.activeProfiles.contains("scheduled-policy").shouldBeFalse()
+
+        applicationContext.environment.activeProfiles
+            .onEach { log.debug { "activeProfile=$it" } }
+            .toList() shouldNotContain "scheduled-policy"
     }
 }

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.resilience.config
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Runtimex
 import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
@@ -13,7 +14,6 @@ import org.springframework.http.client.ReactorResourceFactory
 import reactor.netty.http.server.HttpServer
 import reactor.netty.resources.ConnectionProvider
 import reactor.netty.resources.LoopResources
-import java.time.Duration
 
 /**
  * Webflux 에서 사용하는 Netty 관련 설정을 제공합니다.
@@ -23,7 +23,7 @@ import java.time.Duration
 @Configuration(proxyBeanMethods = false)
 class NettyConfig {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     @Bean
     fun nettyReactiveWebServerFactory(): NettyReactiveWebServerFactory {
@@ -50,7 +50,7 @@ class NettyConfig {
             isUseGlobalResources = false
             connectionProvider = ConnectionProvider.builder("http")
                 .maxConnections(10_000)
-                .maxIdleTime(Duration.ofSeconds(10))
+                .maxIdleTime(10.seconds())
                 .build()
 
             loopResources = LoopResources.create(

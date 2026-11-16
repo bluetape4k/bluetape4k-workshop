@@ -15,12 +15,11 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
-import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Repository
-class BillingReadModelRepository :
-    EventSourcingExposedJdbcRepository<BillingReadModelEntity, UUID>(BillingReadModelEntity::class.java) {
+class BillingReadModelRepository
+    : EventSourcingExposedJdbcRepository<BillingReadModelEntity, UUID>(BillingReadModelEntity::class) {
 
     fun append(entry: NewBillingReadModelEntry) {
         BillingReadModels.insert {
@@ -41,11 +40,12 @@ class BillingReadModelRepository :
     }
 
     fun entries(projectionName: String, generation: Int, tenantId: String): List<BillingReadModelEntry> =
-        BillingReadModels.selectAll()
+        BillingReadModels
+            .selectAll()
             .where {
                 (BillingReadModels.projectionName eq projectionName) and
-                    (BillingReadModels.generation eq generation) and
-                    (BillingReadModels.tenantId eq tenantId)
+                        (BillingReadModels.generation eq generation) and
+                        (BillingReadModels.tenantId eq tenantId)
             }
             .orderBy(
                 BillingReadModels.globalPosition to SortOrder.ASC,
@@ -69,7 +69,7 @@ class BillingReadModelRepository :
         entries(projectionName, generation, tenantId)
             .filter { entry ->
                 entry.modelType == ProjectionModelType.LEDGER_DEBIT ||
-                    entry.modelType == ProjectionModelType.LEDGER_CREDIT
+                        entry.modelType == ProjectionModelType.LEDGER_CREDIT
             }
             .fold(BigDecimal.ZERO) { total, entry ->
                 val amount = checkNotNull(entry.amount)
@@ -78,8 +78,8 @@ class BillingReadModelRepository :
 }
 
 @Repository
-class ProjectionFailureRepository :
-    AppendOnlyEventSourcingExposedJdbcRepository<ProjectionFailureEntity, UUID>(ProjectionFailureEntity::class.java) {
+class ProjectionFailureRepository:
+    AppendOnlyEventSourcingExposedJdbcRepository<ProjectionFailureEntity, UUID>(ProjectionFailureEntity::class) {
 
     fun record(failure: NewProjectionFailure) {
         val inserted = ProjectionFailures.insertIgnore {
@@ -94,14 +94,16 @@ class ProjectionFailureRepository :
             it[firstFailedAt] = failure.failedAt
             it[lastFailedAt] = failure.failedAt
         }.insertedCount == 1
+
         if (!inserted) incrementAttempt(failure)
     }
 
     fun latest(projectionName: String, generation: Int): ProjectionFailure? =
-        ProjectionFailures.selectAll()
+        ProjectionFailures
+            .selectAll()
             .where {
                 (ProjectionFailures.projectionName eq projectionName) and
-                    (ProjectionFailures.generation eq generation)
+                        (ProjectionFailures.generation eq generation)
             }
             .orderBy(ProjectionFailures.globalPosition to SortOrder.DESC)
             .limit(1)
@@ -117,14 +119,16 @@ class ProjectionFailureRepository :
             }
 
     private fun incrementAttempt(failure: NewProjectionFailure) {
-        val row = ProjectionFailures.selectAll()
+        val row = ProjectionFailures
+            .selectAll()
             .where {
                 (ProjectionFailures.projectionName eq failure.projectionName) and
-                    (ProjectionFailures.generation eq failure.generation) and
-                    (ProjectionFailures.eventId eq failure.eventId)
+                        (ProjectionFailures.generation eq failure.generation) and
+                        (ProjectionFailures.eventId eq failure.eventId)
             }
             .forUpdate()
             .single()
+
         ProjectionFailures.update({ ProjectionFailures.id eq row[ProjectionFailures.id] }) {
             it[attemptCount] = row[ProjectionFailures.attemptCount] + 1
             it[ProjectionFailures.errorDigest] = failure.errorDigest

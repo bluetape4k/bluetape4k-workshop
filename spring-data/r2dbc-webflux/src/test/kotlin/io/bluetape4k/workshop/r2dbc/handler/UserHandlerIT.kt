@@ -1,5 +1,12 @@
 package io.bluetape4k.workshop.r2dbc.handler
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
@@ -10,12 +17,6 @@ import io.bluetape4k.workshop.r2dbc.service.UserService
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +26,7 @@ class UserHandlerIT(
     @param:Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {
@@ -42,7 +43,9 @@ class UserHandlerIT(
                 .exchange()
                 .expectStatus().is2xxSuccessful
                 .returnResult<UserDTO>().responseBody
-                .asFlow().toList()
+                .asFlow()
+                .log("Users")
+                .toList()
 
             users.shouldNotBeEmpty()
             users.forEach { user ->
@@ -97,7 +100,9 @@ class UserHandlerIT(
                 .exchange()
                 .expectStatus().is2xxSuccessful
                 .returnResult<User>().responseBody
-                .asFlow().toList()
+                .asFlow()
+                .log("Search")
+                .toList()
 
             searchedUsers shouldHaveSize 1
             searchedUsers.all { it.email == searchEmail }.shouldBeTrue()
@@ -139,7 +144,8 @@ class UserHandlerIT(
                 .bodyValue(newUser)
                 .exchange()
                 .expectStatus().isCreated
-                .returnResult<User>().responseBody.awaitSingle()
+                .returnResult<User>().responseBody
+                .awaitSingle()
 
             savedUser.id.shouldNotBeNull()
             savedUser.toDto() shouldBeEqualTo newUser
@@ -165,7 +171,7 @@ class UserHandlerIT(
         @Test
         fun `update existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
+            val savedUser = service.addUser(newUser).shouldNotBeNull()
 
             val userToUpdate = createUserDTO()
 
@@ -230,7 +236,7 @@ class UserHandlerIT(
         @Test
         fun `delete existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
+            val savedUser = service.addUser(newUser).shouldNotBeNull()
 
             webTestClient
                 .delete()

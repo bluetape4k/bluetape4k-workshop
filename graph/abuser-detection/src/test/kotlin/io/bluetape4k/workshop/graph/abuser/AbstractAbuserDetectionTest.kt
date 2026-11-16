@@ -1,10 +1,9 @@
 package io.bluetape4k.workshop.graph.abuser
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBePositive
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
@@ -13,6 +12,8 @@ import io.bluetape4k.graph.algo.provider.GraphAlgorithmFallbackReason
 import io.bluetape4k.graph.algo.provider.GraphAlgorithmProviderPolicy
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
 import io.bluetape4k.workshop.graph.abuser.schema.DeviceLabel
@@ -36,6 +37,8 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractAbuserDetectionTest {
+
+    companion object: KLogging()
 
     protected abstract val graphName: String
     protected abstract val ops: GraphOperations
@@ -120,6 +123,7 @@ abstract class AbstractAbuserDetectionTest {
 
         val cluster = service.findAbuseCluster(seed.user1.id)
 
+        log.debug { "cluster=$cluster" }
         cluster.users.shouldNotBeEmpty()
         val clusterUserIds = cluster.users.map { it.id }
         clusterUserIds shouldContain seed.user2.id
@@ -131,8 +135,9 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
 
         val cluster = service.findAbuseCluster(seed.user1.id)
+        log.debug { "cluster=$cluster" }
 
-        val clusterUserIds = cluster.users.map { it.id }
+        val clusterUserIds = cluster.users.map { it.id }.onEach { log.debug { "userId=$it" } }
         clusterUserIds shouldNotContain seed.user1.id
     }
 
@@ -142,6 +147,7 @@ abstract class AbstractAbuserDetectionTest {
 
         val cluster = service.findAbuseCluster(seed.user1.id)
 
+        log.debug { "cluster=$cluster" }
         cluster.sharedIdentifiers.shouldNotBeEmpty()
         cluster.sharedIdentifiers.map { it.id } shouldContain seed.deviceA.id
     }
@@ -151,7 +157,7 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
 
         val cluster = service.findAbuseCluster(seed.unrelatedUser.id)
-
+        log.debug { "cluster=$cluster" }
         // unrelatedUser는 클러스터 사용자와 식별자를 공유하지 않습니다.
         cluster.users.shouldBeEmpty()
     }
@@ -161,7 +167,7 @@ abstract class AbstractAbuserDetectionTest {
         val unknownId = GraphElementId("99999999")
 
         val cluster = service.findAbuseCluster(unknownId)
-
+        log.debug { "cluster=$cluster" }
         cluster.users.shouldBeEmpty()
         cluster.sharedIdentifiers.shouldBeEmpty()
     }
@@ -174,11 +180,11 @@ abstract class AbstractAbuserDetectionTest {
     fun `explainSuspicion returns AbusePaths for connected user`() {
         val seed = seedSharedIdentifiers(service)
 
-        val paths = service.explainSuspicion(seed.user1.id)
+        val paths = service.explainSuspicion(seed.user1.id).onEach { log.debug { "path=$it" } }
 
         // user1은 USES_DEVICE(deviceA)와 USES_IP(ipA) 간선을 가집니다.
         paths shouldHaveSize 2
-        val identifierIds = paths.map { it.identifierVertexId }
+        val identifierIds = paths.map { it.identifierVertexId }.onEach { log.debug { "identifierId=$it" } }
         identifierIds shouldContain seed.deviceA.id
         identifierIds shouldContain seed.ipA.id
     }
@@ -187,7 +193,7 @@ abstract class AbstractAbuserDetectionTest {
     fun `explainSuspicion returns only outgoing private identifiers for isolated user`() {
         val seed = seedSharedIdentifiers(service)
 
-        val paths = service.explainSuspicion(seed.unrelatedUser.id)
+        val paths = service.explainSuspicion(seed.unrelatedUser.id).onEach { log.debug { "path=$it" } }
 
         // unrelatedUser는 deviceB만 가지며 클러스터 사용자와 공유 식별자가 없습니다.
         // 하지만 explainSuspicion은 모든 outgoing 식별자 간선을 반환하므로 deviceB가 나타납니다.
@@ -224,7 +230,7 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val cycles = service.detectReferralLoops()
+        val cycles = service.detectReferralLoops().onEach { log.debug { "cycle=$it" } }
 
         cycles.shouldNotBeEmpty()
     }
@@ -235,8 +241,7 @@ abstract class AbstractAbuserDetectionTest {
         service.addUser("u-a", "KR")
         service.addUser("u-b", "KR")
 
-        val cycles = service.detectReferralLoops()
-
+        val cycles = service.detectReferralLoops().onEach { log.debug { "cycle=$it" } }
         cycles.shouldBeEmpty()
     }
 
@@ -249,7 +254,7 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val scores = service.rankSuspiciousUsers(limit = 10)
+        val scores = service.rankSuspiciousUsers(limit = 10).onEach { log.debug { "score=$it" } }
 
         scores.shouldNotBeEmpty()
         scores.forEachIndexed { index, score ->
@@ -264,8 +269,8 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val scores = service.rankSuspiciousUsers(limit = 2)
-
+        val scores = service.rankSuspiciousUsers(limit = 2).onEach { log.debug { "score=$it" } }
+        
         scores shouldHaveSize 2
         scores.first().rank shouldBeEqualTo 1
         scores.last().rank shouldBeEqualTo 2
@@ -276,12 +281,13 @@ abstract class AbstractAbuserDetectionTest {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        val existingScores = service.rankSuspiciousUsers(limit = 10)
+        val existingScores = service.rankSuspiciousUsers(limit = 10).onEach { log.debug { "existingScores=$it" } }
+
         val ranking = service.rankSuspiciousUsersWithExecution(
             limit = 10,
             policy = GraphAlgorithmProviderPolicy.AUTO,
         )
-
+        log.debug { "ranking=$ranking" }
         ranking.scores shouldBeEqualTo existingScores
         ranking.execution.fallbackReason shouldBeEqualTo GraphAlgorithmFallbackReason.NO_PROVIDER
     }

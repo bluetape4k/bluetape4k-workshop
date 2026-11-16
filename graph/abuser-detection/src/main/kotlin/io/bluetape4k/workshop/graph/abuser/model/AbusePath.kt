@@ -23,7 +23,7 @@ data class AbusePath(
     val identifierVertexId: GraphElementId,
     /** 사용자가 이 식별자에 어떻게 연결되는지 설명하는 간선 레이블 유형입니다. */
     val edgeLabel: IdentifierEdgeLabel,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

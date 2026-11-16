@@ -11,5 +11,6 @@ class BillingAdjustmentService(
     private val journal: BillingAdjustmentJournal,
 ) {
     @Transactional
-    fun post(command: BillingAdjustmentCommand): BillingAdjustmentOutcome = journal.post(command)
+    fun post(command: BillingAdjustmentCommand): BillingAdjustmentOutcome =
+        journal.post(command)
 }

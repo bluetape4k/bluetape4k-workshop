@@ -2,13 +2,18 @@ package io.bluetape4k.workshop.optimization.fieldservice.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.concurrency.TestingExecutors
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
@@ -16,7 +21,6 @@ import io.bluetape4k.workshop.optimization.fieldservice.planner.DeterministicFie
 import io.bluetape4k.workshop.optimization.fieldservice.planner.PlannerInput
 import io.bluetape4k.workshop.optimization.fieldservice.planner.TravelTimeMatrix
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CountDownLatch
@@ -29,8 +33,12 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class FieldServiceReplanServiceTest {
+
+    companion object: KLogging()
 
     @Test
     fun `same aggregate coalesces onto one snapshot flight`() {
@@ -44,17 +52,17 @@ class FieldServiceReplanServiceTest {
             snapshot = {
                 snapshotCalls.incrementAndGet()
                 snapshotStarted.countDown()
-                releaseSnapshot.await(5, TimeUnit.SECONDS)
+                releaseSnapshot.await(5.seconds)
                 emptyInput(it)
             },
             executor = cpuExecutor,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
             val first = service.requestReplan(AggregateId("aggregate-same")) as ReplanAdmission.Accepted
-            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotStarted.await(5.seconds).shouldBeTrue()
             val second = service.requestReplan(AggregateId("aggregate-same")) as ReplanAdmission.Coalesced
 
             second.future shouldBeSameInstanceAs first.future
@@ -78,21 +86,21 @@ class FieldServiceReplanServiceTest {
             snapshot = { aggregateId ->
                 if (aggregateId.value == "aggregate-a") {
                     snapshotStarted.countDown()
-                    releaseSnapshot.await(5, TimeUnit.SECONDS)
+                    releaseSnapshot.await(5.seconds)
                 }
                 emptyInput(aggregateId)
             },
             executor = cpuExecutor,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
             val first = service.requestReplan(AggregateId("aggregate-a"))
-            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotStarted.await(5.seconds).shouldBeTrue()
 
             val second = service.requestReplan(AggregateId("aggregate-b"))
-            val secondResult = (second as ReplanAdmission.Accepted).future.get(500, TimeUnit.MILLISECONDS)
+            val secondResult = (second as ReplanAdmission.Accepted).future.get(500.milliseconds)
             secondResult.shouldNotBeNull()
 
             releaseSnapshot.countDown()
@@ -111,11 +119,11 @@ class FieldServiceReplanServiceTest {
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = {
-                releaseSnapshots.await(5, TimeUnit.SECONDS)
+                releaseSnapshots.await(5.seconds)
                 emptyInput(it)
             },
             executor = cpuExecutor,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
@@ -139,6 +147,7 @@ class FieldServiceReplanServiceTest {
         val snapshotCalls = AtomicInteger(0)
         val cpuExecutor = boundedCpuExecutor()
         val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = {
@@ -156,16 +165,18 @@ class FieldServiceReplanServiceTest {
                 emptyInput(it)
             },
             executor = cpuExecutor,
-            timeout = Duration.ofMillis(100),
+            timeout = 100.millis(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
             val first = service.requestReplan(AggregateId("aggregate-timeout"))
-            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotStarted.await(5.seconds).shouldBeTrue()
 
-            assertFailsWith<TimeoutException> { service.await(first) }
-            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            assertFailsWith<TimeoutException> {
+                service.await(first)
+            }
+            snapshotFinished.await(5.seconds).shouldBeTrue()
             interrupted.get().shouldBeTrue()
 
             val second = service.requestReplan(AggregateId("aggregate-timeout"))
@@ -182,6 +193,7 @@ class FieldServiceReplanServiceTest {
         val interrupted = AtomicBoolean(false)
         val snapshotCalls = AtomicInteger(0)
         val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = {
@@ -199,16 +211,16 @@ class FieldServiceReplanServiceTest {
                 emptyInput(it)
             },
             executor = boundedCpuExecutor(),
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
             val first = service.requestReplan(AggregateId("aggregate-cancel")) as ReplanAdmission.Accepted
-            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotStarted.await(5.seconds).shouldBeTrue()
 
             first.future.cancel(true).shouldBeTrue()
-            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotFinished.await(5.seconds).shouldBeTrue()
             interrupted.get().shouldBeTrue()
 
             val second = service.requestReplan(AggregateId("aggregate-cancel"))
@@ -230,7 +242,7 @@ class FieldServiceReplanServiceTest {
             snapshot = {
                 snapshotStarted.countDown()
                 try {
-                    releaseSnapshot.await(5, TimeUnit.SECONDS)
+                    releaseSnapshot.await(5.seconds)
                 } catch (failure: InterruptedException) {
                     interrupted.set(true)
                     throw failure
@@ -240,21 +252,20 @@ class FieldServiceReplanServiceTest {
                 emptyInput(it)
             },
             executor = boundedCpuExecutor(),
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
-            val first = service.requestReplan(AggregateId("aggregate-cancel-no-interrupt"))
-                as ReplanAdmission.Accepted
-            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            val first = service.requestReplan(AggregateId("aggregate-cancel-no-interrupt")) as ReplanAdmission.Accepted
+            snapshotStarted.await(5.seconds).shouldBeTrue()
 
             first.future.cancel(false).shouldBeTrue()
-            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeFalse()
+            snapshotFinished.await(100.milliseconds).shouldBeFalse()
             interrupted.get().shouldBeFalse()
 
             releaseSnapshot.countDown()
-            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotFinished.await(5.seconds).shouldBeTrue()
             interrupted.get().shouldBeFalse()
         } finally {
             releaseSnapshot.countDown()
@@ -268,13 +279,14 @@ class FieldServiceReplanServiceTest {
         val releaseSnapshot = CountDownLatch(1)
         val snapshotFinished = CountDownLatch(1)
         val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = { aggregateId ->
                 if (aggregateId.value == "aggregate-lease") {
                     snapshotStarted.countDown()
                     try {
-                        releaseSnapshot.await(5, TimeUnit.SECONDS)
+                        releaseSnapshot.await(5.seconds)
                     } finally {
                         snapshotFinished.countDown()
                     }
@@ -282,23 +294,22 @@ class FieldServiceReplanServiceTest {
                 emptyInput(aggregateId)
             },
             executor = boundedCpuExecutor(),
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
             val first = service.requestReplan(AggregateId("aggregate-lease")) as ReplanAdmission.Accepted
-            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotStarted.await(5.seconds).shouldBeTrue()
 
             first.future.cancel(false).shouldBeTrue()
-            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeFalse()
+            snapshotFinished.await(100.milliseconds).shouldBeFalse()
 
             service.requestReplan(AggregateId("aggregate-lease-next")) as ReplanAdmission.Accepted
-            service.requestReplan(AggregateId("aggregate-lease-overflow")) shouldBeEqualTo
-                ReplanAdmission.Rejected("REPLAN_REJECTED")
+            service.requestReplan(AggregateId("aggregate-lease-overflow")) shouldBeEqualTo ReplanAdmission.Rejected("REPLAN_REJECTED")
 
             releaseSnapshot.countDown()
-            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotFinished.await(5.seconds).shouldBeTrue()
         } finally {
             releaseSnapshot.countDown()
             service.close()
@@ -310,7 +321,7 @@ class FieldServiceReplanServiceTest {
         val plannerStarted = CountDownLatch(1)
         val releasePlanner = CountDownLatch(1)
         val plannerQueued = CountDownLatch(1)
-        val cpuExecutor = object : ThreadPoolExecutor(
+        val cpuExecutor = object: ThreadPoolExecutor(
             1,
             1,
             0L,
@@ -324,9 +335,9 @@ class FieldServiceReplanServiceTest {
         }
         cpuExecutor.execute {
             plannerStarted.countDown()
-            releasePlanner.await(5, TimeUnit.SECONDS)
+            releasePlanner.await(5.seconds)
         }
-        plannerStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        plannerStarted.await(5.seconds).shouldBeTrue()
 
         val snapshotFinished = CountDownLatch(1)
         val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
@@ -337,15 +348,14 @@ class FieldServiceReplanServiceTest {
                 emptyInput(it)
             },
             executor = cpuExecutor,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
-            val first = service.requestReplan(AggregateId("aggregate-planner-lease"))
-                as ReplanAdmission.Accepted
-            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
-            plannerQueued.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            val first = service.requestReplan(AggregateId("aggregate-planner-lease")) as ReplanAdmission.Accepted
+            snapshotFinished.await(5.seconds).shouldBeTrue()
+            plannerQueued.await(5.seconds).shouldBeTrue()
 
             first.future.cancel(false).shouldBeTrue()
             service.requestReplan(AggregateId("aggregate-planner-next")) as ReplanAdmission.Accepted
@@ -363,25 +373,25 @@ class FieldServiceReplanServiceTest {
         val cpuExecutor = boundedCpuExecutor()
         cpuExecutor.execute {
             plannerStarted.countDown()
-            releasePlanner.await(5, TimeUnit.SECONDS)
+            releasePlanner.await(5.seconds)
         }
-        cpuExecutor.execute { releasePlanner.await(5, TimeUnit.SECONDS) }
-        plannerStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        cpuExecutor.execute { releasePlanner.await(5.seconds) }
+        plannerStarted.await(5.seconds).shouldBeTrue()
 
         val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = ::emptyInput,
             executor = cpuExecutor,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
             repeat(3) { index ->
-                val admission = service.requestReplan(AggregateId("aggregate-rejected-$index"))
-                    as ReplanAdmission.Accepted
-                assertFailsWith<ExecutionException> { admission.future.get(5, TimeUnit.SECONDS) }
+                val admission =
+                    service.requestReplan(AggregateId("aggregate-rejected-$index")) as ReplanAdmission.Accepted
+                assertFailsWith<ExecutionException> { admission.future.get(5.seconds) }
             }
         } finally {
             releasePlanner.countDown()
@@ -392,7 +402,7 @@ class FieldServiceReplanServiceTest {
     @Test
     fun `rejected blocking snapshot releases its admission lease`() {
         val rejectFirst = AtomicBoolean(true)
-        val blockingExecutor = object : ThreadPoolExecutor(
+        val blockingExecutor = object: ThreadPoolExecutor(
             1,
             1,
             0L,
@@ -410,15 +420,13 @@ class FieldServiceReplanServiceTest {
             planner = DeterministicFieldServicePlanner(),
             snapshot = ::emptyInput,
             executor = boundedCpuExecutor(),
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
-            service.requestReplan(AggregateId("aggregate-blocking-rejected")) shouldBeEqualTo
-                ReplanAdmission.Rejected("REPLAN_REJECTED")
-            val accepted = service.requestReplan(AggregateId("aggregate-blocking-next"))
-                as ReplanAdmission.Accepted
+            service.requestReplan(AggregateId("aggregate-blocking-rejected")) shouldBeEqualTo ReplanAdmission.Rejected("REPLAN_REJECTED")
+            val accepted = service.requestReplan(AggregateId("aggregate-blocking-next")) as ReplanAdmission.Accepted
             service.await(accepted).shouldNotBeNull()
         } finally {
             service.close()
@@ -431,6 +439,7 @@ class FieldServiceReplanServiceTest {
         val snapshotFinished = CountDownLatch(1)
         val interrupted = AtomicBoolean(false)
         val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = {
@@ -446,21 +455,20 @@ class FieldServiceReplanServiceTest {
                 emptyInput(it)
             },
             executor = boundedCpuExecutor(),
-            timeout = Duration.ofSeconds(5),
+            timeout = 5.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
         try {
             val first = service.requestReplan(AggregateId("aggregate-close")) as ReplanAdmission.Accepted
-            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotStarted.await(5.seconds).shouldBeTrue()
 
             service.close()
 
-            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            snapshotFinished.await(5.seconds).shouldBeTrue()
             interrupted.get().shouldBeTrue()
             first.future.isCancelled.shouldBeTrue()
-            service.requestReplan(AggregateId("aggregate-after-close")) shouldBeEqualTo
-                ReplanAdmission.Rejected("REPLAN_REJECTED")
+            service.requestReplan(AggregateId("aggregate-after-close")) shouldBeEqualTo ReplanAdmission.Rejected("REPLAN_REJECTED")
         } finally {
             service.close()
         }
@@ -472,7 +480,7 @@ class FieldServiceReplanServiceTest {
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = ::emptyInput,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = sharedExecutor,
             closeBlockingExecutor = false,
         )
@@ -480,7 +488,7 @@ class FieldServiceReplanServiceTest {
         try {
             service.await(service.requestReplan(AggregateId("aggregate-shared"))).shouldNotBeNull()
             service.close()
-            sharedExecutor.submit<Boolean> { true }.get(5, TimeUnit.SECONDS).shouldBeTrue()
+            sharedExecutor.submit<Boolean> { true }.get(5.seconds).shouldBeTrue()
         } finally {
             sharedExecutor.shutdownNow()
         }
@@ -490,11 +498,12 @@ class FieldServiceReplanServiceTest {
     fun `closing the service shares one absolute termination deadline across executors`() {
         val cpuExecutor = RecordingThreadPoolExecutor(awaitDelayMillis = 20)
         val blockingExecutor = RecordingExecutorService(TestingExecutors.newFixedThreadPool(1))
+
         val service = FieldServiceReplanService(
             planner = DeterministicFieldServicePlanner(),
             snapshot = ::emptyInput,
             executor = cpuExecutor,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
@@ -523,7 +532,7 @@ class FieldServiceReplanServiceTest {
             planner = DeterministicFieldServicePlanner(),
             snapshot = ::emptyInput,
             executor = cpuExecutor,
-            timeout = Duration.ofSeconds(2),
+            timeout = 2.seconds(),
             blockingExecutor = blockingExecutor,
         )
 
@@ -551,7 +560,7 @@ class FieldServiceReplanServiceTest {
     private class RecordingThreadPoolExecutor(
         private val awaitDelayMillis: Long,
         private val interruptOnAwait: Boolean = false,
-    ) : ThreadPoolExecutor(
+    ): ThreadPoolExecutor(
         1,
         1,
         0L,
@@ -577,7 +586,7 @@ class FieldServiceReplanServiceTest {
     private class RecordingExecutorService(
         private val delegate: ExecutorService,
         private val interruptOnAwait: Boolean = false,
-    ) : AbstractExecutorService() {
+    ): AbstractExecutorService() {
         val awaitNanos = AtomicLong()
         val shutdownNowCalled = AtomicBoolean(false)
 

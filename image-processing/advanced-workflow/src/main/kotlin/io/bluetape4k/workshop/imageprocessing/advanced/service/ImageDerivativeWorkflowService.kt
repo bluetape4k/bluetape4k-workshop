@@ -5,6 +5,7 @@ import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
@@ -36,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toKotlinDuration
 
 /**
  * 이미지 업로드 → 처리 → 저장 → 영속화 사가를 조율합니다.
@@ -63,6 +65,15 @@ class ImageDerivativeWorkflowService(
     private val persistenceService: ImagePersistenceService,
 ) {
 
+    companion object: KLogging() {
+        const val METRIC_UPLOAD_ACCEPTED = "workshop.images.upload.accepted"
+        const val METRIC_PROCESSING_DURATION = "workshop.images.processing.duration"
+        const val METRIC_PROCESSING_FAILURES = "workshop.images.processing.failures"
+        const val METRIC_VARIANT_GENERATED = "workshop.images.variant.generated"
+        const val METRIC_METADATA_READ = "workshop.images.storage.metadata.read"
+        const val METRIC_METADATA_UNAVAILABLE = "workshop.images.storage.metadata.unavailable"
+    }
+
     private val requestSemaphore = Semaphore(properties.requestConcurrency)
     private val metadataReader = storage as? ImageObjectMetadataReader
 
@@ -70,7 +81,7 @@ class ImageDerivativeWorkflowService(
         val sample = Timer.start(meterRegistry)
         var resultTag = "failure"
         try {
-            return withTimeout(properties.processingTimeout.toMillis()) {
+            return withTimeout(properties.processingTimeout.toKotlinDuration()) {
                 requestSemaphore.withPermit {
                     val response = processUploadInternal(file)
                     resultTag = "success"
@@ -251,7 +262,7 @@ class ImageDerivativeWorkflowService(
                 durationMillis = durationMs,
             )
         } catch (e: CancellationException) {
-            val durationMs = Duration.ofNanos(System.nanoTime() - started).toMillis()
+            val durationMs = (System.nanoTime() - started).nanos().toMillis()
             cleanupUploaded(uploadedKeys, e)
             withContext(NonCancellable + Dispatchers.IO) {
                 val reason = JobFailureReason("CANCELLED", "Job was cancelled: ${e.message?.take(200) ?: "unknown"}")
@@ -265,7 +276,7 @@ class ImageDerivativeWorkflowService(
             }
             throw e
         } catch (e: Exception) {
-            val durationMs = Duration.ofNanos(System.nanoTime() - started).toMillis()
+            val durationMs = (System.nanoTime() - started).nanos().toMillis()
             cleanupUploaded(uploadedKeys, e)
             withContext(NonCancellable + Dispatchers.IO) {
                 val errorCode = when (e) {
@@ -444,14 +455,5 @@ class ImageDerivativeWorkflowService(
     private fun computeChecksum(bytes: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(bytes).joinToString("") { "%02x".format(it) }
-    }
-
-    companion object : KLogging() {
-        const val METRIC_UPLOAD_ACCEPTED = "workshop.images.upload.accepted"
-        const val METRIC_PROCESSING_DURATION = "workshop.images.processing.duration"
-        const val METRIC_PROCESSING_FAILURES = "workshop.images.processing.failures"
-        const val METRIC_VARIANT_GENERATED = "workshop.images.variant.generated"
-        const val METRIC_METADATA_READ = "workshop.images.storage.metadata.read"
-        const val METRIC_METADATA_UNAVAILABLE = "workshop.images.storage.metadata.unavailable"
     }
 }

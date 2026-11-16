@@ -16,7 +16,8 @@ import io.bluetape4k.graph.schema.VertexLabel
  * - `title` - 직무 title입니다. 선택 값입니다.
  * - `location` - 도시 또는 지역입니다. 선택 값입니다.
  */
-object PersonLabel : VertexLabel("Person") {
+object PersonLabel: VertexLabel("Person") {
+    private fun readResolve(): Any = PersonLabel
     val personId = string("personId")
     val name = string("name")
     val title = string("title")
@@ -32,7 +33,8 @@ object PersonLabel : VertexLabel("Person") {
  * - `industry` - 산업 분야입니다. 선택 값입니다.
  * - `location` - 본사 도시 또는 지역입니다. 선택 값입니다.
  */
-object CompanyLabel : VertexLabel("Company") {
+object CompanyLabel: VertexLabel("Company") {
+    private fun readResolve(): Any = CompanyLabel
     val companyId = string("companyId")
     val name = string("name")
     val industry = string("industry")
@@ -54,7 +56,8 @@ object CompanyLabel : VertexLabel("Company") {
  * - `since` - connection이 성립된 ISO-8601 날짜입니다. 선택 값입니다.
  * - `strength` - connection 강도입니다. 범위는 1-10이고 `"8"` 같은 문자열로 저장합니다.
  */
-object KnowsLabel : EdgeLabel("KNOWS", PersonLabel, PersonLabel) {
+object KnowsLabel: EdgeLabel("KNOWS", PersonLabel, PersonLabel) {
+    private fun readResolve(): Any = KnowsLabel
     val since = string("since")
     val strength = string("strength")   // stored as String, valid values "1".."10"
 }
@@ -67,7 +70,8 @@ object KnowsLabel : EdgeLabel("KNOWS", PersonLabel, PersonLabel) {
  * - `startDate` - ISO-8601 재직 시작일입니다. 선택 값입니다.
  * - `isCurrent` - 현재 재직 여부를 나타내는 `"true"` 또는 `"false"` 문자열입니다.
  */
-object WorksAtLabel : EdgeLabel("WORKS_AT", PersonLabel, CompanyLabel) {
+object WorksAtLabel: EdgeLabel("WORKS_AT", PersonLabel, CompanyLabel) {
+    private fun readResolve(): Any = WorksAtLabel
     val role = string("role")
     val startDate = string("startDate")
     val isCurrent = string("isCurrent")  // stored as String "true"/"false"
@@ -79,4 +83,6 @@ object WorksAtLabel : EdgeLabel("WORKS_AT", PersonLabel, CompanyLabel) {
  * [KnowsLabel]과 달리 `FOLLOWS`는 단방향이며 간선 하나만 만듭니다.
  * `FOLLOWS` 관계는 상호 acquaintance를 뜻하지 않습니다.
  */
-object FollowsLabel : EdgeLabel("FOLLOWS", PersonLabel, PersonLabel)
+object FollowsLabel: EdgeLabel("FOLLOWS", PersonLabel, PersonLabel) {
+    private fun readResolve(): Any = FollowsLabel
+}

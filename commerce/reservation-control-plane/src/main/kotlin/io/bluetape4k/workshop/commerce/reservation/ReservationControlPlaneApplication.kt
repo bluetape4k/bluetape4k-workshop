@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableScheduling
 @SpringBootApplication
 internal class ReservationControlPlaneApplication {
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 /** Spring Boot의 virtual-thread-aware runtime으로 reservation control plane을 시작합니다. */

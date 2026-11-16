@@ -6,13 +6,14 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.javers.codecs.JaversCodec
 import io.bluetape4k.javers.codecs.JaversCodecs
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.javers.core.JaversBuilder
 import org.javers.core.metamodel.`object`.SnapshotType
-import org.javers.repository.jql.JqlQuery
 import org.javers.repository.jql.QueryBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.redisson.api.options.KeysScanOptions
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -22,17 +23,25 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class BoundedRedissonCdoSnapshotRepositoryTest {
 
+    private companion object: KLogging() {
+        private const val REPOSITORY_PREFIX = "workshop:bounded-history"
+        private const val ORDER_ID = "order-fallback"
+
+        val redisClient by lazy { RedisServer.Launcher.RedissonLib.getRedisson() }
+    }
+
     @AfterEach
     fun tearDown() {
-        redis.keys.getKeysByPattern("javers:$REPOSITORY_PREFIX:*")
-            .forEach { redis.keys.delete(it) }
+        val options = KeysScanOptions.defaults().pattern("javers:$REPOSITORY_PREFIX:*")
+        redisClient.keys.getKeys(options)
+            .forEach { redisClient.keys.delete(it) }
     }
 
     @Test
     fun `unsupported query parameters delegate without changing JaVers semantics`() {
         val codec = CountingCodec()
         val repositoryName = "$REPOSITORY_PREFIX:${System.nanoTime()}"
-        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redis, codec)
+        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redisClient, codec)
         val javers = JaversBuilder.javers()
             .registerJaversRepository(repository)
             .build()
@@ -41,7 +50,7 @@ class BoundedRedissonCdoSnapshotRepositoryTest {
         val update = javers.commit("bob", initial.copy(status = OrderStatus.PAID))
         javers.commit("carol", initial.copy(totalAmount = BigDecimal("29.99")))
 
-        val fallbackQueries = listOf<Pair<String, () -> JqlQuery>>(
+        val fallbackQueries = listOf(
             "skip" to { instanceQuery().skip(1).limit(1).build() },
             "aggregate" to { instanceQuery().withChildValueObjects().limit(1).build() },
             "author" to { instanceQuery().byAuthor("alice").limit(1).build() },
@@ -77,7 +86,7 @@ class BoundedRedissonCdoSnapshotRepositoryTest {
     fun `bounded range remains newest first while snapshots are appended`() {
         val codec = CountingCodec()
         val repositoryName = "$REPOSITORY_PREFIX:concurrent:${System.nanoTime()}"
-        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redis, codec)
+        val repository = BoundedRedissonCdoSnapshotRepository(repositoryName, redisClient, codec)
         val javers = JaversBuilder.javers()
             .registerJaversRepository(repository)
             .build()
@@ -137,12 +146,5 @@ class BoundedRedissonCdoSnapshotRepositoryTest {
         fun resetDecodeCount() {
             decodeCount.set(0)
         }
-    }
-
-    private companion object {
-        private const val REPOSITORY_PREFIX = "workshop:bounded-history"
-        private const val ORDER_ID = "order-fallback"
-
-        val redis = RedisServer.Launcher.RedissonLib.getRedisson()
     }
 }

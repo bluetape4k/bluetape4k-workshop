@@ -4,37 +4,41 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
-import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledForJreRange
+import org.junit.jupiter.api.condition.JRE
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class VoucherPoolFixturesTest {
-    private val executor =
-        VoucherPoolJdbcExecutor(
-            gate = DatabasePermitGate.default(16),
-            transactionManager = mockk<PlatformTransactionManager>(relaxed = true),
-        )
+
+    private val executor = VoucherPoolJdbcExecutor(
+        gate = DatabasePermitGate.default(16),
+        transactionManager = mockk<PlatformTransactionManager>(relaxed = true),
+    )
     private val fixtures = VoucherPoolFixtures(executor)
 
     @Test
     fun `catalog covers every deterministic recovery scenario`() {
         fixtures.catalog().map(FixtureScenario::slug).toSet() shouldBeEqualTo
-            setOf(
-                "redis-outage",
-                "bloom-false-positive",
-                "reveal-response-loss",
-                "pause-allocation-race",
-                "redeem-revoke-race",
-                "worker-takeover",
-                "ciphertext-quarantine",
-                "restore-smoke",
-            )
+                setOf(
+                    "redis-outage",
+                    "bloom-false-positive",
+                    "reveal-response-loss",
+                    "pause-allocation-race",
+                    "redeem-revoke-race",
+                    "worker-takeover",
+                    "ciphertext-quarantine",
+                    "restore-smoke",
+                )
     }
 
     @Test
@@ -46,8 +50,8 @@ internal class VoucherPoolFixturesTest {
             fixtures.state("reveal-response-loss").armed.shouldBeFalse()
             fixtures.state("reveal-response-loss").consumed.shouldBeFalse()
         }
-
         fixtures.state("reveal-response-loss").armed.shouldBeTrue()
+
         inTransaction {
             fixtures.claim("reveal-response-loss").shouldBeTrue()
             fixtures.state("reveal-response-loss").claimed.shouldBeTrue()
@@ -84,7 +88,7 @@ internal class VoucherPoolFixturesTest {
         }
 
         fixtures.state("worker-takeover") shouldBeEqualTo
-            FixtureState(FixtureScenario.WORKER_TAKEOVER, armed = true, consumed = false)
+                FixtureState(FixtureScenario.WORKER_TAKEOVER, armed = true, consumed = false)
     }
 
     @Test
@@ -101,7 +105,7 @@ internal class VoucherPoolFixturesTest {
         }
 
         fixtures.state("redis-outage") shouldBeEqualTo
-            FixtureState(FixtureScenario.REDIS_OUTAGE, armed = true, consumed = false)
+                FixtureState(FixtureScenario.REDIS_OUTAGE, armed = true, consumed = false)
     }
 
     @Test
@@ -110,13 +114,41 @@ internal class VoucherPoolFixturesTest {
             fixtures.configureAfterCommit("pause-allocation-race")
             fixtures.armAfterCommit("pause-allocation-race")
         }
+
         val winners = AtomicInteger()
         MultithreadingTester()
-            .workers(16)
-            .rounds(1)
+            .workers(Runtimex.availableProcessors)
+            .rounds(2)
             .add {
                 var claimed = false
-                inTransaction { claimed = fixtures.claim("pause-allocation-race") }
+                inTransaction {
+                    claimed = fixtures.claim("pause-allocation-race")
+                }
+                if (claimed) winners.incrementAndGet()
+            }
+            .run()
+
+        winners.get() shouldBeEqualTo 1
+        fixtures.state("pause-allocation-race").consumed.shouldBeTrue()
+        fixtures.state("pause-allocation-race").claimed.shouldBeFalse()
+    }
+
+    @EnabledForJreRange(min = JRE.JAVA_21)
+    @Test
+    fun `virtual threads duplicate claims have exactly one committed winner`() {
+        inTransaction {
+            fixtures.configureAfterCommit("pause-allocation-race")
+            fixtures.armAfterCommit("pause-allocation-race")
+        }
+
+        val winners = AtomicInteger()
+        StructuredTaskScopeTester()
+            .rounds(Runtimex.availableProcessors * 2)
+            .add {
+                var claimed = false
+                inTransaction {
+                    claimed = fixtures.claim("pause-allocation-race")
+                }
                 if (claimed) winners.incrementAndGet()
             }
             .run()
@@ -132,43 +164,52 @@ internal class VoucherPoolFixturesTest {
             fixtures.configureAfterCommit("restore-smoke")
             fixtures.armAfterCommit("restore-smoke")
         }
-        val oldClaim = pendingTransaction { fixtures.claim("restore-smoke").shouldBeTrue() }
+        val oldClaim = pendingTransaction {
+            fixtures.claim("restore-smoke").shouldBeTrue()
+        }
 
         inTransaction {
             fixtures.configureAfterCommit("restore-smoke")
             fixtures.armAfterCommit("restore-smoke")
         }
-        val newClaim = pendingTransaction { fixtures.claim("restore-smoke").shouldBeTrue() }
+        val newClaim = pendingTransaction {
+            fixtures.claim("restore-smoke").shouldBeTrue()
+        }
 
         complete(oldClaim, commit = false)
         fixtures.state("restore-smoke").claimed.shouldBeTrue()
         fixtures.state("restore-smoke").consumed.shouldBeFalse()
+
         complete(oldClaim, commit = true)
         fixtures.state("restore-smoke").claimed.shouldBeTrue()
         fixtures.state("restore-smoke").consumed.shouldBeFalse()
 
         complete(newClaim, commit = false)
         fixtures.state("restore-smoke") shouldBeEqualTo
-            FixtureState(FixtureScenario.RESTORE_SMOKE, armed = true, consumed = false)
+                FixtureState(FixtureScenario.RESTORE_SMOKE, armed = true, consumed = false)
     }
 
     @Test
     fun `unsupported fixture scenarios fail closed`() {
-        assertFailsWith<IllegalArgumentException> { fixtures.state("unknown") }
+        assertFailsWith<IllegalArgumentException> {
+            fixtures.state("unknown")
+        }
 
         inTransaction(commit = false) {
-            assertFailsWith<IllegalArgumentException> { fixtures.armAfterCommit("unknown") }
+            assertFailsWith<IllegalArgumentException> {
+                fixtures.armAfterCommit("unknown")
+            }
         }
     }
 
-    private fun inTransaction(
+    private inline fun inTransaction(
         commit: Boolean = true,
         block: () -> Unit,
     ) {
         complete(pendingTransaction(block), commit)
     }
 
-    private fun pendingTransaction(block: () -> Unit): List<TransactionSynchronization> {
+    private inline fun pendingTransaction(block: () -> Unit): List<TransactionSynchronization> {
         TransactionSynchronizationManager.initSynchronization()
         return try {
             block()
@@ -182,9 +223,16 @@ internal class VoucherPoolFixturesTest {
         synchronizations: List<TransactionSynchronization>,
         commit: Boolean,
     ) {
-        if (commit) synchronizations.forEach(TransactionSynchronization::afterCommit)
-        val status =
-            if (commit) TransactionSynchronization.STATUS_COMMITTED else TransactionSynchronization.STATUS_ROLLED_BACK
-        synchronizations.forEach { it.afterCompletion(status) }
+        if (commit) {
+            synchronizations.forEach(TransactionSynchronization::afterCommit)
+        }
+        val status = when {
+            commit -> TransactionSynchronization.STATUS_COMMITTED
+            else   -> TransactionSynchronization.STATUS_ROLLED_BACK
+        }
+
+        synchronizations.forEach {
+            it.afterCompletion(status)
+        }
     }
 }

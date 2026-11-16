@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.config
 
+import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.context.annotation.Bean
@@ -10,6 +11,9 @@ import javax.sql.DataSource
 
 @Configuration(proxyBeanMethods = false)
 class UsageServiceConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun usageClock(): Clock = Clock.systemUTC()
 

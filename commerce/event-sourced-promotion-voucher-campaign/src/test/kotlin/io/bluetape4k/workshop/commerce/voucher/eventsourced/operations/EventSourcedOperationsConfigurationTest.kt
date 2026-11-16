@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 
 internal class EventSourcedOperationsConfigurationTest {
+
+    companion object: KLogging()
 
     @Test
     fun `configuration binds the bounded database gate meters`() {

@@ -35,20 +35,23 @@ data class ClinicAppointmentAssignmentResponse(
     val endTime: String?,
 )
 
-private fun ClinicAppointmentProposal.toResponse(): ClinicAppointmentDemoResponse = ClinicAppointmentDemoResponse(
-    feasible = feasible,
-    hardScore = hardScore,
-    softScore = softScore,
-    assignments = assignments.map { assignment ->
-        ClinicAppointmentAssignmentResponse(
-            requestId = assignment.requestId,
-            providerId = assignment.providerId,
-            roomId = assignment.roomId,
-            equipmentId = assignment.equipmentId,
-            date = assignment.date?.toString(),
-            startTime = assignment.startTime?.toString(),
-            endTime = assignment.endTime?.toString(),
-        )
-    },
-    unassignedReasons = unassignedReasons.mapValues { (_, reasons) -> reasons.map { it.name }.toSet() },
-)
+private fun ClinicAppointmentProposal.toResponse(): ClinicAppointmentDemoResponse =
+    ClinicAppointmentDemoResponse(
+        feasible = feasible,
+        hardScore = hardScore,
+        softScore = softScore,
+        assignments = assignments.map { assignment ->
+            ClinicAppointmentAssignmentResponse(
+                requestId = assignment.requestId,
+                providerId = assignment.providerId,
+                roomId = assignment.roomId,
+                equipmentId = assignment.equipmentId,
+                date = assignment.date?.toString(),
+                startTime = assignment.startTime?.toString(),
+                endTime = assignment.endTime?.toString(),
+            )
+        },
+        unassignedReasons = unassignedReasons.mapValues { (_, reasons) ->
+            reasons.map { it.name }.toSet()
+        },
+    )

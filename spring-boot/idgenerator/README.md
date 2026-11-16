@@ -2,9 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-This module exposes four `bluetape4k-idgenerators` families through a Spring Boot
-WebFlux REST API. It is useful when you need to compare sortable IDs, parse a
-Snowflake `Long`, or hide numeric IDs with reversible Hashids encoding.
+This module exposes four `bluetape4k-idgenerators` families through a Spring Boot WebFlux REST API. It is useful when you need to compare sortable IDs, parse a Snowflake `Long`, or hide numeric IDs with reversible Hashids encoding.
 
 ## Architecture Diagram
 
@@ -14,43 +12,42 @@ Snowflake `Long`, or hide numeric IDs with reversible Hashids encoding.
 
 ![ID Generator Workshop request sequence diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-sequence-01.png)
 
-This integration example exposes four distributed ID generators from `bluetape4k-idgenerators` through a Spring Boot WebFlux REST API.
-It covers the characteristics of Snowflake, ULID, KSUID, and Hashids, along with operational cautions for each algorithm.
+This integration example exposes four distributed ID generators from `bluetape4k-idgenerators` through a Spring Boot WebFlux REST API. It covers the characteristics of Snowflake, ULID, KSUID, and Hashids, along with operational cautions for each algorithm.
 
 ## API Endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/ids/snowflake` | Generates a Snowflake Long ID + parsed components |
-| `GET` | `/ids/snowflake/parse/{id}` | Reverse-parses an existing Snowflake ID |
-| `GET` | `/ids/snowflake/batch?count=N` | Generates N Snowflake IDs in a batch (maximum 1000) |
-| `GET` | `/ids/ulid` | Generates a ULID (26-character Crockford Base32) |
-| `GET` | `/ids/ulid/batch?count=N` | Generates N ULIDs in a batch |
-| `GET` | `/ids/ksuid` | Generates a KSUID (27-character Base62) |
-| `GET` | `/ids/ksuid/batch?count=N` | Generates N KSUIDs in a batch |
-| `GET` | `/ids/hashids/encode?numbers=1,2,3` | Encodes an array of numbers into Hashids |
-| `GET` | `/ids/hashids/decode/{hash}` | Decodes a Hashids string into an array of numbers |
+| Method | Path                                | Description                                         |
+|--------|-------------------------------------|-----------------------------------------------------|
+| `GET`  | `/ids/snowflake`                    | Generates a Snowflake Long ID + parsed components   |
+| `GET`  | `/ids/snowflake/parse/{id}`         | Reverse-parses an existing Snowflake ID             |
+| `GET`  | `/ids/snowflake/batch?count=N`      | Generates N Snowflake IDs in a batch (maximum 1000) |
+| `GET`  | `/ids/ulid`                         | Generates a ULID (26-character Crockford Base32)    |
+| `GET`  | `/ids/ulid/batch?count=N`           | Generates N ULIDs in a batch                        |
+| `GET`  | `/ids/ksuid`                        | Generates a KSUID (27-character Base62)             |
+| `GET`  | `/ids/ksuid/batch?count=N`          | Generates N KSUIDs in a batch                       |
+| `GET`  | `/ids/hashids/encode?numbers=1,2,3` | Encodes an array of numbers into Hashids            |
+| `GET`  | `/ids/hashids/decode/{hash}`        | Decodes a Hashids string into an array of numbers   |
 
 ## ID Algorithm Comparison
 
-| Algorithm | Type | Length | Ordering | Characteristics |
-|---|---|---|---|---|
-| **Snowflake** | `Long` | 64-bit | Chronological | Includes machine ID, reverse-parseable, 4096 IDs/sec/node |
-| **ULID** | `String` | 26 characters | Lexicographic = chronological | Millisecond precision, UUID-compatible |
-| **KSUID** | `String` | 27 characters | Lexicographic = chronological | Second precision, 128-bit random payload |
-| **Hashids** | `String` | Variable | No | Numeric obfuscation, reversible |
+| Algorithm     | Type     | Length        | Ordering                      | Characteristics                                           |
+|---------------|----------|---------------|-------------------------------|-----------------------------------------------------------|
+| **Snowflake** | `Long`   | 64-bit        | Chronological                 | Includes machine ID, reverse-parseable, 4096 IDs/sec/node |
+| **ULID**      | `String` | 26 characters | Lexicographic = chronological | Millisecond precision, UUID-compatible                    |
+| **KSUID**     | `String` | 27 characters | Lexicographic = chronological | Second precision, 128-bit random payload                  |
+| **Hashids**   | `String` | Variable      | No                            | Numeric obfuscation, reversible                           |
 
 ## bluetape4k Features Used
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `Snowflakers.Default` | `bluetape4k-idgenerators` | `IdGeneratorController` | Singleton DefaultSnowflake with automatic machine ID selection |
-| `Snowflake.parse(id)` | `bluetape4k-idgenerators` | `parseSnowflakeId()` | Reverse-parses a Long ID into timestamp/machineId/sequence |
-| `Snowflake.nextIds(size)` | `bluetape4k-idgenerators` | `snowflakeBatch()` | Sequence-based batch generation |
-| `UlidGenerator` | `bluetape4k-idgenerators` | `IdGeneratorController` | Monotonic ULID generation with built-in StatefulMonotonic support |
-| `KsuidGenerator` | `bluetape4k-idgenerators` | `IdGeneratorController` | Second-based sortable IDs |
-| `Hashids` | `bluetape4k-idgenerators` | `IdGeneratorController` | Adjusts obfuscation strength through salt + minLength settings |
-| `KLogging` | `bluetape4k-logging` | companion object | Lazy lambda logging |
+| Feature                   | Artifact                  | Code Location           | Benefit                                                           |
+|---------------------------|---------------------------|-------------------------|-------------------------------------------------------------------|
+| `Snowflakers.Default`     | `bluetape4k-idgenerators` | `IdGeneratorController` | Singleton DefaultSnowflake with automatic machine ID selection    |
+| `Snowflake.parse(id)`     | `bluetape4k-idgenerators` | `parseSnowflakeId()`    | Reverse-parses a Long ID into timestamp/machineId/sequence        |
+| `Snowflake.nextIds(size)` | `bluetape4k-idgenerators` | `snowflakeBatch()`      | Sequence-based batch generation                                   |
+| `UlidGenerator`           | `bluetape4k-idgenerators` | `IdGeneratorController` | Monotonic ULID generation with built-in StatefulMonotonic support |
+| `KsuidGenerator`          | `bluetape4k-idgenerators` | `IdGeneratorController` | Second-based sortable IDs                                         |
+| `Hashids`                 | `bluetape4k-idgenerators` | `IdGeneratorController` | Adjusts obfuscation strength through salt + minLength settings    |
+| `KLogging`                | `bluetape4k-logging`      | companion object        | Lazy lambda logging                                               |
 
 ## bluetape4k Before / After
 
@@ -113,12 +110,12 @@ For real usage: Hashids(salt = "project-specific secret", minHashLength = 8)
 
 ### ULID vs KSUID Selection Criteria
 
-| Situation | Recommendation |
-|---|---|
-| UUID replacement and DB index efficiency with millisecond precision | **ULID** |
-| Second-level precision is enough and a shorter random payload is preferred | **KSUID** |
-| Long type, distributed node identity, and reverse parsing are required | **Snowflake** |
-| Hide numeric IDs in URLs, such as PKs and sequences | **Hashids** |
+| Situation                                                                  | Recommendation |
+|----------------------------------------------------------------------------|----------------|
+| UUID replacement and DB index efficiency with millisecond precision        | **ULID**       |
+| Second-level precision is enough and a shorter random payload is preferred | **KSUID**      |
+| Long type, distributed node identity, and reverse parsing are required     | **Snowflake**  |
+| Hide numeric IDs in URLs, such as PKs and sequences                        | **Hashids**    |
 
 ## Run
 
