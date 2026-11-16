@@ -426,7 +426,15 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     prefix.size,
                     scenarioDeadline.child(45.seconds)
                 )
-                log.debug { "prefixStats=$prefixStats" }
+                log.debug {
+                    "prefixStats=" +
+                        "rawDeliveryCount=${prefixStats.rawDeliveryCount}, " +
+                        "appliedCount=${prefixStats.appliedCount}, " +
+                        "conflictCount=${prefixStats.conflictCount}, " +
+                        "retryCount=${prefixStats.retryCount}, " +
+                        "maxBufferedRecords=${prefixStats.maxBufferedRecords}, " +
+                        "maxBufferedBytes=${prefixStats.maxBufferedBytes}"
+                }
                 prefixStats.appliedEventIds shouldBeEqualTo prefix.map(KafkaFailoverEvent::eventId).toSet()
 
                 writer.append(
@@ -509,7 +517,15 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     expectedPartition = selected.partition,
                 )
                 val stats = collector.awaitApplied(prefix.size + suffix.size, scenarioDeadline.child(45.seconds))
-                log.debug { "stats=$stats" }
+                log.debug {
+                    "stats=" +
+                        "rawDeliveryCount=${stats.rawDeliveryCount}, " +
+                        "appliedCount=${stats.appliedCount}, " +
+                        "conflictCount=${stats.conflictCount}, " +
+                        "retryCount=${stats.retryCount}, " +
+                        "maxBufferedRecords=${stats.maxBufferedRecords}, " +
+                        "maxBufferedBytes=${stats.maxBufferedBytes}"
+                }
                 val expectedIds = KafkaFailoverEvidence.exactLogicalIds(
                     prefix.map(KafkaFailoverEvent::eventId),
                     suffix.map(KafkaFailoverEvent::eventId),
