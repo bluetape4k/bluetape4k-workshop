@@ -12,7 +12,7 @@ abstract class AbstractProblemTest @Autowired constructor(
     protected val context: ApplicationContext,
 ) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         @JvmStatic
         protected val faker = Fakers.faker
     }

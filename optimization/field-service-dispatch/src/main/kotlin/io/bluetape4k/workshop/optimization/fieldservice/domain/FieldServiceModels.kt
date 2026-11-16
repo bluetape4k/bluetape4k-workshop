@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.optimization.fieldservice.domain
 
+import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.io.Serializable
 import java.time.Duration
 import java.time.Instant
@@ -8,7 +11,7 @@ import java.time.Instant
 data class AvailabilityWindow(
     val start: Instant,
     val end: Instant,
-) : Serializable {
+): Serializable {
     init {
         require(start < end) { "availability window must have start before end" }
     }
@@ -22,9 +25,9 @@ data class AvailabilityWindow(
 data class VisitPin(
     val workerId: WorkerId,
     val routeOrder: Int,
-) : Serializable {
+): Serializable {
     init {
-        require(routeOrder >= 0) { "routeOrder must be non-negative" }
+        routeOrder.requireZeroOrPositiveNumber("routeOrder")
     }
 
     companion object {
@@ -42,15 +45,15 @@ data class Worker(
     val version: Long = 0L,
     val workerScheduleRevision: Long = 0L,
     val unavailable: Boolean = false,
-) : Serializable {
+): Serializable {
     init {
-        require(name.isNotBlank()) { "worker name must not be blank" }
+        name.requireNotBlank("name")
         require(skills.size <= FieldServiceLimits.MAX_SKILLS_PER_WORKER) { "worker skills exceed configured limit" }
         require(availability.size <= FieldServiceLimits.MAX_AVAILABILITY_WINDOWS_PER_WORKER) {
             "worker availability exceeds configured limit"
         }
-        require(version >= 0L) { "worker version must be non-negative" }
-        require(workerScheduleRevision >= 0L) { "worker schedule revision must be non-negative" }
+        version.requireZeroOrPositiveNumber("version")
+        workerScheduleRevision.requireZeroOrPositiveNumber("workerScheduleRevision")
     }
 
     companion object {
@@ -87,11 +90,11 @@ data class Visit(
     val startedAt: Instant? = null,
     val startedPin: VisitPin? = null,
     val manualPin: VisitPin? = null,
-) : Serializable {
+): Serializable {
     init {
         require(windowStart < windowEnd) { "visit window must have start before end" }
-        require(!serviceDuration.isNegative) { "service duration must be non-negative" }
-        require(version >= 0L) { "visit version must be non-negative" }
+        serviceDuration.requireZeroOrPositiveDuration("serviceDuration")
+        version.requireZeroOrPositiveNumber("version")
         require(startedAt == null || startedPin != null) { "started visit must retain its pin" }
         require(startedAt == null || manualPin == null) { "started visit cannot have a manual pre-start pin" }
     }
@@ -130,7 +133,7 @@ data class FieldServiceScoreSummary(
     val softScore: Long,
     val assignedCount: Int,
     val unassignedCount: Int,
-) : Serializable {
+): Serializable {
     init {
         require(assignedCount >= 0 && unassignedCount >= 0) { "score counts must be non-negative" }
     }
@@ -146,7 +149,7 @@ data class PlannedVisit(
     val coordinateId: CoordinateId,
     val routeOrder: Int,
     val pinned: Boolean,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -156,7 +159,7 @@ data class PlannedVisit(
 data class WorkerRoute(
     val workerId: WorkerId,
     val visits: List<PlannedVisit>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -166,7 +169,7 @@ data class WorkerRoute(
 data class UnassignedVisit(
     val visitId: VisitId,
     val reason: ConstraintReasonCode,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -176,7 +179,7 @@ data class UnassignedVisit(
 data class ConstraintExplanation(
     val visitId: VisitId,
     val reason: ConstraintReasonCode,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -187,7 +190,7 @@ data class VersionVector(
     val visitVersions: Map<VisitId, Long>,
     val workerVersions: Map<WorkerId, Long>,
     val workerScheduleRevisions: Map<WorkerId, Long>,
-) : Serializable {
+): Serializable {
     init {
         require(visitVersions.values.all { it >= 0L }) { "visit versions must be non-negative" }
         require(workerVersions.values.all { it >= 0L }) { "worker versions must be non-negative" }
@@ -205,7 +208,7 @@ data class PlannerMetrics(
     val matrixLookups: Int,
     val externalCalls: Int,
     val invariants: List<String> = listOf("O(V*W+E)"),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -215,7 +218,7 @@ data class PlannerMetrics(
 data class PlannerRun(
     val proposal: PlanProposal,
     val metrics: PlannerMetrics,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -236,7 +239,7 @@ data class PlanProposal(
     val score: FieldServiceScoreSummary,
     val explanations: List<ConstraintExplanation> = emptyList(),
     val state: PlanState = PlanState.DRAFT,
-) : Serializable {
+): Serializable {
     init {
         require(planRevision >= 0L) { "plan revision must be non-negative" }
         require(parentRevision == null || parentRevision >= 0L) { "parent revision must be non-negative" }

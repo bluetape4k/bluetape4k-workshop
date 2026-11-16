@@ -10,7 +10,7 @@ data class SaleTransitionContext(
     val opensAt: Instant,
     val closesAt: Instant,
     val invariantsHealthy: Boolean,
-) : Serializable {
+): Serializable {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -21,7 +21,7 @@ data class SaleTransitionContext(
 class InvalidSaleTransition(
     val state: SaleState,
     val command: SaleCommand,
-) : IllegalStateException("invalid_sale_transition:${state.code}:${command.name.lowercase()}") {
+): IllegalStateException("invalid_sale_transition:${state.code}:${command.name.lowercase()}") {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -32,7 +32,7 @@ class InvalidSaleTransition(
 class InvalidPurchaseTransition(
     val state: PurchaseState,
     val outcome: PaymentOutcome,
-) : IllegalStateException("invalid_purchase_transition:${state.code}:${outcome.name.lowercase()}") {
+): IllegalStateException("invalid_purchase_transition:${state.code}:${outcome.name.lowercase()}") {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -43,7 +43,7 @@ class InvalidPurchaseTransition(
 class InvalidTicketTransition(
     val state: TicketState,
     val outcome: TicketEffectOutcome,
-) : IllegalStateException("invalid_ticket_transition:${state.code}:${outcome.name.lowercase()}") {
+): IllegalStateException("invalid_ticket_transition:${state.code}:${outcome.name.lowercase()}") {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -57,19 +57,25 @@ fun saleTransition(
     context: SaleTransitionContext,
 ): SaleState =
     when (state to command) {
-        SaleState.DRAFT to SaleCommand.SCHEDULE -> SaleState.SCHEDULED
-        SaleState.SCHEDULED to SaleCommand.OPEN ->
-            if (context.insideWindow()) SaleState.OPEN else invalidSale(state, command)
+        SaleState.DRAFT to SaleCommand.SCHEDULE   -> SaleState.SCHEDULED
+
+        SaleState.SCHEDULED to SaleCommand.OPEN   ->
+            if (context.insideWindow()) SaleState.OPEN
+            else invalidSale(state, command)
+
         SaleState.SCHEDULED to SaleCommand.SUSPEND,
         SaleState.OPEN to SaleCommand.SUSPEND,
-        -> SaleState.SUSPENDED
+                                                  -> SaleState.SUSPENDED
         SaleState.SUSPENDED to SaleCommand.RESUME ->
-            if (context.insideWindow() && context.invariantsHealthy) SaleState.OPEN else invalidSale(state, command)
+            if (context.insideWindow() && context.invariantsHealthy) SaleState.OPEN
+            else invalidSale(state, command)
+
         SaleState.SCHEDULED to SaleCommand.CLOSE,
         SaleState.OPEN to SaleCommand.CLOSE,
         SaleState.SUSPENDED to SaleCommand.CLOSE,
-        -> SaleState.CLOSED
-        else -> invalidSale(state, command)
+                                                  -> SaleState.CLOSED
+
+        else                                      -> invalidSale(state, command)
     }
 
 /** fenced payment outcome과 해당 atomic inventory delta를 평가합니다. */
@@ -79,29 +85,70 @@ fun transition(
 ): PurchaseTransition =
     when (state to outcome) {
         PurchaseState.INVENTORY_HELD to PaymentOutcome.UNKNOWN,
-        PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.UNKNOWN ->
-            PurchaseTransition(PurchaseState.RECONCILIATION_REQUIRED, 0, 0, false)
+        PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.UNKNOWN,
+                                                                        ->
+            PurchaseTransition(
+                next = PurchaseState.RECONCILIATION_REQUIRED,
+                heldDelta = 0,
+                soldDelta = 0,
+                releaseGuards = false
+            )
         PurchaseState.INVENTORY_HELD to PaymentOutcome.APPROVED,
         PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.APPROVED,
         PurchaseState.RECONCILIATION_REQUIRED to PaymentOutcome.APPROVED,
-        -> PurchaseTransition(PurchaseState.APPROVED, -1, 1, true, TicketDisposition.PENDING)
+                                                                        ->
+            PurchaseTransition(
+                next = PurchaseState.APPROVED,
+                heldDelta = -1,
+                soldDelta = 1,
+                releaseGuards = true,
+                ticketDisposition = TicketDisposition.PENDING
+            )
         PurchaseState.INVENTORY_HELD to PaymentOutcome.DECLINED,
         PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.DECLINED,
         PurchaseState.RECONCILIATION_REQUIRED to PaymentOutcome.DECLINED,
-        -> PurchaseTransition(PurchaseState.DECLINED, -1, 0, true)
+                                                                        ->
+            PurchaseTransition(
+                next = PurchaseState.DECLINED,
+                heldDelta = -1,
+                soldDelta = 0,
+                releaseGuards = true
+            )
         PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.CANCELLATION_REQUESTED,
         PurchaseState.RECONCILIATION_REQUIRED to PaymentOutcome.CANCELLATION_REQUESTED,
-        -> PurchaseTransition(PurchaseState.CANCELLATION_REQUESTED, 0, 0, false)
+                                                                        ->
+            PurchaseTransition(
+                next = PurchaseState.CANCELLATION_REQUESTED,
+                heldDelta = 0,
+                soldDelta = 0,
+                releaseGuards = false
+            )
         PurchaseState.CANCELLATION_REQUESTED to PaymentOutcome.DECLINED ->
-            PurchaseTransition(PurchaseState.CANCELLED, -1, 0, true)
+            PurchaseTransition(
+                next = PurchaseState.CANCELLED,
+                heldDelta = -1,
+                soldDelta = 0,
+                releaseGuards = true
+            )
         PurchaseState.CANCELLATION_REQUESTED to PaymentOutcome.APPROVED ->
-            PurchaseTransition(PurchaseState.REFUND_PENDING, -1, 1, false, TicketDisposition.NEVER_ISSUED)
-        PurchaseState.INVENTORY_HELD to PaymentOutcome.EXPIRED ->
-            PurchaseTransition(PurchaseState.EXPIRED, -1, 0, true)
-        else -> throw InvalidPurchaseTransition(state, outcome)
+            PurchaseTransition(
+                next = PurchaseState.REFUND_PENDING,
+                heldDelta = -1,
+                soldDelta = 1,
+                releaseGuards = false,
+                ticketDisposition = TicketDisposition.NEVER_ISSUED
+            )
+        PurchaseState.INVENTORY_HELD to PaymentOutcome.EXPIRED          ->
+            PurchaseTransition(
+                next = PurchaseState.EXPIRED,
+                heldDelta = -1,
+                soldDelta = 0,
+                releaseGuards = true
+            )
+        else                                                            ->
+            throw InvalidPurchaseTransition(state, outcome)
     }
 
-/** refund와 ticket disposition이 모두 안전성을 증명할 때만 restock을 확정합니다. */
 fun refundTransition(
     state: PurchaseState,
     disposition: TicketDisposition,
@@ -112,10 +159,23 @@ fun refundTransition(
     return when (disposition) {
         TicketDisposition.NEVER_ISSUED,
         TicketDisposition.REVOKED,
-        -> PurchaseTransition(PurchaseState.REFUNDED, 0, -1, true, disposition)
+            -> PurchaseTransition(
+            next = PurchaseState.REFUNDED,
+            heldDelta = 0,
+            soldDelta = -1,
+            releaseGuards = true,
+            ticketDisposition = disposition
+        )
+
         TicketDisposition.PENDING,
         TicketDisposition.ISSUED,
-        -> PurchaseTransition(PurchaseState.REFUND_PENDING, 0, 0, false, disposition)
+            -> PurchaseTransition(
+            next = PurchaseState.REFUND_PENDING,
+            heldDelta = 0,
+            soldDelta = 0,
+            releaseGuards = false,
+            ticketDisposition = disposition
+        )
     }
 }
 
@@ -127,17 +187,23 @@ fun ticketTransition(
     when (state to outcome) {
         TicketState.ISSUE_PENDING to TicketEffectOutcome.SUCCEEDED,
         TicketState.ISSUE_RETRY to TicketEffectOutcome.SUCCEEDED,
-        -> TicketState.ISSUED
+                                                                            -> TicketState.ISSUED
+
         TicketState.ISSUE_PENDING to TicketEffectOutcome.RETRYABLE_FAILURE,
         TicketState.ISSUE_RETRY to TicketEffectOutcome.RETRYABLE_FAILURE,
-        -> TicketState.ISSUE_RETRY
-        TicketState.REVOKE_PENDING to TicketEffectOutcome.SUCCEEDED -> TicketState.REVOKED
+                                                                            -> TicketState.ISSUE_RETRY
+
+        TicketState.REVOKE_PENDING to TicketEffectOutcome.SUCCEEDED         -> TicketState.REVOKED
         TicketState.REVOKE_PENDING to TicketEffectOutcome.RETRYABLE_FAILURE -> TicketState.REVOKE_PENDING
         TicketState.REVOKE_PENDING to TicketEffectOutcome.RETRY_BUDGET_EXHAUSTED -> TicketState.QUARANTINED
-        else -> throw InvalidTicketTransition(state, outcome)
+
+        else                                                                ->
+            throw InvalidTicketTransition(state, outcome)
     }
 
-private fun SaleTransitionContext.insideWindow(): Boolean = !now.isBefore(opensAt) && now.isBefore(closesAt)
+private fun SaleTransitionContext.insideWindow(): Boolean =
+    !now.isBefore(opensAt) &&
+            now.isBefore(closesAt)
 
 private fun invalidSale(
     state: SaleState,

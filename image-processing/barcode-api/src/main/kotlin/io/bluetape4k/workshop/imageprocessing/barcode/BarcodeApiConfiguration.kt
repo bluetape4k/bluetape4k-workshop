@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.imageprocessing.barcode
 
 import io.bluetape4k.images.barcode.BarcodeReader
 import io.bluetape4k.images.barcode.zxing.ZxingBarcodeReader
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -24,11 +26,10 @@ data class BarcodeExampleProperties(
     val maxInputBytes: Long = 2L * 1024L * 1024L,
     val maxInputPixels: Long = 12_000_000L,
     val maxInputSide: Int = 4_096,
-) : Serializable {
+): Serializable {
 
     init {
-        maxInputBytes.requirePositiveNumber("maxInputBytes")
-        require(maxInputBytes <= Int.MAX_VALUE) { "maxInputBytes must fit Int" }
+        maxInputBytes.requireInRange(1, Int.MAX_VALUE.toLong(), "maxInputBytes")
         maxInputPixels.requirePositiveNumber("maxInputPixels")
         maxInputSide.requirePositiveNumber("maxInputSide")
     }
@@ -41,6 +42,8 @@ data class BarcodeExampleProperties(
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(BarcodeExampleProperties::class)
 internal class BarcodeApiConfiguration {
+
+    private companion object: KLogging()
 
     @Bean
     fun barcodeReader(): BarcodeReader = ZxingBarcodeReader()

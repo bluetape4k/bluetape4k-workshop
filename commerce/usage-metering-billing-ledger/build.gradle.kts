@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    kotlin("kapt")
 }
 
 java {

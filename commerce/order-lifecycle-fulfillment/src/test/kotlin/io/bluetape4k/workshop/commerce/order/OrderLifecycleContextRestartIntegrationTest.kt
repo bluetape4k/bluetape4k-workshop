@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.order
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.order.application.InventoryListenerFailureSwitch
 import io.bluetape4k.workshop.commerce.order.application.OrderCommandService
@@ -23,7 +25,9 @@ import io.bluetape4k.workshop.commerce.order.persistence.ProviderEventInboxRepos
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ConfigurableApplicationContext
@@ -31,27 +35,33 @@ import org.springframework.modulith.events.EventPublication
 import org.springframework.modulith.events.core.EventPublicationRepository
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import org.testcontainers.utility.Base58
 import java.math.BigDecimal
+import java.sql.Connection
 import java.sql.DriverManager
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 internal class OrderLifecycleContextRestartIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
 
     @Test
     fun `state failed publication and provider inbox survive context restart and replay`() {
-        val schema = "restart_${UUID.randomUUID().toString().replace("-", "")}"
+        val schema = "restart_${Base58.randomString(12).lowercase()}"
         createSchema(schema)
+
         try {
             val first = startContext(schema)
-            val evidence =
-                try {
-                    createFailedPublication(first)
-                } finally {
-                    first.close()
-                }
+            val evidence = try {
+                createFailedPublication(first)
+            } finally {
+                first.close()
+            }
 
             val restarted = startContext(schema)
             try {
@@ -65,16 +75,16 @@ internal class OrderLifecycleContextRestartIntegrationTest {
     }
 
     private fun createFailedPublication(context: ConfigurableApplicationContext): RestartEvidence {
-        val commands = context.getBean(OrderCommandService::class.java)
-        val paymentEvents = context.getBean(PaymentEventService::class.java)
-        val payments = context.getBean(PaymentAttemptRepository::class.java)
-        val reservations = context.getBean(InventoryReservationRepository::class.java)
-        val inbox = context.getBean(ProviderEventInboxRepository::class.java)
-        val failureSwitch = context.getBean(InventoryListenerFailureSwitch::class.java)
-        val publications = context.getBean(EventPublicationRepository::class.java)
+        val commands = context.getBean<OrderCommandService>()
+        val paymentEvents = context.getBean<PaymentEventService>()
+        val payments = context.getBean<PaymentAttemptRepository>()
+        val reservations = context.getBean<InventoryReservationRepository>()
+        val inbox = context.getBean<ProviderEventInboxRepository>()
+        val failureSwitch = context.getBean<InventoryListenerFailureSwitch>()
+        val publications = context.getBean<EventPublicationRepository>()
         val submitted = commands.submit(validOrder())
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 200.milliseconds untilAsserted {
             read(context) {
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.AUTHORIZING
             }
@@ -82,16 +92,16 @@ internal class OrderLifecycleContextRestartIntegrationTest {
 
         val providerEventId = "restart-success-${submitted.paymentAttemptId}"
         failureSwitch.failOnce(submitted.orderId)
-        paymentEvents.ingest(
-            PaymentProviderEvent(
-                providerEventId = providerEventId,
-                paymentAttemptId = submitted.paymentAttemptId,
-                kind = ProviderEventKind.SUCCEEDED,
-                occurredAt = Instant.parse("2026-07-19T00:00:00Z")
-            )
-        ) shouldBeEqualTo ProviderEventDisposition.APPLIED
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        val event = PaymentProviderEvent(
+            providerEventId = providerEventId,
+            paymentAttemptId = submitted.paymentAttemptId,
+            kind = ProviderEventKind.SUCCEEDED,
+            occurredAt = Instant.parse("2026-07-19T00:00:00Z")
+        )
+        paymentEvents.ingest(event) shouldBeEqualTo ProviderEventDisposition.APPLIED
+
+        await atMost 10.seconds withPollInterval 200.milliseconds untilAsserted {
             read(context) {
                 publications.countByStatus(EventPublication.Status.FAILED) shouldBeGreaterThan 0
                 payments.findById(submitted.paymentAttemptId).status shouldBeEqualTo PaymentStatus.SUCCEEDED
@@ -106,25 +116,27 @@ internal class OrderLifecycleContextRestartIntegrationTest {
         context: ConfigurableApplicationContext,
         evidence: RestartEvidence,
     ) {
-        val orders = context.getBean(OrderRepository::class.java)
-        val payments = context.getBean(PaymentAttemptRepository::class.java)
-        val reservations = context.getBean(InventoryReservationRepository::class.java)
-        val fulfillments = context.getBean(FulfillmentGroupRepository::class.java)
-        val inbox = context.getBean(ProviderEventInboxRepository::class.java)
-        val publications = context.getBean(EventPublicationRepository::class.java)
+        val orders = context.getBean<OrderRepository>()
+        val payments = context.getBean<PaymentAttemptRepository>()
+        val reservations = context.getBean<InventoryReservationRepository>()
+        val fulfillments = context.getBean<FulfillmentGroupRepository>()
+        val inbox = context.getBean<ProviderEventInboxRepository>()
+        val publications = context.getBean<EventPublicationRepository>()
 
         read(context) {
             payments.findById(evidence.paymentAttemptId).status shouldBeEqualTo PaymentStatus.SUCCEEDED
             inbox.find("FAKE", evidence.providerEventId)!!.disposition shouldBeEqualTo ProviderEventDisposition.APPLIED
         }
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost 10.seconds withPollInterval 200.milliseconds untilAsserted {
             read(context) {
                 orders.findById(evidence.orderId).status shouldBeEqualTo OrderStatus.FULFILLMENT_IN_PROGRESS
                 reservations.findByOrderId(evidence.orderId)!!.status shouldBeEqualTo ReservationStatus.COMMITTED
                 fulfillments.findByOrderId(evidence.orderId).size shouldBeEqualTo 2
-                inbox.find("FAKE", evidence.providerEventId)!!.disposition shouldBeEqualTo
-                    ProviderEventDisposition.APPLIED
+
+                inbox.find("FAKE", evidence.providerEventId)!!
+                    .disposition shouldBeEqualTo ProviderEventDisposition.APPLIED
+
                 publications.countByStatus(EventPublication.Status.COMPLETED) shouldBeGreaterThan 0
             }
         }
@@ -142,12 +154,12 @@ internal class OrderLifecycleContextRestartIntegrationTest {
                 "--spring.main.banner-mode=off"
             )
 
-    private fun <T : Any> read(
+    private inline fun <T: Any> read(
         context: ConfigurableApplicationContext,
-        block: () -> T,
+        crossinline block: () -> T,
     ): T {
-        val transactions = TransactionTemplate(context.getBean(PlatformTransactionManager::class.java))
-        return requireNotNull(transactions.execute { block() })
+        val transactions = TransactionTemplate(context.getBean<PlatformTransactionManager>())
+        return transactions.execute { block() }.shouldNotBeNull()
     }
 
     private fun validOrder() =
@@ -155,11 +167,10 @@ internal class OrderLifecycleContextRestartIntegrationTest {
             tenantId = "tenant-restart",
             customerReference = "restart-order",
             providerMode = ProviderMode.DELAYED_SUCCESS,
-            lines =
-                listOf(
-                    SubmitOrderLine("sku-a", 1, BigDecimal("10.00")),
-                    SubmitOrderLine("sku-b", 2, BigDecimal("20.00"))
-                )
+            lines = listOf(
+                SubmitOrderLine("sku-a", 1, BigDecimal("10.00")),
+                SubmitOrderLine("sku-b", 2, BigDecimal("20.00"))
+            )
         )
 
     private fun createSchema(schema: String) =
@@ -172,11 +183,11 @@ internal class OrderLifecycleContextRestartIntegrationTest {
             connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
         }
 
-    private fun postgresConnection() =
+    private fun postgresConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,
-            requireNotNull(postgres.username),
-            requireNotNull(postgres.password)
+            postgres.username.shouldNotBeNull(),
+            postgres.password.shouldNotBeNull(),
         )
 
     private fun schemaJdbcUrl(schema: String): String {

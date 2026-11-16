@@ -1,15 +1,22 @@
 package io.bluetape4k.workshop.leader.jobsafety.effect
 
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExternalEffectResult
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobEffectReceiptRepository
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobOutboxRepository
-import io.bluetape4k.support.requireGt
 import java.time.Duration
 import java.time.Instant
 
-enum class EffectWorkResult { NO_WORK, CONFIRMED, DECLINED, RECONCILIATION_REQUIRED }
+enum class EffectWorkResult {
+    NO_WORK,
+    CONFIRMED,
+    DECLINED,
+    RECONCILIATION_REQUIRED
+}
 
 interface EffectOperations {
     fun deliverNext(): EffectWorkResult
@@ -22,30 +29,33 @@ class OutboxEffectWorker(
     private val outbox: JobOutboxRepository,
     private val receipts: JobEffectReceiptRepository,
     private val provider: ExternalEffectPort,
-    private val claimTimeout: Duration = Duration.ofSeconds(30),
+    private val claimTimeout: Duration = 30.seconds(),
     private val clock: () -> Instant = Instant::now,
-) : EffectOperations {
+): EffectOperations {
+
+    companion object: KLogging()
+
     init {
-        claimTimeout.requireGt(Duration.ZERO, "claimTimeout")
+        claimTimeout.requirePositiveDuration("claimTimeout")
     }
 
     override fun deliverNext(): EffectWorkResult {
-        val claimed =
-            outbox.claimNext(EffectDeliveryState.PENDING, clock(), claimTimeout)
-                ?: return EffectWorkResult.NO_WORK
+        val claimed = outbox.claimNext(EffectDeliveryState.PENDING, clock(), claimTimeout)
+            ?: return EffectWorkResult.NO_WORK
+
         return finalize(claimed.operationId, provider.execute(claimed.operationId))
     }
 
     override fun reconcileNext(): EffectWorkResult {
-        val claimed =
-            outbox.claimNextForReconciliation(clock(), claimTimeout)
-                ?: return EffectWorkResult.NO_WORK
+        val claimed = outbox.claimNextForReconciliation(clock(), claimTimeout)
+            ?: return EffectWorkResult.NO_WORK
+        
         return finalize(claimed.operationId, provider.query(claimed.operationId))
     }
 
     private fun finalize(operationId: OperationId, result: ExternalEffectResult): EffectWorkResult =
         when (result) {
-            ExternalEffectResult.UNKNOWN -> {
+            ExternalEffectResult.UNKNOWN  -> {
                 outbox.transaction {
                     outbox.complete(this, operationId, EffectDeliveryState.RECONCILIATION_REQUIRED)
                 }

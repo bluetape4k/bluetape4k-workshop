@@ -20,9 +20,9 @@ import java.util.concurrent.ConcurrentHashMap
  * - SSE stream 은 `extraBufferCapacity = 64` 와 `onBufferOverflow = BufferOverflow.SUSPEND` 를 가진 [MutableSharedFlow] 를 기반으로 합니다.
  * - stalled SSE subscriber 가 HTTP handler 를 무기한 block 하지 못하도록 [save] 와 [update] 는 5초 timeout 으로 `sharedFlow.emit(book)` 을 시도합니다. emit 성공 여부와 관계없이 book 은 항상 persist 됩니다.
  */
-class InMemoryBookRepository : BookRepository {
+class InMemoryBookRepository: BookRepository {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val EMIT_TIMEOUT_MS = 5_000L
     }
 
@@ -64,7 +64,7 @@ class InMemoryBookRepository : BookRepository {
     override fun stream(): Flow<Book> = sharedFlow.asSharedFlow()
 
     private suspend fun emitWithTimeout(book: Book) {
-        val emitted = withTimeoutOrNull(EMIT_TIMEOUT_MS) { sharedFlow.emit(book) } != null
+        val emitted = withTimeoutOrNull(timeMillis = EMIT_TIMEOUT_MS) { sharedFlow.emit(book) } != null
         if (!emitted) {
             log.warn { "SSE emit timed out for book ${book.id}; book saved, event dropped" }
         }

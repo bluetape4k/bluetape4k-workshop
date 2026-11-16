@@ -5,7 +5,7 @@ import java.io.Serializable
 
 data class Order(
     val id: String = Uuid.V7.nextIdAsString(),
-) : Serializable {
+): Serializable {
 
     var status: OrderStatus = OrderStatus.OPEN
         private set

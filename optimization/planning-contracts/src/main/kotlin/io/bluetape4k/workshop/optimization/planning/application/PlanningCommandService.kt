@@ -5,7 +5,7 @@ import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestR
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.Serializable
-import java.util.UUID
+import java.util.*
 
 internal sealed interface PlanningCommandResult: Serializable {
     data class Ready(
@@ -38,8 +38,10 @@ internal class PlanningCommandService(
         if (!aggregateRepository.versionMatches(request.aggregateId, request.aggregateVersion)) {
             return PlanningCommandResult.Conflict("aggregate version changed")
         }
+
         val revision = request.acceptedRevision
             ?: return PlanningCommandResult.Conflict("planning result is not accepted")
+
         return PlanningCommandResult.Ready(
             requestId = request.id,
             aggregateId = request.aggregateId,

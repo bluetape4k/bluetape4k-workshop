@@ -3,12 +3,13 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.integration
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * Kafka publication 전에 local outbox에 저장되는 Versioned Usage event contract입니다.
@@ -27,7 +28,62 @@ class UsageIntegrationEnvelope private constructor(
     val payloadDigest: String,
     val occurredAt: Instant,
     val recordedAt: Instant,
-) : Serializable {
+): Serializable {
+
+    companion object: KLogging() {
+        private const val serialVersionUID: Long = 1L
+
+        operator fun invoke(
+            eventId: UUID,
+            eventType: String,
+            schemaVersion: Int,
+            tenantId: String,
+            aggregateId: String,
+            aggregateVersion: Long,
+            payload: String,
+            occurredAt: Instant,
+            recordedAt: Instant,
+        ): UsageIntegrationEnvelope =
+            UsageIntegrationEnvelope(
+                eventId,
+                eventType,
+                schemaVersion,
+                tenantId,
+                "Usage",
+                aggregateId,
+                aggregateVersion,
+                payload,
+                digestOf(payload),
+                occurredAt,
+                recordedAt,
+            )
+
+        fun create(
+            eventId: UUID,
+            eventType: String,
+            schemaVersion: Int,
+            tenantId: String,
+            aggregateId: String,
+            aggregateVersion: Long,
+            payload: String,
+            occurredAt: Instant,
+            recordedAt: Instant,
+        ): UsageIntegrationEnvelope =
+            invoke(
+                eventId,
+                eventType,
+                schemaVersion,
+                tenantId,
+                aggregateId,
+                aggregateVersion,
+                payload,
+                occurredAt,
+                recordedAt,
+            )
+
+        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
+    }
+
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -41,40 +97,30 @@ class UsageIntegrationEnvelope private constructor(
 
     fun hasValidPayloadDigest(): Boolean = TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
 
-    fun wirePayload(): String = Jackson.defaultJsonMapper.writeValueAsString(
-        linkedMapOf(
-            "eventId" to eventId.toString(),
-            "eventType" to eventType,
-            "schemaVersion" to schemaVersion,
-            "tenantId" to tenantId,
-            "aggregateType" to aggregateType,
-            "aggregateId" to aggregateId,
-            "aggregateVersion" to aggregateVersion,
-            "payload" to payload,
-            "payloadDigest" to payloadDigest,
-            "occurredAt" to occurredAt.toString(),
-            "recordedAt" to recordedAt.toString(),
-        ),
-    )
+    fun wirePayload(): String =
+        Jackson.defaultJsonMapper.writeValueAsString(
+            linkedMapOf(
+                "eventId" to eventId.toString(),
+                "eventType" to eventType,
+                "schemaVersion" to schemaVersion,
+                "tenantId" to tenantId,
+                "aggregateType" to aggregateType,
+                "aggregateId" to aggregateId,
+                "aggregateVersion" to aggregateVersion,
+                "payload" to payload,
+                "payloadDigest" to payloadDigest,
+                "occurredAt" to occurredAt.toString(),
+                "recordedAt" to recordedAt.toString(),
+            ),
+        )
 
     fun wirePayloadDigest(): String = digestOf(wirePayload())
-
-    companion object {
-        private const val serialVersionUID: Long = 1L
-        fun create(
-            eventId: UUID, eventType: String, schemaVersion: Int, tenantId: String, aggregateId: String,
-            aggregateVersion: Long, payload: String, occurredAt: Instant, recordedAt: Instant,
-        ): UsageIntegrationEnvelope =
-            UsageIntegrationEnvelope(
-                eventId, eventType, schemaVersion, tenantId, "Usage", aggregateId, aggregateVersion,
-                payload, digestOf(payload), occurredAt, recordedAt,
-            )
-
-        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
-    }
 }
 
 class UsageEnvelopeCodecRegistry {
+
+    companion object: KLogging()
+
     private val supportedSchemas = setOf(
         UsageEnvelopeSchema("UsageAccepted", 1),
         UsageEnvelopeSchema("UsageRejected", 1),
@@ -93,7 +139,7 @@ class UsageEnvelopeCodecRegistry {
 data class UsageEnvelopeSchema(
     val eventType: String,
     val schemaVersion: Int,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -102,6 +148,6 @@ data class UsageEnvelopeSchema(
 class UnsupportedUsageEnvelopeVersion(
     eventType: String,
     schemaVersion: Int,
-) : IllegalArgumentException("unsupported_usage_envelope:$eventType:$schemaVersion")
+): IllegalArgumentException("unsupported_usage_envelope:$eventType:$schemaVersion")
 
-class InvalidUsageEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_usage_envelope_digest:$eventId")
+class InvalidUsageEnvelopeDigest(eventId: UUID): IllegalArgumentException("invalid_usage_envelope_digest:$eventId")

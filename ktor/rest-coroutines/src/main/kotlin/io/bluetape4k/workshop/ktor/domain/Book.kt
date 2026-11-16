@@ -20,7 +20,7 @@ data class Book(
     val title: String,
     val author: String,
     val year: Int,
-) : java.io.Serializable {
+): java.io.Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

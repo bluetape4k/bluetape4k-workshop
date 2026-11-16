@@ -10,8 +10,9 @@ import org.springframework.context.annotation.Bean
 @SpringBootApplication(proxyBeanMethods = false)
 class RedisClusterApplication {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         // 참고: RedisCluster 는 7000-7005 port 를 사용합니다. macOS AirPlay Receiver 와 충돌할 수 있습니다.
+        // cluster 구성에 많은 시간이 걸리므로, lazy initialize 를 수행하면 안됩니다.
         @JvmStatic
         val redisCluster = RedisClusterServer.Launcher.redisCluster
     }

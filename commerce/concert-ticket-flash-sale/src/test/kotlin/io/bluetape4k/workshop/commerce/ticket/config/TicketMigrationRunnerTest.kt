@@ -2,41 +2,52 @@ package io.bluetape4k.workshop.commerce.ticket.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.database.getDataSource
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
 import java.sql.DriverManager
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 internal class TicketMigrationRunnerTest {
+
+    companion object {
+        private const val MIGRATION_LOCK_KEY = 521_001L
+        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private lateinit var schema: String
     private lateinit var dataSource: DataSource
 
     @BeforeEach
     fun createIsolatedSchema() {
         schema = "ticket_migration_${Base58.randomString(8).lowercase()}"
+
         adminConnection().use { connection ->
-            connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
-        }
-        dataSource =
-            PGSimpleDataSource().apply {
-                setURL(postgres.jdbcUrl)
-                user = postgres.username ?: PostgreSQLServer.USERNAME
-                password = postgres.password ?: PostgreSQLServer.PASSWORD
-                currentSchema = schema
+            connection.createStatement().use {
+                it.execute("CREATE SCHEMA $schema")
             }
+        }
+        dataSource = postgres.getDataSource {
+            this.schema = this@TicketMigrationRunnerTest.schema
+        }
     }
 
     @AfterEach
@@ -78,10 +89,10 @@ internal class TicketMigrationRunnerTest {
         val readiness = configuration.ticketMigrationReadiness()
         val runner = configuration.ticketMigrationRunner(dataSource, readiness)
 
-        readiness.isReady shouldBeEqualTo false
+        readiness.isReady.shouldBeFalse()
         configuration.ticketSchemaMigration(runner).afterSingletonsInstantiated()
 
-        readiness.isReady shouldBeEqualTo true
+        readiness.isReady.shouldBeTrue()
         queryLong("SELECT count(*) FROM ticket_schema_history") shouldBeEqualTo 1L
     }
 
@@ -111,24 +122,24 @@ internal class TicketMigrationRunnerTest {
                     executor.submit<TicketMigrationResult> {
                         runner(
                             resource = "db/migration/test/V001__ticket_probe.sql",
-                            lockTimeout = Duration.ofSeconds(2),
+                            lockTimeout = 2.seconds(),
                             readiness = readiness,
                         ).migrate()
                     }
                 TimeUnit.MILLISECONDS.sleep(50)
-                migration.isDone shouldBeEqualTo false
-                readiness.isReady shouldBeEqualTo false
+                migration.isDone.shouldBeFalse()
+                readiness.isReady.shouldBeFalse()
                 blocker.rollback()
 
-                migration.get(2, TimeUnit.SECONDS) shouldBeEqualTo TicketMigrationResult.APPLIED
-                readiness.isReady shouldBeEqualTo true
+                migration.get(2.seconds) shouldBeEqualTo TicketMigrationResult.APPLIED
+                readiness.isReady.shouldBeTrue()
             }
         }
     }
 
     private fun runner(
         resource: String,
-        lockTimeout: Duration = Duration.ofSeconds(1),
+        lockTimeout: Duration = 1.seconds(),
         readiness: TicketMigrationReadiness = TicketMigrationReadiness(),
     ): TicketMigrationRunner =
         TicketMigrationRunner(
@@ -143,8 +154,7 @@ internal class TicketMigrationRunnerTest {
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
                 statement.executeQuery(sql).use { result ->
-                    result.next()
-                    result.getLong(1)
+                    result.singleLong()
                 }
             }
         }
@@ -155,9 +165,4 @@ internal class TicketMigrationRunnerTest {
             postgres.username ?: PostgreSQLServer.USERNAME,
             postgres.password ?: PostgreSQLServer.PASSWORD,
         )
-
-    companion object {
-        private const val MIGRATION_LOCK_KEY = 521_001L
-        private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
-    }
 }

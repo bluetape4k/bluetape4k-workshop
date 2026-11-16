@@ -4,6 +4,11 @@ package io.bluetape4k.workshop.commerce.usagebilling.invoice.persistence
 
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceJournal
@@ -12,19 +17,16 @@ import io.bluetape4k.workshop.commerce.usagebilling.invoice.integration.InvoiceI
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging.InvoiceOutboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging.InvoiceOutboxLease
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging.InvoiceOutboxStatus
-import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.greater
-import org.jetbrains.exposed.v1.core.lessEq
-import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
@@ -36,9 +38,10 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
+import kotlin.reflect.KClass
 
-object InvoiceOutboxEvents : UUIDTable("invoice_outbox_event", "outbox_event_id") {
+object InvoiceOutboxEvents: UUIDTable("invoice_outbox_event", "outbox_event_id") {
     val eventId = javaUUID("event_id")
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
@@ -62,7 +65,7 @@ object InvoiceOutboxEvents : UUIDTable("invoice_outbox_event", "outbox_event_id"
     }
 }
 
-object InvoiceLines : UUIDTable("invoice_line", "invoice_line_id") {
+object InvoiceLines: UUIDTable("invoice_line", "invoice_line_id") {
     val sourceEventId = javaUUID("source_event_id")
     val correctionOf = javaUUID("correction_of").nullable()
     val amount = decimal("amount", 19, 6)
@@ -72,7 +75,7 @@ object InvoiceLines : UUIDTable("invoice_line", "invoice_line_id") {
     }
 }
 
-object InvoiceInboxEvents : UUIDTable("invoice_inbox_event", "inbox_event_id") {
+object InvoiceInboxEvents: UUIDTable("invoice_inbox_event", "inbox_event_id") {
     val eventId = javaUUID("event_id")
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
@@ -84,8 +87,8 @@ object InvoiceInboxEvents : UUIDTable("invoice_inbox_event", "inbox_event_id") {
     }
 }
 
-class InvoiceOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<InvoiceOutboxEventEntity>(InvoiceOutboxEvents)
+class InvoiceOutboxEventEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<InvoiceOutboxEventEntity>(InvoiceOutboxEvents)
 
     var eventId by InvoiceOutboxEvents.eventId
     var tenantId by InvoiceOutboxEvents.tenantId
@@ -105,16 +108,16 @@ class InvoiceOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by InvoiceOutboxEvents.updatedAt
 }
 
-class InvoiceLineEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<InvoiceLineEntity>(InvoiceLines)
+class InvoiceLineEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<InvoiceLineEntity>(InvoiceLines)
 
     var sourceEventId by InvoiceLines.sourceEventId
     var correctionOf by InvoiceLines.correctionOf
     var amount by InvoiceLines.amount
 }
 
-class InvoiceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<InvoiceInboxEventEntity>(InvoiceInboxEvents)
+class InvoiceInboxEventEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<InvoiceInboxEventEntity>(InvoiceInboxEvents)
 
     var eventId by InvoiceInboxEvents.eventId
     var tenantId by InvoiceInboxEvents.tenantId
@@ -124,16 +127,16 @@ class InvoiceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 }
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class InvoiceExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
+abstract class InvoiceExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass.java))
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class AppendOnlyInvoiceExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : InvoiceExposedJdbcRepository<E, ID>(domainClass) {
-    final override fun <S : E> save(entity: S): S = immutableMutation()
-    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+abstract class AppendOnlyInvoiceExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): InvoiceExposedJdbcRepository<E, ID>(domainClass) {
+    final override fun <S: E> save(entity: S): S = immutableMutation()
+    final override fun <S: E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
     final override fun deleteById(id: ID): Unit = immutableMutation()
     final override fun delete(entity: E): Unit = immutableMutation()
     final override fun deleteAllById(ids: Iterable<ID>): Unit = immutableMutation()
@@ -144,24 +147,29 @@ abstract class AppendOnlyInvoiceExposedJdbcRepository<E : Entity<ID>, ID : Any>(
 }
 
 @Repository
-class InvoiceOutboxRepository :
-    AppendOnlyInvoiceExposedJdbcRepository<InvoiceOutboxEventEntity, UUID>(InvoiceOutboxEventEntity::class.java)
+class InvoiceOutboxRepository:
+    AppendOnlyInvoiceExposedJdbcRepository<InvoiceOutboxEventEntity, UUID>(InvoiceOutboxEventEntity::class)
 
 @Repository
-class InvoiceLineRepository :
-    AppendOnlyInvoiceExposedJdbcRepository<InvoiceLineEntity, UUID>(InvoiceLineEntity::class.java)
+class InvoiceLineRepository:
+    AppendOnlyInvoiceExposedJdbcRepository<InvoiceLineEntity, UUID>(InvoiceLineEntity::class)
 
 @Repository
-class InvoiceInboxRepository :
-    AppendOnlyInvoiceExposedJdbcRepository<InvoiceInboxEventEntity, UUID>(InvoiceInboxEventEntity::class.java)
+class InvoiceInboxRepository:
+    AppendOnlyInvoiceExposedJdbcRepository<InvoiceInboxEventEntity, UUID>(InvoiceInboxEventEntity::class)
 
 @Repository
-class ExposedInvoiceJournal : InvoiceJournal {
+class ExposedInvoiceJournal: InvoiceJournal {
+
+    companion object: KLogging()
+
     override val lines: List<InvoiceLine>
-        get() = InvoiceLineEntity.all().map { InvoiceLine(it.sourceEventId, it.correctionOf, it.amount) }
+        get() = InvoiceLineEntity.all()
+            .map { InvoiceLine(it.sourceEventId, it.correctionOf, it.amount) }
 
     override fun findLine(sourceEventId: UUID): InvoiceLine? =
-        InvoiceLineEntity.find { InvoiceLines.sourceEventId eq sourceEventId }
+        InvoiceLineEntity
+            .find { InvoiceLines.sourceEventId eq sourceEventId }
             .firstOrNull()
             ?.let { InvoiceLine(it.sourceEventId, it.correctionOf, it.amount) }
 
@@ -175,10 +183,13 @@ class ExposedInvoiceJournal : InvoiceJournal {
             it[createdAt] = now
         }.insertedCount == 1
         if (!inserted) {
-            val existing = InvoiceInboxEvents.selectAll().where {
-                (InvoiceInboxEvents.tenantId eq event.tenantId) and
-                    (InvoiceInboxEvents.eventId eq event.eventId)
-            }.singleOrNull()
+            val existing = InvoiceInboxEvents.selectAll()
+                .where {
+                    (InvoiceInboxEvents.tenantId eq event.tenantId) and
+                            (InvoiceInboxEvents.eventId eq event.eventId)
+                }
+                .singleOrNull()
+
             return when (existing?.get(InvoiceInboxEvents.payloadDigest)) {
                 event.payloadDigest -> InvoiceInboxOutcome.DUPLICATE
                 else -> InvoiceInboxOutcome.QUARANTINED
@@ -240,10 +251,18 @@ class ExposedInvoiceJournal : InvoiceJournal {
 }
 
 @Repository
-class ExposedInvoiceOutboxJournal : InvoiceOutboxJournal {
+class ExposedInvoiceOutboxJournal: InvoiceOutboxJournal {
+
+    private companion object: KLogging() {
+        val CLAIM_LEASE: Duration = 30.seconds()
+        val RETRY_DELAY: Duration = 1.seconds()
+        const val MAX_ATTEMPTS = 3
+    }
+
     @Transactional
     override fun claim(owner: String, now: Instant, limit: Int): List<InvoiceOutboxLease> =
-        InvoiceOutboxEvents.selectAll()
+        InvoiceOutboxEvents
+            .selectAll()
             .where { claimableAt(now) }
             .orderBy(InvoiceOutboxEvents.createdAt to SortOrder.ASC, InvoiceOutboxEvents.id to SortOrder.ASC)
             .limit(limit)
@@ -258,7 +277,9 @@ class ExposedInvoiceOutboxJournal : InvoiceOutboxJournal {
                     it[updatedAt] = now
                 }
                 if (claimed != 1) return@mapNotNull null
-                InvoiceOutboxEvents.selectAll()
+
+                InvoiceOutboxEvents
+                    .selectAll()
                     .where { InvoiceOutboxEvents.eventId eq eventId }
                     .singleOrNull()
                     ?.let { claimedRow ->
@@ -282,38 +303,37 @@ class ExposedInvoiceOutboxJournal : InvoiceOutboxJournal {
 
     @Transactional
     override fun markRetryWait(eventId: UUID, owner: String, now: Instant): Boolean =
-        InvoiceOutboxEvents.selectAll().where { claimedBy(owner, eventId, now) }.singleOrNull()?.let { row ->
-            val attempts = row[InvoiceOutboxEvents.attempt] + 1
-            InvoiceOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
-                it[attempt] = attempts
-                it[status] = if (attempts >= MAX_ATTEMPTS) {
-                    InvoiceOutboxStatus.QUARANTINED.name
-                } else {
-                    InvoiceOutboxStatus.RETRY_WAIT.name
-                }
-                it[claimOwner] = null
-                it[claimUntil] = null
-                it[nextAttemptAt] = now.plus(RETRY_DELAY)
-                it[updatedAt] = now
-            } == 1
-        } ?: false
+        InvoiceOutboxEvents
+            .selectAll()
+            .where { claimedBy(owner, eventId, now) }
+            .singleOrNull()
+            ?.let { row ->
+                val attempts = row[InvoiceOutboxEvents.attempt] + 1
+                InvoiceOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
+                    it[attempt] = attempts
+                    it[status] = if (attempts >= MAX_ATTEMPTS) {
+                        InvoiceOutboxStatus.QUARANTINED.name
+                    } else {
+                        InvoiceOutboxStatus.RETRY_WAIT.name
+                    }
+                    it[claimOwner] = null
+                    it[claimUntil] = null
+                    it[nextAttemptAt] = now.plus(RETRY_DELAY)
+                    it[updatedAt] = now
+                } == 1
+            } ?: false
 
     private fun claimableAt(now: Instant): Op<Boolean> =
         (InvoiceOutboxEvents.status eq InvoiceOutboxStatus.PENDING.name) or
-            ((InvoiceOutboxEvents.status eq InvoiceOutboxStatus.RETRY_WAIT.name) and
-                (InvoiceOutboxEvents.nextAttemptAt lessEq now)) or
-            ((InvoiceOutboxEvents.status eq InvoiceOutboxStatus.CLAIMED.name) and
-                (InvoiceOutboxEvents.claimUntil lessEq now))
+                ((InvoiceOutboxEvents.status eq InvoiceOutboxStatus.RETRY_WAIT.name) and
+                        (InvoiceOutboxEvents.nextAttemptAt lessEq now)) or
+                ((InvoiceOutboxEvents.status eq InvoiceOutboxStatus.CLAIMED.name) and
+                        (InvoiceOutboxEvents.claimUntil lessEq now))
 
     private fun claimedBy(owner: String, eventId: UUID, now: Instant): Op<Boolean> =
         (InvoiceOutboxEvents.eventId eq eventId) and
-            (InvoiceOutboxEvents.status eq InvoiceOutboxStatus.CLAIMED.name) and
-            (InvoiceOutboxEvents.claimOwner eq owner) and
-            (InvoiceOutboxEvents.claimUntil greater now)
+                (InvoiceOutboxEvents.status eq InvoiceOutboxStatus.CLAIMED.name) and
+                (InvoiceOutboxEvents.claimOwner eq owner) and
+                (InvoiceOutboxEvents.claimUntil greater now)
 
-    private companion object {
-        val CLAIM_LEASE: Duration = Duration.ofSeconds(30)
-        val RETRY_DELAY: Duration = Duration.ofSeconds(1)
-        const val MAX_ATTEMPTS = 3
-    }
 }

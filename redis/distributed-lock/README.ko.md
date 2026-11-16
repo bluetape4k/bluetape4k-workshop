@@ -22,13 +22,13 @@ Fenced variant는 Redis에서 단조 증가 token을 받고, 그 token을 `Fence
 
 ## 핵심 기능
 
-| 기능 | 클래스 | 핵심 API |
-|---|---|---|
-| 비안전(race 데모) | `UnsafeInventoryService` | 락 없음; oversell 시연 |
-| 분산 락 | `LockedInventoryService` | `RLock.tryLock(wait, lease, unit)` |
-| 펜싱 락(블로킹) | `FencedInventoryService` | `RFencedLock.tryLockAndGetToken(wait, lease, unit)` |
-| 펜싱 락(코루틴) | `SuspendingFencedInventoryService` | `tryLockAsync` + `tokenAsync` + `NonCancellable` unlock |
-| 토큰 가드 | `FencedResource` | CAS `lastSeenToken`; 오래된 holder 쓰기 거부 |
+| 기능              | 클래스                             | 핵심 API                                                |
+|-------------------|------------------------------------|---------------------------------------------------------|
+| 비안전(race 데모) | `UnsafeInventoryService`           | 락 없음; oversell 시연                                  |
+| 분산 락           | `LockedInventoryService`           | `RLock.tryLock(wait, lease, unit)`                      |
+| 펜싱 락(블로킹)   | `FencedInventoryService`           | `RFencedLock.tryLockAndGetToken(wait, lease, unit)`     |
+| 펜싱 락(코루틴)   | `SuspendingFencedInventoryService` | `tryLockAsync` + `tokenAsync` + `NonCancellable` unlock |
+| 토큰 가드         | `FencedResource`                   | CAS `lastSeenToken`; 오래된 holder 쓰기 거부            |
 
 ---
 
@@ -87,8 +87,7 @@ when (result) {
 
 ### 3. 펜싱 락 — 오래된 holder 방지
 
-`FencedResource` CAS 게이트는 현재 `lastSeenToken`보다 오래된 fencing token을 가진 쓰기를 거부합니다.
-느리거나 재시작된 이전 lock-holder가 더 최신 holder가 쓴 데이터를 덮어쓰지 못하게 합니다.
+`FencedResource` CAS 게이트는 현재 `lastSeenToken`보다 오래된 fencing token을 가진 쓰기를 거부합니다. 느리거나 재시작된 이전 lock-holder가 더 최신 holder가 쓴 데이터를 덮어쓰지 못하게 합니다.
 
 ```kotlin
 // FencedInventoryService internally:
@@ -108,8 +107,7 @@ val result = suspendingService.deduct(inventoryId, qty = 10, waitMs = 3000L, lea
 
 #### 취소 안전성
 
-`SuspendingFencedInventoryService`는 `finally` 절에서 `withContext(NonCancellable)` 블록을 사용합니다.
-그래서 호출 코루틴이 중간에 취소되더라도 `unlockAsync(lockId).await()`가 항상 완료됩니다.
+`SuspendingFencedInventoryService`는 `finally` 절에서 `withContext(NonCancellable)` 블록을 사용합니다. 그래서 호출 코루틴이 중간에 취소되더라도 `unlockAsync(lockId).await()`가 항상 완료됩니다.
 
 ```kotlin
 // Simplified internal pattern
@@ -152,8 +150,7 @@ try {
 
 ### 펜싱 토큰 프로토콜
 
-펜싱 토큰은 lock server가 각 성공적인 lock 획득 시 발급하는 단조 증가 숫자입니다.
-모든 리소스 업데이트는 토큰을 전달해야 하며, 리소스 가드(`lastSeenToken` CAS)는 오래된 토큰의 쓰기를 거부합니다.
+펜싱 토큰은 lock server가 각 성공적인 lock 획득 시 발급하는 단조 증가 숫자입니다. 모든 리소스 업데이트는 토큰을 전달해야 하며, 리소스 가드(`lastSeenToken` CAS)는 오래된 토큰의 쓰기를 거부합니다.
 
 이 방식은 고전적인 "lock을 획득한 프로세스가 쓰기 전에 멈췄다가 재개되는" race를 방지합니다.
 
@@ -166,32 +163,32 @@ Client A resumes → FencedResource rejects write (1 < 2) ✅
 
 ### SuspendedJobTester 의미론
 
-`SuspendedJobTester.workers(N).rounds(R)`는 `N`개 동시 worker를 만들고
-각 `add { }` 블록의 `R`라운드를 협력적으로 실행합니다. `totalUnits = R × blockCount`입니다.
+`SuspendedJobTester.workers(N).rounds(R)`는 `N`개 동시 worker를 만들고 각 `add { }` 블록의 `R`라운드를 협력적으로 실행합니다. `totalUnits = R × blockCount`입니다.
 
 stock-100/qty-10 테스트의 경우:
+
 - `workers(20).rounds(20)` -> 총 20회 시도 -> 정확히 10회 성공
 
 ### Smoke vs 기본 테스트
 
-| 태그 | 목적 | 타이밍 포함? | 기본 CI |
-|---|---|---|---|
-| _(none)_ | 빠른 정확성 검사 | 아니오(로직만) | ✅ 포함 |
-| `smoke` | Lease expiry, timeout | 예(실제 wall-clock) | ❌ 제외 |
+| 태그     | 목적                  | 타이밍 포함?        | 기본 CI |
+|----------|-----------------------|---------------------|---------|
+| _(none)_ | 빠른 정확성 검사      | 아니오(로직만)      | ✅ 포함 |
+| `smoke`  | Lease expiry, timeout | 예(실제 wall-clock) | ❌ 제외 |
 
 ---
 
 ## 사용된 bluetape4k 기능
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
-|---|---|---|---|
-| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractDistributedLockTest` companion | Testcontainers Redis singleton — 한 줄 설정, `@DynamicPropertySource` 불필요 |
-| `redissonClient {}` DSL | `bluetape4k-redisson` | `AbstractDistributedLockTest.redisson` | `RedissonClient`용 Kotlin DSL — `Config()` boilerplate 제거 |
-| `getLockId(lockName)` | `bluetape4k-redis` (`coroutines` package) | `SuspendingFencedInventoryService.deduct()` | `RFencedLock` identity용 coroutine-safe Snowflake ID — 2단계 async acquire에 필요 |
-| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Coroutine-context-aware structured logging |
-| `requirePositiveNumber` | `bluetape4k-core` | `SuspendingFencedInventoryService.deduct()` | 명확한 메시지의 `IllegalArgumentException`을 던지는 inline argument validation |
-| `SuspendedJobTester` | `bluetape4k-junit5` | `SuspendFencedLockTest` | 재현 가능한 coroutine concurrency harness — 결정적 race 검증 |
-| `MultithreadingTester` | `bluetape4k-junit5` | `DistributedLockTest` | OS-thread lock 시나리오용 fixed-thread-pool concurrency verification |
+| 기능                         | 아티팩트                                  | 코드 위치                                   | 이점                                                                              |
+|------------------------------|-------------------------------------------|---------------------------------------------|-----------------------------------------------------------------------------------|
+| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers`               | `AbstractDistributedLockTest` companion     | Testcontainers Redis singleton — 한 줄 설정, `@DynamicPropertySource` 불필요      |
+| `redissonClient {}` DSL      | `bluetape4k-redisson`                     | `AbstractDistributedLockTest.redisson`      | `RedissonClient`용 Kotlin DSL — `Config()` boilerplate 제거                       |
+| `getLockId(lockName)`        | `bluetape4k-redis` (`coroutines` package) | `SuspendingFencedInventoryService.deduct()` | `RFencedLock` identity용 coroutine-safe Snowflake ID — 2단계 async acquire에 필요 |
+| `KLoggingChannel`            | `bluetape4k-logging`                      | All companion objects                       | Coroutine-context-aware structured logging                                        |
+| `requirePositiveNumber`      | `bluetape4k-core`                         | `SuspendingFencedInventoryService.deduct()` | 명확한 메시지의 `IllegalArgumentException`을 던지는 inline argument validation    |
+| `SuspendedJobTester`         | `bluetape4k-junit5`                       | `SuspendFencedLockTest`                     | 재현 가능한 coroutine concurrency harness — 결정적 race 검증                      |
+| `MultithreadingTester`       | `bluetape4k-junit5`                       | `DistributedLockTest`                       | OS-thread lock 시나리오용 fixed-thread-pool concurrency verification              |
 
 ---
 

@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.redisson
 
-import io.bluetape4k.redis.redisson.codec.RedissonCodecs
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.debug
+import io.bluetape4k.redis.redisson.codec.RedissonCodecs
 import org.junit.jupiter.api.Test
 import org.redisson.config.Config
 import org.redisson.config.SingleServerConfig
@@ -19,6 +20,9 @@ class RedissonClientConfigTest: AbstractRedissonTest() {
     fun `shared redisson client uses tuned single server configuration`() {
         val config = redisson.config
         val singleServer = config.singleServerForTest()
+
+        log.debug { "config=$config" }
+        log.debug { "singleServer=$singleServer" }
 
         singleServer.address shouldBeEqualTo redis.url
         singleServer.connectionPoolSize shouldBeEqualTo 128
@@ -45,6 +49,9 @@ class RedissonClientConfigTest: AbstractRedissonTest() {
             val shared = redisson.config
             val expectedSingleServer = expected.singleServerForTest()
             val actualSingleServer = actual.singleServerForTest()
+
+            log.debug { "actual=$actual" }
+            log.debug { "actualSingleServer=$actualSingleServer" }
 
             actualSingleServer.address shouldBeEqualTo expectedSingleServer.address
             actualSingleServer.connectionPoolSize shouldBeEqualTo expectedSingleServer.connectionPoolSize

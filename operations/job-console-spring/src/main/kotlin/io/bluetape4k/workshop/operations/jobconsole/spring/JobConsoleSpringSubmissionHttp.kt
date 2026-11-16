@@ -2,37 +2,46 @@ package io.bluetape4k.workshop.operations.jobconsole.spring
 
 import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
+import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.MediaType
 import tools.jackson.databind.json.JsonMapper
-import jakarta.servlet.http.HttpServletRequest
+import tools.jackson.module.kotlin.readValue
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets.UTF_8
-import java.util.Collections
+import java.util.*
 
 internal const val MAX_JOB_SUBMISSION_BODY_BYTES: Int = 64 * 1024
 
-internal class JobSubmissionRequestTooLargeException : RuntimeException("job submission body exceeds 64 KiB")
+internal class JobSubmissionRequestTooLargeException: RuntimeException("job submission body exceeds 64 KiB")
 
 internal class JobSubmissionInvalidRequestException(
     message: String,
     cause: Throwable? = null,
-) : RuntimeException(message, cause)
+): RuntimeException(message, cause)
 
 internal class JobSubmissionScopeDeniedException(
     message: String,
     cause: Throwable? = null,
-) : RuntimeException(message, cause)
+): RuntimeException(message, cause)
 
 internal object JobConsoleSpringSubmissionHttp {
+
     private val strictMapper: JsonMapper = JobConsoleJson.strictRequestMapper(MAX_JOB_SUBMISSION_BODY_BYTES)
 
-    fun scope(request: HttpServletRequest): io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope {
-        val tenant = runCatching { request.singleHeader("X-Demo-Tenant") }
-            .getOrElse { throw JobSubmissionScopeDeniedException("X-Demo-Tenant is required", it) }
-        val submitter = runCatching { request.singleHeader("X-Demo-Submitter") }
-            .getOrElse { throw JobSubmissionScopeDeniedException("X-Demo-Submitter is required", it) }
+    fun scope(request: HttpServletRequest): DemoCallerScope {
+        val tenant = runCatching {
+            request.singleHeader("X-Demo-Tenant")
+        }.getOrElse {
+            throw JobSubmissionScopeDeniedException("X-Demo-Tenant is required", it)
+        }
+        val submitter = runCatching {
+            request.singleHeader("X-Demo-Submitter")
+        }.getOrElse {
+            throw JobSubmissionScopeDeniedException("X-Demo-Submitter is required", it)
+        }
         return try {
-            io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope(tenant, submitter)
+            DemoCallerScope(tenant, submitter)
         } catch (failure: IllegalArgumentException) {
             throw JobSubmissionScopeDeniedException("invalid demo caller scope", failure)
         }
@@ -41,6 +50,7 @@ internal object JobConsoleSpringSubmissionHttp {
     fun idempotencyKey(request: HttpServletRequest): String {
         val key = request.singleHeader("Idempotency-Key")
         val bytes = key.toByteArray(UTF_8)
+
         if (bytes.isEmpty() || bytes.size > 255 || bytes.any { it.toInt() !in 0x21..0x7e } || ',' in key) {
             throw JobSubmissionInvalidRequestException("Idempotency-Key must be printable ASCII, 1..255 bytes, and contain no comma")
         }
@@ -65,7 +75,7 @@ internal object JobConsoleSpringSubmissionHttp {
                     body.write(buffer, 0, read)
                 }
             }
-            return strictMapper.readValue(body.toByteArray(), SubmitJobRequest::class.java)
+            return strictMapper.readValue<SubmitJobRequest>(body.toByteArray())
         } catch (failure: JobSubmissionRequestTooLargeException) {
             throw failure
         } catch (failure: Exception) {
@@ -83,12 +93,13 @@ internal object JobConsoleSpringSubmissionHttp {
 
     private fun validateContentType(raw: String?) {
         if (raw.isNullOrBlank()) throw JobSubmissionInvalidRequestException("Content-Type must be application/json")
-        val mediaType =
-            try {
-                MediaType.parseMediaType(raw)
-            } catch (failure: IllegalArgumentException) {
-                throw JobSubmissionInvalidRequestException("Content-Type must be application/json", failure)
-            }
+
+        val mediaType = try {
+            MediaType.parseMediaType(raw)
+        } catch (failure: IllegalArgumentException) {
+            throw JobSubmissionInvalidRequestException("Content-Type must be application/json", failure)
+        }
+
         if (!mediaType.type.equals("application", ignoreCase = true) ||
             !mediaType.subtype.equals("json", ignoreCase = true) ||
             (mediaType.charset != null && mediaType.charset != UTF_8)

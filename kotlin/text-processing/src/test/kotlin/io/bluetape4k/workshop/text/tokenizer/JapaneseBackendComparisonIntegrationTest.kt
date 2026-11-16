@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.text.tokenizer
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -10,6 +12,8 @@ import org.junit.jupiter.api.TestInstance
 @Tag("sudachi-integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class JapaneseBackendComparisonIntegrationTest {
+
+    companion object: KLogging()
 
     private lateinit var reports: List<JapaneseBackendComparisonReport>
 
@@ -21,6 +25,8 @@ class JapaneseBackendComparisonIntegrationTest {
     @Test
     fun `prepared dictionary executes all approved corpus observations`() {
         reports.forEach { report ->
+
+            log.debug { "report=$report" }
             report.candidate.execution shouldBeEqualTo BackendExecution.LIVE
             report.candidate.tokens.shouldNotBeEmpty()
             report.candidate.splitModes.map { it.mode } shouldBeEqualTo listOf("A", "B", "C")
@@ -34,20 +40,20 @@ class JapaneseBackendComparisonIntegrationTest {
     fun `prepared dictionary preserves official split fixtures`() {
         val election = reports.first { it.input == "選挙管理委員会" }
         election.candidate.splitModes.first { it.mode == "A" }.surfaces shouldBeEqualTo
-            listOf("選挙", "管理", "委員", "会")
+                listOf("選挙", "管理", "委員", "会")
         election.candidate.splitModes.first { it.mode == "B" }.surfaces shouldBeEqualTo
-            listOf("選挙", "管理", "委員会")
+                listOf("選挙", "管理", "委員会")
         election.candidate.splitModes.first { it.mode == "C" }.surfaces shouldBeEqualTo
-            listOf("選挙管理委員会")
+                listOf("選挙管理委員会")
 
         val tokyo = reports.first { it.input == "東京都へ行く" }
         tokyo.candidate.splitModes.first { it.mode == "B" }.surfaces shouldBeEqualTo
-            listOf("東京都", "へ", "行く")
+                listOf("東京都", "へ", "行く")
 
         val foreign = reports.first { it.input == "外国人参政権" }
         foreign.candidate.splitModes.first { it.mode == "A" }.surfaces shouldBeEqualTo
-            listOf("外国", "人", "参政", "権")
+                listOf("外国", "人", "参政", "権")
         foreign.candidate.splitModes.first { it.mode == "C" }.surfaces shouldBeEqualTo
-            listOf("外国人参政権")
+                listOf("外国人参政権")
     }
 }

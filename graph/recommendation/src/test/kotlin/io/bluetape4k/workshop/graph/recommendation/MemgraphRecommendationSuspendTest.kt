@@ -18,13 +18,13 @@ import org.neo4j.driver.GraphDatabase
  *
  * Docker가 필요합니다. 실행: `./gradlew :graph-recommendation:integrationTest`
  * 기본 `:test` task는 `@Tag("integration")`으로 이 클래스를 제외합니다.
- */
 @Tag("integration")
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MemgraphRecommendationSuspendTest : AbstractRecommendationSuspendTest() {
+class MemgraphRecommendationSuspendTest: AbstractRecommendationSuspendTest() {
 
-    companion object : KLoggingChannel() {
-        private val memgraph = MemgraphServer.Launcher.memgraph
+    companion object: KLoggingChannel() {
+        private val memgraph by lazy { MemgraphServer.Launcher.memgraph }
     }
 
     override val graphName = "memgraph_recommendation_suspend"
@@ -43,7 +43,10 @@ class MemgraphRecommendationSuspendTest : AbstractRecommendationSuspendTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown — possible resource leak" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown — possible resource leak" }
+        }
     }
 }

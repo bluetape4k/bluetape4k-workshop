@@ -32,6 +32,9 @@ import java.time.Clock
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
 internal class VoucherPublicationConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun eventPublicationRepository(
         eventPublicationTable: ExposedEventPublicationTable,
@@ -56,7 +59,8 @@ internal class VoucherPublicationConfiguration {
     fun voucherDelayedEventHandler(
         audits: AuditRepository,
         events: VoucherEventPublisher,
-    ): VoucherDelayedEventHandler = AuditingVoucherDelayedEventHandler(audits, events)
+    ): VoucherDelayedEventHandler =
+        AuditingVoucherDelayedEventHandler(audits, events)
 
     @Bean
     fun voucherInboxAppliedEventListener(): VoucherInboxAppliedEventListener =
@@ -99,7 +103,13 @@ internal class VoucherPublicationConfiguration {
         degradation: VoucherDegradationState,
         metrics: VoucherMetrics,
     ): VoucherReconciliationWorker =
-        VoucherReconciliationWorker(reconciliation, properties.worker, leader, degradation, metrics)
+        VoucherReconciliationWorker(
+            reconciliation = reconciliation,
+            properties = properties.worker,
+            leader = leader,
+            degradation = degradation,
+            metrics = metrics
+        )
 
     @Bean
     @ConditionalOnProperty(prefix = "workshop.voucher.redis", name = ["enabled"], havingValue = "true")
@@ -109,8 +119,8 @@ internal class VoucherPublicationConfiguration {
         havingValue = "true",
         matchIfMissing = true,
     )
-    fun voucherReconciliationScheduler(worker: VoucherReconciliationWorker): VoucherReconciliationScheduler =
+    fun voucherReconciliationScheduler(
+        worker: VoucherReconciliationWorker,
+    ): VoucherReconciliationScheduler =
         VoucherReconciliationScheduler(worker)
-
-    companion object : KLogging()
 }

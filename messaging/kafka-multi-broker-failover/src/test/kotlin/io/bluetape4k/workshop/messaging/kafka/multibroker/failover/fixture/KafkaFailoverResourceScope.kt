@@ -8,7 +8,7 @@ import org.apache.kafka.clients.producer.Producer
  * scenario resource의 단일 owner입니다. close 순서는 collector → admin →
  * producer → consumer이며 이후 failure는 최초 failure에 suppressed로 보존합니다.
  */
-class KafkaFailoverResourceScope : AutoCloseable {
+class KafkaFailoverResourceScope: AutoCloseable {
     private enum class ResourceKind {
         COLLECTOR,
         ADMIN,
@@ -64,14 +64,18 @@ class KafkaFailoverResourceScope : AutoCloseable {
         if (closed) return
         closed = true
         ResourceKind.entries
-            .flatMap { kind -> actions.values.filter { it.kind == kind }.asReversed() }
+            .flatMap { kind ->
+                actions.values.filter { it.kind == kind }.asReversed()
+            }
             .forEach { registration ->
                 order += registration.name
-                runCatching { registration.close.invoke() }
-                    .onFailure { error ->
-                        if (firstFailure == null) firstFailure = error else firstFailure!!.addSuppressed(error)
-                    }
+                runCatching {
+                    registration.close.invoke()
+                }.onFailure { error ->
+                    if (firstFailure == null) firstFailure = error else firstFailure!!.addSuppressed(error)
+                }
             }
+
         firstFailure?.let { throw it }
     }
 }

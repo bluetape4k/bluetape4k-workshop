@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.kotlin.allopen)
     alias(libs.plugins.kotlin.noarg)
-    alias(libs.plugins.kotlin.kapt)
+    kotlin("kapt")
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.graalvm.native)
     alias(libs.plugins.gatling.plugin)

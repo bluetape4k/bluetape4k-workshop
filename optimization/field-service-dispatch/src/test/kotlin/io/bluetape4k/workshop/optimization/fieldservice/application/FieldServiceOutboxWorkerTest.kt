@@ -1,14 +1,15 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
-import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
-import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
-import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
+import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceOutboxTable
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceRepository
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceTables
-import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceOutboxTable
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.OutboxRecord
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -19,16 +20,25 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FieldServiceOutboxWorkerTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object: KLogging() {
+        private val postgres = PostgreSQLServer.Launcher.postgres
+    }
+
+
     private val repository = FieldServiceRepository()
 
     @BeforeAll
     fun connect() {
-        Database.connect(postgres.jdbcUrl, "org.postgresql.Driver", requireNotNull(postgres.username), requireNotNull(postgres.password))
+        Database.connect(
+            url = postgres.jdbcUrl,
+            driver = "org.postgresql.Driver",
+            user = postgres.username.requireNotNull("username"),
+            password = postgres.password.requireNotNull("password")
+        )
     }
 
     @BeforeEach
@@ -42,12 +52,20 @@ class FieldServiceOutboxWorkerTest {
     @Test
     fun `outbox worker claims no more than ten rows and converges replay`() {
         transaction {
-            repeat(12) { index -> repository.enqueueOutbox(OutboxRecord(payload = "job-$index", nextAttemptAt = Instant.EPOCH)) }
+            repeat(12) { index ->
+                repository.enqueueOutbox(
+                    OutboxRecord(
+                        payload = "job-$index",
+                        nextAttemptAt = Instant.EPOCH
+                    )
+                )
+            }
         }
         val worker = FieldServiceOutboxWorker(repository, handler = { ReplayOutcome.COMPLETED })
 
         val result = worker.processOutboxBatch(maxItems = 100)
 
+        log.debug { "result=$result" }
         result.claimed shouldBeEqualTo 10
         result.completed shouldBeEqualTo 10
     }
@@ -61,8 +79,12 @@ class FieldServiceOutboxWorkerTest {
 
         val result = worker.processOutboxBatch()
 
+        log.debug { "result=$result" }
         result.deadLetter shouldBeEqualTo 1
-        transaction { repository.claimOutbox().size shouldBeEqualTo 0 }
+
+        transaction {
+            repository.claimOutbox().shouldBeEmpty()
+        }
     }
 
     @Test
@@ -80,6 +102,6 @@ class FieldServiceOutboxWorkerTest {
             FieldServiceOutboxTable.selectAll().single()[FieldServiceOutboxTable.lastError]
         }
         lastError shouldBeEqualTo "RETRYABLE:IllegalArgumentException"
-        lastError.orEmpty() shouldNotContain "do-not-persist"
+        lastError shouldNotContain "do-not-persist"
     }
 }

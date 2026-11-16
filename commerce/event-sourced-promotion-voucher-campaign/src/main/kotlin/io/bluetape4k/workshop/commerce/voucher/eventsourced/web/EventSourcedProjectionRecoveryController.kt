@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.PoisonRetryRequest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.PoisonRetryResult
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.ProjectionReconciliationRequest
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 
 internal data class PoisonRetryHttpResponse(
     val eventId: UUID,
@@ -38,6 +39,9 @@ internal data class ProjectionReconciliationHttpResponse(
 internal class EventSourcedProjectionRecoveryController(
     private val service: ProjectionRecoveryManagementService,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping("/poison-events/{eventId}/retry")
     fun retryPoison(
         @PathVariable projection: String,
@@ -45,14 +49,16 @@ internal class EventSourcedProjectionRecoveryController(
         @PathVariable eventId: UUID,
         @RequestHeader headers: HttpHeaders,
     ): ResponseEntity<Any> =
-        service.retryPoison(
-            PoisonRetryRequest(
-                identity = headers.operatorIdentity(),
-                key = ProjectionKey(projection, generation),
-                eventId = eventId,
-                expectedToken = headers.expectedGenerationToken(),
-            ),
-        ).toResponse()
+        service
+            .retryPoison(
+                request = PoisonRetryRequest(
+                    identity = headers.operatorIdentity(),
+                    key = ProjectionKey(projection, generation),
+                    eventId = eventId,
+                    expectedToken = headers.expectedGenerationToken(),
+                ),
+            )
+            .toResponse()
 
     @PostMapping("/reconciliation")
     fun reconcile(
@@ -60,13 +66,15 @@ internal class EventSourcedProjectionRecoveryController(
         @PathVariable generation: Long,
         @RequestHeader headers: HttpHeaders,
     ): ResponseEntity<Any> =
-        service.reconcile(
-            ProjectionReconciliationRequest(
-                identity = headers.operatorIdentity(),
-                key = ProjectionKey(projection, generation),
-                expectedToken = headers.expectedGenerationToken(),
-            ),
-        ).toResponse()
+        service
+            .reconcile(
+                request = ProjectionReconciliationRequest(
+                    identity = headers.operatorIdentity(),
+                    key = ProjectionKey(projection, generation),
+                    expectedToken = headers.expectedGenerationToken(),
+                ),
+            )
+            .toResponse()
 }
 
 private fun PoisonRetryResult.toResponse(): ResponseEntity<Any> =
@@ -87,14 +95,17 @@ private fun PoisonRetryResult.toResponse(): ResponseEntity<Any> =
             ResponseEntity.status(HttpStatus.CONFLICT)
                 .header(HttpHeaders.RETRY_AFTER, delay.retryAfterSeconds().toString())
                 .body(EventSourcedApiError("POISON_RETRY_BACKOFF", "poison retry is not ready"))
+
         is PoisonRetryResult.StaleToken ->
             ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
                 .header(EXPECTED_GENERATION_TOKEN_HEADER, currentToken.toString())
                 .body(EventSourcedApiError("STALE_GENERATION_TOKEN", "generation token is stale"))
+
         is PoisonRetryResult.Conflict ->
             ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(EventSourcedApiError(reason, "poison retry conflicts with current state"))
-        PoisonRetryResult.NotFound -> ResponseEntity.notFound().build()
+
+        PoisonRetryResult.NotFound    -> ResponseEntity.notFound().build()
     }
 
 private fun ProjectionReconciliationResult.toResponse(): ResponseEntity<Any> =
@@ -115,7 +126,8 @@ private fun ProjectionReconciliationResult.toResponse(): ResponseEntity<Any> =
             ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
                 .header(EXPECTED_GENERATION_TOKEN_HEADER, currentToken.toString())
                 .body(EventSourcedApiError("STALE_GENERATION_TOKEN", "generation token is stale"))
-        ProjectionReconciliationResult.NotFound -> ResponseEntity.notFound().build()
+
+        ProjectionReconciliationResult.NotFound     -> ResponseEntity.notFound().build()
     }
 
 private fun Duration.retryAfterSeconds(): Long =

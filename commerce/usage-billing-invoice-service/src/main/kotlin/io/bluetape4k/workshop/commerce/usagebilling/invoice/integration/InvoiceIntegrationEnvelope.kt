@@ -8,7 +8,7 @@ import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * local invoice outbox에서 발행되는 Versioned Invoice event contract입니다.
@@ -19,7 +19,7 @@ class InvoiceIntegrationEnvelope private constructor(
     val eventId: UUID, val eventType: String, val schemaVersion: Int, val tenantId: String,
     val aggregateType: String, val aggregateId: String, val aggregateVersion: Long,
     val payload: String, val payloadDigest: String, val occurredAt: Instant, val recordedAt: Instant,
-) : Serializable {
+): Serializable {
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -30,6 +30,7 @@ class InvoiceIntegrationEnvelope private constructor(
     }
 
     fun partitionKey(): String = "$tenantId|$aggregateType|$aggregateId"
+
     fun hasValidPayloadDigest(): Boolean = TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
 
     fun wirePayload(): String = Jackson.defaultJsonMapper.writeValueAsString(
@@ -61,7 +62,8 @@ class InvoiceIntegrationEnvelope private constructor(
                 payload, digestOf(payload), occurredAt, recordedAt,
             )
 
-        private fun digestOf(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
+        private fun digestOf(payload: String): String =
+            TinkDigesters.SHA256.digestHex(payload)
     }
 }
 
@@ -83,7 +85,7 @@ class InvoiceEnvelopeCodecRegistry {
 data class InvoiceEnvelopeSchema(
     val eventType: String,
     val schemaVersion: Int,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -92,6 +94,6 @@ data class InvoiceEnvelopeSchema(
 class UnsupportedInvoiceEnvelopeVersion(
     eventType: String,
     schemaVersion: Int,
-) : IllegalArgumentException("unsupported_invoice_envelope:$eventType:$schemaVersion")
+): IllegalArgumentException("unsupported_invoice_envelope:$eventType:$schemaVersion")
 
-class InvalidInvoiceEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_invoice_envelope_digest:$eventId")
+class InvalidInvoiceEnvelopeDigest(eventId: UUID): IllegalArgumentException("invalid_invoice_envelope_digest:$eventId")

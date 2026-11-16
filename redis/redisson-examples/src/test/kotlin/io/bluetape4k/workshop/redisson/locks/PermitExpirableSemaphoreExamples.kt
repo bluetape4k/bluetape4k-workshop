@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * PermitExpirableSemaphore examples
@@ -85,7 +86,7 @@ class PermitExpirableSemaphoreExamples: AbstractRedissonTest() {
 
         if (id5 != null) {
             log.debug { "Semaphore id5=$id5" }
-            delay(100)
+            delay(100.milliseconds)
             semaphore.release(id5)
         }
     }

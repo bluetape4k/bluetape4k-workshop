@@ -273,9 +273,7 @@ class RealBufferedSuspendedSource(
     }
 
     override suspend fun readUtf8Line(): String? {
-        val newline = indexOf('\n'.code.toByte())
-
-        return when (newline) {
+        return when (val newline = indexOf('\n'.code.toByte())) {
             -1L ->
                 if (buffer.size != 0L) {
                     readUtf8(buffer.size)
@@ -395,7 +393,7 @@ class RealBufferedSuspendedSource(
     }
 
     override suspend fun close() {
-        if (closed.compareAndSet(false, true)) {
+        if (closed.compareAndSet(expect = false, update = true)) {
             try {
                 source.close()
             } catch (e: Exception) {

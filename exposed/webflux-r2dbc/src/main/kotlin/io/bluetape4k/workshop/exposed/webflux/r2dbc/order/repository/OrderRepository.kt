@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.order.repository
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.OrderDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.OrderLineDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.PlaceOrderRequest
@@ -16,10 +18,11 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
 
 @Repository
 class OrderRepository {
+
+    companion object: KLoggingChannel()
 
     fun findAll(): Flow<OrderDTO> =
         OrderTable.selectAll().map { it.toOrderDTO() }
@@ -36,16 +39,17 @@ class OrderRepository {
             .where { OrderLineTable.orderId eq id }
             .map { it.toOrderLineDTO() }
             .toList()
+
         return order.copy(lines = lines)
     }
 
     suspend fun insert(req: PlaceOrderRequest): OrderDTO {
-        val stmt = OrderTable.insert {
+        val newId = OrderTable.insert {
             it[customerId] = req.customerId
             it[status] = OrderStatus.PENDING
-        }
-        val newId = stmt[OrderTable.id]
-        return checkNotNull(findByIdOrNull(newId)) { "inserted order must be readable. id=$newId" }
+        }[OrderTable.id]
+
+        return findByIdOrNull(newId).checkNotNull { "inserted order must be readable. id=$newId" }
     }
 
     suspend fun updateStatus(id: Long, status: OrderStatus): Int =

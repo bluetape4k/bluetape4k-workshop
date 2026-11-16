@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.allopen)
     alias(libs.plugins.kotlinx.benchmark)
     alias(libs.plugins.spring.boot)
+    kotlin("kapt")
+    kotlin("plugin.jpa")
 }
 
 springBoot {
@@ -185,4 +187,5 @@ dependencies {
     // kotlinx-benchmark runtime (benchmark source set 용)
     add("benchmarkImplementation", libs.kotlinx.benchmark.runtime)
     add("benchmarkImplementation", libs.jmh.core)
+    testImplementation(kotlin("test"))
 }

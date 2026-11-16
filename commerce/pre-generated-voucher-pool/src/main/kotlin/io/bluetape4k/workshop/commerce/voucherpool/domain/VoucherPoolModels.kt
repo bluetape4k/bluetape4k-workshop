@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucherpool.domain
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
@@ -97,14 +98,16 @@ class CanonicalVoucherCode private constructor(
 
     override fun toString(): String = "CanonicalVoucherCode([REDACTED])"
 
-    companion object {
+    companion object: KLogging() {
         private const val MAX_CODE_POINTS = 256
 
         /** semantic input boundary를 강제한 뒤 voucher code를 생성합니다. */
-        fun of(raw: String): CanonicalVoucherCode {
+        operator fun invoke(raw: String): CanonicalVoucherCode {
             val validated = raw.requireNotBlank("voucherCode")
-            validated.codePointCount(0, validated.length)
+            validated
+                .codePointCount(0, validated.length)
                 .requireInRange(1, MAX_CODE_POINTS, "voucherCode.codePointCount")
+
             require(validated.none(Char::isISOControl)) {
                 "voucherCode must not contain ISO control characters."
             }
@@ -113,6 +116,10 @@ class CanonicalVoucherCode private constructor(
             }
             return CanonicalVoucherCode(validated)
         }
+
+        /** semantic input boundary를 강제한 뒤 voucher code를 생성합니다. */
+        fun of(raw: String): CanonicalVoucherCode =
+            invoke(raw)
     }
 }
 
@@ -128,22 +135,22 @@ data class VoucherPoolPolicy private constructor(
     val reservationTtl: Duration,
     val allocationTtl: Duration,
     val replacementAllowance: Int,
-) : Serializable {
+): Serializable {
     @Suppress("unused")
     private fun readResolve(): Any =
-        of(
+        invoke(
             perUserLimit = perUserLimit,
             reservationTtl = reservationTtl,
             allocationTtl = allocationTtl,
             replacementAllowance = replacementAllowance,
         )
 
-    companion object {
+    companion object: KLogging() {
         private const val serialVersionUID: Long = 1L
         private const val MAX_REPLACEMENT_ALLOWANCE = 1
 
         /** 모든 lifetime과 TTL boundary를 검증한 뒤 policy를 생성합니다. */
-        fun of(
+        operator fun invoke(
             perUserLimit: Int,
             reservationTtl: Duration,
             allocationTtl: Duration,
@@ -169,12 +176,22 @@ data class VoucherPoolPolicy private constructor(
                 replacementAllowance = validatedAllowance,
             )
         }
+
+        /** 모든 lifetime과 TTL boundary를 검증한 뒤 policy를 생성합니다. */
+        fun of(
+            perUserLimit: Int,
+            reservationTtl: Duration,
+            allocationTtl: Duration,
+            replacementAllowance: Int,
+        ): VoucherPoolPolicy =
+            invoke(perUserLimit, reservationTtl, allocationTtl, replacementAllowance)
     }
 }
 
 private fun String.hasOnlyWellFormedSurrogates(): Boolean {
     var index = 0
     var wellFormed = true
+
     while (index < length && wellFormed) {
         val current = this[index]
         when {
@@ -184,7 +201,7 @@ private fun String.hasOnlyWellFormedSurrogates(): Boolean {
             }
 
             current.isLowSurrogate() -> wellFormed = false
-            else -> index += 1
+            else                     -> index += 1
         }
     }
     return wellFormed

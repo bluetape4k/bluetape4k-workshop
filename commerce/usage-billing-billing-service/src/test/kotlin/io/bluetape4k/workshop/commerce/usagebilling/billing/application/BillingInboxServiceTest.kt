@@ -1,18 +1,28 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidence
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class BillingInboxServiceTest {
+
+    companion object: KLogging()
+
     private val journal = InMemoryBillingInboxJournal()
     private val service = BillingInboxService(journal)
+
+    @BeforeEach
+    fun beforeEach() {
+        journal.reset()
+    }
 
     @Test
     fun `expected aggregate version is applied exactly once`() {
@@ -34,15 +44,18 @@ class BillingInboxServiceTest {
     @Test
     fun `same event identifier with a different digest is quarantined`() {
         val eventId = UUID.fromString("2c8ee8f1-5f56-4fc9-9f24-21542b46b8b0")
-        service.handle(usageEvent(eventId = eventId, digest = "digest-a")) shouldBeEqualTo BillingInboxOutcome.APPLIED
+
+        service.handle(usageEvent(eventId = eventId, digest = "digest-a")) shouldBeEqualTo
+                BillingInboxOutcome.APPLIED
 
         service.handle(usageEvent(eventId = eventId, digest = "digest-b")) shouldBeEqualTo
-            BillingInboxOutcome.QUARANTINED
+                BillingInboxOutcome.QUARANTINED
     }
 
     @Test
     fun `usage without local pricing evidence remains deferred`() {
-        service.handle(usageEvent(meterCode = "unknown_meter")) shouldBeEqualTo BillingInboxOutcome.DEFERRED
+        service.handle(usageEvent(meterCode = "unknown_meter")) shouldBeEqualTo
+                BillingInboxOutcome.DEFERRED
     }
 
     private fun usageEvent(
@@ -51,16 +64,34 @@ class BillingInboxServiceTest {
         digest: String = "digest-$version",
         meterCode: String = "api_calls",
     ): BillingInboxEvent =
-        BillingInboxEvent(eventId, "tenant-a", "Usage", "usage-1", version, digest, meterCode)
+        BillingInboxEvent(
+            eventId = eventId,
+            tenantId = "tenant-a",
+            aggregateType = "Usage",
+            aggregateId = "usage-1",
+            aggregateVersion = version,
+            payloadDigest = digest,
+            meterCode = meterCode
+        )
 
-    private class InMemoryBillingInboxJournal : BillingInboxJournal {
+    private class InMemoryBillingInboxJournal: BillingInboxJournal {
+
         override val appliedEventIds = mutableSetOf<UUID>()
         private val digests = mutableMapOf<UUID, String>()
         private var expectedVersion = 1L
 
-        override fun priceEvidence(tenantId: String, meterCode: String, currency: String): BillingPriceEvidence? =
-            BillingPriceEvidence(tenantId, meterCode, currency, BigDecimal("0.10"), Instant.EPOCH)
-                .takeIf { meterCode == "api_calls" }
+        override fun priceEvidence(
+            tenantId: String,
+            meterCode: String,
+            currency: String,
+        ): BillingPriceEvidence? =
+            BillingPriceEvidence(
+                tenantId = tenantId,
+                meterCode = meterCode,
+                currency = currency,
+                unitPrice = BigDecimal("0.10"),
+                effectiveAt = Instant.EPOCH
+            ).takeIf { meterCode == "api_calls" }
 
         override fun digestFor(eventId: UUID): String? = digests[eventId]
 
@@ -70,6 +101,12 @@ class BillingInboxServiceTest {
             digests[event.eventId] = event.payloadDigest
             appliedEventIds += event.eventId
             expectedVersion += 1
+        }
+
+        fun reset() {
+            appliedEventIds.clear()
+            digests.clear()
+            expectedVersion = 1L
         }
     }
 }

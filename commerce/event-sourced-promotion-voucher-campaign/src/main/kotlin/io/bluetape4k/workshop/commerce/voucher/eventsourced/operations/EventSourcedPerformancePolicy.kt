@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import java.time.Duration
-import java.util.LinkedHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -31,23 +34,28 @@ private const val MAINTENANCE_MAX_BACKOFF_SECONDS = 5L
  * runtime safety limit은 normal profile과 stress profile이 공유합니다.
  */
 internal class EventSourcedRuntimeBudget {
+
+    private companion object: KLogging() {
+        private const val MAX_BACKOFF_SHIFT = 16
+    }
+
     val snapshotEveryEvents: Int = SNAPSHOT_EVERY_EVENTS
     val maxReplayEvents: Int = MAX_REPLAY_EVENTS
-    val maxReplayDuration: Duration = Duration.ofSeconds(MAX_REPLAY_SECONDS)
+    val maxReplayDuration: Duration = MAX_REPLAY_SECONDS.seconds()
     val projectionBatchEvents: Int = PROJECTION_BATCH_EVENTS
     val projectionBatchBytes: Int = 2 * KIBIBYTE * KIBIBYTE
-    val projectionTransactionTimeout: Duration = Duration.ofSeconds(PROJECTION_TRANSACTION_SECONDS)
+    val projectionTransactionTimeout: Duration = PROJECTION_TRANSACTION_SECONDS.seconds()
     val rebuildBatchEvents: Int = PROJECTION_BATCH_EVENTS
     val rebuildMaxEvents: Int = REBUILD_MAX_EVENTS
-    val rebuildMaxDuration: Duration = Duration.ofMinutes(REBUILD_MAX_MINUTES)
+    val rebuildMaxDuration: Duration = REBUILD_MAX_MINUTES.minutes()
     val rebuildThrottleLagEvents: Long = REBUILD_THROTTLE_LAG_EVENTS
     val rebuildThrottleForegroundRatio: Double = REBUILD_THROTTLE_FOREGROUND_RATIO
     val maintenanceQueueCapacity: Int = MAINTENANCE_QUEUE_CAPACITY
     val maintenanceBatchRows: Int = MAINTENANCE_BATCH_ROWS
     val maintenanceBatchBytes: Int = 2 * KIBIBYTE * KIBIBYTE
-    val maintenanceTransactionTimeout: Duration = Duration.ofSeconds(MAINTENANCE_TRANSACTION_SECONDS)
-    val maintenanceMinBackoff: Duration = Duration.ofMillis(MAINTENANCE_MIN_BACKOFF_MILLIS)
-    val maintenanceMaxBackoff: Duration = Duration.ofSeconds(MAINTENANCE_MAX_BACKOFF_SECONDS)
+    val maintenanceTransactionTimeout: Duration = MAINTENANCE_TRANSACTION_SECONDS.seconds()
+    val maintenanceMinBackoff: Duration = MAINTENANCE_MIN_BACKOFF_MILLIS.millis()
+    val maintenanceMaxBackoff: Duration = MAINTENANCE_MAX_BACKOFF_SECONDS.seconds()
 
     fun shouldThrottleRebuild(
         lagEvents: Long,
@@ -66,7 +74,7 @@ internal class EventSourcedRuntimeBudget {
         duration: Duration,
     ): Boolean =
         events.requireZeroOrPositiveNumber("events") <= maxReplayEvents &&
-            duration.requireZeroOrPositiveDuration("duration") <= maxReplayDuration
+                duration.requireZeroOrPositiveDuration("duration") <= maxReplayDuration
 
     fun acceptsProjectionBatch(
         events: Int,
@@ -74,15 +82,15 @@ internal class EventSourcedRuntimeBudget {
         duration: Duration,
     ): Boolean =
         events.requireZeroOrPositiveNumber("events") <= projectionBatchEvents &&
-            bytes.requireZeroOrPositiveNumber("bytes") <= projectionBatchBytes &&
-            duration.requireZeroOrPositiveDuration("duration") <= projectionTransactionTimeout
+                bytes.requireZeroOrPositiveNumber("bytes") <= projectionBatchBytes &&
+                duration.requireZeroOrPositiveDuration("duration") <= projectionTransactionTimeout
 
     fun acceptsRebuild(
         events: Int,
         duration: Duration,
     ): Boolean =
         events.requireZeroOrPositiveNumber("events") <= rebuildMaxEvents &&
-            duration.requireZeroOrPositiveDuration("duration") <= rebuildMaxDuration
+                duration.requireZeroOrPositiveDuration("duration") <= rebuildMaxDuration
 
     fun acceptsMaintenanceBatch(
         rows: Int,
@@ -90,17 +98,13 @@ internal class EventSourcedRuntimeBudget {
         duration: Duration,
     ): Boolean =
         rows.requireZeroOrPositiveNumber("rows") <= maintenanceBatchRows &&
-            bytes.requireZeroOrPositiveNumber("bytes") <= maintenanceBatchBytes &&
-            duration.requireZeroOrPositiveDuration("duration") <= maintenanceTransactionTimeout
+                bytes.requireZeroOrPositiveNumber("bytes") <= maintenanceBatchBytes &&
+                duration.requireZeroOrPositiveDuration("duration") <= maintenanceTransactionTimeout
 
     fun maintenanceBackoff(attempt: Int): Duration {
         val validAttempt = attempt.requireZeroOrPositiveNumber("attempt")
         val multiplier = 1L shl validAttempt.coerceAtMost(MAX_BACKOFF_SHIFT)
         return maintenanceMinBackoff.multipliedBy(multiplier).coerceAtMost(maintenanceMaxBackoff)
-    }
-
-    private companion object {
-        private const val MAX_BACKOFF_SHIFT = 16
     }
 }
 
@@ -134,6 +138,9 @@ internal enum class MaintenanceOffer {
 internal class SnapshotMaintenanceQueue(
     capacity: Int = EventSourcedRuntimeBudget().maintenanceQueueCapacity,
 ) {
+
+    companion object: KLogging()
+
     private val capacity = capacity.requirePositiveNumber("capacity")
     private val lock = ReentrantLock()
     private val requests = LinkedHashMap<StreamKey, SnapshotMaintenanceRequest>()
@@ -150,7 +157,7 @@ internal class SnapshotMaintenanceQueue(
                 }
 
                 requests.size >= capacity -> MaintenanceOffer.REJECTED
-                else -> {
+                else             -> {
                     requests[request.stream] = request
                     MaintenanceOffer.ENQUEUED
                 }
@@ -171,4 +178,5 @@ private fun Duration.requireZeroOrPositiveDuration(name: String): Duration {
     return this
 }
 
-private fun Duration.coerceAtMost(maximum: Duration): Duration = if (this <= maximum) this else maximum
+private fun Duration.coerceAtMost(maximum: Duration): Duration =
+    if (this <= maximum) this else maximum

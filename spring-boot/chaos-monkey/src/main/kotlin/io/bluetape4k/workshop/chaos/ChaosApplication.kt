@@ -12,9 +12,9 @@ import org.springframework.boot.runApplication
 @SpringBootApplication(proxyBeanMethods = false)
 class ChaosApplication(
     private val repository: StudentJdbcRepository,
-) : CommandLineRunner {
+): CommandLineRunner {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         val faker = Faker()
     }
 

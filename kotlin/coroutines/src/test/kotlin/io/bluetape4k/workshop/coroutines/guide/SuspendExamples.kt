@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.coroutines.guide
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.concurrent.onFailure
 import io.bluetape4k.concurrent.onSuccess
 import io.bluetape4k.junit5.coroutines.runSuspendTest
@@ -7,13 +9,12 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.trace
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNull
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 
 class SuspendExamples {
 
@@ -66,7 +67,7 @@ class SuspendExamples {
     @Test
     fun `execute suspend function with timeout`() = runSuspendTest {
         // 지정된 시간 안에 결과가 없다면 null을 반환합니다.
-        val result = withTimeoutOrNull(10) {
+        val result = withTimeoutOrNull(10.milliseconds) {
             service.executeWithDelay(1000)
         }
         result.shouldBeNull()

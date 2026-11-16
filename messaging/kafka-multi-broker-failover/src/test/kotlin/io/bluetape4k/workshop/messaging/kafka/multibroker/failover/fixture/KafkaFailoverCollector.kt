@@ -1,23 +1,29 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.javatimes.inMillis
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverCodec
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverEvent
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.WakeupException
-import java.time.Duration
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
+import kotlin.concurrent.withLock
 
 fun interface KafkaFailoverAcknowledgment {
     fun acknowledge()
 }
 
-class KafkaFailoverConflictException(message: String) : IllegalStateException(message)
+class KafkaFailoverConflictException(message: String): IllegalStateException(message)
 
-class KafkaFailoverBufferLimitException(message: String) : IllegalStateException(message)
+class KafkaFailoverBufferLimitException(message: String): IllegalStateException(message)
 
 data class KafkaFailoverCollectorStats(
     val rawDeliveryCount: Int,
@@ -38,7 +44,7 @@ class KafkaFailoverCollector(
     private val maxBufferedRecords: Int = 100,
     private val maxBufferedBytes: Long = 1_048_576L,
 ) {
-    private val lock = Any()
+    private val lock = ReentrantLock()
     private val fingerprints = linkedMapOf<String, String>()
     private val appliedIds = linkedSetOf<String>()
     private var rawCount = 0
@@ -53,6 +59,7 @@ class KafkaFailoverCollector(
     private val callbackCountValue = AtomicInteger(0)
     private val callbackAfterStopValue = AtomicBoolean(false)
     private val rebalanceRequested = AtomicBoolean(false)
+
     @Volatile
     private var consumerRef: Consumer<String, String>? = null
     private var worker: Thread? = null
@@ -85,15 +92,16 @@ class KafkaFailoverCollector(
     fun acceptEncoded(encoded: String, acknowledgment: KafkaFailoverAcknowledgment) {
         val event = codec.decode(encoded)
         val fingerprint = codec.fingerprint(event)
-        synchronized(lock) {
+
+        lock.withLock {
             rawCount += 1
             bufferedRecords += 1
-            bufferedBytes += encoded.toByteArray(Charsets.UTF_8).size
+            bufferedBytes += encoded.toUtf8Bytes().size
             maxBufferedRecordsValue = maxOf(maxBufferedRecordsValue, bufferedRecords)
             maxBufferedBytesValue = maxOf(maxBufferedBytesValue, bufferedBytes)
             if (bufferedRecords > maxBufferedRecords || bufferedBytes > maxBufferedBytes) {
                 bufferedRecords -= 1
-                bufferedBytes -= encoded.toByteArray(Charsets.UTF_8).size
+                bufferedBytes -= encoded.toUtf8Bytes().size
                 throw KafkaFailoverBufferLimitException("collector buffer ceiling exceeded")
             }
 
@@ -101,7 +109,7 @@ class KafkaFailoverCollector(
             if (previous != null && previous != fingerprint) {
                 conflicts += 1
                 bufferedRecords -= 1
-                bufferedBytes -= encoded.toByteArray(Charsets.UTF_8).size
+                bufferedBytes -= encoded.toUtf8Bytes().size
                 throw KafkaFailoverConflictException("event identity fingerprint conflict")
             }
             if (previous == null) fingerprints[event.eventId] = fingerprint
@@ -109,16 +117,16 @@ class KafkaFailoverCollector(
 
         try {
             acknowledgment.acknowledge()
-            synchronized(lock) {
+            lock.withLock {
                 if (event.eventId !in appliedIds) {
                     appliedIds += event.eventId
                     applied += 1
                 }
             }
         } finally {
-            synchronized(lock) {
+            lock.withLock {
                 bufferedRecords = (bufferedRecords - 1).coerceAtLeast(0)
-                bufferedBytes = (bufferedBytes - encoded.toByteArray(Charsets.UTF_8).size).coerceAtLeast(0L)
+                bufferedBytes = (bufferedBytes - encoded.toUtf8Bytes().size).coerceAtLeast(0L)
             }
         }
     }
@@ -128,9 +136,9 @@ class KafkaFailoverCollector(
         while (deadline.remainingNanos() > 0L) {
             val stats = stats()
             if (stats.appliedCount >= expectedCount) return stats
-            Thread.sleep(minOf(250L, (deadline.remainingNanos() / 1_000_000L).coerceAtLeast(1L)))
+            Thread.sleep(minOf(250L, deadline.remainingNanos().nanos().inMillis().coerceAtLeast(1L)))
         }
-        throw java.util.concurrent.TimeoutException("collector applied count deadline exhausted")
+        throw TimeoutException("collector applied count deadline exhausted")
     }
 
     /** coordinator fault 이후 consumer thread가 소유한 rebalance를 요청합니다. */
@@ -148,7 +156,7 @@ class KafkaFailoverCollector(
         consumerRef = consumer
         consumer.subscribe(
             listOf(topic),
-            object : org.apache.kafka.clients.consumer.ConsumerRebalanceListener {
+            object: org.apache.kafka.clients.consumer.ConsumerRebalanceListener {
                 override fun onPartitionsRevoked(partitions: Collection<TopicPartition>) = Unit
 
                 override fun onPartitionsAssigned(partitions: Collection<TopicPartition>) {
@@ -168,7 +176,7 @@ class KafkaFailoverCollector(
                         consumer.enforceRebalance()
                     }
                     pollCountValue.incrementAndGet()
-                    val records = consumer.poll(Duration.ofMillis(250))
+                    val records = consumer.poll(250.millis())
                     records.forEach { record ->
                         // collector의 명시적 acknowledgment가 application 경계입니다.
                         // retry를 관찰할 수 있도록 commit은 scenario harness가 소유합니다.
@@ -188,11 +196,11 @@ class KafkaFailoverCollector(
         consumerRef?.wakeup()
         worker?.interrupt()
         val current = worker ?: return true
-        current.join((deadline.remainingNanos() / 1_000_000L).coerceAtLeast(1L))
+        current.join(deadline.remainingNanos().nanos().inMillis().coerceAtLeast(1L))
         return !current.isAlive
     }
 
-    fun stats(): KafkaFailoverCollectorStats = synchronized(lock) {
+    fun stats(): KafkaFailoverCollectorStats = lock.withLock {
         KafkaFailoverCollectorStats(
             rawDeliveryCount = rawCount,
             appliedCount = applied,

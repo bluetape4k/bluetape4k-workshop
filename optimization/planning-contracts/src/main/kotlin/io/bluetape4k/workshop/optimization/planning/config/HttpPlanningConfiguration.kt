@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.config
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.adapter.http.CallbackSignatureVerifier
 import io.bluetape4k.workshop.optimization.planning.adapter.http.CustomSolverPlanningEngine
 import io.bluetape4k.workshop.optimization.planning.adapter.http.HmacSha256CallbackSignatureVerifier
@@ -14,19 +15,23 @@ import tools.jackson.databind.ObjectMapper
 @Profile("timefold | custom-solver")
 internal class HttpPlanningConfiguration {
 
+    companion object: KLogging()
+
     @Bean(destroyMethod = "close")
     @Profile("timefold")
     fun timefoldPlanningEngine(
         properties: PlanningProviderProperties,
         objectMapper: ObjectMapper,
-    ): PlanningEngine = TimefoldPlatformPlanningEngine(properties.baseUrl, objectMapper)
+    ): PlanningEngine =
+        TimefoldPlatformPlanningEngine(properties.baseUrl, objectMapper)
 
     @Bean(destroyMethod = "close")
     @Profile("custom-solver")
     fun customSolverPlanningEngine(
         properties: PlanningProviderProperties,
         objectMapper: ObjectMapper,
-    ): PlanningEngine = CustomSolverPlanningEngine(properties.baseUrl, objectMapper)
+    ): PlanningEngine =
+        CustomSolverPlanningEngine(properties.baseUrl, objectMapper)
 
     @Bean
     fun hmacCallbackSignatureVerifier(properties: PlanningProviderProperties): CallbackSignatureVerifier =

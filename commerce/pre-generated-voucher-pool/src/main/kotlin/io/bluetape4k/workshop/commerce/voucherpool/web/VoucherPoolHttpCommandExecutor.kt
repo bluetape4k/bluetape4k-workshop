@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionDecision
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionNamespace
 import io.bluetape4k.workshop.commerce.voucherpool.admission.VoucherPoolAdmissionGate
@@ -29,7 +30,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import java.net.URI
-import java.util.UUID
+import java.util.*
 
 /** customer HTTP precondition과 safe replay descriptor를 authoritative application service에 매핑합니다. */
 @Component
@@ -41,6 +42,11 @@ internal class VoucherPoolHttpCommandExecutor(
     private val admission: VoucherPoolAdmissionGate,
     private val digests: VoucherDigestService,
 ) {
+
+    private companion object: KLogging() {
+        val STRONG_ETAG = Regex("\"(0|[1-9][0-9]*)\"")
+    }
+
     fun reserve(
         principal: TenantPrincipal,
         campaignId: UUID,
@@ -69,7 +75,10 @@ internal class VoucherPoolHttpCommandExecutor(
     ): ResponseEntity<ReservationResponse> = translate {
         val snapshot = queries.reservation(principal.tenantId, principal.principalId, reservationId)
             ?: throw resourceNotFound()
-        ResponseEntity.ok().eTag(etag(snapshot.revision)).body(snapshot.response(requestId))
+
+        ResponseEntity.ok()
+            .eTag(etag(snapshot.revision))
+            .body(snapshot.response(requestId))
     }
 
     fun allocate(
@@ -125,7 +134,9 @@ internal class VoucherPoolHttpCommandExecutor(
         requestId: String,
     ): ResponseEntity<AllocationResponse> = translate {
         val snapshot = ownedAllocation(principal, allocationId)
-        ResponseEntity.ok().eTag(etag(snapshot.revision)).body(snapshot.response(requestId))
+        ResponseEntity.ok()
+            .eTag(etag(snapshot.revision))
+            .body(snapshot.response(requestId))
     }
 
     fun replaceLostReveal(
@@ -217,13 +228,16 @@ internal class VoucherPoolHttpCommandExecutor(
             state = descriptor?.outcome?.removePrefix("RESERVATION_") ?: read.state.name,
             revision = descriptor?.revision ?: read.revision,
         )
-        val builder: ResponseEntity.BodyBuilder =
-            if (created && !outcome.replayed) {
-                ResponseEntity.created(URI.create("/api/v1/reservations/$reservationId"))
-            } else {
-                ResponseEntity.status(HttpStatus.OK)
-            }
-        return builder.eTag(etag(response.revision)).commandHeaders(outcome.replayed).body(response)
+        val builder: ResponseEntity.BodyBuilder = if (created && !outcome.replayed) {
+            ResponseEntity.created(URI.create("/api/v1/reservations/$reservationId"))
+        } else {
+            ResponseEntity.status(HttpStatus.OK)
+        }
+
+        return builder
+            .eTag(etag(response.revision))
+            .commandHeaders(outcome.replayed)
+            .body(response)
     }
 
     private fun allocationResult(
@@ -259,11 +273,11 @@ internal class VoucherPoolHttpCommandExecutor(
         val descriptor = outcome.descriptor
         val stableOutcome = reveal?.outcome ?: VoucherPoolErrorCode.ALREADY_REVEALED.name
         val code = reveal?.code?.withRawValue { it }
-        val replacementAvailable =
-            code == null &&
+        val replacementAvailable = code == null &&
                 stableOutcome == VoucherPoolErrorCode.ALREADY_REVEALED.name &&
                 read.replacementOrdinal == 0 &&
                 (queries.campaign(principal.tenantId, read.campaignId)?.replacementAllowance ?: 0) >= 1
+
         val response = RevealResponse(
             allocationId = allocationId,
             outcome = stableOutcome,
@@ -277,10 +291,11 @@ internal class VoucherPoolHttpCommandExecutor(
             nextAction = when {
                 code != null -> "COPY_ONCE_OR_REDEEM"
                 replacementAvailable -> "CONFIRM_REPLACEMENT_OR_REFRESH"
-                else -> "CONTACT_OPERATOR_WITH_REQUEST_ID"
+                else         -> "CONTACT_OPERATOR_WITH_REQUEST_ID"
             },
         )
         val duplicate = outcome.replayed || stableOutcome == VoucherPoolErrorCode.ALREADY_REVEALED.name
+
         return ResponseEntity.status(HttpStatus.OK)
             .eTag(etag(response.revision))
             .header("Pragma", "no-cache")
@@ -301,7 +316,7 @@ internal class VoucherPoolHttpCommandExecutor(
         when (decision) {
             AdmissionDecision.ALLOW,
             AdmissionDecision.DEGRADED_ALLOW,
-            -> Unit
+                                           -> Unit
             AdmissionDecision.RATE_LIMITED -> throw apiFailure(VoucherPoolErrorCode.RATE_LIMITED)
             AdmissionDecision.DATABASE_BUSY -> throw apiFailure(VoucherPoolErrorCode.POOL_BUSY)
         }
@@ -327,7 +342,7 @@ internal class VoucherPoolHttpCommandExecutor(
 
     // caller validation failure는 안전한 HTTP vocabulary로 의도적으로 normalize합니다.
     @Suppress("SwallowedException")
-    private fun <T> translate(block: () -> T): T =
+    private inline fun <T> translate(block: () -> T): T =
         try {
             block()
         } catch (failure: VoucherPoolApiException) {
@@ -345,10 +360,6 @@ internal class VoucherPoolHttpCommandExecutor(
         val descriptor: SafeResponseDescriptor?,
         val replayed: Boolean,
     )
-
-    private companion object {
-        val STRONG_ETAG = Regex("\"(0|[1-9][0-9]*)\"")
-    }
 }
 
 internal fun apiFailure(code: VoucherPoolErrorCode, effectId: UUID? = null): VoucherPoolApiException {
@@ -356,6 +367,7 @@ internal fun apiFailure(code: VoucherPoolErrorCode, effectId: UUID? = null): Vou
         return resourceNotFound()
     }
     val semantics = VoucherPoolErrorCatalog[code]
+
     return VoucherPoolApiException(
         stableCode = code.name,
         status = semantics.httpStatus,
@@ -367,40 +379,38 @@ internal fun apiFailure(code: VoucherPoolErrorCode, effectId: UUID? = null): Vou
 
 private fun VoucherPoolErrorCode.safeReason(): String = SAFE_REASON_BY_CODE.getValue(this)
 
-private val SAFE_REASON_BY_CODE =
-    mapOf(
-        VoucherPoolErrorCode.COMMAND_IN_PROGRESS to "command is still in progress",
-        VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT to
-            "idempotency key conflicts with another request",
-        VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED to "the replay window has expired",
-        VoucherPoolErrorCode.POOL_BUSY to "voucher pool is temporarily unavailable",
-        VoucherPoolErrorCode.BACKEND_TIMEOUT to "voucher pool is temporarily unavailable",
-        VoucherPoolErrorCode.POOL_EXHAUSTED to "voucher pool is exhausted",
-        VoucherPoolErrorCode.USER_LIMIT_REACHED to "voucher limit has been reached",
-        VoucherPoolErrorCode.STALE_REVISION to "resource revision is stale",
-        VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE to "campaign is not available",
-        VoucherPoolErrorCode.CAMPAIGN_PAUSED to "campaign is not available",
-        VoucherPoolErrorCode.CAMPAIGN_REVOKING to "campaign is not available",
-        VoucherPoolErrorCode.CAMPAIGN_REVOKED to "campaign is not available",
-        VoucherPoolErrorCode.BATCH_PAUSED to "voucher batch is not available",
-        VoucherPoolErrorCode.BATCH_EXPIRING to "voucher batch is not available",
-        VoucherPoolErrorCode.BATCH_REVOKED to "voucher batch is not available",
-        VoucherPoolErrorCode.BATCH_EXPIRED to "voucher batch is not available",
-        VoucherPoolErrorCode.BATCH_FAILED_RETRYABLE to "voucher batch is not available",
-        VoucherPoolErrorCode.BATCH_FAILED_TERMINAL to "voucher batch is not available",
-        VoucherPoolErrorCode.RESERVATION_EXPIRED to "reservation has expired",
-        VoucherPoolErrorCode.ALLOCATION_EXPIRED to "allocation has expired",
-        VoucherPoolErrorCode.RATE_LIMITED to "request rate is limited",
-        VoucherPoolErrorCode.KEY_MATERIAL_UNAVAILABLE to "voucher key material is unavailable",
-        VoucherPoolErrorCode.CIPHERTEXT_INVALID to "voucher key material is unavailable",
-        VoucherPoolErrorCode.ALREADY_REVEALED to "voucher code was already revealed",
-        VoucherPoolErrorCode.WRONG_OWNER to "resource was not found",
-        VoucherPoolErrorCode.SCOPE_NOT_FOUND to "resource was not found",
-    ).also { reasons ->
-        check(reasons.keys == VoucherPoolErrorCode.entries.toSet()) {
-            "Customer HTTP safe reasons must cover every voucher pool error code."
-        }
+private val SAFE_REASON_BY_CODE = mapOf(
+    VoucherPoolErrorCode.COMMAND_IN_PROGRESS to "command is still in progress",
+    VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT to "idempotency key conflicts with another request",
+    VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED to "the replay window has expired",
+    VoucherPoolErrorCode.POOL_BUSY to "voucher pool is temporarily unavailable",
+    VoucherPoolErrorCode.BACKEND_TIMEOUT to "voucher pool is temporarily unavailable",
+    VoucherPoolErrorCode.POOL_EXHAUSTED to "voucher pool is exhausted",
+    VoucherPoolErrorCode.USER_LIMIT_REACHED to "voucher limit has been reached",
+    VoucherPoolErrorCode.STALE_REVISION to "resource revision is stale",
+    VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE to "campaign is not available",
+    VoucherPoolErrorCode.CAMPAIGN_PAUSED to "campaign is not available",
+    VoucherPoolErrorCode.CAMPAIGN_REVOKING to "campaign is not available",
+    VoucherPoolErrorCode.CAMPAIGN_REVOKED to "campaign is not available",
+    VoucherPoolErrorCode.BATCH_PAUSED to "voucher batch is not available",
+    VoucherPoolErrorCode.BATCH_EXPIRING to "voucher batch is not available",
+    VoucherPoolErrorCode.BATCH_REVOKED to "voucher batch is not available",
+    VoucherPoolErrorCode.BATCH_EXPIRED to "voucher batch is not available",
+    VoucherPoolErrorCode.BATCH_FAILED_RETRYABLE to "voucher batch is not available",
+    VoucherPoolErrorCode.BATCH_FAILED_TERMINAL to "voucher batch is not available",
+    VoucherPoolErrorCode.RESERVATION_EXPIRED to "reservation has expired",
+    VoucherPoolErrorCode.ALLOCATION_EXPIRED to "allocation has expired",
+    VoucherPoolErrorCode.RATE_LIMITED to "request rate is limited",
+    VoucherPoolErrorCode.KEY_MATERIAL_UNAVAILABLE to "voucher key material is unavailable",
+    VoucherPoolErrorCode.CIPHERTEXT_INVALID to "voucher key material is unavailable",
+    VoucherPoolErrorCode.ALREADY_REVEALED to "voucher code was already revealed",
+    VoucherPoolErrorCode.WRONG_OWNER to "resource was not found",
+    VoucherPoolErrorCode.SCOPE_NOT_FOUND to "resource was not found",
+).also { reasons ->
+    check(reasons.keys == VoucherPoolErrorCode.entries.toSet()) {
+        "Customer HTTP safe reasons must cover every voucher pool error code."
     }
+}
 
 private fun ReservationReadModel.response(
     requestId: String,
@@ -444,18 +454,19 @@ private fun AllocationReadModel.response(
 private fun String.reservationNextAction(): String = when (this) {
     "ACTIVE" -> "ALLOCATE_OR_RELEASE"
     "ALLOCATED" -> "VIEW_ALLOCATION"
-    else -> "CREATE_RESERVATION"
+    else     -> "CREATE_RESERVATION"
 }
 
 private fun String.allocationNextAction(): String = when (this) {
     "ALLOCATED" -> "REVEAL_REDEEM_OR_RELEASE"
     "REDEEMED" -> "COMPLETE"
-    else -> "CREATE_RESERVATION"
+    else       -> "CREATE_RESERVATION"
 }
 
 private fun etag(revision: Long): String = "\"$revision\""
 
 private fun ResponseEntity.BodyBuilder.commandHeaders(replayed: Boolean): ResponseEntity.BodyBuilder =
-    header("Idempotency-Replay-Window", "86400").apply {
-        if (replayed) header("Duplicate-Request", "true")
-    }
+    header("Idempotency-Replay-Window", "86400")
+        .apply {
+            if (replayed) header("Duplicate-Request", "true")
+        }

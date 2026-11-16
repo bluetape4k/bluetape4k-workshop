@@ -12,7 +12,7 @@ data class BookCursorPageResponse(
     val content: List<BookDTO>,
     val nextCursor: Long?,
     val hasNext: Boolean,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

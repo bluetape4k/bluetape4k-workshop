@@ -16,29 +16,29 @@ It starts Kafka through `KafkaServer.Launcher.kafka`, so the sample and tests ca
 
 ![Kafka demo message sequence](../../docs/images/readme-diagrams/messaging-kafka-readme-message-sequence-01.png)
 
-| Endpoint | Kafka path |
-|----------|------------|
-| `GET /greeting?message=...` | Publishes a string to `simple.topic.1`; `SimpleMessageHandler` logs it. |
-| `POST /greeting` | Publishes a `GreetingRequest` to `greeting.topic.1`; `GreetingMessageHandler` returns a `GreetingResult` with `@SendTo(logger.topic.1)`; `LoggerMessageHandler` stores the result. |
+| Endpoint                    | Kafka path                                                                                                                                                                         |
+|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `GET /greeting?message=...` | Publishes a string to `simple.topic.1`; `SimpleMessageHandler` logs it.                                                                                                            |
+| `POST /greeting`            | Publishes a `GreetingRequest` to `greeting.topic.1`; `GreetingMessageHandler` returns a `GreetingResult` with `@SendTo(logger.topic.1)`; `LoggerMessageHandler` stores the result. |
 
 ## Main Types
 
-| Type | Role |
-|------|------|
-| `KafkaApplication` | Starts the Testcontainers Kafka singleton through `KafkaServer.Launcher.kafka`. |
-| `KafkaConfig` | Enables Kafka and provides `ProducerFactory<String, Any>` plus `KafkaTemplate<String, Any>`. |
-| `GreetingController` | Provides suspend HTTP endpoints and waits for send completion with `suspendSend`. |
-| `SimpleMessageHandler` | Consumes `TOPIC_SIMPLE` string messages. |
-| `GreetingMessageHandler` | Consumes `GreetingRequest` and relays `GreetingResult` to the logger topic. |
-| `LoggerMessageHandler` | Consumes `GreetingResult` and keeps received messages for assertions. |
+| Type                     | Role                                                                                         |
+|--------------------------|----------------------------------------------------------------------------------------------|
+| `KafkaApplication`       | Starts the Testcontainers Kafka singleton through `KafkaServer.Launcher.kafka`.              |
+| `KafkaConfig`            | Enables Kafka and provides `ProducerFactory<String, Any>` plus `KafkaTemplate<String, Any>`. |
+| `GreetingController`     | Provides suspend HTTP endpoints and waits for send completion with `suspendSend`.            |
+| `SimpleMessageHandler`   | Consumes `TOPIC_SIMPLE` string messages.                                                     |
+| `GreetingMessageHandler` | Consumes `GreetingRequest` and relays `GreetingResult` to the logger topic.                  |
+| `LoggerMessageHandler`   | Consumes `GreetingResult` and keeps received messages for assertions.                        |
 
 ## Topics
 
-| Constant | Topic |
-|----------|-------|
-| `KafkaTopics.TOPIC_SIMPLE` | `simple.topic.1` |
+| Constant                     | Topic              |
+|------------------------------|--------------------|
+| `KafkaTopics.TOPIC_SIMPLE`   | `simple.topic.1`   |
 | `KafkaTopics.TOPIC_GREETING` | `greeting.topic.1` |
-| `KafkaTopics.TOPIC_LOGGER` | `logger.topic.1` |
+| `KafkaTopics.TOPIC_LOGGER`   | `logger.topic.1`   |
 
 ## Coroutine Boundary
 

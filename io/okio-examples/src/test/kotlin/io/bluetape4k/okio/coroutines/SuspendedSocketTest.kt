@@ -1,5 +1,8 @@
 package io.bluetape4k.okio.coroutines
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.fail
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -11,7 +14,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okio.IOException
 import okio.Timeout
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -19,8 +21,7 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.util.concurrent.TimeUnit
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.fail
+import kotlin.time.Duration.Companion.milliseconds
 
 class SuspendedSocketTest: AbstractOkioTest() {
 
@@ -89,7 +90,7 @@ class SuspendedSocketTest: AbstractOkioTest() {
 
         coroutineScope {
             launch {
-                delay(500)
+                delay(500.milliseconds)
                 server.close()
             }
 
@@ -105,7 +106,7 @@ class SuspendedSocketTest: AbstractOkioTest() {
 
         coroutineScope {
             launch {
-                delay(500)
+                delay(500.milliseconds)
                 server.close()
             }
 

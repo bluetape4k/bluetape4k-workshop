@@ -4,13 +4,16 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
 import io.bluetape4k.workshop.redis.stream.RedisStreamConfiguration
 import io.bluetape4k.workshop.redis.stream.SensorData
+import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,14 +29,16 @@ import org.springframework.data.redis.stream.StreamMessageListenerContainer
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @SpringBootTest(classes = [RedisStreamConfiguration::class])
 class SyncStreamApiTest @Autowired constructor(
     private val template: StringRedisTemplate,
     private val messageListenerContainer: StreamMessageListenerContainer<String, MapRecord<String, String, String>>,
 ) {
-    companion object : KLoggingChannel() {
-        private val RECORD_TIMEOUT: Duration = Duration.ofSeconds(3)
+    companion object: KLoggingChannel() {
+        private val RECORD_TIMEOUT: Duration = 3.seconds()
 
         @JvmStatic
         @DynamicPropertySource
@@ -110,7 +115,7 @@ class SyncStreamApiTest @Autowired constructor(
         // XREAD BLOCK 으로 StreamListener 를 등록합니다.
         messageListenerContainer.receive(StreamOffset.fromStart(SensorData.KEY), streamListener)
 
-        await untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             streamListener.receivedRecordCount shouldBeEqualTo 0
         }
 
@@ -119,13 +124,13 @@ class SyncStreamApiTest @Autowired constructor(
         streamOps.add(SensorData.RECORD_1234_1)
 
         // StreamListener 로 받은 SensorData 를 확인한다
-        streamListener.poll(RECORD_TIMEOUT).shouldNotBeNull().id shouldBeEqualTo SensorData.RECORD_1234_0.id
-        streamListener.poll(RECORD_TIMEOUT).shouldNotBeNull().id shouldBeEqualTo SensorData.RECORD_1234_1.id
+        streamListener.poll(RECORD_TIMEOUT)!!.id shouldBeEqualTo SensorData.RECORD_1234_0.id
+        streamListener.poll(RECORD_TIMEOUT)!!.id shouldBeEqualTo SensorData.RECORD_1234_1.id
         streamListener.receivedRecordCount shouldBeEqualTo 2
 
         streamOps.add(SensorData.RECORD_1235_0)
 
-        streamListener.poll(RECORD_TIMEOUT).shouldNotBeNull().id shouldBeEqualTo SensorData.RECORD_1235_0.id
+        streamListener.poll(RECORD_TIMEOUT)!!.id shouldBeEqualTo SensorData.RECORD_1235_0.id
         streamListener.receivedRecordCount shouldBeEqualTo 3
     }
 }

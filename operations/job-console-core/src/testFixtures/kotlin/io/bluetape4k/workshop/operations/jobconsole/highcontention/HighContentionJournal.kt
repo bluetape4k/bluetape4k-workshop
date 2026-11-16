@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8String
 import tools.jackson.core.ObjectReadContext
 import tools.jackson.core.StreamReadFeature
 import tools.jackson.core.json.JsonFactory
@@ -67,7 +68,7 @@ class HighContentionJournal private constructor(
                 .toSortedMap(),
         )
         val payloadBytes = mapper.writeValueAsBytes(payload)
-        HighContentionRedaction.verify(payloadBytes.toString(Charsets.UTF_8), forbiddenSentinels)
+        HighContentionRedaction.verify(payloadBytes.toUtf8String(), forbiddenSentinels)
         val payloadSha256 = sha256(payloadBytes)
         val persisted = PersistedJournalRecord(
             sequence = nextSequence,
@@ -175,7 +176,7 @@ class HighContentionJournal private constructor(
             }
             val complete = bytes.copyOfRange(0, completeLength + 1)
             val lines = complete
-                .toString(Charsets.UTF_8)
+                .toUtf8String()
                 .split('\n')
                 .dropLast(1)
             if (lines.any(String::isEmpty)) {

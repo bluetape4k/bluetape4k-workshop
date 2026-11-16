@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    kotlin("kapt")
 }
 
 tasks.test {
@@ -19,7 +20,7 @@ dependencies {
     implementation(libs.bluetape4k.graph.io.micrometer)
 
     // Bluetape4k 공통 기능
-    implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.core)
 
     // 테스트
     testImplementation(project(":shared"))

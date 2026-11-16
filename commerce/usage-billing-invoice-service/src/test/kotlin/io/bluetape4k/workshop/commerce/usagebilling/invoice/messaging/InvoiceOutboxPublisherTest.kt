@@ -1,13 +1,19 @@
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 
 class InvoiceOutboxPublisherTest {
+
+    private companion object: KLogging() {
+        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
+    }
+
     private val journal = InMemoryInvoiceOutboxJournal()
     private val transport = RecordingInvoiceEventTransport()
     private val publisher = InvoiceOutboxPublisher(journal, transport, Clock.fixed(NOW, ZoneOffset.UTC))
@@ -35,7 +41,7 @@ class InvoiceOutboxPublisherTest {
     private fun event(): InvoiceOutboxLease =
         InvoiceOutboxLease(UUID.randomUUID(), "tenant-a|Invoice|invoice-1", "{\"event\":\"InvoiceIssued\"}")
 
-    private class InMemoryInvoiceOutboxJournal : InvoiceOutboxJournal {
+    private class InMemoryInvoiceOutboxJournal: InvoiceOutboxJournal {
         val events = mutableListOf<InvoiceOutboxLease>()
         private val statusByEvent = mutableMapOf<UUID, InvoiceOutboxStatus>()
         private val ownerByEvent = mutableMapOf<UUID, String>()
@@ -64,7 +70,7 @@ class InvoiceOutboxPublisherTest {
             statusByEvent[eventId] ?: InvoiceOutboxStatus.PENDING
     }
 
-    private class RecordingInvoiceEventTransport : InvoiceEventTransport {
+    private class RecordingInvoiceEventTransport: InvoiceEventTransport {
         val keys = mutableListOf<String>()
         var failure: InvoiceEventTransportFailure? = null
 
@@ -72,9 +78,5 @@ class InvoiceOutboxPublisherTest {
             failure?.let { throw it }
             keys += partitionKey
         }
-    }
-
-    private companion object {
-        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
     }
 }

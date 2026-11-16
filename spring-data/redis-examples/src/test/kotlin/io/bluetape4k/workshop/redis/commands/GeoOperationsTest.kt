@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.redis.commands
 
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.redis.AbstractRedisTest
 import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.redis.AbstractRedisTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +22,7 @@ class GeoOperationsTest(
     @param:Autowired private val operations: RedisOperations<String, String>,
 ): AbstractRedisTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val geoOperations: GeoOperations<String, String>
         get() = operations.opsForGeo()
@@ -41,6 +41,7 @@ class GeoOperationsTest(
             "Palermo",
             Distance(100.0, RedisGeoCommands.DistanceUnit.KILOMETERS)
         ).shouldNotBeNull()
+        byDistance.forEach { log.debug { "distance: $it" } }
         byDistance shouldHaveSize 2
         byDistance.content.map { it.content.name } shouldContainSame listOf("Arigento", "Palermo")
 
@@ -49,6 +50,7 @@ class GeoOperationsTest(
             "Palermo",
             Distance(200.0, RedisGeoCommands.DistanceUnit.KILOMETERS)
         ).shouldNotBeNull()
+        greaterDistance.forEach { log.debug { "distance: $it" } }
         greaterDistance shouldHaveSize 3
         greaterDistance.content.map { it.content.name } shouldContainSame listOf("Arigento", "Catania", "Palermo")
     }
@@ -61,6 +63,7 @@ class GeoOperationsTest(
         )
         val result = geoOperations.radius("Sicily", circle).shouldNotBeNull()
 
+        result.forEach { log.debug { "distance: $it" } }
         result shouldHaveSize 2
         result.content.map { it.content.name } shouldContainSame listOf("Arigento", "Palermo")
     }
@@ -73,6 +76,8 @@ class GeoOperationsTest(
             "Palermo",
             RedisGeoCommands.DistanceUnit.KILOMETERS
         ).shouldNotBeNull()
+
+        log.debug { "distance: $distance" }
         distance.value shouldBeInRange 130.0..140.0
     }
 
@@ -80,7 +85,7 @@ class GeoOperationsTest(
     fun `두 지점의 geohash 구하기`() {
         val geohashes: List<String> = geoOperations.hash("Sicily", "Catania", "Palermo").shouldNotBeNull()
 
-        log.debug { "geohashes=${geohashes.joinToString(",")}" }
+        geohashes.forEach { log.debug { "geohashes: $it" } }
         geohashes shouldHaveSize 2
         geohashes shouldContainSame listOf("sqdtr74hyu0", "sq9sm1716e0")
     }

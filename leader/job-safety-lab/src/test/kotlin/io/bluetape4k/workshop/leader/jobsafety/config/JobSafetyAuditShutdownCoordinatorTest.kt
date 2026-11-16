@@ -1,30 +1,35 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.audit.LeaderAuditExportEvent
 import io.bluetape4k.leader.audit.LeaderAuditExportObserver
 import io.bluetape4k.leader.audit.LeaderAuditExportSnapshot
 import io.bluetape4k.leader.audit.LeaderAuditExporter
 import io.bluetape4k.leader.audit.LeaderAuditSubmitResult
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.jobsafety.audit.InMemoryAuditHttpClient
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.core.read.ListAppender
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import org.junit.jupiter.api.assertTimeoutPreemptively
-import java.time.Duration
+import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 internal class JobSafetyAuditShutdownCoordinatorTest {
+
+    companion object: KLogging()
 
     @Test
     fun `close is ordered idempotent and bounded across all owned resources`() {
@@ -34,14 +39,16 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         val exporter = TracedExporter { }
         val client = InMemoryAuditHttpClient()
         val clientLifecycle = JobSafetyAuditHttpClientLifecycle(client)
+
         val scheduler = ScheduledThreadPoolExecutor(1).apply {
             removeOnCancelPolicy = true
-            schedule({ Thread.sleep(10_000) }, 1, java.util.concurrent.TimeUnit.MINUTES)
+            schedule({ Thread.sleep(10_000) }, 1, TimeUnit.MINUTES)
         }
         val executor = Executors.newSingleThreadExecutor()
         val scope = JobSafetyAuditScope()
+
         val coordinator = JobSafetyAuditShutdownCoordinator(
-            shutdownTimeout = Duration.ofMillis(500),
+            shutdownTimeout = 500.millis(),
             subscription = subscription,
             exporter = exporter,
             clientLifecycle = clientLifecycle,
@@ -51,11 +58,12 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
             onStep = { trace += it },
         )
 
-        assertTimeoutPreemptively(Duration.ofSeconds(3)) {
+        assertTimeoutPreemptively(3.seconds()) {
             coordinator.close()
             coordinator.close()
         }
 
+        log.debug { "trace=$trace" }
         trace shouldBeEqualTo listOf(
             "subscription.close",
             "exporter.close",
@@ -89,8 +97,8 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         val executor = Executors.newSingleThreadExecutor()
         val scope = JobSafetyAuditScope()
         val coordinator = JobSafetyAuditShutdownCoordinator(
-            shutdownTimeout = Duration.ofSeconds(1),
-            subscription = AutoCloseable { error("subscription-secret") },
+            shutdownTimeout = 1.seconds(),
+            subscription = { error("subscription-secret") },
             exporter = TracedExporter { },
             clientLifecycle = JobSafetyAuditHttpClientLifecycle(client),
             scheduler = scheduler,
@@ -101,6 +109,7 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         try {
             coordinator.close()
             val messages = appender.list.map { it.formattedMessage }.joinToString("\n")
+            log.debug { "messages=$messages" }
             messages shouldContain "job_safety_audit_shutdown_failed"
             messages shouldContain "resource_step=subscription.close"
             messages shouldContain "outcome=exception"
@@ -130,8 +139,8 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         val executor = TimeoutExecutorService()
         val scope = JobSafetyAuditScope()
         val coordinator = JobSafetyAuditShutdownCoordinator(
-            shutdownTimeout = Duration.ofSeconds(1),
-            subscription = AutoCloseable { },
+            shutdownTimeout = 1.seconds(),
+            subscription = { },
             exporter = TracedExporter { },
             clientLifecycle = JobSafetyAuditHttpClientLifecycle(client),
             scheduler = scheduler,
@@ -142,6 +151,8 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         try {
             coordinator.close()
             val messages = appender.list.map { it.formattedMessage }.joinToString("\n")
+
+            log.debug { "messages=$messages" }
             messages shouldContain "job_safety_audit_shutdown_timeout"
             messages shouldContain "resource_step=scheduler.awaitTermination"
             messages shouldContain "resource_step=executor.awaitTermination"
@@ -157,7 +168,7 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         }
     }
 
-    private class TracedExporter(private val onClose: () -> Unit) : LeaderAuditExporter {
+    private class TracedExporter(private val onClose: () -> Unit): LeaderAuditExporter {
         var closes: Int = 0
 
         override fun submit(event: LeaderAuditExportEvent): LeaderAuditSubmitResult =
@@ -173,11 +184,11 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         }
     }
 
-    private class TimeoutScheduledExecutor : ScheduledThreadPoolExecutor(1) {
+    private class TimeoutScheduledExecutor: ScheduledThreadPoolExecutor(1) {
         override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean = false
     }
 
-    private class TimeoutExecutorService : java.util.concurrent.AbstractExecutorService() {
+    private class TimeoutExecutorService: java.util.concurrent.AbstractExecutorService() {
         @Volatile
         private var shutdown = false
 

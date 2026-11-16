@@ -19,7 +19,7 @@ import org.springframework.boot.runApplication
  */
 @SpringBootApplication
 class CacheResilienceApplication {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 }
 
 fun main(args: Array<String>) {

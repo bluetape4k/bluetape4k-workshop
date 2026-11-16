@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestamp
 
-internal object VoucherPoolCampaignTable : Table("voucher_pool_campaigns") {
+internal object VoucherPoolCampaignTable: Table("voucher_pool_campaigns") {
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
     val state = enumerationByName<CampaignState>("state", 24)
@@ -27,7 +27,7 @@ internal object VoucherPoolCampaignTable : Table("voucher_pool_campaigns") {
     override val primaryKey = PrimaryKey(tenantId, campaignId)
 }
 
-internal object VoucherPoolBatchTable : Table("voucher_pool_batches") {
+internal object VoucherPoolBatchTable: Table("voucher_pool_batches") {
     val tenantId = varchar("tenant_id", 64)
     val batchId = javaUUID("batch_id")
     val campaignId = javaUUID("campaign_id")
@@ -50,7 +50,7 @@ internal object VoucherPoolBatchTable : Table("voucher_pool_batches") {
     override val primaryKey = PrimaryKey(tenantId, batchId)
 }
 
-internal object VoucherPoolEntryTable : Table("voucher_pool_entries") {
+internal object VoucherPoolEntryTable: Table("voucher_pool_entries") {
     val tenantId = varchar("tenant_id", 64)
     val entryId = javaUUID("entry_id")
     val campaignId = javaUUID("campaign_id")
@@ -85,7 +85,7 @@ internal object VoucherPoolEntryTable : Table("voucher_pool_entries") {
     override val primaryKey = PrimaryKey(tenantId, entryId)
 }
 
-internal object VoucherPoolReservationTable : Table("voucher_pool_reservations") {
+internal object VoucherPoolReservationTable: Table("voucher_pool_reservations") {
     val tenantId = varchar("tenant_id", 64)
     val reservationId = javaUUID("reservation_id")
     val entryId = javaUUID("entry_id")
@@ -102,7 +102,7 @@ internal object VoucherPoolReservationTable : Table("voucher_pool_reservations")
     override val primaryKey = PrimaryKey(tenantId, reservationId)
 }
 
-internal object VoucherPoolAllocationTable : Table("voucher_pool_allocations") {
+internal object VoucherPoolAllocationTable: Table("voucher_pool_allocations") {
     val tenantId = varchar("tenant_id", 64)
     val allocationId = javaUUID("allocation_id")
     val reservationId = javaUUID("reservation_id")
@@ -118,7 +118,7 @@ internal object VoucherPoolAllocationTable : Table("voucher_pool_allocations") {
     override val primaryKey = PrimaryKey(tenantId, allocationId)
 }
 
-internal object VoucherPoolCodeDedupTable : Table("voucher_pool_code_dedup") {
+internal object VoucherPoolCodeDedupTable: Table("voucher_pool_code_dedup") {
     val tenantId = varchar("tenant_id", 64)
     val stableDedupDigest = binary("stable_dedup_digest")
     val firstCampaignId = javaUUID("first_campaign_id")
@@ -129,7 +129,7 @@ internal object VoucherPoolCodeDedupTable : Table("voucher_pool_code_dedup") {
     override val primaryKey = PrimaryKey(tenantId, stableDedupDigest)
 }
 
-internal object VoucherPoolHttpIdempotencyTable : Table("voucher_pool_http_idempotency") {
+internal object VoucherPoolHttpIdempotencyTable: Table("voucher_pool_http_idempotency") {
     val tenantId = varchar("tenant_id", 64)
     val operation = varchar("operation", 64)
     val scopedKeyDigest = binary("scoped_key_digest")
@@ -144,7 +144,7 @@ internal object VoucherPoolHttpIdempotencyTable : Table("voucher_pool_http_idemp
     override val primaryKey = PrimaryKey(tenantId, operation, scopedKeyDigest)
 }
 
-internal object VoucherPoolCommandTombstoneTable : Table("voucher_pool_command_tombstones") {
+internal object VoucherPoolCommandTombstoneTable: Table("voucher_pool_command_tombstones") {
     val tenantId = varchar("tenant_id", 64)
     val operation = varchar("operation", 64)
     val keyVersion = integer("key_version")
@@ -156,7 +156,7 @@ internal object VoucherPoolCommandTombstoneTable : Table("voucher_pool_command_t
     override val primaryKey = PrimaryKey(tenantId, operation, scopedKeyDigest)
 }
 
-internal object VoucherPoolAuditTable : Table("voucher_pool_audits") {
+internal object VoucherPoolAuditTable: Table("voucher_pool_audits") {
     val id = long("id").autoIncrement()
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
@@ -174,7 +174,7 @@ internal object VoucherPoolAuditTable : Table("voucher_pool_audits") {
     override val primaryKey = PrimaryKey(id)
 }
 
-internal object VoucherPoolReconciliationInboxTable : Table("voucher_pool_reconciliation_inbox") {
+internal object VoucherPoolReconciliationInboxTable: Table("voucher_pool_reconciliation_inbox") {
     val tenantId = varchar("tenant_id", 64)
     val eventId = javaUUID("event_id")
     val payloadDigest = binary("payload_digest")
@@ -188,7 +188,7 @@ internal object VoucherPoolReconciliationInboxTable : Table("voucher_pool_reconc
     override val primaryKey = PrimaryKey(tenantId, eventId)
 }
 
-internal object VoucherPoolQuarantineTable : Table("voucher_pool_quarantines") {
+internal object VoucherPoolQuarantineTable: Table("voucher_pool_quarantines") {
     val tenantId = varchar("tenant_id", 64)
     val entryId = javaUUID("entry_id")
     val sourceState = varchar("source_state", 24)
@@ -200,7 +200,7 @@ internal object VoucherPoolQuarantineTable : Table("voucher_pool_quarantines") {
     override val primaryKey = PrimaryKey(tenantId, entryId)
 }
 
-internal object VoucherPoolWorkerClaimTable : Table("voucher_pool_worker_claims") {
+internal object VoucherPoolWorkerClaimTable: Table("voucher_pool_worker_claims") {
     val tenantId = varchar("tenant_id", 64)
     val workerType = varchar("worker_type", 32)
     val scopeId = javaUUID("scope_id")
@@ -215,16 +215,17 @@ internal object VoucherPoolWorkerClaimTable : Table("voucher_pool_worker_claims"
     override val primaryKey = PrimaryKey(tenantId, workerType, scopeId)
 }
 
-internal object VoucherPoolDepthTable : Table("voucher_pool_pool_depth") {
+internal object VoucherPoolDepthTable: Table("voucher_pool_pool_depth") {
     val tenantId = varchar("tenant_id", 64)
     val batchId = javaUUID("batch_id")
     val state = enumerationByName<EntryState>("state", 24)
     val entryCount = long("entry_count")
     val revision = long("revision")
+
     override val primaryKey = PrimaryKey(tenantId, batchId, state)
 }
 
-internal object VoucherPoolUserLimitTable : Table("voucher_pool_user_limits") {
+internal object VoucherPoolUserLimitTable: Table("voucher_pool_user_limits") {
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
     val userDigest = binary("user_digest", 32)

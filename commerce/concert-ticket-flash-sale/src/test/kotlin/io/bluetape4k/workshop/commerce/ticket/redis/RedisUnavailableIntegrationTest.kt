@@ -3,6 +3,9 @@ package io.bluetape4k.workshop.commerce.ticket.redis
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.commerce.ticket.config.TicketProperties
@@ -11,27 +14,28 @@ import io.bluetape4k.workshop.commerce.ticket.config.TicketRedisProperties
 import io.bluetape4k.workshop.commerce.ticket.config.TicketRedisResources
 import io.lettuce.core.RedisException
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 internal class RedisUnavailableIntegrationTest {
+
+    companion object: KLogging() {
+        val redis by lazy { RedisServer.Launcher.redis }
+    }
+
     @Test
     fun `distributed route limit rejects excess calls independently of the lease`() {
-        val redis = RedisServer.Launcher.redis
         val cleanupClient = LettuceClients.clientOf(redis.url)
         try {
             LettuceClients.connect(cleanupClient).sync().flushdb()
         } finally {
             LettuceClients.shutdown(cleanupClient)
         }
-        val properties =
-            TicketProperties(
-                redis =
-                    TicketRedisProperties(
-                        uri = redis.url,
-                        rateLimitCapacity = 2,
-                        rateLimitPeriod = Duration.ofHours(1),
-                    ),
-            )
+        val properties = TicketProperties(
+            redis = TicketRedisProperties(
+                uri = redis.url,
+                rateLimitCapacity = 2,
+                rateLimitPeriod = 1.hours(),
+            ),
+        )
 
         TicketRedisResources.open(properties.redis).use { resources ->
             val limiter = TicketRedisConfiguration().ticketRateLimiter(resources, properties)
@@ -52,7 +56,6 @@ internal class RedisUnavailableIntegrationTest {
             gate.acquire(request())
         }
         reconciled += 1
-
         reconciled shouldBeEqualTo 1
     }
 
@@ -65,10 +68,10 @@ internal class RedisUnavailableIntegrationTest {
         }
     }
 
-    private fun request() =
+    private fun request(): LeaseRequest =
         LeaseRequest(
             keys = LeaseKeys("ticket:{sale}:inflight:ip:ip", "ticket:{sale}:inflight:user:user"),
             ownerCandidates = listOf(LeaseOwner(1, "owner".padEnd(43, 'x'))),
-            ttl = Duration.ofSeconds(5),
+            ttl = 5.seconds(),
         )
 }

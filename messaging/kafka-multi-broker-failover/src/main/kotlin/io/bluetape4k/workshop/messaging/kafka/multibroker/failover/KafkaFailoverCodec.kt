@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.tink.digest.TinkDigesters
 import tools.jackson.core.JacksonException
 import tools.jackson.core.StreamReadConstraints
@@ -8,7 +10,6 @@ import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
-import java.nio.charset.StandardCharsets
 
 /**
  * Kafka value를 위한 제한된 JSON 문자열 codec입니다.
@@ -17,6 +18,39 @@ import java.nio.charset.StandardCharsets
  * 의존하지 않습니다. decode는 허용된 네 필드와 정확한 scalar type만 받아들입니다.
  */
 class KafkaFailoverCodec {
+
+    private companion object: KLogging() {
+        const val EVENT_ID_FIELD = "eventId"
+        const val SEQUENCE_FIELD = "sequence"
+        const val PAYLOAD_FIELD = "payload"
+        const val PARTITION_KEY_FIELD = "partitionKey"
+        const val MAX_DOCUMENT_BYTES = 16 * 1024
+        val EXPECTED_FIELDS = setOf(EVENT_ID_FIELD, SEQUENCE_FIELD, PAYLOAD_FIELD, PARTITION_KEY_FIELD)
+
+        val mapper: JsonMapper = JsonMapper.builder(
+            JsonFactory.builder()
+                .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
+                .streamReadConstraints(
+                    StreamReadConstraints.builder()
+                        .maxNestingDepth(32)
+                        .maxDocumentLength(MAX_DOCUMENT_BYTES.toLong())
+                        .maxTokenCount(128)
+                        .maxNumberLength(20)
+                        .maxStringLength(8 * 1024)
+                        .maxNameLength(64)
+                        .build()
+                )
+                .build()
+        )
+            .findAndAddModules()
+            .enable(
+                DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY,
+                DeserializationFeature.FAIL_ON_TRAILING_TOKENS,
+            )
+            .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
+            .build()
+    }
 
     /**
      * event를 canonical field order의 JSON 문자열로 인코딩합니다.
@@ -37,7 +71,7 @@ class KafkaFailoverCodec {
      * @throws IllegalArgumentException JSON이 schema 또는 입력 제한을 위반할 때 발생합니다.
      */
     fun decode(json: String): KafkaFailoverEvent {
-        if (json.toByteArray(StandardCharsets.UTF_8).size > MAX_DOCUMENT_BYTES) {
+        if (json.toUtf8Bytes().size > MAX_DOCUMENT_BYTES) {
             throw invalidJson()
         }
 
@@ -88,7 +122,7 @@ class KafkaFailoverCodec {
 
     private fun JsonNode.requiredText(fieldName: String): String {
         val value = get(fieldName)
-        if (value == null || !value.isTextual) {
+        if (value == null || !value.isString) {
             throw invalidJson("JSON field $fieldName must be a string")
         }
         return value.stringValue()
@@ -104,35 +138,4 @@ class KafkaFailoverCodec {
 
     private fun invalidJson(message: String = "Invalid Kafka failover event JSON"): IllegalArgumentException =
         IllegalArgumentException(message)
-
-    private companion object {
-        const val EVENT_ID_FIELD = "eventId"
-        const val SEQUENCE_FIELD = "sequence"
-        const val PAYLOAD_FIELD = "payload"
-        const val PARTITION_KEY_FIELD = "partitionKey"
-        const val MAX_DOCUMENT_BYTES = 16 * 1024
-        val EXPECTED_FIELDS = setOf(EVENT_ID_FIELD, SEQUENCE_FIELD, PAYLOAD_FIELD, PARTITION_KEY_FIELD)
-        val mapper: JsonMapper = JsonMapper.builder(
-            JsonFactory.builder()
-                .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
-                .streamReadConstraints(
-                    StreamReadConstraints.builder()
-                        .maxNestingDepth(32)
-                        .maxDocumentLength(MAX_DOCUMENT_BYTES.toLong())
-                        .maxTokenCount(128)
-                        .maxNumberLength(20)
-                        .maxStringLength(8 * 1024)
-                        .maxNameLength(64)
-                        .build()
-                )
-                .build()
-        )
-            .enable(
-                DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-                DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY,
-                DeserializationFeature.FAIL_ON_TRAILING_TOKENS,
-            )
-            .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
-            .build()
-    }
 }

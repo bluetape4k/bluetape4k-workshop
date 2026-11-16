@@ -1,28 +1,29 @@
 package io.bluetape4k.workshop.redis.reactive.operations
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.time.delay
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.ReactiveRedisOperations
-import java.time.Duration
 import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.seconds
 
 class ValueOperationsTest(
     @param:Autowired private val operations: ReactiveRedisOperations<String, String>,
 ): AbstractReactiveRedisTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val CACHED_VALUE = "Hello, World!"
     }
 
@@ -35,6 +36,7 @@ class ValueOperationsTest(
         operations.execute { connection ->
             connection.serverCommands().flushAll()
         }.awaitSingle() shouldBeEqualTo "OK"
+
         valueCreationCount = 0
     }
 
@@ -52,7 +54,7 @@ class ValueOperationsTest(
             var value = valueOperations.get(cacheKey).awaitSingleOrNull()
             if (value == null) {
                 value = cacheValue()
-                valueOperations.set(cacheKey, value, Duration.ofSeconds(3)).awaitSingle()
+                valueOperations.set(cacheKey, value, 1.seconds()).awaitSingle()
             }
 
             value shouldBeEqualTo CACHED_VALUE
@@ -61,12 +63,12 @@ class ValueOperationsTest(
             value2 shouldBeEqualTo CACHED_VALUE
         }
         // cacheValue() 실행이 3초가 걸리므로
-        elapsed shouldBeLessOrEqualTo 5_000L
+        elapsed shouldBeLessOrEqualTo 3_000L
         valueCreationCount shouldBeEqualTo 1
     }
 
     private suspend fun cacheValue(): String {
-        delay(Duration.ofSeconds(3))
+        delay(1.seconds)
         valueCreationCounter.incrementAndGet()
         return CACHED_VALUE
     }

@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 data class GreetingResult(
     val message: String,
     val createdAt: LocalDateTime = LocalDateTime.now(),
-) : Serializable {
+): Serializable {
 
     init {
         message.requireNotBlank("message")

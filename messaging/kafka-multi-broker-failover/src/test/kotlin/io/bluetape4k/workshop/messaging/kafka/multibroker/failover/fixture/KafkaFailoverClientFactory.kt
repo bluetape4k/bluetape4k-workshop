@@ -1,17 +1,23 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture
 
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverCodec
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverEvent
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverKafkaConfiguration
 import org.apache.kafka.clients.admin.Admin
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
-import java.util.Properties
+import org.apache.kafka.common.TopicPartition
+import java.util.*
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.nanoseconds
 
 /** reference scenario에서 사용하는 명시적 문자열 client를 생성합니다. */
 class KafkaFailoverClientFactory(
@@ -70,41 +76,44 @@ class KafkaFailoverClientFactory(
             val remaining = deadline.remainingNanos()
             remainingObserver(remaining)
             deadline.awaitBlocking("producer-ack") {
-                requirePartition(future.get(remaining, TimeUnit.NANOSECONDS), expectedPartition)
+                requirePartition(future.get(remaining.nanoseconds), expectedPartition)
             }
         }
         return futures.size
     }
 
-    private fun properties(source: Map<String, Any>): Properties = Properties().also { properties ->
-        source.forEach { (key, value) -> properties[key] = value }
-    }
+    private fun properties(source: Map<String, Any>): Properties =
+        Properties().also { properties ->
+            source.forEach { (key, value) ->
+                properties[key] = value
+            }
+        }
 }
 
 data class KafkaFailoverAssignmentSnapshot(
     val callbackCount: Int,
     val generation: Int?,
-    val partitions: Set<org.apache.kafka.common.TopicPartition>,
+    val partitions: Set<TopicPartition>,
 )
 
 /** 제한된 assignment callback barrier이며 stop 이후 quiescence도 추적합니다. */
 class KafkaFailoverAssignmentBarrier {
-    private val latch = java.util.concurrent.CountDownLatch(1)
-    private val lock = Any()
+    private val latch = CountDownLatch(1)
+    private val lock = ReentrantLock()
     private var stopped = false
     private var callbackAfterStopValue = false
     private var callbackCountValue = 0
     private var generationValue: Int? = null
-    private var partitionsValue: Set<org.apache.kafka.common.TopicPartition> = emptySet()
+    private var partitionsValue: Set<TopicPartition> = emptySet()
 
     val callbackCount: Int
-        get() = synchronized(lock) { callbackCountValue }
+        get() = lock.withLock { callbackCountValue }
 
     val callbackAfterStop: Boolean
-        get() = synchronized(lock) { callbackAfterStopValue }
+        get() = lock.withLock { callbackAfterStopValue }
 
-    fun recordAssignment(partitions: Set<org.apache.kafka.common.TopicPartition>, generation: Int?) {
-        synchronized(lock) {
+    fun recordAssignment(partitions: Set<TopicPartition>, generation: Int?) {
+        lock.withLock {
             if (stopped) {
                 callbackAfterStopValue = true
                 return
@@ -118,16 +127,16 @@ class KafkaFailoverAssignmentBarrier {
 
     fun await(deadline: KafkaFailoverDeadline): KafkaFailoverAssignmentSnapshot {
         deadline.awaitBlocking("assignment") {
-            if (!latch.await(deadline.remainingNanos(), TimeUnit.NANOSECONDS)) {
-                throw java.util.concurrent.TimeoutException("assignment barrier deadline exhausted")
+            if (!latch.await(deadline.remainingNanos().nanoseconds)) {
+                throw TimeoutException("assignment barrier deadline exhausted")
             }
         }
-        return synchronized(lock) {
+        return lock.withLock {
             KafkaFailoverAssignmentSnapshot(callbackCountValue, generationValue, partitionsValue)
         }
     }
 
     fun stop() {
-        synchronized(lock) { stopped = true }
+        lock.withLock { stopped = true }
     }
 }

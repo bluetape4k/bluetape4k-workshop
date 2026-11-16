@@ -2,19 +2,30 @@ package io.bluetape4k.workshop.commerce.usagebilling.billing.messaging
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.HexFormat
+import java.util.*
 
 class BillingInboundEventDecoderTest {
+
+    private companion object: KLogging() {
+        const val PRICE_PAYLOAD = "{\"meterCode\":\"api_calls\",\"currency\":\"USD\",\"unitPrice\":\"0.10\"}"
+        const val USAGE_PAYLOAD = "{\"meterCode\":\"api_calls\",\"currency\":\"USD\",\"quantity\":\"2.5\"}"
+    }
+
     private val decoder = BillingInboundEventDecoder()
 
     @Test
     fun `decodes Meter price evidence without sharing Meter runtime types`() {
-        val event = decoder.decode(envelope("PriceActivated", PRICE_PAYLOAD)) as BillingInboundEvent.PriceActivated
+        val envelop = envelope("PriceActivated", PRICE_PAYLOAD)
+        val event = decoder.decode(envelop).shouldBeInstanceOf<BillingInboundEvent.PriceActivated>()
 
+        log.debug { "event=$event" }
         event.event.payloadDigest shouldBeEqualTo digestOf(PRICE_PAYLOAD)
         event.event.evidence.tenantId shouldBeEqualTo "tenant-a"
         event.event.evidence.meterCode shouldBeEqualTo "api_calls"
@@ -25,8 +36,9 @@ class BillingInboundEventDecoderTest {
     fun `decodes Usage acceptance into Billing local rating input`() {
         val event = decoder.decode(
             envelope("UsageAccepted", USAGE_PAYLOAD, aggregateType = "Usage"),
-        ) as BillingInboundEvent.UsageAccepted
+        ).shouldBeInstanceOf<BillingInboundEvent.UsageAccepted>()
 
+        log.debug { "event=$event" }
         event.event.payloadDigest shouldBeEqualTo digestOf(USAGE_PAYLOAD)
         event.event.meterCode shouldBeEqualTo "api_calls"
         event.event.quantity.toPlainString() shouldBeEqualTo "2.5"
@@ -43,7 +55,11 @@ class BillingInboundEventDecoderTest {
     fun `rejects non-canonical or malformed payload digests`() {
         val digest = digestOf(USAGE_PAYLOAD)
 
-        listOf(digest.uppercase(), "not-hex", digest.dropLast(2)).forEach { invalidDigest ->
+        listOf(
+            digest.uppercase(),
+            "not-hex",
+            digest.dropLast(2)
+        ).forEach { invalidDigest ->
             assertFailsWith<InvalidBillingInboundEnvelope> {
                 decoder.decode(envelope("UsageAccepted", USAGE_PAYLOAD, payloadDigest = invalidDigest))
             }
@@ -81,10 +97,6 @@ class BillingInboundEventDecoderTest {
         )
 
     private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 
-    private companion object {
-        const val PRICE_PAYLOAD = "{\"meterCode\":\"api_calls\",\"currency\":\"USD\",\"unitPrice\":\"0.10\"}"
-        const val USAGE_PAYLOAD = "{\"meterCode\":\"api_calls\",\"currency\":\"USD\",\"quantity\":\"2.5\"}"
-    }
 }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.application.InvalidCallbackSignatureException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 internal class PlanningExceptionHandler {
+
+    companion object: KLogging()
 
     @ExceptionHandler(MethodArgumentNotValidException::class, IllegalArgumentException::class)
     fun badRequest(): ResponseEntity<ErrorResponse> = error(HttpStatus.BAD_REQUEST, "invalid request")

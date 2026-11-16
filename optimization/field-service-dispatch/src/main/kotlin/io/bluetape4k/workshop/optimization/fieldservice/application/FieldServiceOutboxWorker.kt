@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceRepository
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.OutboxRecord
@@ -13,13 +14,17 @@ class FieldServiceOutboxWorker(
     private val handler: (OutboxRecord) -> ReplayOutcome,
     private val owner: String = "field-service-outbox",
 ) {
+    companion object: KLogging()
+
     fun processOutboxBatch(maxItems: Int = 10): ReplayResult {
         val claimed = transaction { repository.claimOutbox(maxItems, owner) }
         var completed = 0
         var retryable = 0
         var deadLetter = 0
+
         claimed.forEach { record ->
             var retryReason = OutboxFailureReason.GENERIC_RETRYABLE
+
             val outcome = try {
                 handler(record)
             } catch (cancellation: CancellationException) {
@@ -29,22 +34,37 @@ class FieldServiceOutboxWorker(
                 retryReason = OutboxFailureReason.from(failure)
                 ReplayOutcome.RETRYABLE
             }
+            log.debug { "record=$record, outcome=$outcome" }
+
             when (outcome) {
-                ReplayOutcome.COMPLETED -> if (
-                    transaction { repository.completeOutbox(record.id, owner, record.leaseToken.orEmpty()) }
-                ) completed++
-                ReplayOutcome.RETRYABLE -> if (
-                    transaction { repository.retryOutbox(record.id, owner, record.leaseToken.orEmpty(), retryReason) }
-                ) retryable++
-                ReplayOutcome.DEAD_LETTER -> if (
-                    transaction { repository.deadLetterOutbox(record.id, owner, record.leaseToken.orEmpty(), "DEAD_LETTER") }
-                ) deadLetter++
+                ReplayOutcome.COMPLETED   -> {
+                    val completeOutbox = transaction {
+                        repository.completeOutbox(record.id, owner, record.leaseToken.orEmpty())
+                    }
+                    if (completeOutbox) {
+                        completed++
+                    }
+                }
+                ReplayOutcome.RETRYABLE   -> {
+                    val retryOutbox = transaction {
+                        repository.retryOutbox(record.id, owner, record.leaseToken.orEmpty(), retryReason)
+                    }
+                    if (retryOutbox) {
+                        retryable++
+                    }
+                }
+                ReplayOutcome.DEAD_LETTER -> {
+                    val deadLetterOutbox = transaction {
+                        repository.deadLetterOutbox(record.id, owner, record.leaseToken.orEmpty(), "DEAD_LETTER")
+                    }
+                    if (deadLetterOutbox) {
+                        deadLetter++
+                    }
+                }
             }
         }
         return ReplayResult(claimed.size, completed, retryable, deadLetter)
     }
-
-    companion object : KLogging()
 }
 
 internal object OutboxFailureReason {

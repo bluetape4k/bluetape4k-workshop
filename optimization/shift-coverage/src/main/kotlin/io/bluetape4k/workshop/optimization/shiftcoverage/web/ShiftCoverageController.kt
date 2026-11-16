@@ -1,12 +1,11 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.web
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageDemoService
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.IdempotencyKey
-import io.bluetape4k.workshop.optimization.shiftcoverage.domain.InvalidShiftCoverageInput
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
 import jakarta.servlet.http.HttpServletRequest
-import java.net.URI
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -16,35 +15,45 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.net.URI
 
 /** loopback과 closed demo operator guard를 적용한 command/query surface입니다. */
 @RestController
 @RequestMapping("/api/shift-coverage")
 class ShiftCoverageController(private val service: ShiftCoverageDemoService) {
+
+    companion object: KLogging() {
+        private val LOOPBACK = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
+        private val ALLOWED_ORIGIN_HOSTS = setOf("127.0.0.1", "localhost")
+    }
+
     @GetMapping("/plans")
     fun plans(request: HttpServletRequest): List<Any> {
         val principal = guard(request, requiredRole = null)
-        return service.listPlans(principal.workerId).map { proposal ->
-            if (principal.workerId == null) {
-                ShiftCoveragePlanDto(
-                    planId = proposal.planId.value,
-                    revision = proposal.revision,
-                    siteId = proposal.siteId?.value ?: "site-demo",
-                    assignments = proposal.assignments.size,
-                    gaps = proposal.unassigned.size,
-                    coverageMinor = proposal.score.coverageMinor,
-                    fairnessMinor = proposal.score.fairnessMinor,
-                    reasons = proposal.unassigned.map { it.reason.name },
-                )
-            } else {
-                ShiftCoverageWorkerPlanDto(
-                    planId = proposal.planId.value,
-                    revision = proposal.revision,
-                    siteId = proposal.siteId?.value ?: "site-demo",
-                    assignments = proposal.assignments.size,
-                )
+
+        return service
+            .listPlans(principal.workerId)
+            .map { proposal ->
+                if (principal.workerId == null) {
+                    ShiftCoveragePlanDto(
+                        planId = proposal.planId.value,
+                        revision = proposal.revision,
+                        siteId = proposal.siteId?.value ?: "site-demo",
+                        assignments = proposal.assignments.size,
+                        gaps = proposal.unassigned.size,
+                        coverageMinor = proposal.score.coverageMinor,
+                        fairnessMinor = proposal.score.fairnessMinor,
+                        reasons = proposal.unassigned.map { it.reason.name },
+                    )
+                } else {
+                    ShiftCoverageWorkerPlanDto(
+                        planId = proposal.planId.value,
+                        revision = proposal.revision,
+                        siteId = proposal.siteId?.value ?: "site-demo",
+                        assignments = proposal.assignments.size,
+                    )
+                }
             }
-        }
     }
 
     @GetMapping("/swaps")
@@ -63,7 +72,10 @@ class ShiftCoverageController(private val service: ShiftCoverageDemoService) {
         val key = IdempotencyKey(idempotencyKey)
         val responseRequestId = requestId ?: Uuid.V7.nextId().toString()
         val result = service.replan(key, principal.operatorId, responseRequestId)
-        return ResponseEntity.status(HttpStatus.ACCEPTED).header("Retry-After", "1")
+
+        return ResponseEntity
+            .status(HttpStatus.ACCEPTED)
+            .header("Retry-After", "1")
             .body(ShiftCoverageReplanResponse(true, result.proposal.revision, result.requestId))
     }
 
@@ -87,12 +99,22 @@ class ShiftCoverageController(private val service: ShiftCoverageDemoService) {
         @RequestHeader("Idempotency-Key", required = true) idempotencyKey: String,
     ): ResponseEntity<ShiftCoverageSwapResponse> {
         val principal = guard(request, requiredRole = "worker")
-        val source = principal.workerId ?: throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
+        val source = principal.workerId
+            ?: throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
+
         if (body.sourceWorkerId != source.value) {
             throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_SUBJECT_MISMATCH", false)
         }
-        val swap = service.requestSwap(source, WorkerId(body.targetWorkerId), IdempotencyKey(idempotencyKey), principal.operatorId)
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ShiftCoverageSwapResponse(swap.requestId.value, "REQUESTED"))
+        val swap = service.requestSwap(
+            source,
+            WorkerId(body.targetWorkerId),
+            IdempotencyKey(idempotencyKey),
+            principal.operatorId
+        )
+
+        return ResponseEntity
+            .status(HttpStatus.ACCEPTED)
+            .body(ShiftCoverageSwapResponse(swap.requestId.value, "REQUESTED"))
     }
 
     @PostMapping("/swaps/{requestId}/accept")
@@ -112,36 +134,56 @@ class ShiftCoverageController(private val service: ShiftCoverageDemoService) {
         val remote = request.remoteAddr
         if (remote !in LOOPBACK) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "LOOPBACK_REQUIRED", false)
         val origin = request.getHeader("Origin")
+
         if (origin != null && !isAllowedOrigin(origin)) {
             throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "ORIGIN_FORBIDDEN", false)
         }
-        val operator = request.getHeader("X-Demo-Operator") ?: throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_OPERATOR_REQUIRED", false)
-        val role = request.getHeader("X-Demo-Role") ?: throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
-        if (requiredRole != null && role != requiredRole) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
+
+        val operator = request.getHeader("X-Demo-Operator")
+            ?: throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_OPERATOR_REQUIRED", false)
+
+        val role = request.getHeader("X-Demo-Role")
+            ?: throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
+
+        if (requiredRole != null && role != requiredRole) {
+            throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
+        }
+
         val principal = when (operator) {
             "manager-demo" -> DemoPrincipal(operator, "manager", null)
             "worker-a-demo" -> DemoPrincipal(operator, "worker", WorkerId("worker-a"))
             "worker-b-demo" -> DemoPrincipal(operator, "worker", WorkerId("worker-b"))
-            else -> throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_OPERATOR_FORBIDDEN", false)
+            else           -> throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_OPERATOR_FORBIDDEN", false)
         }
-        if (principal.role != role) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
+
+        if (principal.role != role) {
+            throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
+        }
         return principal
     }
 
-    private fun isAllowedOrigin(value: String): Boolean = try {
-        val origin = URI(value)
-        origin.scheme == "http" && origin.userInfo == null && origin.path.isEmpty() &&
-            origin.host in ALLOWED_ORIGIN_HOSTS && origin.query == null && origin.fragment == null
-    } catch (_: IllegalArgumentException) {
-        false
-    }
-
-    companion object {
-        private val LOOPBACK = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
-        private val ALLOWED_ORIGIN_HOSTS = setOf("127.0.0.1", "localhost")
-    }
+    private fun isAllowedOrigin(value: String): Boolean =
+        try {
+            val origin = URI(value)
+            origin.scheme == "http" &&
+                    origin.userInfo == null &&
+                    origin.path.isEmpty() &&
+                    origin.host in ALLOWED_ORIGIN_HOSTS &&
+                    origin.query == null &&
+                    origin.fragment == null
+        } catch (_: IllegalArgumentException) {
+            false
+        }
 }
 
-private data class DemoPrincipal(val operatorId: String, val role: String, val workerId: WorkerId?)
+private data class DemoPrincipal(
+    val operatorId: String,
+    val role: String,
+    val workerId: WorkerId?,
+)
 
-class ShiftCoverageHttpException(val status: HttpStatus, val code: String, val retryable: Boolean) : RuntimeException(code)
+class ShiftCoverageHttpException(
+    val status: HttpStatus,
+    val code: String,
+    val retryable: Boolean,
+): RuntimeException(code)

@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.observation.examples
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.observation.AbstractObservationTest
 import io.bluetape4k.workshop.observation.service.GreetingService
 import io.micrometer.observation.ObservationRegistry
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
-class ObservationRegistryTest : AbstractObservationTest() {
+class ObservationRegistryTest: AbstractObservationTest() {
 
     @Autowired
     private val observationRegistry: ObservationRegistry = uninitialized()

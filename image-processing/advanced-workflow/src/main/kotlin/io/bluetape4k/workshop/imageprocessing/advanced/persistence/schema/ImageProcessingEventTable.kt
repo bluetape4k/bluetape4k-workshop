@@ -13,17 +13,17 @@ import org.jetbrains.exposed.v1.javatime.timestamp
  * 지정한 [ImageProcessingJobTable] 행에 대해 적용됩니다.
  * 부모 job이 삭제되면 행도 cascade 삭제됩니다.
  */
-object ImageProcessingEventTable : LongIdTable("image_processing_events") {
+object ImageProcessingEventTable: LongIdTable("image_processing_events") {
 
     /** 부모 [ImageProcessingJobTable]에 대한 FK이며 삭제를 cascade합니다. */
     val jobId = reference("job_id", ImageProcessingJobTable, onDelete = ReferenceOption.CASCADE)
         .index()
 
     /** 이 이벤트가 설명하는 파이프라인 단계입니다. */
-    val step = enumerationByName("step", 30, ImageProcessingStep::class)
+    val step = enumerationByName<ImageProcessingStep>("step", 30)
 
     /** 이 단계의 결과입니다. */
-    val status = enumerationByName("status", 20, ImageProcessingEventStatus::class)
+    val status = enumerationByName<ImageProcessingEventStatus>("status", 20)
 
     /** 선택적인 사람이 읽을 수 있는 메시지입니다(예: 오류 설명 또는 요약). */
     val message = text("message").nullable()

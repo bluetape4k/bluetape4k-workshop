@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.inventory.Inventory
 import io.bluetape4k.workshop.spring.modulith.events.util.IntegrationTest
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 import org.springframework.dao.InvalidDataAccessApiUsageException
 
@@ -14,7 +14,7 @@ class OrderIntegrationTest(
     private val inventory: Inventory,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `transaction rollback if inventory update fails`() {

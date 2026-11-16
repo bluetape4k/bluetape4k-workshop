@@ -18,9 +18,9 @@ import org.springframework.context.ApplicationContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 
-class IdGeneratorControllerTest(context: ApplicationContext) : AbstractIdGeneratorTest(context) {
+class IdGeneratorControllerTest(context: ApplicationContext): AbstractIdGeneratorTest(context) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     // ── Snowflake ──────────────────────────────────────────────────────────
 
@@ -173,7 +173,7 @@ class IdGeneratorControllerTest(context: ApplicationContext) : AbstractIdGenerat
         result.decoded shouldBeEqualTo listOf(42L)
     }
 
-    private inline fun <reified T : Any> WebTestClient.ResponseSpec.expectRequiredBody(): T =
+    private inline fun <reified T: Any> WebTestClient.ResponseSpec.expectRequiredBody(): T =
         expectBody<T>()
             .returnResult()
             .responseBody

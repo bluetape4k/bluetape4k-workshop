@@ -11,7 +11,7 @@ data class SnowflakeResponse(
     val timestamp: Long,
     val machineId: Int,
     val sequence: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -23,7 +23,7 @@ data class SnowflakeResponse(
 data class StringIdResponse(
     val type: String,
     val id: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -36,7 +36,7 @@ data class HashidsResponse(
     val numbers: List<Long>,
     val encoded: String,
     val decoded: List<Long>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -49,7 +49,7 @@ data class BatchIdResponse(
     val type: String,
     val count: Int,
     val ids: List<String>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

@@ -82,7 +82,7 @@ data class RecommendationSeed(
     val headphones: GraphVertex,
     val keyboard: GraphVertex,
     val mouse: GraphVertex,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

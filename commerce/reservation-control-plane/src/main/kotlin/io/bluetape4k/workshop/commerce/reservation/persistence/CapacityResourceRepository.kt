@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.reservation.persistence
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.reservation.domain.ResourceState
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
@@ -22,13 +23,16 @@ import org.springframework.stereotype.Repository
  * caller가 stale read에서 capacity를 authorize하지 못합니다.
  */
 @Repository
-internal class CapacityResourceRepository :
-    LongAuditableJdbcRepository<CapacityResourceRecord, CapacityResourceTable> {
+internal class CapacityResourceRepository
+    : LongAuditableJdbcRepository<CapacityResourceRecord, CapacityResourceTable> {
+
+    companion object: KLogging()
+
     override val table = CapacityResourceTable
 
     override fun extractId(entity: CapacityResourceRecord): Long = entity.id
 
-    override fun ResultRow.toEntity() =
+    override fun ResultRow.toEntity(): CapacityResourceRecord =
         CapacityResourceRecord(
             id = this[table.id].value,
             code = this[table.code],
@@ -49,14 +53,15 @@ internal class CapacityResourceRepository :
         capacity: Int,
         policyVersion: Long,
     ): CapacityResourceRecord {
-        require(capacity > 0) { "capacity must be positive" }
-        val id =
-            table
-                .insertAndGetId {
-                    it[table.code] = code.take(80)
-                    it[table.capacity] = capacity
-                    it[table.policyVersion] = policyVersion
-                }.value
+        capacity.requirePositiveNumber("capacity")
+
+        val id = table
+            .insertAndGetId {
+                it[table.code] = code.take(80)
+                it[table.capacity] = capacity
+                it[table.policyVersion] = policyVersion
+            }.value
+
         log.debug { "capacity_resource_created resourceId=$id capacity=$capacity policyVersion=$policyVersion" }
         return findById(id)
     }
@@ -65,16 +70,16 @@ internal class CapacityResourceRepository :
         id: Long,
         expectedRevision: Long,
     ): Boolean {
-        val applied =
-            auditedUpdateAll({
-                (table.id eq id) and
+        val applied = auditedUpdateAll({
+            (table.id eq id) and
                     (table.state eq ResourceState.OPEN) and
                     (table.revision eq expectedRevision) and
                     (table.occupiedCount less table.capacity)
-            }) {
-                it[occupiedCount] = occupiedCount + 1
-                it[revision] = expectedRevision + 1
-            } == 1
+        }) {
+            it[occupiedCount] = occupiedCount + 1
+            it[revision] = expectedRevision + 1
+        } == 1
+
         log.debug { "capacity_resource_occupy resourceId=$id expectedRevision=$expectedRevision applied=$applied" }
         return applied
     }
@@ -85,16 +90,18 @@ internal class CapacityResourceRepository :
     ): Boolean =
         auditedUpdateAll({
             (table.id eq id) and
-                (table.revision eq expectedRevision) and
-                (table.occupiedCount greater 0)
+                    (table.revision eq expectedRevision) and
+                    (table.occupiedCount greater 0)
         }) {
             it[occupiedCount] = occupiedCount - 1
             it[revision] = expectedRevision + 1
-        }.also { updated ->
-            log.debug { "capacity_resource_release resourceId=$id expectedRevision=$expectedRevision updated=$updated" }
-        } == 1
+        }
+            .also { updated ->
+                log.debug { "capacity_resource_release resourceId=$id expectedRevision=$expectedRevision updated=$updated" }
+            } == 1
 
-    fun snapshots(): List<CapacityResourceRecord> = table.selectAll().map { with(this) { it.toEntity() } }
+    fun snapshots(): List<CapacityResourceRecord> =
+        table.selectAll().map { it.toEntity() }
 
     /** capacity ownership을 이전할 수 있는 모든 transaction에서 canonical first lock을 획득합니다. */
     fun findByIdForUpdate(id: Long): CapacityResourceRecord =
@@ -103,8 +110,6 @@ internal class CapacityResourceRepository :
             .where { table.id eq id }
             .forUpdate()
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
-            ?: throw NoSuchElementException("capacity resource not found")
+            ?.toEntity() ?: throw NoSuchElementException("capacity resource not found")
 
-    companion object : KLogging()
 }

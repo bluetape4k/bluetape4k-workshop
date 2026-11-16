@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.channels
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -17,10 +18,11 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class ChannelExamples {
 
@@ -34,7 +36,7 @@ class ChannelExamples {
 
             launch {
                 repeat(5) { index ->
-                    delay(1000)
+                    delay(1.seconds)
                     log.debug { "[#1] Producing next one. $index" }
                     channel.send(index * 2)
                 }
@@ -59,7 +61,7 @@ class ChannelExamples {
 
             launch {
                 repeat(5) { index ->
-                    delay(1000)
+                    delay(1.seconds)
                     log.debug { "[#1] Producing next one. $index" }
                     channel.send(index * 2)
                 }
@@ -85,7 +87,7 @@ class ChannelExamples {
 
             launch {
                 repeat(5) { index ->
-                    delay(1000)
+                    delay(1.seconds)
                     log.debug { "[#1] Producing next one. $index" }
                     channel.send(index * 2)
                 }
@@ -108,7 +110,7 @@ class ChannelExamples {
     fun `produce 함수를 이용하여 channel 구성`() = runTest {
         val channel = produce {
             repeat(5) { index ->
-                delay(1000)
+                delay(1.seconds)
                 log.debug { "[#1] Producing next one. $index" }
                 send(index)
             }
@@ -140,12 +142,12 @@ class ChannelExamples {
         val channel = produce(capacity = Channel.UNLIMITED) {
             repeat(5) { index ->
                 send(index * 2)
-                delay(100)
+                delay(100.milliseconds)
                 log.debug { "[#1] Sent ${index * 2}" }
             }
         }
         // send한 요소가 모두 버퍼링 된다
-        delay(1000)
+        delay(1.seconds)
         for (element in channel) {
             log.debug { "[#2] Receive $element" }
         }
@@ -156,12 +158,12 @@ class ChannelExamples {
         val channel = produce(capacity = 3) {
             repeat(5) { index ->
                 send(index * 2)
-                delay(100)
+                delay(100.milliseconds)
                 log.debug { "[#1] Sent ${index * 2}" }
             }
         }
         // send한 요소가 모두 버퍼링 된다
-        delay(1000)
+        delay(1.seconds)
         val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
@@ -175,12 +177,12 @@ class ChannelExamples {
         val channel = produce(capacity = Channel.RENDEZVOUS) {
             repeat(5) { index ->
                 send(index * 2)
-                delay(100)
+                delay(100.milliseconds)
                 log.debug { "[#1] Sent ${index * 2}" }
             }
         }
         // send한 요소가 모두 버퍼링 된다
-        delay(1000)
+        delay(1.seconds)
         val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
@@ -194,13 +196,13 @@ class ChannelExamples {
         val channel = produce(capacity = Channel.CONFLATED) {
             repeat(5) { index ->
                 send(index * 2)
-                delay(100)
+                delay(100.milliseconds)
                 log.debug { "[#1] Sent ${index * 2}" }
             }
         }
 
         // Channel.CONFLATED는 send한 요소 중 가장 최신 것만 남기고 버려버립니다.
-        delay(400)
+        delay(400.milliseconds)
         val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
@@ -224,13 +226,13 @@ class ChannelExamples {
         launch {
             repeat(5) { index ->
                 channel.send(index * 2)
-                delay(100)
+                delay(100.milliseconds)
                 log.debug { "[#1] Sent ${index * 2}" }
             }
             channel.close()
         }
         // send한 요소가 모두 버퍼링 된다
-        delay(1000)
+        delay(1.seconds)
         val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
@@ -247,7 +249,7 @@ class ChannelExamples {
 
         private fun CoroutineScope.produceNumbers(): ReceiveChannel<Int> = produce {
             repeat(10) {
-                delay(100)
+                delay(100.milliseconds)
                 log.debug { "[#1] Send $it" }
                 send(it)
             }
@@ -266,7 +268,7 @@ class ChannelExamples {
             val channel = produceNumbers()
 
             repeat(3) { id ->
-                delay(10)
+                delay(10.milliseconds)
                 launchProcessor(id, channel)
             }
         }
@@ -286,7 +288,7 @@ class ChannelExamples {
             timeMillis: Long = 100,
         ) {
             while (true) {
-                delay(timeMillis)
+                delay(timeMillis.milliseconds)
                 log.debug { "[#1] Send [$text]" }
                 channel.send(text)
             }

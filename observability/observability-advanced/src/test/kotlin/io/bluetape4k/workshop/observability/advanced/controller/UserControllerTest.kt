@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.observability.advanced.controller
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.observability.advanced.AbstractAdvancedTest
 import io.bluetape4k.workshop.observability.advanced.TestObservationConfig
-import io.bluetape4k.workshop.observability.advanced.model.User
+import io.bluetape4k.workshop.observability.advanced.model.UserRecord
 import io.bluetape4k.workshop.observability.advanced.repository.UserCacheRepository
 import io.bluetape4k.workshop.observability.advanced.repository.UserRepository
 import io.micrometer.observation.tck.TestObservationRegistry
@@ -15,9 +16,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.test.web.reactive.server.expectBody
 
 @Import(TestObservationConfig::class)
-class UserControllerTest : AbstractAdvancedTest() {
+class UserControllerTest: AbstractAdvancedTest() {
+
+    companion object: KLogging()
 
     @Autowired
     private lateinit var testRegistry: TestObservationRegistry
@@ -43,7 +47,7 @@ class UserControllerTest : AbstractAdvancedTest() {
 
     @Test
     fun `POST users - creates user and instruments user service create span`() = runSuspendIO {
-        val newUser = User(id = 2001L, name = "bob", email = "bob@example.com")
+        val newUser = UserRecord(id = 2001L, name = "bob", email = "bob@example.com")
 
         webTestClient.post()
             .uri("/users")
@@ -54,6 +58,7 @@ class UserControllerTest : AbstractAdvancedTest() {
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.create")
             .that().hasBeenStarted().hasBeenStopped()
+
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.db.save")
             .that().hasBeenStarted().hasBeenStopped()
@@ -61,7 +66,7 @@ class UserControllerTest : AbstractAdvancedTest() {
 
     @Test
     fun `GET users id - cache miss instruments user db find span`() = runSuspendIO {
-        val newUser = User(id = 2002L, name = "carol", email = "carol@example.com")
+        val newUser = UserRecord(id = 2002L, name = "carol", email = "carol@example.com")
         // 먼저 user 를 생성합니다. POST 는 cache 도 warm 하므로 GET 에서 miss 를 강제하기 위해 cache 를 비웁니다.
         webTestClient.post()
             .uri("/users")
@@ -76,7 +81,7 @@ class UserControllerTest : AbstractAdvancedTest() {
             .uri("/users/${newUser.id}")
             .exchange()
             .expectStatus().isOk
-            .expectBody(User::class.java)
+            .expectBody<UserRecord>()
             .returnResult()
             .responseBody
 
@@ -88,7 +93,8 @@ class UserControllerTest : AbstractAdvancedTest() {
 
     @Test
     fun `GET users id - cache hit skips user db find span`() = runSuspendIO {
-        val newUser = User(id = 2003L, name = "dave", email = "dave@example.com")
+        val newUser = UserRecord(id = 2003L, name = "dave", email = "dave@example.com")
+
         // user 를 생성합니다.
         webTestClient.post()
             .uri("/users")

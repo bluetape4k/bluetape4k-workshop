@@ -5,9 +5,7 @@
 ## What this example shows
 
 This module compares the Resilience4j paths that behave differently in a Spring Boot 4 application:
-blocking controllers, Reactor `Mono`/`Flux`, `CompletableFuture`, Kotlin `suspend` functions, Kotlin `Flow`,
-and the bluetape4k `SuspendDecorators` API. It is useful when deciding whether a resilience rule should be
-an annotation, a Reactor/Future wrapper, or an explicit coroutine decorator.
+blocking controllers, Reactor `Mono`/`Flux`, `CompletableFuture`, Kotlin `suspend` functions, Kotlin `Flow`, and the bluetape4k `SuspendDecorators` API. It is useful when deciding whether a resilience rule should be an annotation, a Reactor/Future wrapper, or an explicit coroutine decorator.
 
 ## Architecture
 
@@ -23,26 +21,23 @@ an annotation, a Reactor/Future wrapper, or an explicit coroutine decorator.
 
 ## Overview
 
-Demonstrates applying Resilience4j 2.4.0 fault-tolerance patterns in a Spring Boot 4 application with
-Kotlin coroutines. Covers CircuitBreaker, Bulkhead, Retry, TimeLimiter, and RateLimiter for both
-blocking and non-blocking (suspend / Flow / Mono / Flux / CompletableFuture) code paths.
+Demonstrates applying Resilience4j 2.4.0 fault-tolerance patterns in a Spring Boot 4 application with Kotlin coroutines. Covers CircuitBreaker, Bulkhead, Retry, TimeLimiter, and RateLimiter for both blocking and non-blocking (suspend / Flow / Mono / Flux / CompletableFuture) code paths.
 
 ## Used Bluetape4k Features
 
-| Module | Feature | Usage |
-|---|---|---|
-| `bluetape4k-logging` | `KLogging()` / `KLoggingChannel()` | Structured logging in services and tests |
-| `bluetape4k-junit5` | `runSuspendIO { }` | Running suspend test blocks with real I/O |
-| `bluetape4k-resilience4j` | `SuspendDecorators` | Programmatic resilience decorator chain for suspend functions |
-| `bluetape4k-testcontainers` | Test infrastructure | (no external infra required for this module) |
-| `bluetape4k-assertions` | `shouldBeEqualTo`, `shouldBeTrue`, etc. | Type-safe test assertions |
+| Module                      | Feature                                 | Usage                                                         |
+|-----------------------------|-----------------------------------------|---------------------------------------------------------------|
+| `bluetape4k-logging`        | `KLogging()` / `KLoggingChannel()`      | Structured logging in services and tests                      |
+| `bluetape4k-junit5`         | `runSuspendIO { }`                      | Running suspend test blocks with real I/O                     |
+| `bluetape4k-resilience4j`   | `SuspendDecorators`                     | Programmatic resilience decorator chain for suspend functions |
+| `bluetape4k-testcontainers` | Test infrastructure                     | (no external infra required for this module)                  |
+| `bluetape4k-assertions`     | `shouldBeEqualTo`, `shouldBeTrue`, etc. | Type-safe test assertions                                     |
 
 ## Resilience4j Patterns
 
 ### Circuit Breaker
 
-Opens when the failure rate exceeds the configured threshold, preventing calls to a degraded backend.
-Returns to CLOSED when probe calls succeed from HALF-OPEN state.
+Opens when the failure rate exceeds the configured threshold, preventing calls to a degraded backend. Returns to CLOSED when probe calls succeed from HALF-OPEN state.
 
 ```kotlin
 @CircuitBreaker(name = "backendA", fallbackMethod = "fallback")
@@ -103,15 +98,15 @@ Limits the number of calls within a time window. Backend B demonstrates IP-based
 
 ## Key Coroutine Integration Findings
 
-| Pattern | Supported | Notes |
-|---|---|---|
-| `@CircuitBreaker` + `suspend` | ✅ | AOP proxy wraps suspend function correctly |
-| `@Bulkhead` + `suspend` | ✅ | Semaphore bulkhead works with suspend |
-| `@Retry` + `suspend` | ⚠️ | Annotation behavior is limited; use `SuspendDecorators` for explicit retry chains |
-| `@TimeLimiter` + `suspend` | ❌ | Not used in this endpoint; use `withTimeout {}` or a programmatic decorator |
-| `@Retry` + `Flow` | ❌ | Not applied; use `Flow.retry(retry)` extension |
-| CircuitBreaker fallback for `suspend` | ⚠️ | Fallback method must be non-suspend |
-| Metrics update for suspend/reactive | ⚠️ | Async paths do not update registry synchronously |
+| Pattern                               | Supported | Notes                                                                             |
+|---------------------------------------|-----------|-----------------------------------------------------------------------------------|
+| `@CircuitBreaker` + `suspend`         | ✅        | AOP proxy wraps suspend function correctly                                        |
+| `@Bulkhead` + `suspend`               | ✅        | Semaphore bulkhead works with suspend                                             |
+| `@Retry` + `suspend`                  | ⚠️        | Annotation behavior is limited; use `SuspendDecorators` for explicit retry chains |
+| `@TimeLimiter` + `suspend`            | ❌        | Not used in this endpoint; use `withTimeout {}` or a programmatic decorator       |
+| `@Retry` + `Flow`                     | ❌        | Not applied; use `Flow.retry(retry)` extension                                    |
+| CircuitBreaker fallback for `suspend` | ⚠️        | Fallback method must be non-suspend                                               |
+| Metrics update for suspend/reactive   | ⚠️        | Async paths do not update registry synchronously                                  |
 
 ## Configuration
 

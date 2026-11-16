@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.spring.security.mvc.controller
 
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.spring.security.mvc.AbstractSecurityApplicationTest
 import io.bluetape4k.assertions.shouldEndWith
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.spring.security.mvc.AbstractSecurityApplicationTest
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpSession
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin
@@ -12,9 +12,9 @@ import org.springframework.security.test.web.servlet.response.SecurityMockMvcRes
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-class MainControllerTest : AbstractSecurityApplicationTest() {
+class MainControllerTest: AbstractSecurityApplicationTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `index page is not protected`() {
@@ -32,7 +32,8 @@ class MainControllerTest : AbstractSecurityApplicationTest() {
             .andExpect(status().is3xxRedirection())
             .andReturn()
 
-        mvcResult.response.redirectedUrl.shouldNotBeNull() shouldEndWith "/log-in"
+        log.debug { "mvcResult=$mvcResult" }
+        mvcResult.response.redirectedUrl shouldEndWith "/log-in"
     }
 
     @Test
@@ -72,6 +73,7 @@ class MainControllerTest : AbstractSecurityApplicationTest() {
             .andExpect(authenticated())
             .andReturn()
 
+        log.debug { "mvcResult=$mvcResult" }
         val httpSession = mvcResult.request.getSession(false) as MockHttpSession
 
         mockMvc

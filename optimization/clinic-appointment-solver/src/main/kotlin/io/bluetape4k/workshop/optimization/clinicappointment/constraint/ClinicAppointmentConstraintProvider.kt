@@ -12,7 +12,7 @@ import io.bluetape4k.workshop.optimization.clinicappointment.domain.ProviderFact
 import io.bluetape4k.workshop.optimization.clinicappointment.domain.RoomFact
 
 /** Clinic appointment planning의 hard/soft score stream을 한 곳에서 정의한다. */
-class ClinicAppointmentConstraintProvider : ConstraintProvider {
+class ClinicAppointmentConstraintProvider: ConstraintProvider {
     override fun defineConstraints(factory: ConstraintFactory): Array<Constraint> = arrayOf(
         assignmentComplete(factory),
         providerQualification(factory),
@@ -34,7 +34,7 @@ class ClinicAppointmentConstraintProvider : ConstraintProvider {
             factory.forEachIncludingUnassigned(ClinicAppointmentPlanning::class.java)
                 .filter { appointment ->
                     appointment.providerId == null || appointment.roomId == null ||
-                        appointment.date == null || appointment.startTime == null
+                            appointment.date == null || appointment.startTime == null
                 }
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("ASSIGNMENT_COMPLETE")
@@ -91,7 +91,7 @@ class ClinicAppointmentConstraintProvider : ConstraintProvider {
                     val start = appointment.startTime
                     val end = appointment.endTime
                     start != null && end != null &&
-                        (start < appointment.windowStart || end > appointment.windowEnd)
+                            (start < appointment.windowStart || end > appointment.windowEnd)
                 }
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("REQUESTED_WINDOW")
@@ -117,11 +117,11 @@ class ClinicAppointmentConstraintProvider : ConstraintProvider {
                     Joiners.equal({ appointment -> appointment.equipmentId }, { equipment -> equipment.id }),
                     Joiners.filtering { appointment, equipment ->
                         equipment.services.contains(appointment.requiredService) &&
-                            appointment.startTime?.let { start ->
-                                appointment.endTime?.let { end ->
-                                    equipment.availability.any { it.contains(start, end) }
-                                }
-                            } == true
+                                appointment.startTime?.let { start ->
+                                    appointment.endTime?.let { end ->
+                                        equipment.availability.any { it.contains(start, end) }
+                                    }
+                                } == true
                     },
                 )
                 .penalize(HardSoftScore.ONE_HARD)

@@ -1,18 +1,20 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.database.getHikariDataSource
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.postgresql.ds.PGSimpleDataSource
 
-internal class EventStoreDatabaseFixture : AutoCloseable {
+internal class EventStoreDatabaseFixture: AutoCloseable {
+
+    private companion object: KLogging() {
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     val executor: MeteringEventsJdbcExecutor
 
     init {
-        val dataSource = PGSimpleDataSource().apply {
-            setURL(postgres.jdbcUrl)
-            user = postgres.username ?: PostgreSQLServer.USERNAME
-            password = postgres.password ?: PostgreSQLServer.PASSWORD
-        }
+        val dataSource = postgres.getHikariDataSource {}
         executor = MeteringEventsJdbcExecutor(dataSource)
         reset()
     }
@@ -26,11 +28,9 @@ internal class EventStoreDatabaseFixture : AutoCloseable {
     }
 
     override fun close() {
-        executor.transaction { SchemaUtils.drop(*METERING_EVENT_TABLES.reversedArray()) }
+        executor.transaction {
+            SchemaUtils.drop(*METERING_EVENT_TABLES.reversedArray())
+        }
         executor.close()
-    }
-
-    private companion object {
-        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
     }
 }

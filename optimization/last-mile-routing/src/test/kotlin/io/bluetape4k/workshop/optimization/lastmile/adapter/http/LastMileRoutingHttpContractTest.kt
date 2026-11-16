@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.optimization.lastmile.adapter.http
 
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.logging.KLogging
+import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
-import org.junit.jupiter.api.Test
 
 class LastMileRoutingHttpContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `controller keeps bounded redacted endpoint surface`() {
         val source = Files.readString(
@@ -18,8 +22,10 @@ class LastMileRoutingHttpContractTest {
             "/providers/{provider}/callbacks",
             "/events",
             "/drivers/{driverId}/reconnect",
-        ).forEach { mapping -> source.contains(mapping).shouldBeTrue() }
-        source.contains("eTag").shouldBeTrue()
-        source.contains("Idempotency-Key").shouldBeTrue()
+        ).forEach { mapping ->
+            source shouldContain mapping
+        }
+        source shouldContain "eTag"
+        source shouldContain "Idempotency-Key"
     }
 }

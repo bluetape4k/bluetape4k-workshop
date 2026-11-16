@@ -1,12 +1,12 @@
 plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    kotlin("kapt")
 }
 
 springBoot {
     mainClass.set("io.bluetape4k.workshop.chaos.ChaosApplicationKt")
 }
-
 
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
@@ -15,6 +15,7 @@ configurations {
 dependencies {
     implementation(libs.bluetape4k.core)
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.bluetape4k.spring.boot4.core)
 
     // FIXME: chaos monkey 3.2.2 는 아직 Spring Boot 4 를 지원하지 않습니다.
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)

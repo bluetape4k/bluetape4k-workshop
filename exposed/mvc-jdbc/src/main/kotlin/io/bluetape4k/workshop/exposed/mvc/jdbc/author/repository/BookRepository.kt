@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.author.repository
 
-import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
-import io.bluetape4k.exposed.jdbc.repository.findCursorPage as findCursorPageExtension
-import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
 import io.bluetape4k.exposed.core.ExposedCursorPage
+import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
+import io.bluetape4k.exposed.jdbc.repository.findCursorPage
+import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.mapper.toBookDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.schema.AuthorTable
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.schema.BookTable
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -22,7 +23,7 @@ import org.springframework.stereotype.Repository
  * 여기서는 [table], [extractId], [ResultRow.toEntity]만 정의한다.
  */
 @Repository
-class BookRepository : LongJdbcRepository<BookDTO> {
+class BookRepository: LongJdbcRepository<BookDTO> {
 
     override val table = BookTable
 
@@ -39,10 +40,11 @@ class BookRepository : LongJdbcRepository<BookDTO> {
         cursor: Long? = null,
         sortOrder: SortOrder = SortOrder.ASC,
     ): ExposedCursorPage<BookDTO, Long> =
-        this.findCursorPageExtension(
+        findCursorPage(
             pageSize = pageSize,
             cursor = cursor,
             sortOrder = sortOrder,
+            { Op.TRUE }
         )
 
     /**
@@ -63,6 +65,12 @@ class BookRepository : LongJdbcRepository<BookDTO> {
             it[publishDate] = req.publishDate
             it[this.authorId] = EntityID(req.authorId, AuthorTable)
         }.value
-        return findById(id)
+
+        return BookDTO(
+            id = id,
+            title = req.title,
+            publishDate = req.publishDate,
+            authorId = req.authorId,
+        )
     }
 }

@@ -2,35 +2,38 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.domain
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class EventContractTest {
 
+    companion object: KLogging()
+
     @Test
     fun `envelope accepts uuid v7 and produces a stable checksum`() {
-        val event =
-            EventEnvelope(
-                eventId = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abcdef"),
-                tenantId = TenantId("tenant-a"),
-                stream =
-                    StreamReference(
-                        "campaign",
-                        UUID.fromString("00000000-0000-0000-0000-000000000001"),
-                        version = 2,
-                    ),
-                globalPosition = 7,
-                eventType = "campaign.created",
-                schemaVersion = 1,
-                occurredAt = Instant.parse("2026-07-22T00:00:00Z"),
-                recordedAt = Instant.parse("2026-07-22T00:00:01Z"),
-                correlationId = "correlation-a",
-                causationId = null,
-                actorSurrogate = "subject-digest-a",
-                payload = EventPayload("{\"capacity\":3}"),
-            )
+        val event = EventEnvelope(
+            eventId = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abcdef"),
+            tenantId = TenantId("tenant-a"),
+            stream = StreamReference(
+                "campaign",
+                UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                version = 2,
+            ),
+            globalPosition = 7,
+            eventType = "campaign.created",
+            schemaVersion = 1,
+            occurredAt = Instant.parse("2026-07-22T00:00:00Z"),
+            recordedAt = Instant.parse("2026-07-22T00:00:01Z"),
+            correlationId = "correlation-a",
+            causationId = null,
+            actorSurrogate = "subject-digest-a",
+            payload = EventPayload("{\"capacity\":3}"),
+        )
 
+        log.debug { "event=$event" }
         event.canonicalChecksum shouldBeEqualTo event.canonicalChecksum
     }
 
@@ -53,36 +56,36 @@ internal class EventContractTest {
             )
         }
 
-        val fixture =
-            UpcastGoldenFixture(
-                "voucher.issued",
-                fromVersion = 1,
-                toVersion = 2,
-                input = EventPayload("{}"),
-                expected = EventPayload("{\"subjectRef\":\"digest\"}"),
-            )
+        val fixture = UpcastGoldenFixture(
+            "voucher.issued",
+            fromVersion = 1,
+            toVersion = 2,
+            input = EventPayload("{}"),
+            expected = EventPayload("{\"subjectRef\":\"digest\"}"),
+        )
 
+        log.debug { "fixture=$fixture" }
         fixture.toVersion shouldBeEqualTo fixture.fromVersion + 1
     }
 
     @Test
     fun `registry upcasts only a complete bounded chain`() {
-        val registry =
-            EventSchemaRegistry(
-                schemas = setOf(EventSchema("voucher.issued", currentVersion = 2) { it.canonicalJson }),
-                upcasters =
-                    setOf(
-                        EventUpcaster("voucher.issued", fromVersion = 1, toVersion = 2) {
-                            EventPayload("{\"subjectRef\":\"digest\"}")
-                        },
-                    ),
-            )
+        val registry = EventSchemaRegistry(
+            schemas = setOf(EventSchema("voucher.issued", currentVersion = 2) { it.canonicalJson }),
+            upcasters = setOf(
+                EventUpcaster("voucher.issued", fromVersion = 1, toVersion = 2) {
+                    EventPayload("{\"subjectRef\":\"digest\"}")
+                },
+            ),
+        )
 
-        registry.decode(SerializedEvent("voucher.issued", 1, EventPayload("{}"))) shouldBeEqualTo
-            "{\"subjectRef\":\"digest\"}"
+        val serializedEvent = SerializedEvent("voucher.issued", 1, EventPayload("{}"))
+        registry.decode(serializedEvent) shouldBeEqualTo "{\"subjectRef\":\"digest\"}"
+
         assertFailsWith<UnknownEventSchemaException> {
             registry.decode(SerializedEvent("unknown", 1, EventPayload("{}")))
         }
+
         assertFailsWith<UnknownEventSchemaException> {
             EventSchemaRegistry(
                 schemas = setOf(EventSchema("voucher.issued", currentVersion = 3) { it.canonicalJson }),
@@ -107,6 +110,9 @@ internal class EventContractTest {
                 EventPayload("""{"$fieldName":"raw-sensitive-value"}""")
             }
         }
-        assertFailsWith<IllegalArgumentException> { EventPayload("{".repeat(17) + "}".repeat(17)) }
+
+        assertFailsWith<IllegalArgumentException> {
+            EventPayload("{".repeat(17) + "}".repeat(17))
+        }
     }
 }

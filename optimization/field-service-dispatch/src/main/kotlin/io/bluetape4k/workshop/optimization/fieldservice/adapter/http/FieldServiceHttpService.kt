@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.fieldservice.application.ApprovalResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.CommandResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.DispatchResult
@@ -14,10 +17,12 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.EventKey
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceConflict
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceConflictCode
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEventType
+import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import io.bluetape4k.workshop.optimization.fieldservice.domain.IdempotencyKey
 import io.bluetape4k.workshop.optimization.fieldservice.domain.InvalidFieldServiceInput
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanProposal
+import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanState
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Visit
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VisitId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Worker
@@ -27,9 +32,7 @@ import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldService
 import io.bluetape4k.workshop.optimization.fieldservice.planner.DeterministicFieldServicePlanner
 import io.bluetape4k.workshop.optimization.fieldservice.planner.PlannerInput
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.time.Duration
 
 /** REST 경계에서 synthetic 상태 변경과 deterministic replan을 연결합니다. */
 class FieldServiceHttpService(
@@ -47,7 +50,7 @@ class FieldServiceHttpService(
             requiredSkill = io.bluetape4k.workshop.optimization.fieldservice.domain.Skill(request.requiredSkill),
             windowStart = request.windowStart,
             windowEnd = request.windowEnd,
-            serviceDuration = Duration.ofSeconds(request.serviceDurationSeconds),
+            serviceDuration = request.serviceDurationSeconds.seconds(),
             priority = request.priority,
         )
         return transaction {
@@ -115,7 +118,7 @@ class FieldServiceHttpService(
     }
 
     fun recordTravelTime(request: TravelTimeUpdateRequest, idempotencyKey: String): CommandResult {
-        if (!io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits.isFiniteNonNegativeTravelTime(request.seconds)) {
+        if (!FieldServiceLimits.isFiniteNonNegativeTravelTime(request.seconds)) {
             throw InvalidFieldServiceInput("travel time must be finite and non-negative")
         }
         val aggregate = "${request.fromCoordinateId}->${request.toCoordinateId}"
@@ -155,7 +158,7 @@ class FieldServiceHttpService(
             eventVersion = revision,
         )
         var created: PlanProposal? = null
-        return@transaction when (commandService.accept(command) {
+        val result = commandService.accept(command) {
             val plan = planner.plan(
                 PlannerInput(
                     workers = workers,
@@ -170,8 +173,9 @@ class FieldServiceHttpService(
             )
             repository.savePlan(plan)
             created = plan
-        }) {
-            CommandResult.APPLIED -> requireNotNull(created)
+        }
+        return@transaction when (result) {
+            CommandResult.APPLIED   -> created.requireNotNull("created")
             CommandResult.DUPLICATE -> {
                 val stored = repository.findStoredEvent("field_service", planId.value, idempotencyKey)
                     ?: throw FieldServiceConflict(FieldServiceConflictCode.EVENT_KEY_REUSED)
@@ -193,48 +197,53 @@ class FieldServiceHttpService(
             expectedVersion = repository.nextAggregateVersion("field_service", planId.value),
             eventVersion = revision,
         )
-        return@transaction when (commandService.accept(command) {
+        val result = commandService.accept(command) {
             if (approvalService.approve(planId, revision, plan.versionVector) != ApprovalResult.APPROVED) {
                 throw FieldServiceConflict(FieldServiceConflictCode.VERSION_CONFLICT)
             }
-        }) {
-            CommandResult.APPLIED -> ApprovalResult.APPROVED
-            CommandResult.DUPLICATE -> if (repository.loadPlan(planId, revision)?.state == io.bluetape4k.workshop.optimization.fieldservice.domain.PlanState.APPROVED) {
-                ApprovalResult.APPROVED
-            } else {
-                ApprovalResult.VERSION_CONFLICT
-            }
+        }
+        return@transaction when (result) {
+            CommandResult.APPLIED   -> ApprovalResult.APPROVED
+            CommandResult.DUPLICATE ->
+                if (repository.loadPlan(planId, revision)?.state == PlanState.APPROVED) {
+                    ApprovalResult.APPROVED
+                } else {
+                    ApprovalResult.VERSION_CONFLICT
+                }
             CommandResult.EVENT_KEY_REUSED -> throw FieldServiceConflict(FieldServiceConflictCode.EVENT_KEY_REUSED)
             CommandResult.VERSION_CONFLICT -> ApprovalResult.VERSION_CONFLICT
         }
     }
 
-    fun confirm(workerId: WorkerId, planId: PlanId, revision: Long, idempotencyKey: String): DispatchResult = transaction {
-        val command = command(
-            aggregateId = "${planId.value}:${workerId.value}",
-            eventType = FieldServiceEventType.ROUTE_CONFIRMED,
-            idempotencyKey = idempotencyKey,
-            payload = "${planId.value}|$revision|${workerId.value}",
-            expectedVersion = repository.nextAggregateVersion("field_service", "${planId.value}:${workerId.value}"),
-            eventVersion = revision,
-        )
-        return@transaction when (commandService.accept(command) {
-            when (val result = dispatchService.confirmWorkerRoute(workerId, planId, revision)) {
-                DispatchResult.COMMITTED -> Unit
-                DispatchResult.VERSION_CONFLICT -> throw FieldServiceConflict(FieldServiceConflictCode.VERSION_CONFLICT)
-                DispatchResult.SCHEDULE_CONFLICT -> throw FieldServiceConflict(FieldServiceConflictCode.SCHEDULE_CONFLICT)
+    fun confirm(workerId: WorkerId, planId: PlanId, revision: Long, idempotencyKey: String): DispatchResult =
+        transaction {
+            val command = command(
+                aggregateId = "${planId.value}:${workerId.value}",
+                eventType = FieldServiceEventType.ROUTE_CONFIRMED,
+                idempotencyKey = idempotencyKey,
+                payload = "${planId.value}|$revision|${workerId.value}",
+                expectedVersion = repository.nextAggregateVersion("field_service", "${planId.value}:${workerId.value}"),
+                eventVersion = revision,
+            )
+            val result = commandService.accept(command) {
+                when (val result = dispatchService.confirmWorkerRoute(workerId, planId, revision)) {
+                    DispatchResult.COMMITTED         -> Unit
+                    DispatchResult.VERSION_CONFLICT  -> throw FieldServiceConflict(FieldServiceConflictCode.VERSION_CONFLICT)
+                    DispatchResult.SCHEDULE_CONFLICT -> throw FieldServiceConflict(FieldServiceConflictCode.SCHEDULE_CONFLICT)
+                }
             }
-        }) {
-            CommandResult.APPLIED -> DispatchResult.COMMITTED
-            CommandResult.DUPLICATE -> if (repository.hasCommittedRoute(workerId, planId, revision)) {
-                DispatchResult.COMMITTED
-            } else {
-                DispatchResult.VERSION_CONFLICT
+            return@transaction when (result) {
+                CommandResult.APPLIED          -> DispatchResult.COMMITTED
+                CommandResult.DUPLICATE        ->
+                    if (repository.hasCommittedRoute(workerId, planId, revision)) {
+                        DispatchResult.COMMITTED
+                    } else {
+                        DispatchResult.VERSION_CONFLICT
+                    }
+                CommandResult.EVENT_KEY_REUSED -> throw FieldServiceConflict(FieldServiceConflictCode.EVENT_KEY_REUSED)
+                CommandResult.VERSION_CONFLICT -> DispatchResult.VERSION_CONFLICT
             }
-            CommandResult.EVENT_KEY_REUSED -> throw FieldServiceConflict(FieldServiceConflictCode.EVENT_KEY_REUSED)
-            CommandResult.VERSION_CONFLICT -> DispatchResult.VERSION_CONFLICT
         }
-    }
 
     fun command(
         aggregateId: String,
@@ -245,7 +254,7 @@ class FieldServiceHttpService(
         eventVersion: Long = expectedVersion,
     ): FieldServiceCommand {
         val key = IdempotencyKey(idempotencyKey)
-        val digest = canonicalizer.digest("{\"payload\":${quote(payload)}}".toByteArray(UTF_8))
+        val digest = canonicalizer.digest("{\"payload\":${quote(payload)}}".toUtf8Bytes())
         return FieldServiceCommand(
             aggregateType = "field_service",
             aggregateId = AggregateId(aggregateId),
@@ -271,11 +280,11 @@ class FieldServiceHttpService(
             request.priority,
         ).joinToString("|").let(::boundedPayload)
 
-    private fun boundedPayload(raw: String): String = if (raw.length <= io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits.MAX_STRING_LENGTH) {
+    private fun boundedPayload(raw: String): String = if (raw.length <= FieldServiceLimits.MAX_STRING_LENGTH) {
         raw
     } else {
         val digest = MessageDigest.getInstance("SHA-256")
-            .digest(raw.toByteArray(UTF_8))
+            .digest(raw.toUtf8Bytes())
             .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
         "sha256:$digest"
     }

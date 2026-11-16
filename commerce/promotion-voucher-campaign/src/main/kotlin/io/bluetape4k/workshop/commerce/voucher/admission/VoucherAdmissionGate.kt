@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucher.admission
 
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -18,21 +21,21 @@ internal enum class AdmissionState {
 }
 
 internal sealed interface AdmissionDecision {
-    data object Proceed : AdmissionDecision
+    data object Proceed: AdmissionDecision
 
     data class RateLimited(
         val retryAfter: Duration,
-    ) : AdmissionDecision
+    ): AdmissionDecision
 
     data class DatabaseBusy(
         val retryAfter: Duration,
-    ) : AdmissionDecision
+    ): AdmissionDecision
 }
 
 internal data class AdmissionRecoveryPolicy(
     val failureThreshold: Int = 3,
     val recoverySuccessThreshold: Int = 3,
-    val probeInterval: Duration = Duration.ofSeconds(1),
+    val probeInterval: Duration = 1.seconds(),
     val maxInFlightProbes: Int = 1,
 ) {
     init {
@@ -54,6 +57,12 @@ internal class VoucherAdmissionGate(
     private val recoveryPolicy: AdmissionRecoveryPolicy = AdmissionRecoveryPolicy(),
     private val clock: Clock = Clock.systemUTC(),
 ) {
+
+    companion object: KLogging() {
+        private val DEFAULT_RETRY_AFTER = 1.seconds()
+        private val MINIMUM_RETRY_AFTER = 1.millis()
+    }
+
     private val stateLock = ReentrantLock()
     private var currentState = if (rateLimiter == null) AdmissionState.DEGRADED else AdmissionState.HEALTHY
     private var consecutiveFailures = 0
@@ -62,7 +71,8 @@ internal class VoucherAdmissionGate(
     private var probesInFlight = 0
 
     fun decide(rateKey: String): AdmissionDecision {
-        require(rateKey.isNotBlank()) { "rateKey must not be blank" }
+        rateKey.requireNotBlank("rateKey")
+
         val limiter = rateLimiter ?: return AdmissionDecision.Proceed
         val now = Instant.now(clock)
         val backendCall = reserveBackendCall(now) ?: return AdmissionDecision.Proceed
@@ -74,15 +84,13 @@ internal class VoucherAdmissionGate(
                     recordSuccess()
                     AdmissionDecision.Proceed
                 }
-
                 result.isRejected -> {
                     recordSuccess()
                     AdmissionDecision.RateLimited(
-                        (result.retryAfter ?: DEFAULT_RETRY_AFTER).coerceAtLeast(MINIMUM_RETRY_AFTER),
+                        (result.retryAfter ?: DEFAULT_RETRY_AFTER).coerceAtLeast(MINIMUM_RETRY_AFTER)
                     )
                 }
-
-                else -> {
+                else              -> {
                     recordFailure(now, backendCall.probe)
                     AdmissionDecision.Proceed
                 }
@@ -102,7 +110,7 @@ internal class VoucherAdmissionGate(
     private fun reserveBackendCall(now: Instant): BackendCall? =
         stateLock.withLock {
             when (currentState) {
-                AdmissionState.HEALTHY -> BackendCall(probe = false)
+                AdmissionState.HEALTHY  -> BackendCall(probe = false)
                 AdmissionState.DEGRADED -> {
                     if (now.isBefore(nextProbeAt) || probesInFlight >= recoveryPolicy.maxInFlightProbes) {
                         null
@@ -126,7 +134,8 @@ internal class VoucherAdmissionGate(
     private fun recordSuccess() {
         stateLock.withLock {
             when (currentState) {
-                AdmissionState.HEALTHY -> consecutiveFailures = 0
+                AdmissionState.HEALTHY  -> consecutiveFailures = 0
+
                 AdmissionState.DEGRADED -> {
                     currentState = AdmissionState.RECOVERING
                     recoverySuccesses = 1
@@ -158,11 +167,10 @@ internal class VoucherAdmissionGate(
     ) {
         stateLock.withLock {
             when (currentState) {
-                AdmissionState.HEALTHY -> {
+                AdmissionState.HEALTHY  -> {
                     consecutiveFailures++
                     if (consecutiveFailures >= recoveryPolicy.failureThreshold) degrade(now)
                 }
-
                 AdmissionState.DEGRADED -> nextProbeAt = now.plus(recoveryPolicy.probeInterval)
                 AdmissionState.RECOVERING -> degrade(now)
             }
@@ -177,7 +185,7 @@ internal class VoucherAdmissionGate(
         currentState = AdmissionState.DEGRADED
         consecutiveFailures = 0
         recoverySuccesses = 0
-        nextProbeAt = now.plus(recoveryPolicy.probeInterval)
+        nextProbeAt = now + recoveryPolicy.probeInterval
         log.debug { "voucher_admission_state from=$previous to=DEGRADED" }
     }
 
@@ -189,9 +197,4 @@ internal class VoucherAdmissionGate(
     }
 
     private data class BackendCall(val probe: Boolean)
-
-    companion object : KLogging() {
-        private val DEFAULT_RETRY_AFTER = Duration.ofSeconds(1)
-        private val MINIMUM_RETRY_AFTER = Duration.ofMillis(1)
-    }
 }

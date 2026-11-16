@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionGenerations
@@ -16,6 +19,9 @@ import java.time.Instant
 internal const val MAX_REBUILD_RETENTION_BATCH_SIZE = 100
 
 internal class ProjectionRebuildMaintenance {
+
+    companion object: KLogging()
+
     fun recover(
         key: ProjectionKey,
         now: Instant,
@@ -28,14 +34,14 @@ internal class ProjectionRebuildMaintenance {
                 ProjectionGenerations.update(
                     where = {
                         generationPredicate(key) and
-                            (ProjectionGenerations.state eq ProjectionGenerationState.CANCELLING) and
-                            (ProjectionGenerations.fencingToken eq current.fencingToken)
+                                (ProjectionGenerations.state eq ProjectionGenerationState.CANCELLING) and
+                                (ProjectionGenerations.fencingToken eq current.fencingToken)
                     },
                 ) { row ->
                     row[ProjectionGenerations.state] = ProjectionGenerationState.CANCELLED
                     row[ProjectionGenerations.updatedAt] = now
                 }
-                checkNotNull(findGeneration(key)) { "recovered generation disappeared" }
+                findGeneration(key).checkNotNull { "recovered generation disappeared" }
             }
         }
     }
@@ -48,12 +54,14 @@ internal class ProjectionRebuildMaintenance {
         TransactionManager.current()
         projection.requireNotBlank("projection")
         batchSize.requireInRange(1, MAX_REBUILD_RETENTION_BATCH_SIZE, "batchSize")
+
+        log.debug { "Purge retired. batchSize=$batchSize, retiredBefore=$retiredBefore" }
         return ProjectionGenerations
             .selectAll()
             .where {
                 (ProjectionGenerations.projection eq projection) and
-                    (ProjectionGenerations.state eq ProjectionGenerationState.RETIRED) and
-                    (ProjectionGenerations.updatedAt less retiredBefore)
+                        (ProjectionGenerations.state eq ProjectionGenerationState.RETIRED) and
+                        (ProjectionGenerations.updatedAt less retiredBefore)
             }
             .orderBy(ProjectionGenerations.generation to SortOrder.ASC)
             .limit(batchSize)

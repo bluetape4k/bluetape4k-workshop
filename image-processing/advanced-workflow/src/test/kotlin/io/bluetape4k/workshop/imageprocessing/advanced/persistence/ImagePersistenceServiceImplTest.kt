@@ -1,13 +1,16 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeBlank
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.imageprocessing.advanced.model.JobFailureReason
 import io.bluetape4k.workshop.imageprocessing.advanced.model.JobIdentity
 import io.bluetape4k.workshop.imageprocessing.advanced.model.JobStartResult
@@ -16,7 +19,6 @@ import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageP
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageProcessingStep
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import io.bluetape4k.codec.Base58
 
 /**
  * [ImagePersistenceService] 통합 테스트입니다. 모든 사가 단계와 조회 경로를 다룹니다.
@@ -26,10 +28,10 @@ import io.bluetape4k.codec.Base58
  * 여기서는 transaction rollback을 사용하지 않습니다. [ImagePersistenceServiceImpl]이
  * 자체 PROPAGATION_REQUIRES_NEW 트랜잭션 안에서 commit하기 때문입니다.
  */
-class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
+class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
 
     @Autowired
-    private lateinit var service: ImagePersistenceService
+    private val service: ImagePersistenceService = uninitialized()
 
     // -------------------------------------------------------------------------
     // T1 — recordJobStart 변형
@@ -43,9 +45,9 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
         val result = service.recordJobStart(metadata)
 
         log.info { "recordJobStart result: $result" }
-        (result is JobStartResult.NewAsset).shouldBeTrue()
-        (result.assetId > 0L).shouldBeTrue()
-        (result.jobId > 0L).shouldBeTrue()
+        result.shouldBeInstanceOf<JobStartResult.NewAsset>()
+        result.assetId shouldBeGreaterThan 0L
+        result.jobId shouldBeGreaterThan 0L
         result.externalId.shouldNotBeBlank()
     }
 
@@ -55,14 +57,16 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
         val metadata = buildMetadata(checksum = checksum)
 
         val firstResult = service.recordJobStart(metadata)
-        (firstResult is JobStartResult.NewAsset).shouldBeTrue()
+        firstResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
+        log.debug { "first recordJobStart result: $firstResult" }
+
         val firstIdentity = JobIdentity(jobId = firstResult.jobId, assetId = firstResult.assetId)
 
         service.recordJobSuccess(firstIdentity, buildObjects(firstResult.assetId))
 
         val secondResult = service.recordJobStart(metadata)
         log.debug { "second recordJobStart result: $secondResult" }
-        (secondResult is JobStartResult.AlreadyReady).shouldBeTrue()
+        secondResult.shouldBeInstanceOf<JobStartResult.AlreadyReady>()
         secondResult.jobId shouldBeEqualTo -1L
         secondResult.externalId shouldBeEqualTo firstResult.externalId
     }
@@ -73,14 +77,15 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
         val metadata = buildMetadata(checksum = checksum)
 
         val firstResult = service.recordJobStart(metadata)
-        (firstResult is JobStartResult.NewAsset).shouldBeTrue()
+        firstResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
+        log.debug { "first recordJobStart result: $firstResult" }
 
         val secondResult = service.recordJobStart(metadata)
         log.debug { "second recordJobStart result: $secondResult" }
-        (secondResult is JobStartResult.ConcurrentProcessing).shouldBeTrue()
+        secondResult.shouldBeInstanceOf<JobStartResult.ConcurrentProcessing>()
         secondResult.assetId shouldBeEqualTo firstResult.assetId
         secondResult.externalId shouldBeEqualTo firstResult.externalId
-        (secondResult.jobId > 0L).shouldBeTrue()
+        secondResult.jobId shouldBeGreaterThan 0L
     }
 
     @Test
@@ -89,7 +94,9 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
         val metadata = buildMetadata(checksum = checksum)
 
         val firstResult = service.recordJobStart(metadata)
-        (firstResult is JobStartResult.NewAsset).shouldBeTrue()
+        firstResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
+        log.debug { "first recordJobStart result: $firstResult" }
+
         val firstIdentity = JobIdentity(jobId = firstResult.jobId, assetId = firstResult.assetId)
 
         service.recordJobFailure(
@@ -100,10 +107,10 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
         val recoveredResult = service.recordJobStart(metadata)
         log.debug { "recovered recordJobStart result: $recoveredResult" }
-        (recoveredResult is JobStartResult.RecoveredFromFailed).shouldBeTrue()
+        recoveredResult.shouldBeInstanceOf<JobStartResult.RecoveredFromFailed>()
         recoveredResult.assetId shouldBeEqualTo firstResult.assetId
         recoveredResult.externalId shouldBeEqualTo firstResult.externalId
-        (recoveredResult.jobId > 0L).shouldBeTrue()
+        recoveredResult.jobId shouldBeGreaterThan 0L
     }
 
     // -------------------------------------------------------------------------
@@ -114,17 +121,17 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     fun `recordJobSuccess - updates asset READY and persists image objects`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
-        (startResult is JobStartResult.NewAsset).shouldBeTrue()
+        startResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
 
         val identity = JobIdentity(jobId = startResult.jobId, assetId = startResult.assetId)
         service.recordJobSuccess(identity, buildObjects(startResult.assetId))
 
-        val detail = service.findAssetByExternalId(startResult.externalId)
-        val nonNullDetail = detail.shouldNotBeNull()
-        nonNullDetail.status shouldBeEqualTo ImageAssetStatus.READY
-        nonNullDetail.original.shouldNotBeNull()
-        nonNullDetail.variants shouldHaveSize 1
-        nonNullDetail.variants.first().variantName shouldBeEqualTo "thumbnail"
+        val detail = service.findAssetByExternalId(startResult.externalId).shouldNotBeNull()
+        log.debug { "detail result: $detail" }
+        detail.status shouldBeEqualTo ImageAssetStatus.READY
+        detail.original.shouldNotBeNull()
+        detail.variants shouldHaveSize 1
+        detail.variants.single().variantName shouldBeEqualTo "thumbnail"
     }
 
     // -------------------------------------------------------------------------
@@ -135,7 +142,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     fun `recordJobFailure - updates asset FAILED`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
-        (startResult is JobStartResult.NewAsset).shouldBeTrue()
+        startResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
 
         val identity = JobIdentity(jobId = startResult.jobId, assetId = startResult.assetId)
         service.recordJobFailure(
@@ -144,9 +151,9 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
             durationMs = 250L,
         )
 
-        val detail = service.findAssetByExternalId(startResult.externalId)
-        val nonNullDetail = detail.shouldNotBeNull()
-        nonNullDetail.status shouldBeEqualTo ImageAssetStatus.FAILED
+        val detail = service.findAssetByExternalId(startResult.externalId).shouldNotBeNull()
+        log.debug { "detail result: $detail" }
+        detail.status shouldBeEqualTo ImageAssetStatus.FAILED
     }
 
     // -------------------------------------------------------------------------
@@ -157,7 +164,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     fun `appendEvent - stores event row`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
-        (startResult is JobStartResult.NewAsset).shouldBeTrue()
+        startResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
 
         service.appendEvent(
             jobId = startResult.jobId,
@@ -166,10 +173,10 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
             message = "Validation passed",
         )
 
-        val history = service.findAssetHistory(startResult.externalId)
-        val nonNullHistory = history.shouldNotBeNull()
-        nonNullHistory.jobs shouldHaveSize 1
-        nonNullHistory.jobs.first().events shouldHaveSize 1
+        val history = service.findAssetHistory(startResult.externalId).shouldNotBeNull()
+        log.debug { "history result: $history" }
+        history.jobs shouldHaveSize 1
+        history.jobs.single().events shouldHaveSize 1
     }
 
     // -------------------------------------------------------------------------
@@ -198,7 +205,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     fun `findAssetHistory - returns full job and event history`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
-        (startResult is JobStartResult.NewAsset).shouldBeTrue()
+        startResult.shouldBeInstanceOf<JobStartResult.NewAsset>()
         val identity = JobIdentity(jobId = startResult.jobId, assetId = startResult.assetId)
 
         service.appendEvent(
@@ -215,10 +222,10 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
         )
         service.recordJobSuccess(identity, buildObjects(startResult.assetId))
 
-        val history = service.findAssetHistory(startResult.externalId)
-        val nonNullHistory = history.shouldNotBeNull()
-        nonNullHistory.imageId shouldBeEqualTo startResult.externalId
-        nonNullHistory.jobs shouldHaveSize 1
-        nonNullHistory.jobs.first().events shouldHaveSize 2
+        val history = service.findAssetHistory(startResult.externalId).shouldNotBeNull()
+        log.debug { "history=$history" }
+        history.imageId shouldBeEqualTo startResult.externalId
+        history.jobs shouldHaveSize 1
+        history.jobs.single().events shouldHaveSize 2
     }
 }

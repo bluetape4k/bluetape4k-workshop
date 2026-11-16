@@ -2,16 +2,20 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.HexFormat
+import java.util.*
 
 /**
  * Kafka value로 사용되는 strict JSON 문자열 계약을 검증합니다.
  */
 class KafkaFailoverCodecTest {
+
+    companion object: KLogging()
 
     private val codec = KafkaFailoverCodec()
     private val event = KafkaFailoverEvent(
@@ -24,8 +28,9 @@ class KafkaFailoverCodecTest {
     fun `encode uses canonical field order and decode round trips`() {
         val encoded = codec.encode(event)
 
+        log.debug { "encoded=$encoded" }
         encoded shouldBeEqualTo
-            "{\"eventId\":\"event-1\",\"sequence\":3,\"payload\":\"payload-1\",\"partitionKey\":\"failover-partition-0\"}"
+                "{\"eventId\":\"event-1\",\"sequence\":3,\"payload\":\"payload-1\",\"partitionKey\":\"failover-partition-0\"}"
         codec.decode(encoded) shouldBeEqualTo event
         codec.encode(codec.decode(encoded)) shouldBeEqualTo encoded
     }
@@ -36,7 +41,7 @@ class KafkaFailoverCodecTest {
         val conflictingEvent = KafkaFailoverEvent("event-1", 3L, "payload-2")
 
         codec.fingerprint(event) shouldBeEqualTo codec.fingerprint(sameEvent)
-        (codec.fingerprint(event) != codec.fingerprint(conflictingEvent)).shouldBeTrue()
+        codec.fingerprint(event) shouldNotBeEqualTo codec.fingerprint(conflictingEvent)
         codec.fingerprint(event).length shouldBeEqualTo 64
         codec.fingerprint(event) shouldBeEqualTo "3e723b543374486eaf7bcfc5921456b252ac5a3c187601e35f514b88a8f3c983"
         codec.fingerprint(event) shouldBeEqualTo jdkDigestHex(codec.encode(event))
@@ -82,9 +87,11 @@ class KafkaFailoverCodecTest {
     }
 
     private fun assertInvalid(json: String) {
-        assertFailsWith<IllegalArgumentException> { codec.decode(json) }
+        assertFailsWith<IllegalArgumentException> {
+            codec.decode(json)
+        }
     }
 
     private fun jdkDigestHex(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
+        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 }

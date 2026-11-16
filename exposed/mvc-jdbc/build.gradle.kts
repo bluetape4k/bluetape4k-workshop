@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.exposed)
+    kotlin("kapt")
 }
 
 exposed {
@@ -29,8 +30,8 @@ dependencies {
         exclude(group = "org.jetbrains.exposed", module = "exposed-spring-boot4-starter")
     }
 
-    // 로깅 의존성
-    implementation(libs.bluetape4k.logging)
+    // Bluetape4k 의존성
+    implementation(libs.bluetape4k.core)
 
     // bluetape4k Exposed: core helper(AuditableLongIdTable 등)와 JDBC repository
     implementation(libs.exposed.core)
@@ -45,6 +46,7 @@ dependencies {
     runtimeOnly(libs.postgresql.driver)
 
     // Jackson 직렬화 의존성
+    implementation(libs.bluetape4k.jackson3)
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 

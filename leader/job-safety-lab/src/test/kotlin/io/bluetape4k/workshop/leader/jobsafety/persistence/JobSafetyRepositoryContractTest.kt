@@ -1,8 +1,12 @@
 package io.bluetape4k.workshop.leader.jobsafety.persistence
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.MembershipRevision
@@ -15,6 +19,21 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 internal class JobSafetyRepositoryContractTest {
+
+    companion object: KLogging() {
+        private val RAW_DATABASE_MARKERS =
+            listOf(
+                "Jdbc" + "Template",
+                "Prepared" + "Statement",
+                ".prepareStatement(",
+                ".create" + "Statement(",
+                "dataSource.connection",
+                "DriverManager.getConnection(",
+                "Transaction." + "exec",
+                ".exec(\"",
+            )
+    }
+
     @Test
     fun `all concrete repositories implement bluetape ExposedJdbcRepository`() {
         val repositoryTypes =
@@ -38,9 +57,11 @@ internal class JobSafetyRepositoryContractTest {
 
             fixture.seedAuthority(authority())
 
-            val assignment = repositories.assignment.findByTenant(TenantId("tenant-a"))
-            assignment?.membershipRevision shouldBeEqualTo MembershipRevision(7L)
-            assignment?.regionId shouldBeEqualTo RegionId("region-a")
+            val assignment = repositories.assignment.findByTenant(TenantId("tenant-a")).shouldNotBeNull()
+            log.debug { "assignment=$assignment" }
+            assignment.membershipRevision shouldBeEqualTo MembershipRevision(7L)
+            assignment.regionId shouldBeEqualTo RegionId("region-a")
+
             repositories.rollout.current()?.minimumWriterVersion shouldBeEqualTo ExecutionContractVersion(2)
         }
     }
@@ -54,9 +75,10 @@ internal class JobSafetyRepositoryContractTest {
                 .filter { it.toString().endsWith(".kt") }
                 .filter { path -> RAW_DATABASE_MARKERS.any(Files.readString(path)::contains) }
                 .toList()
+
         }
 
-        violations.isEmpty().shouldBeTrue()
+        violations.shouldBeEmpty()
         Files.exists(moduleRoot.resolve("src/main/resources/db/" + "migration")).shouldBeFalse()
     }
 
@@ -77,17 +99,4 @@ internal class JobSafetyRepositoryContractTest {
         return current.resolve("leader/job-safety-lab")
     }
 
-    companion object {
-        private val RAW_DATABASE_MARKERS =
-            listOf(
-                "Jdbc" + "Template",
-                "Prepared" + "Statement",
-                ".prepareStatement(",
-                ".create" + "Statement(",
-                "dataSource.connection",
-                "DriverManager.getConnection(",
-                "Transaction." + "exec",
-                ".exec(\"",
-            )
-    }
 }

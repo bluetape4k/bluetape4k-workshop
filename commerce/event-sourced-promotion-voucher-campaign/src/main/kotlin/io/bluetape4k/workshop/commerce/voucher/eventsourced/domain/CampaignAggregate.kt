@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.domain
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-internal class DomainTransitionException(message: String) : IllegalArgumentException(message)
+internal class DomainTransitionException(message: String): IllegalArgumentException(message)
 
 internal data class CampaignAggregate(
     val tenantId: TenantId?,
@@ -40,7 +40,7 @@ internal data class CampaignAggregate(
                 )
             }
 
-            CampaignEvent.CampaignActivated -> {
+            CampaignEvent.CampaignActivated  -> {
                 requireCreated()
                 if (state != CampaignState.DRAFT && state != CampaignState.PAUSED) {
                     fail("campaign cannot activate from $state")
@@ -69,9 +69,10 @@ internal data class CampaignAggregate(
     private fun fail(message: String): Nothing = throw DomainTransitionException(message)
 
     companion object {
-        fun replay(events: List<CampaignEvent>): CampaignAggregate = events.fold(empty()) { aggregate, event ->
-            aggregate.evolve(event)
-        }
+        fun replay(events: List<CampaignEvent>): CampaignAggregate =
+            events.fold(empty()) { aggregate, event ->
+                aggregate.evolve(event)
+            }
 
         private fun empty(): CampaignAggregate =
             CampaignAggregate(
@@ -91,11 +92,13 @@ internal data class CampaignAggregate(
 }
 
 @ConsistentCopyVisibility
-internal data class EventDecision<E : Any> private constructor(val events: List<E>) {
+internal data class EventDecision<E: Any> private constructor(val events: List<E>) {
     companion object {
-        fun <E : Any> of(events: List<E>): EventDecision<E> = EventDecision(events.toList())
+        operator fun <E: Any> invoke(events: List<E>): EventDecision<E> = EventDecision(events.toList())
 
-        fun <E : Any> empty(): EventDecision<E> = EventDecision(emptyList())
+        fun <E: Any> of(events: List<E>): EventDecision<E> = EventDecision(events.toList())
+
+        fun <E: Any> empty(): EventDecision<E> = EventDecision(emptyList())
     }
 }
 
@@ -105,6 +108,6 @@ internal object CampaignCommands {
         if (campaign.state != CampaignState.DRAFT && campaign.state != CampaignState.PAUSED) {
             throw DomainTransitionException("campaign cannot activate from ${campaign.state}")
         }
-        return EventDecision.of(listOf(CampaignEvent.CampaignActivated))
+        return EventDecision(listOf(CampaignEvent.CampaignActivated))
     }
 }

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.optimization.lastmile.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.lastmile.domain.CarrierVersion
 import io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId
@@ -12,6 +13,7 @@ import io.bluetape4k.workshop.optimization.lastmile.domain.JobId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileEventType
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanId
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlanProposal
+import io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlannerInput
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileRoute
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileRouteStop
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileScore
@@ -24,9 +26,12 @@ import io.bluetape4k.workshop.optimization.lastmile.domain.Vehicle
 import io.bluetape4k.workshop.optimization.lastmile.domain.VehicleId
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileAuditRepository
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileCallbackInboxRepository
+import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileCommittedStopRepository
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileCommittedStopsTable
+import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileEventAppendResult
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileEventRepository
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileJobRepository
+import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileOutboxRepository
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMilePlanCarrierRepository
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMilePlanRepository
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMilePlanStopRepository
@@ -34,10 +39,9 @@ import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileReposito
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileTables
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileUnassignedRepository
 import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileVehicleRepository
-import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileCommittedStopRepository
-import io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileOutboxRepository
 import io.bluetape4k.workshop.optimization.lastmile.planner.CoordinatePair
 import io.bluetape4k.workshop.optimization.lastmile.planner.TravelTimeMatrix
+import io.bluetape4k.workshop.optimization.lastmile.provider.CallbackDecision
 import io.bluetape4k.workshop.optimization.lastmile.provider.DeterministicRoutingProvider
 import io.bluetape4k.workshop.optimization.lastmile.provider.RoutingCallback
 import io.bluetape4k.workshop.optimization.lastmile.provider.RoutingCallbackCanonicalizer
@@ -56,7 +60,13 @@ import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LastMileLifecycleIntegrationTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+
+    companion object {
+        private val NOW: Instant = Instant.parse("2026-08-24T00:00:00Z")
+
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private val repository = LastMileRepository(
         jobs = LastMileJobRepository(),
         vehicles = LastMileVehicleRepository(),
@@ -114,8 +124,8 @@ class LastMileLifecycleIntegrationTest {
         val callback = draft.copy(payloadDigest = RoutingCallbackCanonicalizer.digest(draft))
 
         transaction {
-            callbackService.handle(callback) shouldBeEqualTo io.bluetape4k.workshop.optimization.lastmile.provider.CallbackDecision.ACCEPTED
-            callbackService.handle(callback) shouldBeEqualTo io.bluetape4k.workshop.optimization.lastmile.provider.CallbackDecision.DUPLICATE
+            callbackService.handle(callback) shouldBeEqualTo CallbackDecision.ACCEPTED
+            callbackService.handle(callback) shouldBeEqualTo CallbackDecision.DUPLICATE
             callbackService.handle(
                 callback.copy(
                     eventId = EventId("event-2"),
@@ -129,7 +139,7 @@ class LastMileLifecycleIntegrationTest {
                         ),
                     ),
                 ),
-            ) shouldBeEqualTo io.bluetape4k.workshop.optimization.lastmile.provider.CallbackDecision.STALE_PROVIDER_REVISION
+            ) shouldBeEqualTo CallbackDecision.STALE_PROVIDER_REVISION
         }
     }
 
@@ -162,7 +172,7 @@ class LastMileLifecycleIntegrationTest {
                 ),
             )
             first.requestGeneration shouldBeEqualTo 1L
-            duplicate.appendResult shouldBeEqualTo io.bluetape4k.workshop.optimization.lastmile.persistence.LastMileEventAppendResult.DUPLICATE
+            duplicate.appendResult shouldBeEqualTo LastMileEventAppendResult.DUPLICATE
             duplicate.requestGeneration shouldBeEqualTo 1L
             next.requestGeneration shouldBeEqualTo 2L
         }
@@ -191,35 +201,37 @@ class LastMileLifecycleIntegrationTest {
             )
             service.approve(command) shouldBeEqualTo LastMileApprovalResult.COMMITTED
             LastMileCommittedStopsTable.selectAll().toList().size shouldBeEqualTo 2
-            repository.loadProposal(LastMilePlanId("plan-1"), 1).shouldNotBeNull().state shouldBeEqualTo PlanState.COMMITTED
+            repository.loadProposal(LastMilePlanId("plan-1"), 1)
+                .shouldNotBeNull().state shouldBeEqualTo PlanState.COMMITTED
             service.approve(command) shouldBeEqualTo LastMileApprovalResult.STALE_ROUTE_APPROVAL
             LastMileCommittedStopsTable.selectAll().toList().size shouldBeEqualTo 2
         }
     }
 
-    private fun input() = io.bluetape4k.workshop.optimization.lastmile.domain.LastMilePlannerInput(
-        planId = LastMilePlanId("plan-1"),
-        jobs = listOf(job()),
-        vehicles = listOf(vehicle()),
-        matrix = TravelTimeMatrix(
-            revision = 7,
-            coordinateIds = setOf(CoordinateId("depot"), CoordinateId("pickup"), CoordinateId("delivery")),
-            edges = mapOf(
-                CoordinatePair(CoordinateId("depot"), CoordinateId("pickup")) to 60,
-                CoordinatePair(CoordinateId("pickup"), CoordinateId("delivery")) to 60,
+    private fun input(): LastMilePlannerInput =
+        LastMilePlannerInput(
+            planId = LastMilePlanId("plan-1"),
+            jobs = listOf(job()),
+            vehicles = listOf(vehicle()),
+            matrix = TravelTimeMatrix(
+                revision = 7,
+                coordinateIds = setOf(CoordinateId("depot"), CoordinateId("pickup"), CoordinateId("delivery")),
+                edges = mapOf(
+                    CoordinatePair(CoordinateId("depot"), CoordinateId("pickup")) to 60,
+                    CoordinatePair(CoordinateId("pickup"), CoordinateId("delivery")) to 60,
+                ),
             ),
-        ),
-        planRevision = 1,
-        requestGeneration = 1,
-    )
+            planRevision = 1,
+            requestGeneration = 1,
+        )
 
     private fun job() = DeliveryJob(
         jobId = JobId("job-1"),
         pickupCoordinateId = CoordinateId("pickup"),
         deliveryCoordinateId = CoordinateId("delivery"),
         demand = 1,
-        pickupWindow = TimeWindow(NOW, NOW.plusSeconds(900)),
-        deliveryWindow = TimeWindow(NOW, NOW.plusSeconds(1_800)),
+        pickupWindow = TimeWindow(NOW, NOW + 900.seconds()),
+        deliveryWindow = TimeWindow(NOW, NOW + 1_800.seconds()),
         priority = Priority.NORMAL,
     )
 
@@ -242,16 +254,28 @@ class LastMileLifecycleIntegrationTest {
             LastMileRoute(
                 vehicleId = VehicleId("vehicle-1"),
                 stops = listOf(
-                    LastMileRouteStop(JobId("job-1"), StopKind.PICKUP, CoordinateId("pickup"), 0, NOW, 1, false),
-                    LastMileRouteStop(JobId("job-1"), StopKind.DELIVERY, CoordinateId("delivery"), 1, NOW.plusSeconds(60), 0, false),
+                    LastMileRouteStop(
+                        jobId = JobId("job-1"),
+                        kind = StopKind.PICKUP,
+                        coordinateId = CoordinateId("pickup"),
+                        sequence = 0,
+                        eta = NOW,
+                        loadAfter = 1,
+                        pinned = false
+                    ),
+                    LastMileRouteStop(
+                        jobId = JobId("job-1"),
+                        kind = StopKind.DELIVERY,
+                        coordinateId = CoordinateId("delivery"),
+                        sequence = 1,
+                        eta = NOW + 60.seconds(),
+                        loadAfter = 0,
+                        pinned = false
+                    ),
                 ),
             ),
         ),
         unassigned = emptyList(),
         score = LastMileScore(1000, -2, 1, 0),
     )
-
-    companion object {
-        private val NOW: Instant = Instant.parse("2026-08-24T00:00:00Z")
-    }
 }

@@ -6,6 +6,7 @@ import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
 import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.images.useGraphics
 import io.bluetape4k.workshop.imageprocessing.profile.config.ProfileImageModerationProperties
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationDecision
 import io.bluetape4k.workshop.imageprocessing.profile.model.ModerationRequest
@@ -65,13 +66,14 @@ internal class ProfileImageServiceFixture(
 
     fun sampleJpeg(width: Int = 32, height: Int = 24): ByteArray {
         val image = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        val graphics = image.createGraphics()
-        graphics.color = Color(0x33, 0x66, 0x99)
-        graphics.fillRect(0, 0, width, height)
-        graphics.dispose()
-        val output = ByteArrayOutputStream()
-        ImageIO.write(image, "jpg", output)
-        return output.toByteArray()
+        image.useGraphics { graphics ->
+            graphics.color = Color(0x33, 0x66, 0x99)
+            graphics.fillRect(0, 0, width, height)
+        }
+        return ByteArrayOutputStream().use { bos ->
+            ImageIO.write(image, "jpg", bos)
+            bos.toByteArray()
+        }
     }
 }
 
@@ -83,18 +85,29 @@ internal data class RecordedProfileUpload(
 
 internal class RecordingProfileImageStorage(
     private val failOnKeyPart: String? = null,
-) : ImageStorage {
+): ImageStorage {
     val uploads = mutableListOf<RecordedProfileUpload>()
     val deletes = mutableListOf<ImageObjectKey>()
     val objects = linkedMapOf<ImageObjectKey, ByteArray>()
 
-    override suspend fun upload(key: ImageObjectKey, bytes: ByteArray, options: UploadOptions): ImageUploadResult {
+    override suspend fun upload(
+        key: ImageObjectKey,
+        bytes: ByteArray,
+        options: UploadOptions,
+    ): ImageUploadResult {
         if (failOnKeyPart != null && key.fullKey.contains(failOnKeyPart)) {
             throw ImageStorageException.TransientException(key = key, message = "forced failure: ${key.fullKey}")
         }
         uploads += RecordedProfileUpload(key, bytes, options)
         objects[key] = bytes
-        return ImageUploadResult(key, bytes.size.toString(), bytes.size.toLong(), options.contentType, Instant.EPOCH)
+
+        return ImageUploadResult(
+            key,
+            bytes.size.toString(),
+            bytes.size.toLong(),
+            options.contentType,
+            Instant.EPOCH
+        )
     }
 
     override suspend fun upload(key: ImageObjectKey, source: Path, options: UploadOptions): ImageUploadResult =
@@ -116,7 +129,7 @@ internal class RecordingProfileImageStorage(
     override fun list(prefix: ImageObjectKey): Flow<ImageObjectKey> = emptyFlow()
 }
 
-internal class ControllableModerationProvider : ImageModerationProvider {
+internal class ControllableModerationProvider: ImageModerationProvider {
     val requests = mutableListOf<ModerationRequest>()
     private val completions = ArrayDeque<CompletableDeferred<ModerationResult>>()
 
@@ -127,7 +140,7 @@ internal class ControllableModerationProvider : ImageModerationProvider {
         return deferred.await()
     }
 
-    suspend fun complete(decision: ModerationDecision, reason: String = decision.name.lowercase()) {
+    fun complete(decision: ModerationDecision, reason: String = decision.name.lowercase()) {
         completions.removeFirst().complete(ModerationResult(decision, reason))
     }
 

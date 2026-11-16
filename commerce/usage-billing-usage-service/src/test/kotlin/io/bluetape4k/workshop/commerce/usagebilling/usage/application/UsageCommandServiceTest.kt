@@ -2,7 +2,11 @@ package io.bluetape4k.workshop.commerce.usagebilling.usage.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.MissingPriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
@@ -10,55 +14,86 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptance
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageOutboxRecord
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageRecord
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageSourceConflict
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 
 class UsageCommandServiceTest {
+
+    private companion object: KLogging() {
+        val EVENT_ID: UUID = UUID.fromString("487a67c1-6541-4c31-af7a-916fd35b2f83")
+    }
+
     private val now = Instant.parse("2026-07-22T00:00:00Z")
     private val journal = InMemoryUsageAcceptanceJournal()
     private val service = UsageCommandService(journal, Clock.fixed(now, ZoneOffset.UTC)) { EVENT_ID }
 
+    @BeforeEach
+    fun beforeEach() {
+        journal.reset()
+    }
+
     @Test
     fun `verified local price evidence accepts usage and appends UsageAccepted outbox record`() {
-        journal.evidence += PriceEvidence("tenant-a", "api_calls", "USD", BigDecimal("0.10"), now)
+        journal.evidence += PriceEvidence(
+            tenantId = "tenant-a",
+            meterCode = "api_calls",
+            currency = "USD",
+            unitPrice = BigDecimal("0.10"),
+            effectiveAt = now
+        )
 
         val result = service.accept(command())
 
-        result.replayed shouldBeEqualTo false
+        result.replayed.shouldBeFalse()
         journal.usages.single().sourceEventId shouldBeEqualTo "source-usage-1"
         journal.outbox.single().eventType shouldBeEqualTo "UsageAccepted"
         journal.outbox.single().partitionKey shouldBeEqualTo "tenant-a|Usage|source-usage-1"
+
         val wire = Jackson.defaultJsonMapper.readTree(journal.outbox.single().payload)
-        requireNotNull(wire.get("eventId")).asString() shouldBeEqualTo result.eventId.toString()
-        val payload = Jackson.defaultJsonMapper.readTree(requireNotNull(wire.get("payload")).asString())
-        requireNotNull(payload.get("meterCode")).asString() shouldBeEqualTo "api_calls"
-        requireNotNull(payload.get("unitPrice")).asString() shouldBeEqualTo "0.10"
+        wire.get("eventId")!!.asString() shouldBeEqualTo result.eventId.toString()
+
+        val payload = Jackson.defaultJsonMapper.readTree(wire.get("payload")!!.asString())
+        payload.get("meterCode")!!.asString() shouldBeEqualTo "api_calls"
+        payload.get("unitPrice")!!.asString() shouldBeEqualTo "0.10"
     }
 
     @Test
     fun `same source event replays without a second usage or outbox record`() {
-        journal.evidence += PriceEvidence("tenant-a", "api_calls", "USD", BigDecimal("0.10"), now)
+        journal.evidence += PriceEvidence(
+            tenantId = "tenant-a",
+            meterCode = "api_calls",
+            currency = "USD",
+            unitPrice = BigDecimal("0.10"),
+            effectiveAt = now
+        )
         service.accept(command())
 
-        service.accept(command()).replayed shouldBeEqualTo true
+        service.accept(command()).replayed.shouldBeTrue()
         journal.usages.size shouldBeEqualTo 1
         journal.outbox.size shouldBeEqualTo 1
     }
 
     @Test
     fun `same source event with different payload is rejected`() {
-        journal.evidence += PriceEvidence("tenant-a", "api_calls", "USD", BigDecimal("0.10"), now)
+        journal.evidence += PriceEvidence(
+            tenantId = "tenant-a",
+            meterCode = "api_calls",
+            currency = "USD",
+            unitPrice = BigDecimal("0.10"),
+            effectiveAt = now
+        )
         service.accept(command())
 
         val failure = assertFailsWith<UsageSourceConflict> {
             service.accept(command(quantity = BigDecimal.TWO))
         }
 
-        failure::class.simpleName shouldBeEqualTo "UsageSourceConflict"
+        log.debug { "failure: $failure" }
         journal.usages.size shouldBeEqualTo 1
     }
 
@@ -68,7 +103,7 @@ class UsageCommandServiceTest {
             service.accept(command())
         }
 
-        failure::class.simpleName shouldBeEqualTo "MissingPriceEvidence"
+        log.debug { "failure: $failure" }
         journal.outbox.size shouldBeEqualTo 0
     }
 
@@ -83,7 +118,7 @@ class UsageCommandServiceTest {
             occurredAt = now,
         )
 
-    private class InMemoryUsageAcceptanceJournal : UsageAcceptanceJournal {
+    private class InMemoryUsageAcceptanceJournal: UsageAcceptanceJournal {
         val evidence = mutableListOf<PriceEvidence>()
         val usages = mutableListOf<UsageRecord>()
         val outbox = mutableListOf<UsageOutboxRecord>()
@@ -100,9 +135,11 @@ class UsageCommandServiceTest {
             usages += usage
             outbox += outboxRecord
         }
-    }
 
-    private companion object {
-        val EVENT_ID: UUID = UUID.fromString("487a67c1-6541-4c31-af7a-916fd35b2f83")
+        fun reset() {
+            evidence.clear()
+            usages.clear()
+            outbox.clear()
+        }
     }
 }

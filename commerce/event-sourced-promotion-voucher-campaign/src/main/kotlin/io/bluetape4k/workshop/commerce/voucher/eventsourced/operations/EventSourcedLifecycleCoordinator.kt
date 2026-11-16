@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
-import io.bluetape4k.support.requireGt
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
@@ -32,7 +34,7 @@ internal class EventSourcedLifecycleCoordinator(
     private val workers: EventSourcedWorkerShutdown,
     graceDeadline: Duration = DEFAULT_GRACE_DEADLINE,
 ) {
-    private val graceDeadline = graceDeadline.requireGt(Duration.ZERO, "graceDeadline")
+    private val graceDeadline = graceDeadline.requirePositiveDuration("graceDeadline")
     private val shuttingDown = AtomicBoolean()
     private val eventLock = ReentrantLock()
     private val recordedEvents = mutableListOf<EventSourcedShutdownEvent>()
@@ -42,13 +44,16 @@ internal class EventSourcedLifecycleCoordinator(
 
     fun shutdown() {
         if (!shuttingDown.compareAndSet(false, true)) return
+
         val deadline = System.nanoTime() + graceDeadline.toNanos()
+
         step(EventSourcedShutdownEvent.READINESS_DOWN, state::beginShutdown)
         step(EventSourcedShutdownEvent.REJECT_ADMISSION, gate::beginShutdown)
         step(EventSourcedShutdownEvent.STOP_PROJECTION, workers.projection)
         step(EventSourcedShutdownEvent.STOP_REBUILD, workers.rebuild)
         step(EventSourcedShutdownEvent.STOP_MAINTENANCE, workers.maintenance)
         record(EventSourcedShutdownEvent.AWAIT_DRAIN)
+
         if (!gate.awaitDrained(remaining(deadline))) {
             drainForced = true
             log.warn { "event_sourced_shutdown_drain_deadline_exceeded" }
@@ -60,7 +65,7 @@ internal class EventSourcedLifecycleCoordinator(
 
     fun forcedDrain(): Boolean = drainForced
 
-    private fun step(
+    private inline fun step(
         event: EventSourcedShutdownEvent,
         action: () -> Unit,
     ) {
@@ -72,9 +77,10 @@ internal class EventSourcedLifecycleCoordinator(
         eventLock.withLock { recordedEvents += event }
     }
 
-    private fun remaining(deadline: Long): Duration = Duration.ofNanos((deadline - System.nanoTime()).coerceAtLeast(0))
+    private fun remaining(deadline: Long): Duration =
+        (deadline - System.nanoTime()).coerceAtLeast(0).nanos()
 
-    private companion object : KLogging() {
-        private val DEFAULT_GRACE_DEADLINE: Duration = Duration.ofSeconds(10)
+    private companion object: KLogging() {
+        private val DEFAULT_GRACE_DEADLINE: Duration = 10.seconds()
     }
 }

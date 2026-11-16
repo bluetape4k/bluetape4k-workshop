@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.leader.jobsafety.audit
 import io.bluetape4k.leader.audit.LeaderAuditExportEvent
 import io.bluetape4k.leader.audit.http.LeaderAuditHttpPayload
 import io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder
+import io.bluetape4k.logging.KLogging
 
 /**
  * 실제 transport와 무관하게 serialized audit payload를 bounded observation store에
@@ -14,10 +15,13 @@ import io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder
 class RecordingLeaderAuditPayloadEncoder(
     private val delegate: LeaderAuditPayloadEncoder,
     private val store: BoundedAuditPayloadStore,
-) : LeaderAuditPayloadEncoder {
+): LeaderAuditPayloadEncoder {
+
+    companion object: KLogging()
 
     override fun encode(event: LeaderAuditExportEvent): LeaderAuditHttpPayload =
-        delegate.encode(event).also { payload ->
-            store.add(payload.body())
-        }
+        delegate.encode(event)
+            .also { payload ->
+                store.add(payload.body())
+            }
 }

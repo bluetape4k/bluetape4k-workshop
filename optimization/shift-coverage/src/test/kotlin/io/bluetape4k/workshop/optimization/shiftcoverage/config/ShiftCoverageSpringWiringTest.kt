@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.config
 
-import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.shiftcoverage.ShiftCoverageApplication
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageDemoService
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageExecutorLifecycle
@@ -18,6 +19,9 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest(classes = [ShiftCoverageApplication::class], webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("demo")
 class ShiftCoverageSpringWiringTest {
+
+    companion object: KLogging()
+
     @Autowired
     private lateinit var lifecycle: ShiftCoverageExecutorLifecycle
 

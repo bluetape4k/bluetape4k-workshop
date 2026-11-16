@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 open class TenantScheduledPolicyFixture {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val invocations = AtomicInteger()
 

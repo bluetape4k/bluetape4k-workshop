@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.meter.persistence
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandJournal
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandReceipt
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterOutboxRecord
@@ -293,8 +294,8 @@ class ExposedMeterOutboxJournal : MeterOutboxJournal {
             (MeterOutboxEvents.claimUntil greater now)
 
     private companion object {
-        val CLAIM_LEASE: Duration = Duration.ofSeconds(30)
-        val RETRY_DELAY: Duration = Duration.ofSeconds(1)
+        val CLAIM_LEASE: Duration = 30.seconds()
+        val RETRY_DELAY: Duration = 1.seconds()
         const val MAX_ATTEMPTS = 3
     }
 }

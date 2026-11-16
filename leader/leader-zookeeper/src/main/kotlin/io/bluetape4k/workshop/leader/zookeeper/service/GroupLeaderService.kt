@@ -28,7 +28,7 @@ class GroupLeaderService(
     private val elector: ZooKeeperLeaderGroupElector,
     @Suppress("unused") private val props: LeaderZookeeperProperties,
 ) {
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val LOCK_NAME = "workshop:group-job"
     }
 
@@ -42,6 +42,7 @@ class GroupLeaderService(
      */
     fun runLeaderWork(lockName: String = LOCK_NAME): String? {
         lockName.requireNotBlank("lockName")
+
         return elector.runIfLeader(lockName) {
             executionCount.incrementAndGet()
             log.info { "[GROUP-LEADER] GroupLeaderService entered slot (total=${executionCount.get()})" }

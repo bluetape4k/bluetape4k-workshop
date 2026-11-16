@@ -16,7 +16,7 @@ sealed interface DeductionResult {
     data class Success(
         val remaining: Int,
         val token: Long? = null,
-    ) : DeductionResult, Serializable {
+    ): DeductionResult, Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -25,7 +25,7 @@ sealed interface DeductionResult {
     data class InsufficientStock(
         val requested: Int,
         val available: Int,
-    ) : DeductionResult, Serializable {
+    ): DeductionResult, Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -33,7 +33,7 @@ sealed interface DeductionResult {
 
     data class Rejected(
         val token: Long,
-    ) : DeductionResult, Serializable {
+    ): DeductionResult, Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -41,7 +41,7 @@ sealed interface DeductionResult {
 
     data class LockNotAcquired(
         val lockName: String,
-    ) : DeductionResult, Serializable {
+    ): DeductionResult, Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }

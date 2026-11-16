@@ -6,6 +6,7 @@ import io.bluetape4k.bucket4j.distributed.BucketProxyProvider
 import io.bluetape4k.bucket4j.distributed.redis.lettuceBasedProxyManagerOf
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.workshop.commerce.ticket.redis.ForegroundLeaseGate
 import io.bluetape4k.workshop.commerce.ticket.redis.MultiKeyLeaseAdapter
@@ -23,7 +24,15 @@ import kotlin.concurrent.withLock
 /** Redis를 startup authority로 만들지 않고 lazy하고 재연결 가능한 Lettuce command connection을 소유합니다. */
 internal class TicketRedisResources private constructor(
     val client: RedisClient,
-) : AutoCloseable {
+): AutoCloseable {
+
+    companion object: KLogging() {
+        fun open(properties: TicketRedisProperties): TicketRedisResources {
+            val uri = RedisURI.create(properties.uri).apply { timeout = properties.commandTimeout }
+            return TicketRedisResources(LettuceClients.clientOf(uri))
+        }
+    }
+
     private val connectionLock = ReentrantLock()
     private val closed = AtomicBoolean()
 
@@ -34,6 +43,7 @@ internal class TicketRedisResources private constructor(
         check(!closed.get()) { "ticket Redis resources are closed" }
         val available = connection
         if (available != null && available.isOpen) return available.sync()
+
         return connectionLock.withLock {
             val current = connection
             if (current != null && current.isOpen) {
@@ -48,13 +58,6 @@ internal class TicketRedisResources private constructor(
         if (!closed.compareAndSet(false, true)) return
         connection?.close()
         LettuceClients.shutdown(client)
-    }
-
-    companion object {
-        fun open(properties: TicketRedisProperties): TicketRedisResources {
-            val uri = RedisURI.create(properties.uri).apply { timeout = properties.commandTimeout }
-            return TicketRedisResources(LettuceClients.clientOf(uri))
-        }
     }
 }
 
@@ -80,15 +83,15 @@ internal class TicketRedisConfiguration {
     ): RateLimiter<String> {
         val redis = properties.redis
         val manager = lettuceBasedProxyManagerOf(resources.client) {}
-        val configuration =
-            bucketConfiguration {
-                addBandwidth {
-                    Bandwidth.builder()
-                        .capacity(redis.rateLimitCapacity)
-                        .refillGreedy(redis.rateLimitCapacity, redis.rateLimitPeriod)
-                        .build()
-                }
+        val configuration = bucketConfiguration {
+            addBandwidth {
+                Bandwidth.builder()
+                    .capacity(redis.rateLimitCapacity)
+                    .refillGreedy(redis.rateLimitCapacity, redis.rateLimitPeriod)
+                    .build()
             }
+        }
+
         return DistributedRateLimiter(
             BucketProxyProvider(manager, configuration, keyPrefix = "ticket:rate:"),
         )

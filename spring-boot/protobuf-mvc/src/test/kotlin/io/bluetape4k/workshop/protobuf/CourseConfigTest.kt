@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.protobuf
 
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,7 +14,7 @@ class CourseConfigTest @Autowired constructor(
     private val courseRepository: CourseRepository,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     @Test
     fun `context loading`() {

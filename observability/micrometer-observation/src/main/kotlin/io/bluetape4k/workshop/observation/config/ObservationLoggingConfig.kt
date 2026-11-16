@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.observation.config
 
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.micrometer.observation.Observation
 import io.micrometer.observation.ObservationHandler
@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Configuration
 @Configuration(proxyBeanMethods = false)
 class ObservationLoggingConfig {
 
-    private val logger = KotlinLogging.logger("io.bluetape4k.workshop.observation.ObservationLogger")
+    companion object: KLogging()
 
     @Bean
     fun observationLogger(): ObservationHandler<Observation.Context> {
-        return ObservationTextPublisher { logger.debug { it } }
+        return ObservationTextPublisher { log.debug { it } }
     }
 }

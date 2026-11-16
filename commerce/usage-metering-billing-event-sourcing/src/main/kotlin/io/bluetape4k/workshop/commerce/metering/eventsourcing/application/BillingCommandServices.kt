@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AggregateReducer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingCloseStarted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodOpened
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodReducer
@@ -12,22 +15,22 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterReduce
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterRegistered
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterState
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.PriceActivated
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.ReplayedAggregate
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageReducer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageState
-import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.AggregateReplayer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.AggregateReplayRequest
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.AggregateReplayer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayPolicy
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayTelemetry
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.Locale
+import java.util.*
 
 @Service
 class MeterCommandService(
@@ -35,19 +38,40 @@ class MeterCommandService(
     private val codec: DomainEventJsonCodec,
     metrics: ReplayTelemetry? = null,
 ) {
+
+    companion object: KLogging()
+
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
-    fun register(tenantId: String, meterCode: String, unit: String, currency: String, now: Instant) = register(
-        MeterRegistration(tenantId, meterCode, unit, currency, now),
-    )
+    fun register(
+        tenantId: String,
+        meterCode: String,
+        unit: String,
+        currency: String,
+        now: Instant,
+    ) {
+        register(
+            MeterRegistration(
+                tenantId = tenantId,
+                meterCode = meterCode,
+                unit = unit,
+                currency = currency,
+                occurredAt = now
+            ),
+        )
+    }
 
     fun register(command: MeterRegistration) {
         val stream = StreamKey(command.tenantId, "Meter", command.meterCode)
         val current = replay(stream, MeterState.Empty, MeterReducer, replayRuntime)
+
         check(current.state == MeterState.Empty) { "meter_already_registered" }
+
         val domainEvent = MeterRegistered(command.meterCode, command.unit, command.currency)
-        val event = command.metadata?.let { codec.encode(domainEvent, command.occurredAt, metadata = it) }
+        val event = command.metadata
+            ?.let { codec.encode(domainEvent, command.occurredAt, metadata = it) }
             ?: codec.encode(domainEvent, command.occurredAt)
+
         eventStore.append(stream, current.streamVersion, listOf(event))
     }
 
@@ -62,7 +86,11 @@ class MeterCommandService(
         val current = replay(stream, MeterState.Empty, MeterReducer, replayRuntime)
         val event = PriceActivated(currency, unitPrice, effectiveFrom)
         MeterReducer.evolve(current.state, event)
-        eventStore.append(stream, current.streamVersion, listOf(codec.encode(event, effectiveFrom)))
+        eventStore.append(
+            stream = stream,
+            expectedVersion = current.streamVersion,
+            events = listOf(codec.encode(event, effectiveFrom))
+        )
     }
 }
 
@@ -83,14 +111,27 @@ class UsageCommandService(
     private val codec: DomainEventJsonCodec,
     metrics: ReplayTelemetry? = null,
 ) {
+
+    companion object: KLogging()
+
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
     fun accept(tenantId: String, usage: UsageAccepted, now: Instant): UsageAcceptance {
         val stream = StreamKey(tenantId, "Usage", deterministicUsageId(usage.sourceSystem, usage.sourceEventId))
         val current = replay(stream, UsageState.Empty, UsageReducer, replayRuntime)
-        if (current.state is UsageState.Accepted) return existing(current.state, usage, stream, current.streamVersion)
+
+        if (current.state is UsageState.Accepted) {
+            return existing(current.state, usage, stream, current.streamVersion)
+        }
+
         return try {
-            val appended = eventStore.append(stream, 0, listOf(codec.encode(usage, now))).single()
+            val appended = eventStore
+                .append(
+                    stream = stream,
+                    expectedVersion = 0,
+                    events = listOf(codec.encode(usage, now))
+                )
+                .single()
             UsageAcceptance(true, stream, appended.streamVersion)
         } catch (_: OptimisticConcurrencyException) {
             val winner = replay(stream, UsageState.Empty, UsageReducer, replayRuntime)
@@ -110,7 +151,7 @@ class UsageCommandService(
 
     private fun deterministicUsageId(sourceSystem: String, sourceEventId: String): String =
         MessageDigest.getInstance("SHA-256")
-            .digest("$sourceSystem\u0000$sourceEventId".toByteArray(UTF_8))
+            .digest("$sourceSystem\u0000$sourceEventId".toUtf8Bytes())
             .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 }
 
@@ -120,22 +161,41 @@ class BillingLifecycleCommandService(
     private val codec: DomainEventJsonCodec,
     metrics: ReplayTelemetry? = null,
 ) {
+
+    companion object: KLogging()
+
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
     fun open(tenantId: String, periodId: String, currency: String, startsAt: Instant, endsAt: Instant) {
         require(startsAt < endsAt) { "billing_period_range_invalid" }
+
         val stream = StreamKey(tenantId, "BillingPeriod", periodId)
-        val current = replay(stream, BillingPeriodState.Empty, BillingPeriodReducer, replayRuntime)
+        val current = replay(
+            stream = stream,
+            initialState = BillingPeriodState.Empty,
+            reducer = BillingPeriodReducer,
+            runtime = replayRuntime
+        )
+
         check(current.state == BillingPeriodState.Empty) { "billing_period_already_opened" }
-        eventStore.append(stream, 0, listOf(codec.encode(BillingPeriodOpened(currency, startsAt, endsAt), startsAt)))
+        eventStore.append(
+            stream = stream,
+            expectedVersion = 0,
+            events = listOf(codec.encode(BillingPeriodOpened(currency, startsAt, endsAt), startsAt))
+        )
     }
 
     fun startClose(tenantId: String, periodId: String, cutoff: Instant) {
         val stream = StreamKey(tenantId, "BillingPeriod", periodId)
         val current = replay(stream, BillingPeriodState.Empty, BillingPeriodReducer, replayRuntime)
         val event = BillingCloseStarted(cutoff)
+
         BillingPeriodReducer.evolve(current.state, event)
-        eventStore.append(stream, current.streamVersion, listOf(codec.encode(event, cutoff)))
+        eventStore.append(
+            stream = stream,
+            expectedVersion = current.streamVersion,
+            events = listOf(codec.encode(event, cutoff))
+        )
     }
 
     fun issueInvoice(tenantId: String, invoiceId: String, total: BigDecimal, currency: String, now: Instant): Boolean {
@@ -145,7 +205,11 @@ class BillingLifecycleCommandService(
             check(current.state.total == total && current.state.currency == currency) { "invoice_conflict" }
             return false
         }
-        eventStore.append(stream, 0, listOf(codec.encode(InvoiceIssued(invoiceId, total, currency), now)))
+        eventStore.append(
+            stream = stream,
+            expectedVersion = 0,
+            events = listOf(codec.encode(InvoiceIssued(invoiceId, total, currency), now))
+        )
         return true
     }
 }
@@ -153,18 +217,19 @@ class BillingLifecycleCommandService(
 internal fun <S> replay(
     stream: StreamKey,
     initialState: S,
-    reducer: io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AggregateReducer<S>,
+    reducer: AggregateReducer<S>,
     runtime: ReplayRuntime,
-) = AggregateReplayer.replay(
-    AggregateReplayRequest(
-        runtime.eventStore.load(stream),
-        initialState,
-        reducer,
-        null,
-        ReplayPolicy(runtime.codec.registry, 1),
-    ),
-    runtime.metrics,
-)
+): ReplayedAggregate<S> =
+    AggregateReplayer.replay(
+        AggregateReplayRequest(
+            runtime.eventStore.load(stream),
+            initialState,
+            reducer,
+            null,
+            ReplayPolicy(runtime.codec.registry, 1),
+        ),
+        runtime.metrics,
+    )
 
 internal data class ReplayRuntime(
     val eventStore: EventStore,

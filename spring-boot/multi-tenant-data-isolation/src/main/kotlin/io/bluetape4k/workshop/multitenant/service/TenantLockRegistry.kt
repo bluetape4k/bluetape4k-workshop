@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.multitenant.service
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.multitenant.domain.TenantId
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
@@ -14,12 +16,16 @@ class TenantLockRegistry(
     private val keyFactory: TenantKeyFactory,
 ) {
 
+    companion object: KLogging()
+
     private val locks = ConcurrentHashMap<String, ReentrantLock>()
 
     /**
      * tenant scope 를 포함하는 key 의 lock 을 잡은 상태로 [block] 을 실행합니다.
      */
     fun <T> withInvoiceLock(tenantId: TenantId, invoiceId: Long, block: (String) -> T): T {
+        log.debug { "With Invoice Lock. tenantId=$tenantId, invoiceId=$invoiceId" }
+
         val key = keyFactory.invoiceLockKey(tenantId, invoiceId)
         val lock = locks.computeIfAbsent(key) { ReentrantLock() }
         return lock.withLock { block(key) }
@@ -34,6 +40,7 @@ class TenantLockRegistry(
      * 모든 lock entry 를 지웁니다.
      */
     fun clear() {
+        log.debug { "Clearing all locks..." }
         locks.clear()
     }
 }

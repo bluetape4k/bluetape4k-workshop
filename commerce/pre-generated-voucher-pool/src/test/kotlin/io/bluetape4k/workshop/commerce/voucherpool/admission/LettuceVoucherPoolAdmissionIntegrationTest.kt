@@ -4,29 +4,50 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.storage.RedisServer
-import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRedisProperties
-import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRedisResources
 import io.bluetape4k.workshop.commerce.voucherpool.config.RecoverableVoucherPoolAdmissionBackend
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolLeaderTrigger
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRedisProperties
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRedisResources
 import io.bluetape4k.workshop.commerce.voucherpool.config.voucherPoolDistributedAdmissionBackend
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class LettuceVoucherPoolAdmissionIntegrationTest {
+
+    private companion object: KLogging() {
+        private val redis: RedisServer = RedisServer.Launcher.redis
+
+        private fun flushRedis() {
+            val client = LettuceClients.clientOf(redis.url)
+            try {
+                LettuceClients.connect(client).sync().flushall()
+            } finally {
+                LettuceClients.shutdown(client)
+            }
+        }
+    }
+
+    @BeforeEach
+    fun beforeEach() {
+        flushRedis()
+    }
+
     @Test
     fun `Bucket4j keeps operation quotas in opaque isolated namespaces`() {
-        val properties =
-            VoucherPoolRedisProperties(
-                enabled = true,
-                uri = redis.url,
-                commandTimeout = Duration.ofSeconds(1),
-                limits = AdmissionLimits.defaults().withLimit(AdmissionNamespace.REVEAL, 1),
-            )
-        flushRedis()
-
+        val properties = VoucherPoolRedisProperties(
+            enabled = true,
+            uri = redis.url,
+            commandTimeout = 1.seconds(),
+            limits = AdmissionLimits.defaults().withLimit(AdmissionNamespace.REVEAL, 1),
+        )
+        
         VoucherPoolRedisResources.open(properties).use { resources ->
             val gate = VoucherPoolAdmissionGate(voucherPoolDistributedAdmissionBackend(resources.client, properties))
             val principal = ByteArray(32) { 0x41 }
@@ -35,10 +56,10 @@ internal class LettuceVoucherPoolAdmissionIntegrationTest {
             gate.admit(AdmissionNamespace.REVEAL, principal) shouldBeEqualTo AdmissionDecision.RATE_LIMITED
             gate.admit(AdmissionNamespace.REDEEM, principal) shouldBeEqualTo AdmissionDecision.ALLOW
 
-            val keys =
-                resources.client.connect().use { connection ->
-                    connection.sync().keys("voucher-pool:admission:*")
-                }
+            val keys = resources.client.connect().use { connection ->
+                connection.sync().keys("voucher-pool:admission:*")
+            }
+            log.debug { "keys=$keys" }
             keys shouldHaveSize 2
             keys.none { "principal" in it || "414141" in it }.shouldBeTrue()
         }
@@ -46,20 +67,18 @@ internal class LettuceVoucherPoolAdmissionIntegrationTest {
 
     @Test
     fun `unavailable Redis falls back to the same bounded local policy`() {
-        val properties =
-            VoucherPoolRedisProperties(
-                enabled = true,
-                uri = "redis://127.0.0.1:1",
-                commandTimeout = Duration.ofMillis(50),
-                limits = AdmissionLimits.defaults().withLimit(AdmissionNamespace.REDEEM, 1),
-            )
+        val properties = VoucherPoolRedisProperties(
+            enabled = true,
+            uri = "redis://127.0.0.1:1",
+            commandTimeout = 50.millis(),
+            limits = AdmissionLimits.defaults().withLimit(AdmissionNamespace.REDEEM, 1),
+        )
 
         VoucherPoolRedisResources.open(properties).use { resources ->
-            val gate =
-                VoucherPoolAdmissionGate(
-                    RecoverableVoucherPoolAdmissionBackend(resources.client, properties),
-                    properties.limits,
-                )
+            val gate = VoucherPoolAdmissionGate(
+                RecoverableVoucherPoolAdmissionBackend(resources.client, properties),
+                properties.limits,
+            )
             val principal = ByteArray(32) { 0x42 }
 
             gate.admit(AdmissionNamespace.REDEEM, principal) shouldBeEqualTo AdmissionDecision.DEGRADED_ALLOW
@@ -69,33 +88,22 @@ internal class LettuceVoucherPoolAdmissionIntegrationTest {
 
     @Test
     fun `leader trigger executes the supplied shared worker path at most once`() {
-        val properties =
-            VoucherPoolRedisProperties(
-                enabled = true,
-                uri = redis.url,
-                commandTimeout = Duration.ofSeconds(1),
-            )
+        val properties = VoucherPoolRedisProperties(
+            enabled = true,
+            uri = redis.url,
+            commandTimeout = 1.seconds(),
+        )
         val calls = AtomicInteger()
 
         VoucherPoolRedisResources.open(properties).use { resources ->
             val trigger = VoucherPoolLeaderTrigger(resources::leaderElector, "test-instance")
-            val result = trigger.run("voucher-pool-reconciliation") { calls.incrementAndGet() }
+            val result = trigger.run("voucher-pool-reconciliation") {
+                calls.incrementAndGet()
+            }
 
+            log.debug { "result=$result" }
             result.shouldNotBeNull()
             calls.get() shouldBeEqualTo 1
         }
-    }
-
-    private fun flushRedis() {
-        val client = LettuceClients.clientOf(redis.url)
-        try {
-            LettuceClients.connect(client).sync().flushall()
-        } finally {
-            LettuceClients.shutdown(client)
-        }
-    }
-
-    private companion object {
-        val redis: RedisServer = RedisServer.Launcher.redis
     }
 }

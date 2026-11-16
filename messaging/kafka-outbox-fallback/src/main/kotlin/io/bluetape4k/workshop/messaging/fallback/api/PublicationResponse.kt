@@ -21,7 +21,7 @@ data class PublicationResponse(
     val nextAttemptAt: LocalDateTime,
     val publishedAt: LocalDateTime?,
     val updatedAt: LocalDateTime,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 

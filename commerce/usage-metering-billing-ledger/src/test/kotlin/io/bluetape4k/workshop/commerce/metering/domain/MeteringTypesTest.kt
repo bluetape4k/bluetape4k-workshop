@@ -2,11 +2,14 @@ package io.bluetape4k.workshop.commerce.metering.domain
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.util.Currency
+import java.util.*
 
 class MeteringTypesTest {
+
+    companion object: KLogging()
 
     @Test
     fun `identifiers reject blank and oversized values`() {
@@ -38,9 +41,9 @@ class MeteringTypesTest {
     @Test
     fun `money normalizes using currency fraction digits and half up rounding`() {
         Money(BigDecimal("12.345"), Currency.getInstance("USD")).normalized() shouldBeEqualTo
-            Money(BigDecimal("12.35"), Currency.getInstance("USD"))
+                Money(BigDecimal("12.35"), Currency.getInstance("USD"))
         Money(BigDecimal("12.5"), Currency.getInstance("KRW")).normalized() shouldBeEqualTo
-            Money(BigDecimal("13"), Currency.getInstance("KRW"))
+                Money(BigDecimal("13"), Currency.getInstance("KRW"))
     }
 
     @Test
@@ -48,7 +51,9 @@ class MeteringTypesTest {
         val dollars = Money(BigDecimal("10.00"), Currency.getInstance("USD"))
         val won = Money(BigDecimal("10"), Currency.getInstance("KRW"))
 
-        assertFailsWith<IllegalArgumentException> { dollars + won }
+        assertFailsWith<IllegalArgumentException> {
+            dollars + won
+        }
     }
 
     @Test

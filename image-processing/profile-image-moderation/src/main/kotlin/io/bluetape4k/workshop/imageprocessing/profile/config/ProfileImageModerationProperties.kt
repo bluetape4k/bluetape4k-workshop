@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.profile.config
 
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -27,7 +28,7 @@ data class ProfileImageModerationProperties(
     val decisionDelay: Duration = Duration.ofSeconds(1),
     val rejectedFilenameMarker: String = "reject",
     val privacy: ProfileImagePrivacyProperties = ProfileImagePrivacyProperties(),
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -42,9 +43,9 @@ data class ProfileImageModerationProperties(
         maxHeight.requirePositiveNumber("maxHeight")
         requestConcurrency.requirePositiveNumber("requestConcurrency")
         moderationConcurrency.requirePositiveNumber("moderationConcurrency")
-        processingTimeout.requireGt(Duration.ZERO, "processingTimeout")
-        moderationTimeout.requireGt(Duration.ZERO, "moderationTimeout")
-        require(!decisionDelay.isNegative) { "decisionDelay must be zero or positive" }
+        processingTimeout.requirePositiveDuration("processingTimeout")
+        moderationTimeout.requirePositiveDuration("moderationTimeout")
+        decisionDelay.requireZeroOrPositiveDuration("decisionDelay")
         rejectedFilenameMarker.requireNotBlank("rejectedFilenameMarker")
     }
 }
@@ -57,7 +58,7 @@ data class ProfileImagePrivacyProperties(
     val removeGps: Boolean = true,
     val normalizeOrientation: Boolean = true,
     val maxMetadataBytes: Int = 5 * 1024 * 1024,
-) : Serializable {
+): Serializable {
 
     init {
         maxMetadataBytes.requirePositiveNumber("maxMetadataBytes")

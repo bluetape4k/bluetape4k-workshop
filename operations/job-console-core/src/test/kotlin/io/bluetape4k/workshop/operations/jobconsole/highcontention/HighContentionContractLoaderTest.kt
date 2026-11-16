@@ -2,7 +2,9 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -11,13 +13,39 @@ import java.nio.file.StandardCopyOption
 
 class HighContentionContractLoaderTest {
 
+    companion object: KLogging() {
+        private fun contractRoot(): Path =
+            Path.of(System.getProperty("highContentionContractRoot").shouldNotBeNull())
+
+        private fun copyContract(target: Path): Path {
+            val source = contractRoot()
+            Files.walk(source).use { paths ->
+                paths.forEach { path ->
+                    val destination = target.resolve(source.relativize(path).toString())
+                    if (Files.isDirectory(path)) {
+                        Files.createDirectories(destination)
+                    } else {
+                        Files.copy(path, destination)
+                    }
+                }
+            }
+            return target
+        }
+
+        private fun Path.replaceText(oldValue: String, newValue: String) {
+            Files.writeString(this, Files.readString(this).replaceFirst(oldValue, newValue))
+        }
+    }
+
     @Test
     fun `valid selection preserves the canonical profile and implementation order`() {
-        val loaded = HighContentionContractLoader().load(
-            contractRoot = contractRoot(),
-            mode = HighContentionMode.CI_CORRECTNESS,
-        )
+        val loaded = HighContentionContractLoader()
+            .load(
+                contractRoot = contractRoot(),
+                mode = HighContentionMode.CI_CORRECTNESS,
+            )
 
+        log.debug { "loaded=$loaded" }
         loaded.selections.size shouldBeEqualTo 28
         loaded.selections.first().profile.profileId shouldBeEqualTo "burst"
         loaded.selections.first().implementation shouldBeEqualTo "job-core"
@@ -27,13 +55,15 @@ class HighContentionContractLoaderTest {
 
     @Test
     fun `optional filters select one exact matrix tuple`() {
-        val loaded = HighContentionContractLoader().load(
-            contractRoot = contractRoot(),
-            mode = HighContentionMode.LOCAL_REFERENCE,
-            profileId = "redis-path-outage",
-            implementation = "job-spring",
-        )
+        val loaded = HighContentionContractLoader()
+            .load(
+                contractRoot = contractRoot(),
+                mode = HighContentionMode.LOCAL_REFERENCE,
+                profileId = "redis-path-outage",
+                implementation = "job-spring",
+            )
 
+        log.debug { "loaded=$loaded" }
         loaded.selections.size shouldBeEqualTo 1
         loaded.selections.single().profile.mode shouldBeEqualTo HighContentionMode.LOCAL_REFERENCE
         loaded.selections.single().profile.profileId shouldBeEqualTo "redis-path-outage"
@@ -61,19 +91,21 @@ class HighContentionContractLoaderTest {
     @Test
     fun `duplicate keys and unknown fields fail before topology startup`(@TempDir tempDir: Path) {
         val duplicateRoot = copyContract(tempDir.resolve("duplicate"))
-        duplicateRoot.resolve("suite-manifest.json").replaceText(
-            "\"suiteSchemaVersion\": 1,",
-            "\"suiteSchemaVersion\": 1,\n  \"suiteSchemaVersion\": 1,",
-        )
+        duplicateRoot.resolve("suite-manifest.json")
+            .replaceText(
+                "\"suiteSchemaVersion\": 1,",
+                "\"suiteSchemaVersion\": 1,\n  \"suiteSchemaVersion\": 1,",
+            )
         assertFailsWith<HighContentionContractException> {
             HighContentionContractLoader().load(duplicateRoot, HighContentionMode.CI_CORRECTNESS)
         }
 
         val unknownRoot = copyContract(tempDir.resolve("unknown"))
-        unknownRoot.resolve("profiles/ci-correctness/burst.json").replaceText(
-            "\"knownLimitations\":",
-            "\"unreviewedOption\": true,\n  \"knownLimitations\":",
-        )
+        unknownRoot.resolve("profiles/ci-correctness/burst.json")
+            .replaceText(
+                "\"knownLimitations\":",
+                "\"unreviewedOption\": true,\n  \"knownLimitations\":",
+            )
         assertFailsWith<HighContentionContractException> {
             HighContentionContractLoader().load(unknownRoot, HighContentionMode.CI_CORRECTNESS)
         }
@@ -151,10 +183,11 @@ class HighContentionContractLoaderTest {
 
         val deepRoot = copyContract(tempDir.resolve("deep"))
         val nested = "[".repeat(40) + "0" + "]".repeat(40)
-        deepRoot.resolve("suite-manifest.json").replaceText(
-            "\"entries\":",
-            "\"tooDeep\": $nested,\n  \"entries\":",
-        )
+        deepRoot.resolve("suite-manifest.json")
+            .replaceText(
+                "\"entries\":",
+                "\"tooDeep\": $nested,\n  \"entries\":",
+            )
         assertFailsWith<HighContentionContractException> {
             HighContentionContractLoader().load(deepRoot, HighContentionMode.CI_CORRECTNESS)
         }
@@ -163,10 +196,11 @@ class HighContentionContractLoaderTest {
     @Test
     fun `profile paths cannot escape or cross a symbolic link`(@TempDir tempDir: Path) {
         val escapedRoot = copyContract(tempDir.resolve("escaped"))
-        escapedRoot.resolve("suite-manifest.json").replaceText(
-            "\"profileFile\": \"profiles/ci-correctness/burst.json\"",
-            "\"profileFile\": \"../burst.json\"",
-        )
+        escapedRoot.resolve("suite-manifest.json")
+            .replaceText(
+                "\"profileFile\": \"profiles/ci-correctness/burst.json\"",
+                "\"profileFile\": \"../burst.json\"",
+            )
         assertFailsWith<HighContentionContractException> {
             HighContentionContractLoader().load(escapedRoot, HighContentionMode.CI_CORRECTNESS)
         }
@@ -185,7 +219,7 @@ class HighContentionContractLoaderTest {
         val copiedRoot = copyContract(tempDir.resolve("identity"))
         var replaced = false
         val loader = HighContentionContractLoader(
-            fileReadObserver = HighContentionFileReadObserver { path ->
+            fileReadObserver = { path ->
                 if (!replaced && path.fileName.toString() == "suite-manifest.json") {
                     val replacement = path.resolveSibling("suite-manifest.replacement.json")
                     Files.copy(path, replacement)
@@ -198,27 +232,5 @@ class HighContentionContractLoaderTest {
         assertFailsWith<HighContentionContractException> {
             loader.load(copiedRoot, HighContentionMode.CI_CORRECTNESS)
         }
-    }
-
-    private fun contractRoot(): Path =
-        Path.of(System.getProperty("highContentionContractRoot").requireNotNull("highContentionContractRoot"))
-
-    private fun copyContract(target: Path): Path {
-        val source = contractRoot()
-        Files.walk(source).use { paths ->
-            paths.forEach { path ->
-                val destination = target.resolve(source.relativize(path).toString())
-                if (Files.isDirectory(path)) {
-                    Files.createDirectories(destination)
-                } else {
-                    Files.copy(path, destination)
-                }
-            }
-        }
-        return target
-    }
-
-    private fun Path.replaceText(oldValue: String, newValue: String) {
-        Files.writeString(this, Files.readString(this).replaceFirst(oldValue, newValue))
     }
 }

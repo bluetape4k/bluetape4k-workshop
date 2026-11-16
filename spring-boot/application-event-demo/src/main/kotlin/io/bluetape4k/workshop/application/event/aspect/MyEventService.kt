@@ -9,7 +9,7 @@ import java.io.Serializable
 @Service
 class MyEventService {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * 예제 작업을 실행하고 [AspectEventEmitter] 를 통해 [AspectEvent] 를 발생시킵니다.
@@ -28,7 +28,7 @@ class MyEventService {
 data class OperationParams(
     val id: String,
     val type: String,
-) : Serializable {
+): Serializable {
 
     init {
         id.requireNotBlank("id")
@@ -42,7 +42,7 @@ data class OperationParams(
 
 data class MyAspectParams(
     val message: String?,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

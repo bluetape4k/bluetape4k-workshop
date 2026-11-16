@@ -19,6 +19,7 @@ data class FieldServicePlanningFixtureMetadata(
         }
     }
 }
+
 /** 외부 provider 대신 canonical body와 fixture signature를 재생하는 경로입니다. */
 class FieldServicePlanningFixture(
     val metadata: FieldServicePlanningFixtureMetadata = FieldServicePlanningFixtureMetadata(),

@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.javatimes.days
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanProposal
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VisitPriority
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.PositiveOrZero
-import java.time.Duration
 import java.time.Instant
 
 data class CreateVisitRequest(
@@ -18,7 +18,7 @@ data class CreateVisitRequest(
 ) {
     init {
         require(windowStart < windowEnd) { "windowStart must precede windowEnd" }
-        require(serviceDurationSeconds <= Duration.ofDays(1).seconds) { "service duration is too large" }
+        require(serviceDurationSeconds <= 1.days().seconds) { "service duration is too large" }
     }
 }
 

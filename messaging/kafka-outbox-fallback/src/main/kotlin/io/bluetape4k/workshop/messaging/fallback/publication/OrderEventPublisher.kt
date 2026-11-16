@@ -1,9 +1,13 @@
 package io.bluetape4k.workshop.messaging.fallback.publication
 
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.error
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.messaging.fallback.api.OrderPublicationStatus
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
 import io.bluetape4k.workshop.messaging.fallback.observability.OutboxMetrics
@@ -11,8 +15,8 @@ import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * order event 를 Kafka 로 직접 publish 하고 필요하면 durable row 로 fallback 합니다.
@@ -25,34 +29,41 @@ class OrderEventPublisher(
     private val eventPublicationRepository: EventPublicationRepository,
     private val outboxMetrics: OutboxMetrics,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     fun publishDirectOrFallback(event: OrderPlacedEvent): OrderPublicationStatus {
         if (!properties.directPublishEnabled) {
             val payload = objectMapper.writeValueAsString(event)
-            return storeFallback(event, payload, properties.directPublishAttempts, "DIRECT_DISABLED", "Direct publish disabled")
+            return storeFallback(
+                event,
+                payload,
+                properties.directPublishAttempts,
+                "DIRECT_DISABLED",
+                "Direct publish disabled"
+            )
         }
 
         val payload = objectMapper.writeValueAsString(event)
-        payload.toByteArray(Charsets.UTF_8).size
-            .requireInRange(0, properties.maxPayloadBytes, "orderPlacedPayload.bytes")
+        payload.toUtf8Bytes().size.requireInRange(0, properties.maxPayloadBytes, "orderPlacedPayload.bytes")
 
         var lastFailure: Exception? = null
         val deadline = System.nanoTime() + properties.directPublishTotalTimeout.toNanos()
 
         for (attempt in 1..properties.directPublishAttempts) {
-            val remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime())
+            log.debug { "publish event. event=$event, attempt=$attempt" }
+
+            val remainingMillis = (deadline - System.nanoTime()).nanos().toMillis()
             if (remainingMillis <= 0) break
 
             val timeoutMillis = minOf(properties.directPublishTimeout.toMillis(), remainingMillis)
-            var future: CompletableFuture<*>? = null
+            var promise: CompletableFuture<*>? = null
             try {
-                future = kafkaTemplate.send(properties.topic, event.eventId, payload)
-                future.get(timeoutMillis, TimeUnit.MILLISECONDS)
+                promise = kafkaTemplate.send(properties.topic, event.eventId, payload)
+                promise.get(timeoutMillis.milliseconds)
                 outboxMetrics.recordDirectPublish("success")
                 return OrderPublicationStatus.PUBLISHED_DIRECT
             } catch (e: TimeoutException) {
-                future?.cancel(true)
+                promise?.cancel(true)
                 lastFailure = e
                 outboxMetrics.recordDirectPublish("timeout")
                 log.warn { "order.event.direct-publish.failed eventId=${event.eventId} attempt=$attempt reason=timeout" }

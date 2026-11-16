@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import org.junit.jupiter.api.Test
 
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.Test
  * 잘못된 설정이 운영에 도달하지 못하도록 생성자가 유효하지 않은 구성을 조기에 거부하는지 검증한다.
  */
 class LeaderZookeeperPropertiesValidationTest {
+
+    companion object: KLogging()
 
     @Test
     fun `blank basePath throws IllegalArgumentException`() {

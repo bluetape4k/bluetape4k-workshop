@@ -15,8 +15,9 @@ import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.update
 import java.io.Serial
 import java.time.Clock
+import java.time.Instant
 
-class AdmissionExpired : IllegalStateException("admission_expired") {
+class AdmissionExpired: IllegalStateException("admission_expired") {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -24,23 +25,23 @@ class AdmissionExpired : IllegalStateException("admission_expired") {
 }
 
 /** Bluetape4k Exposed JDBC repository로 구현한 admission authority입니다. */
-class TicketAdmissionGrantRepository :
-    TicketExposedJdbcRepository<TicketAdmissionGrantEntity, Long>(TicketAdmissionGrantEntity::class.java) {
-    fun consume(transaction: TicketJdbcTransaction, command: ConsumeGrant, now: java.time.Instant) {
-        with(transaction) {
-            val updated = TicketAdmissionGrants.update({
-                (TicketAdmissionGrants.saleId eq command.saleId) and
+class TicketAdmissionGrantRepository:
+    TicketExposedJdbcRepository<TicketAdmissionGrantEntity, Long>(TicketAdmissionGrantEntity::class) {
+    fun consume(transaction: TicketJdbcTransaction, command: ConsumeGrant, now: Instant) {
+        val whereOp = {
+            (TicketAdmissionGrants.saleId eq command.saleId) and
                     (TicketAdmissionGrants.grantNonce eq command.grantNonce) and
                     (TicketAdmissionGrants.buyerSubjectId eq command.buyerSubjectId) and
                     (TicketAdmissionGrants.policyVersion eq command.policyVersion) and
                     TicketAdmissionGrants.consumedAttemptId.isNull() and
                     (TicketAdmissionGrants.expiresAt greater now)
-            }) {
-                it[consumedAttemptId] = command.attemptId
-                it[consumedAt] = now
-            }
-            if (updated != 1) throw AdmissionExpired()
         }
+
+        val updated = TicketAdmissionGrants.update(whereOp) {
+            it[consumedAttemptId] = command.attemptId
+            it[consumedAt] = now
+        }
+        if (updated != 1) throw AdmissionExpired()
     }
 }
 
@@ -49,9 +50,11 @@ class AdmissionService(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,
     private val grants: TicketAdmissionGrantRepository = TicketAdmissionGrantRepository(),
-) : AdmissionCommands, TransactionalAdmissionCommands {
+): AdmissionCommands, TransactionalAdmissionCommands {
     override fun consume(command: ConsumeGrant) {
-        jdbc.transaction { consume(this, command) }
+        jdbc.transaction {
+            consume(this, command)
+        }
     }
 
     override fun consume(transaction: TicketJdbcTransaction, command: ConsumeGrant) {

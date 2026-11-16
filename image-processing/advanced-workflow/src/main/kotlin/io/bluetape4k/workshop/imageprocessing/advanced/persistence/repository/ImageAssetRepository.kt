@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence.repository
 
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.mapper.toImageAssetDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageAssetStatus
@@ -19,7 +20,9 @@ import org.springframework.stereotype.Repository
  * - 모든 메서드는 Exposed `transaction {}` 또는 동등한 경계 안에서 호출해야 합니다.
  */
 @Repository
-class ImageAssetRepository : LongAuditableJdbcRepository<ImageAssetDTO, ImageAssetTable> {
+class ImageAssetRepository: LongAuditableJdbcRepository<ImageAssetDTO, ImageAssetTable> {
+
+    private companion object: KLogging()
 
     override val table = ImageAssetTable
 
@@ -53,6 +56,7 @@ class ImageAssetRepository : LongAuditableJdbcRepository<ImageAssetDTO, ImageAss
      * [auditedUpdateById]를 사용해 `updated_by`와 `updated_at`이 자동으로 설정되게 합니다.
      */
     fun updateStatus(id: Long, status: ImageAssetStatus) {
+
         auditedUpdateById(id) {
             it[ImageAssetTable.status] = status
         }

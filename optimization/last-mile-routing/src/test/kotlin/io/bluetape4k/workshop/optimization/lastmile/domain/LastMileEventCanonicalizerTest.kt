@@ -2,10 +2,13 @@ package io.bluetape4k.workshop.optimization.lastmile.domain
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class LastMileEventCanonicalizerTest {
+
+    companion object: KLogging()
 
     @Test
     fun `same canonical payload is duplicate regardless of map order`() {

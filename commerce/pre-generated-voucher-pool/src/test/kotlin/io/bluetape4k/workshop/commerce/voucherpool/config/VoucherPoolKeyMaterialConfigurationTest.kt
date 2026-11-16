@@ -9,6 +9,9 @@ import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.trimAllWhitespace
 import io.bluetape4k.workshop.commerce.voucherpool.application.AllocationService
 import io.bluetape4k.workshop.commerce.voucherpool.application.CampaignBatchCommandService
 import io.bluetape4k.workshop.commerce.voucherpool.application.RedemptionService
@@ -25,17 +28,27 @@ import io.bluetape4k.workshop.commerce.voucherpool.worker.VoucherPoolWorkers
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import tools.jackson.databind.ObjectMapper
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.nio.file.attribute.PosixFilePermission
-import java.util.Base64
-import java.util.function.Supplier
+import java.util.*
 import javax.sql.DataSource
 
 internal class VoucherPoolKeyMaterialConfigurationTest {
+
+    private companion object: KLogging() {
+        const val MARKER = "raw-key-marker-must-never-escape"
+        const val PRODUCTION_STABLE_SEED = 101
+        const val PRODUCTION_RING_SEED = 111
+
+        val MAPPER: ObjectMapper = Jackson.defaultJsonMapper
+    }
+
     @TempDir
     lateinit var directory: Path
 
@@ -46,6 +59,7 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
 
         val runtimeKeys = provider.load()
 
+        log.debug { "runtimeKeys: $runtimeKeys" }
         runtimeKeys.provenance shouldBeEqualTo VoucherPoolKeyProvenance.MOUNTED_SECRET
         runtimeKeys.kekRing.current.version shouldBeEqualTo "kek-v1"
         runtimeKeys.toString() shouldNotContain MARKER
@@ -66,7 +80,9 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 RedemptionService::class.java,
                 JdbcVoucherPoolWorkerRepository::class.java,
                 VoucherPoolWorkers::class.java,
-            ).forEach { type -> context.getBeansOfType(type) shouldHaveSize 1 }
+            ).forEach { type ->
+                context.getBeansOfType(type) shouldHaveSize 1
+            }
         }
     }
 
@@ -80,9 +96,9 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 VoucherPoolTestKeyMaterialConfiguration::class.java,
             ).run { context ->
                 context.startupFailure.shouldBeNull()
-                context.getBeansOfType(VoucherPoolKeyMaterialProvider::class.java) shouldHaveSize 1
-                context.getBean(VoucherPoolRuntimeKeys::class.java).provenance shouldBeEqualTo
-                    VoucherPoolKeyProvenance.TEST_FIXTURE
+
+                context.getBeansOfType<VoucherPoolKeyMaterialProvider>() shouldHaveSize 1
+                context.getBean<VoucherPoolRuntimeKeys>().provenance shouldBeEqualTo VoucherPoolKeyProvenance.TEST_FIXTURE
             }
     }
 
@@ -95,6 +111,7 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 VoucherPoolServiceConfiguration::class.java,
             ).run { context ->
                 val failure = context.startupFailure.shouldNotBeNull()
+                log.debug { "failure: ${failure.causeMessages()}" }
                 failure.causeMessages() shouldContain "VoucherPoolKeyMaterialProvider"
             }
     }
@@ -107,11 +124,12 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         baseServiceContext()
             .withBean(
                 VoucherPoolKeyFileLocator::class.java,
-                Supplier { VoucherPoolKeyFileLocator { null } },
+                { VoucherPoolKeyFileLocator { null } },
             ).withUserConfiguration(
                 VoucherPoolKeyMaterialConfiguration::class.java,
                 VoucherPoolServiceConfiguration::class.java,
             ).run { context ->
+                log.debug { "startupFailure: ${context.startupFailure.causeMessages()}" }
                 context.startupFailure.causeMessages() shouldContain "VOUCHER_POOL_KEY_MATERIAL_MISSING_LOCATION"
             }
     }
@@ -128,11 +146,22 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         val readable = writeSecret(validJson(), "group-readable.json")
         Files.setPosixFilePermissions(
             readable,
-            setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ),
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.GROUP_READ
+            ),
         )
         assertRedactedFailure(mountedProvider(readable))
 
-        assertRedactedFailure(mountedProvider(writeSecret("x".repeat(65 * 1024), "oversized.json")))
+        assertRedactedFailure(
+            mountedProvider(
+                writeSecret(
+                    content = "x".repeat(65 * 1024),
+                    name = "oversized.json"
+                )
+            )
+        )
     }
 
     @Test
@@ -140,8 +169,8 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         val wrongOwner = writeSecret(validJson(), "wrong-owner.json")
         assertRedactedFailure(
             MountedSecretVoucherPoolKeyMaterialProvider(
-                VoucherPoolKeyFileLocator { wrongOwner.toString() },
-                MAPPER,
+                locator = { wrongOwner.toString() },
+                mapper = MAPPER,
                 expectedOwnerId = { Long.MAX_VALUE },
             ),
         )
@@ -150,8 +179,8 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         val replacement = writeSecret(validJson(201), "replace-source.json")
         assertRedactedFailure(
             MountedSecretVoucherPoolKeyMaterialProvider(
-                VoucherPoolKeyFileLocator { original.toString() },
-                MAPPER,
+                locator = { original.toString() },
+                mapper = MAPPER,
                 beforeRead = { Files.move(replacement, original, REPLACE_EXISTING) },
             ),
         )
@@ -161,6 +190,7 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
     fun `mutable JVM user name cannot influence the OS owner decision`() {
         val secret = writeSecret(validJson(), "user-name-independent.json")
         val previous = System.getProperty("user.name")
+
         try {
             System.setProperty("user.name", "forged-owner-name")
             mountedProvider(secret).load().shouldNotBeNull()
@@ -177,13 +207,18 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
     fun `malformed unknown and missing purpose JSON fail closed`() {
         assertRedactedFailure(mountedProvider(writeSecret("{", "malformed.json")))
         assertRedactedFailure(
-            mountedProvider(writeSecret(validJson().replaceFirst("{", "{\"unexpected\":true,"), "unknown.json")),
+            mountedProvider(
+                writeSecret(
+                    content = validJson().replaceFirst("{", "{\"unexpected\":true,"),
+                    name = "unknown.json"
+                )
+            ),
         )
         assertRedactedFailure(
             mountedProvider(
                 writeSecret(
-                    validJson().replace(",\"AUDIT\":${ring(141)}", ""),
-                    "missing-purpose.json",
+                    content = validJson().replace(",\"AUDIT\":${ring(141)}", ""),
+                    name = "missing-purpose.json",
                 ),
             ),
         )
@@ -194,49 +229,52 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         assertRedactedFailure(
             mountedProvider(
                 writeSecret(
-                    validJson().replace(
+                    content = validJson().replace(
                         material(PRODUCTION_STABLE_SEED),
                         Base64.getEncoder().encodeToString(ByteArray(31) { (it + 1).toByte() }),
                     ),
-                    "short.json",
+                    name = "short.json",
                 ),
             ),
         )
         assertRedactedFailure(
             mountedProvider(
                 writeSecret(
-                    validJson().replaceFirst("\"retained\":[]", "\"retained\":[${key(PRODUCTION_RING_SEED)}]"),
-                    "duplicate.json",
-                ),
-            ),
-        )
-        assertRedactedFailure(
-            mountedProvider(
-                writeSecret(
-                    validJson().replaceFirst("\"version\":$PRODUCTION_STABLE_SEED", "\"version\":0"),
-                    "zero-version.json",
-                ),
-            ),
-        )
-        assertRedactedFailure(
-            mountedProvider(
-                writeSecret(
-                    validJson().replace(
-                        material(PRODUCTION_STABLE_SEED),
-                        Base64.getEncoder().encodeToString(ByteArray(32)),
+                    content = validJson().replaceFirst(
+                        "\"retained\":[]",
+                        "\"retained\":[${key(PRODUCTION_RING_SEED)}]"
                     ),
-                    "zero.json",
+                    name = "duplicate.json",
                 ),
             ),
         )
         assertRedactedFailure(
             mountedProvider(
                 writeSecret(
-                    validJson().replace(
-                        material(PRODUCTION_STABLE_SEED),
-                        Base64.getEncoder().encodeToString(ByteArray(32) { 7 }),
+                    content = validJson().replaceFirst("\"version\":$PRODUCTION_STABLE_SEED", "\"version\":0"),
+                    name = "zero-version.json",
+                ),
+            ),
+        )
+        assertRedactedFailure(
+            mountedProvider(
+                writeSecret(
+                    content = validJson().replace(
+                        oldValue = material(PRODUCTION_STABLE_SEED),
+                        newValue = Base64.getEncoder().encodeToString(ByteArray(32)),
                     ),
-                    "repeating.json",
+                    name = "zero.json",
+                ),
+            ),
+        )
+        assertRedactedFailure(
+            mountedProvider(
+                writeSecret(
+                    content = validJson().replace(
+                        oldValue = material(PRODUCTION_STABLE_SEED),
+                        newValue = Base64.getEncoder().encodeToString(ByteArray(32) { 7 }),
+                    ),
+                    name = "repeating.json",
                 ),
             ),
         )
@@ -246,15 +284,20 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
     fun `known fixture material and unsafe key labels fail closed`() {
         listOf("test", "fixture", "sample", "demo", "default", "local", "example").forEach { label ->
             assertRedactedFailure(
-                mountedProvider(writeSecret(validJson().replace("kek-v1", "$label-kek-v1"), "$label-label.json")),
+                mountedProvider(
+                    writeSecret(
+                        content = validJson().replace("kek-v1", "$label-kek-v1"),
+                        name = "$label-label.json"
+                    )
+                ),
             )
         }
         VOUCHER_POOL_TEST_KEY_MATERIAL_SEEDS.forEach { fixtureSeed ->
             assertRedactedFailure(
                 mountedProvider(
                     writeSecret(
-                        validJson().replace(material(PRODUCTION_STABLE_SEED), material(fixtureSeed)),
-                        "fixture-material-$fixtureSeed.json",
+                        content = validJson().replace(material(PRODUCTION_STABLE_SEED), material(fixtureSeed)),
+                        name = "fixture-material-$fixtureSeed.json",
                     ),
                 ),
             )
@@ -265,7 +308,7 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         baseServiceContext()
             .withBean(
                 VoucherPoolKeyFileLocator::class.java,
-                Supplier { VoucherPoolKeyFileLocator { secret.toString() } },
+                { VoucherPoolKeyFileLocator { secret.toString() } },
             )
             .withUserConfiguration(
                 VoucherPoolKeyMaterialConfiguration::class.java,
@@ -278,16 +321,19 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 "workshop.voucher-pool.startup-initializer-enabled=false",
                 "workshop.voucher-pool.worker-dispatcher-enabled=false",
             )
-            .withBean(ObjectMapper::class.java, Supplier { MAPPER })
-            .withBean(DataSource::class.java, Supplier { mockk(relaxed = true) })
-            .withBean(VoucherPoolJdbcExecutor::class.java, Supplier { mockk(relaxed = true) })
+            .withBean(ObjectMapper::class.java, { MAPPER })
+            .withBean(DataSource::class.java, { mockk(relaxed = true) })
+            .withBean(VoucherPoolJdbcExecutor::class.java, { mockk(relaxed = true) })
 
     private fun mountedProvider(path: Path): MountedSecretVoucherPoolKeyMaterialProvider =
-        MountedSecretVoucherPoolKeyMaterialProvider(VoucherPoolKeyFileLocator { path.toString() }, MAPPER)
+        MountedSecretVoucherPoolKeyMaterialProvider({ path.toString() }, MAPPER)
 
     private fun assertRedactedFailure(provider: VoucherPoolKeyMaterialProvider) {
         val failure = runCatching(provider::load).exceptionOrNull().shouldNotBeNull()
+
         val rendered = failure.toString()
+
+        log.debug { "rendered: $rendered" }
         rendered shouldNotContain MARKER
         rendered shouldNotContain material(1)
         rendered shouldNotContain directory.toString()
@@ -295,28 +341,60 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
     }
 
     private fun Throwable?.causeMessages(): String =
-        generateSequence(this) { it.cause }.joinToString(" ") { it.message.orEmpty() }
+        generateSequence(this) { it.cause }
+            .joinToString(" ") { it.message.orEmpty() }
 
     private fun writeSecret(content: String, name: String = "keys.json"): Path =
-        directory.resolve(name).also { path ->
-            Files.writeString(path, content)
-            Files.setPosixFilePermissions(path, setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE))
-        }.toRealPath()
+        directory.resolve(name)
+            .also { path ->
+                Files.writeString(path, content)
+                Files.setPosixFilePermissions(
+                    path,
+                    setOf(
+                        PosixFilePermission.OWNER_READ,
+                        PosixFilePermission.OWNER_WRITE
+                    )
+                )
+            }
+            .toRealPath()
 
     private fun validJson(offset: Int = 0): String =
-        """{"stableDedup":${key(PRODUCTION_STABLE_SEED + offset)},"commandTombstone":${key(102 + offset)},"rotating":{"VERIFICATION":${ring(PRODUCTION_RING_SEED + offset)},"USER_IDENTITY":${ring(121 + offset)},"REDIS_SIGNAL":${ring(131 + offset)},"AUDIT":${ring(141 + offset)}},"kek":{"current":{"version":"kek-v1","material":"${material(151 + offset)}"},"retained":[]}}"""
+        """
+        {
+            "stableDedup":${key(PRODUCTION_STABLE_SEED + offset)},
+            "commandTombstone":${key(102 + offset)},
+            "rotating": {
+                "VERIFICATION":${ring(PRODUCTION_RING_SEED + offset)},
+                "USER_IDENTITY":${ring(121 + offset)},
+                "REDIS_SIGNAL":${ring(131 + offset)},
+                "AUDIT":${ring(141 + offset)}
+            },
+            "kek":{
+                "current":{
+                    "version":"kek-v1",
+                    "material":"${material(151 + offset)}"},
+                    "retained":[]
+            }
+        }
+        """.trimAllWhitespace()
 
-    private fun ring(version: Int): String = """{"current":${key(version)},"retained":[]}"""
+    private fun ring(version: Int): String =
+        """
+        {
+             "current":${key(version)},
+             "retained":[]
+        }
+        """.trimAllWhitespace()
 
-    private fun key(version: Int): String = """{"version":$version,"material":"${material(version)}"}"""
+    private fun key(version: Int): String =
+        """
+        {
+            "version":$version,
+            "material":"${material(version)}"
+        }
+        """.trimAllWhitespace()
 
     private fun material(seed: Int): String =
         Base64.getEncoder().encodeToString(ByteArray(32) { index -> (seed + index).toByte() })
 
-    private companion object {
-        const val MARKER = "raw-key-marker-must-never-escape"
-        const val PRODUCTION_STABLE_SEED = 101
-        const val PRODUCTION_RING_SEED = 111
-        val MAPPER: ObjectMapper = Jackson.defaultJsonMapper
-    }
 }

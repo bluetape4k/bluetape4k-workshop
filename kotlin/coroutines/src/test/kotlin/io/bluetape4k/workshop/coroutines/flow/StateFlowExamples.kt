@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.flow
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
@@ -11,9 +12,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * 상태를 관리하는 [MutableStateFlow] 에 대한 예제
@@ -34,10 +35,10 @@ class StateFlowExamples {
                 .log("#1")
                 .collect { changeCounter1.incrementAndGet() }
         }
-        delay(10)
+        delay(10.milliseconds)
         state.value = 2
 
-        delay(10)
+        delay(10.milliseconds)
 
         // 상태가 변경되면, collect 를 수행합니다.
         launch {
@@ -45,10 +46,10 @@ class StateFlowExamples {
                 .log("#2")
                 .collect { changeCounter2.incrementAndGet() }
         }
-        delay(10)
+        delay(10.milliseconds)
         state.value = 3
 
-        delay(10)
+        delay(10.milliseconds)
 
         // collector1 에서는 state 값이 1 -> 2 -> 3 으로 변경되었으므로 3번 호출됩니다.
         changeCounter1.get() shouldBeEqualTo 3
@@ -63,7 +64,7 @@ class StateFlowExamples {
     @Test
     fun `stateIn - 일반 flow 를 StateFlow로 변환하기`() = runTest {
         val flow = flowOf("A", "B", "C")
-            .onEach { delay(100) }
+            .onEach { delay(100.milliseconds) }
             .log("source")
 
         // stateIn 을 이용하여 일반 Flow를 StateFlow로 변환합니다.
@@ -80,7 +81,7 @@ class StateFlowExamples {
                 .collect { receivedCounter.incrementAndGet() }
         }
 
-        delay(500)
+        delay(500.milliseconds)
         log.info { "State=${stateFlow.value}" }
 
         // state 가 A -> B -> C 로 3번 변경되었다 

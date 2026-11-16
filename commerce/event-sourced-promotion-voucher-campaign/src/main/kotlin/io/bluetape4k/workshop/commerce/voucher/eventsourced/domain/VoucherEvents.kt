@@ -5,7 +5,7 @@ import io.bluetape4k.support.requireLt
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 private const val TENANT_ID_MAX_LENGTH = 64
 
@@ -14,12 +14,11 @@ value class TenantId private constructor(val value: String) {
     companion object {
         operator fun invoke(value: String): TenantId {
             val validValue = value.requireNotBlank("tenantId")
-            val validLength =
-                validValue.length.requireInRange(
-                    1,
-                    TENANT_ID_MAX_LENGTH,
-                    "tenantId.length",
-                )
+            val validLength = validValue.length.requireInRange(
+                1,
+                TENANT_ID_MAX_LENGTH,
+                "tenantId.length",
+            )
             return TenantId(validValue.take(validLength))
         }
     }
@@ -41,7 +40,7 @@ internal sealed interface CampaignEvent {
         val capacity: Int,
         val perUserLimit: Int,
         val redemptionTtlSeconds: Long,
-    ) : CampaignEvent {
+    ): CampaignEvent {
         init {
             startsAt.requireLt(endsAt, "startsAt")
             capacity.requirePositiveNumber("capacity")
@@ -50,9 +49,9 @@ internal sealed interface CampaignEvent {
         }
     }
 
-    data object CampaignActivated : CampaignEvent
+    data object CampaignActivated: CampaignEvent
 
-    data class CampaignCapacityChanged(val capacity: Int) : CampaignEvent {
+    data class CampaignCapacityChanged(val capacity: Int): CampaignEvent {
         init {
             capacity.requirePositiveNumber("capacity")
         }
@@ -61,7 +60,7 @@ internal sealed interface CampaignEvent {
     data class VoucherCapacityReserved(
         val voucherId: UUID,
         val policyVersion: Long,
-    ) : CampaignEvent {
+    ): CampaignEvent {
         init {
             policyVersion.requirePositiveNumber("policyVersion")
         }
@@ -102,7 +101,7 @@ internal sealed interface VoucherEvent {
         val voucherId: UUID,
         val subjectId: UUID,
         val codeKeyVersions: VoucherCodeKeyVersions,
-    ) : VoucherEvent {
+    ): VoucherEvent {
         companion object {
             operator fun invoke(
                 tenantId: TenantId,
@@ -124,17 +123,17 @@ internal sealed interface VoucherEvent {
     data class VoucherAllocated(
         val policyVersion: Long,
         val expiresAt: Instant,
-    ) : VoucherEvent {
+    ): VoucherEvent {
         init {
             policyVersion.requirePositiveNumber("policyVersion")
         }
     }
 
-    data class VoucherRedeemed(val redeemedAt: Instant) : VoucherEvent
+    data class VoucherRedeemed(val redeemedAt: Instant): VoucherEvent
 
-    data object VoucherReleased : VoucherEvent
+    data object VoucherReleased: VoucherEvent
 
-    data object VoucherExpired : VoucherEvent
+    data object VoucherExpired: VoucherEvent
 
-    data object VoucherRevoked : VoucherEvent
+    data object VoucherRevoked: VoucherEvent
 }

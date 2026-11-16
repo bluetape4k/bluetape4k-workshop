@@ -5,10 +5,14 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.reservation.domain.WaitlistState
 import org.junit.jupiter.api.Test
 
 class WaitlistEntryRepositoryTest {
+
+    companion object: KLogging()
+
     @Test
     fun `join allocates stable FIFO sequence and snapshots preserve that order on PostgreSQL`() {
         withTables(TestDB.POSTGRESQL, *reservationTables) {
@@ -39,6 +43,7 @@ class WaitlistEntryRepositoryTest {
                 from = WaitlistState.WAITING,
                 to = WaitlistState.CANCELLED
             ).shouldBeFalse()
+
             repository.transition(
                 id = entry.id,
                 ownerDigest = entry.ownerDigest,
@@ -46,6 +51,7 @@ class WaitlistEntryRepositoryTest {
                 from = WaitlistState.WAITING,
                 to = WaitlistState.CANCELLED
             ).shouldBeTrue()
+
             repository.transition(
                 id = entry.id,
                 ownerDigest = entry.ownerDigest,

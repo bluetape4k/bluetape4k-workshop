@@ -5,7 +5,13 @@ import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucherpool.admission.PermitLane
 import io.bluetape4k.workshop.commerce.voucherpool.admission.PermitLaneConfig
@@ -23,8 +29,8 @@ import org.springframework.boot.env.YamlPropertySourceLoader
 import org.springframework.core.env.MutablePropertySources
 import org.springframework.core.env.PropertySourcesPropertyResolver
 import org.springframework.core.io.ClassPathResource
-import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.CannotCreateTransactionException
+import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionTimedOutException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionStatus
@@ -33,7 +39,7 @@ import java.sql.SQLException
 import java.sql.SQLTimeoutException
 import java.sql.SQLTransientConnectionException
 import java.time.Duration
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -41,6 +47,9 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 internal class RuntimeContractTest {
+
+    companion object: KLogging()
+
     @Test
     fun `runtime uses Java 25 virtual threads and excludes the JDK21 provider`() {
         Runtime.version().feature() shouldBeEqualTo 25
@@ -107,36 +116,40 @@ internal class RuntimeContractTest {
 
     @Test
     fun `JDBC executor owns independent acquisition lock and transaction budgets`() {
-        val executor = VoucherPoolJdbcExecutor(DatabasePermitGate.default(16), RecordingTransactionManager())
+        val executor = VoucherPoolJdbcExecutor(
+            DatabasePermitGate.default(16),
+            RecordingTransactionManager()
+        )
 
-        executor.timeouts shouldBeEqualTo
-            VoucherPoolJdbcTimeouts(
-                connectionAcquisition = Duration.ofSeconds(2),
-                foregroundTransaction = Duration.ofSeconds(5),
-                operatorTransaction = Duration.ofSeconds(5),
-                workerChunkTransaction = Duration.ofSeconds(10),
-                sseTransaction = Duration.ofSeconds(5),
-                foregroundLock = Duration.ofSeconds(5),
-                operatorLock = Duration.ofSeconds(5),
-                sseLock = Duration.ofSeconds(5),
-            )
+        log.debug { "executor.timeouts=${executor.timeouts}" }
+
+        executor.timeouts shouldBeEqualTo VoucherPoolJdbcTimeouts(
+            connectionAcquisition = 2.seconds(),
+            foregroundTransaction = 5.seconds(),
+            operatorTransaction = 5.seconds(),
+            workerChunkTransaction = 10.seconds(),
+            sseTransaction = 5.seconds(),
+            foregroundLock = 5.seconds(),
+            operatorLock = 5.seconds(),
+            sseLock = 5.seconds(),
+        )
     }
 
     @Test
     fun `JDBC timeout configuration maps and validates the SSE lane`() {
         val timeouts =
             VoucherPoolJdbcTimeouts(
-                sseTransaction = Duration.ofSeconds(7),
-                sseLock = Duration.ofSeconds(3),
+                sseTransaction = 7.seconds(),
+                sseLock = 3.seconds(),
             )
 
-        timeouts.transactionTimeout(JdbcExecutionLane.SSE) shouldBeEqualTo Duration.ofSeconds(7)
-        timeouts.lockTimeout(JdbcExecutionLane.SSE) shouldBeEqualTo Duration.ofSeconds(3)
+        timeouts.transactionTimeout(JdbcExecutionLane.SSE) shouldBeEqualTo 7.seconds()
+        timeouts.lockTimeout(JdbcExecutionLane.SSE) shouldBeEqualTo 3.seconds()
         assertFailsWith<IllegalArgumentException> {
             VoucherPoolJdbcTimeouts(sseTransaction = Duration.ZERO)
         }
         assertFailsWith<IllegalArgumentException> {
-            VoucherPoolJdbcTimeouts(sseLock = Duration.ofNanos(1))
+            VoucherPoolJdbcTimeouts(sseLock = 1.nanos())
         }
     }
 
@@ -152,28 +165,27 @@ internal class RuntimeContractTest {
 
         val acquisition =
             assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.foregroundTransaction<Unit> { failConnectionAcquisition() }
+                executor.foregroundTransaction { failConnectionAcquisition() }
             }
         acquisition.phase shouldBeEqualTo JdbcTimeoutPhase.ACQUISITION
 
         val lock =
             assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.operatorTransaction<Unit> { failLockAcquisition() }
+                executor.operatorTransaction { failLockAcquisition() }
             }
         lock.phase shouldBeEqualTo JdbcTimeoutPhase.LOCK
 
         val transaction =
             assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.workerTransaction<Unit> { failTransactionDeadline() }
+                executor.workerTransaction { failTransactionDeadline() }
             }
         transaction.phase shouldBeEqualTo JdbcTimeoutPhase.TRANSACTION
 
-        metrics.timeouts shouldBeEqualTo
-            listOf(
-                JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.ACQUISITION,
-                JdbcExecutionLane.OPERATOR to JdbcTimeoutPhase.LOCK,
-                JdbcExecutionLane.WORKER to JdbcTimeoutPhase.TRANSACTION,
-            )
+        metrics.timeouts.toList() shouldBeEqualTo listOf(
+            JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.ACQUISITION,
+            JdbcExecutionLane.OPERATOR to JdbcTimeoutPhase.LOCK,
+            JdbcExecutionLane.WORKER to JdbcTimeoutPhase.TRANSACTION,
+        )
     }
 
     @Test
@@ -184,12 +196,11 @@ internal class RuntimeContractTest {
 
         val failure =
             assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.foregroundTransaction<Unit> { throw exposedFailure }
+                executor.foregroundTransaction { throw exposedFailure }
             }
 
         failure.phase shouldBeEqualTo JdbcTimeoutPhase.ACQUISITION
-        metrics.timeouts shouldBeEqualTo
-            listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.ACQUISITION)
+        metrics.timeouts.toList() shouldBeEqualTo listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.ACQUISITION)
     }
 
     @Test
@@ -199,37 +210,33 @@ internal class RuntimeContractTest {
         val lockFailure = SQLException("lock", "55P03")
         val exposedFailure = exposedFailure(IllegalStateException("repository wrapper", lockFailure))
 
-        val failure =
-            assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.operatorTransaction<Unit> { throw exposedFailure }
-            }
+        val failure = assertFailsWith<VoucherPoolJdbcTimeoutException> {
+            executor.operatorTransaction { throw exposedFailure }
+        }
 
         failure.phase shouldBeEqualTo JdbcTimeoutPhase.LOCK
-        metrics.timeouts shouldBeEqualTo listOf(JdbcExecutionLane.OPERATOR to JdbcTimeoutPhase.LOCK)
+        metrics.timeouts.toList() shouldBeEqualTo listOf(JdbcExecutionLane.OPERATOR to JdbcTimeoutPhase.LOCK)
     }
 
     @Test
     fun `JDBC executor maps generic acquisition wrappers and records one metric`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
-        val failureCause =
-            RepositoryRuntimeException(
-                "service wrapper",
-                CannotCreateTransactionException(
-                    "transaction acquisition",
-                    SQLTransientConnectionException("pool acquisition"),
-                ),
-            )
+        val failureCause = RepositoryRuntimeException(
+            "service wrapper",
+            CannotCreateTransactionException(
+                "transaction acquisition",
+                SQLTransientConnectionException("pool acquisition"),
+            ),
+        )
 
-        val failure =
-            assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.foregroundTransaction<Unit> { throw failureCause }
-            }
+        val failure = assertFailsWith<VoucherPoolJdbcTimeoutException> {
+            executor.foregroundTransaction { throw failureCause }
+        }
 
         failure.phase shouldBeEqualTo JdbcTimeoutPhase.ACQUISITION
         failure.cause shouldBeEqualTo failureCause
-        metrics.timeouts shouldBeEqualTo
-            listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.ACQUISITION)
+        metrics.timeouts.toList() shouldBeEqualTo listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.ACQUISITION)
     }
 
     @Test
@@ -237,16 +244,14 @@ internal class RuntimeContractTest {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
 
-        val failure =
-            assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.workerTransaction<Unit> {
-                    throw RepositoryRuntimeException("repository wrapper", SQLTimeoutException("statement deadline"))
-                }
+        val failure = assertFailsWith<VoucherPoolJdbcTimeoutException> {
+            executor.workerTransaction {
+                throw RepositoryRuntimeException("repository wrapper", SQLTimeoutException("statement deadline"))
             }
+        }
 
         failure.phase shouldBeEqualTo JdbcTimeoutPhase.TRANSACTION
-        metrics.timeouts shouldBeEqualTo
-            listOf(JdbcExecutionLane.WORKER to JdbcTimeoutPhase.TRANSACTION)
+        metrics.timeouts.toList() shouldBeEqualTo listOf(JdbcExecutionLane.WORKER to JdbcTimeoutPhase.TRANSACTION)
     }
 
     @Test
@@ -254,16 +259,14 @@ internal class RuntimeContractTest {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
 
-        val failure =
-            assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                executor.operatorTransaction<Unit> {
-                    throw RepositoryRuntimeException("repository wrapper", SQLException("query cancelled", "57014"))
-                }
+        val failure = assertFailsWith<VoucherPoolJdbcTimeoutException> {
+            executor.operatorTransaction {
+                throw RepositoryRuntimeException("repository wrapper", SQLException("query cancelled", "57014"))
             }
+        }
 
         failure.phase shouldBeEqualTo JdbcTimeoutPhase.TRANSACTION
-        metrics.timeouts shouldBeEqualTo
-            listOf(JdbcExecutionLane.OPERATOR to JdbcTimeoutPhase.TRANSACTION)
+        metrics.timeouts.toList() shouldBeEqualTo listOf(JdbcExecutionLane.OPERATOR to JdbcTimeoutPhase.TRANSACTION)
     }
 
     @Test
@@ -272,10 +275,9 @@ internal class RuntimeContractTest {
         val executor = jdbcExecutor(metrics = metrics)
         val unknown = RepositoryRuntimeException("service wrapper", IllegalArgumentException("unknown"))
 
-        val failure =
-            assertFailsWith<RuntimeException> {
-                executor.foregroundTransaction<Unit> { throw unknown }
-            }
+        val failure = assertFailsWith<RuntimeException> {
+            executor.foregroundTransaction { throw unknown }
+        }
 
         failure shouldBeEqualTo unknown
         metrics.timeouts.shouldBeEmpty()
@@ -284,91 +286,84 @@ internal class RuntimeContractTest {
     @Test
     fun `JDBC timeout configuration rejects sub-millisecond lock timeout`() {
         assertFailsWith<IllegalArgumentException> {
-            VoucherPoolJdbcTimeouts(foregroundLock = Duration.ofNanos(1))
+            VoucherPoolJdbcTimeouts(foregroundLock = 1.nanos())
         }
     }
 
     @Test
     fun `JDBC executor maps permit timeout and records one metric`() {
-        val gate =
-            DatabasePermitGate(
-                hikariMaximumPoolSize = 4,
-                configs =
-                    mapOf(
-                        PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
-                        PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
-                        PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
-                    ),
-            )
+        val gate = DatabasePermitGate(
+            hikariMaximumPoolSize = 4,
+            configs =
+                mapOf(
+                    PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
+                    PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
+                    PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
+                ),
+        )
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(gate = gate, metrics = metrics)
         val holderEntered = CountDownLatch(1)
         val holderRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { virtualExecutor ->
-            val holder =
-                virtualExecutor.submit {
-                    gate.withForegroundPermit {
-                        holderEntered.countDown()
-                        holderRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            val holder = virtualExecutor.submit {
+                gate.withForegroundPermit {
+                    holderEntered.countDown()
+                    holderRelease.await(5.seconds).shouldBeTrue()
+                }
+            }
+            holderEntered.await(5.seconds).shouldBeTrue()
+            try {
+                val failure = assertFailsWith<VoucherPoolJdbcTimeoutException> {
+                    executor.foregroundTransaction {
+                        error("foreground permit unexpectedly acquired")
                     }
                 }
-            holderEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
-            try {
-                val failure =
-                    assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                        executor.foregroundTransaction<Unit> { error("foreground permit unexpectedly acquired") }
-                    }
                 failure.phase shouldBeEqualTo JdbcTimeoutPhase.PERMIT
-                metrics.timeouts shouldBeEqualTo
-                    listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.PERMIT)
+                metrics.timeouts.toList() shouldBeEqualTo listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.PERMIT)
             } finally {
                 holderRelease.countDown()
-                holder.get(5, TimeUnit.SECONDS)
+                holder.get(5.seconds)
             }
         }
     }
 
     @Test
     fun `SSE JDBC lane is isolated from foreground permits and reports SSE timeout metrics`() {
-        val gate =
-            DatabasePermitGate(
-                hikariMaximumPoolSize = 4,
-                configs =
-                    mapOf(
-                        PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
-                        PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
-                        PermitLane.SSE to PermitLaneConfig(1, 25.milliseconds),
-                    ),
-            )
+        val gate = DatabasePermitGate(
+            hikariMaximumPoolSize = 4,
+            configs = mapOf(
+                PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
+                PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
+                PermitLane.SSE to PermitLaneConfig(1, 25.milliseconds),
+            ),
+        )
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(gate = gate, metrics = metrics)
         val holderEntered = CountDownLatch(1)
         val holderRelease = CountDownLatch(1)
 
         VirtualThreads.executorService().use { virtualExecutor ->
-            val holder =
-                virtualExecutor.submit {
-                    gate.withSsePermit {
-                        holderEntered.countDown()
-                        holderRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
-                    }
+            val holder = virtualExecutor.submit {
+                gate.withSsePermit {
+                    holderEntered.countDown()
+                    holderRelease.await(5.seconds).shouldBeTrue()
                 }
-            holderEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            }
+            holderEntered.await(5.seconds).shouldBeTrue()
             try {
                 executor.foregroundTransaction { "foreground" } shouldBeEqualTo "foreground"
 
-                val failure =
-                    assertFailsWith<VoucherPoolJdbcTimeoutException> {
-                        executor.sseTransaction<Unit> { error("SSE permit unexpectedly acquired") }
-                    }
+                val failure = assertFailsWith<VoucherPoolJdbcTimeoutException> {
+                    executor.sseTransaction { error("SSE permit unexpectedly acquired") }
+                }
                 failure.lane shouldBeEqualTo JdbcExecutionLane.SSE
                 failure.phase shouldBeEqualTo JdbcTimeoutPhase.PERMIT
-                metrics.timeouts shouldBeEqualTo
-                    listOf(JdbcExecutionLane.SSE to JdbcTimeoutPhase.PERMIT)
+                metrics.timeouts.toList() shouldBeEqualTo listOf(JdbcExecutionLane.SSE to JdbcTimeoutPhase.PERMIT)
             } finally {
                 holderRelease.countDown()
-                holder.get(5, TimeUnit.SECONDS)
+                holder.get(5.seconds)
             }
         }
     }
@@ -384,22 +379,20 @@ internal class RuntimeContractTest {
         second.initCause(first)
         val exposedFailure = exposedFailure(first)
 
-        val failure =
-            assertFailsWith<java.lang.reflect.UndeclaredThrowableException> {
-                executor.foregroundTransaction<Unit> { throw exposedFailure }
-            }
+        val failure = assertFailsWith<java.lang.reflect.UndeclaredThrowableException> {
+            executor.foregroundTransaction { throw exposedFailure }
+        }
 
         failure.undeclaredThrowable shouldBeEqualTo exposedFailure
         metrics.timeouts.shouldBeEmpty()
     }
 
     private fun applicationProperties(): PropertySourcesPropertyResolver {
-        val sources =
-            MutablePropertySources().apply {
-                YamlPropertySourceLoader()
-                    .load("voucher-pool", ClassPathResource("application.yml"))
-                    .forEach(::addLast)
-            }
+        val sources = MutablePropertySources().apply {
+            YamlPropertySourceLoader()
+                .load("voucher-pool", ClassPathResource("application.yml"))
+                .forEach(::addLast)
+        }
         return PropertySourcesPropertyResolver(sources)
     }
 
@@ -422,7 +415,7 @@ internal class RuntimeContractTest {
             metrics = metrics,
         )
 
-    private class RecordingTransactionManager : AbstractPlatformTransactionManager() {
+    private class RecordingTransactionManager: AbstractPlatformTransactionManager() {
         var commits: Int = 0
         var rollbacks: Int = 0
 
@@ -442,8 +435,8 @@ internal class RuntimeContractTest {
         }
     }
 
-    private class RecordingJdbcMetrics : VoucherPoolJdbcMetrics {
-        val timeouts = CopyOnWriteArrayList<Pair<JdbcExecutionLane, JdbcTimeoutPhase>>()
+    private class RecordingJdbcMetrics: VoucherPoolJdbcMetrics {
+        val timeouts = ConcurrentLinkedQueue<Pair<JdbcExecutionLane, JdbcTimeoutPhase>>()
 
         override fun timedOut(
             lane: JdbcExecutionLane,
@@ -456,5 +449,5 @@ internal class RuntimeContractTest {
     private class RepositoryRuntimeException(
         message: String,
         cause: Throwable,
-    ) : RuntimeException(message, cause)
+    ): RuntimeException(message, cause)
 }

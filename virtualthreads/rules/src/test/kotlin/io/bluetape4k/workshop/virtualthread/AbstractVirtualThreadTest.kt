@@ -6,11 +6,12 @@ import kotlinx.coroutines.delay
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 @EnabledOnJre(JRE.JAVA_21, JRE.JAVA_25)
 abstract class AbstractVirtualThreadTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
 
         @JvmStatic
         protected fun sleep(millis: Int) {
@@ -28,7 +29,7 @@ abstract class AbstractVirtualThreadTest {
         @JvmStatic
         protected suspend fun <T> sleepAndGetAwait(millis: Int, value: T): T {
             log.info { "$value started" }
-            delay(millis.toLong())
+            delay(millis.milliseconds)
             log.info { "$value finished" }
             return value
         }

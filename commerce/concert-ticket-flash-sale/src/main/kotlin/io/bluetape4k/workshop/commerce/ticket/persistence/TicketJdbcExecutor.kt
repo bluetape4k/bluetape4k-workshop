@@ -1,18 +1,22 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.concurrent.tryAcquire
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.support.requirePositiveNumber
-import java.io.Serial
-import java.time.Duration
-import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
-import javax.sql.DataSource
+import okio.withLock
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.io.Serial
+import java.time.Duration
+import java.util.concurrent.Semaphore
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import javax.sql.DataSource
+import kotlin.time.toKotlinDuration
 
 /** 모든 ticket transaction에 적용되는 전역 row-lock 획득 순서입니다. */
 enum class TicketLockRank {
@@ -30,7 +34,7 @@ enum class TicketLockRank {
 class TicketLockOrderViolation(
     val previous: TicketLockRank,
     val requested: TicketLockRank,
-) : IllegalStateException("ticket_lock_order_violation:$previous:$requested") {
+): IllegalStateException("ticket_lock_order_violation:$previous:$requested") {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -38,7 +42,7 @@ class TicketLockOrderViolation(
 }
 
 /** JDBC connection을 얻기 전 database work를 거부합니다. */
-class TicketDatabasePermitUnavailable : IllegalStateException("ticket_database_permit_unavailable") {
+class TicketDatabasePermitUnavailable: IllegalStateException("ticket_database_permit_unavailable") {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -47,16 +51,19 @@ class TicketDatabasePermitUnavailable : IllegalStateException("ticket_database_p
 
 /** lock 획득 순서를 기록하는 단일 Exposed transaction입니다. */
 class TicketJdbcTransaction internal constructor(
-    val exposed: JdbcTransaction,
+    val transaction: JdbcTransaction,
 ) {
     private var lastRank: TicketLockRank? = null
+    private val lock = ReentrantLock()
 
     fun acquire(rank: TicketLockRank) {
-        val previous = lastRank
-        if (previous != null && rank < previous) {
-            throw TicketLockOrderViolation(previous, rank)
+        lock.withLock {
+            val previous = lastRank
+            if (previous != null && rank < previous) {
+                throw TicketLockOrderViolation(previous, rank)
+            }
+            lastRank = rank
         }
-        lastRank = rank
     }
 }
 
@@ -64,10 +71,11 @@ class TicketJdbcTransaction internal constructor(
 class TicketJdbcExecutor(
     dataSource: DataSource,
     foregroundPermits: Int,
-    internal val permitTimeout: Duration = Duration.ofMillis(250),
-) : AutoCloseable {
+    internal val permitTimeout: Duration = 250.millis(),
+): AutoCloseable {
     private val permits = Semaphore(foregroundPermits, true)
     private val closed = AtomicBoolean()
+
     private val database = Database.connect(
         datasource = dataSource,
         databaseConfig = DatabaseConfig {
@@ -77,14 +85,16 @@ class TicketJdbcExecutor(
 
     init {
         foregroundPermits.requirePositiveNumber("foregroundPermits")
-        permitTimeout.requireGt(Duration.ZERO, "permitTimeout")
+        permitTimeout.requirePositiveDuration("permitTimeout")
     }
 
     fun <T> transaction(block: TicketJdbcTransaction.() -> T): T {
         check(!closed.get()) { "ticket_jdbc_executor_closed" }
-        if (!permits.tryAcquire(permitTimeout.toMillis(), TimeUnit.MILLISECONDS)) {
+
+        if (!permits.tryAcquire(permitTimeout.toKotlinDuration())) {
             throw TicketDatabasePermitUnavailable()
         }
+
         try {
             return transaction(database) {
                 TicketJdbcTransaction(this).block()

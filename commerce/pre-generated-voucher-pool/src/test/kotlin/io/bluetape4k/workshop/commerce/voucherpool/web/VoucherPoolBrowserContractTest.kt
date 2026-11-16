@@ -3,8 +3,14 @@ package io.bluetape4k.workshop.commerce.voucherpool.web
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.support.toUtf8String
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayOutputStream
@@ -14,43 +20,49 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 internal class VoucherPoolBrowserContractTest {
+
+    private companion object: KLogging() {
+        const val MAX_BROWSER_OUTPUT_BYTES = 16 * 1024
+    }
+
     @Test
     fun `browser behavior passes the dependency free Node contract`() {
         val harness = ClassPathResource("browser/voucher-pool-browser-contract.mjs")
         val application = ClassPathResource("static/app.js")
         val html = ClassPathResource("static/index.html")
-        check(harness.exists()) { "browser contract harness is missing" }
-        check(application.exists()) { "browser application is missing" }
-        check(html.exists()) { "browser HTML is missing" }
+
+        harness.exists().shouldBeTrue()
+        application.exists().shouldBeTrue()
+        html.exists().shouldBeTrue()
 
         val result = runNode(
-            listOf(harness.file.absolutePath, application.file.absolutePath, html.file.absolutePath),
-            Duration.ofSeconds(20),
+            arguments = listOf(harness.file.absolutePath, application.file.absolutePath, html.file.absolutePath),
+            timeout = 20.seconds(),
         )
-        check(result.exitCode == 0) { "browser contract failed:\n${result.output}" }
+        result.exitCode shouldBeEqualTo 0 // "browser contract failed:\n${result.output}"
     }
 
     @Test
     fun `browser runner terminates a timed out Node process before reading bounded output`() {
         val failure = assertFailsWith<IllegalStateException> {
             runNode(
-                listOf("-e", "process.stdout.write('started'); setInterval(() => {}, 1000)"),
-                Duration.ofMillis(100),
+                arguments = listOf("-e", "process.stdout.write('started'); setInterval(() => {}, 1000)"),
+                timeout = 100.millis(),
             )
         }
 
-        failure.message.orEmpty() shouldContain "timed out"
+        failure.message shouldContain "timed out"
     }
 
     @Test
     fun `browser runner drains large failure output without exceeding its diagnostic bound`() {
         val result = runNode(
-            listOf("-e", "process.stdout.write('x'.repeat(256 * 1024)); process.exitCode = 7"),
-            Duration.ofSeconds(20),
+            arguments = listOf("-e", "process.stdout.write('x'.repeat(256 * 1024)); process.exitCode = 7"),
+            timeout = 20.seconds(),
         )
 
         result.exitCode shouldBeEqualTo 7
-        (result.output.toByteArray().size <= MAX_BROWSER_OUTPUT_BYTES).shouldBeTrue()
+        result.output.toUtf8Bytes().size shouldBeLessOrEqualTo MAX_BROWSER_OUTPUT_BYTES
     }
 
     @Test
@@ -94,6 +106,7 @@ internal class VoucherPoolBrowserContractTest {
             "X-Workshop-Operator-Secret",
             "cache: \"no-store\"",
         ).all(script::contains).shouldBeTrue()
+
         listOf(
             "localStorage",
             "sessionStorage",
@@ -101,6 +114,7 @@ internal class VoucherPoolBrowserContractTest {
             "history.",
             "innerHTML",
         ).none(script::contains).shouldBeTrue()
+
         Regex("setAttribute\\([^\\n]*(operatorSecret|revealedCode)").containsMatchIn(script).shouldBeFalse()
     }
 
@@ -146,6 +160,7 @@ internal class VoucherPoolBrowserContractTest {
             "AbortController",
             "text/event-stream",
         ).all(script::contains).shouldBeTrue()
+
         listOf(
             ":focus-visible",
             ".status-label::before",
@@ -156,7 +171,8 @@ internal class VoucherPoolBrowserContractTest {
 
     private fun staticText(name: String): String {
         val resource = ClassPathResource("static/$name")
-        check(resource.exists()) { "static resource is missing: $name" }
+        resource.exists().shouldBeTrue()
+
         return resource.inputStream.bufferedReader().use { it.readText() }
     }
 
@@ -171,16 +187,13 @@ internal class VoucherPoolBrowserContractTest {
             throw AssertionError("Node is required to execute the voucher-pool browser contract", failure)
         }
         val output = BoundedProcessOutput(process.inputStream, MAX_BROWSER_OUTPUT_BYTES)
+
         if (!process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
             process.destroyForcibly()
-            check(process.waitFor(2, TimeUnit.SECONDS)) { "browser contract did not terminate after forced shutdown" }
+            process.waitFor(2.seconds()).shouldBeTrue()
             error("browser contract timed out: ${output.await()}")
         }
         return BrowserProcessResult(process.exitValue(), output.await())
-    }
-
-    private companion object {
-        const val MAX_BROWSER_OUTPUT_BYTES = 16 * 1024
     }
 }
 
@@ -188,23 +201,24 @@ private class BoundedProcessOutput(
     input: InputStream,
     limit: Int,
 ) {
-    private val bytes = ByteArrayOutputStream(limit)
+    private val bos = ByteArrayOutputStream(limit)
     private val drain = thread(start = true, isDaemon = true, name = "voucher-pool-node-output") {
         input.use { stream ->
             val chunk = ByteArray(DEFAULT_BUFFER_SIZE)
             while (true) {
                 val count = stream.read(chunk)
                 if (count < 0) break
-                val accepted = minOf(count, limit - bytes.size()).coerceAtLeast(0)
-                if (accepted > 0) bytes.write(chunk, 0, accepted)
+                val accepted = minOf(count, limit - bos.size()).coerceAtLeast(0)
+                if (accepted > 0) bos.write(chunk, 0, accepted)
             }
         }
     }
 
     fun await(): String {
-        drain.join(TimeUnit.SECONDS.toMillis(2))
-        check(!drain.isAlive) { "browser contract output drain did not terminate" }
-        return bytes.toByteArray().decodeToString()
+        drain.join(2.seconds().toMillis())
+        drain.isAlive.shouldBeFalse()
+
+        return bos.toByteArray().toUtf8String()
     }
 }
 

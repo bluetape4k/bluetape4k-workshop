@@ -5,6 +5,7 @@ import io.bluetape4k.exposed.core.auditable.UserContext
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -29,8 +30,8 @@ internal data class ReservationOfferRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable,
-    Serializable {
+): Auditable,
+   Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -43,12 +44,15 @@ internal data class ReservationOfferRecord(
  * revision CAS는 accept와 expiry가 같은 offer를 동시에 finalize하지 못하게 합니다.
  */
 @Repository
-internal class ReservationOfferRepository : LongAuditableJdbcRepository<ReservationOfferRecord, ReservationOfferTable> {
+internal class ReservationOfferRepository: LongAuditableJdbcRepository<ReservationOfferRecord, ReservationOfferTable> {
+
+    companion object: KLogging()
+
     override val table = ReservationOfferTable
 
     override fun extractId(entity: ReservationOfferRecord): Long = entity.id
 
-    override fun ResultRow.toEntity() =
+    override fun ResultRow.toEntity(): ReservationOfferRecord =
         ReservationOfferRecord(
             id = this[table.id].value,
             resourceId = this[table.resourceId].value,
@@ -69,15 +73,15 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
         ownerDigest: String,
         expiresAt: Instant,
     ): ReservationOfferRecord {
-        val id =
-            table
-                .insertAndGetId {
-                    it[table.resourceId] = resourceId
-                    it[table.entryId] = entryId
-                    it[table.ownerDigest] = ownerDigest
-                    it[table.state] = OfferState.ACTIVE
-                    it[table.expiresAt] = expiresAt
-                }.value
+        val id = table
+            .insertAndGetId {
+                it[table.resourceId] = resourceId
+                it[table.entryId] = entryId
+                it[table.ownerDigest] = ownerDigest
+                it[table.state] = OfferState.ACTIVE
+                it[table.expiresAt] = expiresAt
+            }.value
+
         log.debug { "reservation_offer_created offerId=$id entryId=$entryId resourceId=$resourceId" }
         return findById(id)
     }
@@ -90,34 +94,37 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
             .selectAll()
             .where { (table.id eq id) and (table.ownerDigest eq ownerDigest) }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
 
     fun snapshots(resourceId: Long): List<ReservationOfferRecord> =
         table
             .selectAll()
             .where { table.resourceId eq resourceId }
             .orderBy(table.id to SortOrder.ASC)
-            .map { with(this) { it.toEntity() } }
+            .map { it.toEntity() }
 
     fun activeForEntry(entryId: Long): ReservationOfferRecord? =
         table
             .selectAll()
             .where { (table.entryId eq entryId) and (table.state eq OfferState.ACTIVE) }
             .singleOrNull()
-            ?.let { with(this) { it.toEntity() } }
+            ?.toEntity()
 
     /** bounded candidate를 반환합니다. transaction service는 이를 expired hold와 timestamp 기준으로 병합합니다. */
     fun expiredResourceCandidates(
         now: Instant,
         limit: Int,
     ): List<ExpiredResourceCandidate> {
-        require(limit in 1..32) { "limit must be between 1 and 32" }
+        limit.requireInRange(1, 32, "limit")
+
         return table
             .selectAll()
             .where { (table.state eq OfferState.ACTIVE) and (table.expiresAt lessEq now) }
             .orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
             .limit(limit * 4)
-            .map { ExpiredResourceCandidate(it[table.resourceId].value, it[table.expiresAt]) }
+            .map {
+                ExpiredResourceCandidate(it[table.resourceId].value, it[table.expiresAt])
+            }
             .distinctBy { it.resourceId }
             .take(limit)
     }
@@ -130,10 +137,11 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
             .selectAll()
             .where {
                 (table.resourceId eq resourceId) and
-                    (table.state eq OfferState.ACTIVE) and
-                    (table.expiresAt lessEq now)
-            }.orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
-            .map { with(this) { it.toEntity() } }
+                        (table.state eq OfferState.ACTIVE) and
+                        (table.expiresAt lessEq now)
+            }
+            .orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
+            .map { it.toEntity() }
 
     fun transition(
         id: Long,
@@ -142,21 +150,19 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
         from: OfferState,
         to: OfferState,
     ): Boolean {
-        val applied =
-            auditedUpdateAll({
-                (table.id eq id) and
+        val applied = auditedUpdateAll({
+            (table.id eq id) and
                     (table.ownerDigest eq ownerDigest) and
                     (table.revision eq expectedRevision) and
                     (table.state eq from)
-            }) {
-                it[state] = to
-                it[revision] = expectedRevision + 1
-            } == 1
+        }) {
+            it[state] = to
+            it[revision] = expectedRevision + 1
+        } == 1
+        
         log.debug {
             "reservation_offer_transition offerId=$id expectedRevision=$expectedRevision from=$from to=$to applied=$applied"
         }
         return applied
     }
-
-    companion object : KLogging()
 }

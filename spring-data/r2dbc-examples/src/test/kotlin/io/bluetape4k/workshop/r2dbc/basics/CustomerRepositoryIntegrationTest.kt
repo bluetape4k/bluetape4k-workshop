@@ -1,13 +1,16 @@
 package io.bluetape4k.workshop.r2dbc.basics
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactor.awaitSingle
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +22,7 @@ class CustomerRepositoryIntegrationTest(
     @param:Autowired private val customerRepo: CustomerRepository,
     @param:Autowired private val database: DatabaseClient,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {
@@ -29,7 +32,8 @@ class CustomerRepositoryIntegrationTest(
         )
 
         statements.forEach {
-            database.sql(it)
+            log.debug { "statement=\n$it" }
+            database.sql(it.requireNotBlank("statement"))
                 .fetch()
                 .rowsUpdated()
                 .awaitSingle()
@@ -61,11 +65,13 @@ class CustomerRepositoryIntegrationTest(
         insertCustomers(dave, carter)
 
         val customer = customerRepo.findByLastname("Matthews").first()
-        customer.shouldNotBeNull() shouldBeEqualTo dave
+        customer shouldBeEqualTo dave
     }
 
 
     private suspend fun insertCustomers(vararg customers: Customer) {
-        customerRepo.saveAll(customers.toList()).collect()
+        customerRepo.saveAll(customers.toList())
+            .log("SaveAll")
+            .collect()
     }
 }

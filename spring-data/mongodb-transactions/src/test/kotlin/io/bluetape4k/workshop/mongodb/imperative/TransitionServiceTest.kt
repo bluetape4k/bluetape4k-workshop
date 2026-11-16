@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.mongodb.imperative
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -10,8 +12,6 @@ import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.Process
 import io.bluetape4k.workshop.mongodb.State
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @ContextConfiguration(classes = [TransitionServiceTest.TestConfig::class])
 class TransitionServiceTest: AbstractMongodbTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-demo"
     }
 

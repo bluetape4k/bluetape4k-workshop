@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionDecision
 import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionGate
 import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionKeyFactory
@@ -9,15 +11,15 @@ import io.bluetape4k.workshop.commerce.voucher.application.IdempotentVoucherComm
 import io.bluetape4k.workshop.commerce.voucher.application.RetryableVoucherCommand
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandException
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandFailure
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
 import io.bluetape4k.workshop.commerce.voucher.idempotency.Digest
 import io.bluetape4k.workshop.commerce.voucher.idempotency.IdempotencyFingerprint
 import io.bluetape4k.workshop.commerce.voucher.idempotency.IdempotencyScope
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
-import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
 import org.springframework.stereotype.Component
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import kotlin.math.ceil
 
 internal data class ExecutedHttpCommand(
@@ -33,6 +35,34 @@ internal class VoucherHttpCommandExecutor(
     private val admissionKeys: VoucherAdmissionKeyFactory,
     private val metrics: VoucherMetrics? = null,
 ) {
+
+    companion object: KLogging() {
+        private const val MINIMUM_IDEMPOTENCY_KEY_LENGTH = 8
+        private val RETRYABLE_COMMAND_FAILURES = setOf(
+            VoucherCommandFailure.CAMPAIGN_PAUSED,
+            VoucherCommandFailure.REPLAY_KEY_UNAVAILABLE
+        )
+        private val FAILURE_RESPONSES = mapOf(
+            VoucherCommandFailure.CAMPAIGN_ALREADY_EXISTS to (VoucherResponseKind.CAMPAIGN_ALREADY_EXISTS to 409),
+            VoucherCommandFailure.CAMPAIGN_NOT_FOUND to (VoucherResponseKind.CAMPAIGN_NOT_FOUND to 404),
+            VoucherCommandFailure.CLAIM_NOT_FOUND to (VoucherResponseKind.CLAIM_NOT_FOUND to 404),
+            VoucherCommandFailure.REVIEW_NOT_FOUND to (VoucherResponseKind.REVIEW_NOT_FOUND to 404),
+            VoucherCommandFailure.CAMPAIGN_PAUSED to (VoucherResponseKind.CAMPAIGN_PAUSED to 409),
+            VoucherCommandFailure.CAMPAIGN_NOT_ACTIVE to (VoucherResponseKind.CAMPAIGN_NOT_ACTIVE to 409),
+            VoucherCommandFailure.CAMPAIGN_NOT_STARTED to (VoucherResponseKind.CAMPAIGN_NOT_STARTED to 409),
+            VoucherCommandFailure.CAMPAIGN_ENDED to (VoucherResponseKind.CAMPAIGN_ENDED to 409),
+            VoucherCommandFailure.CAPACITY_EXHAUSTED to (VoucherResponseKind.CAPACITY_EXHAUSTED to 409),
+            VoucherCommandFailure.PER_USER_LIMIT_REACHED to (VoucherResponseKind.PER_USER_LIMIT_REACHED to 409),
+            VoucherCommandFailure.INVALID_CODE to (VoucherResponseKind.INVALID_CODE to 409),
+            VoucherCommandFailure.VOUCHER_EXPIRED to (VoucherResponseKind.CLAIM_EXPIRED to 409),
+            VoucherCommandFailure.ALREADY_REDEEMED to (VoucherResponseKind.ALREADY_REDEEMED to 409),
+            VoucherCommandFailure.STALE_REVISION to (VoucherResponseKind.STALE_REVISION to 412),
+            VoucherCommandFailure.CONCURRENT_MODIFICATION to (VoucherResponseKind.CONCURRENT_MODIFICATION to 409),
+            VoucherCommandFailure.REPLAY_KEY_UNAVAILABLE to (VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE to 503),
+            VoucherCommandFailure.CODE_ALREADY_ACKNOWLEDGED to (VoucherResponseKind.CODE_ALREADY_ACKNOWLEDGED to 409),
+        )
+    }
+
     fun execute(
         tenantId: String,
         principalRef: String,
@@ -43,14 +73,14 @@ internal class VoucherHttpCommandExecutor(
         business: () -> StoredHttpResponse,
     ): ExecutedHttpCommand =
         executeScoped(
-            tenantId,
-            principalRef,
-            rawIdempotencyKey,
-            operation,
-            resourceId,
-            fingerprintMaterial,
+            tenantId = tenantId,
+            principalRef = principalRef,
+            rawIdempotencyKey = rawIdempotencyKey,
+            operation = operation,
+            resourceId = resourceId,
+            fingerprintMaterial = fingerprintMaterial,
             externalBusiness = false,
-            business,
+            business = business,
         )
 
     fun executeExternal(
@@ -63,14 +93,14 @@ internal class VoucherHttpCommandExecutor(
         business: () -> StoredHttpResponse,
     ): ExecutedHttpCommand =
         executeScoped(
-            tenantId,
-            principalRef,
-            rawIdempotencyKey,
-            operation,
-            resourceId,
-            fingerprintMaterial,
+            tenantId = tenantId,
+            principalRef = principalRef,
+            rawIdempotencyKey = rawIdempotencyKey,
+            operation = operation,
+            resourceId = resourceId,
+            fingerprintMaterial = fingerprintMaterial,
             externalBusiness = true,
-            business,
+            business = business,
         )
 
     private fun executeScoped(
@@ -87,19 +117,23 @@ internal class VoucherHttpCommandExecutor(
         var outcome = "FAILED"
         try {
             val executed = executeCommand(
-                tenantId,
-                principalRef,
-                rawIdempotencyKey,
-                operation,
-                resourceId,
-                fingerprintMaterial,
-                externalBusiness,
-                business,
+                tenantId = tenantId,
+                principalRef = principalRef,
+                rawIdempotencyKey = rawIdempotencyKey,
+                operation = operation,
+                resourceId = resourceId,
+                fingerprintMaterial = fingerprintMaterial,
+                externalBusiness = externalBusiness,
+                business = business,
             )
             outcome = executed.response.responseKind.name
             return executed
         } finally {
-            metrics?.recordCommand(operation, outcome, Duration.ofNanos(System.nanoTime() - startedAt))
+            metrics?.recordCommand(
+                operation = operation,
+                outcome = outcome,
+                duration = (System.nanoTime() - startedAt).nanos()
+            )
         }
     }
 
@@ -118,21 +152,28 @@ internal class VoucherHttpCommandExecutor(
             throw invalidRequest("Idempotency-Key must contain at least $MINIMUM_IDEMPOTENCY_KEY_LENGTH characters")
         }
         val principalDigest = Digest.sha256("voucher-principal-v1\u0000$tenantId\u0000$principalRef")
-        val scope =
-            IdempotencyScope(
-                tenantId = tenantId,
-                principalDigest = principalDigest,
-                operation = operation,
-                resourceId = resourceId.toString(),
-                keyDigest = IdempotencyFingerprint.key(tenantId, principalDigest, operation, resourceId.toString(), key),
-            )
-        val command =
-            IdempotentVoucherCommand(
-                scope = scope,
-                fingerprint = Digest.sha256("voucher-http-command-v1\u0000$operation\u0000$fingerprintMaterial"),
-            )
-        val admissionCheck = { admissionResponse(tenantId, principalRef, operation, resourceId) }
-        val guardedBusiness = {
+
+        val scope = IdempotencyScope(
+            tenantId = tenantId,
+            principalDigest = principalDigest,
+            operation = operation,
+            resourceId = resourceId.toString(),
+            keyDigest = IdempotencyFingerprint.key(
+                tenantId,
+                principalDigest,
+                operation,
+                resourceId.toString(),
+                key
+            ),
+        )
+        val command = IdempotentVoucherCommand(
+            scope = scope,
+            fingerprint = Digest.sha256("voucher-http-command-v1\u0000$operation\u0000$fingerprintMaterial"),
+        )
+        val admissionCheck: () -> StoredHttpResponse? = {
+            admissionResponse(tenantId, principalRef, operation, resourceId)
+        }
+        val guardedBusiness: () -> StoredHttpResponse = {
             try {
                 business()
             } catch (failure: VoucherCommandException) {
@@ -141,27 +182,28 @@ internal class VoucherHttpCommandExecutor(
                 response
             }
         }
-        val result =
-            if (externalBusiness) {
-                commands.executeExternal(command, admissionCheck, guardedBusiness)
-            } else {
-                commands.execute(command, admissionCheck, guardedBusiness)
-            }
+
+        val result = if (externalBusiness) {
+            commands.executeExternal(command, admissionCheck, guardedBusiness)
+        } else {
+            commands.execute(command, admissionCheck, guardedBusiness)
+        }
+
         return when (result) {
-            is IdempotentCommandResult.Completed -> ExecutedHttpCommand(result.response, result.replayed)
-            is IdempotentCommandResult.Retryable -> ExecutedHttpCommand(result.response, replayed = false)
-            is IdempotentCommandResult.InProgress ->
+            is IdempotentCommandResult.Completed        -> ExecutedHttpCommand(result.response, result.replayed)
+            is IdempotentCommandResult.Retryable        -> ExecutedHttpCommand(result.response, replayed = false)
+            is IdempotentCommandResult.InProgress       ->
                 throw VoucherApiException(
-                    "COMMAND_IN_PROGRESS",
-                    409,
-                    "the command is already in progress",
-                    result.retryAfter.toRetrySeconds(),
+                    stableCode = "COMMAND_IN_PROGRESS",
+                    status = 409,
+                    safeReason = "the command is already in progress",
+                    retryAfterSeconds = result.retryAfter.toRetrySeconds(),
                 )
             IdempotentCommandResult.FingerprintConflict ->
                 throw VoucherApiException(
-                    "IDEMPOTENCY_FINGERPRINT_CONFLICT",
-                    409,
-                    "the idempotency key belongs to a different request",
+                    stableCode = "IDEMPOTENCY_FINGERPRINT_CONFLICT",
+                    status = 409,
+                    safeReason = "the idempotency key belongs to a different request",
                 )
         }
     }
@@ -171,24 +213,27 @@ internal class VoucherHttpCommandExecutor(
         principalRef: String,
         operation: String,
         resourceId: UUID,
-    ): StoredHttpResponse? =
-        when (val decision = admission.decide(admissionKeys.rateKey(tenantId, principalRef, operation))) {
-            AdmissionDecision.Proceed -> null
-            is AdmissionDecision.RateLimited ->
+    ): StoredHttpResponse? {
+        val rateKey = admissionKeys.rateKey(tenantId, principalRef, operation)
+
+        return when (val decision = admission.decide(rateKey)) {
+            AdmissionDecision.Proceed         -> null
+            is AdmissionDecision.RateLimited  ->
                 retryable(
-                    VoucherResponseKind.RATE_LIMITED,
-                    429,
-                    resourceId,
-                    decision.retryAfter,
+                    kind = VoucherResponseKind.RATE_LIMITED,
+                    status = 429,
+                    resourceId = resourceId,
+                    retryAfter = decision.retryAfter,
                 )
             is AdmissionDecision.DatabaseBusy ->
                 retryable(
-                    VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
-                    503,
-                    resourceId,
-                    decision.retryAfter,
+                    kind = VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
+                    status = 503,
+                    resourceId = resourceId,
+                    retryAfter = decision.retryAfter,
                 )
         }
+    }
 
     private fun failureResponse(
         failure: VoucherCommandFailure,
@@ -196,7 +241,17 @@ internal class VoucherHttpCommandExecutor(
     ): StoredHttpResponse {
         val (kind, status) = FAILURE_RESPONSES.getValue(failure)
         val headers = if (failure in RETRYABLE_COMMAND_FAILURES) mapOf("Retry-After" to "1") else emptyMap()
-        return StoredHttpResponse(kind, status, headers, resourceId, null, 0, null, null)
+
+        return StoredHttpResponse(
+            responseKind = kind,
+            status = status,
+            headers = headers,
+            aggregateId = resourceId,
+            allocationId = null,
+            aggregateRevision = 0,
+            generationKeyVersion = null,
+            verificationKeyVersion = null
+        )
     }
 
     private fun retryable(
@@ -216,33 +271,7 @@ internal class VoucherHttpCommandExecutor(
             verificationKeyVersion = null,
         )
 
-    private fun Duration.toRetrySeconds(): Long = ceil(toMillis() / 1_000.0).toLong().coerceAtLeast(1)
+    private fun Duration.toRetrySeconds(): Long =
+        ceil(toMillis() / 1_000.0).toLong().coerceAtLeast(1)
 
-    companion object {
-        private const val MINIMUM_IDEMPOTENCY_KEY_LENGTH = 8
-        private val RETRYABLE_COMMAND_FAILURES =
-            setOf(VoucherCommandFailure.CAMPAIGN_PAUSED, VoucherCommandFailure.REPLAY_KEY_UNAVAILABLE)
-        private val FAILURE_RESPONSES =
-            mapOf(
-                VoucherCommandFailure.CAMPAIGN_ALREADY_EXISTS to (VoucherResponseKind.CAMPAIGN_ALREADY_EXISTS to 409),
-                VoucherCommandFailure.CAMPAIGN_NOT_FOUND to (VoucherResponseKind.CAMPAIGN_NOT_FOUND to 404),
-                VoucherCommandFailure.CLAIM_NOT_FOUND to (VoucherResponseKind.CLAIM_NOT_FOUND to 404),
-                VoucherCommandFailure.REVIEW_NOT_FOUND to (VoucherResponseKind.REVIEW_NOT_FOUND to 404),
-                VoucherCommandFailure.CAMPAIGN_PAUSED to (VoucherResponseKind.CAMPAIGN_PAUSED to 409),
-                VoucherCommandFailure.CAMPAIGN_NOT_ACTIVE to (VoucherResponseKind.CAMPAIGN_NOT_ACTIVE to 409),
-                VoucherCommandFailure.CAMPAIGN_NOT_STARTED to (VoucherResponseKind.CAMPAIGN_NOT_STARTED to 409),
-                VoucherCommandFailure.CAMPAIGN_ENDED to (VoucherResponseKind.CAMPAIGN_ENDED to 409),
-                VoucherCommandFailure.CAPACITY_EXHAUSTED to (VoucherResponseKind.CAPACITY_EXHAUSTED to 409),
-                VoucherCommandFailure.PER_USER_LIMIT_REACHED to (VoucherResponseKind.PER_USER_LIMIT_REACHED to 409),
-                VoucherCommandFailure.INVALID_CODE to (VoucherResponseKind.INVALID_CODE to 409),
-                VoucherCommandFailure.VOUCHER_EXPIRED to (VoucherResponseKind.CLAIM_EXPIRED to 409),
-                VoucherCommandFailure.ALREADY_REDEEMED to (VoucherResponseKind.ALREADY_REDEEMED to 409),
-                VoucherCommandFailure.STALE_REVISION to (VoucherResponseKind.STALE_REVISION to 412),
-                VoucherCommandFailure.CONCURRENT_MODIFICATION to (VoucherResponseKind.CONCURRENT_MODIFICATION to 409),
-                VoucherCommandFailure.REPLAY_KEY_UNAVAILABLE to
-                    (VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE to 503),
-                VoucherCommandFailure.CODE_ALREADY_ACKNOWLEDGED to
-                    (VoucherResponseKind.CODE_ALREADY_ACKNOWLEDGED to 409),
-            )
-    }
 }

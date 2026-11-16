@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -7,9 +8,8 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import kotlin.random.Random
 
@@ -78,7 +78,7 @@ class HyperLogLogExamples: AbstractRedissonTest() {
         hyperLog.delete()
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @Test
     fun `Virtual Thread 환경에서 HyperLogLog 사용하기`() {
         val hyperLog = redisson.getHyperLogLog<Int>(randomName())

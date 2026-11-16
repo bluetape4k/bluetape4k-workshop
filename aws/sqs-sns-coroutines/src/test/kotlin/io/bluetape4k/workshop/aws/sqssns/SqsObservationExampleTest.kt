@@ -71,23 +71,25 @@ class SqsObservationExampleTest {
                 }
                 listenerRegistry.stop(OrderNotificationObservationListener.LISTENER_ID)
 
-                val records = recorder.snapshots
-                records.any { it.stage == SqsObservationStage.RECEIVE }.shouldBeTrue()
-                records.count { it.stage == SqsObservationStage.PROCESS } shouldBeEqualTo 1
-                records.any {
-                    it.stage == SqsObservationStage.PROCESS &&
-                        it.outcome == SqsObservationOutcome.SUCCESS
-                }.shouldBeTrue()
-                records.any {
-                    it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
-                        it.acknowledgementAction == SqsAcknowledgementAction.CHANGE_VISIBILITY
-                }.shouldBeTrue()
-                records.count {
-                    it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
-                        it.acknowledgementAction == SqsAcknowledgementAction.ACK
-                } shouldBeEqualTo 1
-                operations.visibilityChanges.isNotEmpty().shouldBeTrue()
-                (registry.currentObservation == null).shouldBeTrue()
+                await.atMost(Duration.ofSeconds(10)).untilAsserted {
+                    val records = recorder.snapshots
+                    records.any { it.stage == SqsObservationStage.RECEIVE }.shouldBeTrue()
+                    records.count { it.stage == SqsObservationStage.PROCESS } shouldBeEqualTo 1
+                    records.any {
+                        it.stage == SqsObservationStage.PROCESS &&
+                            it.outcome == SqsObservationOutcome.SUCCESS
+                    }.shouldBeTrue()
+                    records.any {
+                        it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
+                            it.acknowledgementAction == SqsAcknowledgementAction.CHANGE_VISIBILITY
+                    }.shouldBeTrue()
+                    records.count {
+                        it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
+                            it.acknowledgementAction == SqsAcknowledgementAction.ACK
+                    } shouldBeEqualTo 1
+                    operations.visibilityChanges.isNotEmpty().shouldBeTrue()
+                    (registry.currentObservation == null).shouldBeTrue()
+                }
             }
     }
 

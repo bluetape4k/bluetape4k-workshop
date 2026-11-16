@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.config
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireGe
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -18,14 +19,15 @@ import java.time.Duration
  */
 @ConfigurationProperties(prefix = "leader")
 data class LeaderElectionProperties(
+
     val redis: RedisConfig = RedisConfig(),
     /** distributed lock을 포기하기 전에 기다릴 시간입니다. java.time.Duration으로 바인딩됩니다. */
-    val waitTime: Duration = Duration.ofSeconds(2),
+    val waitTime: Duration = 2.seconds(),
     /** lock을 보유하는 시간(TTL)입니다. java.time.Duration으로 바인딩됩니다. */
-    val leaseTime: Duration = Duration.ofSeconds(30),
+    val leaseTime: Duration = 30.seconds(),
     /** scheduled job 호출 사이의 fixed delay입니다(Spring Duration 문자열). */
     val jobFixedDelay: String = "PT10S",
-) : Serializable {
+): Serializable {
 
     init {
         // 큰 값에서 toMillis() overflow를 피하려고 Duration 비교를 직접 사용합니다.
@@ -37,13 +39,13 @@ data class LeaderElectionProperties(
      */
     data class RedisConfig(
         val url: String = "redis://localhost:6379",
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val serialVersionUID: Long = 1L
     }
 }

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.leader.zookeeper
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import io.bluetape4k.workshop.leader.zookeeper.service.BlockingLeaderService
 import io.bluetape4k.workshop.leader.zookeeper.service.GroupLeaderService
@@ -14,9 +15,9 @@ import org.junit.jupiter.api.Test
  * Spring context 없이 [AbstractLeaderZookeeperTest]의 공유 [curator]로 서비스 인스턴스를 직접 구성한다.
  * 각 서비스가 하위 elector에 올바르게 위임하고 [BlockingLeaderService.executionCount]를 갱신하는지 검증한다.
  */
-class LeaderServiceBehaviorTest : AbstractLeaderZookeeperTest() {
+class LeaderServiceBehaviorTest: AbstractLeaderZookeeperTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val defaultProps = LeaderZookeeperProperties()
 
@@ -37,7 +38,9 @@ class LeaderServiceBehaviorTest : AbstractLeaderZookeeperTest() {
         val service = BlockingLeaderService(elector, defaultProps)
         val lockName = randomLockName("svc-blocking-repeat")
 
-        repeat(3) { service.runLeaderWork(lockName) }
+        repeat(3) {
+            service.runLeaderWork(lockName)
+        }
 
         service.executionCount.get() shouldBeEqualTo 3
     }
@@ -63,6 +66,7 @@ class LeaderServiceBehaviorTest : AbstractLeaderZookeeperTest() {
         service.runLeaderWork(lockName)
 
         val state = service.inspectState(lockName)
+        log.debug { "state=$state" }
         state.shouldNotBeNull()
     }
 }

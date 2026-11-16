@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.web
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -7,6 +8,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 class MeteringExceptionHandler {
+
+    companion object: KLogging()
+
     @ExceptionHandler(IllegalArgumentException::class)
     fun invalid(ex: IllegalArgumentException): ResponseEntity<ApiError> {
         val message = ex.message ?: "invalid_request"
@@ -27,17 +31,25 @@ internal object MeteringErrorStatus {
         val message = failure.message.orEmpty()
         return when (failure) {
             is IllegalArgumentException -> when {
-                message.contains("conflict") || message.contains("not_open") || message.contains("stale") ->
+                message.contains("conflict") ||
+                        message.contains("not_open") ||
+                        message.contains("stale") ->
                     HttpStatus.CONFLICT
-                else -> HttpStatus.BAD_REQUEST
+                else                              ->
+                    HttpStatus.BAD_REQUEST
             }
-            is IllegalStateException -> when {
-                message.contains("not_ready") || message.contains("price_not_found") ->
+            is IllegalStateException    -> when {
+                message.contains("not_ready") ||
+                        message.contains("price_not_found") ->
                     HttpStatus.UNPROCESSABLE_CONTENT
-                message.contains("not_found") -> HttpStatus.NOT_FOUND
-                else -> HttpStatus.CONFLICT
+
+                message.contains("not_found")               ->
+                    HttpStatus.NOT_FOUND
+                else                                        ->
+                    HttpStatus.CONFLICT
             }
-            else -> HttpStatus.INTERNAL_SERVER_ERROR
+            else                        ->
+                HttpStatus.INTERNAL_SERVER_ERROR
         }
     }
 }

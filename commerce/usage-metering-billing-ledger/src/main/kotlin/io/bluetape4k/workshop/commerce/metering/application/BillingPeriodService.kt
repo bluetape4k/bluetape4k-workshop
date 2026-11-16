@@ -1,6 +1,10 @@
 package io.bluetape4k.workshop.commerce.metering.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.support.checkBeFalse
+import io.bluetape4k.support.requireBeFalse
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.BillingPeriodState
 import io.bluetape4k.workshop.commerce.metering.domain.CloseRunState
@@ -20,8 +24,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.Instant
-import java.util.Currency
-import java.util.UUID
+import java.util.*
 
 data class CloseRunView(val id: UUID, val periodId: UUID, val state: CloseRunState, val cutoff: Instant)
 
@@ -33,20 +36,23 @@ class BillingPeriodService(
 ) {
     @Transactional
     fun create(tenantId: TenantId, currency: Currency, startsAt: Instant, endsAt: Instant): UUID {
-        require(endsAt > startsAt) { "invalid_billing_period" }
+        endsAt.requireGt(startsAt, "endsAt")
+
         BillingCalendars.insertIgnore {
             it[id] = Uuid.V7.nextId()
             it[BillingCalendars.tenantId] = tenantId.value
             it[BillingCalendars.currency] = currency.currencyCode
             it[createdAt] = clock.instant()
         }
-        BillingCalendars.selectAll().where {
-            (BillingCalendars.tenantId eq tenantId.value) and (BillingCalendars.currency eq currency.currencyCode)
-        }.forUpdate().single()
-        val calendar = BillingCalendarEntity.find {
-            (BillingCalendars.tenantId eq tenantId.value) and (BillingCalendars.currency eq currency.currencyCode)
-        }.single()
-        require(!periods.overlapping(calendar.id.value, startsAt, endsAt)) { "billing_period_overlap" }
+        val calendar: BillingCalendarEntity = BillingCalendarEntity
+            .find {
+                (BillingCalendars.tenantId eq tenantId.value) and (BillingCalendars.currency eq currency.currencyCode)
+            }
+            .single()
+
+        periods.overlapping(calendar.id.value, startsAt, endsAt)
+            .checkBeFalse { "period.overlapping must be false. calendarId=${calendar.id}, startsAt=$startsAt endsAt=$endsAt" }
+
         return BillingPeriodEntity.new(Uuid.V7.nextId()) {
             this.tenantId = tenantId.value
             calendarId = EntityID(calendar.id.value, BillingCalendars)
@@ -66,21 +72,27 @@ class BillingPeriodService(
 
     @Transactional
     fun startClose(tenantId: TenantId, periodId: UUID): CloseRunView {
-        BillingPeriods.selectAll().where { BillingPeriods.id eq periodId }.forUpdate().singleOrNull()
-            ?: error("period_not_found")
-        val period = requireNotNull(periods.findTenant(periodId, tenantId.value)) { "period_not_found" }
+        BillingPeriods.selectAll()
+            .where { BillingPeriods.id eq periodId }
+            .forUpdate()
+            .singleOrNull() ?: error("period_not_found")
+
+        val period = periods.findTenant(periodId, tenantId.value)
+            .requireNotNull { "BillingPeriodEntity not found. periodId=$periodId, tenantId=$tenantId" }
+
         period.activeCloseRunId?.let { existingId ->
             val existing = CloseRunEntity[existingId]
             return CloseRunView(
-                existing.id.value,
-                periodId,
-                CloseRunState.valueOf(existing.state),
-                existing.cutoffReceivedAt,
+                id = existing.id.value,
+                periodId = periodId,
+                state = CloseRunState.valueOf(existing.state),
+                cutoff = existing.cutoffReceivedAt,
             )
         }
         val now = clock.instant()
-        require(period.state == BillingPeriodState.OPEN.name) { "period_not_open" }
-        require(now >= period.allowedLatenessDeadline) { "allowed_lateness_not_elapsed" }
+        check(period.state == BillingPeriodState.OPEN.name) { "period.state[${period.state}] not open." }
+        check(now >= period.allowedLatenessDeadline) { "now[$now] must be at least ${period.allowedLatenessDeadline}" }
+
         val run = CloseRunEntity.new(Uuid.V7.nextId()) {
             this.tenantId = tenantId.value
             this.periodId = EntityID(period.id.value, BillingPeriods)
@@ -100,6 +112,12 @@ class BillingPeriodService(
         period.activeCloseRunId = run.id.value
         period.cutoffReceivedAt = now
         period.version += 1
-        return CloseRunView(run.id.value, periodId, CloseRunState.RUNNING, now)
+
+        return CloseRunView(
+            id = run.id.value,
+            periodId = periodId,
+            state = CloseRunState.RUNNING,
+            cutoff = now
+        )
     }
 }

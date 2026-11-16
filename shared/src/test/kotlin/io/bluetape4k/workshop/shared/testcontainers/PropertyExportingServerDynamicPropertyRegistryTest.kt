@@ -150,7 +150,7 @@ class PropertyExportingServerDynamicPropertyRegistryTest {
         }
 
         error.message shouldBeEqualTo
-            "PropertyExportingServer 'bridge-contract' did not provide property 'port'"
+                "PropertyExportingServer 'bridge-contract' did not provide property 'port'"
     }
 
     @Test
@@ -208,7 +208,7 @@ class PropertyExportingServerDynamicPropertyRegistryTest {
         private val keys: Set<String>,
         var values: Map<String, String>,
         private val propertiesFailure: RuntimeException? = null,
-    ) : PropertyExportingServer {
+    ): PropertyExportingServer {
         var propertiesCalls: Int = 0
             private set
 
@@ -221,7 +221,7 @@ class PropertyExportingServerDynamicPropertyRegistryTest {
         }
     }
 
-    private class RecordingRegistry : DynamicPropertyRegistry {
+    private class RecordingRegistry: DynamicPropertyRegistry {
         private val entries = mutableListOf<Pair<String, Supplier<Any>>>()
 
         val names: List<String>

@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.optimization.planning.application
 
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateId
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateVersion
 import io.bluetape4k.workshop.optimization.planning.domain.DatasetId
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningEngine
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningRevision
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningSubmission
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.optimization.planning.observability.PlanningObservations
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningOutboxRecord
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningOutboxRepository
@@ -18,7 +19,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Clock
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
@@ -34,12 +34,25 @@ internal class PlanningOutboxWorker(
     private val observations: PlanningObservations,
 ) {
 
+    companion object: KLogging() {
+        private const val WORKER_ID = "planning-worker"
+        private const val DEFAULT_BATCH_SIZE = 16
+        private const val MAX_RETRIES = 3
+        private val LEASE_DURATION = 30.seconds()
+        private val RETRY_DELAY = 5.seconds()
+    }
+
     fun processDue(batchSize: Int = DEFAULT_BATCH_SIZE): List<Future<PlanningOutboxStatus>> {
         val now = Instant.now(clock)
         val claimed = transactionTemplate.execute {
             outboxRepository.claimNextBatch(WORKER_ID, batchSize, now, LEASE_DURATION)
-        }.orEmpty()
-        return claimed.map { outbox -> executor.submit<PlanningOutboxStatus> { process(outbox) } }
+        }
+
+        return claimed.map { outbox ->
+            executor.submit<PlanningOutboxStatus> {
+                process(outbox)
+            }
+        }
     }
 
     private fun process(outbox: PlanningOutboxRecord): PlanningOutboxStatus {
@@ -77,18 +90,11 @@ internal class PlanningOutboxWorker(
         }
     }
 
-    private fun PlanningRequestRecord.toSubmission() = PlanningSubmission(
-        requestId = id,
-        datasetId = DatasetId(datasetId),
-        aggregate = AggregateVersion(AggregateId(aggregateId), aggregateVersion),
-        parentRevision = parentRevision?.let(::PlanningRevision),
-    )
-
-    companion object: KLogging() {
-        private const val WORKER_ID = "planning-worker"
-        private const val DEFAULT_BATCH_SIZE = 16
-        private const val MAX_RETRIES = 3
-        private val LEASE_DURATION = Duration.ofSeconds(30)
-        private val RETRY_DELAY = Duration.ofSeconds(5)
-    }
+    private fun PlanningRequestRecord.toSubmission(): PlanningSubmission =
+        PlanningSubmission(
+            requestId = id,
+            datasetId = DatasetId(datasetId),
+            aggregate = AggregateVersion(AggregateId(aggregateId), aggregateVersion),
+            parentRevision = parentRevision?.let(::PlanningRevision),
+        )
 }

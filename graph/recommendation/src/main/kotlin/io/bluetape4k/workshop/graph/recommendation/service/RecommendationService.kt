@@ -70,7 +70,7 @@ class RecommendationService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * named graph가 존재하도록 보장합니다. 여러 번 호출해도 안전하며, 이미 생성되어 있으면 no-op입니다.
@@ -95,6 +95,7 @@ class RecommendationService(
     fun addUser(userId: String, name: String): GraphVertex {
         userId.requireNotBlank("userId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(UserLabel.label, mapOf(UserLabel.userId.name to userId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -116,6 +117,7 @@ class RecommendationService(
     fun addProduct(productId: String, name: String, category: String = ""): GraphVertex {
         productId.requireNotBlank("productId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(ProductLabel.label, mapOf(ProductLabel.productId.name to productId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -152,11 +154,17 @@ class RecommendationService(
         rating.requireInRange(0, 5, "rating")
         ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
         ops.requireEndpoint(productVertexId, ProductLabel.label, "productVertexId")
+
         val props = buildMap {
             if (rating > 0) put(PurchasedLabel.rating.name, rating.toString())
             if (purchasedAt.isNotBlank()) put(PurchasedLabel.purchasedAt.name, purchasedAt)
         }
-        return ops.createEdge(userVertexId, productVertexId, PurchasedLabel.label, props)
+        return ops.createEdge(
+            userVertexId,
+            productVertexId,
+            PurchasedLabel.label,
+            props
+        )
     }
 
     /**
@@ -172,7 +180,12 @@ class RecommendationService(
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
         ops.requireEndpoint(followerVertexId, UserLabel.label, "followerVertexId")
         ops.requireEndpoint(followeeVertexId, UserLabel.label, "followeeVertexId")
-        return ops.createEdge(followerVertexId, followeeVertexId, FollowsLabel.label, emptyMap())
+        return ops.createEdge(
+            followerVertexId,
+            followeeVertexId,
+            FollowsLabel.label,
+            emptyMap()
+        )
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -199,7 +212,10 @@ class RecommendationService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
      * @return 순위화된 [ProductRecommendation] 목록입니다. User를 찾을 수 없거나 구매가 없으면 `emptyList()`입니다.
      */
-    fun recommendProducts(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<ProductRecommendation> {
+    fun recommendProducts(
+        userVertexId: GraphElementId,
+        limit: Int = DEFAULT_RECOMMENDATION_LIMIT,
+    ): List<ProductRecommendation> {
         return explainProductRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
@@ -216,7 +232,10 @@ class RecommendationService(
     ): List<ExplainedProductRecommendation> {
         limit.requireInRange(1, MAX_RECOMMENDATION_LIMIT, "limit")
 
-        val myProducts = ops.neighbors(userVertexId, NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1))
+        val myProducts = ops.neighbors(
+            userVertexId,
+            NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1)
+        )
         if (myProducts.isEmpty()) {
             log.debug { "recommendProducts: userVertexId=$userVertexId has no PURCHASED products (user may not exist or has no purchases)" }
             return emptyList()
@@ -227,15 +246,17 @@ class RecommendationService(
         // candidateMap: candidateProductId -> (candidateVertex, evidence path)
         val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<ProductEvidencePath>>>()
 
+        val incommingOptions = NeighborOptions(PurchasedLabel.label, Direction.INCOMING, 1)
+        val outcommingOptions = NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1)
         for (product in myProducts) {
-            val coBuyers = ops.neighbors(product.id, NeighborOptions(PurchasedLabel.label, Direction.INCOMING, 1))
+            val coBuyers = ops
+                .neighbors(product.id, incommingOptions)
                 .filter { it.id != userVertexId }
 
             for (coBuyer in coBuyers) {
-                val theirProducts = ops.neighbors(
-                    coBuyer.id,
-                    NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1)
-                ).filter { it.id !in myProductIds }
+                val theirProducts = ops
+                    .neighbors(coBuyer.id, outcommingOptions)
+                    .filter { it.id !in myProductIds }
 
                 for (candidate in theirProducts) {
                     candidateMap.getOrPut(candidate.id) { candidate to mutableListOf() }
@@ -280,7 +301,10 @@ class RecommendationService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
      * @return 순위화된 [FollowRecommendation] 목록입니다. User를 찾을 수 없거나 follow가 없으면 `emptyList()`입니다.
      */
-    fun recommendFollows(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<FollowRecommendation> {
+    fun recommendFollows(
+        userVertexId: GraphElementId,
+        limit: Int = DEFAULT_RECOMMENDATION_LIMIT,
+    ): List<FollowRecommendation> {
         return explainFollowRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
@@ -305,11 +329,9 @@ class RecommendationService(
         val excludedCandidates = myFollows.map { CandidateExclusion(it.id, ALREADY_FOLLOWED) }.toMutableList()
         val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<FollowEvidencePath>>>()
 
+        val outgoingOptions = NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1)
         for (intermediary in myFollows) {
-            val candidates = ops.neighbors(
-                intermediary.id,
-                NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1)
-            )
+            val candidates = ops.neighbors(intermediary.id, outgoingOptions)
 
             for (candidate in candidates) {
                 when {
@@ -319,7 +341,7 @@ class RecommendationService(
                     candidate.id in myFollowIds ->
                         excludedCandidates += CandidateExclusion(candidate.id, ALREADY_FOLLOWED, intermediary)
 
-                    else ->
+                    else                        ->
                         candidateMap.getOrPut(candidate.id) { candidate to mutableListOf() }
                             .second += FollowEvidencePath(intermediary, candidate)
                 }

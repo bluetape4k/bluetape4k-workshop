@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.config
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.billing.persistence.BillingCharges
 import io.bluetape4k.workshop.commerce.usagebilling.billing.persistence.BillingInboxEvents
 import io.bluetape4k.workshop.commerce.usagebilling.billing.persistence.BillingOutboxEvents
@@ -12,7 +13,10 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class BillingSchemaInitializer : ApplicationRunner {
+class BillingSchemaInitializer: ApplicationRunner {
+
+    companion object: KLogging()
+
     @Transactional
     override fun run(args: ApplicationArguments) {
         SchemaUtils.create(

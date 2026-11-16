@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.r2dbc
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.exposed.r2dbc.tests.TestDB
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -20,7 +21,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractWebfluxR2dbcExposedApplicationTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private val testDB = TestDB.POSTGRESQL
 
         @JvmStatic
@@ -39,7 +40,7 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
     private var applicationContext: ApplicationContext? = null
 
     protected val context: ApplicationContext
-        get() = checkNotNull(applicationContext) { "applicationContext is not injected." }
+        get() = applicationContext.shouldNotBeNull()
 
     @Autowired
     private var injectedSchemaInitializer: SchemaInitializer? = null
@@ -48,7 +49,7 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
     private var injectedDatabase: R2dbcDatabase? = null
 
     private val schemaInitializer: SchemaInitializer
-        get() = checkNotNull(injectedSchemaInitializer) { "schemaInitializer is not injected." }
+        get() = injectedSchemaInitializer.shouldNotBeNull()
 
     protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
@@ -58,9 +59,7 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
     fun ensureSchema() {
         // QBE/FluentQuery terminal은 Exposed 기본 DB를 사용하므로, 다이얼렉트 계약
         // 테스트가 전역 값을 바꾼 뒤에도 애플리케이션 DB를 복원한다.
-        TransactionManager.defaultDatabase = checkNotNull(injectedDatabase) {
-            "r2dbcDatabase is not injected."
-        }
+        TransactionManager.defaultDatabase = injectedDatabase.shouldNotBeNull()
         schemaInitializer.initializeSchema()
     }
 

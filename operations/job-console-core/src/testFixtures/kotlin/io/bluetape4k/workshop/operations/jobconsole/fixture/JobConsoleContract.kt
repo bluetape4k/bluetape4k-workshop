@@ -9,7 +9,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -26,7 +26,7 @@ interface JobConsoleHttpDriver {
     suspend fun openEvents(jobId: UUID, scope: DemoCallerScope): JobEventProbe
 }
 
-interface JobEventProbe : AutoCloseable {
+interface JobEventProbe: AutoCloseable {
     suspend fun awaitEvent(timeout: Duration): JobEvent?
 }
 
@@ -35,7 +35,7 @@ class JobConsoleContract(
 ) {
     suspend fun submitReplay(scenario: JobConsoleScenario): Pair<JobSnapshot, JobSnapshot> =
         driver.submit(scenario.request, scenario.idempotencyKey, scenario.scope) to
-            driver.submit(scenario.request, scenario.idempotencyKey, scenario.scope)
+                driver.submit(scenario.request, scenario.idempotencyKey, scenario.scope)
 }
 
 /** Versioned black-box fixture shared by every live JVM adapter. */
@@ -142,7 +142,8 @@ class JobConsoleV1LiveContract(
                 .header("X-Demo-Submitter", "submitter-a")
         if (idempotencyKey != null) builder.header("Idempotency-Key", idempotencyKey)
         if (body == null) builder.method(method, HttpRequest.BodyPublishers.noBody())
-        else builder.header("Content-Type", "application/json").method(method, HttpRequest.BodyPublishers.ofString(body))
+        else builder.header("Content-Type", "application/json")
+            .method(method, HttpRequest.BodyPublishers.ofString(body))
         return client.send(builder.build(), HttpResponse.BodyHandlers.ofString())
     }
 

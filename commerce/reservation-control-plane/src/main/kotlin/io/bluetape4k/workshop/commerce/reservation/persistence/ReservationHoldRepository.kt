@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.reservation.persistence
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -16,12 +17,15 @@ import java.time.Instant
 
 /** owner, state, revision을 확인하는 hold mutation을 Exposed JDBC CAS update로 적용합니다. */
 @Repository
-internal class ReservationHoldRepository : LongAuditableJdbcRepository<ReservationHoldRecord, ReservationHoldTable> {
+internal class ReservationHoldRepository: LongAuditableJdbcRepository<ReservationHoldRecord, ReservationHoldTable> {
+
+    companion object: KLogging()
+
     override val table = ReservationHoldTable
 
     override fun extractId(entity: ReservationHoldRecord): Long = entity.id
 
-    override fun ResultRow.toEntity() =
+    override fun ResultRow.toEntity(): ReservationHoldRecord =
         ReservationHoldRecord(
             id = this[table.id].value,
             resourceId = this[table.resourceId].value,
@@ -42,15 +46,15 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
         policyVersion: Long,
         expiresAt: Instant,
     ): ReservationHoldRecord {
-        val id =
-            table
-                .insertAndGetId {
-                    it[table.resourceId] = resourceId
-                    it[table.ownerDigest] = ownerDigest
-                    it[table.state] = HoldState.HELD
-                    it[table.policyVersion] = policyVersion
-                    it[table.expiresAt] = expiresAt
-                }.value
+        val id = table
+            .insertAndGetId {
+                it[table.resourceId] = resourceId
+                it[table.ownerDigest] = ownerDigest
+                it[table.state] = HoldState.HELD
+                it[table.policyVersion] = policyVersion
+                it[table.expiresAt] = expiresAt
+            }.value
+
         log.debug { "reservation_hold_created holdId=$id resourceId=$resourceId policyVersion=$policyVersion" }
         return findById(id)
     }
@@ -64,9 +68,9 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
     ): Boolean =
         auditedUpdateAll({
             (table.id eq id) and
-                (table.ownerDigest eq ownerDigest) and
-                (table.revision eq expectedRevision) and
-                (table.state eq from)
+                    (table.ownerDigest eq ownerDigest) and
+                    (table.revision eq expectedRevision) and
+                    (table.state eq from)
         }) {
             it[state] = to
             it[revision] = expectedRevision + 1
@@ -81,10 +85,10 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
     ): Boolean =
         auditedUpdateAll({
             (table.id eq id) and
-                (table.ownerDigest eq ownerDigest) and
-                (table.revision eq expectedRevision) and
-                (table.state eq HoldState.HELD) and
-                (table.expiresAt eq expectedExpiresAt)
+                    (table.ownerDigest eq ownerDigest) and
+                    (table.revision eq expectedRevision) and
+                    (table.state eq HoldState.HELD) and
+                    (table.expiresAt eq expectedExpiresAt)
         }) {
             it[expiresAt] = newExpiresAt
             it[revision] = expectedRevision + 1
@@ -97,13 +101,22 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
         now: Instant,
         limit: Int,
     ): List<ExpiredResourceCandidate> {
-        require(limit in 1..32) { "limit must be between 1 and 32" }
+        limit.requireInRange(1, 32, "limit")
+
         return table
             .selectAll()
-            .where { (table.state eq HoldState.HELD) and (table.expiresAt lessEq now) }
+            .where {
+                (table.state eq HoldState.HELD) and
+                        (table.expiresAt lessEq now)
+            }
             .orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
             .limit(limit * 4)
-            .map { ExpiredResourceCandidate(it[table.resourceId].value, it[table.expiresAt]) }
+            .map {
+                ExpiredResourceCandidate(
+                    resourceId = it[table.resourceId].value,
+                    expiresAt = it[table.expiresAt]
+                )
+            }
             .distinctBy { it.resourceId }
             .take(limit)
     }
@@ -116,10 +129,10 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
             .selectAll()
             .where {
                 (table.resourceId eq resourceId) and
-                    (table.state eq HoldState.HELD) and
-                    (table.expiresAt lessEq now)
-            }.orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
-            .map { with(this) { it.toEntity() } }
+                        (table.state eq HoldState.HELD) and
+                        (table.expiresAt lessEq now)
+            }
+            .orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
+            .map { it.toEntity() }
 
-    companion object : KLogging()
 }

@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.commerce.voucherpool.admission
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import org.springframework.transaction.support.TransactionSynchronizationManager
-import java.time.Duration as JavaDuration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -15,6 +14,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
+import java.time.Duration as JavaDuration
 
 private const val DEFAULT_FOREGROUND_CAPACITY = 11
 private const val DEFAULT_WORKER_CAPACITY = 1
@@ -47,12 +47,12 @@ internal class PoolBusyException(
     val lane: PermitLane,
     val interrupted: Boolean = false,
     cause: Throwable? = null,
-) : RuntimeException("database permit unavailable for lane=$lane", cause)
+): RuntimeException("database permit unavailable for lane=$lane", cause)
 
 internal class NestedPermitException(
     val activeLane: PermitLane,
     val requestedLane: PermitLane,
-) : IllegalStateException("nested database permit acquisition is forbidden: $activeLane -> $requestedLane")
+): IllegalStateException("nested database permit acquisition is forbidden: $activeLane -> $requestedLane")
 
 /** virtual-thread concurrency를 bounded PostgreSQL connection budget 안에 유지합니다. */
 @Suppress("TooManyFunctions")
@@ -60,6 +60,22 @@ internal class DatabasePermitGate(
     hikariMaximumPoolSize: Int,
     configs: Map<PermitLane, PermitLaneConfig>,
 ) {
+
+    companion object: KLogging() {
+        fun default(hikariMaximumPoolSize: Int): DatabasePermitGate =
+            DatabasePermitGate(
+                hikariMaximumPoolSize = hikariMaximumPoolSize,
+                configs = mapOf(
+                    PermitLane.FOREGROUND to PermitLaneConfig(
+                        DEFAULT_FOREGROUND_CAPACITY,
+                        DEFAULT_FOREGROUND_WAIT_MILLIS.milliseconds
+                    ),
+                    PermitLane.WORKER to PermitLaneConfig(DEFAULT_WORKER_CAPACITY, 1.seconds),
+                    PermitLane.SSE to PermitLaneConfig(DEFAULT_SSE_CAPACITY, 1.seconds),
+                ),
+            )
+    }
+
     private val configs: Map<PermitLane, PermitLaneConfig> = configs.toMap()
     private val permits: Map<PermitLane, Semaphore>
     private val activeLane = ThreadLocal<PermitLane>()
@@ -123,6 +139,7 @@ internal class DatabasePermitGate(
     fun awaitDrained(timeout: JavaDuration): Boolean {
         require(!timeout.isNegative) { "timeout must not be negative" }
         var remaining = timeout.toNanos()
+
         drainLock.withLock {
             while (inUseTotal() > 0 && remaining > 0L) {
                 remaining = drained.awaitNanos(remaining)
@@ -131,7 +148,7 @@ internal class DatabasePermitGate(
         }
     }
 
-    private fun <T> withPermit(
+    private inline fun <T> withPermit(
         lane: PermitLane,
         block: () -> T,
     ): T {
@@ -146,6 +163,7 @@ internal class DatabasePermitGate(
 
         activeLane.set(lane)
         activeThreads += Thread.currentThread()
+
         return try {
             block()
         } finally {
@@ -164,16 +182,16 @@ internal class DatabasePermitGate(
         wait: Duration,
     ) {
         val startedAt = System.nanoTime()
-        val acquired =
-            try {
-                semaphore.tryAcquire(wait.inWholeNanoseconds, TimeUnit.NANOSECONDS)
-            } catch (interrupted: InterruptedException) {
-                Thread.currentThread().interrupt()
-                log.debug { "voucher_pool_db_permit_interrupted lane=$lane" }
-                throw PoolBusyException(lane = lane, interrupted = true, cause = interrupted)
-            } finally {
-                recordWait(lane, System.nanoTime() - startedAt)
-            }
+        val acquired = try {
+            semaphore.tryAcquire(wait.inWholeNanoseconds, TimeUnit.NANOSECONDS)
+        } catch (interrupted: InterruptedException) {
+            Thread.currentThread().interrupt()
+            log.debug { "voucher_pool_db_permit_interrupted lane=$lane" }
+            throw PoolBusyException(lane = lane, interrupted = true, cause = interrupted)
+        } finally {
+            recordWait(lane, System.nanoTime() - startedAt)
+        }
+
         if (!acquired) {
             log.debug { "voucher_pool_db_permit_timed_out lane=$lane" }
             throw PoolBusyException(lane)
@@ -199,19 +217,5 @@ internal class DatabasePermitGate(
         if (inUseTotal() == 0) {
             drainLock.withLock { drained.signalAll() }
         }
-    }
-
-    companion object : KLogging() {
-        fun default(hikariMaximumPoolSize: Int): DatabasePermitGate =
-            DatabasePermitGate(
-                hikariMaximumPoolSize = hikariMaximumPoolSize,
-                configs =
-                    mapOf(
-                        PermitLane.FOREGROUND to
-                            PermitLaneConfig(DEFAULT_FOREGROUND_CAPACITY, DEFAULT_FOREGROUND_WAIT_MILLIS.milliseconds),
-                        PermitLane.WORKER to PermitLaneConfig(DEFAULT_WORKER_CAPACITY, 1.seconds),
-                        PermitLane.SSE to PermitLaneConfig(DEFAULT_SSE_CAPACITY, 1.seconds),
-                    ),
-            )
     }
 }

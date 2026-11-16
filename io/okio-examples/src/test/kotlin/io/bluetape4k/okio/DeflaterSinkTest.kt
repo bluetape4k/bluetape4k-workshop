@@ -1,18 +1,18 @@
 package io.bluetape4k.okio
 
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import okio.Buffer
 import okio.Deflater
 import okio.DeflaterSink
 import okio.IOException
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import java.util.zip.InflaterInputStream
 import kotlin.random.Random
-import io.bluetape4k.assertions.assertFailsWith
 
 class DeflaterSinkTest: AbstractOkioTest() {
 

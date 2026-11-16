@@ -1,4 +1,3 @@
-import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -6,6 +5,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    kotlin("kapt")
 }
 
 java {

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -9,7 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class NewAggregateSnapshot(
     val stream: StreamKey,
@@ -38,8 +39,8 @@ data class StoredAggregateSnapshot(
 )
 
 @Repository
-class SnapshotRepository :
-    AppendOnlyEventSourcingExposedJdbcRepository<AggregateSnapshotEntity, UUID>(AggregateSnapshotEntity::class.java) {
+class SnapshotRepository
+    : AppendOnlyEventSourcingExposedJdbcRepository<AggregateSnapshotEntity, UUID>(AggregateSnapshotEntity::class) {
 
     fun append(snapshot: NewAggregateSnapshot): StoredAggregateSnapshot {
         val snapshotId = Uuid.V7.nextId()
@@ -58,13 +59,15 @@ class SnapshotRepository :
     }
 
     fun latest(stream: StreamKey, reducerVersion: Int): StoredAggregateSnapshot? {
-        require(reducerVersion > 0) { "snapshot_reducer_version_invalid" }
-        return AggregateSnapshots.selectAll()
+        reducerVersion.requirePositiveNumber("reducerVersion")
+
+        return AggregateSnapshots
+            .selectAll()
             .where {
                 (AggregateSnapshots.tenantId eq stream.tenantId) and
-                    (AggregateSnapshots.streamType eq stream.streamType) and
-                    (AggregateSnapshots.streamId eq stream.streamId) and
-                    (AggregateSnapshots.reducerVersion eq reducerVersion)
+                        (AggregateSnapshots.streamType eq stream.streamType) and
+                        (AggregateSnapshots.streamId eq stream.streamId) and
+                        (AggregateSnapshots.reducerVersion eq reducerVersion)
             }
             .orderBy(AggregateSnapshots.streamVersion to SortOrder.DESC)
             .limit(1)
@@ -82,7 +85,14 @@ class SnapshotRepository :
             }
     }
 
-    private fun NewAggregateSnapshot.toStored(snapshotId: UUID): StoredAggregateSnapshot = StoredAggregateSnapshot(
-        snapshotId, stream, streamVersion, reducerVersion, statePayload, lastEventHash, createdAt,
-    )
+    private fun NewAggregateSnapshot.toStored(snapshotId: UUID): StoredAggregateSnapshot =
+        StoredAggregateSnapshot(
+            snapshotId = snapshotId,
+            stream = stream,
+            streamVersion = streamVersion,
+            reducerVersion = reducerVersion,
+            statePayload = statePayload,
+            lastEventHash = lastEventHash,
+            createdAt = createdAt,
+        )
 }

@@ -8,7 +8,7 @@ data class Course(
     val id: Int,
     val name: String,
     val students: List<Student> = emptyList(),
-) : Serializable {
+): Serializable {
     init {
         id.requirePositiveNumber("id")
         name.requireNotBlank("name")
@@ -25,7 +25,7 @@ data class Student(
     val lastName: String,
     val email: String,
     val phones: List<Phone> = emptyList(),
-) : Serializable {
+): Serializable {
     init {
         id.requirePositiveNumber("id")
         firstName.requireNotBlank("firstName")
@@ -41,7 +41,7 @@ data class Student(
 data class Phone(
     val number: String,
     val type: PhoneType,
-) : Serializable {
+): Serializable {
     init {
         number.requireNotBlank("number")
     }

@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableScheduling
 @SpringBootApplication
 internal class OrderLifecycleApplication {
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 fun main(args: Array<String>) {

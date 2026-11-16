@@ -3,9 +3,13 @@ package io.bluetape4k.workshop.commerce.reservation.application
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class ReservationCredentialServiceTest {
+
+    companion object: KLogging()
+
     private val service = ReservationCredentialService("0123456789abcdef0123456789abcdef")
 
     @Test

@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.allopen)
     alias(libs.plugins.kotlin.noarg)
     alias(libs.plugins.kotlin.jpa)
-    alias(libs.plugins.kotlin.kapt)
+    kotlin("kapt")
 }
 
 // JPA Entities 들을 Java와 같이 모두 override 가능하게 합니다 (Kotlin 은 기본이 final 입니다)

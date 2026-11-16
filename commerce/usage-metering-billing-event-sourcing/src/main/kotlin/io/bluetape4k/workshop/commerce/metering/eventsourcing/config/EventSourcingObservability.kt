@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.config
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingTelemetry
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionFailureRepository
@@ -13,12 +14,14 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 @Component
 class EventSourcingMetrics(
     private val registry: MeterRegistry,
-) : BillingTelemetry, ProjectionTelemetry {
+): BillingTelemetry, ProjectionTelemetry {
+
+    companion object: KLogging()
+
     fun recordAppend(outcome: String, duration: Duration) {
         timer("billing.event.append", "outcome", outcome).record(duration)
     }
@@ -59,7 +62,7 @@ class EventSourcingMetrics(
         registry.timer(name, tagName, tagValue)
 
     private fun Timer.record(duration: Duration) {
-        record(duration.toNanos(), TimeUnit.NANOSECONDS)
+        record(duration)
     }
 }
 
@@ -69,7 +72,13 @@ class EventSourcingHealthIndicator(
     private val generations: ProjectionGenerationRepository,
     private val failures: ProjectionFailureRepository,
     transactionManager: PlatformTransactionManager,
-) : HealthIndicator {
+): HealthIndicator {
+
+    private companion object: KLogging() {
+        const val BILLING_PROJECTION = "billing"
+        const val CONNECTIVITY_PAGE_SIZE = 1
+    }
+
     private val transactions = TransactionTemplate(transactionManager).apply { isReadOnly = true }
 
     override fun health(): Health = runCatching {
@@ -84,9 +93,11 @@ class EventSourcingHealthIndicator(
         eventStore.loadAfterGlobalPosition(0, CONNECTIVITY_PAGE_SIZE)
         val active = generations.active(BILLING_PROJECTION)
             ?: return Health.down().withDetail("reason", "active_projection_missing").build()
+
         val lag = (active.highWatermark - active.checkpoint).coerceAtLeast(0)
         val failure = failures.latest(BILLING_PROJECTION, active.generation)
         val builder = if (failure == null) Health.up() else Health.down()
+
         return builder
             .withDetail("activeGeneration", active.generation)
             .withDetail("projectionPosition", active.checkpoint)
@@ -100,10 +111,5 @@ class EventSourcingHealthIndicator(
                 }
             }
             .build()
-    }
-
-    private companion object {
-        const val BILLING_PROJECTION = "billing"
-        const val CONNECTIVITY_PAGE_SIZE = 1
     }
 }

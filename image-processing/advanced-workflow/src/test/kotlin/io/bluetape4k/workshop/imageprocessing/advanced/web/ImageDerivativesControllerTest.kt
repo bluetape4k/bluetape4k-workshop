@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.web
 
 import com.ninjasquad.springmockk.MockkBean
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetDetailResponse
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetHistoryResponse
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectDTO
@@ -32,6 +33,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(controllers = [ImageDerivativesController::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ImageDerivativesControllerTest {
+
+    private companion object: KLogging()
 
     @Autowired
     private lateinit var mockMvc: MockMvc

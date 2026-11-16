@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.backendcomparison.domain
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import java.io.Serializable
@@ -30,7 +31,7 @@ data class BackendProfile(
     val avoidWhen: String,
     val practiceModulePath: String,
     val capabilities: List<BackendCapability>,
-) : Serializable {
+): Serializable {
 
     init {
         id.requireNotBlank("id")
@@ -45,7 +46,7 @@ data class BackendProfile(
         capabilities.requireNotEmpty("capabilities")
     }
 
-    companion object {
+    companion object: KLogging() {
         private const val serialVersionUID: Long = 1L
     }
 }

@@ -2,6 +2,15 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.usage.persistence
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxOutcome
@@ -11,11 +20,6 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageRecord
 import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.UsageOutboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.UsageOutboxLease
 import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.UsageOutboxStatus
-import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -24,21 +28,20 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
-import org.jetbrains.exposed.v1.javatime.timestamp
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
+import kotlin.reflect.KClass
 
-object UsageOutboxEvents : UUIDTable("usage_outbox_event", "outbox_event_id") {
-    val eventId = javaUUID("event_id")
+object UsageOutboxEvents: TimebasedUUIDTable("usage_outbox_event", "outbox_event_id") {
+    val eventId = javaUUID("event_id").uniqueIndex()
     val tenantId = varchar("tenant_id", 64)
     val eventType = varchar("event_type", 128)
     val aggregateType = varchar("aggregate_type", 64)
@@ -56,12 +59,11 @@ object UsageOutboxEvents : UUIDTable("usage_outbox_event", "outbox_event_id") {
     val updatedAt = timestamp("updated_at")
 
     init {
-        uniqueIndex(eventId)
         index(false, status, nextAttemptAt, id)
     }
 }
 
-object UsagePriceEvidence : UUIDTable("usage_price_evidence", "price_evidence_id") {
+object UsagePriceEvidence: TimebasedUUIDTable("usage_price_evidence", "price_evidence_id") {
     val tenantId = varchar("tenant_id", 64)
     val meterCode = varchar("meter_code", 64)
     val currency = varchar("currency", 3)
@@ -73,7 +75,8 @@ object UsagePriceEvidence : UUIDTable("usage_price_evidence", "price_evidence_id
     }
 }
 
-object UsagePriceEvidenceInboxEvents : UUIDTable("usage_price_evidence_inbox_event", "price_evidence_inbox_event_id") {
+object UsagePriceEvidenceInboxEvents:
+    TimebasedUUIDTable("usage_price_evidence_inbox_event", "price_evidence_inbox_event_id") {
     val eventId = javaUUID("event_id")
     val tenantId = varchar("tenant_id", 64)
     val payloadDigest = varchar("payload_digest", 64)
@@ -84,7 +87,7 @@ object UsagePriceEvidenceInboxEvents : UUIDTable("usage_price_evidence_inbox_eve
     }
 }
 
-object UsageRecords : UUIDTable("usage_record", "usage_id") {
+object UsageRecords: TimebasedUUIDTable("usage_record", "usage_id") {
     val tenantId = varchar("tenant_id", 64)
     val sourceSystem = varchar("source_system", 64)
     val sourceEventId = varchar("source_event_id", 128)
@@ -101,8 +104,8 @@ object UsageRecords : UUIDTable("usage_record", "usage_id") {
     }
 }
 
-class UsageOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UsageOutboxEventEntity>(UsageOutboxEvents)
+class UsageOutboxEventEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<UsageOutboxEventEntity>(UsageOutboxEvents)
 
     var eventId by UsageOutboxEvents.eventId
     var tenantId by UsageOutboxEvents.tenantId
@@ -122,8 +125,8 @@ class UsageOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by UsageOutboxEvents.updatedAt
 }
 
-class UsagePriceEvidenceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UsagePriceEvidenceEntity>(UsagePriceEvidence)
+class UsagePriceEvidenceEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<UsagePriceEvidenceEntity>(UsagePriceEvidence)
 
     var tenantId by UsagePriceEvidence.tenantId
     var meterCode by UsagePriceEvidence.meterCode
@@ -132,8 +135,8 @@ class UsagePriceEvidenceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var effectiveAt by UsagePriceEvidence.effectiveAt
 }
 
-class UsagePriceEvidenceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UsagePriceEvidenceInboxEventEntity>(UsagePriceEvidenceInboxEvents)
+class UsagePriceEvidenceInboxEventEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<UsagePriceEvidenceInboxEventEntity>(UsagePriceEvidenceInboxEvents)
 
     var eventId by UsagePriceEvidenceInboxEvents.eventId
     var tenantId by UsagePriceEvidenceInboxEvents.tenantId
@@ -141,8 +144,8 @@ class UsagePriceEvidenceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by UsagePriceEvidenceInboxEvents.createdAt
 }
 
-class UsageRecordEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UsageRecordEntity>(UsageRecords)
+class UsageRecordEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<UsageRecordEntity>(UsageRecords)
 
     var tenantId by UsageRecords.tenantId
     var sourceSystem by UsageRecords.sourceSystem
@@ -157,16 +160,16 @@ class UsageRecordEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 }
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class UsageExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
+abstract class UsageExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass.java))
 
 @Suppress("AbstractClassCanBeConcreteClass")
-abstract class AppendOnlyUsageExposedJdbcRepository<E : Entity<ID>, ID : Any>(
-    domainClass: Class<E>,
-) : UsageExposedJdbcRepository<E, ID>(domainClass) {
-    final override fun <S : E> save(entity: S): S = immutableMutation()
-    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+abstract class AppendOnlyUsageExposedJdbcRepository<E: Entity<ID>, ID: Any>(
+    domainClass: KClass<E>,
+): UsageExposedJdbcRepository<E, ID>(domainClass) {
+    final override fun <S: E> save(entity: S): S = immutableMutation()
+    final override fun <S: E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
     final override fun deleteById(id: ID): Unit = immutableMutation()
     final override fun delete(entity: E): Unit = immutableMutation()
     final override fun deleteAllById(ids: Iterable<ID>): Unit = immutableMutation()
@@ -177,12 +180,12 @@ abstract class AppendOnlyUsageExposedJdbcRepository<E : Entity<ID>, ID : Any>(
 }
 
 @Repository
-class UsageOutboxRepository :
-    AppendOnlyUsageExposedJdbcRepository<UsageOutboxEventEntity, UUID>(UsageOutboxEventEntity::class.java)
+class UsageOutboxRepository:
+    AppendOnlyUsageExposedJdbcRepository<UsageOutboxEventEntity, UUID>(UsageOutboxEventEntity::class)
 
 @Repository
-class UsagePriceEvidenceRepository :
-    AppendOnlyUsageExposedJdbcRepository<UsagePriceEvidenceEntity, UUID>(UsagePriceEvidenceEntity::class.java) {
+class UsagePriceEvidenceRepository:
+    AppendOnlyUsageExposedJdbcRepository<UsagePriceEvidenceEntity, UUID>(UsagePriceEvidenceEntity::class) {
     fun append(evidence: PriceEvidence) {
         UsagePriceEvidenceEntity.new {
             tenantId = evidence.tenantId
@@ -195,24 +198,26 @@ class UsagePriceEvidenceRepository :
 }
 
 @Repository
-class UsagePriceEvidenceInboxRepository :
+class UsagePriceEvidenceInboxRepository:
     AppendOnlyUsageExposedJdbcRepository<UsagePriceEvidenceInboxEventEntity, UUID>(
-        UsagePriceEvidenceInboxEventEntity::class.java,
+        UsagePriceEvidenceInboxEventEntity::class,
     ) {
     fun record(event: PriceEvidenceInboxEvent): PriceEvidenceInboxOutcome {
-        val inserted =
-            UsagePriceEvidenceInboxEvents.insertIgnore {
-                it[eventId] = event.eventId
-                it[tenantId] = event.tenantId
-                it[payloadDigest] = event.payloadDigest
-                it[createdAt] = event.evidence.effectiveAt
-            }.insertedCount == 1
+        val inserted = UsagePriceEvidenceInboxEvents.insertIgnore {
+            it[eventId] = event.eventId
+            it[tenantId] = event.tenantId
+            it[payloadDigest] = event.payloadDigest
+            it[createdAt] = event.evidence.effectiveAt
+        }.insertedCount == 1
+
         if (!inserted) {
             val existing = UsagePriceEvidenceInboxEvents.selectAll()
                 .where {
                     (UsagePriceEvidenceInboxEvents.tenantId eq event.tenantId) and
-                        (UsagePriceEvidenceInboxEvents.eventId eq event.eventId)
-                }.singleOrNull()
+                            (UsagePriceEvidenceInboxEvents.eventId eq event.eventId)
+                }
+                .singleOrNull()
+
             return when (existing?.get(UsagePriceEvidenceInboxEvents.payloadDigest)) {
                 event.payloadDigest -> PriceEvidenceInboxOutcome.DUPLICATE
                 else -> PriceEvidenceInboxOutcome.QUARANTINED
@@ -230,29 +235,53 @@ class UsagePriceEvidenceInboxRepository :
 }
 
 @Repository
-class UsageRecordRepository :
-    AppendOnlyUsageExposedJdbcRepository<UsageRecordEntity, UUID>(UsageRecordEntity::class.java)
+class UsageRecordRepository:
+    AppendOnlyUsageExposedJdbcRepository<UsageRecordEntity, UUID>(UsageRecordEntity::class)
 
 @Repository
-class ExposedUsageAcceptanceJournal : UsageAcceptanceJournal {
+class ExposedUsageAcceptanceJournal: UsageAcceptanceJournal {
+
     override fun priceEvidence(tenantId: String, meterCode: String, currency: String): PriceEvidence? =
-        UsagePriceEvidenceEntity.find {
-            (UsagePriceEvidence.tenantId eq tenantId) and
-                (UsagePriceEvidence.meterCode eq meterCode) and
-                (UsagePriceEvidence.currency eq currency)
-        }.firstOrNull()?.let { PriceEvidence(it.tenantId, it.meterCode, it.currency, it.unitPrice, it.effectiveAt) }
+        UsagePriceEvidenceEntity
+            .find {
+                (UsagePriceEvidence.tenantId eq tenantId) and
+                        (UsagePriceEvidence.meterCode eq meterCode) and
+                        (UsagePriceEvidence.currency eq currency)
+            }
+            .firstOrNull()
+            ?.let {
+                PriceEvidence(
+                    it.tenantId,
+                    it.meterCode,
+                    it.currency,
+                    it.unitPrice,
+                    it.effectiveAt
+                )
+            }
 
     override fun findUsage(tenantId: String, sourceSystem: String, sourceEventId: String): UsageRecord? =
-        UsageRecordEntity.find {
-            (UsageRecords.tenantId eq tenantId) and
-                (UsageRecords.sourceSystem eq sourceSystem) and
-                (UsageRecords.sourceEventId eq sourceEventId)
-        }.firstOrNull()?.let {
-            UsageRecord(
-                it.id.value, it.eventId, it.tenantId, it.sourceSystem, it.sourceEventId, it.fingerprint,
-                it.meterCode, it.currency, it.quantity, it.unitPrice, it.occurredAt,
-            )
-        }
+        UsageRecordEntity
+            .find {
+                (UsageRecords.tenantId eq tenantId) and
+                        (UsageRecords.sourceSystem eq sourceSystem) and
+                        (UsageRecords.sourceEventId eq sourceEventId)
+            }
+            .firstOrNull()
+            ?.let {
+                UsageRecord(
+                    it.id.value,
+                    it.eventId,
+                    it.tenantId,
+                    it.sourceSystem,
+                    it.sourceEventId,
+                    it.fingerprint,
+                    it.meterCode,
+                    it.currency,
+                    it.quantity,
+                    it.unitPrice,
+                    it.occurredAt,
+                )
+            }
 
     override fun append(usage: UsageRecord, outboxRecord: UsageOutboxRecord) {
         UsageRecordEntity.new(usage.usageId) {
@@ -289,10 +318,18 @@ class ExposedUsageAcceptanceJournal : UsageAcceptanceJournal {
 }
 
 @Repository
-class ExposedUsageOutboxJournal : UsageOutboxJournal {
+class ExposedUsageOutboxJournal: UsageOutboxJournal {
+
+    private companion object: KLogging() {
+        val CLAIM_LEASE: Duration = 30.seconds()
+        val RETRY_DELAY: Duration = 1.seconds()
+        const val MAX_ATTEMPTS = 3
+    }
+
     @Transactional
     override fun claim(owner: String, now: Instant, limit: Int): List<UsageOutboxLease> =
-        UsageOutboxEvents.selectAll()
+        UsageOutboxEvents
+            .selectAll()
             .where { claimableAt(now) }
             .orderBy(UsageOutboxEvents.createdAt to SortOrder.ASC, UsageOutboxEvents.id to SortOrder.ASC)
             .limit(limit)
@@ -307,7 +344,9 @@ class ExposedUsageOutboxJournal : UsageOutboxJournal {
                     it[updatedAt] = now
                 }
                 if (claimed != 1) return@mapNotNull null
-                UsageOutboxEvents.selectAll()
+
+                UsageOutboxEvents
+                    .selectAll()
                     .where { UsageOutboxEvents.eventId eq eventId }
                     .singleOrNull()
                     ?.let { claimedRow ->
@@ -331,7 +370,8 @@ class ExposedUsageOutboxJournal : UsageOutboxJournal {
 
     @Transactional
     override fun markRetryWait(eventId: UUID, owner: String, now: Instant): Boolean =
-        UsageOutboxEvents.selectAll()
+        UsageOutboxEvents
+            .selectAll()
             .where { claimedBy(owner, eventId, now) }
             .singleOrNull()
             ?.let { row ->
@@ -352,20 +392,15 @@ class ExposedUsageOutboxJournal : UsageOutboxJournal {
 
     private fun claimableAt(now: Instant): Op<Boolean> =
         (UsageOutboxEvents.status eq UsageOutboxStatus.PENDING.name) or
-            ((UsageOutboxEvents.status eq UsageOutboxStatus.RETRY_WAIT.name) and
-                (UsageOutboxEvents.nextAttemptAt lessEq now)) or
-            ((UsageOutboxEvents.status eq UsageOutboxStatus.CLAIMED.name) and
-                (UsageOutboxEvents.claimUntil lessEq now))
+                ((UsageOutboxEvents.status eq UsageOutboxStatus.RETRY_WAIT.name) and
+                        (UsageOutboxEvents.nextAttemptAt lessEq now)) or
+                ((UsageOutboxEvents.status eq UsageOutboxStatus.CLAIMED.name) and
+                        (UsageOutboxEvents.claimUntil lessEq now))
 
     private fun claimedBy(owner: String, eventId: UUID, now: Instant): Op<Boolean> =
         (UsageOutboxEvents.eventId eq eventId) and
-            (UsageOutboxEvents.status eq UsageOutboxStatus.CLAIMED.name) and
-            (UsageOutboxEvents.claimOwner eq owner) and
-            (UsageOutboxEvents.claimUntil greater now)
+                (UsageOutboxEvents.status eq UsageOutboxStatus.CLAIMED.name) and
+                (UsageOutboxEvents.claimOwner eq owner) and
+                (UsageOutboxEvents.claimUntil greater now)
 
-    private companion object {
-        val CLAIM_LEASE: Duration = Duration.ofSeconds(30)
-        val RETRY_DELAY: Duration = Duration.ofSeconds(1)
-        const val MAX_ATTEMPTS = 3
-    }
 }

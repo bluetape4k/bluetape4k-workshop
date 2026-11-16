@@ -7,5 +7,6 @@ import io.bluetape4k.workshop.optimization.warehouseallocation.planner.Warehouse
 internal class DeterministicWarehouseAllocationPlanner(
     private val delegate: WarehouseAllocationPlanner = WarehouseAllocationPlanner(),
 ) {
-    fun plan(input: WarehouseAllocationPlannerInput): WarehouseAllocationPlannerOutput = delegate.plan(input)
+    fun plan(input: WarehouseAllocationPlannerInput): WarehouseAllocationPlannerOutput =
+        delegate.plan(input)
 }

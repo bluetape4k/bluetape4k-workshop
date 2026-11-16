@@ -1,11 +1,16 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigestMatch
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import io.bluetape4k.workshop.optimization.fieldservice.domain.InvalidFieldServiceInput
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ProviderRequestId
+import okio.withLock
+import java.util.concurrent.locks.ReentrantLock
 
 /** #524 planning lifecycle을 선택적으로 감싸는 transport port입니다. assignment 권위는 갖지 않습니다. */
 fun interface PlanningContractsTransport {
@@ -20,11 +25,11 @@ data class PlanningContractsSubmission(
     val provider: FieldServiceProvider,
 ) {
     init {
-        require(aggregateId.isNotBlank()) { "aggregateId must not be blank" }
+        aggregateId.requireNotBlank("aggregateId")
         require(aggregateId.length <= FieldServiceLimits.MAX_STRING_LENGTH) {
             "aggregateId exceeds ${FieldServiceLimits.MAX_STRING_LENGTH} characters"
         }
-        require(aggregateVersion >= 0L) { "aggregateVersion must be non-negative" }
+        aggregateVersion.requireZeroOrPositiveNumber("aggregateVersion")
         require(provider != FieldServiceProvider.UNKNOWN) { "provider must be known" }
     }
 }
@@ -42,7 +47,11 @@ class PlanningContractsHttpAdapter(
     private val signatureVerifier: FieldServiceSignatureVerifier = FieldServiceSignatureVerifier.fixture(),
     private val canonicalizer: FieldServiceCanonicalizer = FieldServiceCanonicalizer(),
 ) {
-    private val callbackMutex = Any()
+
+    companion object: KLogging()
+
+    private val callbackMutex = ReentrantLock()
+
     fun submit(
         aggregateId: String,
         aggregateVersion: Long,
@@ -151,20 +160,21 @@ class PlanningContractsHttpAdapter(
         envelope: FieldServiceCallbackEnvelope,
         rawBody: ByteArray,
         signature: String?,
-    ): FieldServiceCallbackResult = synchronized(callbackMutex) {
-        val result = preflight(envelope, rawBody, signature)
-        when (result.decision) {
-            FieldServiceCallbackDecision.ACCEPTED -> {
-                callbackState.accept(envelope, canonicalizer.digest(rawBody))
-                result.copy(stateChanged = true)
+    ): FieldServiceCallbackResult =
+        callbackMutex.withLock {
+            val result = preflight(envelope, rawBody, signature)
+            when (result.decision) {
+                FieldServiceCallbackDecision.ACCEPTED -> {
+                    callbackState.accept(envelope, canonicalizer.digest(rawBody))
+                    result.copy(stateChanged = true)
+                }
+                FieldServiceCallbackDecision.STALE_REVISION,
+                FieldServiceCallbackDecision.STALE_REQUEST_GENERATION,
+                                                      -> {
+                    callbackState.audit(result.decision, envelope)
+                    result.copy(auditOnly = true)
+                }
+                else                                  -> result
             }
-            FieldServiceCallbackDecision.STALE_REVISION,
-            FieldServiceCallbackDecision.STALE_REQUEST_GENERATION,
-            -> {
-                callbackState.audit(result.decision, envelope)
-                result.copy(auditOnly = true)
-            }
-            else -> result
         }
-    }
 }

@@ -1,12 +1,16 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.domain
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class PriceEvidenceInboxEventTest {
+
+    companion object: KLogging()
+
     @Test
     fun `tenant mismatch is rejected as producer input`() {
         assertFailsWith<IllegalArgumentException> {

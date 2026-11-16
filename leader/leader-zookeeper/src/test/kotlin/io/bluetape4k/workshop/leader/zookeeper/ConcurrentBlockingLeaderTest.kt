@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.utils.Runtimex
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
@@ -21,10 +24,12 @@ import kotlin.math.max
  *
  * [MultithreadingTester](bluetape4k-junit5)를 사용한다. 직접 Thread/Executors/CyclicBarrier를 쓰지 않는다.
  */
-class ConcurrentBlockingLeaderTest : AbstractLeaderZookeeperTest() {
+class ConcurrentBlockingLeaderTest: AbstractLeaderZookeeperTest() {
+
+    companion object: KLogging()
 
     @Test
-    fun `peakConcurrent never exceeds 1 across 8 concurrent workers`() {
+    fun `peakConcurrent never exceeds 1 across core x 2 concurrent workers`() {
         val lockName = randomLockName("t2")
         // worker들이 같은 대상에서 경쟁하도록 공유 단일 elector를 worker 블록 밖에서 한 번만 만든다.
         val elector = newElector()
@@ -34,8 +39,8 @@ class ConcurrentBlockingLeaderTest : AbstractLeaderZookeeperTest() {
         val peakConcurrent = AtomicInteger(0)
 
         MultithreadingTester()
-            .workers(8)
-            .rounds(1)
+            .workers(Runtimex.availableProcessors)
+            .rounds(2)
             .add {
                 elector.runIfLeader(lockName) {
                     val c = current.incrementAndGet()
@@ -52,7 +57,39 @@ class ConcurrentBlockingLeaderTest : AbstractLeaderZookeeperTest() {
             }
             .run()
 
-        peakConcurrent.get() shouldBeLessOrEqualTo 1
+        peakConcurrent.get() shouldBeEqualTo 1
+        executed.get() shouldBeGreaterThan 3
+    }
+
+    @Test
+    fun `peakConcurrent never exceeds core x 2 virtual thread workers`() {
+        val lockName = randomLockName("t2")
+        // worker들이 같은 대상에서 경쟁하도록 공유 단일 elector를 worker 블록 밖에서 한 번만 만든다.
+        val elector = newElector()
+
+        val executed = AtomicInteger(0)
+        val current = AtomicInteger(0)
+        val peakConcurrent = AtomicInteger(0)
+
+        StructuredTaskScopeTester()
+            .rounds(Runtimex.availableProcessors * 2)
+            .add {
+                elector.runIfLeader(lockName) {
+                    val c = current.incrementAndGet()
+                    peakConcurrent.updateAndGet { max(it, c) }
+                    try {
+                        executed.incrementAndGet()
+                        // 다른 worker가 실제로 경합하도록 lock을 잠깐 유지하되,
+                        // 500ms waitTime 안에 여러 worker가 순차 진입할 수 있을 만큼 짧게 유지한다.
+                        Thread.sleep(30)
+                    } finally {
+                        current.decrementAndGet()
+                    }
+                }
+            }
+            .run()
+
+        peakConcurrent.get() shouldBeEqualTo 1
         executed.get() shouldBeGreaterThan 3
     }
 }

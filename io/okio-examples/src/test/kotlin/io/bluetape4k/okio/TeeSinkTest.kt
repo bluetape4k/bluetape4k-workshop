@@ -1,8 +1,11 @@
-package okio.samples
+package io.bluetape4k.okio
 
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.KLogging
+import okio.Buffer
+import okio.Sink
+import okio.Timeout
 import okio.buffer
 import okio.sink
 import org.junit.jupiter.api.Test
@@ -25,16 +28,16 @@ class TeeSinkTest {
     }
 
     class TeeSink(
-        private val sinkA: okio.Sink,
-        private val sinkB: okio.Sink,
-    ): okio.Sink {
+        private val sinkA: Sink,
+        private val sinkB: Sink,
+    ): Sink {
 
-        private val timeout = okio.Timeout()
+        private val timeout = Timeout()
 
-        override fun write(source: okio.Buffer, byteCount: Long) {
+        override fun write(source: Buffer, byteCount: Long) {
             // sink 에 쓰면 source 가 mutate 되므로 이를 우회합니다.
             sinkA.timeout().intersectWith(timeout) {
-                val buffer = okio.Buffer()
+                val buffer = Buffer()
                 source.copyTo(buffer, byteCount = byteCount)
                 sinkA.write(buffer, byteCount)
             }

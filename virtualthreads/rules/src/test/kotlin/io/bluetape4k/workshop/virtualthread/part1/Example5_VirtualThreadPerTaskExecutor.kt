@@ -1,16 +1,16 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
-import io.bluetape4k.assertions.shouldBeEmpty
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 
-class Example5_VirtualThreadPerTaskExecutor : AbstractVirtualThreadTest() {
+class Example5_VirtualThreadPerTaskExecutor: AbstractVirtualThreadTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `Virtual threads per Task Executor`() {

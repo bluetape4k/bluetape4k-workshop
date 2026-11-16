@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.resilience.filters
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.trace
+import io.bluetape4k.logging.debug
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
 @Order(Int.MAX_VALUE)
 class RedirectWebFilter: WebFilter {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val ROOT_PATH = "/"
         const val SWAGGER_PATH = "/swagger-ui.html"
     }
@@ -28,7 +28,7 @@ class RedirectWebFilter: WebFilter {
                     .request(exchange.request.mutate().path(SWAGGER_PATH).build())
                     .build()
                     .apply {
-                        log.trace { "redirect to `$SWAGGER_PATH`" }
+                        log.debug { "redirect to `$SWAGGER_PATH`" }
                     }
 
             else      -> exchange

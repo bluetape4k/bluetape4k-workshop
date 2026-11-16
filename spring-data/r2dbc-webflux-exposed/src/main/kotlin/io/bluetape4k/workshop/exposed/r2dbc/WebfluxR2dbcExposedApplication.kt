@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.server.coRouter
 )
 class WebfluxR2dbcExposedApplication {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Bean
     fun userRoute(userHandler: UserHandler) = coRouter {

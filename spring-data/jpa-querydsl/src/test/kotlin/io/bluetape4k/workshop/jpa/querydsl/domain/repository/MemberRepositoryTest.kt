@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.jpa.querydsl.domain.repository
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jpa.querydsl.domain.AbstractDomainTest
 import io.bluetape4k.workshop.jpa.querydsl.domain.dto.MemberSearchCondition
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.jpa.querydsl.services.InitMemberService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,14 +15,14 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 
 class MemberRepositoryTest(
-    @param:Autowired private val memberRepo: MemberRepository,
-    @param:Autowired initMemberService: InitMemberService,
-    @param:Autowired tem: TestEntityManager,
-) : AbstractDomainTest(
+    @Autowired private val memberRepo: MemberRepository,
+    @Autowired initMemberService: InitMemberService,
+    @Autowired tem: TestEntityManager,
+): AbstractDomainTest(
     initMemberService = initMemberService,
     tem = tem,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `context loading`() {
@@ -32,10 +32,7 @@ class MemberRepositoryTest(
     @Test
     fun `find by search condition`() {
         val searchCond = MemberSearchCondition(memberName = "member-5")
-        val memberTeamDtos = memberRepo.search(searchCond)
-        memberTeamDtos.forEach {
-            log.debug { it }
-        }
+        val memberTeamDtos = memberRepo.search(searchCond).onEach { log.debug { "DTO=$it" } }
         memberTeamDtos shouldHaveSize 1
     }
 
@@ -46,6 +43,7 @@ class MemberRepositoryTest(
 
         val page = memberRepo.searchPageSimple(searchCond, pageable)
 
+        log.debug { "page=$page" }
         page.totalElements shouldBeEqualTo 10L
         page.content shouldHaveSize 5
         page.content.map { it.member.age } shouldBeEqualTo listOf(38, 36, 34, 32, 30)
@@ -58,6 +56,7 @@ class MemberRepositoryTest(
 
         val page = memberRepo.searchPageComplex(searchCond, pageable)
 
+        log.debug { "page=$page" }
         page.totalElements shouldBeEqualTo 10L
         page.content shouldHaveSize 3
         page.content.map { it.member.age } shouldBeEqualTo listOf(17, 19, 21)
@@ -70,6 +69,7 @@ class MemberRepositoryTest(
 
         val page = memberRepo.searchPageExtremeCountQuery(searchCond, pageable)
 
+        log.debug { "page=$page" }
         page.totalElements shouldBeEqualTo 5L
         page.content shouldHaveSize 4
         page.content.map { it.member.age } shouldBeEqualTo listOf(40, 42, 44, 46)

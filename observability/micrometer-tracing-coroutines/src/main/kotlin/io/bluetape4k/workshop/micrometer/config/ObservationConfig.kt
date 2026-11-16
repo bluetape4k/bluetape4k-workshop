@@ -34,6 +34,7 @@ class ObservationConfig {
      */
     private fun skipControllers(pjp: ProceedingJoinPoint): Boolean {
         val targetClass: Class<*> = pjp.target.javaClass
+
         return targetClass.isAnnotationPresent(RestController::class.java) ||
                 targetClass.isAnnotationPresent(Controller::class.java)
     }

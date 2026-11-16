@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.resilience.circuitbreaker.AbstractCircuitBreakerTest
 import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.workshop.resilience.circuitbreaker.AbstractCircuitBreakerTest
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class SuspendMethod {
@@ -117,7 +117,7 @@ class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
         fun `Backend A - 연속된 예외에 Circuit breaker 가 Open 상태로 전환됩니다`() {
             // 예외가 6번 발생 (call 2회 * retry 3회) - 6회 예외
             // minimumNumberOfCalls = 5 < 6 회 예외
-            repeat(2) {
+            repeat(6) {
                 procedureFlowFailure(BACKEND_A)
             }
             checkHealthStatus(BACKEND_A, CircuitBreaker.State.OPEN)
@@ -160,12 +160,12 @@ class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
             checkHealthStatus(BACKEND_B, CircuitBreaker.State.OPEN)
         }
 
-        @Disabled("Resilience4j 가 아직 Spring Boot 4 를 지원하지 않습니다")
         @Test
         fun `Backend B - 연속적으로 작업이 성공하면 Circuit Breaker는 Closed 상태로 전환됩니다`() {
             // Circuit breaker 는 OPEN -> HALF OPEN -> CLOSED 상태로 전환됩니다 (OPEN에서 바로 CLOSED로 전환되지 않습니다)
             // 1. Circuit breaker를 OPEN 상태로 전환
             transitionToOpenState(BACKEND_B)
+
             // 2.Circuit breaker를 HALF_OPEN 상태로 전환
             transitionToHalfOpenState(BACKEND_B)
             checkHealthStatus(BACKEND_B, CircuitBreaker.State.HALF_OPEN)

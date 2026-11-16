@@ -20,10 +20,10 @@ import org.neo4j.driver.GraphDatabase
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class EventLineageNeo4jTest : AbstractEventLineageTest() {
+class EventLineageNeo4jTest: AbstractEventLineageTest() {
 
-    companion object : KLogging() {
-        private val neo4j = Neo4jServer.Launcher.neo4j
+    companion object: KLogging() {
+        private val neo4j by lazy { Neo4jServer.Launcher.neo4j }
     }
 
     override val graphName: String = "neo4j_event_lineage"

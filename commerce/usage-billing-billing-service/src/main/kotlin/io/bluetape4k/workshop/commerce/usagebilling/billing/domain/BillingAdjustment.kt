@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.domain
 
-import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNegativeNumber
+import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 data class BillingAdjustmentCommand(
     val adjustmentEventId: UUID,
@@ -12,7 +12,7 @@ data class BillingAdjustmentCommand(
     val correctionOf: UUID,
     val amount: BigDecimal,
     val currency: String,
-) : Serializable {
+): Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         currency.requireNotBlank("currency")

@@ -14,7 +14,10 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 internal class ReservationSchemaInitializer(
     private val resources: CapacityResourceRepository,
-) : ApplicationRunner {
+): ApplicationRunner {
+
+    companion object: KLogging()
+
     @Transactional
     override fun run(args: ApplicationArguments) {
         SchemaUtils.create(*reservationTables)
@@ -23,6 +26,4 @@ internal class ReservationSchemaInitializer(
         }
         log.info { "reservation_schema_initialized tableCount=${reservationTables.size}" }
     }
-
-    companion object : KLogging()
 }

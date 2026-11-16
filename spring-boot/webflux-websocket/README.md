@@ -5,15 +5,13 @@
 ## What this example shows
 
 This module demonstrates raw WebFlux WebSocket streaming without STOMP. A browser connects to
-`/event-emitter`, `ReactiveWebSocketHandler` turns generated quote JSON into WebSocket text messages, and
-the same `QuoteGenerator` also backs the `/quotes` NDJSON HTTP routes used by tests.
+`/event-emitter`, `ReactiveWebSocketHandler` turns generated quote JSON into WebSocket text messages, and the same `QuoteGenerator` also backs the `/quotes` NDJSON HTTP routes used by tests.
 
 ## Architecture Diagram
 
 ![WebFlux WebSocket quote architecture](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-architecture-01.png)
 
-The architecture separates the static page, WebSocket handler mapping, quote generation, NDJSON routes, and
-Netty runtime tuning.
+The architecture separates the static page, WebSocket handler mapping, quote generation, NDJSON routes, and Netty runtime tuning.
 
 ## Quote Streaming Flow
 
@@ -23,20 +21,19 @@ Original source: [sample-webflux-websockets](https://github.com/ketangit/sample-
 
 ## Introduction
 
-This example demonstrates asynchronous quote delivery over WebSocket and coroutine-friendly HTTP streaming
-over `application/x-ndjson`.
+This example demonstrates asynchronous quote delivery over WebSocket and coroutine-friendly HTTP streaming over `application/x-ndjson`.
 
 ## Main Components
 
-| Class | Role |
-|---|---|
-| `ReactiveWebSocketConfiguration` | Maps the handler to `/event-emitter` and registers the `WebSocketHandlerAdapter` bean |
-| `ReactiveWebSocketHandler` | Receives a `WebSocketSession` and sends the Quote stream as text messages |
-| `QuoteGenerator` | Service that periodically generates prices for seven stock tickers such as APPL, TSLA, and GOOG |
-| `SampleWebfluxRouter` | Configures HTTP routes |
-| `NettyConfig` | Configures the Netty server |
-| `Quote` | Data model containing ticker, price, and timestamp |
-| `Event` | Event wrapper that combines traceId (UUID v7) + a list of Quotes |
+| Class                            | Role                                                                                            |
+|----------------------------------|-------------------------------------------------------------------------------------------------|
+| `ReactiveWebSocketConfiguration` | Maps the handler to `/event-emitter` and registers the `WebSocketHandlerAdapter` bean           |
+| `ReactiveWebSocketHandler`       | Receives a `WebSocketSession` and sends the Quote stream as text messages                       |
+| `QuoteGenerator`                 | Service that periodically generates prices for seven stock tickers such as APPL, TSLA, and GOOG |
+| `SampleWebfluxRouter`            | Configures HTTP routes                                                                          |
+| `NettyConfig`                    | Configures the Netty server                                                                     |
+| `Quote`                          | Data model containing ticker, price, and timestamp                                              |
+| `Event`                          | Event wrapper that combines traceId (UUID v7) + a list of Quotes                                |
 
 ## Data Model
 

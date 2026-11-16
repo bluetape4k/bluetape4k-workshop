@@ -1,17 +1,18 @@
 package io.bluetape4k.workshop.commerce.voucherpool
 
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolTestKeyMaterialConfiguration
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.context.annotation.Import
 import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.context.annotation.Import
-import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolTestKeyMaterialConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.net.http.HttpClient
 import java.time.Duration
@@ -26,22 +27,10 @@ import java.time.Duration
     "AbstractClassCanBeConcreteClass",
 ) // Shared JUnit fixture must not be discovered as a concrete test class.
 internal abstract class AbstractVoucherPoolIntegrationTest {
-    @LocalServerPort
-    protected var port: Int = 0
-
-    protected val webTestClient: WebTestClient by lazy { testClient(port) }
-
-    protected fun testClient(port: Int): WebTestClient {
-        val connector = JdkClientHttpConnector(HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build())
-        return WebTestClient.bindToServer(connector)
-            .baseUrl("http://127.0.0.1:$port")
-            .responseTimeout(HTTP_TIMEOUT)
-            .build()
-    }
 
     protected companion object {
-        val HTTP_TIMEOUT: Duration = Duration.ofSeconds(60)
-        val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
+        val HTTP_TIMEOUT: Duration = 60.seconds()
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
         @DynamicPropertySource
@@ -55,4 +44,18 @@ internal abstract class AbstractVoucherPoolIntegrationTest {
             registry.add("workshop.voucher-pool.http.operator-guard") { "test-voucher-pool-operator-guard" }
         }
     }
+
+    @LocalServerPort
+    protected var port: Int = 0
+
+    protected val webTestClient: WebTestClient by lazy { testClient(port) }
+
+    protected fun testClient(port: Int): WebTestClient {
+        val connector = JdkClientHttpConnector(HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build())
+        return WebTestClient.bindToServer(connector)
+            .baseUrl("http://127.0.0.1:$port")
+            .responseTimeout(HTTP_TIMEOUT)
+            .build()
+    }
+
 }

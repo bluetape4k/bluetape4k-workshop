@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.messaging.outbox.domain
 
-import tools.jackson.databind.ObjectMapper
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
@@ -15,6 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import tools.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 
 /**
@@ -27,7 +27,7 @@ import java.time.LocalDateTime
 class OrderService(
     private val objectMapper: ObjectMapper,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * 새 order 를 place 하고 `OrderPlaced` outbox event 를 atomically 기록합니다.
@@ -119,17 +119,9 @@ class OrderService(
     /** 모든 order 를 id ascending 순서로 반환합니다. */
     @Transactional(readOnly = true)
     fun getAllOrders(): List<OrderResponse> =
-        OrderTable.selectAll().orderBy(OrderTable.id to SortOrder.ASC).map { row ->
-            OrderResponse(
-                id = row[OrderTable.id].value,
-                customerId = row[OrderTable.customerId],
-                product = row[OrderTable.product],
-                quantity = row[OrderTable.quantity],
-                status = row[OrderTable.status],
-                createdAt = row[OrderTable.createdAt],
-                updatedAt = row[OrderTable.updatedAt],
-            )
-        }
+        OrderTable.selectAll()
+            .orderBy(OrderTable.id to SortOrder.ASC)
+            .map { row -> row.toOrderResponse() }
 
     // ── 내부 helper ───────────────────────────────────────────────────────────
 
@@ -139,14 +131,6 @@ class OrderService(
             .singleOrNull()
             ?: throw NoSuchElementException("Order $orderId not found")
 
-        return OrderResponse(
-            id = row[OrderTable.id].value,
-            customerId = row[OrderTable.customerId],
-            product = row[OrderTable.product],
-            quantity = row[OrderTable.quantity],
-            status = row[OrderTable.status],
-            createdAt = row[OrderTable.createdAt],
-            updatedAt = row[OrderTable.updatedAt],
-        )
+        return row.toOrderResponse()
     }
 }

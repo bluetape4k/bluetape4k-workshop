@@ -1,5 +1,7 @@
 package io.bluetape4k.okio.channels
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.KLogging
@@ -7,8 +9,6 @@ import io.bluetape4k.okio.AbstractOkioTest
 import okio.Buffer
 import okio.Timeout
 import okio.buffer
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.nio.channels.FileChannel

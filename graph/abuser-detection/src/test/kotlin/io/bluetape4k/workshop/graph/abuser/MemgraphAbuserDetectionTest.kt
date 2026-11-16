@@ -21,10 +21,10 @@ import org.neo4j.driver.GraphDatabase
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MemgraphAbuserDetectionTest : AbstractAbuserDetectionTest() {
+class MemgraphAbuserDetectionTest: AbstractAbuserDetectionTest() {
 
-    companion object : KLogging() {
-        private val memgraph = MemgraphServer.Launcher.memgraph
+    companion object: KLogging() {
+        private val memgraph by lazy { MemgraphServer.Launcher.memgraph }
     }
 
     override val graphName = "memgraph"
@@ -43,7 +43,10 @@ class MemgraphAbuserDetectionTest : AbstractAbuserDetectionTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown — possible resource leak" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown — possible resource leak" }
+        }
     }
 }

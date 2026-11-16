@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration(proxyBeanMethods = false)
 class RedissonConfig {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Value("\${spring.data.redis.host:localhost}")
     private val redisHost: String = uninitialized()

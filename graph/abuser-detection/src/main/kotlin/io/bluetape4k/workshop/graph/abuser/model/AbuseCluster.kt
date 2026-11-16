@@ -31,7 +31,7 @@ data class AbuseCluster(
     val users: List<GraphVertex>,
     /** 클러스터를 연결하는 식별자 정점입니다. */
     val sharedIdentifiers: List<GraphVertex>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

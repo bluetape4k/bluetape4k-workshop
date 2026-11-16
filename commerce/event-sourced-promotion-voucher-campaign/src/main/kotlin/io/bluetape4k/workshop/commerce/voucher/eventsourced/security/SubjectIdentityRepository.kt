@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.security
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
@@ -13,19 +14,18 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSour
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.javatime.timestamp
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-internal object SubjectIdentityMappings : UUIDTable("voucher_subject_identity_mapping", "surrogate_id") {
+internal object SubjectIdentityMappings: TimebasedUUIDTable("voucher_subject_identity_mapping", "surrogate_id") {
     val tenantId = varchar("tenant_id", 64)
     val identityDigest = varchar("identity_digest", 64)
     val hmacKeyVersion = integer("hmac_key_version")
@@ -44,7 +44,7 @@ internal data class SubjectIdentity private constructor(
     val identityDigest: String,
     val hmacKeyVersion: Int,
     val createdAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -82,23 +82,21 @@ internal class SubjectIdentityRepository(
     ): SubjectIdentity {
         val validDomain = domain.requireNotBlank("identity.domain")
         val validIdentity = identity.requireNotBlank("identity")
-        val candidates =
-            keyRing.digestsForLookup(
+        val candidates = keyRing.digestsForLookup(
+            purpose = HmacPurpose.SUBJECT_IDENTITY,
+            tenantId = tenantId,
+            domain = validDomain,
+            value = validIdentity,
+        )
+        candidates.firstNotNullOfOrNull { findByDigest(tenantId, it) }?.let { return it }
+
+        return insert(
+            digest = keyRing.digest(
                 purpose = HmacPurpose.SUBJECT_IDENTITY,
                 tenantId = tenantId,
                 domain = validDomain,
                 value = validIdentity,
-            )
-        candidates.firstNotNullOfOrNull { findByDigest(tenantId, it) }?.let { return it }
-
-        return insert(
-            digest =
-                keyRing.digest(
-                    purpose = HmacPurpose.SUBJECT_IDENTITY,
-                    tenantId = tenantId,
-                    domain = validDomain,
-                    value = validIdentity,
-                ),
+            ),
             tenantId = tenantId,
         )
     }
@@ -127,7 +125,7 @@ internal class SubjectIdentityRepository(
             .selectAll()
             .where {
                 (SubjectIdentityMappings.tenantId eq tenantId.value) and
-                    (SubjectIdentityMappings.id eq surrogate)
+                        (SubjectIdentityMappings.id eq surrogate)
             }.singleOrNull()
             ?.let(::toSubjectIdentity)
 
@@ -136,21 +134,19 @@ internal class SubjectIdentityRepository(
         domain: String,
         identity: String,
     ): Int {
-        val candidates =
-            keyRing.digestsForLookup(
-                purpose = HmacPurpose.SUBJECT_IDENTITY,
-                tenantId = tenantId,
-                domain = domain.requireNotBlank("identity.domain"),
-                value = identity.requireNotBlank("identity"),
-            )
-        val erased =
-            candidates.sumOf { digest ->
-                SubjectIdentityMappings.deleteWhere {
-                    (SubjectIdentityMappings.tenantId eq tenantId.value) and
+        val candidates = keyRing.digestsForLookup(
+            purpose = HmacPurpose.SUBJECT_IDENTITY,
+            tenantId = tenantId,
+            domain = domain.requireNotBlank("identity.domain"),
+            value = identity.requireNotBlank("identity"),
+        )
+        val erased = candidates.sumOf { digest ->
+            SubjectIdentityMappings.deleteWhere {
+                (SubjectIdentityMappings.tenantId eq tenantId.value) and
                         (SubjectIdentityMappings.identityDigest eq digest.value) and
                         (SubjectIdentityMappings.hmacKeyVersion eq digest.keyVersion)
-                }
             }
+        }
         if (erased > 0) {
             log.info { "Erased subject identity mappings. count=$erased" }
         }
@@ -173,9 +169,10 @@ internal class SubjectIdentityRepository(
                     .selectAll()
                     .where {
                         (SubjectIdentityMappings.tenantId eq tenantId.value) and
-                            (SubjectIdentityMappings.identityDigest eq digest.value) and
-                            (SubjectIdentityMappings.hmacKeyVersion eq digest.keyVersion)
-                    }.count()
+                                (SubjectIdentityMappings.identityDigest eq digest.value) and
+                                (SubjectIdentityMappings.hmacKeyVersion eq digest.keyVersion)
+                    }
+                    .count()
             }
 
     private fun findByDigest(
@@ -186,9 +183,10 @@ internal class SubjectIdentityRepository(
             .selectAll()
             .where {
                 (SubjectIdentityMappings.tenantId eq tenantId.value) and
-                    (SubjectIdentityMappings.identityDigest eq digest.value) and
-                    (SubjectIdentityMappings.hmacKeyVersion eq digest.keyVersion)
-            }.singleOrNull()
+                        (SubjectIdentityMappings.identityDigest eq digest.value) and
+                        (SubjectIdentityMappings.hmacKeyVersion eq digest.keyVersion)
+            }
+            .singleOrNull()
             ?.let(::toSubjectIdentity)
 
     private fun toSubjectIdentity(row: ResultRow): SubjectIdentity =
@@ -200,7 +198,7 @@ internal class SubjectIdentityRepository(
             createdAt = row[SubjectIdentityMappings.createdAt],
         )
 
-    private companion object : KLogging()
+    private companion object: KLogging()
 }
 
 internal interface SubjectIdentityService {
@@ -221,7 +219,7 @@ internal class ExposedSubjectIdentityService(
     database: Database,
     permits: EventSourcedDatabasePermitGate,
     private val repository: SubjectIdentityRepository,
-) : SubjectIdentityService {
+): SubjectIdentityService {
     private val transactions =
         EventSourcedPermitTransactionRunner(
             database = database,
@@ -233,11 +231,15 @@ internal class ExposedSubjectIdentityService(
         tenantId: TenantId,
         domain: String,
         identity: String,
-    ): SubjectIdentity = transactions.inTransaction { repository.resolve(tenantId, domain, identity) }
+    ): SubjectIdentity = transactions.inTransaction {
+        repository.resolve(tenantId, domain, identity)
+    }
 
     override fun erase(
         tenantId: TenantId,
         domain: String,
         identity: String,
-    ): Int = transactions.inTransaction { repository.erase(tenantId, domain, identity) }
+    ): Int = transactions.inTransaction {
+        repository.erase(tenantId, domain, identity)
+    }
 }

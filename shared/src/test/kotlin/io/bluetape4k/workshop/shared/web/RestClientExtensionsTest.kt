@@ -1,10 +1,9 @@
 package io.bluetape4k.workshop.shared.web
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -25,9 +24,9 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.toEntity
 
-class RestClientExtensionsTest : AbstractSpringTest() {
+class RestClientExtensionsTest: AbstractSpringTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val client: RestClient = RestClient
         .builder()

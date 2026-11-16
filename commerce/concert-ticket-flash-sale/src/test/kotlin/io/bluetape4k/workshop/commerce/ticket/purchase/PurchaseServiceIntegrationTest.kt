@@ -1,8 +1,17 @@
 package io.bluetape4k.workshop.commerce.ticket.purchase
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.jdbc.sql.singleInt
+import io.bluetape4k.jdbc.sql.singleString
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
@@ -24,9 +33,12 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 
 internal class PurchaseServiceIntegrationTest {
+
+    companion object: KLogging()
+
     @Test
     fun `integration fixture uses a bounded Hikari pool`() {
         TicketDatabaseFixture().use { fixture ->
@@ -42,7 +54,7 @@ internal class PurchaseServiceIntegrationTest {
             assertFailsWith<SaleNotStarted> { fixture.service.start(command) }
 
             fixture.durableState(command.attemptId) shouldBeEqualTo DurableState.ZERO
-            fixture.events.size shouldBeEqualTo 0
+            fixture.events.shouldBeEmpty()
         }
     }
 
@@ -52,10 +64,11 @@ internal class PurchaseServiceIntegrationTest {
             val command = fixture.command()
 
             val snapshot = fixture.service.start(command)
+            log.debug { "snapshot: $snapshot" }
 
             snapshot.state shouldBeEqualTo PurchaseState.INVENTORY_HELD
             fixture.durableState(command.attemptId) shouldBeEqualTo
-                DurableState(attempts = 1, guards = 2, held = 1, consumedGrants = 1, boundIdempotency = 1)
+                    DurableState(attempts = 1, guards = 2, held = 1, consumedGrants = 1, boundIdempotency = 1)
             fixture.events.size shouldBeEqualTo 1
             fixture.events.single().attemptId shouldBeEqualTo snapshot.attemptId
             fixture.events.single().operationId shouldBeEqualTo command.authorizationOperationId
@@ -70,9 +83,10 @@ internal class PurchaseServiceIntegrationTest {
 
             val cancelled = fixture.service.cancel(CancelPurchase(command.attemptId, command.buyerSubjectId))
 
+            log.debug { "cancelled: $cancelled" }
             cancelled.state shouldBeEqualTo PurchaseState.CANCELLED
             fixture.durableState(command.attemptId) shouldBeEqualTo
-                DurableState(attempts = 1, guards = 0, held = 0, consumedGrants = 1, boundIdempotency = 1)
+                    DurableState(attempts = 1, guards = 0, held = 0, consumedGrants = 1, boundIdempotency = 1)
         }
     }
 
@@ -87,9 +101,10 @@ internal class PurchaseServiceIntegrationTest {
 
             val cancelling = fixture.service.cancel(CancelPurchase(command.attemptId, command.buyerSubjectId))
 
+            log.debug { "cancelling: $cancelling" }
             cancelling.state shouldBeEqualTo PurchaseState.CANCELLATION_REQUESTED
             fixture.durableState(command.attemptId) shouldBeEqualTo
-                DurableState(attempts = 1, guards = 2, held = 1, consumedGrants = 1, boundIdempotency = 1)
+                    DurableState(attempts = 1, guards = 2, held = 1, consumedGrants = 1, boundIdempotency = 1)
         }
     }
 
@@ -99,8 +114,12 @@ internal class PurchaseServiceIntegrationTest {
             val command = fixture.command()
             fixture.service.start(command)
 
-            fixture.service.owned(command.attemptId, command.buyerSubjectId)?.attemptId shouldBeEqualTo command.attemptId
-            fixture.service.owned(command.attemptId, Uuid.V7.nextId()) shouldBeEqualTo null
+            fixture.service.owned(
+                command.attemptId,
+                command.buyerSubjectId
+            )?.attemptId shouldBeEqualTo command.attemptId
+
+            fixture.service.owned(command.attemptId, Uuid.V7.nextId()).shouldBeNull()
         }
     }
 }
@@ -117,23 +136,27 @@ internal data class DurableState(
     }
 }
 
+@Suppress("SqlResolve", "SqlSourceToSinkFlow")
 internal class PurchaseFixture(
     val inventory: Int = 2,
-    val opensAt: Instant = NOW.minusSeconds(1),
-) : AutoCloseable {
+    val opensAt: Instant = NOW - 1.seconds(),
+): AutoCloseable {
+
+    companion object: KLogging()
+
     private val database = TicketDatabaseFixture()
     val executor get() = database.executor
     val saleId: UUID = Uuid.V7.nextId()
     val sharedIp: UUID = Uuid.V7.nextId()
     val events = mutableListOf<AuthorizationRequested>()
-    val service =
-        PurchaseService(
-            jdbc = database.executor,
-            sale = SaleService(),
-            admission = AdmissionService(database.executor, Clock.fixed(NOW, ZoneOffset.UTC)),
-            clock = Clock.fixed(NOW, ZoneOffset.UTC),
-            events = PurchaseEventPublisher(events::add),
-        )
+
+    val service = PurchaseService(
+        jdbcExecutor = database.executor,
+        sale = SaleService(),
+        admission = AdmissionService(database.executor, Clock.fixed(NOW, ZoneOffset.UTC)),
+        clock = Clock.fixed(NOW, ZoneOffset.UTC),
+        events = PurchaseEventPublisher(events::add),
+    )
 
     init {
         execute(
@@ -167,19 +190,19 @@ internal class PurchaseFixture(
             """.trimIndent(),
         )
         val idempotency = HttpIdempotencyRepository(database.executor)
-        val owner =
-            idempotency.acquire(
-                IdempotencyScope(
-                    principalSubjectId = buyer,
-                    httpMethod = "POST",
-                    canonicalRoute = "/api/v1/sales/{saleId}/purchase-attempts",
-                    resourceId = saleId.toString(),
-                    operation = "purchase",
-                    keyDigest = IdempotencyFingerprint.key(ByteArray(32) { 0x33 }, Uuid.V7.nextId().toString()),
-                ),
-                IdempotencyFingerprint.request("POST", "/purchase", "{\"grade\":\"GENERAL\",\"quantity\":$quantity}"),
-                NOW,
-            ) as IdempotencyDecision.Owner
+        val owner = idempotency.acquire(
+            IdempotencyScope(
+                principalSubjectId = buyer,
+                httpMethod = "POST",
+                canonicalRoute = "/api/v1/sales/{saleId}/purchase-attempts",
+                resourceId = saleId.toString(),
+                operation = "purchase",
+                keyDigest = IdempotencyFingerprint.key(ByteArray(32) { 0x33 }, Uuid.V7.nextId().toString()),
+            ),
+            IdempotencyFingerprint.request("POST", "/purchase", "{\"grade\":\"GENERAL\",\"quantity\":$quantity}"),
+            NOW,
+        ).shouldBeInstanceOf<IdempotencyDecision.Owner>()
+
         return StartPurchase(
             attemptId = attemptId,
             authorizationOperationId = Uuid.V7.nextId(),
@@ -189,7 +212,7 @@ internal class PurchaseFixture(
             grade = "GENERAL",
             quantity = quantity,
             grant = ConsumeGrant(saleId, grantNonce, buyer, 1, attemptId),
-            policy = SalePolicySnapshot(saleId, SaleState.OPEN, 1, opensAt, NOW.plusSeconds(3600)),
+            policy = SalePolicySnapshot(saleId, SaleState.OPEN, 1, opensAt, NOW + 3600.seconds()),
         )
     }
 
@@ -210,8 +233,9 @@ internal class PurchaseFixture(
                 statement.setObject(3, saleId)
                 statement.setObject(4, attemptId)
                 statement.setObject(5, attemptId)
+
                 statement.executeQuery().use { result ->
-                    check(result.next())
+                    result.next().shouldBeTrue()
                     DurableState(
                         attempts = result.getInt("attempts"),
                         guards = result.getInt("guards"),
@@ -228,9 +252,9 @@ internal class PurchaseFixture(
     fun queryInt(sql: String): Int =
         database.dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
+                log.debug { "Query Int: $sql" }
                 statement.executeQuery(sql).use { result ->
-                    check(result.next())
-                    result.getInt(1)
+                    result.singleInt()
                 }
             }
         }
@@ -238,9 +262,9 @@ internal class PurchaseFixture(
     fun queryString(sql: String): String =
         database.dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
+                log.debug { "Query String: $sql" }
                 statement.executeQuery(sql).use { result ->
-                    check(result.next())
-                    result.getString(1)
+                    result.singleString()!!
                 }
             }
         }
@@ -248,14 +272,17 @@ internal class PurchaseFixture(
     fun queryUuid(sql: String): UUID =
         database.dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
+                log.debug { "Execute UUID: $sql" }
                 statement.executeQuery(sql).use { result ->
-                    check(result.next())
+                    result.next().shouldBeTrue()
                     result.getObject(1, UUID::class.java)
                 }
             }
         }
 
-    override fun close() = database.close()
+    override fun close() {
+        database.close()
+    }
 }
 
 internal val NOW: Instant = Instant.parse("2026-07-21T10:00:00Z")

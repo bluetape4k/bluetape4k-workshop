@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Warmup(iterations = 2, time = 1)
 @Measurement(iterations = 5, time = 1)
-class WriteBehindBenchmark : AbstractCacheBenchmark() {
+class WriteBehindBenchmark: AbstractCacheBenchmark() {
     private lateinit var service: WriteBehindService
     private lateinit var productRepository: ProductRepository
     private lateinit var targetProducts: List<Product>

@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.invoice.domain
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 data class InvoiceInboxEvent(
     val eventId: UUID,
@@ -12,7 +12,7 @@ data class InvoiceInboxEvent(
     val amount: BigDecimal,
     val tenantId: String = "tenant-a",
     val payloadDigest: String = eventId.toString(),
-) : Serializable {
+): Serializable {
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -28,7 +28,7 @@ data class InvoiceLine(
     val sourceEventId: UUID,
     val correctionOf: UUID?,
     val amount: BigDecimal,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -37,7 +37,7 @@ data class InvoiceLine(
 data class InvoiceInboxResult(
     val created: Boolean,
     val outcome: InvoiceInboxOutcome,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

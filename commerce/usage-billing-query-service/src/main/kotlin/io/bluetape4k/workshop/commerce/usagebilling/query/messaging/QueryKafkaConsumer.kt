@@ -10,18 +10,34 @@ import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
-import java.time.Instant
-import java.util.UUID
 import tools.jackson.databind.JsonNode
+import java.time.Instant
+import java.util.*
 
 @Component
 class QueryInboundEventDecoder {
+
+    private companion object: KLogging() {
+        val SUPPORTED_SCHEMA_VERSIONS = setOf(1, 2)
+        val UNKNOWN_EVENT_ID: UUID = UUID(0, 0)
+        val SUPPORTED_EVENT_TYPES = setOf(
+            "PriceActivated",
+            "UsageAccepted",
+            "UsageCorrected",
+            "ChargeRated",
+            "AdjustmentPosted",
+            "InvoiceIssued",
+            "InvoiceCorrectionIssued",
+        )
+    }
+
     fun decode(wirePayload: String): QueryInboxEvent {
         val envelope = Jackson.defaultJsonMapper.readTree(wirePayload)
         val eventId = envelope.eventIdOrFallback()
         val eventType = envelope.optionalText("eventType") ?: "unknown"
         val tenantId = envelope.optionalText("tenantId") ?: "unknown"
         val schemaVersion = envelope.optionalInt("schemaVersion") ?: 0
+
         if (eventType !in SUPPORTED_EVENT_TYPES) {
             fail(eventId, tenantId, eventType, "unsupported_schema:$schemaVersion")
         }
@@ -30,9 +46,11 @@ class QueryInboundEventDecoder {
         }
         val payload = envelope.requiredText("payload", eventId, tenantId, eventType)
         val payloadDigest = envelope.requiredText("payloadDigest", eventId, tenantId, eventType)
+
         if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) {
             fail(eventId, tenantId, eventType, "invalid_payload_digest")
         }
+
         return QueryInboxEvent(
             eventId = eventId,
             tenantId = tenantId,
@@ -47,17 +65,20 @@ class QueryInboundEventDecoder {
     }
 
     private fun JsonNode.eventIdOrFallback(): UUID =
-        optionalText("eventId")?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: UNKNOWN_EVENT_ID
+        optionalText("eventId")
+            ?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: UNKNOWN_EVENT_ID
 
     private fun JsonNode.requiredText(eventId: UUID, tenantId: String, eventType: String, name: String): String =
-        optionalText(name)?.takeIf(String::isNotBlank)
+        optionalText(name)
+            ?.takeIf(String::isNotBlank)
             ?: fail(eventId, tenantId, eventType, "missing_$name")
 
     private fun JsonNode.requiredText(name: String, eventId: UUID, tenantId: String, eventType: String): String =
         requiredText(eventId, tenantId, eventType, name)
 
     private fun JsonNode.requiredLong(name: String, eventId: UUID, tenantId: String, eventType: String): Long =
-        optionalLong(name)?.takeIf { it > 0 } ?: fail(eventId, tenantId, eventType, "invalid_$name")
+        optionalLong(name)?.takeIf { it > 0 }
+            ?: fail(eventId, tenantId, eventType, "invalid_$name")
 
     private fun JsonNode.optionalText(name: String): String? = get(name)?.asString()
 
@@ -66,19 +87,12 @@ class QueryInboundEventDecoder {
     private fun JsonNode.optionalLong(name: String): Long? = get(name)?.asLong()
 
     private fun fail(eventId: UUID, tenantId: String, eventType: String, reason: String): Nothing =
-        throw PermanentQueryInboundException(QueryQuarantineEvent(eventId, tenantId, eventType, reason, Instant.now()))
-
-    private companion object {
-        val SUPPORTED_SCHEMA_VERSIONS = setOf(1, 2)
-        val UNKNOWN_EVENT_ID: UUID = UUID(0, 0)
-        val SUPPORTED_EVENT_TYPES = setOf(
-            "PriceActivated", "UsageAccepted", "UsageCorrected", "ChargeRated", "AdjustmentPosted",
-            "InvoiceIssued", "InvoiceCorrectionIssued",
+        throw PermanentQueryInboundException(
+            QueryQuarantineEvent(eventId, tenantId, eventType, reason, Instant.now())
         )
-    }
 }
 
-class PermanentQueryInboundException(val quarantine: QueryQuarantineEvent) :
+class PermanentQueryInboundException(val quarantine: QueryQuarantineEvent):
     IllegalArgumentException("permanent_query_inbound:${quarantine.reason}")
 
 @Component
@@ -87,6 +101,8 @@ class KafkaQueryIntegrationListener(
     private val inbox: QueryInboxService,
     private val quarantine: QueryQuarantineService,
 ) {
+    private companion object: KLogging()
+
     @KafkaListener(
         topics = ["meter.events.v1", "usage.events.v1", "billing.events.v1", "invoice.events.v1"],
         containerFactory = "queryKafkaListenerContainerFactory",
@@ -101,11 +117,8 @@ class KafkaQueryIntegrationListener(
         } catch (failure: PermanentQueryInboundException) {
             quarantine.record(failure.quarantine)
             log.warn(
-                "query.inbound.quarantined eventId=${failure.quarantine.eventId} " +
-                    "reason=${failure.quarantine.reason}",
+                "query.inbound.quarantined eventId=${failure.quarantine.eventId} reason=${failure.quarantine.reason}",
             )
         }
     }
-
-    private companion object : KLogging()
 }

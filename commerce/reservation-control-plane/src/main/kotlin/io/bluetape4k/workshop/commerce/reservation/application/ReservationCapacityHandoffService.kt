@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.reservation.application
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkBeTrue
 import io.bluetape4k.workshop.commerce.reservation.notification.NotificationChannel
 import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryRepository
 import io.bluetape4k.workshop.commerce.reservation.notification.NotificationRequest
@@ -22,6 +23,8 @@ internal class ReservationCapacityHandoffService(
     private val notifications: NotificationDeliveryRepository,
     private val audits: ReservationAuditRepository,
 ) {
+    companion object: KLogging()
+
     fun promoteOrRelease(
         resourceId: Long,
         now: Instant,
@@ -29,10 +32,14 @@ internal class ReservationCapacityHandoffService(
         val offer = waitlist.promote(resourceId)
         if (offer == null) {
             val resource = resources.findByIdForUpdate(resourceId)
-            check(resources.release(resource.id, resource.revision)) {
-                "capacity release lost after terminal reservation transition"
-            }
-            audits.record("CAPACITY_RESOURCE", resource.id, resource.revision + 1, "CAPACITY_RELEASED")
+            resources.release(resource.id, resource.revision)
+                .checkBeTrue { "capacity release lost after terminal reservation transition" }
+            audits.record(
+                aggregateType = "CAPACITY_RESOURCE",
+                aggregateId = resource.id,
+                revision = resource.revision + 1,
+                outcome = "CAPACITY_RELEASED"
+            )
             log.debug { "reservation_capacity_released resourceId=$resourceId revision=${resource.revision + 1}" }
             return null
         }
@@ -48,6 +55,4 @@ internal class ReservationCapacityHandoffService(
         log.debug { "reservation_capacity_handed_off resourceId=$resourceId offerId=${offer.id}" }
         return offer
     }
-
-    companion object : KLogging()
 }

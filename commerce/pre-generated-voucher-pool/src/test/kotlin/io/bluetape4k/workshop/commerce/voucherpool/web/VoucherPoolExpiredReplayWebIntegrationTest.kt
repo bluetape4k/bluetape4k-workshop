@@ -12,20 +12,22 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.http.MediaType
-import java.util.UUID
+import java.util.*
 
 @Import(VoucherPoolExpiredReplayTestConfiguration::class)
-internal class VoucherPoolExpiredReplayWebIntegrationTest : AbstractVoucherPoolIntegrationTest() {
+internal class VoucherPoolExpiredReplayWebIntegrationTest: AbstractVoucherPoolIntegrationTest() {
     @Test
     fun `expired replay returns gone with its safe existing effect id`() {
-        webTestClient.post().uri("/api/v1/campaigns/${UUID.randomUUID()}/reservations")
+        webTestClient.post()
+            .uri("/api/v1/campaigns/${UUID.randomUUID()}/reservations")
             .contentType(MediaType.APPLICATION_JSON)
             .header(IDEMPOTENCY_HEADER, "expired-replay-key")
             .header("If-None-Match", "*")
             .header(TENANT_HEADER, "tenant-expired-replay")
             .header(PRINCIPAL_HEADER, "principal-expired-replay")
             .bodyValue(emptyMap<String, String>())
-            .exchange().expectStatus().isEqualTo(410)
+            .exchange()
+            .expectStatus().isEqualTo(410)
             .expectBody()
             .jsonPath("$.code").isEqualTo("REPLAY_WINDOW_EXPIRED")
             .jsonPath("$.effectId").isEqualTo(EXPIRED_EFFECT_ID.toString())
@@ -37,7 +39,7 @@ internal class VoucherPoolExpiredReplayTestConfiguration {
     @Bean
     @Primary
     fun expiredReplayReservationService(): ReservationService =
-        object : ReservationService {
+        object: ReservationService {
             override fun reserve(command: ReserveVoucherCommand): MutationResult<ReservationSnapshot> =
                 MutationResult.Expired(EXPIRED_EFFECT_ID, null)
 

@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** observation과 worker resource가 닫히기 전에 admission을 중지합니다. */
 class TicketLifecycle(private val eventStream: TicketEventStream) {
+
+
     private val acceptingForeground = AtomicBoolean(true)
 
     fun acceptsForegroundWork(): Boolean = acceptingForeground.get()

@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.toSet
 
 /**
  * LinkedIn 스타일 social network 작업을 수행하는 coroutine 기반 그래프 서비스입니다.
@@ -62,7 +64,7 @@ class SocialNetworkSuspendService(
         graphName.requireNotBlank("graphName")
     }
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         /**
          * network query에 허용하는 최대 순회 깊이입니다.
          * LinkedIn의 "6 degrees of separation"에 해당하는 상한입니다.
@@ -107,6 +109,7 @@ class SocialNetworkSuspendService(
     ): GraphVertex {
         personId.requireNotBlank("personId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(PersonLabel.label, mapOf(PersonLabel.personId.name to personId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -136,6 +139,7 @@ class SocialNetworkSuspendService(
     ): GraphVertex {
         companyId.requireNotBlank("companyId")
         name.requireNotBlank("name")
+
         return ops.findVerticesByLabel(CompanyLabel.label, mapOf(CompanyLabel.companyId.name to companyId))
             .firstOrNull()
             ?: ops.createVertex(
@@ -174,12 +178,14 @@ class SocialNetworkSuspendService(
     ): Pair<GraphEdge, GraphEdge> {
         strength.requireInRange(1, 10, "strength")
         requireDistinctEndpoints(fromVertexId, toVertexId, "fromVertexId", "toVertexId")
+
         ops.requireEndpoint(fromVertexId, PersonLabel.label, "fromVertexId")
         ops.requireEndpoint(toVertexId, PersonLabel.label, "toVertexId")
         val props = buildMap {
             if (since.isNotBlank()) put(KnowsLabel.since.name, since)
             put(KnowsLabel.strength.name, strength.toString())
         }
+
         val forward = ops.createEdge(fromVertexId, toVertexId, KnowsLabel.label, props)
         val backward = ops.createEdge(toVertexId, fromVertexId, KnowsLabel.label, props)
         log.debug { "Connected vertices [$fromVertexId ↔ $toVertexId] strength=$strength" }
@@ -220,6 +226,7 @@ class SocialNetworkSuspendService(
         isCurrent: Boolean = true,
     ): GraphEdge {
         role.requireNotBlank("role")
+
         ops.requireEndpoint(personVertexId, PersonLabel.label, "personVertexId")
         ops.requireEndpoint(companyVertexId, CompanyLabel.label, "companyVertexId")
         return ops.createEdge(
@@ -278,18 +285,20 @@ class SocialNetworkSuspendService(
      */
     suspend fun getNthDegreeConnections(personVertexId: GraphElementId, degree: Int): List<GraphVertex> {
         degree.requireInRange(1, MAX_TRAVERSAL_DEPTH, "degree")
+
         val allWithin = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, degree))
-            .toList()
             .filter { it.id != personVertexId }
+            .toList()
+
         val closerIds = if (degree > 1) {
             ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, degree - 1))
-                .toList()
                 .filter { it.id != personVertexId }
                 .map { it.id }
                 .toSet()
         } else {
             emptySet()
         }
+
         return allWithin.filter { it.id !in closerIds }
     }
 
@@ -310,24 +319,24 @@ class SocialNetworkSuspendService(
      */
     suspend fun recommendConnections(personVertexId: GraphElementId): List<ConnectionRecommendation> {
         val directFriends = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
-            .toList()
         val directFriendIds = directFriends.map { it.id }.toSet()
 
         val candidates = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 2))
-            .toList()
             .filter { it.id != personVertexId && it.id !in directFriendIds }
+            .toList()
 
-        return candidates.map { candidate ->
-            val candidateFriends = ops.neighbors(candidate.id, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
-                .toList()
-                .filter { it.id != personVertexId }
-            val mutualConnections = candidateFriends.filter { it.id in directFriendIds }
-            ConnectionRecommendation(
-                person = candidate,
-                mutualConnectionCount = mutualConnections.size,
-                mutualConnections = mutualConnections,
-            )
-        }
+        val outgoingOptions = NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1)
+        return candidates
+            .map { candidate ->
+                val candidateFriends = ops.neighbors(candidate.id, outgoingOptions)
+                    .filter { it.id != personVertexId }
+                val mutualConnections = candidateFriends.filter { it.id in directFriendIds }.toList()
+                ConnectionRecommendation(
+                    person = candidate,
+                    mutualConnectionCount = mutualConnections.size,
+                    mutualConnections = mutualConnections,
+                )
+            }
             .filter { it.mutualConnectionCount > 0 }
             .sortedWith(
                 compareByDescending<ConnectionRecommendation> { it.mutualConnectionCount }
@@ -346,8 +355,10 @@ class SocialNetworkSuspendService(
         val companies = ops.neighbors(personVertexId, NeighborOptions(WorksAtLabel.label, Direction.OUTGOING, 1))
             .toList()
         val emitted = mutableSetOf<GraphElementId>()
-        for (company in companies) {
-            ops.neighbors(company.id, NeighborOptions(WorksAtLabel.label, Direction.INCOMING, 1))
+
+        val incomingOptions = NeighborOptions(WorksAtLabel.label, Direction.INCOMING, 1)
+        for ((id) in companies) {
+            ops.neighbors(id, incomingOptions)
                 .collect { colleague ->
                     if (colleague.id != personVertexId && emitted.add(colleague.id)) {
                         emit(colleague)
@@ -439,12 +450,12 @@ class SocialNetworkSuspendService(
      */
     suspend fun findMutualConnections(vertexId1: GraphElementId, vertexId2: GraphElementId): List<GraphVertex> {
         val friends1 = ops.neighbors(vertexId1, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
-            .toList()
             .map { it.id }
             .toSet()
+
         return ops.neighbors(vertexId2, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
-            .toList()
             .filter { it.id in friends1 }
+            .toList()
     }
 
     private fun requireDistinctEndpoints(

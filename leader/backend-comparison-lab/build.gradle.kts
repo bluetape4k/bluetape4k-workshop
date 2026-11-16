@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 springBoot {
@@ -41,4 +42,8 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
+    testImplementation(kotlin("test"))
+}
+repositories {
+    mavenCentral()
 }

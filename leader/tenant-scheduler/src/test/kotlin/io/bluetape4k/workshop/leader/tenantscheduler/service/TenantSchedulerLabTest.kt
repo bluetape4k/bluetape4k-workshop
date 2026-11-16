@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.leader.tenantscheduler.service
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantJobName
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantLeaseState
@@ -17,6 +19,8 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TenantSchedulerLabTest {
+
+    companion object: KLogging()
 
     private val tenantA = TenantId("tenant-a")
     private val tenantB = TenantId("tenant-b")
@@ -33,6 +37,7 @@ class TenantSchedulerLabTest {
             ticks = listOf(tick(0, nodeA)),
         )
 
+        log.debug { "report=$report" }
         report.eventRows.map { it.tenantId } shouldBeEqualTo listOf(tenantA, tenantB)
         report.eventRows.map { it.outcome } shouldBeEqualTo listOf(
             TenantRunOutcome.EXECUTED,
@@ -57,6 +62,7 @@ class TenantSchedulerLabTest {
             ),
         )
 
+        log.debug { "report=$report" }
         report.eventRows.map { it.tenantId } shouldBeEqualTo listOf(tenantA, tenantB)
         report.eventRows.map { it.outcome } shouldBeEqualTo listOf(
             TenantRunOutcome.FAILED,
@@ -82,6 +88,7 @@ class TenantSchedulerLabTest {
             ),
         )
 
+        log.debug { "report=$report" }
         report.eventRows.map { it.outcome } shouldBeEqualTo listOf(
             TenantRunOutcome.SKIPPED,
             TenantRunOutcome.STALE_HANDOFF,
@@ -117,6 +124,7 @@ class TenantSchedulerLabTest {
             ),
         )
 
+        log.debug { "report=$report" }
         report.eventRows.map { it.tenantId } shouldBeEqualTo listOf(tenantA, tenantB)
         report.eventRows.map { it.outcome } shouldBeEqualTo listOf(
             TenantRunOutcome.STALE_HANDOFF,
@@ -145,6 +153,7 @@ class TenantSchedulerLabTest {
             ),
         )
 
+        log.debug { "report=$report" }
         report.eventRows.map { it.outcome } shouldBeEqualTo listOf(
             TenantRunOutcome.FAILED,
             TenantRunOutcome.STALE_HANDOFF,
@@ -233,6 +242,7 @@ class TenantSchedulerLabTest {
             ticks = ticks,
         )
 
+        log.debug { "report=$report" }
         report.eventRows.size shouldBeEqualTo 25
         report.truncated.shouldBeTrue()
         report.droppedEventRows shouldBeEqualTo 25

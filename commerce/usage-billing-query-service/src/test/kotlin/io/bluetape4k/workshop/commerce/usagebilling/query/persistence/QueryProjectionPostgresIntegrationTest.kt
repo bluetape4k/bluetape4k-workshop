@@ -1,6 +1,11 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
@@ -16,69 +21,13 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 @SpringBootTest
-@Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class QueryProjectionPostgresIntegrationTest {
-    @Autowired
-    private lateinit var inbox: QueryInboxService
 
-    @Autowired
-    private lateinit var inboxEvents: QueryInboxRepository
-
-    @Autowired
-    private lateinit var readModels: QueryReadModelRepository
-
-    @Autowired
-    private lateinit var checkpoints: QueryCheckpointRepository
-
-    @Autowired
-    private lateinit var recovery: QueryRecoveryService
-
-    @Autowired
-    private lateinit var quarantine: QueryQuarantineService
-
-    @Autowired
-    private lateinit var redriveAudits: QueryRedriveAuditRepository
-
-    @Autowired
-    private lateinit var transactionManager: PlatformTransactionManager
-
-    @Test
-    fun `replay persists one inbox receipt and one read model while advancing one checkpoint`() {
-        val inboxCount = transaction { inboxEvents.findAll().count() }
-        val readModelCount = transaction { readModels.findAll().count() }
-        val checkpoint = transaction { checkpoints.findAll().singleOrNull()?.position ?: 0 }
-        val event = QueryInboxEvent(UUID.randomUUID(), "tenant-a", "InvoiceIssued")
-
-        inbox.apply(event).applied shouldBeEqualTo true
-        inbox.apply(event).applied shouldBeEqualTo false
-
-        transaction { inboxEvents.findAll().count() } shouldBeEqualTo inboxCount + 1
-        transaction { readModels.findAll().count() } shouldBeEqualTo readModelCount + 1
-        transaction { checkpoints.findAll().single().position } shouldBeEqualTo checkpoint + 1
-    }
-
-    @Test
-    fun `redrive creates an immutable audit without mutating a financial projection`() {
-        val auditCount = transaction { redriveAudits.findAll().count() }
-        val eventId = UUID.randomUUID()
-        quarantine.record(
-            QueryQuarantineEvent(eventId, "tenant-a", "InvoiceIssued", "unsupported_schema", Instant.now()),
-        )
-
-        recovery.redrive(eventId, "operator-a", "correlation-a").requested shouldBeEqualTo true
-
-        transaction { redriveAudits.findAll().count() } shouldBeEqualTo auditCount + 1
-        transaction { requireNotNull(redriveAudits.findAll().last()).currentState } shouldBeEqualTo "REDRIVE_REQUESTED"
-    }
-
-    private fun <T : Any> transaction(block: () -> T): T =
-        requireNotNull(TransactionTemplate(transactionManager).execute { block() })
-
-    private companion object {
+    private companion object: KLogging() {
         val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
@@ -90,4 +39,66 @@ class QueryProjectionPostgresIntegrationTest {
             registry.add("management.datadog.metrics.export.enabled") { false }
         }
     }
+
+    @Autowired
+    private val inbox: QueryInboxService = uninitialized()
+
+    @Autowired
+    private val inboxEvents: QueryInboxRepository = uninitialized()
+
+    @Autowired
+    private val readModels: QueryReadModelRepository = uninitialized()
+
+    @Autowired
+    private val checkpoints: QueryCheckpointRepository = uninitialized()
+
+    @Autowired
+    private val recovery: QueryRecoveryService = uninitialized()
+
+    @Autowired
+    private val quarantine: QueryQuarantineService = uninitialized()
+
+    @Autowired
+    private val redriveAudits: QueryRedriveAuditRepository = uninitialized()
+
+    @Autowired
+    private val transactionManager: PlatformTransactionManager = uninitialized()
+
+    @Test
+    fun `replay persists one inbox receipt and one read model while advancing one checkpoint`() {
+        val inboxCount = transaction { inboxEvents.findAll().count() }
+        val readModelCount = transaction { readModels.findAll().count() }
+        val checkpoint = transaction { checkpoints.findAll().singleOrNull()?.position ?: 0 }
+        val event = QueryInboxEvent(UUID.randomUUID(), "tenant-a", "InvoiceIssued")
+
+        inbox.apply(event).applied.shouldBeTrue()
+        inbox.apply(event).applied.shouldBeFalse()
+
+        transaction { inboxEvents.findAll().count() } shouldBeEqualTo inboxCount + 1
+        transaction { readModels.findAll().count() } shouldBeEqualTo readModelCount + 1
+        transaction { checkpoints.findAll().single().position } shouldBeEqualTo checkpoint + 1
+    }
+
+    @Test
+    fun `redrive creates an immutable audit without mutating a financial projection`() {
+        val auditCount = transaction { redriveAudits.findAll().count() }
+        val eventId = UUID.randomUUID()
+        quarantine.record(
+            QueryQuarantineEvent(
+                eventId = eventId,
+                tenantId = "tenant-a",
+                eventType = "InvoiceIssued",
+                reason = "unsupported_schema",
+                quarantinedAt = Instant.now()
+            ),
+        )
+
+        recovery.redrive(eventId = eventId, "operator-a", "correlation-a").requested.shouldBeTrue()
+
+        transaction { redriveAudits.findAll().count() } shouldBeEqualTo auditCount + 1
+        transaction { requireNotNull(redriveAudits.findAll().last()).currentState } shouldBeEqualTo "REDRIVE_REQUESTED"
+    }
+
+    private inline fun <T: Any> transaction(crossinline block: () -> T): T =
+        TransactionTemplate(transactionManager).execute { block() }.shouldNotBeNull()
 }

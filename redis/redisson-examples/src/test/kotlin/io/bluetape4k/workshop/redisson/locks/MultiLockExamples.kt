@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -18,14 +21,14 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import org.redisson.RedissonMultiLock
 import org.redisson.api.RLock
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [RedissonMultiLock]은 복수의 [RLock] 객체를 한번에 Lock/Unlock 을 수행할 수 있는 클래스입니다.
@@ -52,9 +55,7 @@ class MultiLockExamples: AbstractRedissonTest() {
             val mlockId = redisson.getLockId("mlock1")
             try {
                 log.debug {
-                    "새로운 Thread예서 MultiLock을 잡습니다. threadId=${
-                        Thread.currentThread().threadId()
-                    }, lockId=$mlockId"
+                    "새로운 Thread예서 MultiLock을 잡습니다. threadId=${Thread.currentThread().threadId()}, lockId=$mlockId"
                 }
 
                 mlock.tryLockAsync(1, 60, TimeUnit.SECONDS, mlockId).await().shouldBeTrue()
@@ -73,7 +74,7 @@ class MultiLockExamples: AbstractRedissonTest() {
                 }
             }
         }
-        delay(1000)
+        delay(1.seconds)
         job.cancel()
 
         val mlock2 = RedissonMultiLock(lock1, lock2, lock3)
@@ -82,17 +83,24 @@ class MultiLockExamples: AbstractRedissonTest() {
         log.debug { "Main Thread예서 MultiLock을 잡습니다." }
         mlock2.lockAsync(mlockId2).await()
 
-        delay(10)
+        delay(10.milliseconds)
         assertIsLockedAsync(lock1, lock2, lock3)
-        delay(10)
+        delay(10.milliseconds)
 
         mlock2.unlockAsync(mlockId2).await()
     }
 
     private suspend fun assertIsLockedAsync(vararg locks: RLock) {
         log.debug { "모든 Lock이 lock이 잡혀있는지 검사합니다..." }
-        locks.asFlow().flatMapMerge { flow { emit(it.isLockedAsync().await()) } }.toList().all { it }
-            .shouldBeTrue()
+        locks.asFlow()
+            .flatMapMerge {
+                flow {
+                    emit(it.isLockedAsync().await())
+                }
+            }
+            .log("Lock")
+            .toList()
+            .all { it }.shouldBeTrue()
     }
 
     @Test
@@ -128,13 +136,13 @@ class MultiLockExamples: AbstractRedissonTest() {
             // lock 획득에 실패했으므로, unlock을 할 수 없다.
             // mlock2.unlockAsync(mlockId2).suspendAwait()
         }
-        delay(10)
+        delay(10.milliseconds)
         job.join()
 
         // 같은 Thread 에서 기존 lock이 걸려 있는데, 또 lock을 걸면 TTL이 갱신된다
         mlock.tryLockAsync(1, 60, TimeUnit.SECONDS, mlockId).await().shouldBeTrue()
 
-        delay(10)
+        delay(10.milliseconds)
         mlock.unlockAsync(mlockId).await()
     }
 
@@ -178,7 +186,7 @@ class MultiLockExamples: AbstractRedissonTest() {
         mlock.unlock()
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @Test
     fun `tryLock with RedissionMultiLock in virtual threads`() {
         val lock1 = redisson.getLock(randomName())
@@ -256,7 +264,7 @@ class MultiLockExamples: AbstractRedissonTest() {
         // 같은 Coroutine 환경에서 기존 lock이 걸려 있는데, 또 lock을 걸면 TTL만 갱신된다
         mlock.tryLockAsync(1, 60, TimeUnit.SECONDS, mlockId).await().shouldBeTrue()
 
-        delay(10)
+        delay(10.milliseconds)
         mlock.unlockAsync(mlockId).await()
     }
 

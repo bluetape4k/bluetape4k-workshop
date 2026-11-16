@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.random.RandomizedTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -8,8 +10,6 @@ import io.bluetape4k.redis.redisson.codec.RedissonCodecs
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.io.Serializable
 

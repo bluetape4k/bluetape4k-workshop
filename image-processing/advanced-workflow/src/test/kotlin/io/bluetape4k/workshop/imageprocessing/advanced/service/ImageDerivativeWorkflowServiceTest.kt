@@ -2,11 +2,15 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
 import io.bluetape4k.images.spring.metrics.MetricImageStorageWithMetadata
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetDetailResponse
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectDTO
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectKind
@@ -19,6 +23,8 @@ import org.springframework.mock.web.MockMultipartFile
 
 class ImageDerivativeWorkflowServiceTest {
 
+    private companion object: KLogging()
+
     private val keyFactory = ImageKeyFactory()
 
     @Test
@@ -30,14 +36,18 @@ class ImageDerivativeWorkflowServiceTest {
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
         val response = service.processUpload(file)
+        log.debug { "response: $response" }
 
         storage.uploads.size shouldBeEqualTo 4
-        response.original.key.startsWith("images/") shouldBeEqualTo true
-        response.original.url.startsWith("http://localhost:8080/public-images/images/") shouldBeEqualTo true
+        response.original.key.startsWith("images/").shouldBeTrue()
+        response.original.url.startsWith("http://localhost:8080/public-images/images/").shouldBeTrue()
         response.thumbnailUrl shouldBeEqualTo response.variants.first { it.name == "thumb-128" }.url
         response.variants.map { it.name } shouldBeEqualTo listOf("thumb-128", "card-320", "detail-1024")
-        meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_VARIANT_GENERATED, "variant", "thumb-128").count() shouldBeEqualTo 1.0
-        meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_UNAVAILABLE).count() shouldBeEqualTo 4.0
+
+        meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_VARIANT_GENERATED, "variant", "thumb-128")
+            .count() shouldBeEqualTo 1.0
+        meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_UNAVAILABLE)
+            .count() shouldBeEqualTo 4.0
     }
 
     @Test
@@ -60,20 +70,24 @@ class ImageDerivativeWorkflowServiceTest {
 
         val response = service.processUpload(file)
 
+        log.debug { "response: $response" }
+
         storage.metadataReads.size shouldBeEqualTo 4
         storage.downloads.size shouldBeEqualTo 0
         response.original.sizeBytes shouldBeEqualTo SAMPLE_JPEG_BYTES.size.toLong()
         response.original.contentType shouldBeEqualTo "image/jpeg"
-        response.variants.all { it.contentType == "image/webp" } shouldBeEqualTo true
+        response.variants.all { it.contentType == "image/webp" }.shouldBeTrue()
         meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_READ).count() shouldBeEqualTo 4.0
         meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_UNAVAILABLE).count() shouldBeEqualTo 0.0
 
         val uploadEvent = persistence.events.single { it.message.startsWith("S3 upload complete") }
         uploadEvent.payload["metadataCapability"] shouldBeEqualTo true
+
         @Suppress("UNCHECKED_CAST")
         val metadata = uploadEvent.payload["metadata"] as List<Map<String, Any?>>
         metadata.size shouldBeEqualTo 4
-        metadata.all { it["available"] == true && it["etag"] is String && it["lastModified"] == "1970-01-01T00:00:00Z" } shouldBeEqualTo true
+        metadata.all { it["available"] == true && it["etag"] is String && it["lastModified"] == "1970-01-01T00:00:00Z" }
+            .shouldBeTrue()
     }
 
     @Test
@@ -116,7 +130,7 @@ class ImageDerivativeWorkflowServiceTest {
     fun `workflow rejects invalid content type before storage`() = runSuspendIO {
         val storage = RecordingImageStorage()
         val service = service(testProperties(), storage)
-        val file = MockMultipartFile("file", "note.txt", "text/plain", "plain text".encodeToByteArray())
+        val file = MockMultipartFile("file", "note.txt", "text/plain", "plain text".toUtf8Bytes())
 
         assertFailsWith<IllegalArgumentException> {
             service.processUpload(file)
@@ -197,6 +211,7 @@ class ImageDerivativeWorkflowServiceTest {
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
         val response = service.processUpload(file)
+        log.debug { "response: $response" }
 
         // 새 업로드는 없으며 캐시에서 제공합니다.
         storage.uploads.size shouldBeEqualTo 0

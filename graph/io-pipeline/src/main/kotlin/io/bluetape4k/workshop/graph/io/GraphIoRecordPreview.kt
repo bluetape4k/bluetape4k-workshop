@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.graph.io
 
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.graph.io.contract.GraphRecordFlowReader
 import io.bluetape4k.graph.io.csv.CsvGraphImportSource
 import io.bluetape4k.graph.io.csv.CsvGraphRecordFlowReader
@@ -8,6 +9,7 @@ import io.bluetape4k.graph.io.jackson3.Jackson3NdJsonRecordFlowReader
 import io.bluetape4k.graph.io.model.GraphIoEdgeRecord
 import io.bluetape4k.graph.io.model.GraphIoVertexRecord
 import io.bluetape4k.graph.io.source.GraphImportSource
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -21,6 +23,8 @@ import java.nio.file.Path
  * resolve하는 책임은 bulk importer에 남아 있습니다.
  */
 class GraphIoRecordPreview {
+
+    companion object: KLoggingChannel()
 
     /** CSV의 정점/간선 파일을 각각 [limit]개까지 읽습니다. */
     suspend fun csv(vertices: Path, edges: Path, limit: Int): GraphIoRecordPreviewResult {
@@ -39,15 +43,15 @@ class GraphIoRecordPreview {
     suspend fun graphMl(source: Path, limit: Int): GraphIoRecordPreviewResult =
         read(GraphMlRecordFlowReader(), GraphImportSource.PathSource(source), limit)
 
-    private suspend fun <S : Any> read(
+    private suspend fun <S: Any> read(
         reader: GraphRecordFlowReader<S>,
         source: S,
         limit: Int,
     ): GraphIoRecordPreviewResult {
         limit.requirePositiveNumber("limit")
         return GraphIoRecordPreviewResult(
-            vertices = reader.readVertices(source).take(limit).toList(),
-            edges = reader.readEdges(source).take(limit).toList(),
+            vertices = reader.readVertices(source).log("Vertex").take(limit).toList(),
+            edges = reader.readEdges(source).log("Edge").take(limit).toList(),
         )
     }
 }

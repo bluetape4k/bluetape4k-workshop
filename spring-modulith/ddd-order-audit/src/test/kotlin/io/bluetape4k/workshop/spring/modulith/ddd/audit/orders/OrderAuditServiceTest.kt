@@ -3,12 +3,12 @@ package io.bluetape4k.workshop.spring.modulith.ddd.audit.orders
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.spring.modulith.ddd.audit.AbstractDddOrderAuditTest
 import io.bluetape4k.workshop.spring.modulith.ddd.audit.fulfillment.FulfillmentReservationRepository
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.javers.core.diff.changetype.ValueChange
 import org.javers.core.metamodel.`object`.SnapshotType
 import org.junit.jupiter.api.AfterEach
@@ -21,7 +21,8 @@ import org.springframework.modulith.events.EventPublication
 import org.springframework.modulith.events.core.EventPublicationRepository
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Import(OrderAuditServiceTest.RollbackAuditProbeConfig::class)
 class OrderAuditServiceTest(
@@ -39,7 +40,9 @@ class OrderAuditServiceTest(
         orderRepository.deleteAll()
 
         val publicationIds = EventPublication.Status.entries
-            .flatMap { status -> eventPublicationRepository.findByStatus(status).map { it.identifier } }
+            .flatMap { status ->
+                eventPublicationRepository.findByStatus(status).map { it.identifier }
+            }
         if (publicationIds.isNotEmpty()) {
             eventPublicationRepository.deletePublications(publicationIds)
         }
@@ -49,7 +52,7 @@ class OrderAuditServiceTest(
     fun `placing order records one JaVers snapshot after commit`() {
         val placed = commandService.place(validPlaceOrderCommand())
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             val history = auditService.getHistory(placed.id)
             history.size shouldBeEqualTo 1
             history.single().type shouldBeEqualTo SnapshotType.INITIAL
@@ -61,7 +64,7 @@ class OrderAuditServiceTest(
         val placed = commandService.place(validPlaceOrderCommand())
         val approved = commandService.approve(ApproveOrderCommand(placed.id, approvedBy = "ops-user"))
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             val history = auditService.getHistory(approved.id)
             history.size shouldBeEqualTo 2
             history.last().type shouldBeEqualTo SnapshotType.UPDATE
@@ -93,7 +96,7 @@ class OrderAuditServiceTest(
     fun `audit trail exposes synthetic ids status and amounts only`() {
         val placed = commandService.place(validPlaceOrderCommand())
 
-        await atMost Duration.ofSeconds(5) untilAsserted {
+        await atMost 5.seconds withPollInterval 100.milliseconds untilAsserted {
             val auditTrail = auditService.getAuditTrail(placed.id)
             auditTrail.size shouldBeEqualTo 1
             auditTrail.single().orderId shouldBeEqualTo placed.id.value

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionLeaseRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.EventSourcedProjectionRuntime
@@ -19,6 +20,9 @@ import java.time.Clock
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ProjectionWorkerProperties::class)
 internal class EventSourcedRebuildConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun projectionRebuildRepository(): ProjectionRebuildRepository = ProjectionRebuildRepository()
 

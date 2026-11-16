@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.observability
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.micrometer.observation.withObservation
 import io.bluetape4k.workshop.optimization.planning.application.PlanningCallbackDecision
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
@@ -13,6 +14,16 @@ internal class PlanningObservations(
     private val observationRegistry: ObservationRegistry,
     private val meterRegistry: MeterRegistry,
 ) {
+    companion object: KLogging() {
+        internal const val PROVIDER_SUBMIT_OBSERVATION = "workshop.planning.provider.submit"
+        internal const val PROVIDER_SUBMIT_COUNTER = "workshop.planning.provider.submit.attempts"
+        internal const val OUTBOX_COUNTER = "workshop.planning.outbox.results"
+        internal const val CALLBACK_COUNTER = "workshop.planning.callback.results"
+        private const val TAG_PROVIDER = "provider"
+        private const val TAG_RESULT = "result"
+        private const val RESULT_SUCCESS = "success"
+        private const val RESULT_FAILURE = "failure"
+    }
 
     fun <T> observeProviderSubmission(
         provider: PlanningProvider,
@@ -42,16 +53,5 @@ internal class PlanningObservations(
             TAG_RESULT,
             result,
         ).increment()
-    }
-
-    companion object {
-        internal const val PROVIDER_SUBMIT_OBSERVATION = "workshop.planning.provider.submit"
-        internal const val PROVIDER_SUBMIT_COUNTER = "workshop.planning.provider.submit.attempts"
-        internal const val OUTBOX_COUNTER = "workshop.planning.outbox.results"
-        internal const val CALLBACK_COUNTER = "workshop.planning.callback.results"
-        private const val TAG_PROVIDER = "provider"
-        private const val TAG_RESULT = "result"
-        private const val RESULT_SUCCESS = "success"
-        private const val RESULT_FAILURE = "failure"
     }
 }

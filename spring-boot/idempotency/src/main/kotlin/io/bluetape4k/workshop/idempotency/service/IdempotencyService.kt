@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class IdempotencyService(private val redisson: RedissonClient) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val CACHE_NAME = "idempotency:orders"
         private const val TTL_MINUTES = 5L
     }
@@ -77,16 +77,16 @@ class IdempotencyService(private val redisson: RedissonClient) {
 /**
  * idempotent order processing 을 위한 sealed result type 입니다.
  */
-sealed class IdempotencyResult : Serializable {
+sealed class IdempotencyResult: Serializable {
     /** 주문이 처음 생성되었습니다. HTTP 201 입니다. */
-    data class Created(val cached: CachedResponse) : IdempotencyResult() {
+    data class Created(val cached: CachedResponse): IdempotencyResult() {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
     /** 같은 idempotency key 를 이전에 본 적이 있습니다. 원래 payload 와 함께 HTTP 200 입니다. */
-    data class Replay(val cached: CachedResponse) : IdempotencyResult() {
+    data class Replay(val cached: CachedResponse): IdempotencyResult() {
         companion object {
             private const val serialVersionUID: Long = 1L
         }

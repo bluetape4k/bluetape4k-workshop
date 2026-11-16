@@ -6,7 +6,7 @@ import java.io.Serializable
 data class TeamDto(
     val id: Long?,
     val name: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = -1760953420114915137L
     }
@@ -16,7 +16,7 @@ data class TeamDto(
 data class TeamVo @QueryProjection constructor(
     val id: Long?,
     val name: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 3871452397561381479L
     }

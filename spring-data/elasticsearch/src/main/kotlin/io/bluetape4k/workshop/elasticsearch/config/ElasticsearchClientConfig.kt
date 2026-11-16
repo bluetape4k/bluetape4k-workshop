@@ -1,18 +1,19 @@
 package io.bluetape4k.workshop.elasticsearch.config
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.elasticsearch.ElasticsearchApplication.Companion.elasticsearch
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.elasticsearch.client.ClientConfiguration
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration
 
 @Configuration(proxyBeanMethods = false)
-class ElasticsearchClientConfig : ElasticsearchConfiguration() {
+class ElasticsearchClientConfig: ElasticsearchConfiguration() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override fun clientConfiguration(): ClientConfiguration {
-        // log.info { "Elasticsearch 클라이언트 설정을 생성합니다. username=elastic, url=${elasticsearch.url}" }
+        log.info { "Elasticsearch 클라이언트 설정을 생성합니다. username=elastic, url=${elasticsearch.url}" }
 
         return ClientConfiguration.builder()
             .connectedTo(elasticsearch.url)

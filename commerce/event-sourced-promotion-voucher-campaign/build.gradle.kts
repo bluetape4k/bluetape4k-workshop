@@ -1,7 +1,3 @@
-import org.gradle.api.tasks.testing.Test
-import org.gradle.api.tasks.testing.TestDescriptor
-import org.gradle.api.tasks.testing.TestListener
-import org.gradle.api.tasks.testing.TestResult
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.concurrent.atomic.AtomicLong
 
@@ -10,6 +6,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    kotlin("kapt")
 }
 
 java {
@@ -97,7 +94,7 @@ dependencies {
 fun Test.failOnZeroTests() {
     val executed = AtomicLong()
     addTestListener(
-        object : TestListener {
+        object: TestListener {
             override fun beforeSuite(suite: TestDescriptor) = Unit
             override fun afterSuite(suite: TestDescriptor, result: TestResult) = Unit
             override fun beforeTest(testDescriptor: TestDescriptor) = Unit

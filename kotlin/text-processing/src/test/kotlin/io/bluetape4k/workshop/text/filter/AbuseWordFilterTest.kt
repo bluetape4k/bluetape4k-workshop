@@ -6,8 +6,8 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.text.search.NormalizationForm
@@ -23,7 +23,7 @@ import kotlin.coroutines.cancellation.CancellationException
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AbuseWordFilterTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val filter = AbuseWordFilter(
         listOf("badword", "spam", "abuse", "hate")

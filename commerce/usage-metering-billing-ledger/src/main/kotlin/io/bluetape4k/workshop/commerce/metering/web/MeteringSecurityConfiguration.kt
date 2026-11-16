@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.web
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.Customizer.withDefaults
@@ -9,6 +10,9 @@ import org.springframework.security.web.SecurityFilterChain
 
 @Configuration(proxyBeanMethods = false)
 class MeteringSecurityConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun meteringSecurity(http: HttpSecurity): SecurityFilterChain =
         http

@@ -15,7 +15,7 @@ data class ErrorResponse(
     val status: Int,
     val code: String,
     val message: String,
-) : Serializable {
+): Serializable {
     companion object {
         const val serialVersionUID = 1L
     }
@@ -24,7 +24,7 @@ data class ErrorResponse(
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @ExceptionHandler(NoSuchElementException::class)
     fun handleNotFound(e: NoSuchElementException): ResponseEntity<ErrorResponse> {

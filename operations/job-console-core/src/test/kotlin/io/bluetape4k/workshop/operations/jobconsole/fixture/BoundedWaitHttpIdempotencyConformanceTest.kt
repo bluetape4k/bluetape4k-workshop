@@ -1,23 +1,27 @@
 package io.bluetape4k.workshop.operations.jobconsole.fixture
 
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.junit5.coroutines.runSuspendDefault
 import io.bluetape4k.junit5.http.idempotency.BoundedWaitHttpIdempotencyConformanceConfig
 import io.bluetape4k.junit5.http.idempotency.assertBoundedWaitHttpIdempotencyConformance
-import kotlinx.coroutines.runBlocking
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 class BoundedWaitHttpIdempotencyConformanceTest {
 
+    companion object: KLogging()
+
     @Test
-    fun `shared coordinator fixture passes upstream bounded wait conformance`() = runBlocking {
+    fun `shared coordinator fixture passes upstream bounded wait conformance`() = runSuspendDefault {
         BoundedWaitHttpIdempotencyFixture(
             BoundedWaitHttpIdempotencyConformanceConfig(
-                waitTimeout = Duration.ofSeconds(2),
-                scenarioTimeout = Duration.ofSeconds(15),
+                waitTimeout = 2.seconds(),
+                scenarioTimeout = 15.seconds(),
                 maxWaitersPerKey = 2,
-                retention = Duration.ofHours(1),
-                inFlightRetryAfter = Duration.ofSeconds(1),
-                overflowRetryAfter = Duration.ofSeconds(2),
+                retention = 1.hours(),
+                inFlightRetryAfter = 1.seconds(),
+                overflowRetryAfter = 2.seconds(),
                 maxIdempotencyKeyBytes = 255,
                 maxRequestBodyBytes = 64 * 1024,
                 maxReplayBodyBytes = 64 * 1024,
@@ -30,12 +34,12 @@ class BoundedWaitHttpIdempotencyConformanceTest {
             assertBoundedWaitHttpIdempotencyConformance(
                 fixture,
                 BoundedWaitHttpIdempotencyConformanceConfig(
-                    waitTimeout = Duration.ofSeconds(2),
-                    scenarioTimeout = Duration.ofSeconds(15),
+                    waitTimeout = 2.seconds(),
+                    scenarioTimeout = 15.seconds(),
                     maxWaitersPerKey = 2,
-                    retention = Duration.ofHours(1),
-                    inFlightRetryAfter = Duration.ofSeconds(1),
-                    overflowRetryAfter = Duration.ofSeconds(2),
+                    retention = 1.hours(),
+                    inFlightRetryAfter = 1.seconds(),
+                    overflowRetryAfter = 2.seconds(),
                     maxIdempotencyKeyBytes = 255,
                     maxRequestBodyBytes = 64 * 1024,
                     maxReplayBodyBytes = 64 * 1024,

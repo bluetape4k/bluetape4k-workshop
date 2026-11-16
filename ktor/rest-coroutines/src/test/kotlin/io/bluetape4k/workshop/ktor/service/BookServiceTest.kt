@@ -1,17 +1,20 @@
 package io.bluetape4k.workshop.ktor.service
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.ktor.AbstractKtorTest
 import io.bluetape4k.workshop.ktor.domain.Book
 import io.bluetape4k.workshop.ktor.domain.DomainError
 import io.bluetape4k.workshop.ktor.repository.InMemoryBookRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import io.bluetape4k.assertions.assertFailsWith
 
-class BookServiceTest : AbstractKtorTest() {
+class BookServiceTest: AbstractKtorTest() {
+
+    companion object: KLoggingChannel()
 
     private fun service(repository: InMemoryBookRepository = InMemoryBookRepository()) =
         BookService(repository)
@@ -31,6 +34,7 @@ class BookServiceTest : AbstractKtorTest() {
     fun `create returns saved book for valid input`() = runTest {
         val svc = service()
         val book = svc.create(validBook())
+        log.debug { "book=$book" }
         book.id shouldBeEqualTo "v-1"
     }
 
@@ -154,14 +158,16 @@ class BookServiceTest : AbstractKtorTest() {
         val svc = service()
         svc.create(validBook(id = "del-1"))
         svc.delete("del-1")
-        svc.list().size shouldBeEqualTo 0
+        svc.list().shouldBeEmpty()
     }
 
     @Test
     fun `update replaces book content`() = runTest {
         val svc = service()
         svc.create(validBook(id = "upd-1"))
+
         val updated = svc.update("upd-1", validBook(id = "upd-1", title = "New Title"))
+        log.debug { "updated=$updated" }
         updated.title shouldBeEqualTo "New Title"
     }
 }

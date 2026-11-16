@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.voucherpool.web
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionLimits
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionNamespace
@@ -10,17 +12,18 @@ import io.bluetape4k.workshop.commerce.voucherpool.admission.VoucherPoolAdmissio
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolProperties
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.system.CapturedOutput
 import org.springframework.boot.test.system.OutputCaptureExtension
-import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.http.MediaType
+import org.springframework.mock.env.MockEnvironment
 import org.springframework.mock.web.MockFilterChain
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
-import org.springframework.mock.env.MockEnvironment
+import org.springframework.test.web.reactive.server.WebTestClient.RequestHeadersSpec
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -30,13 +33,28 @@ import tools.jackson.databind.ObjectMapper
 @Import(OperatorAccessFilterTestConfiguration::class)
 @ExtendWith(OutputCaptureExtension::class)
 @Suppress("VarCouldBeVal")
-internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrationTest() {
+internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrationTest() {
+
+    companion object: KLogging()
+
+    private fun origin(): String = "http://127.0.0.1:$port"
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private lateinit var operatorAccessFilter: OperatorAccessFilter
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private lateinit var properties: VoucherPoolProperties
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private lateinit var mapper: ObjectMapper
+
     @Test
     fun `operator trust boundary failures are uniform not found and redact credentials`() {
         val path = "/operator/test/probe"
         val secret = "wrong-secret-that-must-not-leak"
 
-        webTestClient.post().uri(path)
+        webTestClient.post()
+            .uri(path)
             .contentType(MediaType.APPLICATION_JSON)
             .header("Origin", "https://untrusted.example")
             .header(TENANT_HEADER, "tenant-denied")
@@ -53,14 +71,18 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
             .jsonPath("$.retryAfterSeconds").doesNotExist()
             .consumeWith { result ->
                 val body = result.responseBody?.decodeToString().orEmpty()
+                log.debug { "body: $body" }
                 body shouldNotContain secret
                 body shouldNotContain "wrong-guard-that-must-not-leak"
             }
 
         operatorPost(path, tenant = "tenant-secret", secret = "wrong-secret")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
+
         operatorPost(path, tenant = "tenant-guard", guard = "wrong-guard")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     @Test
@@ -68,10 +90,15 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
         val path = "/operator/test/probe"
 
         operatorPost(path, tenant = "tenant-origin", origin = "https://untrusted.example")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
+
         operatorPost(path, tenant = "tenant-scheme", origin = "https://127.0.0.1:$port")
-            .exchange().expectStatus().isNotFound
-        webTestClient.post().uri(path)
+            .exchange()
+            .expectStatus().isNotFound
+
+        webTestClient.post()
+            .uri(path)
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Workshop-Origin", origin())
             .header(TENANT_HEADER, "tenant-fallback-origin")
@@ -79,68 +106,84 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
             .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
             .bodyValue(emptyMap<String, String>())
             .exchange().expectStatus().isNotFound
+
         operatorPost(path, tenant = "tenant-content", contentType = MediaType.TEXT_PLAIN, body = "{}")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
+
         webTestClient.options().uri(path)
             .header("Origin", origin())
             .header(TENANT_HEADER, "tenant-options")
             .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
             .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
+
         operatorPost(path, tenant = "t".repeat(65))
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     @Test
     fun `operator routes accept same origin GET and JSON POST with valid credentials`() {
-        webTestClient.get().uri("/operator/test/probe")
+        webTestClient.get()
+            .uri("/operator/test/probe")
             .header("X-Workshop-Origin", origin())
             .header(TENANT_HEADER, "tenant-safe-get")
             .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
             .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
-            .exchange().expectStatus().isOk
-            .expectBody().jsonPath("$.status").isEqualTo("ok")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.status").isEqualTo("ok")
 
         operatorPost("/operator/test/probe", tenant = "tenant-safe-post")
-            .exchange().expectStatus().isOk
-            .expectBody().jsonPath("$.status").isEqualTo("ok")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.status").isEqualTo("ok")
     }
 
     @Test
     fun `operator authentication attempts use bounded admission quota`() {
-        val boundedFilter =
-            OperatorAccessFilter(
-                properties,
-                mapper,
-                VoucherPoolAdmissionGate(
-                    backend = null,
-                    limits = AdmissionLimits.defaults().withLimit(AdmissionNamespace.OPERATOR_AUTH, 5),
-                ),
-                org.springframework.mock.env.MockEnvironment().withProperty("server.address", "127.0.0.1"),
-            )
+        val boundedFilter = OperatorAccessFilter(
+            properties = properties,
+            mapper = mapper,
+            admissionGate = VoucherPoolAdmissionGate(
+                backend = null,
+                limits = AdmissionLimits.defaults().withLimit(AdmissionNamespace.OPERATOR_AUTH, 5),
+            ),
+            environment = MockEnvironment().withProperty("server.address", "127.0.0.1"),
+        )
 
         repeat(5) {
-            directFilterRequest("127.0.0.1", "127.0.0.1", boundedFilter).status shouldBeEqualTo 200
+            directFilterRequest(
+                remoteAddress = "127.0.0.1",
+                serverName = "127.0.0.1",
+                filter = boundedFilter
+            ).status shouldBeEqualTo 200
         }
-        directFilterRequest("127.0.0.1", "127.0.0.1", boundedFilter).status shouldBeEqualTo 404
+        directFilterRequest(
+            remoteAddress = "127.0.0.1",
+            serverName = "127.0.0.1",
+            filter = boundedFilter
+        ).status shouldBeEqualTo 404
     }
 
     @Test
     fun `remote and Host checks use servlet connection metadata instead of forwarding headers`() {
-        val remoteResponse =
-            directFilterRequest(
-                remoteAddress = "198.51.100.10",
-                serverName = "127.0.0.1",
-                includeForwardingHeaders = true,
-            )
+        val remoteResponse = directFilterRequest(
+            remoteAddress = "198.51.100.10",
+            serverName = "127.0.0.1",
+            includeForwardingHeaders = true,
+        )
         remoteResponse.status shouldBeEqualTo 404
 
-        val hostResponse =
-            directFilterRequest(
-                remoteAddress = "127.0.0.1",
-                serverName = "untrusted.example",
-                includeForwardingHeaders = true,
-            )
+        val hostResponse = directFilterRequest(
+            remoteAddress = "127.0.0.1",
+            serverName = "untrusted.example",
+            includeForwardingHeaders = true,
+        )
         hostResponse.status shouldBeEqualTo 404
     }
 
@@ -154,38 +197,49 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
             guard = GUARD_SECRET,
         ).exchange().expectStatus().isNotFound
 
-        output.all shouldNotContain QUERY_SECRET
-        output.all shouldNotContain BODY_SECRET
-        output.all shouldNotContain HEADER_SECRET
-        output.all shouldNotContain GUARD_SECRET
+        output.all.let {
+            it shouldNotContain QUERY_SECRET
+            it shouldNotContain BODY_SECRET
+            it shouldNotContain HEADER_SECRET
+            it shouldNotContain GUARD_SECRET
+        }
     }
 
     @Test
     fun `configured public bind rejects operator even when the connection is loopback`() {
-        val publicBindFilter =
-            OperatorAccessFilter(
-                properties,
-                mapper,
-                VoucherPoolAdmissionGate(backend = null),
-                MockEnvironment().withProperty("server.address", "0.0.0.0"),
-            )
+        val publicBindFilter = OperatorAccessFilter(
+            properties = properties,
+            mapper = mapper,
+            admissionGate = VoucherPoolAdmissionGate(backend = null),
+            environment = MockEnvironment().withProperty("server.address", "0.0.0.0"),
+        )
 
-        directFilterRequest("127.0.0.1", "127.0.0.1", publicBindFilter).status shouldBeEqualTo 404
+        directFilterRequest(
+            remoteAddress = "127.0.0.1",
+            serverName = "127.0.0.1",
+            filter = publicBindFilter
+        ).status shouldBeEqualTo 404
     }
 
     @Test
     fun `missing short and long credentials always compare two fixed length digests`() {
-        listOf<String?>(null, "short", "x".repeat(4_096)).forEach { candidate ->
-            val comparedLengths = mutableListOf<Pair<Int, Int>>()
-            val verifier =
-                OperatorCredentialVerifier { actualDigest: ByteArray, expectedDigest: ByteArray ->
+        listOf(null, "short", "x".repeat(4_096))
+            .forEach { candidate ->
+                val comparedLengths = mutableListOf<Pair<Int, Int>>()
+                val verifier = OperatorCredentialVerifier { actualDigest: ByteArray, expectedDigest: ByteArray ->
                     comparedLengths += actualDigest.size to expectedDigest.size
                     false
                 }
 
-            verifier.matches(candidate, OPERATOR_SECRET, candidate, OPERATOR_GUARD).shouldBeFalse()
-            comparedLengths shouldBeEqualTo listOf(32 to 32, 32 to 32)
-        }
+                verifier.matches(
+                    actualSecret = candidate,
+                    expectedSecret = OPERATOR_SECRET,
+                    actualGuard = candidate,
+                    expectedGuard = OPERATOR_GUARD
+                ).shouldBeFalse()
+
+                comparedLengths shouldBeEqualTo listOf(32 to 32, 32 to 32)
+            }
     }
 
     private fun directFilterRequest(
@@ -195,6 +249,7 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
         includeForwardingHeaders: Boolean = false,
     ): MockHttpServletResponse {
         val request = MockHttpServletRequest("POST", "/operator/test/probe")
+
         request.remoteAddr = remoteAddress
         request.serverName = serverName
         request.serverPort = port
@@ -204,6 +259,7 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
         request.addHeader(TENANT_HEADER, "tenant-direct-$serverName")
         request.addHeader(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
         request.addHeader(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
+
         if (includeForwardingHeaders) {
             request.addHeader("Host", "$serverName:$port")
             request.addHeader("X-Forwarded-For", "127.0.0.1")
@@ -224,8 +280,9 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
         body: Any = emptyMap<String, String>(),
         secret: String = OPERATOR_SECRET,
         guard: String = OPERATOR_GUARD,
-    ) =
-        webTestClient.post().uri(path)
+    ): RequestHeadersSpec<*> =
+        webTestClient.post()
+            .uri(path)
             .contentType(contentType)
             .header("Origin", origin)
             .header(TENANT_HEADER, tenant)
@@ -233,16 +290,6 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
             .header(OPERATOR_GUARD_HEADER, guard)
             .bodyValue(body)
 
-    private fun origin(): String = "http://127.0.0.1:$port"
-
-    @org.springframework.beans.factory.annotation.Autowired
-    private lateinit var operatorAccessFilter: OperatorAccessFilter
-
-    @org.springframework.beans.factory.annotation.Autowired
-    private lateinit var properties: VoucherPoolProperties
-
-    @org.springframework.beans.factory.annotation.Autowired
-    private lateinit var mapper: ObjectMapper
 }
 
 @TestConfiguration(proxyBeanMethods = false)

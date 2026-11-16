@@ -38,78 +38,76 @@ counter.addAndGetAsync("count", 1).await() // HINCRBYFLOAT 기반 원자 갱신
 
 ### Distributed Locks (`locks/`)
 
-| 클래스 | 설명 |
-|---|---|
-| `LockExamples` | 기본 distributed lock(`RLock`) |
-| `FairLockExamples` | 요청 순서를 보존하는 fair lock |
+| 클래스                  | 설명                                       |
+|-------------------------|--------------------------------------------|
+| `LockExamples`          | 기본 distributed lock(`RLock`)             |
+| `FairLockExamples`      | 요청 순서를 보존하는 fair lock             |
 | `ReadWriteLockExamples` | read/write를 분리한 lock(`RReadWriteLock`) |
-| `FencedLockExamples` | fencing token 기반 lock(split brain 방지) |
-| `SpinLockExamples` | 짧은 critical section용 spin lock |
-| `MultiLockExamples` | 여러 Redis node에 걸친 distributed lock |
+| `FencedLockExamples`    | fencing token 기반 lock(split brain 방지)  |
+| `SpinLockExamples`      | 짧은 critical section용 spin lock          |
+| `MultiLockExamples`     | 여러 Redis node에 걸친 distributed lock    |
 
 ### Distributed Semaphores (`locks/`)
 
-| 클래스 | 설명 |
-|---|---|
-| `SemaphoreExamples` | distributed semaphore(`RSemaphore`) |
-| `PermitExpirableSemaphoreExamples` | TTL 기반 자동 만료 semaphore |
-| `CountDownLatchExamples` | Distributed `CountDownLatch` |
+| 클래스                             | 설명                                |
+|------------------------------------|-------------------------------------|
+| `SemaphoreExamples`                | distributed semaphore(`RSemaphore`) |
+| `PermitExpirableSemaphoreExamples` | TTL 기반 자동 만료 semaphore        |
+| `CountDownLatchExamples`           | Distributed `CountDownLatch`        |
 
 ### Distributed Objects (`objects/`)
 
-| 클래스 | 설명 |
-|---|---|
-| `BucketExamples` | `RBucket` — `AtomicReference`와 유사한 object holder |
-| `AtomicLongExamples` | `RAtomicLong` — distributed atomic integer |
-| `BloomFilterExamples` | `RBloomFilter` — probabilistic membership filter |
-| `HyperLogLogExamples` | `RHyperLogLog` — 대규모 cardinality estimation |
-| `GeoExamples` | `RGeo` — geospatial data |
-| `RateLimiterExamples` | `RRateLimiter` — distributed rate limiting |
-| `IdGeneratorExamples` | `RIdGenerator` — distributed ID generation |
-| `BatchExamples` | 명령을 batch로 실행합니다 |
+| 클래스                | 설명                                                 |
+|-----------------------|------------------------------------------------------|
+| `BucketExamples`      | `RBucket` — `AtomicReference`와 유사한 object holder |
+| `AtomicLongExamples`  | `RAtomicLong` — distributed atomic integer           |
+| `BloomFilterExamples` | `RBloomFilter` — probabilistic membership filter     |
+| `HyperLogLogExamples` | `RHyperLogLog` — 대규모 cardinality estimation       |
+| `GeoExamples`         | `RGeo` — geospatial data                             |
+| `RateLimiterExamples` | `RRateLimiter` — distributed rate limiting           |
+| `IdGeneratorExamples` | `RIdGenerator` — distributed ID generation           |
+| `BatchExamples`       | 명령을 batch로 실행합니다                            |
 
 ### Pub/Sub (`objects/`)
 
-| 클래스 | 설명 |
-|---|---|
-| `TopicExamples` | `RTopic` channel을 통해 메시지를 발행하고 구독합니다 |
+| 클래스                  | 설명                                                 |
+|-------------------------|------------------------------------------------------|
+| `TopicExamples`         | `RTopic` channel을 통해 메시지를 발행하고 구독합니다 |
 | `ReliableTopicExamples` | `RReliableTopic` — 메시지 손실 없는 reliable Pub/Sub |
 
 ### Distributed Collections (`collections/`)
 
-| 클래스 | 설명 |
-|---|---|
-| `LocalCachedMapExamples` | `RLocalCachedMap` — local cache + Redis synchronization |
-| `StreamExamples` | `RStream` — Redis Streams |
-| `ScoredSortedSetExamples` | `RScoredSortedSet` — score 기반 sorted set |
+| 클래스                    | 설명                                                    |
+|---------------------------|---------------------------------------------------------|
+| `LocalCachedMapExamples`  | `RLocalCachedMap` — local cache + Redis synchronization |
+| `StreamExamples`          | `RStream` — Redis Streams                               |
+| `ScoredSortedSetExamples` | `RScoredSortedSet` — score 기반 sorted set              |
 
 ### Read/Write Through
 
-| 클래스 | 설명 |
-|---|---|
+| 클래스                     | 설명                                                |
+|----------------------------|-----------------------------------------------------|
 | `ReadWriteThroughExamples` | Cache-as-SOR — cache가 DB 읽기와 쓰기를 proxy합니다 |
 
 ## 사용한 bluetape4k 기능
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
-|---|---|---|---|
-| `RedissonCodecs.LZ4FastForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | 휘발성/cache 예제에서 LZ4 압축 + FastFory serialization을 사용합니다 |
-| `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | `LocalCachedMapOptions` DSL과 map 생성 호출을 결합해 Near Cache 설정 중복을 줄입니다 |
-| `RedissonCodecs.Int` / `Double` + `CompositeCodec` | `bluetape4k-redisson` | `LocalCachedMapExamples`, `LocalCachedMapTest` | String map key를 유지하면서 `addAndGetAsync`가 Redis hash 숫자 payload를 처리하도록 합니다 |
-| `awaitRedis` | workshop test fixture | `AbstractRedissonTest` | 비동기 Redis 대기를 제한하고 timeout/취소를 underlying future에 전파합니다 |
-| `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Kotlin 친화적인 helper로 Redis Stream append arguments를 만듭니다 |
-| `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Virtual Threads로 Redisson I/O를 처리합니다 |
-| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractRedissonTest` | 자동으로 시작하고 중지하는 Testcontainers Redis singleton입니다 |
-| `ShutdownQueue.register` | `bluetape4k-core` | `AbstractRedissonTest` | JVM shutdown 시 `RedissonClient`를 자동으로 닫습니다 |
-| `Base58.randomString` | `bluetape4k-io` | `AbstractRedissonTest` | URL-safe random key를 생성합니다 |
-| `MultithreadingTester` | `bluetape4k-junit5` | `FencedLockExamples` | 고정 thread pool로 concurrency를 검증합니다 |
-| `StructuredTaskScopeTester` | `bluetape4k-junit5` | `FencedLockExamples` | Virtual Thread concurrency를 검증합니다 |
-| `SuspendedJobTester` | `bluetape4k-junit5` | `FencedLockExamples` | coroutine race condition을 검증합니다 |
-| `getLockId()` | `bluetape4k-redis` | `FencedLockExamples` | coroutine-safe `RFencedLock` ID를 가져옵니다 |
+| 기능                                               | 아티팩트                    | 코드 위치                                      | 이점                                                                                       |
+|----------------------------------------------------|-----------------------------|------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `RedissonCodecs.LZ4FastForyComposite`              | `bluetape4k-redisson`       | `AbstractRedissonTest`                         | 휘발성/cache 예제에서 LZ4 압축 + FastFory serialization을 사용합니다                       |
+| `localCachedMap()`                                 | `bluetape4k-redisson`       | `LocalCachedMapExamples`                       | `LocalCachedMapOptions` DSL과 map 생성 호출을 결합해 Near Cache 설정 중복을 줄입니다       |
+| `RedissonCodecs.Int` / `Double` + `CompositeCodec` | `bluetape4k-redisson`       | `LocalCachedMapExamples`, `LocalCachedMapTest` | String map key를 유지하면서 `addAndGetAsync`가 Redis hash 숫자 payload를 처리하도록 합니다 |
+| `awaitRedis`                                       | workshop test fixture       | `AbstractRedissonTest`                         | 비동기 Redis 대기를 제한하고 timeout/취소를 underlying future에 전파합니다                 |
+| `streamAddArgsOf()`                                | `bluetape4k-redisson`       | `StreamExamples`                               | Kotlin 친화적인 helper로 Redis Stream append arguments를 만듭니다                          |
+| `VirtualThreadExecutor`                            | `bluetape4k-coroutines`     | `AbstractRedissonTest`                         | Virtual Threads로 Redisson I/O를 처리합니다                                                |
+| `RedisServer.Launcher.redis`                       | `bluetape4k-testcontainers` | `AbstractRedissonTest`                         | 자동으로 시작하고 중지하는 Testcontainers Redis singleton입니다                            |
+| `ShutdownQueue.register`                           | `bluetape4k-core`           | `AbstractRedissonTest`                         | JVM shutdown 시 `RedissonClient`를 자동으로 닫습니다                                       |
+| `Base58.randomString`                              | `bluetape4k-io`             | `AbstractRedissonTest`                         | URL-safe random key를 생성합니다                                                           |
+| `MultithreadingTester`                             | `bluetape4k-junit5`         | `FencedLockExamples`                           | 고정 thread pool로 concurrency를 검증합니다                                                |
+| `StructuredTaskScopeTester`                        | `bluetape4k-junit5`         | `FencedLockExamples`                           | Virtual Thread concurrency를 검증합니다                                                    |
+| `SuspendedJobTester`                               | `bluetape4k-junit5`         | `FencedLockExamples`                           | coroutine race condition을 검증합니다                                                      |
+| `getLockId()`                                      | `bluetape4k-redis`          | `FencedLockExamples`                           | coroutine-safe `RFencedLock` ID를 가져옵니다                                               |
 
-`FastFory`를 사용하는 클래스는 `SCHEMA_CONSISTENT`를 유지해야 하며 기본
-Fory codec과 wire 호환되지 않습니다. 따라서 이 codec은 폐기 가능한 cache
-데이터에만 사용하고 durable 또는 버전 간 공유 데이터에는 사용하지 않습니다.
+`FastFory`를 사용하는 클래스는 `SCHEMA_CONSISTENT`를 유지해야 하며 기본 Fory codec과 wire 호환되지 않습니다. 따라서 이 codec은 폐기 가능한 cache 데이터에만 사용하고 durable 또는 버전 간 공유 데이터에는 사용하지 않습니다.
 
 ## bluetape4k Before / After
 

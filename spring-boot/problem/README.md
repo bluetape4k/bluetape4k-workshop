@@ -2,9 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-This module shows how WebFlux controllers return standardized RFC 9457 Problem
-Details when task-domain exceptions or Resilience4j failures occur. The important
-path is controller exception -> `RestApiExceptionHandler` -> Zalando
+This module shows how WebFlux controllers return standardized RFC 9457 Problem Details when task-domain exceptions or Resilience4j failures occur. The important path is controller exception -> `RestApiExceptionHandler` -> Zalando
 `ProblemHandling` response.
 
 ## Architecture Diagram
@@ -15,8 +13,7 @@ path is controller exception -> `RestApiExceptionHandler` -> Zalando
 
 ![Problem Web Demo error sequence diagram](../../docs/images/readme-diagrams/spring-boot-problem-readme-sequence-01.png)
 
-This error-handling example combines Spring Boot 4, which includes built-in RFC 9457 Problem Details support, with Zalando Problem Spring Web.
-It uses bluetape4k `KLogging` and `bluetape4k-resilience4j` to convert Circuit Breaker related exceptions into the RFC 9457 format.
+This error-handling example combines Spring Boot 4, which includes built-in RFC 9457 Problem Details support, with Zalando Problem Spring Web. It uses bluetape4k `KLogging` and `bluetape4k-resilience4j` to convert Circuit Breaker related exceptions into the RFC 9457 format.
 
 ## RFC 9457 Problem Details Concepts
 
@@ -34,24 +31,24 @@ Problem Details (`application/problem+json`) is a specification for standardizin
 }
 ```
 
-| Field | Description |
-|---|---|
-| `type` | URI that identifies the error type (optional) |
-| `title` | Human-readable error summary |
-| `status` | HTTP status code |
-| `detail` | Detailed description of the error |
+| Field      | Description                                           |
+|------------|-------------------------------------------------------|
+| `type`     | URI that identifies the error type (optional)         |
+| `title`    | Human-readable error summary                          |
+| `status`   | HTTP status code                                      |
+| `detail`   | Detailed description of the error                     |
 | `instance` | URI of the specific resource where the error occurred |
 
 ## Main Components
 
-| Class | Role |
-|---|---|
-| `RestApiExceptionHandler` | `@ControllerAdvice` — combines `ProblemHandling` + `TaskAdviceTrait` + `Resilience4jTrait` |
-| `TaskAdviceTrait` | Converts `TaskNotFoundException` to 404 and `InvalidTaskIdException` to 400 |
-| `Resilience4jTrait` | Converts Resilience4j exceptions into Circuit Breaker/Bulkhead/RateLimit Problem responses |
-| `RestControllerLoggingFilter` | WebFilter for request/response logging |
-| `TaskController` | `/tasks` CRUD implemented with coroutine `suspend` functions |
-| `Resilience4jController` | Example controller integrated with Circuit Breaker |
+| Class                         | Role                                                                                       |
+|-------------------------------|--------------------------------------------------------------------------------------------|
+| `RestApiExceptionHandler`     | `@ControllerAdvice` — combines `ProblemHandling` + `TaskAdviceTrait` + `Resilience4jTrait` |
+| `TaskAdviceTrait`             | Converts `TaskNotFoundException` to 404 and `InvalidTaskIdException` to 400                |
+| `Resilience4jTrait`           | Converts Resilience4j exceptions into Circuit Breaker/Bulkhead/RateLimit Problem responses |
+| `RestControllerLoggingFilter` | WebFilter for request/response logging                                                     |
+| `TaskController`              | `/tasks` CRUD implemented with coroutine `suspend` functions                               |
+| `Resilience4jController`      | Example controller integrated with Circuit Breaker                                         |
 
 ## Exception Hierarchy
 
@@ -67,10 +64,10 @@ MaxRetriesExceededException   → 500 Internal Server Error
 
 ## bluetape4k Features Used
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `KLogging` | `bluetape4k-logging` | All companion objects | Lazy lambda logging and structured exception logging |
-| `bluetape4k-resilience4j` | `bluetape4k-resilience4j` | `Resilience4jTrait` | Provides traits that convert Resilience4j exceptions into Problem JSON |
+| Feature                   | Artifact                  | Code Location         | Benefit                                                                |
+|---------------------------|---------------------------|-----------------------|------------------------------------------------------------------------|
+| `KLogging`                | `bluetape4k-logging`      | All companion objects | Lazy lambda logging and structured exception logging                   |
+| `bluetape4k-resilience4j` | `bluetape4k-resilience4j` | `Resilience4jTrait`   | Provides traits that convert Resilience4j exceptions into Problem JSON |
 
 ## bluetape4k Before / After
 

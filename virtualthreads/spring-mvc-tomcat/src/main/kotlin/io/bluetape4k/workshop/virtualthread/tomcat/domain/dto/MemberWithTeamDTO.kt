@@ -9,7 +9,7 @@ data class MemberWithTeamDTO(
     val age: Int? = null,
     val teamId: Long? = null,
     val teamName: String? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

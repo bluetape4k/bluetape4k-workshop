@@ -1,5 +1,13 @@
 package io.bluetape4k.workshop.r2dbc.controller
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
@@ -9,13 +17,6 @@ import io.bluetape4k.workshop.r2dbc.service.UserService
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,7 +27,7 @@ class UserControllerTest(
     @param:Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class Find {
@@ -39,10 +40,10 @@ class UserControllerTest(
                 .expectStatus().is2xxSuccessful
                 .returnResult<User>().responseBody
                 .asFlow()
+                .log("User")
                 .toList()
 
             users.shouldNotBeEmpty()
-            users.forEach { log.debug { it } }
         }
 
         @Test
@@ -101,6 +102,7 @@ class UserControllerTest(
                 .expectStatus().is2xxSuccessful
                 .returnResult<User>().responseBody
                 .asFlow()
+                .log("Search")
                 .toList()
 
             searchedUsers shouldHaveSize 1
@@ -165,7 +167,7 @@ class UserControllerTest(
         @Test
         fun `update existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
+            val savedUser = service.addUser(newUser).shouldNotBeNull()
 
             val userToUpdate = createUserDTO()
 
@@ -221,7 +223,7 @@ class UserControllerTest(
         @Test
         fun `delete existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
+            val savedUser = service.addUser(newUser).shouldNotBeNull()
 
             webTestClient
                 .delete()

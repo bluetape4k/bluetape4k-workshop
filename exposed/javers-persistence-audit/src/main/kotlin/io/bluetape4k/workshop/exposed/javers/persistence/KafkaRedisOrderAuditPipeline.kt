@@ -7,6 +7,7 @@ import io.bluetape4k.javers.persistence.kafka.repository.VanillaKafkaCdoSnapshot
 import io.bluetape4k.javers.persistence.kafka.repository.VanillaKafkaCdoSnapshotRepositoryOptions
 import io.bluetape4k.javers.persistence.redis.repository.LettuceCdoSnapshotRepository
 import io.bluetape4k.javers.repository.CdoSnapshotRepository
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodecs
 import io.bluetape4k.support.requireNotBlank
 import io.lettuce.core.RedisClient
@@ -134,7 +135,7 @@ class KafkaRedisOrderAuditPipeline internal constructor(
         }
     }
 
-    private companion object {
+    private companion object: KLogging() {
         private const val DEFAULT_HISTORY_LIMIT = 100
         private const val DEFAULT_MAX_IDLE_POLLS = 3
     }
@@ -147,7 +148,7 @@ class KafkaRedisOrderAuditPipeline internal constructor(
  * 보존하기 위해 auto commit은 `false`, offset reset은 `earliest`만 허용한다. [redisClient]는 caller가
  * 소유하며 pipeline close 대상이 아니다.
  */
-object KafkaRedisOrderAuditFactory {
+object KafkaRedisOrderAuditFactory: KLogging() {
 
     fun create(
         repositoryName: String,
@@ -182,6 +183,7 @@ object KafkaRedisOrderAuditFactory {
                     flushAfterSend = true,
                 ),
             ).also(ownedResources::add)
+
             val commandRepository = KafkaPublishingCdoSnapshotRepository(
                 publisher = writeRepository,
                 queryRepository = readRepository,
@@ -197,6 +199,7 @@ object KafkaRedisOrderAuditFactory {
                 StringDeserializer(),
                 StringDeserializer(),
             ).also(ownedResources::add)
+
             val projector = KafkaCdoSnapshotProjector(
                 consumer = consumer,
                 jsonConverter = readJavers.jsonConverter,
@@ -226,6 +229,7 @@ object KafkaRedisOrderAuditFactory {
  *
  * 다음 command 전에 projection을 catch-up해야 version과 snapshot type이 이전 history를 이어간다.
  */
+@Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
 private class KafkaPublishingCdoSnapshotRepository(
     private val publisher: CdoSnapshotRepository,
     private val queryRepository: CdoSnapshotRepository,
@@ -247,7 +251,7 @@ private class KafkaPublishingCdoSnapshotRepository(
 
 private fun Map<String, Any?>.validatedProjectionConfigs(): Map<String, Any?> {
     val groupId = get(ConsumerConfig.GROUP_ID_CONFIG)?.toString()
-    require(!groupId.isNullOrBlank()) {
+    groupId.requireNotBlank {
         "consumerConfigs must contain a nonblank ${ConsumerConfig.GROUP_ID_CONFIG}."
     }
 

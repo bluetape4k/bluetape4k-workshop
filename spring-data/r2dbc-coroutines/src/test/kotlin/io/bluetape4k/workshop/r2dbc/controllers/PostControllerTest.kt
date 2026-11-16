@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.r2dbc.controllers
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -9,16 +14,12 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 
 class PostControllerTest: AbstractR2dbcApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `find all posts`() = runSuspendIO {
@@ -29,12 +30,10 @@ class PostControllerTest: AbstractR2dbcApplicationTest() {
             .expectStatus().is2xxSuccessful
             .returnResult<Post>().responseBody
             .asFlow()
+            .log("Post")
             .toList()
 
         posts.shouldNotBeEmpty()
-        posts.forEach { post ->
-            log.debug { "post=$post" }
-        }
     }
 
     @Test

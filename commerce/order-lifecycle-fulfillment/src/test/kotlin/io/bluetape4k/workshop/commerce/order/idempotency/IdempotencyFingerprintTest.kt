@@ -2,9 +2,13 @@ package io.bluetape4k.workshop.commerce.order.idempotency
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 internal class IdempotencyFingerprintTest {
+
+    companion object: KLogging()
+
     @Test
     fun `canonical request fingerprint ignores map insertion order`() {
         val first = IdempotencyFingerprint.request(mapOf("sku-b" to 2, "sku-a" to 1))
@@ -16,7 +20,7 @@ internal class IdempotencyFingerprintTest {
     @Test
     fun `different payload has different fingerprint`() {
         IdempotencyFingerprint.request(mapOf("sku-a" to 1)) shouldNotBeEqualTo
-            IdempotencyFingerprint.request(mapOf("sku-a" to 2))
+                IdempotencyFingerprint.request(mapOf("sku-a" to 2))
     }
 
     @Test

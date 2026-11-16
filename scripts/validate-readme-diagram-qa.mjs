@@ -459,7 +459,9 @@ function auditRoundedBendDirection(file, svg) {
 function auditConnectorGeometry(file, svg) {
   const scope = rel(file);
   if (referenceAuditsAvailable()) return;
-  const pathMatches = [...svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)];
+  const dataConnectorMatches = [...svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)];
+  const sequenceConnectorMatches = [...svg.matchAll(/<path\b([^>]*\bclass="[^"]*\b(?:call|work|return)\b[^"]*"[^>]*)\/?>/g)];
+  const pathMatches = dataConnectorMatches.length > 0 ? dataConnectorMatches : sequenceConnectorMatches;
   if (pathMatches.length === 0) {
     if (!referenceAuditsAvailable() && /class="edge"|data-edge=/.test(svg)) {
       fail(scope, "fallback connector audit", "edge groups exist but data-connector paths=0");
@@ -476,7 +478,7 @@ function auditConnectorGeometry(file, svg) {
 
   for (const pathMatch of pathMatches) {
     const attrs = parseAttrs(pathMatch[1]);
-    const connector = attrs["data-connector"];
+    const connector = attrs["data-connector"] || attrs.class || "sequence-" + (pathMatches.indexOf(pathMatch) + 1);
     const d = attrs.d || "";
     const points = parsePathEndPoints(d);
     const directions = [];
@@ -556,7 +558,7 @@ function referenceAuditsAvailable() {
 
 function runSkillAudits(file, svg) {
   const scope = rel(file);
-  const isConnectorHeavy = /data-connector=|class="edge"|marker-end\s*:|marker-end=/.test(svg);
+  const isConnectorHeavy = /data-connector=|class="edge"|data-edge=|marker-end\s*:|marker-end=/.test(svg);
   if (!isConnectorHeavy) return;
 
   const audits = [
@@ -568,7 +570,7 @@ function runSkillAudits(file, svg) {
   for (const [gate, script] of audits) {
     const scriptPath = path.join(skillAuditDir, script);
     if (!fs.existsSync(scriptPath)) {
-      addRow(scope, `${gate} reference audit`, `${scriptPath} missing`, "UNAVAILABLE");
+      fail(scope, gate + " reference audit", scriptPath + " missing");
       continue;
     }
     const result = run("python3", [scriptPath, rel(file)]);
@@ -638,6 +640,8 @@ if (sequenceTargets.length > 0) {
       const resultLabel = /sequence_files=0/.test(evidence) ? "WEAK" : "PASS";
       addRow("diagram-set", "sequence style reference audit", evidence.split("\n").at(-1) || "exit=0", resultLabel);
     }
+  } else {
+    fail("diagram-set", "sequence style reference audit", `${sequenceStyle} missing`);
   }
 }
 

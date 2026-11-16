@@ -3,18 +3,26 @@ package io.bluetape4k.workshop.commerce.usagebilling.usage.messaging
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.HexFormat
+import java.util.*
 
 class MeterPriceEvidenceDecoderTest {
+
+    private companion object: KLogging() {
+        const val PAYLOAD = "{\"meterCode\":\"api_calls\",\"currency\":\"USD\",\"unitPrice\":\"0.10\"}"
+    }
+
     private val decoder = MeterPriceEvidenceDecoder()
 
     @Test
     fun `decodes a complete Meter price envelope into local evidence`() {
         val evidence = decoder.decode(wirePayload())
 
+        log.debug { "evidence=$evidence" }
         evidence.tenantId shouldBeEqualTo "tenant-a"
         evidence.payloadDigest shouldBeEqualTo digestOf(PAYLOAD)
         evidence.evidence.meterCode shouldBeEqualTo "api_calls"
@@ -55,10 +63,8 @@ class MeterPriceEvidenceDecoderTest {
             ),
         )
 
+    @Suppress("SameParameterValue")
     private fun digestOf(value: String): String =
-        HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
-
-    private companion object {
-        const val PAYLOAD = "{\"meterCode\":\"api_calls\",\"currency\":\"USD\",\"unitPrice\":\"0.10\"}"
-    }
+        HexFormat.of()
+            .formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 }

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration(proxyBeanMethods = false)
 class DatabaseConfig {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Bean
     fun database(

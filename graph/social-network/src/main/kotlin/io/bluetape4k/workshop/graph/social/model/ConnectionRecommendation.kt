@@ -29,7 +29,7 @@ data class ConnectionRecommendation(
     val person: GraphVertex,
     val mutualConnectionCount: Int,
     val mutualConnections: List<GraphVertex>,
-) : Serializable {
+): Serializable {
     init {
         mutualConnectionCount.requirePositiveNumber("mutualConnectionCount")
         mutualConnections.size.requireEquals(mutualConnectionCount, "mutualConnections.size")

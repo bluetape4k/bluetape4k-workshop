@@ -1,24 +1,25 @@
 package io.bluetape4k.workshop.virtualthread.part2
 
-import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.fail
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeFailFast
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
-import io.bluetape4k.assertions.fail
 
 
 /**
  * Rule 5: Virtual Thread 사용 시에는 ThreadLocal 를 사용하지 말고, [ScopedValue]를 사용하세요
  */
-class Rule5UseThreadLocalVariablesCarefully : AbstractVirtualThreadTest() {
+class Rule5UseThreadLocalVariablesCarefully: AbstractVirtualThreadTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class DoNot {
@@ -50,7 +51,7 @@ class Rule5UseThreadLocalVariablesCarefully : AbstractVirtualThreadTest() {
 
         private val scopedValue = ScopedValue.newInstance<String>()
 
-        @EnabledOnJre(JRE.JAVA_21)
+        @EnabledForJreRange(min = JRE.JAVA_21)
         @Test
         fun `추천 - ScopedValue 사용하기`() {
             ScopedValue.where(scopedValue, "zero").run {
@@ -63,7 +64,10 @@ class Rule5UseThreadLocalVariablesCarefully : AbstractVirtualThreadTest() {
                 scopedValue.get() shouldBeEqualTo "zero"
 
                 try {
-                    structuredTaskScopeAll { scope ->
+                    structuredTaskScopeFailFast(
+                        null,
+                        VirtualThreads.threadFactory("sts-all-")
+                    ) { scope ->
                         // Scope 안에서 sub task를 생성합니다.
                         scope.fork {
                             scopedValue.get() shouldBeEqualTo "zero"

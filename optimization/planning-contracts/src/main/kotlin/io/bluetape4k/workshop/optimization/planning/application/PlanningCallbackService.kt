@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.optimization.planning.application
 import io.bluetape4k.workshop.optimization.planning.adapter.http.CallbackSignatureVerifier
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
+import io.bluetape4k.workshop.optimization.planning.observability.PlanningObservations
 import io.bluetape4k.workshop.optimization.planning.persistence.CallbackOutcome
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAggregateRepository
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAuditDecision
@@ -11,12 +12,11 @@ import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAuditRep
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningCallbackInboxRecord
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningCallbackInboxRepository
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestRepository
-import io.bluetape4k.workshop.optimization.planning.observability.PlanningObservations
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class PlanningCallback(
     val provider: PlanningProvider,
@@ -86,17 +86,23 @@ internal class PlanningCallbackService(
         val decision = when {
             callback.provider != request.provider ->
                 PlanningCallbackDecision.PROVIDER_MISMATCH
-            !aggregateRepository.versionMatches(request.aggregateId, request.aggregateVersion) ->
+            !aggregateRepository.versionMatches(
+                request.aggregateId,
+                request.aggregateVersion
+            )                                     ->
                 PlanningCallbackDecision.AGGREGATE_CHANGED
             callback.status != PlanningStatus.SUCCEEDED ->
                 PlanningCallbackDecision.REJECTED
+
             requestRepository.acceptIfNewer(
                 callback.planningRequestId,
                 callback.providerRevision,
                 callback.scoreSummary,
                 explanation,
-            ) -> PlanningCallbackDecision.ACCEPTED
-            else -> PlanningCallbackDecision.STALE_REVISION
+            )                                     ->
+                PlanningCallbackDecision.ACCEPTED
+            else                                  ->
+                PlanningCallbackDecision.STALE_REVISION
         }
 
         auditRepository.append(
@@ -119,6 +125,7 @@ internal class PlanningCallbackService(
                 Instant.now(clock),
             ),
         ) { "callback inbox state was not updated" }
+
         return decision.also(observations::recordCallback)
     }
 
@@ -127,21 +134,21 @@ internal class PlanningCallbackService(
             .replace(Regex("(?i)(secret|token|password|credential)[^\\s,;]*"), "[redacted]")
             .take(500)
 
-    private fun PlanningCallbackDecision.toAuditDecision() = when (this) {
-        PlanningCallbackDecision.ACCEPTED -> PlanningAuditDecision.ACCEPTED
+    private fun PlanningCallbackDecision.toAuditDecision(): PlanningAuditDecision = when (this) {
+        PlanningCallbackDecision.ACCEPTED       -> PlanningAuditDecision.ACCEPTED
         PlanningCallbackDecision.STALE_REVISION -> PlanningAuditDecision.STALE_REVISION
         PlanningCallbackDecision.AGGREGATE_CHANGED -> PlanningAuditDecision.AGGREGATE_CHANGED
         PlanningCallbackDecision.PROVIDER_MISMATCH -> PlanningAuditDecision.PROVIDER_MISMATCH
-        PlanningCallbackDecision.REJECTED -> PlanningAuditDecision.REJECTED
-        PlanningCallbackDecision.DUPLICATE -> error("duplicate callbacks are not audited")
+        PlanningCallbackDecision.REJECTED       -> PlanningAuditDecision.REJECTED
+        PlanningCallbackDecision.DUPLICATE      -> error("duplicate callbacks are not audited")
     }
 
-    private fun PlanningCallbackDecision.toCallbackOutcome() = when (this) {
-        PlanningCallbackDecision.ACCEPTED -> CallbackOutcome.ACCEPTED
+    private fun PlanningCallbackDecision.toCallbackOutcome(): CallbackOutcome = when (this) {
+        PlanningCallbackDecision.ACCEPTED       -> CallbackOutcome.ACCEPTED
         PlanningCallbackDecision.STALE_REVISION -> CallbackOutcome.STALE_REVISION
         PlanningCallbackDecision.AGGREGATE_CHANGED -> CallbackOutcome.AGGREGATE_CHANGED
         PlanningCallbackDecision.PROVIDER_MISMATCH -> CallbackOutcome.PROVIDER_MISMATCH
-        PlanningCallbackDecision.REJECTED -> CallbackOutcome.REJECTED
-        PlanningCallbackDecision.DUPLICATE -> error("duplicate callbacks do not change inbox state")
+        PlanningCallbackDecision.REJECTED       -> CallbackOutcome.REJECTED
+        PlanningCallbackDecision.DUPLICATE      -> error("duplicate callbacks do not change inbox state")
     }
 }

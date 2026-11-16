@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.spring
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
@@ -18,6 +19,8 @@ import javax.sql.DataSource
 
 class JobConsoleSpringLifecycleTest {
 
+    companion object: KLogging()
+
     @Test
     fun `pre-destroy closes admission and is idempotent`() {
         val service = JobConsoleService(JobRepository(neverUsedDataSource), boundedWaitEnabled = false)
@@ -26,20 +29,19 @@ class JobConsoleSpringLifecycleTest {
         lifecycle.stop()
         lifecycle.stop()
 
-        val failure =
-            assertFailsWith<JobRepositoryException> {
-                service.submit(
-                    DemoCallerScope("tenant-a", "submitter-a"),
-                    "shutdown-key",
-                    SubmitJobRequest(JobType.DOCUMENT_EXPORT, 1),
-                )
-            }
+        val failure = assertFailsWith<JobRepositoryException> {
+            service.submit(
+                DemoCallerScope("tenant-a", "submitter-a"),
+                "shutdown-key",
+                SubmitJobRequest(JobType.DOCUMENT_EXPORT, 1),
+            )
+        }
         failure.code shouldBeEqualTo JobProblemCode.DEPENDENCY_UNAVAILABLE
         service.activeSubmissionCount() shouldBeEqualTo 0
     }
 
     private val neverUsedDataSource: DataSource =
-        object : DataSource {
+        object: DataSource {
             override fun getConnection(): Connection = throw SQLException("connection must not be acquired")
 
             override fun getConnection(
@@ -47,7 +49,7 @@ class JobConsoleSpringLifecycleTest {
                 password: String?,
             ): Connection = throw SQLException("connection must not be acquired")
 
-            override fun <T : Any?> unwrap(iface: Class<T>?): T = throw SQLException("not a wrapper")
+            override fun <T> unwrap(iface: Class<T>?): T = throw SQLException("not a wrapper")
 
             override fun isWrapperFor(iface: Class<*>?): Boolean = false
 

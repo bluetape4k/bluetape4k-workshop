@@ -7,6 +7,8 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendDefault
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.text.detection.CoroutineLanguageDetectionService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -15,6 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CoroutineMultilingualSearchIndexTest {
+
+    companion object: KLogging()
 
     private val documents = listOf(
         SearchDocument.of(
@@ -42,6 +46,8 @@ class CoroutineMultilingualSearchIndexTest {
 
         hits shouldHaveSize 1
         val hit = hits.single()
+
+        log.debug { "hit=$hit" }
         hit.document.id shouldBeEqualTo "ko-1"
         hit.language shouldBeEqualTo Language.KOREAN
         hit.matches.map { it.text } shouldContain "서울"

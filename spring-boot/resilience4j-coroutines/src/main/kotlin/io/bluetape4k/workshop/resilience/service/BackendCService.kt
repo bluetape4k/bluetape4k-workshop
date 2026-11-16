@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.resilience.service
 import io.bluetape4k.concurrent.completableFutureOf
 import io.bluetape4k.concurrent.failedCompletableFutureOf
 import io.bluetape4k.concurrent.futureOf
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.exception.BusinessException
 import io.bluetape4k.workshop.resilience.simulateBlockingLatency
@@ -19,15 +20,14 @@ import org.springframework.web.client.HttpServerErrorException
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.io.IOException
-import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeoutException
 import kotlin.time.Duration.Companion.seconds
 
 @Component("backendCService")
-class BackendCService : Service {
+class BackendCService: Service {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         const val BACKEND_C = "backendC"
     }
 
@@ -83,7 +83,7 @@ class BackendCService : Service {
     @CircuitBreaker(name = BACKEND_C, fallbackMethod = "fluxFallback")
     override fun fluxTimeout(): Flux<String> {
         return Flux.just("Hello World as Flux from backend C")
-            .delayElements(Duration.ofSeconds(10))
+            .delayElements(10.seconds())
     }
 
 
@@ -108,7 +108,7 @@ class BackendCService : Service {
     override fun monoTimeout(): Mono<String> {
         return Mono
             .just("Hello World as Mono from backend C")
-            .delayElement(Duration.ofSeconds(10))
+            .delayElement(10.seconds())
     }
 
     @Bulkhead(name = BACKEND_C, type = Bulkhead.Type.THREADPOOL)

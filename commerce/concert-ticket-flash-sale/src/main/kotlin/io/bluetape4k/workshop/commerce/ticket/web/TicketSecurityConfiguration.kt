@@ -14,7 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.filter.OncePerRequestFilter
-import java.util.UUID
+import java.util.*
 
 @Configuration(proxyBeanMethods = false)
 internal class TicketSecurityConfiguration {
@@ -52,7 +52,7 @@ internal class TicketSecurityConfiguration {
         .addFilterAfter(RequestLoggingFilter(), UsernamePasswordAuthenticationFilter::class.java)
 }
 
-private class DemoBuyerFilter : OncePerRequestFilter() {
+private class DemoBuyerFilter: OncePerRequestFilter() {
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
         val raw = request.getHeader("X-Demo-Buyer")
         if (raw != null) {

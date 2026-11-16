@@ -1,26 +1,35 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Configuration
 
 internal class JobSafetyLeaderObservationPropertiesTest {
+
+    companion object: KLogging()
+
     private val runner =
         ApplicationContextRunner()
             .withUserConfiguration(PropertiesConfiguration::class.java)
 
     @Test
     fun `safe defaults keep observation tags disabled`() {
-        runner.run { context ->
-            val properties = context.getBean(JobSafetyLeaderObservationProperties::class.java)
+        runner
+            .run { context ->
+                val properties = context.getBean<JobSafetyLeaderObservationProperties>()
 
-            properties.enabled shouldBeEqualTo true
-            properties.includeLockName shouldBeEqualTo false
-            properties.includeLeaderId shouldBeEqualTo false
-            properties.includeExceptionDetails shouldBeEqualTo false
-        }
+                log.debug { "properties=$properties" }
+                properties.enabled.shouldBeTrue()
+                properties.includeLockName.shouldBeFalse()
+                properties.includeLeaderId.shouldBeFalse()
+                properties.includeExceptionDetails.shouldBeFalse()
+            }
     }
 
     @Test
@@ -32,12 +41,13 @@ internal class JobSafetyLeaderObservationPropertiesTest {
                 "bluetape4k.leader.observation.include-leader-id=true",
                 "bluetape4k.leader.observation.include-exception-details=true",
             ).run { context ->
-                val properties = context.getBean(JobSafetyLeaderObservationProperties::class.java)
+                val properties = context.getBean<JobSafetyLeaderObservationProperties>()
 
-                properties.enabled shouldBeEqualTo false
-                properties.includeLockName shouldBeEqualTo true
-                properties.includeLeaderId shouldBeEqualTo true
-                properties.includeExceptionDetails shouldBeEqualTo true
+                log.debug { "properties=$properties" }
+                properties.enabled.shouldBeFalse()
+                properties.includeLockName.shouldBeTrue()
+                properties.includeLeaderId.shouldBeTrue()
+                properties.includeExceptionDetails.shouldBeTrue()
             }
     }
 

@@ -3,8 +3,14 @@
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeIn
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
@@ -16,34 +22,44 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import java.util.concurrent.Callable
 import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 internal class VoucherPoolConcurrencyIntegrationTest {
+
+    companion object: KLogging()
+
     private val harness = LifecycleHarness("concurrency")
 
-    @BeforeAll fun migrate() = harness.migrate()
-    @AfterAll fun cleanup() {
+    @BeforeAll
+    fun migrate() = harness.migrate()
+
+    @AfterAll
+    fun cleanup() {
         harness.cleanup()
     }
-    @BeforeEach fun reset() = harness.reset()
+
+    @BeforeEach
+    fun reset() = harness.reset()
 
     @Test
     fun `concurrent reservations select distinct entries`() {
         val fixture = harness.activePool("distinct", List(64) { "CONCURRENT-$it" })
+
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
             val futures = List(64) { index ->
-                executor.submit(Callable {
+                executor.submit<ReservationSnapshot> {
                     reserveWithAdmissionRetry {
-                        harness.reservations.reserve(harness.reserve(fixture, "user-$index", "reserve-$index")).applied()
+                        harness.reservations
+                            .reserve(harness.reserve(fixture, "user-$index", "reserve-$index"))
+                            .applied()
                     }
-                })
+                }
             }
-            val results = futures.map { it.get(20, TimeUnit.SECONDS) }
+            val results = futures.map { it.get(20.seconds) }
             results.map { it.entryId }.distinct() shouldHaveSize 64
         }
     }
@@ -53,19 +69,22 @@ internal class VoucherPoolConcurrencyIntegrationTest {
         val fixture = harness.activePool("user-limit", List(8) { "LIMIT-$it" })
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
             val futures = List(8) { index ->
-                executor.submit(Callable {
+                executor.submit<Result<ReservationSnapshot>> {
                     runCatching {
-                        harness.reservations.reserve(harness.reserve(fixture, "same-user", "same-$index")).applied()
+                        harness.reservations
+                            .reserve(harness.reserve(fixture, "same-user", "same-$index"))
+                            .applied()
                     }
-                })
+                }
             }
-            val outcomes = futures.map { it.get(10, TimeUnit.SECONDS) }
+            val outcomes = futures.map { it.get(10.seconds) }
             outcomes.count { it.isSuccess } shouldBeEqualTo 4
             outcomes.filter { it.isFailure }.forEach { outcome ->
-                val failure = outcome.exceptionOrNull() as VoucherPoolLifecycleException
+                val failure = outcome.exceptionOrNull().shouldBeInstanceOf<VoucherPoolLifecycleException>()
                 failure.code shouldBeEqualTo VoucherPoolErrorCode.USER_LIMIT_REACHED
             }
-            harness.userCounts(fixture.campaign.campaignId, "same-user") shouldBeEqualTo UserCounts(4, 0, 0)
+            harness.userCounts(fixture.campaign.campaignId, "same-user") shouldBeEqualTo
+                    UserCounts(4, 0, 0)
         }
     }
 
@@ -74,21 +93,24 @@ internal class VoucherPoolConcurrencyIntegrationTest {
         val fixture = harness.activePool("shared-progress", List(4) { "SHARED-$it" })
         val probe = harness.installReservationGuardProbe(4)
         val startedAt = System.nanoTime()
+
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
             val results = List(4) { index ->
-                executor.submit(Callable<ReservationSnapshot> {
-                    harness.reservations.reserve(harness.reserve(fixture, "shared-user-$index", "shared-$index")).applied()
-                })
+                executor.submit<ReservationSnapshot> {
+                    harness.reservations.reserve(
+                        harness.reserve(fixture, "shared-user-$index", "shared-$index")
+                    ).applied()
+                }
             }
             probe.awaitEntered().shouldBeTrue()
             harness.sharedGuardHolders(probe, "voucher_pool_campaigns") shouldBeEqualTo 4
             harness.sharedGuardHolders(probe, "voucher_pool_batches") shouldBeEqualTo 4
             harness.guardWaiters(probe) shouldBeEqualTo 0
             probe.release()
-            val reservations = results.map { it.get(2, TimeUnit.SECONDS) }
+            val reservations = results.map { it.get(2.seconds) }
             reservations.map { it.entryId }.distinct() shouldHaveSize 4
         }
-        (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt) <= 2_000).shouldBeTrue()
+        (System.nanoTime() - startedAt).nanos().toMillis() shouldBeLessOrEqualTo 2_000
     }
 
     @Test
@@ -104,12 +126,12 @@ internal class VoucherPoolConcurrencyIntegrationTest {
                     reserveWithAdmissionRetry {
                         harness.reservations.release(
                             ReleaseReservationCommand(
-                                harness.tenant,
-                                fixture.campaign.campaignId,
-                                reservation.reservationId,
-                                "release-user-$index",
-                                reservation.revision,
-                                "opposing-release-$index",
+                                tenantId = harness.tenant,
+                                campaignId = fixture.campaign.campaignId,
+                                reservationId = reservation.reservationId,
+                                canonicalUser = "release-user-$index",
+                                expectedRevision = reservation.revision,
+                                idempotencyKey = "opposing-release-$index",
                             ),
                         ).applied()
                     }
@@ -124,7 +146,7 @@ internal class VoucherPoolConcurrencyIntegrationTest {
                     }
                 }
             }
-            (releases + reserves).forEach { it.get(20, TimeUnit.SECONDS) }
+            (releases + reserves).forEach { it.get(20.seconds) }
         }
 
         harness.poolDepth(fixture.batch.batchId, EntryState.AVAILABLE) shouldBeEqualTo 8L
@@ -141,50 +163,51 @@ internal class VoucherPoolConcurrencyIntegrationTest {
 
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
             val outcomes = listOf(
-                executor.submit(Callable {
+                executor.submit<Result<AllocationSnapshot>> {
                     barrier.await()
                     runCatching {
                         harness.redemptions.redeem(
                             RedeemVoucherCommand(
-                                harness.tenant,
-                                fixture.campaign.campaignId,
-                                allocation.allocationId,
-                                "racer",
-                                CanonicalVoucherCode.of("TERMINAL-RACE"),
-                                revealed.revision,
-                                "race-redeem-key",
+                                tenantId = harness.tenant,
+                                campaignId = fixture.campaign.campaignId,
+                                allocationId = allocation.allocationId,
+                                canonicalUser = "racer",
+                                code = CanonicalVoucherCode("TERMINAL-RACE"),
+                                expectedRevision = revealed.revision,
+                                idempotencyKey = "race-redeem-key",
                             ),
                         ).applied()
                     }
-                }),
-                executor.submit(Callable {
+                },
+                executor.submit<Result<AllocationSnapshot>> {
                     barrier.await()
                     runCatching {
                         harness.redemptions.revoke(
                             RevokeAllocationCommand(
-                                harness.tenant,
-                                allocation.allocationId,
-                                revealed.revision,
-                                "race-revoke-key",
+                                tenantId = harness.tenant,
+                                allocationId = allocation.allocationId,
+                                expectedRevision = revealed.revision,
+                                idempotencyKey = "race-revoke-key",
                             ),
                         ).applied()
                     }
-                }),
-            ).map { it.get(10, TimeUnit.SECONDS) }
+                },
+            ).map { it.get(10.seconds) }
 
             outcomes.count { it.isSuccess } shouldBeEqualTo 1
-            val loser = outcomes.single { it.isFailure }.exceptionOrNull() as VoucherPoolLifecycleException
+            val loser =
+                outcomes.single { it.isFailure }.exceptionOrNull().shouldBeInstanceOf<VoucherPoolLifecycleException>()
             loser.code shouldBeEqualTo VoucherPoolErrorCode.STALE_REVISION
+
             val terminalState = harness.entryState(allocation.entryId)
-            (terminalState in setOf(EntryState.REDEEMED, EntryState.REVOKED)).shouldBeTrue()
+            terminalState shouldBeIn setOf(EntryState.REDEEMED, EntryState.REVOKED)
             harness.userCounts(fixture.campaign.campaignId, "racer") shouldBeEqualTo UserCounts(0, 0, 1)
             harness.terminalAuditCount(allocation.allocationId) shouldBeEqualTo 1L
-            harness.revokeRaceLostAuditCount(allocation.allocationId) shouldBeEqualTo
-                if (terminalState == EntryState.REDEEMED) 1L else 0L
+            harness.revokeRaceLostAuditCount(allocation.allocationId) shouldBeEqualTo if (terminalState == EntryState.REDEEMED) 1L else 0L
         }
     }
 
-    private fun reserveWithAdmissionRetry(block: () -> ReservationSnapshot): ReservationSnapshot {
+    private inline fun reserveWithAdmissionRetry(block: () -> ReservationSnapshot): ReservationSnapshot {
         repeat(50) {
             try {
                 return block()

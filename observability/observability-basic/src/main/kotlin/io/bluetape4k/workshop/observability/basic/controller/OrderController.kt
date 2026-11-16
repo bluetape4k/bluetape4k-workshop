@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.observability.basic.controller
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.observability.basic.model.Order
 import io.bluetape4k.workshop.observability.basic.service.OrderService
 import org.springframework.http.ResponseEntity
@@ -20,6 +21,9 @@ import org.springframework.web.bind.annotation.RestController
 class OrderController(
     private val orderService: OrderService,
 ) {
+
+    companion object: KLoggingChannel()
+
     /**
      * ID 로 order 를 조회합니다.
      *
@@ -28,6 +32,7 @@ class OrderController(
     @GetMapping("/{id}")
     suspend fun getOrder(@PathVariable id: Long): ResponseEntity<Order> {
         val order = orderService.getOrder(id)
+
         return if (order != null) ResponseEntity.ok(order)
         else ResponseEntity.notFound().build()
     }

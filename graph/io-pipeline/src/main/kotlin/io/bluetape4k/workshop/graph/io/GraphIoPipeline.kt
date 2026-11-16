@@ -22,9 +22,10 @@ import io.bluetape4k.graph.model.BatchEdge
 import io.bluetape4k.graph.model.GraphEdge
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphVertex
-import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.repository.DEFAULT_GRAPH_EXPORT_CHUNK_SIZE
+import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
@@ -148,6 +149,7 @@ class GraphIoPipeline(
     fun exportJackson3NdJson(target: Path): GraphExportReport {
         val exporter = Jackson3NdJsonBulkExporter()
         val sink = GraphExportSink.PathSink(requireWritableTarget(target, "target"))
+
         return progressListener?.let { listener ->
             exporter.exportGraph(sink = sink, operations = operations, options = exportOptions, listener = listener)
         } ?: exporter.exportGraph(sink = sink, operations = operations, options = exportOptions)
@@ -275,7 +277,7 @@ class GraphIoPipeline(
     private fun Map<GraphElementId, GraphElementId>.requiredId(id: GraphElementId): GraphElementId =
         this[id].requireNotNull("copiedVertex[${id.value}]")
 
-    private companion object {
+    private companion object: KLogging() {
         private const val EXTERNAL_ID_PROPERTY = "_graphIoExternalId"
 
         private val vertexLabels = setOf("Person", "Project")

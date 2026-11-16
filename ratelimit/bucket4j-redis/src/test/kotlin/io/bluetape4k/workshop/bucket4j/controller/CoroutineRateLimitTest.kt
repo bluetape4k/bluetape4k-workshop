@@ -4,9 +4,9 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.AbstractRateLimitTest
 import org.junit.jupiter.api.Test
 
-class CoroutineRateLimitTest : AbstractRateLimitTest() {
+class CoroutineRateLimitTest: AbstractRateLimitTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val HELLO_PATH = "/coroutines/hello"
         private const val WORLD_PATH = "/coroutines/world"
     }

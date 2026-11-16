@@ -5,21 +5,29 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.coroutines.flow.extensions.FlowEvent
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.coroutines.support.awaitUntil
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.junit5.coroutines.runSuspendTest
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
+import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 class RaceFallbackCatalogTest {
+
+    companion object: KLogging()
 
     private val catalog = RaceFallbackCatalog()
 
@@ -42,27 +50,28 @@ class RaceFallbackCatalogTest {
         val slowCancelled = AtomicBoolean(false)
         val cache = catalog.source(result(CatalogSource.CACHE, latencyMs = 200), onCancel = { slowCancelled.set(true) })
         val replica = catalog.source(result(CatalogSource.REPLICA, latencyMs = 20))
-        val remote = catalog.source(result(CatalogSource.REMOTE_API, latencyMs = 120), onCancel = { slowCancelled.set(true) })
+        val remote =
+            catalog.source(result(CatalogSource.REMOTE_API, latencyMs = 120), onCancel = { slowCancelled.set(true) })
 
         val winner = catalog.fastestHealthy(listOf(cache, replica, remote)).take(1).toList()
 
         winner.map { it.source } shouldBeEqualTo listOf(CatalogSource.REPLICA)
-        slowCancelled.get() shouldBeEqualTo true
+        slowCancelled.get().shouldBeTrue()
     }
 
     @Test
     fun `source delay must be zero or positive`() = runSuspendTest {
         assertFailsWith<IllegalArgumentException> {
-            catalog.source(result(CatalogSource.CACHE), delayMs = -1)
+            catalog.source(result(CatalogSource.CACHE), delayMs = -1).collect()
         }
     }
 
     @Test
     fun `source composition requires at least one source`() = runSuspendTest {
-        assertFailsWith<IllegalArgumentException> { catalog.fastestHealthy(emptyList()) }
-        assertFailsWith<IllegalArgumentException> { catalog.orderedFallback(emptyList()) }
-        assertFailsWith<IllegalArgumentException> { catalog.eagerFallback() }
-        assertFailsWith<IllegalArgumentException> { catalog.mergeContributions() }
+        assertFailsWith<IllegalArgumentException> { catalog.fastestHealthy(emptyList()).collect() }
+        assertFailsWith<IllegalArgumentException> { catalog.orderedFallback(emptyList()).collect() }
+        assertFailsWith<IllegalArgumentException> { catalog.eagerFallback().collect() }
+        assertFailsWith<IllegalArgumentException> { catalog.mergeContributions().collect() }
     }
 
     @Test
@@ -70,7 +79,9 @@ class RaceFallbackCatalogTest {
         val cache = catalog.source(result(CatalogSource.CACHE, latencyMs = 40, quality = SourceQuality.STALE))
         val backup = catalog.source(result(CatalogSource.BACKUP_API, latencyMs = 1))
 
-        val ordered = catalog.orderedFallback(listOf(cache, backup)).toList()
+        val ordered = catalog.orderedFallback(listOf(cache, backup))
+            .log("Fallback")
+            .toList()
 
         ordered.map { it.source } shouldBeEqualTo listOf(CatalogSource.CACHE, CatalogSource.BACKUP_API)
     }
@@ -84,10 +95,14 @@ class RaceFallbackCatalogTest {
             onStart = { backupStarted.complete(Unit) },
         )
 
-        val collection = async { catalog.eagerFallback(cache, backup).toList() }
-        withTimeout(1_000) { backupStarted.await() }
+        val collection = async {
+            catalog.eagerFallback(cache, backup)
+                .log("Fallback")
+                .toList()
+        }
+        backupStarted.awaitUntil(1.seconds)
 
-        backupStarted.isCompleted shouldBeEqualTo true
+        backupStarted.isCompleted.shouldBeTrue()
         collection.await().map { it.source } shouldBeEqualTo listOf(CatalogSource.CACHE, CatalogSource.BACKUP_API)
     }
 
@@ -99,18 +114,24 @@ class RaceFallbackCatalogTest {
         val collection = async {
             catalog.eagerFallbackBySource(sources) { source ->
                 when (source) {
-                    CatalogSource.CACHE -> catalog.source(result(source, latencyMs = 80, quality = SourceQuality.STALE))
+                    CatalogSource.CACHE -> catalog.source(
+                        result(
+                            source,
+                            latencyMs = 80,
+                            quality = SourceQuality.STALE
+                        )
+                    )
                     CatalogSource.REMOTE_API -> catalog.source(
                         result = result(source, latencyMs = 1),
                         onStart = { remoteStarted.complete(Unit) },
                     )
-                    else -> catalog.source(result(source))
+                    else                -> catalog.source(result(source))
                 }
-            }.toList()
+            }.log("EagerFallback").toList()
         }
-        withTimeout(1_000) { remoteStarted.await() }
+        remoteStarted.awaitUntil(1.seconds)
 
-        remoteStarted.isCompleted shouldBeEqualTo true
+        remoteStarted.isCompleted.shouldBeTrue()
         collection.await().map { it.source } shouldBeEqualTo listOf(CatalogSource.CACHE, CatalogSource.REMOTE_API)
     }
 
@@ -145,10 +166,10 @@ class RaceFallbackCatalogTest {
                         active.decrementAndGet()
                     }
                 }
-            }.toList()
-        }
+            }.log("BounedEagerFallback").toList()
+        }.log("Job")
 
-        withTimeout(1_000) { secondInnerStarted.await() }
+        secondInnerStarted.awaitUntil(1.seconds)
         peak.get() shouldBeLessOrEqualTo 2
         release.complete(Unit)
 
@@ -186,15 +207,15 @@ class RaceFallbackCatalogTest {
                         secondSecondEmission.complete(Unit)
                     }
                 }
-            }.toList()
-        }
+            }.log("BoundedEagerFallback").toList()
+        }.log("Job")
 
-        withTimeout(1_000) { secondFirstEmission.await() }
+        secondFirstEmission.awaitUntil(1.seconds)
         secondSecondEmission.isCompleted shouldBeEqualTo false
 
         firstInnerRelease.complete(Unit)
         collection.await().map { it.item.sku } shouldBeEqualTo listOf("sku-100", "sku-200", "sku-201")
-        secondSecondEmission.isCompleted shouldBeEqualTo true
+        secondSecondEmission.isCompleted.shouldBeTrue()
     }
 
     @Test
@@ -214,7 +235,7 @@ class RaceFallbackCatalogTest {
                     cancelled.incrementAndGet()
                 }
             }
-        }.take(1).toList()
+        }.log("BoundedEagerFallback").take(1).toList()
 
         cancelled.get() shouldBeGreaterThan 0
     }
@@ -237,48 +258,76 @@ class RaceFallbackCatalogTest {
         val failure = assertFailsWith<IllegalStateException> {
             catalog.boundedEagerFallbackBySource(flowOf(CatalogSource.REMOTE_API), maxConcurrency = 2) {
                 flow { throw boom }
-            }.toList()
+            }.log("BoundedEagerFallback").toList()
         }
         failure.message shouldBeEqualTo boom.message
     }
 
     @Test
     fun `merge collects partial contributions from every source`() = runSuspendTest {
-        val cache = catalog.source(result(CatalogSource.CACHE, attributes = mapOf("price" to "cached"), latencyMs = 40, quality = SourceQuality.PARTIAL))
-        val replica = catalog.source(result(CatalogSource.REPLICA, attributes = mapOf("stock" to "replica"), latencyMs = 10, quality = SourceQuality.PARTIAL))
-        val remote = catalog.source(result(CatalogSource.REMOTE_API, attributes = mapOf("description" to "remote"), latencyMs = 20, quality = SourceQuality.PARTIAL))
+        val cache = catalog.source(
+            result(
+                CatalogSource.CACHE,
+                attributes = mapOf("price" to "cached"),
+                latencyMs = 40,
+                quality = SourceQuality.PARTIAL
+            )
+        )
+        val replica = catalog.source(
+            result(
+                CatalogSource.REPLICA,
+                attributes = mapOf("stock" to "replica"),
+                latencyMs = 10,
+                quality = SourceQuality.PARTIAL
+            )
+        )
+        val remote = catalog.source(
+            result(
+                CatalogSource.REMOTE_API,
+                attributes = mapOf("description" to "remote"),
+                latencyMs = 20,
+                quality = SourceQuality.PARTIAL
+            )
+        )
 
-        val merged = catalog.mergeContributions(cache, replica, remote).toList()
+        val merged = catalog.mergeContributions(cache, replica, remote)
+            .log("MergeContributions")
+            .toList()
 
-        merged.map { it.source }.toSet() shouldBeEqualTo setOf(CatalogSource.CACHE, CatalogSource.REPLICA, CatalogSource.REMOTE_API)
+        merged.map { it.source }.toSet() shouldBeEqualTo setOf(
+            CatalogSource.CACHE,
+            CatalogSource.REPLICA,
+            CatalogSource.REMOTE_API
+        )
         merged.flatMap { it.item.attributes.keys }.toSet() shouldBeEqualTo setOf("price", "stock", "description")
     }
 
     @Test
     fun `materialize turns terminal errors into values`() = runSuspendTest {
         val boom = IllegalStateException("remote catalog failed")
-        val remote = flow<SourceResult> {
+        val remote = flow {
             emit(result(CatalogSource.REMOTE_API))
             throw boom
         }
 
-        val events = catalog.materialized(remote).toList()
+        val events = catalog.materialized(remote)
+            .log("Materialized")
+            .toList()
 
         events[0].shouldBeInstanceOf<FlowEvent.Value<SourceResult>>()
-        events[1].shouldBeInstanceOf<FlowEvent.Error>()
-        (events[1] as FlowEvent.Error).error shouldBeEqualTo boom
+        events[1].shouldBeInstanceOf<FlowEvent.Error>().error shouldBeEqualTo boom
     }
 
     @Test
     fun `dematerialize restores error as terminal failure`() = runSuspendTest {
         val boom = IllegalArgumentException("bad fallback payload")
-        val events = flowOf<FlowEvent<SourceResult>>(
+        val events = flowOf(
             FlowEvent.Value(result(CatalogSource.CACHE)),
             FlowEvent.Error(boom),
         )
 
         val failure = assertFailsWith<IllegalArgumentException> {
-            catalog.dematerialized(events).toList()
+            catalog.dematerialized(events).log("Dematerialized").toList()
         }
 
         failure shouldBeEqualTo boom

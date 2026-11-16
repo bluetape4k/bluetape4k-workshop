@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.IdempotencyClaimKind
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.IdempotencyNamespace
@@ -16,9 +19,18 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ShiftCoveragePostgresIdempotencyRepositoryTest {
-    private val postgres = PostgreSQLServer.Launcher.postgres
+    companion object: KLogging() {
+        private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+    }
+
     private val repository = ShiftCoveragePostgresIdempotencyRepository()
-    private val namespace = IdempotencyNamespace("POST", "/replans", "site-demo", "manager-demo", IdempotencyKey("pg-idempotency"))
+    private val namespace = IdempotencyNamespace(
+        "POST",
+        "/replans",
+        "site-demo",
+        "manager-demo",
+        IdempotencyKey("pg-idempotency")
+    )
     private val fingerprint = "a".repeat(64)
 
     @BeforeAll
@@ -26,8 +38,8 @@ class ShiftCoveragePostgresIdempotencyRepositoryTest {
         Database.connect(
             url = postgres.jdbcUrl,
             driver = "org.postgresql.Driver",
-            user = requireNotNull(postgres.username),
-            password = requireNotNull(postgres.password),
+            user = postgres.username.shouldNotBeNull(),
+            password = postgres.password.shouldNotBeNull(),
         )
     }
 
@@ -41,7 +53,9 @@ class ShiftCoveragePostgresIdempotencyRepositoryTest {
 
     @AfterAll
     fun dropSchema() {
-        transaction { SchemaUtils.drop(ShiftCoverageIdempotencyTable) }
+        transaction {
+            SchemaUtils.drop(ShiftCoverageIdempotencyTable)
+        }
     }
 
     @Test
@@ -50,9 +64,16 @@ class ShiftCoveragePostgresIdempotencyRepositoryTest {
         repository.complete(namespace, "accepted|request-1")
 
         val replay = ShiftCoveragePostgresIdempotencyRepository().begin(namespace, fingerprint)
+
+        log.debug { "replay=$replay" }
         replay.kind shouldBeEqualTo IdempotencyClaimKind.REPLAY
         replay.response shouldBeEqualTo "accepted|request-1"
 
-        ShiftCoveragePostgresIdempotencyRepository().begin(namespace, "b".repeat(64)).kind shouldBeEqualTo IdempotencyClaimKind.REUSED
+        ShiftCoveragePostgresIdempotencyRepository()
+            .begin(
+                namespace,
+                "b".repeat(64)
+            )
+            .kind shouldBeEqualTo IdempotencyClaimKind.REUSED
     }
 }

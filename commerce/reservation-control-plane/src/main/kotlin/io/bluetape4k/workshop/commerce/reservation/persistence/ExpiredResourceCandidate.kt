@@ -7,7 +7,7 @@ import java.time.Instant
 internal data class ExpiredResourceCandidate(
     val resourceId: Long,
     val expiresAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

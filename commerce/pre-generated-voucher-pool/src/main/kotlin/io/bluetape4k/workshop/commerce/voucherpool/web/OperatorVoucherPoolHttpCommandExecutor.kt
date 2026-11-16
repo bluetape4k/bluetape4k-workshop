@@ -15,19 +15,19 @@ import io.bluetape4k.workshop.commerce.voucherpool.application.CreateImportBatch
 import io.bluetape4k.workshop.commerce.voucherpool.application.GenerateChunkCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.ImportChunkCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.MutationResult
-import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeAggregateType
-import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeCommand
-import io.bluetape4k.workshop.commerce.voucherpool.application.RevokePreviewSnapshot
-import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeProgressSnapshot
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReconciliationCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReconciliationCommandException
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReconciliationCommandFailure
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReconciliationProgressSnapshot
 import io.bluetape4k.workshop.commerce.voucherpool.application.RevocationCommandException
 import io.bluetape4k.workshop.commerce.voucherpool.application.RevocationCommandFailure
+import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeAggregateType
+import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeCommand
+import io.bluetape4k.workshop.commerce.voucherpool.application.RevokePreviewSnapshot
+import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeProgressSnapshot
 import io.bluetape4k.workshop.commerce.voucherpool.application.UpdateCampaignPolicyCommand
-import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolRevocationService
 import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolReconciliationCommandService
+import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolRevocationService
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
@@ -38,7 +38,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import java.net.URI
-import java.util.UUID
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 /** operator HTTP precondition을 tenant-scoped campaign 및 batch command로 매핑합니다. */
@@ -58,14 +58,14 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         requestId: String,
     ): ResponseEntity<OperatorCampaignResponse> = translate {
         requireCreatePrecondition(ifNoneMatch)
-        val result = service.createCampaign(
-            CreateCampaignCommand(
-                tenantId,
-                request.campaignId,
-                request.startsAt,
-                request.endsAt,
-                request.policy(),
-                idempotencyKey,
+        val result: MutationResult<CampaignSnapshot> = service.createCampaign(
+            command = CreateCampaignCommand(
+                tenantId = tenantId,
+                campaignId = request.campaignId,
+                startsAt = request.startsAt,
+                endsAt = request.endsAt,
+                policy = request.policy(),
+                idempotencyKey = idempotencyKey,
             ),
         )
         campaignResult(tenantId, request.campaignId, result, requestId, created = true)
@@ -81,11 +81,11 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
     ): ResponseEntity<OperatorCampaignResponse> = translate {
         val result = service.updatePolicy(
             UpdateCampaignPolicyCommand(
-                tenantId,
-                campaignId,
-                parseRevision(ifMatch),
-                request.policy(),
-                idempotencyKey,
+                tenantId = tenantId,
+                campaignId = campaignId,
+                expectedRevision = parseRevision(ifMatch),
+                policy = request.policy(),
+                idempotencyKey = idempotencyKey,
             ),
         )
         campaignResult(tenantId, campaignId, result, requestId)
@@ -99,7 +99,12 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         requestId: String,
     ): ResponseEntity<OperatorCampaignResponse> = translate {
         val result = service.activateCampaign(
-            CampaignRevisionCommand(tenantId, campaignId, parseRevision(ifMatch), idempotencyKey),
+            CampaignRevisionCommand(
+                tenantId = tenantId,
+                campaignId = campaignId,
+                expectedRevision = parseRevision(ifMatch),
+                idempotencyKey = idempotencyKey
+            ),
         )
         campaignResult(tenantId, campaignId, result, requestId)
     }
@@ -110,14 +115,15 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         idempotencyKey: String,
         ifMatch: String,
         requestId: String,
-    ): ResponseEntity<OperatorCampaignResponse> = campaignTransition(
-        tenantId,
-        campaignId,
-        idempotencyKey,
-        ifMatch,
-        requestId,
-        service::pauseCampaign,
-    )
+    ): ResponseEntity<OperatorCampaignResponse> =
+        campaignTransition(
+            tenantId = tenantId,
+            campaignId = campaignId,
+            idempotencyKey = idempotencyKey,
+            ifMatch = ifMatch,
+            requestId = requestId,
+            transition = service::pauseCampaign,
+        )
 
     fun resumeCampaign(
         tenantId: String,
@@ -125,14 +131,15 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         idempotencyKey: String,
         ifMatch: String,
         requestId: String,
-    ): ResponseEntity<OperatorCampaignResponse> = campaignTransition(
-        tenantId,
-        campaignId,
-        idempotencyKey,
-        ifMatch,
-        requestId,
-        service::resumeCampaign,
-    )
+    ): ResponseEntity<OperatorCampaignResponse> =
+        campaignTransition(
+            tenantId = tenantId,
+            campaignId = campaignId,
+            idempotencyKey = idempotencyKey,
+            ifMatch = ifMatch,
+            requestId = requestId,
+            transition = service::resumeCampaign,
+        )
 
     fun createBatch(
         tenantId: String,
@@ -147,19 +154,20 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         val sourceKind = if (imported) BatchSourceKind.IMPORTED else BatchSourceKind.GENERATED
         val manifest = request.manifestDigest.digestValue()
         val requestFingerprint = serverRequestFingerprint(tenantId, sourceKind, request)
+
         val result = service.createImportBatch(
             CreateImportBatchCommand(
-                tenantId,
-                request.batchId,
-                request.campaignId,
-                sourceKind,
-                manifest,
-                requestFingerprint,
-                request.expectedCount,
-                request.activatesAt,
-                request.expiresAt,
-                request.codes,
-                idempotencyKey,
+                tenantId = tenantId,
+                batchId = request.batchId,
+                campaignId = request.campaignId,
+                sourceKind = sourceKind,
+                manifestDigest = manifest,
+                requestFingerprint = requestFingerprint,
+                expectedCount = request.expectedCount,
+                activatesAt = request.activatesAt,
+                expiresAt = request.expiresAt,
+                initialCodes = request.codes,
+                idempotencyKey = idempotencyKey,
             ),
         )
         batchResult(tenantId, request.batchId, result, requestId, created = true)
@@ -175,14 +183,14 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
     ): ResponseEntity<OperatorBatchResponse> = translate {
         val result = service.importChunk(
             ImportChunkCommand(
-                tenantId,
-                batchId,
-                request.campaignId,
-                request.firstOrdinal,
-                request.manifestDigest.digestValue(),
-                request.codes,
-                parseRevision(ifMatch),
-                idempotencyKey,
+                tenantId = tenantId,
+                batchId = batchId,
+                campaignId = request.campaignId,
+                firstOrdinal = request.firstOrdinal,
+                manifestDigest = request.manifestDigest.digestValue(),
+                codes = request.codes,
+                expectedRevision = parseRevision(ifMatch),
+                idempotencyKey = idempotencyKey,
             ),
         )
         batchResult(tenantId, batchId, result, requestId)
@@ -195,21 +203,22 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         ifMatch: String,
         request: OperatorGenerateChunkRequest,
         requestId: String,
-    ): ResponseEntity<OperatorBatchResponse> = translate {
-        val result = service.generateChunk(
-            GenerateChunkCommand(
-                tenantId,
-                batchId,
-                request.campaignId,
-                request.firstOrdinal,
-                request.manifestDigest.digestValue(),
-                request.count,
-                parseRevision(ifMatch),
-                idempotencyKey,
-            ),
-        )
-        batchResult(tenantId, batchId, result, requestId)
-    }
+    ): ResponseEntity<OperatorBatchResponse> =
+        translate {
+            val result = service.generateChunk(
+                GenerateChunkCommand(
+                    tenantId = tenantId,
+                    batchId = batchId,
+                    campaignId = request.campaignId,
+                    firstOrdinal = request.firstOrdinal,
+                    manifestDigest = request.manifestDigest.digestValue(),
+                    count = request.count,
+                    expectedRevision = parseRevision(ifMatch),
+                    idempotencyKey = idempotencyKey,
+                ),
+            )
+            batchResult(tenantId, batchId, result, requestId)
+        }
 
     fun activateBatch(
         tenantId: String,
@@ -255,7 +264,9 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
             campaignId,
             parseRevision(ifMatch),
         )
-        ResponseEntity.ok().eTag(operatorEtag(preview.revision)).body(preview.toResponse(requestId))
+        ResponseEntity.ok()
+            .eTag(operatorEtag(preview.revision))
+            .body(preview.toResponse(requestId))
     }
 
     fun previewBatchRevoke(
@@ -264,8 +275,15 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         ifMatch: String,
         requestId: String,
     ): ResponseEntity<OperatorRevokePreviewResponse> = translate {
-        val preview = revocations.preview(tenantId, RevokeAggregateType.BATCH, batchId, parseRevision(ifMatch))
-        ResponseEntity.ok().eTag(operatorEtag(preview.revision)).body(preview.toResponse(requestId))
+        val preview = revocations.preview(
+            tenantId = tenantId,
+            aggregateType = RevokeAggregateType.BATCH,
+            aggregateId = batchId,
+            expectedRevision = parseRevision(ifMatch)
+        )
+        ResponseEntity.ok()
+            .eTag(operatorEtag(preview.revision))
+            .body(preview.toResponse(requestId))
     }
 
     fun revokeCampaign(
@@ -275,16 +293,17 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         ifMatch: String,
         request: OperatorCampaignRevokeRequest,
         requestId: String,
-    ): ResponseEntity<OperatorWorkerProgressResponse> = revoke(
-        tenantId,
-        RevokeAggregateType.CAMPAIGN,
-        campaignId,
-        request.confirmedCampaignId,
-        request.previewToken,
-        idempotencyKey,
-        ifMatch,
-        requestId,
-    )
+    ): ResponseEntity<OperatorWorkerProgressResponse> =
+        revoke(
+            tenantId = tenantId,
+            aggregateType = RevokeAggregateType.CAMPAIGN,
+            aggregateId = campaignId,
+            confirmedAggregateId = request.confirmedCampaignId,
+            previewToken = request.previewToken,
+            idempotencyKey = idempotencyKey,
+            ifMatch = ifMatch,
+            requestId = requestId,
+        )
 
     fun revokeBatch(
         tenantId: String,
@@ -293,16 +312,17 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         ifMatch: String,
         request: OperatorBatchRevokeRequest,
         requestId: String,
-    ): ResponseEntity<OperatorWorkerProgressResponse> = revoke(
-        tenantId,
-        RevokeAggregateType.BATCH,
-        batchId,
-        request.confirmedBatchId,
-        request.previewToken,
-        idempotencyKey,
-        ifMatch,
-        requestId,
-    )
+    ): ResponseEntity<OperatorWorkerProgressResponse> =
+        revoke(
+            tenantId = tenantId,
+            aggregateType = RevokeAggregateType.BATCH,
+            aggregateId = batchId,
+            confirmedAggregateId = request.confirmedBatchId,
+            previewToken = request.previewToken,
+            idempotencyKey = idempotencyKey,
+            ifMatch = ifMatch,
+            requestId = requestId,
+        )
 
     private fun revoke(
         tenantId: String,
@@ -313,48 +333,59 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         idempotencyKey: String,
         ifMatch: String,
         requestId: String,
-    ): ResponseEntity<OperatorWorkerProgressResponse> = translate {
-        val result = revocations.revoke(
-            RevokeCommand(
-                tenantId,
-                aggregateType,
-                aggregateId,
-                confirmedAggregateId,
-                parseRevision(ifMatch),
-                previewToken,
-                idempotencyKey,
-            ),
-        )
-        val outcome = result.commandOutcome()
-        val progress = when (result) {
-            is MutationResult.Applied -> result.value
-            is MutationResult.Replay -> revocations.progress(tenantId, aggregateType, aggregateId)
-                ?: throw resourceNotFound()
-            is MutationResult.Expired -> throw apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED, result.effectId)
+    ): ResponseEntity<OperatorWorkerProgressResponse> =
+        translate {
+            val result = revocations.revoke(
+                RevokeCommand(
+                    tenantId = tenantId,
+                    aggregateType = aggregateType,
+                    aggregateId = aggregateId,
+                    confirmedAggregateId = confirmedAggregateId,
+                    expectedRevision = parseRevision(ifMatch),
+                    previewToken = previewToken,
+                    idempotencyKey = idempotencyKey,
+                ),
+            )
+            val outcome = result.commandOutcome()
+            val progress = when (result) {
+                is MutationResult.Applied -> result.value
+                is MutationResult.Replay  ->
+                    revocations.progress(tenantId, aggregateType, aggregateId)
+                        ?: throw resourceNotFound()
+                is MutationResult.Expired ->
+                    throw apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED, result.effectId)
+            }
+            val builder = ResponseEntity.status(if (outcome.replayed) HttpStatus.OK else HttpStatus.ACCEPTED)
+
+            builder
+                .eTag(operatorEtag(progress.revision))
+                .operatorCommandHeaders(outcome.replayed)
+                .body(progress.toResponse(requestId))
         }
-        val builder = ResponseEntity.status(if (outcome.replayed) HttpStatus.OK else HttpStatus.ACCEPTED)
-        builder.eTag(operatorEtag(progress.revision))
-            .operatorCommandHeaders(outcome.replayed)
-            .body(progress.toResponse(requestId))
-    }
 
     fun runReconciliation(
         tenantId: String,
         idempotencyKey: String,
         request: OperatorReconciliationRequest,
         requestId: String,
-    ): ResponseEntity<OperatorReconciliationProgressResponse> = translate {
-        val result = reconciliations.run(ReconciliationCommand(tenantId, request.batchId, idempotencyKey))
-        val outcome = result.commandOutcome()
-        val progress = when (result) {
-            is MutationResult.Applied -> result.value
-            is MutationResult.Replay -> reconciliations.progress(tenantId, request.batchId) ?: throw resourceNotFound()
-            is MutationResult.Expired -> throw apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED, result.effectId)
+    ): ResponseEntity<OperatorReconciliationProgressResponse> =
+        translate {
+            val result = reconciliations.run(ReconciliationCommand(tenantId, request.batchId, idempotencyKey))
+            val outcome = result.commandOutcome()
+            val progress = when (result) {
+                is MutationResult.Applied -> result.value
+                is MutationResult.Replay  -> reconciliations.progress(tenantId, request.batchId)
+                    ?: throw resourceNotFound()
+                is MutationResult.Expired -> throw apiFailure(
+                    VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED,
+                    result.effectId
+                )
+            }
+            ResponseEntity
+                .status(if (outcome.replayed) HttpStatus.OK else HttpStatus.ACCEPTED)
+                .operatorCommandHeaders(outcome.replayed)
+                .body(progress.toResponse(requestId))
         }
-        ResponseEntity.status(if (outcome.replayed) HttpStatus.OK else HttpStatus.ACCEPTED)
-            .operatorCommandHeaders(outcome.replayed)
-            .body(progress.toResponse(requestId))
-    }
 
     private fun campaignTransition(
         tenantId: String,
@@ -363,12 +394,13 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         ifMatch: String,
         requestId: String,
         transition: (CampaignRevisionCommand) -> MutationResult<CampaignSnapshot>,
-    ): ResponseEntity<OperatorCampaignResponse> = translate {
-        val result = transition(
-            CampaignRevisionCommand(tenantId, campaignId, parseRevision(ifMatch), idempotencyKey),
-        )
-        campaignResult(tenantId, campaignId, result, requestId)
-    }
+    ): ResponseEntity<OperatorCampaignResponse> =
+        translate {
+            val result = transition(
+                CampaignRevisionCommand(tenantId, campaignId, parseRevision(ifMatch), idempotencyKey),
+            )
+            campaignResult(tenantId, campaignId, result, requestId)
+        }
 
     private fun batchTransition(
         tenantId: String,
@@ -377,13 +409,14 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         ifMatch: String,
         requestId: String,
         transition: (BatchRevisionCommand) -> MutationResult<BatchSnapshot>,
-    ): ResponseEntity<OperatorBatchResponse> = translate {
-        val batch = queries.batch(tenantId, batchId) ?: throw resourceNotFound()
-        val result = transition(
-            BatchRevisionCommand(tenantId, batch.campaignId, batchId, parseRevision(ifMatch), idempotencyKey),
-        )
-        batchResult(tenantId, batchId, result, requestId)
-    }
+    ): ResponseEntity<OperatorBatchResponse> =
+        translate {
+            val batch = queries.batch(tenantId, batchId) ?: throw resourceNotFound()
+            val result = transition(
+                BatchRevisionCommand(tenantId, batch.campaignId, batchId, parseRevision(ifMatch), idempotencyKey),
+            )
+            batchResult(tenantId, batchId, result, requestId)
+        }
 
     private fun campaignResult(
         tenantId: String,
@@ -395,12 +428,17 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         val outcome = result.commandOutcome()
         val read = queries.campaign(tenantId, campaignId) ?: throw resourceNotFound()
         val response = read.toOperatorResponse(requestId)
+
         val builder = if (created && !outcome.replayed) {
             ResponseEntity.created(URI.create("/operator/api/v1/campaigns/$campaignId"))
         } else {
             ResponseEntity.status(HttpStatus.OK)
         }
-        return builder.eTag(operatorEtag(response.revision)).operatorCommandHeaders(outcome.replayed).body(response)
+
+        return builder
+            .eTag(operatorEtag(response.revision))
+            .operatorCommandHeaders(outcome.replayed)
+            .body(response)
     }
 
     private fun batchResult(
@@ -418,7 +456,10 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
         } else {
             ResponseEntity.status(HttpStatus.OK)
         }
-        return builder.eTag(operatorEtag(response.revision)).operatorCommandHeaders(outcome.replayed).body(response)
+        return builder
+            .eTag(operatorEtag(response.revision))
+            .operatorCommandHeaders(outcome.replayed)
+            .body(response)
     }
 
     private fun serverRequestFingerprint(
@@ -436,9 +477,10 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
             request.expiresAt ?: "",
             request.codes.size,
         ).joinToString("|")
+
         val bytes = digests.audit(tenantId, "operator-batch-create", material).copyBytes()
         return try {
-            DigestValue.of(bytes)
+            DigestValue(bytes)
         } finally {
             bytes.fill(0)
         }
@@ -454,7 +496,7 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
     }
 
     @Suppress("SwallowedException")
-    private fun <T> translate(block: () -> T): T =
+    private inline fun <T> translate(block: () -> T): T =
         try {
             block()
         } catch (failure: VoucherPoolApiException) {
@@ -476,19 +518,19 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
 }
 
 private fun OperatorCreateCampaignRequest.policy(): VoucherPoolPolicy =
-    VoucherPoolPolicy.of(
-        perUserLimit,
-        reservationTtlSeconds.seconds,
-        allocationTtlSeconds.seconds,
-        replacementAllowance,
+    VoucherPoolPolicy(
+        perUserLimit = perUserLimit,
+        reservationTtl = reservationTtlSeconds.seconds,
+        allocationTtl = allocationTtlSeconds.seconds,
+        replacementAllowance = replacementAllowance,
     )
 
 private fun OperatorCampaignPolicyRequest.policy(): VoucherPoolPolicy =
-    VoucherPoolPolicy.of(
-        perUserLimit,
-        reservationTtlSeconds.seconds,
-        allocationTtlSeconds.seconds,
-        replacementAllowance,
+    VoucherPoolPolicy(
+        perUserLimit = perUserLimit,
+        reservationTtl = reservationTtlSeconds.seconds,
+        allocationTtl = allocationTtlSeconds.seconds,
+        replacementAllowance = replacementAllowance,
     )
 
 private fun requireCreatePrecondition(ifNoneMatch: String) {
@@ -502,101 +544,113 @@ private fun parseRevision(ifMatch: String): Long {
 
 private fun String.digestValue(): DigestValue {
     if (!matches(HEX_DIGEST)) throw invalidRequest()
+
     val bytes = ByteArray(length / HEX_OCTET_CHARACTERS) { index ->
         val offset = index * HEX_OCTET_CHARACTERS
         substring(offset, offset + HEX_OCTET_CHARACTERS).toInt(HEX_RADIX).toByte()
     }
     return try {
-        DigestValue.of(bytes)
+        DigestValue(bytes)
     } finally {
         bytes.fill(0)
     }
 }
 
 private fun BatchCommandException.toApiException(): VoucherPoolApiException = when (reason) {
-    BatchCommandFailure.SCOPE_NOT_FOUND -> resourceNotFound()
-    BatchCommandFailure.STALE_REVISION -> apiFailure(VoucherPoolErrorCode.STALE_REVISION)
+    BatchCommandFailure.SCOPE_NOT_FOUND       -> resourceNotFound()
+    BatchCommandFailure.STALE_REVISION        -> apiFailure(VoucherPoolErrorCode.STALE_REVISION)
     BatchCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT,
     BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT,
     BatchCommandFailure.CHUNK_FINGERPRINT_CONFLICT,
-    -> apiFailure(VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT)
-    BatchCommandFailure.COMMAND_IN_PROGRESS -> apiFailure(VoucherPoolErrorCode.COMMAND_IN_PROGRESS)
+                                              -> apiFailure(VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT)
+    BatchCommandFailure.COMMAND_IN_PROGRESS   -> apiFailure(VoucherPoolErrorCode.COMMAND_IN_PROGRESS)
     BatchCommandFailure.REPLAY_WINDOW_EXPIRED -> apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED)
     BatchCommandFailure.RETRYABLE_INTEGRITY_COLLISION -> apiFailure(VoucherPoolErrorCode.POOL_BUSY)
     BatchCommandFailure.DUPLICATE_CODE,
     BatchCommandFailure.VALIDATION_REJECTED,
-    -> apiFailure(VoucherPoolErrorCode.BATCH_FAILED_TERMINAL)
+                                              -> apiFailure(VoucherPoolErrorCode.BATCH_FAILED_TERMINAL)
     BatchCommandFailure.INVALID_STATE,
     BatchCommandFailure.ACTIVATION_INCOMPLETE,
-    -> VoucherPoolApiException("INVALID_STATE", HTTP_CONFLICT, "resource state does not permit this operation")
-    BatchCommandFailure.ORDINAL_GAP -> invalidRequest()
+                                              -> VoucherPoolApiException(
+        "INVALID_STATE",
+        HTTP_CONFLICT,
+        "resource state does not permit this operation"
+    )
+    BatchCommandFailure.ORDINAL_GAP           -> invalidRequest()
 }
 
 private fun RevocationCommandException.toApiException(): VoucherPoolApiException = when (reason) {
-    RevocationCommandFailure.SCOPE_NOT_FOUND -> resourceNotFound()
-    RevocationCommandFailure.STALE_REVISION -> apiFailure(VoucherPoolErrorCode.STALE_REVISION)
-    RevocationCommandFailure.COMMAND_IN_PROGRESS -> apiFailure(VoucherPoolErrorCode.COMMAND_IN_PROGRESS)
+    RevocationCommandFailure.SCOPE_NOT_FOUND       -> resourceNotFound()
+    RevocationCommandFailure.STALE_REVISION        -> apiFailure(VoucherPoolErrorCode.STALE_REVISION)
+    RevocationCommandFailure.COMMAND_IN_PROGRESS   -> apiFailure(VoucherPoolErrorCode.COMMAND_IN_PROGRESS)
     RevocationCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT ->
         apiFailure(VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT)
     RevocationCommandFailure.REPLAY_WINDOW_EXPIRED -> apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED)
-    RevocationCommandFailure.INVALID_STATE ->
-        VoucherPoolApiException("INVALID_STATE", HTTP_CONFLICT, "resource state does not permit this operation")
-    RevocationCommandFailure.INVALID_PREVIEW -> invalidRequest()
+    RevocationCommandFailure.INVALID_STATE         ->
+        VoucherPoolApiException(
+            "INVALID_STATE",
+            HTTP_CONFLICT,
+            "resource state does not permit this operation"
+        )
+    RevocationCommandFailure.INVALID_PREVIEW       -> invalidRequest()
 }
 
 private fun ReconciliationCommandException.toApiException(): VoucherPoolApiException = when (reason) {
-    ReconciliationCommandFailure.SCOPE_NOT_FOUND -> resourceNotFound()
-    ReconciliationCommandFailure.COMMAND_IN_PROGRESS -> apiFailure(VoucherPoolErrorCode.COMMAND_IN_PROGRESS)
-    ReconciliationCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT ->
-        apiFailure(VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT)
-    ReconciliationCommandFailure.REPLAY_WINDOW_EXPIRED -> apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED)
+    ReconciliationCommandFailure.SCOPE_NOT_FOUND                  -> resourceNotFound()
+    ReconciliationCommandFailure.COMMAND_IN_PROGRESS              -> apiFailure(VoucherPoolErrorCode.COMMAND_IN_PROGRESS)
+    ReconciliationCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT -> apiFailure(VoucherPoolErrorCode.IDEMPOTENCY_FINGERPRINT_CONFLICT)
+    ReconciliationCommandFailure.REPLAY_WINDOW_EXPIRED            -> apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED)
 }
 
-private fun RevokePreviewSnapshot.toResponse(requestId: String) = OperatorRevokePreviewResponse(
-    aggregateType,
-    aggregateId,
-    revision,
-    counts,
-    eligibleDepth,
-    activeReservations,
-    activeAllocations,
-    alreadyTerminalCount,
-    affectedCount,
-    previewToken,
-    expiresAt,
-    observedAt,
-    requestId,
-)
+private fun RevokePreviewSnapshot.toResponse(requestId: String): OperatorRevokePreviewResponse =
+    OperatorRevokePreviewResponse(
+        aggregateType = aggregateType,
+        aggregateId = aggregateId,
+        revision = revision,
+        counts = counts,
+        eligibleDepth = eligibleDepth,
+        activeReservations = activeReservations,
+        activeAllocations = activeAllocations,
+        alreadyTerminalCount = alreadyTerminalCount,
+        affectedCount = affectedCount,
+        previewToken = previewToken,
+        expiresAt = expiresAt,
+        observedAt = observedAt,
+        requestId = requestId,
+    )
 
-private fun RevokeProgressSnapshot.toResponse(requestId: String) = OperatorWorkerProgressResponse(
-    aggregateType,
-    aggregateId,
-    state,
-    revision,
-    workerCount,
-    observedAt,
-    requestId,
-)
+private fun RevokeProgressSnapshot.toResponse(requestId: String): OperatorWorkerProgressResponse =
+    OperatorWorkerProgressResponse(
+        aggregateType = aggregateType,
+        aggregateId = aggregateId,
+        state = state,
+        revision = revision,
+        workerCount = workerCount,
+        observedAt = observedAt,
+        requestId = requestId,
+    )
 
-private fun ReconciliationProgressSnapshot.toResponse(requestId: String) = OperatorReconciliationProgressResponse(
-    kind,
-    scopeId,
-    state,
-    cursor,
-    checkpoint,
-    attempt,
-    nextAction,
-    revision,
-    observedAt,
-    requestId,
-)
+private fun ReconciliationProgressSnapshot.toResponse(requestId: String): OperatorReconciliationProgressResponse =
+    OperatorReconciliationProgressResponse(
+        kind = kind,
+        scopeId = scopeId,
+        state = state,
+        cursor = cursor,
+        checkpoint = checkpoint,
+        attempt = attempt,
+        nextAction = nextAction,
+        revision = revision,
+        observedAt = observedAt,
+        requestId = requestId,
+    )
 
 private fun operatorEtag(revision: Long): String = "\"$revision\""
 
 private fun ResponseEntity.BodyBuilder.operatorCommandHeaders(replayed: Boolean): ResponseEntity.BodyBuilder =
-    header("Idempotency-Replay-Window", "86400").apply {
-        if (replayed) header("Duplicate-Request", "true")
-    }
+    header("Idempotency-Replay-Window", "86400")
+        .apply {
+            if (replayed) header("Duplicate-Request", "true")
+        }
 
 private val HEX_DIGEST = Regex("[0-9a-fA-F]{64}")
 private val OPERATOR_STRONG_ETAG = Regex("\"(0|[1-9][0-9]*)\"")

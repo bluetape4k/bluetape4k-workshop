@@ -1,5 +1,12 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.coroutines.support.awaitUntil
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -11,19 +18,15 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.EnabledForJreRange
 import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * 분산 락 예제
@@ -60,22 +63,24 @@ class LockExamples: AbstractRedissonTest() {
             lock2.tryLockAsync(lockId2).await().shouldBeFalse()
             lock2.isLockedAsync.await().shouldBeTrue()
 
-            delay(100)
+            delay(100.milliseconds)
 
             // lock1 에서 이미 lock 이 걸렸고, lock2는 소유권이 없으므로 lock2로는 unlock 할 수 없다
             log.debug { "Lock2 unlock: current coroutineId=$lockId2, threadId=${Thread.currentThread().threadId()}" }
-            runCatching {
-                lock2.unlockAsync().await()
+
+            assertFailsWith<IllegalMonitorStateException> {
+                lock2.unlockAsync().awaitUntil(1.seconds)
             }
-            lock2.isLockedAsync.await().shouldBeTrue()
+
+            lock2.isLockedAsync.awaitUntil(1.seconds).shouldBeTrue()
         }
-        delay(1000)
+        delay(1.seconds)
         job.join()
-        delay(10)
+        delay(10.milliseconds)
 
         log.debug { "lock1.isLocked=${lock1.isLocked}" }
-        lock1.unlockAsync(lockId1).await()
-        lock1.isLockedAsync.await().shouldBeFalse()
+        lock1.unlockAsync(lockId1).awaitUntil(1.seconds)
+        lock1.isLockedAsync.awaitUntil(1.seconds).shouldBeFalse()
     }
 
     @Test
@@ -101,7 +106,7 @@ class LockExamples: AbstractRedissonTest() {
             val lockId2 = redisson.getLockId(lockName)
             lock.tryLockAsync(1, 60, TimeUnit.SECONDS, lockId2).await().shouldBeFalse()
         }
-        delay(5)
+        delay(5.milliseconds)
         job.join()
 
         val prevTtl = lock.remainTimeToLiveAsync().await()
@@ -142,7 +147,7 @@ class LockExamples: AbstractRedissonTest() {
     }
 
 
-    @EnabledOnJre(JRE.JAVA_21)
+    @EnabledForJreRange(min = JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `Virtual Thread 환경에서 락 획득 및 해제`() {
         val lock = redisson.getLock(randomName())
@@ -186,12 +191,12 @@ class LockExamples: AbstractRedissonTest() {
                     log.debug { "Lock 획득." }
                     lockCounter.incrementAndGet()
                     // 더미 작업 표현
-                    delay(Random.nextLong(50))
+                    delay(Random.nextLong(50).milliseconds)
 
                     // lock 해제
                     lock.unlockAsync(lockId).await()
                     log.debug { "Lock 해제." }
-                    delay(1)
+                    delay(1.milliseconds)
                 }
             }
             .run()

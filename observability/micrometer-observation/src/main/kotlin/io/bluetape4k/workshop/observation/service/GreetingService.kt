@@ -16,7 +16,7 @@ import java.util.function.Supplier
 @Service
 class GreetingService(private val observationRegistry: ObservationRegistry) {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val GREETING_SERVICE_NAME = "greetingService"
     }
 

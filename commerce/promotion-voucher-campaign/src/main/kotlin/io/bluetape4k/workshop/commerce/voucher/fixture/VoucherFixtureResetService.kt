@@ -25,12 +25,12 @@ internal class VoucherFixtureResetService(
 ) {
     fun reset(tenantId: String): VoucherFixtureResetResult =
         transactions.foregroundTransaction {
-            val deletedRows =
-                ReviewTable.deleteWhere { ReviewTable.tenantId eq tenantId } +
+            val deletedRows = ReviewTable.deleteWhere { ReviewTable.tenantId eq tenantId } +
                     AuditTable.deleteWhere { AuditTable.tenantId eq tenantId } +
                     EventInboxTable.deleteWhere { EventInboxTable.tenantId eq tenantId } +
                     ClaimTable.deleteWhere { ClaimTable.tenantId eq tenantId } +
                     CampaignTable.deleteWhere { CampaignTable.tenantId eq tenantId }
+
             VoucherFixtureResetResult(scenarios.reset(tenantId), deletedRows)
         }
 }

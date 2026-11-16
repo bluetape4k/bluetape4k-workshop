@@ -2,13 +2,13 @@ package io.bluetape4k.workshop.commerce.voucher.performance
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import jdk.jfr.Recording
 import jdk.jfr.consumer.RecordingFile
-import java.lang.management.ManagementFactory
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -39,9 +39,27 @@ internal data class VoucherStressEvidence(
 )
 
 /** repository code를 바꾸지 않고 JDBC connection과 statement execution boundary를 계산합니다. */
+@Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
 internal class VoucherJdbcProbeDataSource(
     private val delegate: DataSource,
-) : DataSource by delegate {
+): DataSource by delegate {
+
+    private companion object: KLogging() {
+        val STATEMENT_FACTORIES = setOf(
+            "createStatement",
+            "prepareStatement",
+            "prepareCall"
+        )
+        val EXECUTION_METHODS = setOf(
+            "execute",
+            "executeQuery",
+            "executeUpdate",
+            "executeBatch",
+            "executeLargeBatch",
+            "executeLargeUpdate"
+        )
+    }
+
     private val connectionAcquisitions = AtomicLong()
     private val statementExecutions = AtomicLong()
 
@@ -50,7 +68,8 @@ internal class VoucherJdbcProbeDataSource(
     override fun getConnection(
         username: String,
         password: String,
-    ): Connection = observed(delegate.getConnection(username, password))
+    ): Connection =
+        observed(delegate.getConnection(username, password))
 
     fun connectionAcquisitions(): Long = connectionAcquisitions.get()
 
@@ -64,16 +83,13 @@ internal class VoucherJdbcProbeDataSource(
     }
 
     private fun observed(statement: Statement): Statement =
-        proxy(statement, statementContract(statement)) {
-                method,
-                result,
-            ->
+        proxy(statement, statementContract(statement)) { method, result ->
             if (method.name in EXECUTION_METHODS) statementExecutions.incrementAndGet()
             result
         }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T : Any> proxy(
+    private fun <T: Any> proxy(
         target: T,
         contract: Class<*>,
         afterInvocation: (Method, Any?) -> Any?,
@@ -101,11 +117,6 @@ internal class VoucherJdbcProbeDataSource(
             throw failure.targetException
         }
 
-    private companion object {
-        val STATEMENT_FACTORIES = setOf("createStatement", "prepareStatement", "prepareCall")
-        val EXECUTION_METHODS =
-            setOf("execute", "executeQuery", "executeUpdate", "executeBatch", "executeLargeBatch", "executeLargeUpdate")
-    }
 }
 
 /**
@@ -126,7 +137,13 @@ internal class VoucherPerformanceProbe(
     private val jdbc: VoucherJdbcProbeDataSource,
     private val pgStatDataSource: DataSource,
     private val applicationName: String,
-) : AutoCloseable {
+): AutoCloseable {
+
+    companion object: KLogging() {
+        private const val SAMPLE_INTERVAL = 10L
+        private val EXPECTED_STATUSES = listOf(200, 201, 409, 429, 503)
+    }
+
     private val running = AtomicBoolean(true)
     private val finished = AtomicBoolean()
     private val samples = ConcurrentLinkedQueue<OperationSample>()
@@ -145,18 +162,17 @@ internal class VoucherPerformanceProbe(
     private val jfrPath = reportDirectory.resolve("$profile.jfr")
     private val jsonPath = reportDirectory.resolve("$profile.json")
     private val recording = createRecording()
-    private val sampler =
-        Thread.ofPlatform().name("voucher-stress-probe-$profile").start {
-            while (running.get()) {
-                sampleRuntime()
-                try {
-                    Thread.sleep(SAMPLE_INTERVAL)
-                } catch (_: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                    break
-                }
+    private val sampler = Thread.ofPlatform().name("voucher-stress-probe-$profile").start {
+        while (running.get()) {
+            sampleRuntime()
+            try {
+                Thread.sleep(SAMPLE_INTERVAL)
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+                break
             }
         }
+    }
 
     init {
         Files.createDirectories(reportDirectory)
@@ -185,7 +201,9 @@ internal class VoucherPerformanceProbe(
         capacityInvariant: Boolean,
         deterministicLockTimeoutContractPassed: Boolean,
     ): VoucherStressEvidence {
-        check(finished.compareAndSet(false, true)) { "performance evidence was already finalized" }
+        check(finished.compareAndSet(false, true)) {
+            "performance evidence was already finalized"
+        }
         stopSampling()
         recording.stop()
         recording.dump(jfrPath)
@@ -193,111 +211,102 @@ internal class VoucherPerformanceProbe(
 
         val jfr = readJfr(jfrPath)
         val operationCounts = samples.groupingBy(OperationSample::operation).eachCount().toSortedMap()
+
         check(operationCounts == expectedOperations) {
             "operation matrix mismatch: expected=$expectedOperations actual=$operationCounts"
         }
-        val statusCounts =
-            (EXPECTED_STATUSES + samples.map { it.status })
-                .associateWith { status -> samples.count { it.status == status } }
-                .mapKeys { (status, _) -> status.toString() }
-                .toSortedMap()
+        val statusCounts = (EXPECTED_STATUSES + samples.map { it.status })
+            .associateWith { status -> samples.count { it.status == status } }
+            .mapKeys { (status, _) -> status.toString() }
+            .toSortedMap()
         val latencies = samples.map(OperationSample::latencyNanos).sorted()
         val elapsedNanos = (System.nanoTime() - startedAt).coerceAtLeast(1)
         val pool = hikari.hikariPoolMXBean
         val resourceLeaks = databasePermits.inUsePermits() + pool.activeConnections
         val maxConsecutiveWaitSamples = maxConsecutiveWaitSamples(pgSamples.toList())
-        val evidence =
-            VoucherStressEvidence(
-                jsonPath = jsonPath,
-                jfrPath = jfrPath,
-                hikariActiveMax = hikariActiveMax.get(),
-                databasePermitMax = permitMax.get(),
-                deterministicLockTimeoutContractPassed = deterministicLockTimeoutContractPassed,
-                resourceLeaks = resourceLeaks,
-                capacityInvariant = capacityInvariant,
-            )
-        val document =
-            linkedMapOf<String, Any>(
-                "schemaVersion" to "1.0",
-                "gitSha" to gitSha(),
-                "environment" to
-                    mapOf(
-                        "javaVersion" to System.getProperty("java.version"),
-                        "os" to "${System.getProperty("os.name")} ${System.getProperty("os.version")}",
-                        "cpuCount" to Runtime.getRuntime().availableProcessors(),
-                        "containerImage" to containerImage,
-                    ),
-                "seed" to seed,
-                "profile" to profile,
-                "configuration" to
-                    mapOf(
-                        "concurrency" to concurrency,
-                        "redisMode" to redisMode,
-                        "hotspot" to true,
-                        "sampleIntervalMillis" to SAMPLE_INTERVAL,
-                    ),
-                "operationCounts" to operationCounts,
-                "statusCounts" to statusCounts,
-                "latencyNanos" to
+
+        val evidence = VoucherStressEvidence(
+            jsonPath = jsonPath,
+            jfrPath = jfrPath,
+            hikariActiveMax = hikariActiveMax.get(),
+            databasePermitMax = permitMax.get(),
+            deterministicLockTimeoutContractPassed = deterministicLockTimeoutContractPassed,
+            resourceLeaks = resourceLeaks,
+            capacityInvariant = capacityInvariant,
+        )
+        val document = linkedMapOf<String, Any>(
+            "schemaVersion" to "1.0",
+            "gitSha" to gitSha(),
+            "environment" to mapOf(
+                "javaVersion" to System.getProperty("java.version"),
+                "os" to "${System.getProperty("os.name")} ${System.getProperty("os.version")}",
+                "cpuCount" to Runtime.getRuntime().availableProcessors(),
+                "containerImage" to containerImage,
+            ),
+            "seed" to seed,
+            "profile" to profile,
+            "configuration" to mapOf(
+                "concurrency" to concurrency,
+                "redisMode" to redisMode,
+                "hotspot" to true,
+                "sampleIntervalMillis" to SAMPLE_INTERVAL,
+            ),
+            "operationCounts" to operationCounts,
+            "statusCounts" to statusCounts,
+            "latencyNanos" to
                     mapOf(
                         "p50" to percentile(latencies, 0.50),
                         "p95" to percentile(latencies, 0.95),
                         "p99" to percentile(latencies, 0.99),
                     ),
-                "throughputPerSecond" to samples.size * TimeUnit.SECONDS.toNanos(1).toDouble() / elapsedNanos,
-                "maxGauges" to
-                    mapOf(
-                        "hikariActive" to hikariActiveMax.get(),
-                        "hikariIdle" to hikariIdleMax.get(),
-                        "hikariPending" to hikariPendingMax.get(),
-                        "databasePermits" to permitMax.get(),
-                        "laneInUse" to laneActiveMax.mapKeys { it.key.name }.mapValues { it.value.get() },
-                        "laneWaiting" to laneWaitMax.mapKeys { it.key.name }.mapValues { it.value.get() },
-                    ),
-                "roundTrips" to
-                    mapOf(
-                        "postgresTransactions" to jdbc.connectionAcquisitions(),
-                        "postgresStatements" to jdbc.statementExecutions(),
-                        "redisCommands" to redisCommands.get(),
-                        "redisSucceeded" to redisSucceeded.get(),
-                        "redisFailed" to redisFailed.get(),
-                        "redisLatencyNanos" to redisLatencyNanos.get(),
-                    ),
-                "allocation" to
-                    mapOf(
-                        "sampledBytes" to jfr.allocationBytes,
-                        "bytesPerOperation" to jfr.allocationBytes.toDouble() / samples.size.coerceAtLeast(1),
-                    ),
-                "gc" to mapOf("pauseCount" to jfr.gcPauseCount, "pauseNanos" to jfr.gcPauseNanos),
-                "jfrEvents" to mapOf("threadPark" to jfr.threadParks, "monitorEnter" to jfr.monitorEnters),
-                "pgStatActivity" to
-                    mapOf(
-                        "sampleCount" to pgSamples.size,
-                        "maxConsecutiveWaitSamples" to maxConsecutiveWaitSamples,
-                        "samples" to pgSamples.toList(),
-                    ),
-                "correctness" to
-                    mapOf(
-                        "capacityInvariant" to capacityInvariant,
-                        "deterministicLockTimeoutContractPassed" to deterministicLockTimeoutContractPassed,
-                        "resourceLeaks" to resourceLeaks,
-                    ),
-                "artifacts" to mapOf("json" to jsonPath.fileName.toString(), "jfr" to jfrPath.fileName.toString()),
-                "probeSources" to
-                    listOf(
-                        "HikariPoolMXBean",
-                        "DatabasePermitGate fair semaphore lane probes",
-                        "VoucherJdbcProbeDataSource JDBC statement interceptor",
-                        "Instrumented Lettuce-backed RateLimiter command boundary",
-                        "PostgreSQL pg_stat_activity 10ms samples",
-                        "JDK Flight Recorder allocation, park, monitor, and GC events",
-                        "VoucherConcurrencyIntegrationTest deterministic SET LOCAL lock_timeout contract",
-                    ),
-            )
+            "throughputPerSecond" to samples.size * TimeUnit.SECONDS.toNanos(1).toDouble() / elapsedNanos,
+            "maxGauges" to mapOf(
+                "hikariActive" to hikariActiveMax.get(),
+                "hikariIdle" to hikariIdleMax.get(),
+                "hikariPending" to hikariPendingMax.get(),
+                "databasePermits" to permitMax.get(),
+                "laneInUse" to laneActiveMax.mapKeys { it.key.name }.mapValues { it.value.get() },
+                "laneWaiting" to laneWaitMax.mapKeys { it.key.name }.mapValues { it.value.get() },
+            ),
+            "roundTrips" to mapOf(
+                "postgresTransactions" to jdbc.connectionAcquisitions(),
+                "postgresStatements" to jdbc.statementExecutions(),
+                "redisCommands" to redisCommands.get(),
+                "redisSucceeded" to redisSucceeded.get(),
+                "redisFailed" to redisFailed.get(),
+                "redisLatencyNanos" to redisLatencyNanos.get(),
+            ),
+            "allocation" to mapOf(
+                "sampledBytes" to jfr.allocationBytes,
+                "bytesPerOperation" to jfr.allocationBytes.toDouble() / samples.size.coerceAtLeast(1),
+            ),
+            "gc" to mapOf("pauseCount" to jfr.gcPauseCount, "pauseNanos" to jfr.gcPauseNanos),
+            "jfrEvents" to mapOf("threadPark" to jfr.threadParks, "monitorEnter" to jfr.monitorEnters),
+            "pgStatActivity" to mapOf(
+                "sampleCount" to pgSamples.size,
+                "maxConsecutiveWaitSamples" to maxConsecutiveWaitSamples,
+                "samples" to pgSamples.toList(),
+            ),
+            "correctness" to mapOf(
+                "capacityInvariant" to capacityInvariant,
+                "deterministicLockTimeoutContractPassed" to deterministicLockTimeoutContractPassed,
+                "resourceLeaks" to resourceLeaks,
+            ),
+            "artifacts" to mapOf("json" to jsonPath.fileName.toString(), "jfr" to jfrPath.fileName.toString()),
+            "probeSources" to listOf(
+                "HikariPoolMXBean",
+                "DatabasePermitGate fair semaphore lane probes",
+                "VoucherJdbcProbeDataSource JDBC statement interceptor",
+                "Instrumented Lettuce-backed RateLimiter command boundary",
+                "PostgreSQL pg_stat_activity 10ms samples",
+                "JDK Flight Recorder allocation, park, monitor, and GC events",
+                "VoucherConcurrencyIntegrationTest deterministic SET LOCAL lock_timeout contract",
+            ),
+        )
         Jackson.defaultJsonMapper.writeValue(jsonPath.toFile(), document)
         log.info {
             "voucher_stress_evidence_written profile=$profile operations=${samples.size} " +
-                "hikariActiveMax=${evidence.hikariActiveMax} permitMax=${evidence.databasePermitMax}"
+                    "hikariActiveMax=${evidence.hikariActiveMax} permitMax=${evidence.databasePermitMax}"
         }
         return evidence
     }
@@ -317,6 +326,7 @@ internal class VoucherPerformanceProbe(
         hikariPendingMax.accumulateAndGet(pool.threadsAwaitingConnection, ::maxOf)
         val laneActive = DatabaseLane.entries.sumOf(databasePermits::inUsePermits)
         permitMax.accumulateAndGet(laneActive, ::maxOf)
+
         DatabaseLane.entries.forEach { lane ->
             laneActiveMax.getValue(lane).accumulateAndGet(databasePermits.inUsePermits(lane), ::maxOf)
             laneWaitMax.getValue(lane).accumulateAndGet(databasePermits.waitingThreads(lane), ::maxOf)
@@ -327,8 +337,8 @@ internal class VoucherPerformanceProbe(
     private fun samplePgActivity() {
         val waits = mutableListOf<String>()
         try {
-            pgStatDataSource.connection.use { connection ->
-                connection.prepareStatement(
+            pgStatDataSource.connection.use { conn ->
+                conn.prepareStatement(
                     """
                     SELECT coalesce(wait_event_type, '') || ':' || coalesce(wait_event, '')
                       FROM pg_stat_activity
@@ -336,23 +346,26 @@ internal class VoucherPerformanceProbe(
                        AND pid <> pg_backend_pid()
                        AND state <> 'idle'
                     """.trimIndent(),
-                ).use { statement ->
-                    statement.setString(1, applicationName)
-                    statement.executeQuery().use { result ->
-                        while (result.next()) waits += result.getString(1)
+                ).use { stmt ->
+                    stmt.setString(1, applicationName)
+                    stmt.executeQuery().use { result ->
+                        while (result.next()) {
+                            waits += result.getString(1)
+                        }
                     }
                 }
             }
         } catch (failure: Exception) {
             waits += "probe-error:${failure.javaClass.simpleName}"
         }
+
         pgSamples += PgActivitySample(Instant.now().toString(), waits.sorted())
     }
 
     private fun stopSampling() {
         running.set(false)
         sampler.interrupt()
-        sampler.join(Duration.ofSeconds(5))
+        sampler.join(5.seconds())
         sampleRuntime()
     }
 
@@ -372,6 +385,7 @@ internal class VoucherPerformanceProbe(
         var gcPauseNanos = 0L
         var threadParks = 0L
         var monitorEnters = 0L
+
         RecordingFile(path).use { recordingFile ->
             while (recordingFile.hasMoreEvents()) {
                 val event = recordingFile.readEvent()
@@ -381,13 +395,18 @@ internal class VoucherPerformanceProbe(
                         gcPauseCount++
                         gcPauseNanos += event.duration.toNanos()
                     }
-
                     "jdk.ThreadPark" -> threadParks++
                     "jdk.JavaMonitorEnter" -> monitorEnters++
                 }
             }
         }
-        return JfrEvidence(allocationBytes, gcPauseCount, gcPauseNanos, threadParks, monitorEnters)
+        return JfrEvidence(
+            allocationBytes = allocationBytes,
+            gcPauseCount = gcPauseCount,
+            gcPauseNanos = gcPauseNanos,
+            threadParks = threadParks,
+            monitorEnters = monitorEnters
+        )
     }
 
     private fun percentile(
@@ -396,6 +415,7 @@ internal class VoucherPerformanceProbe(
     ): Long {
         if (values.isEmpty()) return 0
         val index = (ceil(values.size * percentile).toInt() - 1).coerceIn(values.indices)
+
         return values[index]
     }
 
@@ -415,7 +435,7 @@ internal class VoucherPerformanceProbe(
                 .redirectErrorStream(true)
                 .start()
                 .run {
-                    check(waitFor(5, TimeUnit.SECONDS) && exitValue() == 0)
+                    check(waitFor(5.seconds()) && exitValue() == 0)
                     inputStream.bufferedReader().use { it.readText().trim() }
                 }
         }.getOrElse { "unknown" }
@@ -432,8 +452,4 @@ internal class VoucherPerformanceProbe(
         val monitorEnters: Long,
     )
 
-    companion object : KLogging() {
-        private const val SAMPLE_INTERVAL = 10L
-        private val EXPECTED_STATUSES = listOf(200, 201, 409, 429, 503)
-    }
 }

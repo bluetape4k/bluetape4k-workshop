@@ -105,7 +105,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
     private val topology: JobConsoleProxiedTopology,
     private val journal: HighContentionJournal,
     private val journalRoot: Path,
-) : JobConsoleLiveProfileAdapter {
+): JobConsoleLiveProfileAdapter {
 
     private val action = KtorJobConsoleProfileAction.resolve(profile.profileId)
     private val lifecycleLock = ReentrantReadWriteLock(true)
@@ -217,37 +217,37 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                 KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE ->
                     redisPathEvidence?.let {
                         ",oldConnectionFailure=${it.oldConnectionFailureObserved}," +
-                            "newConnectionFailure=${it.newConnectionFailureObserved}," +
-                            "redisRecovered=${it.recovered}," +
-                            "durableCancelsDuringOutage=${it.durableCancelsDuringOutage}"
+                                "newConnectionFailure=${it.newConnectionFailureObserved}," +
+                                "redisRecovered=${it.recovered}," +
+                                "durableCancelsDuringOutage=${it.durableCancelsDuringOutage}"
                     }.orEmpty()
 
-                KtorJobConsoleProfileAction.REDIS_KEY_LOSS ->
+                KtorJobConsoleProfileAction.REDIS_KEY_LOSS    ->
                     redisKeyLossEvidence?.let {
                         ",deletedOwnedKeys=${it.deletedKeyCount}," +
-                            "durableCancelsAfterKeyLoss=${it.durableCancelsAfterKeyLoss}"
+                                "durableCancelsAfterKeyLoss=${it.durableCancelsAfterKeyLoss}"
                     }.orEmpty()
 
                 KtorJobConsoleProfileAction.SLOW_PROVIDER,
                 KtorJobConsoleProfileAction.WORKER_RESTART,
-                -> staleAttemptEvidence?.let {
+                                                              -> staleAttemptEvidence?.let {
                     ",staleCode=${it.staleErrorCode}," +
-                        "serverJobsStopped=${it.serverJobsStopped}," +
-                        "oldPortReleased=${it.oldPortReleased}," +
-                        "lateEffects=${it.lateEffectCount},lateReceipts=${it.lateReceiptCount}"
+                            "serverJobsStopped=${it.serverJobsStopped}," +
+                            "oldPortReleased=${it.oldPortReleased}," +
+                            "lateEffects=${it.lateEffectCount},lateReceipts=${it.lateReceiptCount}"
                 }.orEmpty()
 
-                else -> ""
+                else                                          -> ""
             }
             val retrySummary = application.http.retrySummary()
             val retryStatusEvidence = retrySummary.statusCounts.entries
                 .joinToString(separator = ";") { (status, count) -> "$status:$count" }
             "hikari=true,maxPool=${application.dataSource.maximumPoolSize}," +
-                "redisProxy=${application.redisUri == topology.redisUri}," +
-                "retryRequests=${retrySummary.requestCount}," +
-                "retryCount=${retrySummary.retryCount}," +
-                "retryStatusCounts=$retryStatusEvidence," +
-                "retryDelayMillis=${retrySummary.cumulativeDelay.toMillis()}$actionEvidence"
+                    "redisProxy=${application.redisUri == topology.redisUri}," +
+                    "retryRequests=${retrySummary.requestCount}," +
+                    "retryCount=${retrySummary.retryCount}," +
+                    "retryStatusCounts=$retryStatusEvidence," +
+                    "retryDelayMillis=${retrySummary.cumulativeDelay.toMillis()}$actionEvidence"
         }
 
     override fun assertProfileInvariants(delta: JobConsoleAuthorityBaseline) {
@@ -307,7 +307,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
 
             KtorJobConsoleProfileAction.SLOW_PROVIDER,
             KtorJobConsoleProfileAction.WORKER_RESTART,
-            -> assertStaleAttemptEvidence()
+                                              -> assertStaleAttemptEvidence()
 
             KtorJobConsoleProfileAction.DUPLICATE_DELIVERY ->
                 check(deliveredEventIds.isNotEmpty() && duplicateOutboxLogicalEventCount() == 0L) {
@@ -380,7 +380,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                 if (winner) completeThroughOwnedWorker(submitted.jobId)
             }
 
-            else -> error("profile action[$action] must use its dedicated lifecycle path")
+            else                              -> error("profile action[$action] must use its dedicated lifecycle path")
         }
         return WorkloadTerminalDisposition.COMPLETED
     }
@@ -584,7 +584,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             ) {
                 topology.openRedisConnection().use { connection ->
                     connection.ping() == "PONG" &&
-                        application.runtime.redisSignal?.isAvailable() == true
+                            application.runtime.redisSignal?.isAvailable() == true
                 }
             }
             true
@@ -1057,8 +1057,8 @@ internal class KtorJobConsoleHttpClient(
         val RETRYABLE_SUBMISSION_STATUSES = setOf(TOO_MANY_REQUESTS, SERVICE_UNAVAILABLE)
         val DEFAULT_TOO_MANY_REQUESTS_RETRY_AFTER = Duration.ofSeconds(2)
         val DEFAULT_SERVICE_UNAVAILABLE_RETRY_AFTER = Duration.ofMillis(100)
-        val JOB_ID = Regex("\\\"jobId\\\":\\\"([^\\\"]+)")
-        val STATE = Regex("\\\"state\\\":\\\"([^\\\"]+)")
+        val JOB_ID = Regex("\"jobId\":\"([^\"]+)")
+        val STATE = Regex("\"state\":\"([^\"]+)")
     }
 }
 

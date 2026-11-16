@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.flow.parallel.enrichment
 
-import io.bluetape4k.coroutines.flow.extensions.parallel.map as parallelMap
 import io.bluetape4k.coroutines.flow.extensions.parallel.parallel
 import io.bluetape4k.coroutines.flow.extensions.parallel.sequential
 import io.bluetape4k.support.requirePositiveNumber
@@ -10,6 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import io.bluetape4k.coroutines.flow.extensions.parallel.map as parallelMap
 
 /**
  * 주문 Enrichment 파이프라인.
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.map
 class OrderEnrichmentPipeline(
     private val customerProfileService: CustomerProfileService,
     private val inventoryService: InventoryService,
-    private val promotionService: PromotionService
+    private val promotionService: PromotionService,
 ) {
 
     /**
@@ -29,7 +29,7 @@ class OrderEnrichmentPipeline(
     fun enrichInParallel(
         source: Flow<OrderCommand>,
         parallelism: Int,
-        runOn: (Int) -> CoroutineDispatcher
+        runOn: (Int) -> CoroutineDispatcher,
     ): Flow<EnrichedOrder> {
         parallelism.requirePositiveNumber("parallelism")
 
@@ -50,8 +50,8 @@ class OrderEnrichmentPipeline(
 
     private fun isValidOrder(order: OrderCommand): Boolean =
         order.orderId.isNotBlank() &&
-            order.customerId.isNotBlank() &&
-            order.items.isNotEmpty()
+                order.customerId.isNotBlank() &&
+                order.items.isNotEmpty()
 
     private suspend fun enrichOrder(order: OrderCommand): EnrichedOrder = coroutineScope {
         val profile = async {

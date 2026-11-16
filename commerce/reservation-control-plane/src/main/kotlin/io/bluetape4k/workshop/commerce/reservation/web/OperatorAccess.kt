@@ -20,16 +20,19 @@ internal class OperatorPrincipalResolver(
     private val credentials: ReservationCredentialService,
     @Value("\${reservation.operator.key}") configuredKey: String,
 ) {
-    private val expectedDigest =
+    companion object: KLogging()
+
+    private val expectedDigest: String =
         credentials.operatorDigest(
             configuredKey.also {
                 require(it.length >= 32) { "operator key must contain at least 32 characters" }
             }
         )
 
-    fun authorized(rawKey: String?): Boolean = rawKey?.let { credentials.matchesOperator(it, expectedDigest) } == true
-
-    companion object : KLogging()
+    fun authorized(rawKey: String?): Boolean =
+        rawKey?.let {
+            credentials.matchesOperator(it, expectedDigest)
+        } == true
 }
 
 /** request body가 command controller에 도달하기 전에 unauthorized operator route를 거부합니다. */
@@ -38,7 +41,12 @@ internal class OperatorPrincipalResolver(
 @ConditionalOnProperty(prefix = "reservation.operator", name = ["enabled"], havingValue = "true")
 internal class OperatorAuthorizationFilter(
     private val principals: OperatorPrincipalResolver,
-) : OncePerRequestFilter() {
+): OncePerRequestFilter() {
+
+    companion object: KLogging() {
+        private const val OPERATOR_KEY_HEADER = "X-Operator-Key"
+    }
+
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !request.requestURI.startsWith("/api/operator/")
 
@@ -53,9 +61,5 @@ internal class OperatorAuthorizationFilter(
             return
         }
         chain.doFilter(request, response)
-    }
-
-    companion object : KLogging() {
-        private const val OPERATOR_KEY_HEADER = "X-Operator-Key"
     }
 }

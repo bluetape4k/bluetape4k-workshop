@@ -12,15 +12,18 @@ import io.bluetape4k.graph.schema.GraphSchemaPlanAction
 import io.bluetape4k.graph.schema.GraphSchemaPlanOptions
 import io.bluetape4k.graph.schema.GraphSuspendSchemaManagementOperations
 import io.bluetape4k.graph.schema.GraphSuspendSchemaManager
-import io.bluetape4k.graph.schema.schemaManager
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphSuspendOperations
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.graph.knowledge.service.KnowledgeGraphService
 import io.bluetape4k.workshop.graph.knowledge.service.KnowledgeGraphSuspendService
 import org.junit.jupiter.api.Test
 
 class KnowledgeGraphSchemaPlannerTest {
+
+    companion object: KLogging()
 
     @Test
     fun `TinkerGraph apply reports unsupported unique constraints`() {
@@ -31,6 +34,7 @@ class KnowledgeGraphSchemaPlannerTest {
 
             val report = plan.apply(ops.schemaManager())
 
+            log.debug { "report=$report" }
             report.isSuccessful.shouldBeFalse()
             report.unsupported.count { it.action == GraphSchemaPlanAction.UNSUPPORTED } shouldBeEqualTo 3
             report.unsupported.mapNotNull { it.constraint?.property } shouldContain "entityId"
@@ -71,7 +75,7 @@ class KnowledgeGraphSchemaPlannerTest {
 
     private class FailingSchemaGraphOperations(
         private val delegate: TinkerGraphOperations = TinkerGraphOperations(),
-    ) : GraphOperations by delegate, GraphSchemaManagementOperations {
+    ): GraphOperations by delegate, GraphSchemaManagementOperations {
         var createGraphCalls: Int = 0
 
         override fun createGraph(name: String) {
@@ -85,7 +89,7 @@ class KnowledgeGraphSchemaPlannerTest {
 
     private class FailingSuspendSchemaGraphOperations(
         private val delegate: TinkerGraphSuspendOperations = TinkerGraphSuspendOperations(),
-    ) : GraphSuspendOperations by delegate, GraphSuspendSchemaManagementOperations {
+    ): GraphSuspendOperations by delegate, GraphSuspendSchemaManagementOperations {
         var createGraphCalls: Int = 0
 
         override suspend fun createGraph(name: String) {

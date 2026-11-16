@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.spring.modulith.boundaries
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.spring.modulith.boundaries.notification.NotificationOutbox
 import io.bluetape4k.workshop.spring.modulith.boundaries.ordering.OrderRequest
 import io.bluetape4k.workshop.spring.modulith.boundaries.ordering.OrderingService
@@ -23,6 +26,8 @@ class OrderEventFlowTest @Autowired constructor(
     private val notificationOutbox: NotificationOutbox,
 ) {
 
+    companion object: KLogging()
+
     @BeforeEach
     fun resetModuleState() {
         paymentLedger.reset()
@@ -35,15 +40,20 @@ class OrderEventFlowTest @Autowired constructor(
             OrderRequest(sku = "course-ddd", quantity = 2, customerId = "customer-42")
         )
 
+        log.debug { "receipt=$receipt" }
         receipt.sku shouldBeEqualTo "course-ddd"
         receipt.quantity shouldBeEqualTo 2
         receipt.totalCents shouldBeEqualTo 258_00
 
         val payment = paymentLedger.find(receipt.orderId).shouldNotBeNull()
+
+        log.debug { "payment=$payment" }
         payment.customerId shouldBeEqualTo "customer-42"
         payment.amountCents shouldBeEqualTo 258_00
 
         val notification = notificationOutbox.find(receipt.orderId).shouldNotBeNull()
+
+        log.debug { "notification=$notification" }
         notification.customerId shouldBeEqualTo "customer-42"
         notification.message shouldContain receipt.orderId
 
@@ -59,6 +69,7 @@ class OrderEventFlowTest @Autowired constructor(
             )
         }
 
+        log.debug { "error=$error" }
         error.message shouldContain "catalog item not found"
         paymentLedger.all() shouldHaveSize 0
         notificationOutbox.all() shouldHaveSize 0
@@ -72,9 +83,11 @@ class OrderEventFlowTest @Autowired constructor(
             )
         }
 
+        log.debug { "error=$error" }
         error.message shouldContain "quantity"
         error.message shouldContain "greater than 0"
-        paymentLedger.all() shouldHaveSize 0
-        notificationOutbox.all() shouldHaveSize 0
+
+        paymentLedger.all().shouldBeEmpty()
+        notificationOutbox.all().shouldBeEmpty()
     }
 }

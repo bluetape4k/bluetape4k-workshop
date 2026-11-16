@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.cache.benchmark.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import org.springframework.beans.factory.annotation.Value
@@ -14,12 +15,10 @@ import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializationContext
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 @Configuration
 class CacheConfig {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Bean
     @Primary
@@ -28,7 +27,7 @@ class CacheConfig {
         manager.setCaffeine(
             Caffeine.newBuilder()
                 .maximumSize(10_000)
-                .expireAfterWrite(60, TimeUnit.SECONDS)
+                .expireAfterWrite(60.seconds())
                 .recordStats()
         )
         return manager
@@ -40,7 +39,7 @@ class CacheConfig {
         @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
     ): CacheManager {
         val config = RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofSeconds(60))
+            .entryTtl(60.seconds())
             .prefixCacheNameWith("${qualifiedCacheName(namespace, "spring-cache")}:")
             .serializeValuesWith(
                 RedisSerializationContext.SerializationPair.fromSerializer(

@@ -5,7 +5,7 @@ import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.info
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.graph.eventlineage.model.AggregateAuditTrail
@@ -45,7 +45,7 @@ class EventLineageService(
     private val ops: GraphOperations,
     private val graphName: String,
 ) {
-    companion object : KLogging() {
+    companion object: KLogging() {
         const val MAX_TRAVERSAL_DEPTH: Int = 16
     }
 
@@ -54,7 +54,7 @@ class EventLineageService(
      */
     fun initialize() {
         if (!ops.graphExists(graphName)) {
-            log.debug { "Creating graph: $graphName" }
+            log.info { "Creating graph: $graphName" }
             ops.createGraph(graphName)
         }
     }
@@ -72,15 +72,14 @@ class EventLineageService(
         aggregateType.requireNotBlank("aggregateType")
         state.requireNotBlank("state")
         version.requireInRange(0, Int.MAX_VALUE, "version")
+
         return findAggregateVertex(aggregateId)
             ?: ops.createVertex(
                 AggregateLabel.label,
-                mapOf(
-                    AggregateLabel.aggregateId.name to aggregateId,
-                    AggregateLabel.aggregateType.name to aggregateType,
-                    AggregateLabel.state.name to state,
-                    AggregateLabel.version.name to version.toString(),
-                )
+                AggregateLabel.aggregateId.name to aggregateId,
+                AggregateLabel.aggregateType.name to aggregateType,
+                AggregateLabel.state.name to state,
+                AggregateLabel.version.name to version.toString(),
             )
     }
 
@@ -97,15 +96,14 @@ class EventLineageService(
         type.requireNotBlank("type")
         occurredAt.requireNotBlank("occurredAt")
         summary.requireNotBlank("summary")
+
         return findEventVertex(eventId)
             ?: ops.createVertex(
                 EventLabel.label,
-                mapOf(
-                    EventLabel.eventId.name to eventId,
-                    EventLabel.type.name to type,
-                    EventLabel.occurredAt.name to occurredAt,
-                    EventLabel.summary.name to summary,
-                )
+                EventLabel.eventId.name to eventId,
+                EventLabel.type.name to type,
+                EventLabel.occurredAt.name to occurredAt,
+                EventLabel.summary.name to summary,
             )
     }
 
@@ -116,14 +114,13 @@ class EventLineageService(
         actorId.requireNotBlank("actorId")
         displayName.requireNotBlank("displayName")
         role.requireNotBlank("role")
+
         return findActorVertex(actorId)
             ?: ops.createVertex(
                 ActorLabel.label,
-                mapOf(
-                    ActorLabel.actorId.name to actorId,
-                    ActorLabel.displayName.name to displayName,
-                    ActorLabel.role.name to role,
-                )
+                ActorLabel.actorId.name to actorId,
+                ActorLabel.displayName.name to displayName,
+                ActorLabel.role.name to role,
             )
     }
 
@@ -140,15 +137,14 @@ class EventLineageService(
         decisionType.requireNotBlank("decisionType")
         status.requireNotBlank("status")
         reason.requireNotBlank("reason")
+
         return findDecisionVertex(decisionId)
             ?: ops.createVertex(
                 DecisionLabel.label,
-                mapOf(
-                    DecisionLabel.decisionId.name to decisionId,
-                    DecisionLabel.decisionType.name to decisionType,
-                    DecisionLabel.status.name to status,
-                    DecisionLabel.reason.name to reason,
-                )
+                DecisionLabel.decisionId.name to decisionId,
+                DecisionLabel.decisionType.name to decisionType,
+                DecisionLabel.status.name to status,
+                DecisionLabel.reason.name to reason,
             )
     }
 
@@ -156,31 +152,31 @@ class EventLineageService(
      * Aggregate -> Event `EMITS` 간선을 만듭니다.
      */
     fun emit(aggregateVertexId: GraphElementId, eventVertexId: GraphElementId): GraphEdge =
-        ops.createEdge(aggregateVertexId, eventVertexId, EmitsLabel.label, emptyMap())
+        ops.createEdge(aggregateVertexId, eventVertexId, EmitsLabel.label)
 
     /**
      * Event -> upstream Event `CAUSED_BY` 간선을 만듭니다.
      */
     fun causedBy(eventVertexId: GraphElementId, upstreamEventVertexId: GraphElementId): GraphEdge =
-        ops.createEdge(eventVertexId, upstreamEventVertexId, CausedByLabel.label, emptyMap())
+        ops.createEdge(eventVertexId, upstreamEventVertexId, CausedByLabel.label)
 
     /**
      * Event -> Decision `APPROVED_BY` 간선을 만듭니다.
      */
     fun approvedBy(eventVertexId: GraphElementId, decisionVertexId: GraphElementId): GraphEdge =
-        ops.createEdge(eventVertexId, decisionVertexId, ApprovedByLabel.label, emptyMap())
+        ops.createEdge(eventVertexId, decisionVertexId, ApprovedByLabel.label)
 
     /**
      * Decision -> Actor `DECIDED_BY` 간선을 만듭니다.
      */
     fun decidedBy(decisionVertexId: GraphElementId, actorVertexId: GraphElementId): GraphEdge =
-        ops.createEdge(decisionVertexId, actorVertexId, DecidedByLabel.label, emptyMap())
+        ops.createEdge(decisionVertexId, actorVertexId, DecidedByLabel.label)
 
     /**
      * Event -> previous Event `SUPERSEDES` 간선을 만듭니다.
      */
     fun supersedes(eventVertexId: GraphElementId, previousEventVertexId: GraphElementId): GraphEdge =
-        ops.createEdge(eventVertexId, previousEventVertexId, SupersedesLabel.label, emptyMap())
+        ops.createEdge(eventVertexId, previousEventVertexId, SupersedesLabel.label)
 
     /**
      * 워크숍 검증과 진단을 위해 레이블별 간선 수를 셉니다.
@@ -222,6 +218,7 @@ class EventLineageService(
         val start = findEventVertex(eventId) ?: return LineagePath.Empty
         val root = findEventVertex(rootEventId) ?: return LineagePath.Empty
         val path = findCausalPath(start, root.id, maxDepth) ?: return LineagePath.Empty
+
         return LineagePath(
             nodes = path.map { it.toLineageNode() },
             edgeLabels = List(path.size - 1) { CausedByLabel.label },
@@ -237,7 +234,11 @@ class EventLineageService(
         val eventVertices = emittedEventVertices(aggregate)
         val events = eventVertices.map { it.toLineageNode() }.sortedByEventOrder()
         val approvals = eventVertices.flatMap { event -> approvalEvidenceFor(event) }
-            .sortedWith(compareBy({ it.event.properties[EventLabel.occurredAt.name]?.toString().orEmpty() }, { it.event.nodeId }))
+            .sortedWith(
+                compareBy(
+                    { it.event.properties[EventLabel.occurredAt.name]?.toString().orEmpty() },
+                    { it.event.nodeId })
+            )
         val rootCauses = eventVertices
             .filter { it.isRootCauseEvent() }
             .map { it.toLineageNode() }
@@ -282,27 +283,27 @@ class EventLineageService(
         return emittedEventVertices(aggregate)
             .filterNot { event ->
                 event.isRootCauseEvent() ||
-                    ops.findEdgesByStartId(event.id, CausedByLabel.label).isNotEmpty() ||
-                    ops.findEdgesByStartId(event.id, SupersedesLabel.label).isNotEmpty()
+                        ops.findEdgesByStartId(event.id, CausedByLabel.label).isNotEmpty() ||
+                        ops.findEdgesByStartId(event.id, SupersedesLabel.label).isNotEmpty()
             }
             .map { it.toLineageNode() }
             .sortedByEventOrder()
     }
 
     private fun findAggregateVertex(aggregateId: String): GraphVertex? =
-        ops.findVerticesByLabel(AggregateLabel.label, mapOf(AggregateLabel.aggregateId.name to aggregateId))
+        ops.findVerticesByLabel(AggregateLabel.label, AggregateLabel.aggregateId.name to aggregateId)
             .firstOrNull()
 
     private fun findEventVertex(eventId: String): GraphVertex? =
-        ops.findVerticesByLabel(EventLabel.label, mapOf(EventLabel.eventId.name to eventId))
+        ops.findVerticesByLabel(EventLabel.label, EventLabel.eventId.name to eventId)
             .firstOrNull()
 
     private fun findActorVertex(actorId: String): GraphVertex? =
-        ops.findVerticesByLabel(ActorLabel.label, mapOf(ActorLabel.actorId.name to actorId))
+        ops.findVerticesByLabel(ActorLabel.label, ActorLabel.actorId.name to actorId)
             .firstOrNull()
 
     private fun findDecisionVertex(decisionId: String): GraphVertex? =
-        ops.findVerticesByLabel(DecisionLabel.label, mapOf(DecisionLabel.decisionId.name to decisionId))
+        ops.findVerticesByLabel(DecisionLabel.label, DecisionLabel.decisionId.name to decisionId)
             .firstOrNull()
 
     private fun emittedEventVertices(aggregate: GraphVertex): List<GraphVertex> =
@@ -351,12 +352,12 @@ class EventLineageService(
 
     private val GraphVertex.domainNodeId: String
         get() = when (label) {
-            EventLabel.label     -> properties[EventLabel.eventId.name]?.toString().orEmpty()
-            AggregateLabel.label -> properties[AggregateLabel.aggregateId.name]?.toString().orEmpty()
-            ActorLabel.label     -> properties[ActorLabel.actorId.name]?.toString().orEmpty()
-            DecisionLabel.label  -> properties[DecisionLabel.decisionId.name]?.toString().orEmpty()
-            else                 -> id.value
-        }
+            EventLabel.label -> properties[EventLabel.eventId.name]?.toString()
+            AggregateLabel.label -> properties[AggregateLabel.aggregateId.name]?.toString()
+            ActorLabel.label -> properties[ActorLabel.actorId.name]?.toString()
+            DecisionLabel.label -> properties[DecisionLabel.decisionId.name]?.toString()
+            else -> id.value
+        }.orEmpty()
 
     private val GraphVertex.eventId: String
         get() = properties[EventLabel.eventId.name]?.toString().orEmpty()

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8Bytes
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -20,7 +21,7 @@ object HighContentionWorkerPid {
         require(Files.isDirectory(parent, NOFOLLOW_LINKS) && !Files.isSymbolicLink(parent)) {
             "high-contention worker PID parent is not trusted"
         }
-        val bytes = "${ProcessHandle.current().pid()}\n".toByteArray()
+        val bytes = "${ProcessHandle.current().pid()}\n".toUtf8Bytes()
         FileChannel.open(path, CREATE_NEW, WRITE).use { channel ->
             val buffer = ByteBuffer.wrap(bytes)
             while (buffer.hasRemaining()) {

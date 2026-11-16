@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.multitenant.repository
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.multitenant.domain.InvoiceRecord
 import io.bluetape4k.workshop.multitenant.domain.InvoiceTable
 import io.bluetape4k.workshop.multitenant.domain.toInvoiceRecord
@@ -15,13 +17,18 @@ import org.springframework.stereotype.Repository
 @Repository
 class UnsafeInvoiceRepository {
 
+    companion object: KLogging()
+
     /**
      * invoice ID 만으로 조회하여 다른 tenant 의 caller 가 row 를 읽을 수 있게 합니다.
      */
-    fun findByIdWithoutTenant(invoiceId: Long): InvoiceRecord? =
-        InvoiceTable
+    fun findByIdWithoutTenant(invoiceId: Long): InvoiceRecord? {
+        log.debug { "Find Invoce without tenant. invoiceId=$invoiceId" }
+
+        return InvoiceTable
             .selectAll()
             .where { InvoiceTable.id eq invoiceId }
             .firstOrNull()
             ?.toInvoiceRecord()
+    }
 }

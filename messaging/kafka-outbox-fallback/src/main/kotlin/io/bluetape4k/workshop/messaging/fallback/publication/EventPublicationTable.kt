@@ -7,13 +7,13 @@ import org.jetbrains.exposed.v1.javatime.datetime
 /**
  * failed 또는 reconstructed publication 만 저장하는 fallback table 입니다.
  */
-object EventPublicationTable : LongIdTable("event_publications") {
+object EventPublicationTable: LongIdTable("event_publications") {
     val eventId = varchar("event_id", 160).uniqueIndex()
     val aggregateType = varchar("aggregate_type", 80)
     val aggregateId = varchar("aggregate_id", 80)
     val eventType = varchar("event_type", 80)
     val payload = text("payload")
-    val status = enumerationByName("status", 20, EventPublicationStatus::class)
+    val status = enumerationByName<EventPublicationStatus>("status", 20)
         .default(EventPublicationStatus.NOT_PUBLISHED)
     val directAttemptCount = integer("direct_attempt_count").default(0)
     val relayRetryCount = integer("relay_retry_count").default(0)

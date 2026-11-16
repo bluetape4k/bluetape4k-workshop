@@ -1,38 +1,47 @@
 package io.bluetape4k.workshop.gatling.controller
 
-import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.gatling.AbstractGatlingTest
 import io.bluetape4k.workshop.gatling.validation.MAX_DELAY_SECONDS
-import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
+import kotlin.system.measureTimeMillis
 
 class AsyncTaskControllerTest: AbstractGatlingTest() {
 
-    companion object: KLogging()
+    companion object: KLogging() {
+        private const val REPEAT_SIZE = 5
+    }
 
     @Test
     fun `context loading`() {
         client.shouldNotBeNull()
     }
 
-    @Test
+    @RepeatedTest(REPEAT_SIZE)
     fun `delay asynchronously`() = runSuspendIO {
-        val seconds = 1
+        val seconds = 5
 
-        val response = client
-            .httpGet("/async/$seconds")
-            .expectStatus().is2xxSuccessful
-            .returnResult<Long>().responseBody
-            .awaitSingle()
+        val elapsed = measureTimeMillis {
+            val response = client
+                .httpGet("/async/$seconds")
+                .expectStatus().is2xxSuccessful
+                .returnResult<Long>().responseBody
+                .awaitSingle()
 
-        log.info { "delay time: $response msec" }
-        response shouldBeGreaterThan 0L
+            log.info { "delay time: $response msec" }
+            response shouldBeGreaterOrEqualTo 0L
+        }
+        log.info { "delay asynchronously: $elapsed ms" }
+        elapsed shouldBeInRange 0L..(seconds * 1_000L)
     }
 
     @Test

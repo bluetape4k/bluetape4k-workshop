@@ -48,35 +48,35 @@ bucket4j:
 
 The integration profile uses `buckets_test` and splits the URLs:
 
-| URL pattern | Quota |
-|---|---:|
-| `^(/coroutines/hello).*` | 5 requests / 10 seconds |
+| URL pattern              |                    Quota |
+|--------------------------|-------------------------:|
+| `^(/coroutines/hello).*` |  5 requests / 10 seconds |
 | `^(/coroutines/world).*` | 10 requests / 10 seconds |
-| `^(/reactive/hello).*` | 5 requests / 10 seconds |
-| `^(/reactive/world).*` | 10 requests / 10 seconds |
+| `^(/reactive/hello).*`   |  5 requests / 10 seconds |
+| `^(/reactive/world).*`   | 10 requests / 10 seconds |
 
 ## Key Components
 
-| Class / file | Role |
-|---|---|
-| `Bucket4jRedisApplication.kt` | Spring Boot entry point |
-| `LettuceConfiguration.kt` | Creates the `RedisClient` from the Testcontainers Redis URL |
-| `CoroutineController.kt` | Suspend handlers for `/coroutines/hello` and `/coroutines/world` |
-| `ReactiveController.kt` | `Mono` handlers for `/reactive/hello` and `/reactive/world` |
-| `application.yml` | Redis connection plus Bucket4j WebFlux filter configuration |
-| `application-webflux.yml` | Endpoint-specific test quota rules |
-| `CoroutineRateLimitTest.kt` | Verifies coroutine endpoint success counts and final 429 response |
-| `ReactiveRateLimitTest.kt` | Verifies reactive endpoint success counts and final 429 response |
+| Class / file                  | Role                                                              |
+|-------------------------------|-------------------------------------------------------------------|
+| `Bucket4jRedisApplication.kt` | Spring Boot entry point                                           |
+| `LettuceConfiguration.kt`     | Creates the `RedisClient` from the Testcontainers Redis URL       |
+| `CoroutineController.kt`      | Suspend handlers for `/coroutines/hello` and `/coroutines/world`  |
+| `ReactiveController.kt`       | `Mono` handlers for `/reactive/hello` and `/reactive/world`       |
+| `application.yml`             | Redis connection plus Bucket4j WebFlux filter configuration       |
+| `application-webflux.yml`     | Endpoint-specific test quota rules                                |
+| `CoroutineRateLimitTest.kt`   | Verifies coroutine endpoint success counts and final 429 response |
+| `ReactiveRateLimitTest.kt`    | Verifies reactive endpoint success counts and final 429 response  |
 
 ## Caffeine vs Redis
 
-| Item | Caffeine WebMVC | Redis WebFlux |
-|---|---|---|
-| Store | Local JVM cache | Shared Redis buckets |
-| Filter method | `servlet` | `webflux` |
-| Cache adapter | `jcache` | `redis-lettuce` |
-| Scale-out behavior | Per instance | Shared across instances |
-| Endpoint style | Servlet controller | Coroutine and Reactor controllers |
+| Item               | Caffeine WebMVC    | Redis WebFlux                     |
+|--------------------|--------------------|-----------------------------------|
+| Store              | Local JVM cache    | Shared Redis buckets              |
+| Filter method      | `servlet`          | `webflux`                         |
+| Cache adapter      | `jcache`           | `redis-lettuce`                   |
+| Scale-out behavior | Per instance       | Shared across instances           |
+| Endpoint style     | Servlet controller | Coroutine and Reactor controllers |
 
 ## Build and Test
 

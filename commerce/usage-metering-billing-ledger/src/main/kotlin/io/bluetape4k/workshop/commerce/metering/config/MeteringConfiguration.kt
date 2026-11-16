@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.config
 
+import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -12,6 +13,9 @@ import javax.sql.DataSource
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(MeteringProperties::class)
 class MeteringConfiguration {
+
+    companion object: KLogging()
+
     @Bean
     fun meteringClock(): Clock = Clock.systemUTC()
 

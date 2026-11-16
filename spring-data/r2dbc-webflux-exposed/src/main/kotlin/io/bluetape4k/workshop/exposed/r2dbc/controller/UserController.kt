@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.r2dbc.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserQbeResponse
+import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -22,7 +22,7 @@ class UserController(
     private val service: UserService,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @GetMapping("/users")
     suspend fun findAll(): List<UserRecord> {

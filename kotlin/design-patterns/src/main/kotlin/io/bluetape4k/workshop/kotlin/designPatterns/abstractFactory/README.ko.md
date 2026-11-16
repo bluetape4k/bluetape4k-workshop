@@ -2,8 +2,7 @@
 
 [English](README.md) | 한국어
 
-Abstract Factory는 관련 객체 생성을 하나의 factory interface 뒤로 묶습니다. 이 package는 왕국
-family를 모델링합니다. 선택된 factory는 서로 어울리는 `Castle`, `King`, `Army`를 생성합니다.
+Abstract Factory는 관련 객체 생성을 하나의 factory interface 뒤로 묶습니다. 이 package는 왕국 family를 모델링합니다. 선택된 factory는 서로 어울리는 `Castle`, `King`, `Army`를 생성합니다.
 
 ## 아키텍처
 
@@ -11,13 +10,13 @@ family를 모델링합니다. 선택된 factory는 서로 어울리는 `Castle`,
 
 ## Source map
 
-| source | 역할 |
-|---|---|
-| `KingdomFactory` | 공통 생성 계약: `createCastle()`, `createKing()`, `createArmy()` |
-| `FactoryMaker` | `KingdomType`으로 `ElfKingdomFactory` 또는 `OrcKingdomFactory` 선택 |
-| `elf/*` | Elf concrete product family |
-| `orc/*` | Orc concrete product family |
-| `Castle`, `King`, `Army` | 모든 family가 공유하는 product interface |
+| source                   | 역할                                                                |
+|--------------------------|---------------------------------------------------------------------|
+| `KingdomFactory`         | 공통 생성 계약: `createCastle()`, `createKing()`, `createArmy()`    |
+| `FactoryMaker`           | `KingdomType`으로 `ElfKingdomFactory` 또는 `OrcKingdomFactory` 선택 |
+| `elf/*`                  | Elf concrete product family                                         |
+| `orc/*`                  | Orc concrete product family                                         |
+| `Castle`, `King`, `Army` | 모든 family가 공유하는 product interface                            |
 
 ## 사용 예
 

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.guide
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.coroutines.support.suspendLogging
 import io.bluetape4k.logging.KLogging
@@ -15,11 +16,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class CoroutineContextExamples {
 
@@ -40,7 +42,7 @@ class CoroutineContextExamples {
             repeat(10) {
                 log.debug { "Launch job $it." }
                 launch {
-                    delay((it + 1) * 100L)
+                    delay(timeMillis = (it + 1) * 100L)
                     log.debug { "Job $it is done." }
                 }.log("Job $it")
             }
@@ -56,7 +58,7 @@ class CoroutineContextExamples {
 
             suspendLogging { "Launched coroutines ..." }
             activity.doSomething()
-            delay(10)
+            delay(10.milliseconds)
 
             suspendLogging { "Destroying activity..." }
             activity.destroy()      // cancel all child coroutines
@@ -71,14 +73,14 @@ class CoroutineContextExamples {
 
             val v1 = async(CoroutineName("v1")) {
                 suspendLogging { "Starting v1" }
-                delay(Random.nextLong(10))
+                delay(timeMillis = Random.nextLong(10))
                 suspendLogging { "Computing v1" }
                 252
             }.log("coroutines 1")
 
             val v2 = async(CoroutineName("v2")) {
                 suspendLogging { "Starting v2" }
-                delay(Random.nextLong(20))
+                delay(timeMillis = Random.nextLong(20))
                 suspendLogging { "Computing v2" }
                 6
             }.log("coroutines 2")
@@ -98,7 +100,7 @@ class CoroutineContextExamples {
             val completedCounter = AtomicInteger(0)
             val jobs = List(jobSize) {
                 launch(Dispatchers.IO) {
-                    delay(1000)
+                    delay(1.seconds)
                     completedCounter.incrementAndGet()
                 }
             }
@@ -113,7 +115,7 @@ class CoroutineContextExamples {
             coroutineScope {
                 val jobs = List(jobSize) {
                     launch(Dispatchers.IO) {
-                        delay(1000)
+                        delay(1.seconds)
                         completedCounter.incrementAndGet()
                     }
                 }

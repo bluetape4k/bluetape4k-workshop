@@ -9,13 +9,19 @@ import io.bluetape4k.workshop.commerce.usagebilling.invoice.application.InvoiceI
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
-import java.util.UUID
 import tools.jackson.databind.JsonNode
+import java.math.BigDecimal
+import java.util.*
 
 /** producer type을 공유하지 않고 Billing의 wire contract를 Invoice-owned inbox data로 매핑합니다. */
 @Component
 class BillingChargeDecoder {
+
+    private companion object: KLogging() {
+        val SUPPORTED_EVENT_TYPES = setOf("ChargeRated", "AdjustmentPosted")
+        const val SCHEMA_VERSION = 1
+    }
+
     fun decode(wirePayload: String): InvoiceInboxEvent {
         val envelope = Jackson.defaultJsonMapper.readTree(wirePayload)
         val eventType = envelope.requiredText("eventType")
@@ -28,6 +34,7 @@ class BillingChargeDecoder {
         val eventId = UUID.fromString(envelope.requiredText("eventId"))
         if (!TinkDigesters.SHA256.matchesHex(payload, digest)) throw InvalidBillingChargeEnvelope(eventId)
         val body = Jackson.defaultJsonMapper.readTree(payload)
+
         return InvoiceInboxEvent(
             eventId = eventId,
             eventType = eventType,
@@ -49,17 +56,12 @@ class BillingChargeDecoder {
 
     private fun JsonNode.optionalUuid(name: String): UUID? =
         get(name)?.asString()?.takeIf(String::isNotBlank)?.let(UUID::fromString)
-
-    private companion object {
-        val SUPPORTED_EVENT_TYPES = setOf("ChargeRated", "AdjustmentPosted")
-        const val SCHEMA_VERSION = 1
-    }
 }
 
-class UnsupportedBillingChargeEnvelope(eventType: String, schemaVersion: Int) :
+class UnsupportedBillingChargeEnvelope(eventType: String, schemaVersion: Int):
     IllegalArgumentException("unsupported_invoice_billing_envelope:$eventType:$schemaVersion")
 
-class InvalidBillingChargeEnvelope(eventId: UUID) :
+class InvalidBillingChargeEnvelope(eventId: UUID):
     IllegalArgumentException("invalid_invoice_billing_envelope:$eventId")
 
 @Component
@@ -67,6 +69,10 @@ class KafkaBillingChargeListener(
     private val decoder: BillingChargeDecoder,
     private val inbox: InvoiceInboxService,
 ) {
+    private companion object: KLogging() {
+        const val TOPIC = "billing.events.v1"
+    }
+    
     @KafkaListener(
         topics = [TOPIC],
         containerFactory = "invoiceKafkaListenerContainerFactory",
@@ -77,9 +83,5 @@ class KafkaBillingChargeListener(
         val event = decoder.decode(wirePayload)
         inbox.handle(event)
         log.debug { "invoice.inbound.billing_charge eventId=${event.eventId} eventType=${event.eventType}" }
-    }
-
-    private companion object : KLogging() {
-        const val TOPIC = "billing.events.v1"
     }
 }

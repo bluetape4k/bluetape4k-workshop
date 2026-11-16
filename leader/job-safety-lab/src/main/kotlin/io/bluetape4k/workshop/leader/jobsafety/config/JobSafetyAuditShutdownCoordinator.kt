@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.leader.audit.LeaderAuditExporter
-import org.slf4j.LoggerFactory
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.toKotlinDuration
 
 /**
  * audit transport와 실행기의 context-close 순서 및 aggregate deadline을 소유합니다.
@@ -24,10 +28,11 @@ class JobSafetyAuditShutdownCoordinator(
     private val scope: JobSafetyAuditScope,
     private val nanoTime: () -> Long = System::nanoTime,
     private val onStep: (String) -> Unit = {},
-) : AutoCloseable {
+): AutoCloseable {
+
+    companion object: KLogging()
 
     private val closed = AtomicBoolean(false)
-    private val logger = LoggerFactory.getLogger(JobSafetyAuditShutdownCoordinator::class.java)
 
     init {
         require(!shutdownTimeout.isNegative && !shutdownTimeout.isZero) {
@@ -50,12 +55,12 @@ class JobSafetyAuditShutdownCoordinator(
 
         closeQuietly("scheduler.shutdownNow") { scheduler.shutdownNow() }
         awaitQuietly("scheduler.awaitTermination", deadline) {
-            scheduler.awaitTermination(remaining(deadline).toNanos(), java.util.concurrent.TimeUnit.NANOSECONDS)
+            scheduler.awaitTermination(remaining(deadline).toKotlinDuration())
         }
 
         closeQuietly("executor.shutdownNow") { executor.shutdownNow() }
         awaitQuietly("executor.awaitTermination", deadline) {
-            executor.awaitTermination(remaining(deadline).toNanos(), java.util.concurrent.TimeUnit.NANOSECONDS)
+            executor.awaitTermination(remaining(deadline).toKotlinDuration())
         }
 
         closeQuietly("scope.close", scope::close)
@@ -70,7 +75,7 @@ class JobSafetyAuditShutdownCoordinator(
 
     private fun remaining(deadline: Long): Duration {
         val nanos = (deadline - nanoTime()).coerceAtLeast(0L)
-        return Duration.ofNanos(nanos)
+        return nanos.nanos()
     }
 
     private fun closeQuietly(step: String, action: () -> Unit) {
@@ -89,18 +94,12 @@ class JobSafetyAuditShutdownCoordinator(
     private fun awaitQuietly(step: String, deadline: Long, action: () -> Boolean) {
         onStep(step)
         if (nanoTime() >= deadline) {
-            logger.warn(
-                "job_safety_audit_shutdown_timeout resource_step={} outcome=deadline_exceeded",
-                step,
-            )
+            log.warn { "job_safety_audit_shutdown_timeout resource_step=$step outcome=deadline_exceeded" }
             return
         }
         try {
             if (!action()) {
-                logger.warn(
-                    "job_safety_audit_shutdown_timeout resource_step={} outcome=timeout",
-                    step,
-                )
+                log.warn { "job_safety_audit_shutdown_timeout resource_step=$step outcome=timeout" }
             }
         } catch (interrupted: InterruptedException) {
             Thread.currentThread().interrupt()
@@ -112,11 +111,8 @@ class JobSafetyAuditShutdownCoordinator(
     }
 
     private fun logFailure(step: String, outcome: String, error: Exception) {
-        logger.warn(
-            "job_safety_audit_shutdown_failed resource_step={} outcome={} error_type={}",
-            step,
-            outcome,
-            error::class.qualifiedName ?: "unknown",
-        )
+        log.warn {
+            "job_safety_audit_shutdown_failed resource_step=$step outcome=$outcome error_type=${error::class.qualifiedName ?: "unknown"}"
+        }
     }
 }

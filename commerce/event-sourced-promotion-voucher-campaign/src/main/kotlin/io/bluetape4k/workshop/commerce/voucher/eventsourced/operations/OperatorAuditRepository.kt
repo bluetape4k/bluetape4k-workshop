@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
-import io.bluetape4k.support.requireEquals
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
@@ -10,6 +10,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.Projectio
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
@@ -36,7 +37,7 @@ internal data class OperatorAuditIdentity private constructor(
     val actorDigest: ReceiptDigest,
     val tenant: String,
     val requestDigest: ReceiptDigest,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -44,7 +45,12 @@ internal data class OperatorAuditIdentity private constructor(
             actorDigest: ReceiptDigest,
             tenant: String,
             requestDigest: ReceiptDigest,
-        ): OperatorAuditIdentity = OperatorAuditIdentity(actorDigest, tenant.requireNotBlank("tenant"), requestDigest)
+        ): OperatorAuditIdentity =
+            OperatorAuditIdentity(
+                actorDigest = actorDigest,
+                tenant = tenant.requireNotBlank("tenant"),
+                requestDigest = requestDigest
+            )
     }
 }
 
@@ -53,7 +59,7 @@ internal data class OperatorAuditTarget private constructor(
     val projection: String,
     val generation: Long,
     val expectedFencingToken: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
 
@@ -62,12 +68,10 @@ internal data class OperatorAuditTarget private constructor(
             generation: Long,
             expectedFencingToken: Long,
         ): OperatorAuditTarget {
-            val validGeneration = generation.requirePositiveNumber("generation")
-            val validToken = expectedFencingToken.requirePositiveNumber("expectedFencingToken")
             return OperatorAuditTarget(
                 projection.requireNotBlank("projection"),
-                validGeneration,
-                validToken,
+                generation.requirePositiveNumber("generation"),
+                expectedFencingToken.requirePositiveNumber("expectedFencingToken"),
             )
         }
     }
@@ -80,7 +84,7 @@ internal data class OperatorAuditTransition private constructor(
     val checkpointPosition: Long,
     val streamPosition: Long,
     val reasonClass: String?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
         private val REASON_CLASS = Regex("[A-Z][A-Z0-9_]{0,63}")
@@ -94,9 +98,17 @@ internal data class OperatorAuditTransition private constructor(
         ): OperatorAuditTransition {
             val validCheckpoint = checkpointPosition.requireZeroOrPositiveNumber("checkpointPosition")
             val validStreamPosition = streamPosition.requireZeroOrPositiveNumber("streamPosition")
-            (reasonClass == null || REASON_CLASS.matches(reasonClass))
-                .requireEquals(true, "reasonClass.boundedStableCode")
-            return OperatorAuditTransition(beforeState, afterState, validCheckpoint, validStreamPosition, reasonClass)
+            require(reasonClass == null || REASON_CLASS.matches(reasonClass)) {
+                "reasonClass 가 null 이거나 REASON_CLASS 형식에 맞아야 합니다."
+            }
+
+            return OperatorAuditTransition(
+                beforeState = beforeState,
+                afterState = afterState,
+                checkpointPosition = validCheckpoint,
+                streamPosition = validStreamPosition,
+                reasonClass = reasonClass
+            )
         }
     }
 }
@@ -113,7 +125,7 @@ internal data class OperatorAuditEntry private constructor(
     val target: OperatorAuditTarget,
     val transition: OperatorAuditTransition,
     val result: OperatorAuditResult,
-) : Serializable {
+): Serializable {
     val actorDigest: ReceiptDigest get() = identity.actorDigest
     val tenant: String get() = identity.tenant
     val requestDigest: ReceiptDigest get() = identity.requestDigest
@@ -137,7 +149,8 @@ internal data class OperatorAuditEntry private constructor(
             target: OperatorAuditTarget,
             transition: OperatorAuditTransition,
             result: OperatorAuditResult,
-        ): OperatorAuditEntry = OperatorAuditEntry(identity, action, target, transition, result)
+        ): OperatorAuditEntry =
+            OperatorAuditEntry(identity, action, target, transition, result)
     }
 }
 
@@ -146,19 +159,22 @@ internal data class OperatorAuditEntry private constructor(
  * audit evidence를 저장해야 하므로 generic CRUD API를 의도적으로 제공하지 않습니다.
  */
 internal class OperatorAuditRepository {
+
+    companion object: KLogging()
+
     fun find(
         tenant: String,
         requestDigest: ReceiptDigest,
         action: OperatorAuditAction,
     ): OperatorAuditEntry? {
         TransactionManager.current()
+
         return OperatorAudits
             .selectAll()
-            .where {
-                (OperatorAudits.tenant eq tenant) and
-                    (OperatorAudits.requestDigest eq requestDigest.value) and
-                    (OperatorAudits.action eq action)
-            }.singleOrNull()
+            .where { OperatorAudits.tenant eq tenant }
+            .andWhere { OperatorAudits.requestDigest eq requestDigest.value }
+            .andWhere { OperatorAudits.action eq action }
+            .singleOrNull()
             ?.let(::toAuditEntry)
     }
 
@@ -186,30 +202,26 @@ internal class OperatorAuditRepository {
 
 private fun toAuditEntry(row: ResultRow): OperatorAuditEntry =
     OperatorAuditEntry(
-        identity =
-            OperatorAuditIdentity(
-                actorDigest = ReceiptDigest.of(row[OperatorAudits.actorDigest]),
-                tenant = row[OperatorAudits.tenant],
-                requestDigest = ReceiptDigest.of(row[OperatorAudits.requestDigest]),
-            ),
+        identity = OperatorAuditIdentity(
+            actorDigest = ReceiptDigest.of(row[OperatorAudits.actorDigest]),
+            tenant = row[OperatorAudits.tenant],
+            requestDigest = ReceiptDigest.of(row[OperatorAudits.requestDigest]),
+        ),
         action = row[OperatorAudits.action],
-        target =
-            OperatorAuditTarget(
-                projection = row[OperatorAudits.projection],
-                generation = row[OperatorAudits.generation],
-                expectedFencingToken = row[OperatorAudits.expectedFencingToken],
-            ),
-        transition =
-            OperatorAuditTransition(
-                beforeState = row[OperatorAudits.beforeState],
-                afterState = row[OperatorAudits.afterState],
-                checkpointPosition = row[OperatorAudits.checkpointPosition],
-                streamPosition = row[OperatorAudits.streamPosition],
-                reasonClass = row[OperatorAudits.reasonClass],
-            ),
-        result =
-            OperatorAuditResult(
-                outcome = row[OperatorAudits.outcome],
-                occurredAt = row[OperatorAudits.occurredAt],
-            ),
+        target = OperatorAuditTarget(
+            projection = row[OperatorAudits.projection],
+            generation = row[OperatorAudits.generation],
+            expectedFencingToken = row[OperatorAudits.expectedFencingToken],
+        ),
+        transition = OperatorAuditTransition(
+            beforeState = row[OperatorAudits.beforeState],
+            afterState = row[OperatorAudits.afterState],
+            checkpointPosition = row[OperatorAudits.checkpointPosition],
+            streamPosition = row[OperatorAudits.streamPosition],
+            reasonClass = row[OperatorAudits.reasonClass],
+        ),
+        result = OperatorAuditResult(
+            outcome = row[OperatorAudits.outcome],
+            occurredAt = row[OperatorAudits.occurredAt],
+        ),
     )

@@ -107,8 +107,8 @@ function operatorHeaders() {
 }
 
 async function api(path, options = {}) {
-    const response = await fetch(path, { cache: "no-store", ...options });
-    const payload = await response.json().catch(() => ({ code: "INVALID_RESPONSE", reason: "Response was not JSON" }));
+    const response = await fetch(path, {cache: "no-store", ...options});
+    const payload = await response.json().catch(() => ({code: "INVALID_RESPONSE", reason: "Response was not JSON"}));
     if (!response.ok) {
         const failure = new Error(payload.reason || payload.code || `HTTP ${response.status}`);
         failure.status = response.status;
@@ -180,17 +180,17 @@ async function customerCommand(path, body, key = randomKey(), principal = state.
 async function operatorCommand(path, body, key = randomKey(), extraHeaders = {}) {
     return api(path, {
         method: "POST",
-        headers: { ...operatorHeaders(), ...extraHeaders, "Idempotency-Key": key },
+        headers: {...operatorHeaders(), ...extraHeaders, "Idempotency-Key": key},
         body: JSON.stringify(body),
     });
 }
 
 async function operatorQuery(path) {
-    return api(path, { headers: operatorHeaders() });
+    return api(path, {headers: operatorHeaders()});
 }
 
 async function customerQuery(path) {
-    return api(path, { headers: customerHeaders() });
+    return api(path, {headers: customerHeaders()});
 }
 
 function emptyEvidenceItem(message) {
@@ -272,7 +272,7 @@ async function loadOperatorEvidence() {
 async function allocate(principal = state.principal, key = randomKey()) {
     const claim = await customerCommand(
         `/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/claims`,
-        { userRef: principal },
+        {userRef: principal},
         key,
         principal,
     );
@@ -283,7 +283,7 @@ async function allocate(principal = state.principal, key = randomKey()) {
 async function prepareFixture(scenario) {
     return operatorCommand(
         `/operator/api/v1/fixtures/${encodeURIComponent(scenario)}/run`,
-        { principalRef: state.principal, campaignId: state.campaignId },
+        {principalRef: state.principal, campaignId: state.campaignId},
     );
 }
 
@@ -305,9 +305,9 @@ async function resetTenant(capacity = 10) {
             redemptionTtlSeconds: 600,
         },
         randomKey(),
-        { "If-None-Match": "*" },
+        {"If-None-Match": "*"},
     );
-    await operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/activate`, { expectedRevision: 0 });
+    await operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/activate`, {expectedRevision: 0});
     state.latestClaim = null;
     await loadSnapshot();
     connectStream();
@@ -318,7 +318,7 @@ async function redeemLatest(key = randomKey()) {
     if (!claim.code) throw new Error("Scenario requires an allocated voucher code");
     return customerCommand(
         `/api/v1/claims/${encodeURIComponent(claim.claimId)}/redeem`,
-        { code: claim.code, expectedRevision: claim.revision, redemptionReference: randomKey() },
+        {code: claim.code, expectedRevision: claim.revision, redemptionReference: randomKey()},
         key,
     );
 }
@@ -333,7 +333,7 @@ async function loadSnapshot() {
 }
 
 function parseEventBlock(block) {
-    const parsed = { id: null, event: "message", data: "" };
+    const parsed = {id: null, event: "message", data: ""};
     block.split("\n").forEach(line => {
         const separator = line.indexOf(":");
         if (separator < 0) return;
@@ -382,7 +382,7 @@ async function pollFallback(response) {
     if (state.fallbackAttempts > 10) throw new Error("Stream capacity retry limit reached");
     setText(elements.streamState, `Polling fallback · ${retryAfter}s`);
     announce("Stream capacity reached. Using authoritative snapshot polling.");
-    const snapshot = await api(alternateSnapshotPath(response), { headers: customerHeaders() });
+    const snapshot = await api(alternateSnapshotPath(response), {headers: customerHeaders()});
     renderSnapshot(snapshot);
     addTimeline("Fallback snapshot", `${snapshot.state}, remaining ${snapshot.remainingCapacity}`, snapshot.observedAt);
     await new Promise(resolve => window.setTimeout(resolve, retryAfter * 1000));
@@ -420,7 +420,7 @@ async function connectStream() {
         while (!abort.signal.aborted) {
             const chunk = await reader.read();
             if (chunk.done) break;
-            buffer += decoder.decode(chunk.value, { stream: true });
+            buffer += decoder.decode(chunk.value, {stream: true});
             let boundary = buffer.indexOf("\n\n");
             while (boundary >= 0) {
                 renderStreamEvent(parseEventBlock(buffer.slice(0, boundary)));
@@ -495,8 +495,8 @@ elements.operatorActions.forEach(button => {
                 try {
                     const updated = await api(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/${action}`, {
                         method: "POST",
-                        headers: { ...operatorHeaders(), "Idempotency-Key": randomKey() },
-                        body: JSON.stringify({ expectedRevision }),
+                        headers: {...operatorHeaders(), "Idempotency-Key": randomKey()},
+                        body: JSON.stringify({expectedRevision}),
                     });
                     renderSnapshot(updated);
                     announce(`Campaign ${action} completed`);
@@ -555,7 +555,7 @@ async function executeScenario(scenario) {
         }
         case "capacity-race": {
             const attempts = await Promise.allSettled(
-                Array.from({ length: 8 }, (_, index) => allocate(`${state.principal}-${index}`)),
+                Array.from({length: 8}, (_, index) => allocate(`${state.principal}-${index}`)),
             );
             const winners = attempts.filter(result => result.status === "fulfilled");
             const rejected = attempts.filter(result => result.status === "rejected");
@@ -585,7 +585,7 @@ async function executeScenario(scenario) {
         }
         case "pause-allocation-race": {
             const [pause, allocation] = await Promise.allSettled([
-                operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/pause`, { expectedRevision: 1 }),
+                operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/pause`, {expectedRevision: 1}),
                 allocate(),
             ]);
             if ((pause.status === "fulfilled" ? 1 : 0) + (allocation.status === "fulfilled" ? 1 : 0) !== 1) {
@@ -635,7 +635,7 @@ async function executeScenario(scenario) {
             break;
         }
         case "policy-change": {
-            const body = { expectedRevision: 1, capacity: 12, perUserLimit: 1, redemptionTtlSeconds: 600 };
+            const body = {expectedRevision: 1, capacity: 12, perUserLimit: 1, redemptionTtlSeconds: 600};
             const outcomes = await Promise.allSettled([
                 operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/policy`, body),
                 operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/policy`, body),

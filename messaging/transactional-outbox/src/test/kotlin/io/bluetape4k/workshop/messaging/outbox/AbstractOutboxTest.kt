@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.messaging.outbox
 
-import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.mq.KafkaServer
@@ -14,9 +14,9 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractOutboxTest {
 
-    companion object : KLogging() {
-        val postgres = PostgreSQLServer.Launcher.postgres
-        val kafka = KafkaServer.Launcher.kafka
+    companion object: KLogging() {
+        val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+        val kafka by lazy { KafkaServer.Launcher.kafka }
 
         @JvmStatic
         @DynamicPropertySource

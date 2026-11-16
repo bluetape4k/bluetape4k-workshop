@@ -5,16 +5,17 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolProperties
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.support.StaticListableBeanFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
-import org.springframework.beans.factory.support.StaticListableBeanFactory
 import org.springframework.core.MethodParameter
 import org.springframework.mock.env.MockEnvironment
 import org.springframework.mock.web.MockHttpServletRequest
@@ -24,11 +25,15 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.ServletWebRequest
 
 @Import(TenantPrincipalTestConfiguration::class)
-internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPoolIntegrationTest() {
+internal class TenantPrincipalAuthorizationIntegrationTest: AbstractVoucherPoolIntegrationTest() {
+
+    companion object: KLogging()
+
     @Test
     fun `loopback demo auth resolves bounded tenant and principal`() {
         customerGet("tenant-a", "principal-a", "tenant-a", "principal-a")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.tenantId").isEqualTo("tenant-a")
             .jsonPath("$.principalId").isEqualTo("principal-a")
@@ -37,12 +42,17 @@ internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPool
     @Test
     fun `cross tenant cross principal and forged demo identity are uniform not found`() {
         customerGet("tenant-b", "principal-a", "tenant-a", "principal-a")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
+
         customerGet("tenant-a", "principal-b", "tenant-a", "principal-a")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
+
         customerGet("tenant-a", "principal-a", "tenant-a", "principal-a")
             .header("X-Demo-Principal", "forged")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     @Test
@@ -69,7 +79,9 @@ internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPool
                 VALID_OPERATOR_SECRET_PROPERTY,
                 VALID_OPERATOR_GUARD_PROPERTY,
             )
-            .run { context -> context.startupFailure.shouldBeNull() }
+            .run { context ->
+                context.startupFailure.shouldBeNull()
+            }
     }
 
     @Test
@@ -112,42 +124,38 @@ internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPool
 
     @Test
     fun `resolver fails closed instead of throwing bean ambiguity for multiple adapters`() {
-        val beans =
-            StaticListableBeanFactory(
-                mapOf(
-                    "adapterOne" to VoucherPoolProductionAuthAdapter { TenantPrincipal("one", "one") },
-                    "adapterTwo" to VoucherPoolProductionAuthAdapter { TenantPrincipal("two", "two") },
+        val beans = StaticListableBeanFactory(
+            mapOf(
+                "adapterOne" to VoucherPoolProductionAuthAdapter { TenantPrincipal("one", "one") },
+                "adapterTwo" to VoucherPoolProductionAuthAdapter { TenantPrincipal("two", "two") },
+            ),
+        )
+        val resolver = TenantPrincipalResolver(
+            properties = VoucherPoolProperties(
+                http = VoucherPoolHttpProperties(
+                    operatorSecret = "test-operator-secret-0000000000000001",
+                    operatorGuard = "test-voucher-pool-operator-guard",
                 ),
-            )
-        val resolver =
-            TenantPrincipalResolver(
-                VoucherPoolProperties(
-                    http =
-                        VoucherPoolHttpProperties(
-                            operatorSecret = "test-operator-secret-0000000000000001",
-                            operatorGuard = "test-voucher-pool-operator-guard",
-                        ),
-                ),
-                MockEnvironment().withProperty("server.address", "127.0.0.1"),
-                beans.getBeanProvider(VoucherPoolProductionAuthAdapter::class.java),
-            )
-        val method =
-            TenantPrincipalProbeController::class.java.getDeclaredMethod(
-                "principal",
-                TenantPrincipal::class.java,
-                String::class.java,
-                String::class.java,
-            )
+            ),
+            environment = MockEnvironment().withProperty("server.address", "127.0.0.1"),
+            productionAdapters = beans.getBeanProvider(VoucherPoolProductionAuthAdapter::class.java),
+        )
 
-        val failure =
-            assertFailsWith<VoucherPoolApiException> {
-                resolver.resolveArgument(
-                    MethodParameter(method, 0),
-                    null,
-                    ServletWebRequest(MockHttpServletRequest("GET", "/api/v1/test/principals/one/one")),
-                    null,
-                )
-            }
+        val method = TenantPrincipalProbeController::class.java.getDeclaredMethod(
+            "principal",
+            TenantPrincipal::class.java,
+            String::class.java,
+            String::class.java,
+        )
+
+        val failure = assertFailsWith<VoucherPoolApiException> {
+            resolver.resolveArgument(
+                parameter = MethodParameter(method, 0),
+                mavContainer = null,
+                webRequest = ServletWebRequest(MockHttpServletRequest("GET", "/api/v1/test/principals/one/one")),
+                binderFactory = null,
+            )
+        }
 
         failure.status shouldBeEqualTo 404
     }
@@ -175,11 +183,16 @@ internal class TenantPrincipalTestConfiguration {
 }
 
 @Import(TenantPrincipalProductionAdapterTestConfiguration::class)
-internal class TenantPrincipalProductionAdapterIntegrationTest : AbstractVoucherPoolIntegrationTest() {
+internal class TenantPrincipalProductionAdapterIntegrationTest: AbstractVoucherPoolIntegrationTest() {
+
+    companion object: KLogging()
+
     @Test
     fun `production authentication adapter takes precedence over loopback demo headers`() {
-        customerGet().header("X-Test-Production-Auth", "enabled")
-            .exchange().expectStatus().isOk
+        customerGet()
+            .header("X-Test-Production-Auth", "enabled")
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.tenantId").isEqualTo("tenant-adapter")
             .jsonPath("$.principalId").isEqualTo("principal-adapter")
@@ -187,11 +200,14 @@ internal class TenantPrincipalProductionAdapterIntegrationTest : AbstractVoucher
 
     @Test
     fun `production authentication rejection never falls back to loopback demo headers`() {
-        customerGet().exchange().expectStatus().isNotFound
+        customerGet()
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     private fun customerGet() =
-        webTestClient.get().uri("/api/v1/test/principals/tenant-adapter/principal-adapter")
+        webTestClient.get()
+            .uri("/api/v1/test/principals/tenant-adapter/principal-adapter")
             .header(TENANT_HEADER, "tenant-demo")
             .header(PRINCIPAL_HEADER, "principal-demo")
 }
@@ -244,14 +260,17 @@ internal class PublicBindValidationConfiguration {
 internal class PublicBindWithAdapterValidationConfiguration {
     @Bean
     fun productionAuthAdapter(): VoucherPoolProductionAuthAdapter =
-        VoucherPoolProductionAuthAdapter { TenantPrincipal("tenant-adapter", "principal-adapter") }
+        VoucherPoolProductionAuthAdapter {
+            TenantPrincipal("tenant-adapter", "principal-adapter")
+        }
 
     @Bean
     fun voucherPoolAuthStartupValidator(
         properties: VoucherPoolProperties,
         environment: org.springframework.core.env.Environment,
         productionAdapters: ObjectProvider<VoucherPoolProductionAuthAdapter>,
-    ) = VoucherPoolAuthStartupValidator(properties, environment, productionAdapters)
+    ): VoucherPoolAuthStartupValidator =
+        VoucherPoolAuthStartupValidator(properties, environment, productionAdapters)
 }
 
 @TestConfiguration(proxyBeanMethods = false)
@@ -270,5 +289,6 @@ internal class MultipleAdapterValidationConfiguration {
         properties: VoucherPoolProperties,
         environment: org.springframework.core.env.Environment,
         productionAdapters: ObjectProvider<VoucherPoolProductionAuthAdapter>,
-    ) = VoucherPoolAuthStartupValidator(properties, environment, productionAdapters)
+    ): VoucherPoolAuthStartupValidator =
+        VoucherPoolAuthStartupValidator(properties, environment, productionAdapters)
 }

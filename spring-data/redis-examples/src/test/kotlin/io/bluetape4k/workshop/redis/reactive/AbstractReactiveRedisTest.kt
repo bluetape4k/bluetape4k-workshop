@@ -9,7 +9,7 @@ import org.springframework.test.context.DynamicPropertySource
 @SpringBootTest(classes = [ReactiveRedisConfiguration::class])
 abstract class AbstractReactiveRedisTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
 
         @JvmStatic
         @DynamicPropertySource

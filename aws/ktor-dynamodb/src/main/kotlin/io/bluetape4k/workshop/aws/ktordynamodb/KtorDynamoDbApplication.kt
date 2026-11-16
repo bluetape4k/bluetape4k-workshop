@@ -7,6 +7,7 @@ import aws.sdk.kotlin.services.dynamodb.model.StreamViewType
 import io.bluetape4k.aws.kotlin.dynamodb.model.partitionKeyOf
 import io.bluetape4k.aws.kotlin.dynamodb.model.stringAttrDefinitionOf
 import io.bluetape4k.aws.kotlin.dynamodbstreams.dynamoDbStreamsClientOf
+import io.bluetape4k.aws.ktor.AwsKtorCore
 import io.bluetape4k.aws.ktor.dynamodb.DynamoDbKtorPlugin
 import io.bluetape4k.aws.ktor.dynamodb.dynamoDb
 import io.bluetape4k.logging.KLogging
@@ -44,6 +45,10 @@ internal fun Application.ktorDynamoDbApplication(
     streamsConfig: DynamoDbStreamsWorkshopConfig = DynamoDbStreamsWorkshopConfig.fromSystemProperties(),
 ) {
     installOrderSessionHttpPlugins()
+
+    install(AwsKtorCore) {
+        allowInsecureLocalHttpEndpoint = config.mode == AwsWorkshopMode.LOCAL
+    }
 
     install(DynamoDbKtorPlugin) {
         endpointUrl = config.endpointUrl

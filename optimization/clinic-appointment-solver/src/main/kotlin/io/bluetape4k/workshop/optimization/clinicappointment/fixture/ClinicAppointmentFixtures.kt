@@ -92,18 +92,19 @@ object ClinicAppointmentFixtures {
         )
     }
 
-    fun solution(snapshot: ClinicAppointmentSnapshot = snapshot()): ClinicSchedule = ClinicSchedule(
-        clinic = snapshot.clinic,
-        providers = snapshot.providers,
-        rooms = snapshot.rooms,
-        equipment = snapshot.equipment,
-        providerIds = snapshot.providers.map { it.id },
-        roomIds = snapshot.rooms.map { it.id },
-        equipmentIds = snapshot.equipment.map { it.id },
-        dates = snapshot.dates,
-        timeSlots = snapshot.timeSlots,
-        appointments = snapshot.appointments.map(::copyAppointment),
-    )
+    fun solution(snapshot: ClinicAppointmentSnapshot = snapshot()): ClinicSchedule =
+        ClinicSchedule(
+            clinic = snapshot.clinic,
+            providers = snapshot.providers,
+            rooms = snapshot.rooms,
+            equipment = snapshot.equipment,
+            providerIds = snapshot.providers.map { it.id },
+            roomIds = snapshot.rooms.map { it.id },
+            equipmentIds = snapshot.equipment.map { it.id },
+            dates = snapshot.dates,
+            timeSlots = snapshot.timeSlots,
+            appointments = snapshot.appointments.map(::copyAppointment),
+        )
 
     private fun copyAppointment(source: ClinicAppointmentPlanning): ClinicAppointmentPlanning =
         ClinicAppointmentPlanning(

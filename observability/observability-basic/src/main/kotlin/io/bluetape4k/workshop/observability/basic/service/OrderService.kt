@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.observability.basic.service
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.micrometer.observation.coroutines.withObservationContextSuspending
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.basic.client.InventoryClient
@@ -22,7 +23,7 @@ class OrderService(
     private val inventoryClient: InventoryClient,
     private val observationRegistry: ObservationRegistry,
 ) {
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * 주어진 [orderId] 에 대해 inventory availability 가 보강된 [Order] 를 조회합니다.
@@ -34,7 +35,9 @@ class OrderService(
             val validOrderId = orderId.requirePositiveNumber("orderId")
             val inventory = inventoryClient.fetchInventory(validOrderId)
                 ?: return@withObservationContextSuspending null
-            debug { "Fetched inventory for orderId=$validOrderId: available=${inventory.available}" }
+
+            log.debug { "Fetched inventory for orderId=$validOrderId: available=${inventory.available}" }
+
             Order(
                 id = validOrderId,
                 itemId = inventory.itemId,

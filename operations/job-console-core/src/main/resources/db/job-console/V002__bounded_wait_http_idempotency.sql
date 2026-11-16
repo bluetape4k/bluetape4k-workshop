@@ -13,8 +13,7 @@ ALTER TABLE job_requests
     ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE job_requests
-    ADD CONSTRAINT ck_job_requests_state
-        CHECK (state IN ('IN_FLIGHT', 'TERMINAL', 'ABANDONED')),
+    ADD CONSTRAINT ck_job_requests_state CHECK (state IN ('IN_FLIGHT', 'TERMINAL', 'ABANDONED')),
     ADD CONSTRAINT ck_job_requests_owner_fields
         CHECK (state <> 'IN_FLIGHT' OR (owner_token IS NOT NULL AND owner_lease_expires_at IS NOT NULL)),
     ADD CONSTRAINT ck_job_requests_abandoned_until
@@ -29,28 +28,23 @@ ALTER TABLE job_requests
             OR response_content_type IN ('application/json', 'application/problem+json')
         );
 
-CREATE TABLE job_request_waiters (
-    tenant_id VARCHAR(64) NOT NULL,
-    submitter_hash CHAR(64) NOT NULL,
-    key_hash CHAR(64) NOT NULL,
-    generation BIGINT NOT NULL CHECK (generation > 0),
-    waiter_token UUID NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE job_request_waiters
+(
+    tenant_id      VARCHAR(64) NOT NULL,
+    submitter_hash CHAR(64)    NOT NULL,
+    key_hash       CHAR(64)    NOT NULL,
+    generation     BIGINT      NOT NULL CHECK (generation > 0),
+    waiter_token   UUID        NOT NULL,
+    expires_at     TIMESTAMPTZ NOT NULL,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (tenant_id, submitter_hash, key_hash, generation, waiter_token),
-    FOREIGN KEY (tenant_id, submitter_hash, key_hash)
-        REFERENCES job_requests(tenant_id, submitter_hash, key_hash)
-        ON DELETE CASCADE
+    FOREIGN KEY (tenant_id, submitter_hash, key_hash) REFERENCES job_requests (tenant_id, submitter_hash, key_hash) ON DELETE CASCADE
 );
 
-CREATE INDEX ix_job_request_waiters_admission
-    ON job_request_waiters(tenant_id, submitter_hash, key_hash, generation, expires_at);
+CREATE INDEX ix_job_request_waiters_admission ON job_request_waiters (tenant_id, submitter_hash, key_hash, generation, expires_at);
 
-CREATE INDEX ix_job_request_waiters_expiry
-    ON job_request_waiters(expires_at);
+CREATE INDEX ix_job_request_waiters_expiry ON job_request_waiters (expires_at);
 
-CREATE INDEX ix_job_requests_terminal_retention
-    ON job_requests(state, retained_until);
+CREATE INDEX ix_job_requests_terminal_retention ON job_requests (state, retained_until);
 
-CREATE INDEX ix_job_requests_abandoned_until
-    ON job_requests(state, abandoned_until);
+CREATE INDEX ix_job_requests_abandoned_until ON job_requests (state, abandoned_until);

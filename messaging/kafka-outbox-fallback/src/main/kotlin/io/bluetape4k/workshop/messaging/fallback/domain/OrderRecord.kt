@@ -14,7 +14,7 @@ data class OrderRecord(
     val status: OrderStatus,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

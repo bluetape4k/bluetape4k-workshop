@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.toUtf8String
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.FileAlreadyExistsException
@@ -62,7 +63,7 @@ class HighContentionArtifactStore private constructor(
         } catch (error: Exception) {
             throw HighContentionReportSerializationException(error)
         }
-        verifyRedaction(bytes.toString(Charsets.UTF_8))
+        verifyRedaction(bytes.toUtf8String())
         return writeNoReplace(
             Path.of("reports", validImplementation, "$validProfileId.json"),
             bytes,

@@ -4,11 +4,13 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.idgenerators.uuid.Uuid
-import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
+import io.bluetape4k.workshop.operations.jobconsole.api.JobEvent
+import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
-import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleUi
+import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
 import io.bluetape4k.workshop.operations.jobconsole.application.JobSubmissionHttpMapper
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
@@ -39,21 +41,23 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.sse.sse
 import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.runBlocking
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private val mapper = JobConsoleJson.defaultMapper
 
@@ -135,17 +139,35 @@ internal fun Application.jobConsoleModule(
                     JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED -> HttpStatusCode.InternalServerError
                     JobProblemCode.DEPENDENCY_UNAVAILABLE,
                     JobProblemCode.LEASE_LOST,
-                    -> HttpStatusCode.ServiceUnavailable
+                        -> HttpStatusCode.ServiceUnavailable
                     else -> HttpStatusCode.Conflict
                 }
-            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(failure.code, status.value, status.description))
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(
+                    failure.code,
+                    status.value,
+                    status.description
+                )
+            )
         }
         exception<IllegalArgumentException> { call, _ ->
-            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(JobProblemCode.VALIDATION_FAILED, 400, "Bad Request"))
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(
+                    JobProblemCode.VALIDATION_FAILED,
+                    400,
+                    "Bad Request"
+                )
+            )
         }
         exception<CancellationException> { _, failure -> throw failure }
         exception<Throwable> { call, _ ->
-            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(JobProblemCode.DEPENDENCY_UNAVAILABLE, 503, "Service Unavailable"))
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(
+                    JobProblemCode.DEPENDENCY_UNAVAILABLE,
+                    503,
+                    "Service Unavailable"
+                )
+            )
         }
     }
 
@@ -161,7 +183,7 @@ internal fun Application.jobConsoleModule(
             } catch (failure: Exception) {
                 environment.log.warn("Job console background cycle failed", failure)
             }
-            delay(100)
+            delay(100.milliseconds)
         }
     }
     val workerJob =
@@ -176,7 +198,7 @@ internal fun Application.jobConsoleModule(
                     } catch (failure: Exception) {
                         environment.log.warn("Job console worker cycle failed", failure)
                     }
-                    delay(50)
+                    delay(50.milliseconds)
                 }
             }
         } else {
@@ -246,7 +268,9 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
             }
             get("/{jobId}") {
                 val jobId = UUID.fromString(requireNotNull(call.parameters["jobId"]))
-                call.respondJson(HttpStatusCode.OK, withContext(Dispatchers.IO) { service.snapshot(call.demoScope(), jobId) })
+                call.respondJson(
+                    HttpStatusCode.OK,
+                    withContext(Dispatchers.IO) { service.snapshot(call.demoScope(), jobId) })
             }
             post("/{jobId}/cancel") {
                 val jobId = UUID.fromString(requireNotNull(call.parameters["jobId"]))
@@ -258,7 +282,10 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
         get("/v1/queues/me") {
             val cursor = call.request.headers["X-Queue-Cursor"]
             val pageSize = call.request.headers["X-Queue-Page-Size"]?.toIntOrNull() ?: 25
-            call.respondJson(HttpStatusCode.OK, withContext(Dispatchers.IO) { service.myQueue(call.demoScope(), cursor, pageSize) })
+            call.respondJson(
+                HttpStatusCode.OK,
+                withContext(Dispatchers.IO) { service.myQueue(call.demoScope(), cursor, pageSize) }
+            )
         }
         get("/v1/tenants/{tenantId}/queue") {
             val tenantId = requireNotNull(call.parameters["tenantId"])
@@ -268,17 +295,22 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
             }
             val cursor = call.request.headers["X-Queue-Cursor"]
             val pageSize = call.request.headers["X-Queue-Page-Size"]?.toIntOrNull() ?: 25
-            call.respondJson(HttpStatusCode.OK, withContext(Dispatchers.IO) { service.tenantQueue(tenantId, cursor, pageSize) })
+            call.respondJson(
+                HttpStatusCode.OK,
+                withContext(Dispatchers.IO) { service.tenantQueue(tenantId, cursor, pageSize) }
+            )
         }
         sse("/v1/jobs/{jobId}/events") {
-            val jobId = UUID.fromString(requireNotNull(call.parameters["jobId"]))
+            val jobId = UUID.fromString(call.parameters["jobId"].requireNotNull("jobId"))
             withContext(Dispatchers.IO) { service.snapshot(call.demoScope(), jobId) }
-            val channel = Channel<io.bluetape4k.workshop.operations.jobconsole.api.JobEvent>(capacity = 16)
-            val subscription = fanout.subscribe("ktor-${Uuid.V7.nextId().toString()}") { if (it.jobId == jobId) channel.trySend(it) }
+            val channel = Channel<JobEvent>(capacity = 16)
+            val subscription = fanout.subscribe("ktor-${Uuid.V7.nextId()}") {
+                if (it.jobId == jobId) channel.trySend(it)
+            }
             try {
                 send(ServerSentEvent(data = "{}", event = "heartbeat"))
                 while (true) {
-                    val event = withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) { channel.receive() }
+                    val event = withTimeoutOrNull(10.seconds) { channel.receive() }
                     if (event == null) {
                         send(ServerSentEvent(data = "{}", event = "heartbeat"))
                     } else {
@@ -312,15 +344,14 @@ private suspend fun io.ktor.server.application.ApplicationCall.respondJson(statu
 }
 
 fun main() {
-    val dataSource =
-        HikariDataSource(
-            HikariConfig().apply {
-                jdbcUrl = environment("POSTGRES_JDBC_URL", "jdbc:postgresql://localhost:5432/postgres")
-                username = environment("POSTGRES_USERNAME", "postgres")
-                password = environment("POSTGRES_PASSWORD", "postgres")
-                schema = environment("POSTGRES_SCHEMA", "public")
-            },
-        )
+    val dataSource = HikariDataSource(
+        HikariConfig().apply {
+            jdbcUrl = environment("POSTGRES_JDBC_URL", "jdbc:postgresql://localhost:5432/postgres")
+            username = environment("POSTGRES_USERNAME", "postgres")
+            password = environment("POSTGRES_PASSWORD", "postgres")
+            schema = environment("POSTGRES_SCHEMA", "public")
+        },
+    )
     embeddedServer(Netty, port = environment("PORT", "8080").toInt()) {
         jobConsoleModule(
             dataSource,

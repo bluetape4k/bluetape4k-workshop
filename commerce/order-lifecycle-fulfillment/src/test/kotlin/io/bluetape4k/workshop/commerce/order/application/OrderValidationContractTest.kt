@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.commerce.order.application
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.order.domain.ProviderMode
 import io.bluetape4k.workshop.commerce.order.domain.SubmitOrder
 import io.bluetape4k.workshop.commerce.order.domain.SubmitOrderLine
@@ -24,9 +26,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class OrderValidationContractTest {
+
+    companion object: KLogging()
+
     private val orders = mockk<OrderRepository>(relaxed = true)
     private val payments = mockk<PaymentAttemptRepository>(relaxed = true)
     private val lines = mockk<OrderLineRepository>(relaxed = true)
@@ -46,52 +51,44 @@ internal class OrderValidationContractTest {
         val expectedHelpers =
             listOf(
                 "src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/PublicationReconciliationService.kt" to
-                    "batchSize.requireInRange(1, MAX_BATCH_SIZE, \"batchSize\")",
+                        "batchSize.requireInRange(1, MAX_BATCH_SIZE, \"batchSize\")",
                 "src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/OrderCommandService.kt" to
-                    "command.lines.requireNotEmpty(\"lines\")",
+                        "command.lines.requireNotEmpty(\"command.lines\")",
                 "src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/OrderCommandService.kt" to
-                    "command.lines.size.requireInRange(1, 50, \"lines.size\")",
+                        "command.lines.size.requireInRange(1, 50, \"command.lines.size\")",
                 "src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/OrderCommandService.kt" to
-                    "it.quantity.requireInRange(1, 1_000, \"quantity\")",
+                        "it.quantity.requireInRange(1, 1_000, \"quantity\")",
                 "src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/OrderCommandService.kt" to
-                    "quantity.requirePositiveNumber(\"quantity\")",
+                        "quantity.requirePositiveNumber(\"quantity\")",
                 "src/main/kotlin/io/bluetape4k/workshop/commerce/order/idempotency/HttpIdempotencyRepository.kt" to
-                    "limit.requireInRange(1, MAX_CLEANUP_BATCH, \"limit\")",
+                        "limit.requireInRange(1, MAX_CLEANUP_BATCH, \"limit\")",
                 "src/main/kotlin/io/bluetape4k/workshop/commerce/order/idempotency/IdempotencyCleanupService.kt" to
-                    "batchSize.requireInRange(1, HttpIdempotencyRepository.MAX_CLEANUP_BATCH, \"batchSize\")"
+                        "batchSize.requireInRange(1, HttpIdempotencyRepository.MAX_CLEANUP_BATCH, \"batchSize\")"
             )
 
         expectedHelpers.forEach { (sourcePath, helperCall) ->
-            Files.readString(Path.of(sourcePath)).contains(helperCall) shouldBeEqualTo true
+            log.debug { "sourcePath=$sourcePath" }
+            Files.readString(Path.of(sourcePath)) shouldContain helperCall
         }
     }
 
     @Test
     fun `regex length security and decimal contracts stay explicit`() {
-        val orderCommandSource =
-            Files.readString(
-                Path.of(
-                    "src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/OrderCommandService.kt"
-                )
-            )
-        val submissionSource =
-            Files.readString(
-                Path.of(
-                    "src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/IdempotentOrderSubmissionService.kt"
-                )
-            )
-        val controllerSource =
-            Files.readString(
-                Path.of(
-                    "src/main/kotlin/io/bluetape4k/workshop/commerce/order/web/OrderController.kt"
-                )
-            )
+        val orderCommandSource = Files.readString(
+            Path.of("src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/OrderCommandService.kt")
+        )
+        val submissionSource = Files.readString(
+            Path.of("src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/IdempotentOrderSubmissionService.kt")
+        )
+        val controllerSource = Files.readString(
+            Path.of("src/main/kotlin/io/bluetape4k/workshop/commerce/order/web/OrderController.kt")
+        )
 
-        orderCommandSource.contains("matches(IDENTIFIER)") shouldBeEqualTo true
-        orderCommandSource.contains("matches(REASON)") shouldBeEqualTo true
-        orderCommandSource.contains("unitPrice.signum() >= 0") shouldBeEqualTo true
-        submissionSource.contains("rawKey.length in 8..200") shouldBeEqualTo true
-        controllerSource.contains("operatorGuard == WORKSHOP_OPERATOR_VALUE") shouldBeEqualTo true
+        orderCommandSource shouldContain "matches(IDENTIFIER)"
+        orderCommandSource shouldContain "matches(REASON)"
+        orderCommandSource shouldContain "unitPrice.signum() >= 0"
+        submissionSource shouldContain "rawKey.length in 8..200"
+        controllerSource shouldContain "operatorGuard == WORKSHOP_OPERATOR_VALUE"
     }
 
     @Test
@@ -121,7 +118,9 @@ internal class OrderValidationContractTest {
 
     @Test
     fun `invalid reconciliation and cleanup bounds remain IllegalArgumentException`() {
-        assertFailsWith<IllegalArgumentException> { reconciliation.replayFailed(0) }
+        assertFailsWith<IllegalArgumentException> {
+            reconciliation.replayFailed(0)
+        }
 
         assertFailsWith<IllegalArgumentException> {
             repository.deleteExpiredTerminal(Instant.parse("2026-07-18T00:00:00Z"), 0)
@@ -132,7 +131,7 @@ internal class OrderValidationContractTest {
         }
     }
 
-    private fun commandService() =
+    private fun commandService(): OrderCommandService =
         OrderCommandService(
             orders = orders,
             payments = payments,

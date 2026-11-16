@@ -10,19 +10,18 @@ import org.junit.jupiter.api.Tag
 @Tag("vips-required")
 abstract class AbstractFfmVipsWorkshopTest {
 
-    companion object : KLogging() {
-        @JvmStatic
-        @BeforeAll
-        fun initRuntime() {
-            if (System.getProperty("vips.enabled") != "true") {
-                assumeTrue(false, "vips tests require explicit opt-in via -Dvips.enabled=true")
-            }
-            try {
-                FfmVipsRuntime.init()
-            } catch (e: Exception) {
-                log.warn(e) { "FfmVipsRuntime.init() failed, skipping vips tests" }
-                assumeTrue(false, "libvips not available: ${e.message}")
-            }
+    companion object: KLogging()
+
+    @BeforeAll
+    fun initRuntime() {
+        if (System.getProperty("vips.enabled") != "true") {
+            assumeTrue(false, "vips tests require explicit opt-in via -Dvips.enabled=true")
+        }
+        try {
+            FfmVipsRuntime.init()
+        } catch (e: Exception) {
+            log.warn(e) { "FfmVipsRuntime.init() failed, skipping vips tests" }
+            assumeTrue(false, "libvips not available: ${e.message}")
         }
     }
 }

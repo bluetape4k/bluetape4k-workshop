@@ -1,16 +1,19 @@
 package io.bluetape4k.workshop.r2dbc.queryexample
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.data.buildExampleMatcher
+import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldContainSame
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,11 +37,11 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     private var marieFixture: Person? = null
     private var hankFixture: Person? = null
 
-    private val skyler: Person get() = checkNotNull(skylerFixture) { "skyler fixture is not initialized." }
-    private val walter: Person get() = checkNotNull(walterFixture) { "walter fixture is not initialized." }
-    private val flynn: Person get() = checkNotNull(flynnFixture) { "flynn fixture is not initialized." }
-    private val marie: Person get() = checkNotNull(marieFixture) { "marie fixture is not initialized." }
-    private val hank: Person get() = checkNotNull(hankFixture) { "hank fixture is not initialized." }
+    private val skyler: Person get() = skylerFixture.shouldNotBeNull()
+    private val walter: Person get() = walterFixture.shouldNotBeNull()
+    private val flynn: Person get() = flynnFixture.shouldNotBeNull()
+    private val marie: Person get() = marieFixture.shouldNotBeNull()
+    private val hank: Person get() = hankFixture.shouldNotBeNull()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {
@@ -60,7 +63,13 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
         hankFixture = Person("Hank", "Schrader", 43)
 
         statements.forEach { stmt ->
-            client.sql(stmt).fetch().rowsUpdated().awaitSingleOrNull()
+            log.debug { "stmt=\n$stmt" }
+
+            client
+                .sql(stmt.requireNotBlank("stmt"))
+                .fetch()
+                .rowsUpdated()
+                .awaitSingleOrNull()
         }
 
         repository.saveAll(listOf(skyler, walter, flynn, marie, hank)).asFlow().collect()
@@ -111,7 +120,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
 
         val example = Example.of(Person("Walter", "WHITE", 0), matcher)
 
-        repository.findAll(example).asFlow().toList() shouldContainSame listOf(walter, flynn)
+        repository.findAll(example).asFlow().log("Example").toList() shouldContainSame listOf(walter, flynn)
     }
 
     @Test
@@ -125,7 +134,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
 
         val example = Example.of(Person("Walter", "WHITE", 0), matcher)
 
-        repository.findAll(example).asFlow().toList() shouldContainSame listOf(walter, flynn)
+        repository.findAll(example).asFlow().log("Example").toList() shouldContainSame listOf(walter, flynn)
     }
 
     @Test

@@ -1,16 +1,16 @@
 package io.bluetape4k.workshop.jsonview.controller
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.jsonview.AbstractJsonViewApplicationTest
-import io.bluetape4k.workshop.jsonview.dto.ArticleDTO
-import io.bluetape4k.spring.tests.httpGet
-import kotlinx.coroutines.reactive.awaitSingle
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.workshop.jsonview.AbstractJsonViewApplicationTest
+import io.bluetape4k.workshop.jsonview.dto.ArticleDTO
+import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
@@ -30,12 +30,9 @@ class ArticleControllerTest: AbstractJsonViewApplicationTest() {
             .expectBodyList<ArticleDTO>()
             .returnResult().responseBody
             .shouldNotBeNull()
+            .onEach { log.debug { "Article=$it" } }
 
         articles shouldHaveSize 2
-
-        articles.forEach {
-            log.debug { "Article=$it" }
-        }
         articles.forEach { it.views.shouldBeNull() }
         articles.forEach { it.likes.shouldBeNull() }
     }

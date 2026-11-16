@@ -12,7 +12,7 @@ data class InvoiceRecord(
     val customerName: String,
     val amount: BigDecimal,
     val status: InvoiceStatus = InvoiceStatus.OPEN,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 104L

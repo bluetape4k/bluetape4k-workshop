@@ -28,7 +28,7 @@ data class OutboxEvent(
     val retryCount: Int,
     val createdAt: LocalDateTime,
     val processedAt: LocalDateTime?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

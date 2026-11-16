@@ -18,17 +18,17 @@ Chaos Monkey는 정상 student API가 끝나기 전에 watched method call을 �
 
 ## 주요 엔드포인트
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/students` | H2에서 student 목록 조회 |
-| `GET` | `/students/{id}` | student 1건 조회 |
-| `POST` | `/students` | student 추가 |
-| `PUT` | `/students/{id}` | student 수정 |
-| `DELETE` | `/students/{id}` | student 삭제 |
-| `GET` | `/actuator/chaosmonkey` | Chaos Monkey 상태 확인 |
-| `POST` | `/actuator/chaosmonkey/enable` | assault 활성화 |
-| `POST` | `/actuator/chaosmonkey/disable` | assault 비활성화 |
-| `GET` | `/actuator/chaosmonkey/assaults` | assault 설정 확인 |
+| Method   | Path                             | Purpose                  |
+|----------|----------------------------------|--------------------------|
+| `GET`    | `/students`                      | H2에서 student 목록 조회 |
+| `GET`    | `/students/{id}`                 | student 1건 조회         |
+| `POST`   | `/students`                      | student 추가             |
+| `PUT`    | `/students/{id}`                 | student 수정             |
+| `DELETE` | `/students/{id}`                 | student 삭제             |
+| `GET`    | `/actuator/chaosmonkey`          | Chaos Monkey 상태 확인   |
+| `POST`   | `/actuator/chaosmonkey/enable`   | assault 활성화           |
+| `POST`   | `/actuator/chaosmonkey/disable`  | assault 비활성화         |
+| `GET`    | `/actuator/chaosmonkey/assaults` | assault 설정 확인        |
 
 ## 설정 핵심
 

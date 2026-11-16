@@ -1,20 +1,21 @@
 package io.bluetape4k.workshop.commerce.metering.idempotency
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.CommandReceiptStatus
-import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptCompletion
 import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptOwnerInsert
+import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class CommandReceiptScope(
     val tenantId: String,
@@ -49,17 +50,17 @@ sealed interface CommandAcquireResult {
     data class Acquired(
         val receipt: CommandReceiptSnapshot,
         val takeover: Boolean,
-    ) : CommandAcquireResult
+    ): CommandAcquireResult
 
     data class Replay(
         val httpStatus: Int,
         val response: String,
         val failed: Boolean,
-    ) : CommandAcquireResult
+    ): CommandAcquireResult
 
-    data class InProgress(val retryAfter: Duration) : CommandAcquireResult
+    data class InProgress(val retryAfter: Duration): CommandAcquireResult
 
-    data object Conflict : CommandAcquireResult
+    data object Conflict: CommandAcquireResult
 }
 
 @Service
@@ -68,6 +69,9 @@ class CommandReceiptService(
     private val properties: MeteringProperties,
     private val clock: Clock,
 ) {
+
+    companion object: KLogging()
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Suppress("ReturnCount") // Each branch is a distinct receipt state-machine transition.
     fun acquire(
@@ -77,15 +81,16 @@ class CommandReceiptService(
     ): CommandAcquireResult {
         val now = clock.instant()
         val receiptProperties = properties.commandReceipt
-        val inserted =
-            repository.insertOwnerIfAbsent(CommandReceiptOwnerInsert(
+        val inserted = repository.insertOwnerIfAbsent(
+            CommandReceiptOwnerInsert(
                 scope = scope,
                 requestFingerprint = requestFingerprint.value,
                 ownerToken = ownerToken,
                 now = now,
                 leaseDeadline = now.plus(receiptProperties.lease),
                 retentionDeadline = now.plus(receiptProperties.retention),
-            ))
+            )
+        )
         var current = repository.find(scope) ?: error("command receipt was not persisted")
         if (inserted) return CommandAcquireResult.Acquired(current, takeover = false)
         if (current.requestFingerprint != requestFingerprint.value) return CommandAcquireResult.Conflict
@@ -100,15 +105,15 @@ class CommandReceiptService(
             return CommandAcquireResult.InProgress(Duration.between(now, current.leaseDeadline))
         }
 
-        val taken =
-            repository.takeover(
-                current = current,
-                ownerToken = ownerToken,
-                now = now,
-                leaseDeadline = now.plus(receiptProperties.lease),
-                retentionDeadline = now.plus(receiptProperties.retention),
-            )
+        val taken = repository.takeover(
+            current = current,
+            ownerToken = ownerToken,
+            now = now,
+            leaseDeadline = now.plus(receiptProperties.lease),
+            retentionDeadline = now.plus(receiptProperties.retention),
+        )
         current = repository.find(scope) ?: error("command receipt disappeared during takeover")
+
         return if (taken) {
             CommandAcquireResult.Acquired(current, takeover = true)
         } else {
@@ -118,11 +123,23 @@ class CommandReceiptService(
 
     @Transactional
     fun succeed(receiptId: UUID, ownerToken: UUID, httpStatus: Int, response: String): Boolean =
-        complete(receiptId, ownerToken, CommandReceiptStatus.SUCCEEDED, httpStatus, response)
+        complete(
+            receiptId = receiptId,
+            ownerToken = ownerToken,
+            status = CommandReceiptStatus.SUCCEEDED,
+            httpStatus = httpStatus,
+            response = response
+        )
 
     @Transactional
     fun fail(receiptId: UUID, ownerToken: UUID, httpStatus: Int, response: String): Boolean =
-        complete(receiptId, ownerToken, CommandReceiptStatus.FAILED, httpStatus, response)
+        complete(
+            receiptId = receiptId,
+            ownerToken = ownerToken,
+            status = CommandReceiptStatus.FAILED,
+            httpStatus = httpStatus,
+            response = response
+        )
 
     private fun complete(
         receiptId: UUID,
@@ -131,29 +148,34 @@ class CommandReceiptService(
         httpStatus: Int,
         response: String,
     ): Boolean {
-        response.toByteArray(UTF_8).size.requireInRange(
+        response.toUtf8Bytes().size.requireInRange(
             0,
             properties.commandReceipt.terminalResponseBytes,
             "terminalResponse.bytes",
         )
         httpStatus.requireInRange(MIN_HTTP_STATUS, MAX_HTTP_STATUS, "httpStatus")
+
         val now = clock.instant()
-        return repository.complete(CommandReceiptCompletion(
-            receiptId = receiptId,
-            ownerToken = ownerToken,
-            status = status,
-            httpStatus = httpStatus,
-            response = response,
-            now = now,
-            retentionDeadline = now.plus(properties.commandReceipt.retention),
-        ))
+        return repository.complete(
+            CommandReceiptCompletion(
+                receiptId = receiptId,
+                ownerToken = ownerToken,
+                status = status,
+                httpStatus = httpStatus,
+                response = response,
+                now = now,
+                retentionDeadline = now + properties.commandReceipt.retention,
+            )
+        )
     }
 
     @Transactional
     fun cleanupExpiredTerminal(limit: Int = DEFAULT_CLEANUP_BATCH_SIZE): Int {
         limit.requireInRange(1, MAX_CLEANUP_BATCH_SIZE, "limit")
+
         return repository.deleteExpiredTerminalBatch(clock.instant(), limit)
     }
 }
 
-private fun Duration.coerceAtLeast(minimum: Duration): Duration = if (this < minimum) minimum else this
+private fun Duration.coerceAtLeast(minimum: Duration): Duration =
+    if (this < minimum) minimum else this

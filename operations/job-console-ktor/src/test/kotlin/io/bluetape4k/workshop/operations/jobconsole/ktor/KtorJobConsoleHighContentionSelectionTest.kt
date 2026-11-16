@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionContractLoader
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionMode
@@ -8,6 +9,8 @@ import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
 class KtorJobConsoleHighContentionSelectionTest {
+
+    companion object: KLogging()
 
     @Test
     fun `every declared Job profile has exactly one Ktor live action`() {
@@ -26,7 +29,6 @@ class KtorJobConsoleHighContentionSelectionTest {
 
         KtorJobConsoleProfileAction.entries
             .map { it.profileId }
-            .toSet()
-            .shouldBeEqualTo(manifestProfileIds)
+            .toSet() shouldBeEqualTo manifestProfileIds
     }
 }

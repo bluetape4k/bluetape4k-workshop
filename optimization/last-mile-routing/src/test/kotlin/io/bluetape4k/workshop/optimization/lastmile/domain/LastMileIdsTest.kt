@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.optimization.lastmile.domain
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class LastMileIdsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `identifiers reject unbounded and unsafe values`() {

@@ -9,7 +9,7 @@ import java.io.Serializable
 data class TeamDTO(
     val id: Long,
     val name: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

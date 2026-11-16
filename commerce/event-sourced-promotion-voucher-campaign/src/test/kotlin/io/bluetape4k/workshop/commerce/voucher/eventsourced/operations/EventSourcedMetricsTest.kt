@@ -6,14 +6,19 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
-import org.junit.jupiter.api.Test
 import io.mockk.every
 import io.mockk.mockk
-import java.time.Duration
+import org.junit.jupiter.api.Test
 
 internal class EventSourcedMetricsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `operational meters expose bounded projection and bulkhead evidence`() {
@@ -28,18 +33,18 @@ internal class EventSourcedMetricsTest {
         metrics.bind(gate)
         metrics.bind(hikari)
 
-        metrics.projectionLag(events = 12, age = Duration.ofSeconds(60), checkpointStalled = Duration.ofSeconds(30))
+        metrics.projectionLag(events = 12, age = 60.seconds(), checkpointStalled = 30.seconds())
         metrics.retried()
         metrics.rebuildProgress(0.5, ProjectionGenerationState.BUILDING)
-        metrics.rebuildCompleted(Duration.ofSeconds(2), OperatorAuditOutcome.APPLIED)
-        metrics.commandTerminal(status = 201, duration = Duration.ofMillis(12))
-        metrics.appendCommitted(eventCount = 3, duration = Duration.ofMillis(8))
-        metrics.streamHeadWait(Duration.ofMillis(3))
-        metrics.appendFenceWait(Duration.ofMillis(2))
+        metrics.rebuildCompleted(2.seconds(), OperatorAuditOutcome.APPLIED)
+        metrics.commandTerminal(status = 201, duration = 12.millis())
+        metrics.appendCommitted(eventCount = 3, duration = 8.millis())
+        metrics.streamHeadWait(3.millis())
+        metrics.appendFenceWait(2.millis())
         metrics.replay(events = 250, bytes = 32_000)
         metrics.projectionBatch(events = 200, bytes = 2_000_000)
-        metrics.maintenanceQueue(wait = Duration.ofMillis(100), depth = 4)
-        metrics.rebuildEta(Duration.ofMinutes(3))
+        metrics.maintenanceQueue(wait = 100.millis(), depth = 4)
+        metrics.rebuildEta(3.minutes())
         gate.withPermit(EventSourcedDatabaseLane.FOREGROUND) {
             registry.get("voucher_db_bulkhead_active").gauge().value() shouldBeEqualTo 1.0
         }
@@ -65,10 +70,13 @@ internal class EventSourcedMetricsTest {
         registry.get("voucher_db_permit_utilization").gauge().value().shouldBeGreaterOrEqualTo(0.0)
         registry.get("voucher_hikari_active").gauge().value() shouldBeEqualTo 2.0
         registry.get("voucher_hikari_waiting").gauge().value() shouldBeEqualTo 3.0
-        registry.find("voucher_rebuild_duration_seconds").tag("outcome", "APPLIED").timer()
+
+        registry.find("voucher_rebuild_duration_seconds").tag("outcome", "APPLIED")
+            .timer()
             .shouldNotBeNull()
             .count() shouldBeEqualTo 1L
-        registry.get("voucher_db_bulkhead_queued").gauge().value().shouldBeGreaterOrEqualTo(0.0)
+
+        registry.get("voucher_db_bulkhead_queued").gauge().value() shouldBeGreaterOrEqualTo 0.0
     }
 
     @Test
@@ -92,19 +100,23 @@ internal class EventSourcedMetricsTest {
             .tag("reasonClass", "HANDLER_REJECTED")
             .gauge()
             .value() shouldBeEqualTo 1.0
+
         registry.get("voucher_projection_poison_events")
             .tag("reasonClass", "UNKNOWN")
             .gauge()
             .value() shouldBeEqualTo 1.0
+
         registry.meters
             .flatMap { meter -> meter.id.tags.map { tag -> "${tag.key}=${tag.value}" } }
             .joinToString() shouldNotContain "raw-user-device-ip-token"
 
         metrics.failedPoisons(emptyMap())
+
         registry.get("voucher_projection_poison_events")
             .tag("reasonClass", "HANDLER_REJECTED")
             .gauge()
             .value() shouldBeEqualTo 0.0
+
         registry.get("voucher_projection_poison_events")
             .tag("reasonClass", "UNKNOWN")
             .gauge()

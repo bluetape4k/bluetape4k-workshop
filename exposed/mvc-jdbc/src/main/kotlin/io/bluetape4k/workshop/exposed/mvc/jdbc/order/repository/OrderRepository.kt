@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.order.repository
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.OrderDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.PlaceOrderRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.mapper.toOrderDTO
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class OrderRepository {
+
+    companion object: KLogging()
 
     fun findAll(): List<OrderDTO> =
         OrderTable.selectAll().map { it.toOrderDTO() }
@@ -25,6 +28,11 @@ class OrderRepository {
         val id = OrderTable.insert {
             it[customerId] = req.customerId
         }[OrderTable.id]
-        return findById(id) ?: throw NoSuchElementException("Order $id not found after insert")
+
+        return OrderDTO(
+            id = id,
+            customerId = req.customerId,
+        )
+        // return findById(id) ?: throw NoSuchElementException("Order $id not found after insert")
     }
 }

@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.jackson3.writeAsString
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import tools.jackson.module.kotlin.readValue
 

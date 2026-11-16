@@ -4,6 +4,7 @@ import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireGe
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import java.io.Serializable
 import java.nio.charset.StandardCharsets.UTF_8
@@ -109,8 +110,7 @@ internal class EventSourcedHmacKeyRing(
         value: String,
     ): KeyedDigest =
         digest(
-            key =
-                keysByVersion[keyVersion.requirePositiveNumber("keyVersion")]
+            key = keysByVersion[keyVersion.requirePositiveNumber("keyVersion")]
                     ?: throw EventSourcedKeyUnavailableException(keyVersion),
             purpose = purpose,
             tenantId = tenantId,
@@ -145,8 +145,7 @@ internal class EventSourcedHmacKeyRing(
     ): KeyedDigest {
         val validDomain = domain.requireNotBlank("hmac.domain")
         val validValue = value.requireNotBlank("hmac.value")
-        val message =
-            listOf(
+        val message = listOf(
                 HMAC_CONTEXT_VERSION,
                 purpose.value,
                 key.version,
@@ -156,7 +155,7 @@ internal class EventSourcedHmacKeyRing(
             ).joinToString("\u0000")
 
         return KeyedDigest(
-            value = HexFormat.of().formatHex(key.compute(message.toByteArray(UTF_8))),
+            value = HexFormat.of().formatHex(key.compute(message.toUtf8Bytes())),
             keyVersion = key.version,
         )
     }

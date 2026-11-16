@@ -1,23 +1,22 @@
 package io.bluetape4k.workshop.elasticsearch.controller
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.trace
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchApplicationTest
 import io.bluetape4k.workshop.elasticsearch.domain.dto.toBook
 import io.bluetape4k.workshop.elasticsearch.domain.dto.toModifyBookRequest
 import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import io.bluetape4k.workshop.elasticsearch.domain.service.BookService
-import io.bluetape4k.spring.tests.httpDelete
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
-import io.bluetape4k.spring.tests.httpPut
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,7 +28,7 @@ class BookControllerTest(
     @param:Autowired private val bookService: BookService,
 ): AbstractElasticsearchApplicationTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val BOOK_PATH = "/v1/books"
     }
 

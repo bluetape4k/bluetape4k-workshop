@@ -1,6 +1,12 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.PriceEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.UsageCommandService
@@ -8,6 +14,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageComm
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxOutcome
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceResult
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,12 +25,27 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Tag("integration")
 @SpringBootTest
 @Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class UsageAcceptancePostgresIntegrationTest {
+
+    private companion object: KLogging() {
+        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
+            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
+            registry.add("management.datadog.metrics.export.enabled") { false }
+        }
+    }
+
     @Autowired
     private lateinit var priceEvidence: PriceEvidenceService
 
@@ -48,7 +70,9 @@ class UsageAcceptancePostgresIntegrationTest {
     @Test
     fun `persisted price evidence accepts one source event and replays its duplicate without a second outbox row`() {
         val meterCode = "api_calls_${UUID.randomUUID()}"
-        priceEvidence.record(PriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), NOW))
+        val evidence = PriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), NOW)
+        priceEvidence.record(evidence)
+
         val usageCount = transaction { usageRecords.findAll().count() }
         val outboxCount = transaction { outbox.findAll().count() }
         val command = AcceptUsageCommand(
@@ -61,8 +85,8 @@ class UsageAcceptancePostgresIntegrationTest {
             occurredAt = NOW,
         )
 
-        usage.accept(command).replayed shouldBeEqualTo false
-        usage.accept(command).replayed shouldBeEqualTo true
+        usage.accept(command).replayed.shouldBeFalse()
+        usage.accept(command).replayed.shouldBeTrue()
 
         transaction { usageRecords.findAll().count() } shouldBeEqualTo usageCount + 1
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount + 1
@@ -79,11 +103,12 @@ class UsageAcceptancePostgresIntegrationTest {
             payloadDigest = "a".repeat(64),
             evidence = PriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), NOW),
         )
+        log.debug { "event=$event" }
 
         priceEvidence.record(event) shouldBeEqualTo PriceEvidenceInboxOutcome.APPLIED
         priceEvidence.record(event) shouldBeEqualTo PriceEvidenceInboxOutcome.DUPLICATE
         priceEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo
-            PriceEvidenceInboxOutcome.QUARANTINED
+                PriceEvidenceInboxOutcome.QUARANTINED
 
         transaction { priceEvidenceInbox.findAll().count() } shouldBeEqualTo 1
     }
@@ -91,8 +116,10 @@ class UsageAcceptancePostgresIntegrationTest {
     @Test
     fun `an expired Usage outbox claim can be reclaimed while an active claim cannot`() {
         val meterCode = "api_calls_${UUID.randomUUID()}"
-        priceEvidence.record(PriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), NOW))
-        val result = usage.accept(
+        val evidence = PriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), NOW)
+        priceEvidence.record(evidence)
+
+        val result: UsageAcceptanceResult = usage.accept(
             AcceptUsageCommand(
                 tenantId = "tenant-a",
                 sourceSystem = "meter-agent",
@@ -103,28 +130,22 @@ class UsageAcceptancePostgresIntegrationTest {
                 occurredAt = NOW,
             ),
         )
+        log.debug { "result=$result" }
 
-        outboxJournal.claim("worker-a", NOW, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo true
-        outboxJournal.claim("worker-b", NOW, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo false
-        outboxJournal.claim("worker-b", NOW.plusSeconds(31), 100)
+        outboxJournal.claim("worker-a", NOW, 100)
             .map { it.eventId }
-            .contains(result.eventId) shouldBeEqualTo true
+            .contains(result.eventId).shouldBeTrue()
+
+        outboxJournal.claim("worker-b", NOW, 100)
+            .map { it.eventId }
+            .contains(result.eventId).shouldBeFalse()
+
+        outboxJournal.claim("worker-b", NOW + 31.seconds(), 100)
+            .map { it.eventId }
+            .contains(result.eventId).shouldBeTrue()
     }
 
-    private fun <T : Any> transaction(block: () -> T): T =
-        requireNotNull(TransactionTemplate(transactionManager).execute { block() })
+    private fun <T: Any> transaction(block: () -> T): T =
+        TransactionTemplate(transactionManager).execute { block() }.shouldNotBeNull()
 
-    private companion object {
-        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
-        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
-            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
-            registry.add("management.datadog.metrics.export.enabled") { false }
-        }
-    }
 }

@@ -3,15 +3,13 @@
 [한국어](README.ko.md) | English
 
 `messaging/kafka-reply` demonstrates a Spring Kafka request-reply flow. A WebFlux endpoint sends `ping` through
-`ReplyingKafkaTemplate`, `PongHandler` consumes the request from Kafka, and the reply is delivered back through the
-template's reply listener container.
+`ReplyingKafkaTemplate`, `PongHandler` consumes the request from Kafka, and the reply is delivered back through the template's reply listener container.
 
 ## Architecture
 
 ![Kafka reply architecture](../../docs/images/readme-diagrams/messaging-kafka-reply-readme-architecture-01.png)
 
-The example intentionally keeps the protocol primitive in Spring Kafka. bluetape4k is used around that primitive for
-coroutine/Future ergonomics, logging, `uninitialized()` injection fields, and the Testcontainers Kafka server.
+The example intentionally keeps the protocol primitive in Spring Kafka. bluetape4k is used around that primitive for coroutine/Future ergonomics, logging, `uninitialized()` injection fields, and the Testcontainers Kafka server.
 
 ## Request-Reply Flow
 
@@ -24,24 +22,24 @@ coroutine/Future ergonomics, logging, `uninitialized()` injection fields, and th
 
 ## Key Components
 
-| Component | Role |
-|---|---|
-| `KafkaApplicationKt` | Starts `PingApplication` and `PongApplication` in one process for the workshop demo. |
-| `PingController` | Exposes `GET /ping`, sends `ping`, logs success/failure callbacks, and returns the reply body. |
-| `ReplyingKafkaTemplate<String, String, String>` | Sends the request record and correlates the reply consumed by the reply listener container. |
-| `listenerContainer("replies")` | Dedicated reply consumer container with group id `repliesGroup`; it is wired into `ReplyingKafkaTemplate`. |
-| `PongHandler` | Listens on `pingpong` and returns `pong at <time>` with `@SendTo`. |
-| `KafkaServer.Launcher.kafka` | Provides the Testcontainers Kafka bootstrap server used by both applications. |
+| Component                                       | Role                                                                                                       |
+|-------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `KafkaApplicationKt`                            | Starts `PingApplication` and `PongApplication` in one process for the workshop demo.                       |
+| `PingController`                                | Exposes `GET /ping`, sends `ping`, logs success/failure callbacks, and returns the reply body.             |
+| `ReplyingKafkaTemplate<String, String, String>` | Sends the request record and correlates the reply consumed by the reply listener container.                |
+| `listenerContainer("replies")`                  | Dedicated reply consumer container with group id `repliesGroup`; it is wired into `ReplyingKafkaTemplate`. |
+| `PongHandler`                                   | Listens on `pingpong` and returns `pong at <time>` with `@SendTo`.                                         |
+| `KafkaServer.Launcher.kafka`                    | Provides the Testcontainers Kafka bootstrap server used by both applications.                              |
 
 ## bluetape4k Usage
 
-| Feature | Where | Why it matters |
-|---|---|---|
-| `bluetape4k-kafka4` | `build.gradle.kts` | Keeps the example on the Spring Kafka 4-compatible bluetape4k artifact line. |
-| `CompletableFuture.onSuccess/onFailure` | `PingController.ping()` | Adds readable success/failure callbacks before awaiting the reply. |
-| `kotlinx.coroutines.future.await()` | `PingController.ping()` | Lets the suspend endpoint await both send and reply futures without blocking the event loop. |
-| `uninitialized()` | `PingController.template` | Avoids a nullable or `lateinit` property for Spring injection. |
-| `KLoggingChannel` | Application and handler companions | Keeps structured logs consistent with other bluetape4k examples. |
+| Feature                                 | Where                              | Why it matters                                                                               |
+|-----------------------------------------|------------------------------------|----------------------------------------------------------------------------------------------|
+| `bluetape4k-kafka4`                     | `build.gradle.kts`                 | Keeps the example on the Spring Kafka 4-compatible bluetape4k artifact line.                 |
+| `CompletableFuture.onSuccess/onFailure` | `PingController.ping()`            | Adds readable success/failure callbacks before awaiting the reply.                           |
+| `kotlinx.coroutines.future.await()`     | `PingController.ping()`            | Lets the suspend endpoint await both send and reply futures without blocking the event loop. |
+| `uninitialized()`                       | `PingController.template`          | Avoids a nullable or `lateinit` property for Spring injection.                               |
+| `KLoggingChannel`                       | Application and handler companions | Keeps structured logs consistent with other bluetape4k examples.                             |
 
 ## Request Handler
 
@@ -72,10 +70,8 @@ fun handle(request: String): String {
 
 ## Producer callbackFlow bridge
 
-The `KafkaProducerFlow` example adapts Kafka's callback-based `Producer.send` API to a cold Kotlin `Flow` without
-leaking a producer across collections. Each collection creates and owns one producer, limits outstanding sends with
-`maxInFlight`, and keeps callback metadata in the bounded downstream channel. Normal completion and cancellation
-both wait for in-flight callbacks before a bounded `flush`/`close`; a late callback cannot re-open a completed flow.
+The `KafkaProducerFlow` example adapts Kafka's callback-based `Producer.send` API to a cold Kotlin `Flow` without leaking a producer across collections. Each collection creates and owns one producer, limits outstanding sends with
+`maxInFlight`, and keeps callback metadata in the bounded downstream channel. Normal completion and cancellation both wait for in-flight callbacks before a bounded `flush`/`close`; a late callback cannot re-open a completed flow.
 
 ```kotlin
 val metadataFlow = KafkaProducerFlow(
@@ -89,9 +85,7 @@ metadataFlow.collect { metadata ->
 }
 ```
 
-`KafkaProducerFlowTest` covers successful and failed callbacks, malformed callback payloads, bounded backpressure,
-collector cancellation with late callbacks, primary-cause/suppressed-cleanup preservation, and a Kafka Testcontainers
-round trip. Run the complete example with:
+`KafkaProducerFlowTest` covers successful and failed callbacks, malformed callback payloads, bounded backpressure, collector cancellation with late callbacks, primary-cause/suppressed-cleanup preservation, and a Kafka Testcontainers round trip. Run the complete example with:
 
 ```bash
 ./gradlew :messaging-kafka-reply:test

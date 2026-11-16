@@ -2,15 +2,15 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.author.repository
 
 import io.bluetape4k.exposed.core.ExposedCursorPage
 import io.bluetape4k.exposed.r2dbc.repository.LongR2dbcRepository
-import io.bluetape4k.exposed.r2dbc.repository.findCursorPage as findCursorPageExtension
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.schema.BookTable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
@@ -18,9 +18,12 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.springframework.stereotype.Repository
+import io.bluetape4k.exposed.r2dbc.repository.findCursorPage as findCursorPageExtension
 
 @Repository
-class BookRepository : LongR2dbcRepository<BookDTO> {
+class BookRepository: LongR2dbcRepository<BookDTO> {
+
+    companion object: KLoggingChannel()
 
     override val table = BookTable
 

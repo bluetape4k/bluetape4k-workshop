@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 internal class EventSourcedPostgresTestDatabase private constructor(
     val dataSource: HikariDataSource,
     val database: Database,
-) : AutoCloseable {
+): AutoCloseable {
     override fun close() = dataSource.close()
 
     companion object {
@@ -17,12 +17,11 @@ internal class EventSourcedPostgresTestDatabase private constructor(
             poolName: String,
             maximumPoolSize: Int = 4,
         ): EventSourcedPostgresTestDatabase {
-            val dataSource =
-                postgres.getHikariDataSource {
-                    this.poolName = poolName
-                    this.maximumPoolSize = maximumPoolSize
-                    minimumIdle = 0
-                }
+            val dataSource = postgres.getHikariDataSource {
+                this.poolName = poolName
+                this.maximumPoolSize = maximumPoolSize
+                minimumIdle = 0
+            }
             return EventSourcedPostgresTestDatabase(dataSource, Database.connect(dataSource))
         }
     }

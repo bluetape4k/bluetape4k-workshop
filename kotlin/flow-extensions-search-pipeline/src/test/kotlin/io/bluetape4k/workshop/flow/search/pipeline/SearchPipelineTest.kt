@@ -3,36 +3,40 @@ package io.bluetape4k.workshop.flow.search.pipeline
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.junit5.coroutines.runSuspendTest
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
 import java.io.Serializable
-import java.util.Collections
-import java.util.Locale
+import java.util.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class SearchPipelineTest {
+
+    companion object: KLogging()
 
     private fun settings(
         tenantId: String = "tenant-a",
@@ -48,7 +52,7 @@ class SearchPipelineTest {
     )
 
     @Test
-    fun `buffering debounce emits latest query from a typing burst`() = runSuspendTest {
+    fun `buffering debounce emits latest query from a typing burst`() = runTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
         val queries = flow {
@@ -57,7 +61,12 @@ class SearchPipelineTest {
             emit("red")
         }
 
-        val results = pipeline.search(queries, flowOf(settings()), flowOf(), 100.milliseconds).toList()
+        val results = pipeline.search(
+            queries,
+            flowOf(settings()),
+            flowOf(),
+            100.milliseconds
+        ).toList()
 
         results shouldHaveSize 1
         results.single().request.query.text shouldBeEqualTo "red"
@@ -65,14 +74,19 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `large burst still starts one search`() = runSuspendTest {
+    fun `large burst still starts one search`() = runTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
         val queries = flow {
             repeat(1_000) { emit("red-$it") }
         }
 
-        val results = pipeline.search(queries, flowOf(settings()), flowOf(), 100.milliseconds).toList()
+        val results = pipeline.search(
+            queries,
+            flowOf(settings()),
+            flowOf(),
+            100.milliseconds
+        ).toList()
 
         results shouldHaveSize 1
         adapter.requests shouldHaveSize 1
@@ -80,7 +94,7 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `idle timeout returns a request-aware fallback`() = runSuspendTest {
+    fun `idle timeout returns a request-aware fallback`() = runTest {
         val cancelled = AtomicBoolean(false)
         val adapter = RecordingSearchAdapter(
             delayByQuery = mapOf("red" to 100),
@@ -104,7 +118,7 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `idle fallback leaves an adapter result unchanged when it is timely`() = runSuspendTest {
+    fun `idle fallback leaves an adapter result unchanged when it is timely`() = runTest {
         val adapter = RecordingSearchAdapter(delayByQuery = mapOf("red" to 20))
         val pipeline = SearchPipeline(adapter)
 
@@ -122,7 +136,7 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `adapter failure is propagated instead of invoking idle fallback`() = runSuspendTest {
+    fun `adapter failure is propagated instead of invoking idle fallback`() = runTest {
         val fallbackCalls = AtomicInteger(0)
         val boom = IllegalStateException("search failed for red")
         val adapter = RecordingSearchAdapter(failForQueries = setOf("red"), failure = boom)
@@ -146,7 +160,7 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `collector cancellation cancels idle adapter without fallback`() = runSuspendTest {
+    fun `collector cancellation cancels idle adapter without fallback`() = runTest {
         val cancelled = AtomicBoolean(false)
         val fallbackCalls = AtomicInteger(0)
         val adapter = RecordingSearchAdapter(
@@ -168,7 +182,7 @@ class SearchPipelineTest {
             }.toList()
         }
 
-        delay(20)
+        delay(20.milliseconds)
         collection.cancelAndJoin()
 
         cancelled.get().shouldBeTrue()
@@ -176,14 +190,26 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `latest settings are joined with each debounced query`() = runSuspendTest {
+    fun `latest settings are joined with each debounced query`() = runTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
         val settings = MutableStateFlow(settings(tenantId = "tenant-a", mode = SearchMode.PREFIX))
 
-        val first = pipeline.search(flowOf("red"), settings, flowOf(), 10.milliseconds).take(1).toList()
+        val first = pipeline.search(
+            flowOf("red"),
+            settings,
+            flowOf(),
+            10.milliseconds
+        ).take(1).toList()
+
         settings.value = settings(tenantId = "tenant-b", mode = SearchMode.EXACT)
-        val second = pipeline.search(flowOf("redis"), settings, flowOf(), 10.milliseconds).take(1).toList()
+
+        val second = pipeline.search(
+            flowOf("redis"),
+            settings,
+            flowOf(),
+            10.milliseconds
+        ).take(1).toList()
 
         first.single().request.settings.tenantId shouldBeEqualTo "tenant-a"
         second.single().request.settings.tenantId shouldBeEqualTo "tenant-b"
@@ -191,50 +217,60 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `query before settings is dropped permanently and next query uses settings snapshot`() = runSuspendTest {
+    fun `query before settings is dropped permanently and next query uses settings snapshot`() = runTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
         val queries = MutableSharedFlow<String>()
         val settings = MutableSharedFlow<SearchSettings>()
 
         val collection = async {
-            pipeline.search(queries, settings, flowOf(), 20.milliseconds)
+            pipeline
+                .search(
+                    queries,
+                    settings,
+                    flowOf(),
+                    20.milliseconds
+                )
                 .take(1)
                 .toList()
         }
 
         queries.emit("lost")
-        delay(30)
+        delay(30.milliseconds)
         adapter.requests.shouldBeEmpty()
 
         settings.emit(settings(tenantId = "tenant-ready"))
-        delay(1)
+        delay(1.milliseconds)
         adapter.requests.shouldBeEmpty()
 
         queries.emit("red")
-        delay(30)
+        delay(30.milliseconds)
 
         val results = collection.await()
+        log.debug { "results=$results" }
+        results shouldHaveSize 1
         results.single().request.query.text shouldBeEqualTo "red"
         results.single().request.settings.tenantId shouldBeEqualTo "tenant-ready"
         adapter.requests.map { it.query.text } shouldBeEqualTo listOf("red")
     }
 
     @Test
-    fun `settings flow failure propagates downstream`() = runSuspendTest {
+    fun `settings flow failure propagates downstream`() = runTest {
         val boom = IllegalStateException("settings unavailable")
         val pipeline = SearchPipeline(RecordingSearchAdapter())
         val settings = flow<SearchSettings> { throw boom }
 
         val failure = assertFailsWith<IllegalStateException> {
-            pipeline.search(flowOf("red"), settings, flowOf(), 10.milliseconds).toList()
+            pipeline
+                .search(flowOf("red"), settings, flowOf(), 10.milliseconds)
+                .toList()
         }
 
         failure.message shouldBeEqualTo boom.message
     }
 
     @Test
-    fun `newer query cancels stale in-flight search`() = runSuspendTest {
+    fun `newer query cancels stale in-flight search`() = runTest {
         val firstCancelled = AtomicBoolean(false)
         val adapter = RecordingSearchAdapter(
             delayByQuery = mapOf("red" to 1_000, "redis" to 0),
@@ -247,18 +283,20 @@ class SearchPipelineTest {
         val pipeline = SearchPipeline(adapter)
         val queries = flow {
             emit("red")
-            delay(50)
+            delay(50.milliseconds)
             emit("redis")
         }
 
-        val results = pipeline.search(queries, flowOf(settings()), flowOf(), 10.milliseconds).toList()
+        val results = pipeline
+            .search(queries, flowOf(settings()), flowOf(), 10.milliseconds)
+            .toList()
 
         results.map { it.request.query.text } shouldBeEqualTo listOf("redis")
         firstCancelled.get().shouldBeTrue()
     }
 
     @Test
-    fun `cancelled stale request cannot emit or fail downstream later`() = runSuspendTest {
+    fun `cancelled stale request cannot emit or fail downstream later`() = runTest {
         val firstCanContinue = CompletableDeferred<Unit>()
         val firstCancelled = AtomicBoolean(false)
         val adapter = RecordingSearchAdapter(
@@ -273,11 +311,14 @@ class SearchPipelineTest {
         val pipeline = SearchPipeline(adapter)
         val queries = flow {
             emit("red")
-            delay(50)
+            delay(50.milliseconds)
             emit("redis")
         }
 
-        val results = pipeline.search(queries, flowOf(settings()), flowOf(), 10.milliseconds).toList()
+        val results = pipeline
+            .search(queries, flowOf(settings()), flowOf(), 10.milliseconds)
+            .toList()
+
         firstCanContinue.complete(Unit)
 
         results.map { it.request.query.text } shouldBeEqualTo listOf("redis")
@@ -285,7 +326,7 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `session close cancels in-flight search`() = runSuspendTest {
+    fun `session close cancels in-flight search`() = runTest {
         val cancelled = AtomicBoolean(false)
         val sessionClosed = MutableSharedFlow<Unit>()
         val adapter = RecordingSearchAdapter(
@@ -295,19 +336,24 @@ class SearchPipelineTest {
         val pipeline = SearchPipeline(adapter)
 
         val collection = async {
-            pipeline.search(flowOf("red"), flowOf(settings()), sessionClosed, 10.milliseconds).toList()
+            pipeline.search(
+                queries = flowOf("red"),
+                settings = flowOf(settings()),
+                sessionClosed = sessionClosed,
+                debounce = 10.milliseconds
+            ).toList()
         }
 
-        delay(20)
+        delay(20.milliseconds)
         sessionClosed.emit(Unit)
-        delay(1)
+        delay(1.milliseconds)
 
         collection.await().shouldBeEmpty()
         cancelled.get().shouldBeTrue()
     }
 
     @Test
-    fun `session close source is collected once and shared across stop observers`() = runSuspendTest {
+    fun `session close source is collected once and shared across stop observers`() = runTest {
         val subscriptions = AtomicInteger(0)
         val close = MutableSharedFlow<Unit>()
         val sessionClosed = flow {
@@ -317,19 +363,21 @@ class SearchPipelineTest {
         val pipeline = SearchPipeline(RecordingSearchAdapter(delayByQuery = mapOf("red" to 1_000)))
 
         val collection = async {
-            pipeline.search(flowOf("red"), flowOf(settings()), sessionClosed, 10.milliseconds).toList()
+            pipeline.search(flowOf("red"), flowOf(settings()), sessionClosed, 10.milliseconds)
+                .log("Search")
+                .toList()
         }
 
-        delay(20)
+        delay(20.milliseconds)
         close.emit(Unit)
-        delay(1)
+        delay(1.milliseconds)
 
         collection.await().shouldBeEmpty()
         subscriptions.get() shouldBeEqualTo 1
     }
 
     @Test
-    fun `collector cancellation cleans up active search and stop observer`() = runSuspendTest {
+    fun `collector cancellation cleans up active search and stop observer`() = runTest {
         val searchCancelled = AtomicBoolean(false)
         val adapter = RecordingSearchAdapter(
             delayByQuery = mapOf("red" to 1_000),
@@ -339,28 +387,40 @@ class SearchPipelineTest {
         val sessionClosed = MutableSharedFlow<Unit>()
 
         val job = launch {
-            pipeline.search(flowOf("red"), flowOf(settings()), sessionClosed, 10.milliseconds).toList()
-        }
+            pipeline.search(
+                flowOf("red"),
+                flowOf(settings()),
+                sessionClosed,
+                10.milliseconds
+            ).toList()
+        }.log("Job")
 
-        delay(20)
+        delay(20.milliseconds)
         job.cancelAndJoin()
 
         searchCancelled.get().shouldBeTrue()
     }
 
     @Test
-    fun `upstream failure is propagated after buffered query handling`() = runSuspendTest {
+    fun `upstream failure is propagated after buffered query handling`() = runTest {
         val boom = IllegalStateException("query source failed")
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
         val queries = flow {
             emit("red")
-            delay(20)
+            delay(20.milliseconds)
             throw boom
         }
 
         val failure = assertFailsWith<IllegalStateException> {
-            pipeline.search(queries, flowOf(settings()), flowOf(), 10.milliseconds).toList()
+            pipeline
+                .search(
+                    queries = queries,
+                    settings = flowOf(settings()),
+                    sessionClosed = flowOf(),
+                    debounce = 10.milliseconds
+                )
+                .toList()
         }
 
         failure.message shouldBeEqualTo boom.message
@@ -368,18 +428,25 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `blank input is ignored before search starts`() = runSuspendTest {
+    fun `blank input is ignored before search starts`() = runTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
 
-        val results = pipeline.search(flowOf("", "   ", "red"), flowOf(settings()), flowOf(), 10.milliseconds).toList()
+        val results = pipeline
+            .search(
+                queries = flowOf("", "   ", "red"),
+                settings = flowOf(settings()),
+                sessionClosed = flowOf(),
+                debounce = 10.milliseconds
+            )
+            .toList()
 
         results shouldHaveSize 1
         adapter.requests.map { it.query.text } shouldBeEqualTo listOf("red")
     }
 
     @Test
-    fun `domain values reject invalid query settings and limits`() = runSuspendTest {
+    fun `domain values reject invalid query settings and limits`() = runTest {
         assertFailsWith<IllegalArgumentException> { SearchQuery("   ") }
         assertFailsWith<IllegalArgumentException> { SearchQuery("x".repeat(65)) }
         assertFailsWith<IllegalArgumentException> { settings(tenantId = "   ") }
@@ -389,13 +456,13 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `domain construction stores trimmed query and tenant values`() = runSuspendTest {
+    fun `domain construction stores trimmed query and tenant values`() = runTest {
         SearchQuery("  red  ").text shouldBeEqualTo "red"
         settings(tenantId = "  tenant-a  ").tenantId shouldBeEqualTo "tenant-a"
     }
 
     @Test
-    fun `settings expose unmodifiable feature flags`() = runSuspendTest {
+    fun `settings expose unmodifiable feature flags`() = runTest {
         val source = mutableSetOf("prefix-rank")
         val settings = settings(featureFlags = source)
 
@@ -409,25 +476,39 @@ class SearchPipelineTest {
     }
 
     @Test
-    fun `debounce duration must be positive`() = runSuspendTest {
+    fun `debounce duration must be positive`() = runTest {
         val pipeline = SearchPipeline(RecordingSearchAdapter())
 
         assertFailsWith<IllegalArgumentException> {
-            pipeline.search(flowOf("red"), flowOf(settings()), flowOf(), 0.milliseconds).toList()
+            pipeline
+                .search(
+                    queries = flowOf("red"),
+                    settings = flowOf(settings()),
+                    sessionClosed = flowOf(),
+                    debounce = 0.milliseconds
+                )
+                .toList()
         }
     }
 
     @Test
-    fun `debounce duration must be finite`() = runSuspendTest {
+    fun `debounce duration must be finite`() = runTest {
         val pipeline = SearchPipeline(RecordingSearchAdapter())
 
         assertFailsWith<IllegalArgumentException> {
-            pipeline.search(flowOf("red"), flowOf(settings()), flowOf(), Duration.INFINITE).toList()
+            pipeline
+                .search(
+                    queries = flowOf("red"),
+                    settings = flowOf(settings()),
+                    sessionClosed = flowOf(),
+                    debounce = Duration.INFINITE
+                )
+                .toList()
         }
     }
 
     @Test
-    fun `idle timeout must be positive and finite`() = runSuspendTest {
+    fun `idle timeout must be positive and finite`() = runTest {
         val pipeline = SearchPipeline(RecordingSearchAdapter())
 
         assertFailsWith<IllegalArgumentException> {
@@ -437,7 +518,9 @@ class SearchPipelineTest {
                 flowOf(),
                 10.milliseconds,
                 Duration.ZERO,
-            ) { request -> SearchResult(request, emptyList(), "idle-fallback") }
+            ) { request ->
+                SearchResult(request, emptyList(), "idle-fallback")
+            }.collect()
         }
         assertFailsWith<IllegalArgumentException> {
             pipeline.searchWithIdleFallback(
@@ -446,23 +529,32 @@ class SearchPipelineTest {
                 flowOf(),
                 10.milliseconds,
                 Duration.INFINITE,
-            ) { request -> SearchResult(request, emptyList(), "idle-fallback") }
+            ) { request ->
+                SearchResult(request, emptyList(), "idle-fallback")
+            }.collect()
         }
     }
 
     @Test
-    fun `regex looking query is treated as literal text`() = runSuspendTest {
+    fun `regex looking query is treated as literal text`() = runTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
 
-        val results = pipeline.search(flowOf(".*"), flowOf(settings(mode = SearchMode.EXACT)), flowOf(), 10.milliseconds).toList()
+        val results = pipeline
+            .search(
+                queries = flowOf(".*"),
+                settings = flowOf(settings(mode = SearchMode.EXACT)),
+                sessionClosed = flowOf(),
+                debounce = 10.milliseconds
+            )
+            .toList()
 
         results.single().hits.shouldBeEmpty()
         adapter.requests.single().query.text shouldBeEqualTo ".*"
     }
 
     @Test
-    fun `debug string rendering hides query tenant flags and hit titles`() = runSuspendTest {
+    fun `debug string rendering hides query tenant flags and hit titles`() = runTest {
         val result = SearchResult(
             request = SearchRequest(
                 query = SearchQuery("secret-query"),
@@ -474,25 +566,28 @@ class SearchPipelineTest {
 
         val rendered = result.toString() + result.hits.single().toString()
 
-        rendered.shouldContain("<redacted>")
-        rendered.contains("secret-query").shouldBeFalse()
-        rendered.contains("secret-tenant").shouldBeFalse()
-        rendered.contains("secret-flag").shouldBeFalse()
-        rendered.contains("Secret Title").shouldBeFalse()
-        rendered.contains("secret-source").shouldBeFalse()
+        log.debug { "rendered=$rendered" }
+        rendered shouldContain "<redacted>"
+        rendered shouldNotContain "secret-query"
+        rendered shouldNotContain "secret-tenant"
+        rendered shouldNotContain "secret-flag"
+        rendered shouldNotContain "Secret Title"
+        rendered shouldNotContain "secret-source"
     }
 
     @Test
-    fun `result limit caps hit materialization before returning hits`() = runSuspendTest {
+    fun `result limit caps hit materialization before returning hits`() = runTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
 
-        val results = pipeline.search(
-            queries = flowOf("re"),
-            settings = flowOf(settings(resultLimit = 2)),
-            sessionClosed = flowOf(),
-            debounce = 10.milliseconds,
-        ).toList()
+        val results = pipeline
+            .search(
+                queries = flowOf("re"),
+                settings = flowOf(settings(resultLimit = 2)),
+                sessionClosed = flowOf(),
+                debounce = 10.milliseconds,
+            )
+            .toList()
 
         results.single().hits shouldHaveSize 2
         adapter.materializedHits.get() shouldBeEqualTo 2
@@ -513,7 +608,7 @@ class SearchPipelineTest {
             requests += request
 
             try {
-                delayByQuery[request.query.text]?.let { delay(it) }
+                delayByQuery[request.query.text]?.let { delay(it.milliseconds) }
                 if (request.query.text in failForQueries) {
                     throw failure ?: IllegalStateException("search failed for ${request.query.text}")
                 }

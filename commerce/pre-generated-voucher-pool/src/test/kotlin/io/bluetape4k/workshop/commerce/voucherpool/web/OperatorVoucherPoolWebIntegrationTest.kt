@@ -1,9 +1,13 @@
-@file:Suppress("LargeClass", "LongMethod", "MagicNumber", "VarCouldBeVal")
+@file:Suppress("LargeClass", "LongMethod", "MagicNumber", "VarCouldBeVal", "SqlResolve")
 
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.jdbc.sql.singleInt
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionLimits
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionNamespace
@@ -14,10 +18,10 @@ import io.bluetape4k.workshop.commerce.voucherpool.application.CampaignBatchComm
 import io.bluetape4k.workshop.commerce.voucherpool.application.CampaignRevisionCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.CreateCampaignCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.CreateImportBatchCommand
-import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeAggregateType
-import io.bluetape4k.workshop.commerce.voucherpool.application.RevokePreviewSnapshot
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReservationService
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReserveVoucherCommand
+import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeAggregateType
+import io.bluetape4k.workshop.commerce.voucherpool.application.RevokePreviewSnapshot
 import io.bluetape4k.workshop.commerce.voucherpool.application.applied
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigrationRunner
@@ -32,22 +36,30 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.core.io.ClassPathResource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.ObjectMapper
 import java.sql.Timestamp
 import java.time.Instant
-import java.util.Locale
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.minutes
 
 @Import(OperatorVoucherPoolWebTestConfiguration::class)
-internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegrationTest() {
+internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegrationTest() {
+
+    private companion object: KLogging() {
+        const val TENANT = "tenant-operator-web"
+        const val PRINCIPAL = "principal-operator-web"
+        const val OPERATOR_SECRET = "test-operator-secret-0000000000000001"
+        const val OPERATOR_GUARD = "test-voucher-pool-operator-guard"
+    }
+
     @Autowired
     private lateinit var campaigns: CampaignBatchCommandService
 
@@ -66,26 +78,30 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
     @BeforeEach
     fun reset() {
         VoucherPoolMigrationRunner(
-            dataSource,
-            VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
-            537_011L,
+            dataSource = dataSource,
+            migration = VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
+            advisoryLockKey = 537_011L,
         ).migrate()
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { it.execute("TRUNCATE TABLE voucher_pool_campaigns CASCADE") }
+
+        dataSource.connection.use { conn ->
+            conn.createStatement().use {
+                it.execute("TRUNCATE TABLE voucher_pool_campaigns CASCADE")
+            }
         }
     }
 
     @Test
     fun `operator query routes expose safe tenant scoped projections`() {
         val fixture = activePool("projections")
-        val reservation =
-            reservations.reserve(
-                ReserveVoucherCommand(TENANT, fixture.campaignId, PRINCIPAL, "operator-web-reserve"),
-            ).applied()
+        val reservation = reservations.reserve(
+            ReserveVoucherCommand(TENANT, fixture.campaignId, PRINCIPAL, "operator-web-reserve"),
+        ).applied()
+
         expireReservation(reservation.reservationId)
 
         operatorGet("/operator/api/v1/batches/${fixture.batchId}")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectHeader().exists(REQUEST_ID_HEADER)
             .expectBody()
             .jsonPath("$.batchId").isEqualTo(fixture.batchId.toString())
@@ -97,7 +113,8 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
 
         operatorGet(
             "/operator/api/v1/pool-depth?campaignId=${fixture.campaignId}&batchId=${fixture.batchId}",
-        ).exchange().expectStatus().isOk
+        ).exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.counts.RESERVED").isEqualTo(1)
             .jsonPath("$.counts.AVAILABLE").isEqualTo(1)
@@ -105,7 +122,8 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .jsonPath("$.expiredButNotTerminalized").isEqualTo(1)
 
         operatorGet("/operator/api/v1/reservations/stuck?campaignId=${fixture.campaignId}&limit=1")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.items[0].reservationId").isEqualTo(reservation.reservationId.toString())
             .jsonPath("$.items[0].state").isEqualTo("ACTIVE")
@@ -118,17 +136,27 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val fixture = activePool("scope")
 
         operatorGet("/operator/api/v1/batches/${fixture.batchId}", tenant = "wrong-tenant")
-            .exchange().expectStatus().isNotFound
-            .expectBody().jsonPath("$.code").isEqualTo("RESOURCE_NOT_FOUND")
+            .exchange()
+            .expectStatus().isNotFound
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("RESOURCE_NOT_FOUND")
+
         operatorGet(
             "/operator/api/v1/pool-depth?campaignId=${fixture.campaignId}&batchId=${fixture.batchId}",
             tenant = "wrong-tenant",
-        ).exchange().expectStatus().isNotFound
+        )
+            .exchange()
+            .expectStatus().isNotFound
+
         operatorGet("/operator/api/v1/reservations/stuck?campaignId=${fixture.campaignId}&cursor=not-a-cursor")
-            .exchange().expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+
         operatorGet("/operator/api/v1/reservations/stuck?campaignId=${fixture.campaignId}&limit=101")
-            .exchange().expectStatus().isBadRequest
+            .exchange()
+            .expectStatus().isBadRequest
     }
 
     @Test
@@ -166,19 +194,21 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             "replacementAllowance" to 1,
         )
         operatorPost(
-            "/operator/api/v1/campaigns/$campaignId/policy",
-            "campaign-policy",
+            path = "/operator/api/v1/campaigns/$campaignId/policy",
+            idempotencyKey = "campaign-policy",
             ifMatch = "\"0\"",
             body = policyBody,
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"1\"")
             .expectBody().jsonPath("$.policyVersion").isEqualTo(2)
 
         operatorPost(
-            "/operator/api/v1/campaigns/$campaignId/activate",
-            "campaign-activate",
+            path = "/operator/api/v1/campaigns/$campaignId/activate",
+            idempotencyKey = "campaign-activate",
             ifMatch = "\"1\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"2\"")
             .expectBody().jsonPath("$.state").isEqualTo("ACTIVE")
     }
@@ -189,9 +219,10 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val importBatch = UUID.randomUUID()
         val importManifest = digestHex(7)
         val now = Instant.now()
+
         operatorPost(
-            "/operator/api/v1/batches/import",
-            "batch-import-create",
+            path = "/operator/api/v1/batches/import",
+            idempotencyKey = "batch-import-create",
             ifNoneMatch = "*",
             body = mapOf(
                 "batchId" to importBatch,
@@ -201,12 +232,13 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
                 "activatesAt" to now.minusSeconds(30),
                 "codes" to listOf("HTTP-IMPORT-0"),
             ),
-        ).expectStatus().isCreated
+        )
+            .expectStatus().isCreated
             .expectHeader().valueEquals("ETag", "\"1\"")
 
         operatorPost(
-            "/operator/api/v1/batches/$importBatch/import-chunks",
-            "batch-import-chunk",
+            path = "/operator/api/v1/batches/$importBatch/import-chunks",
+            idempotencyKey = "batch-import-chunk",
             ifMatch = "\"1\"",
             body = mapOf(
                 "campaignId" to importCampaign,
@@ -214,25 +246,28 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
                 "manifestDigest" to importManifest,
                 "codes" to listOf("HTTP-IMPORT-1"),
             ),
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"2\"")
             .expectBody().jsonPath("$.acceptedCount").isEqualTo(2)
 
         operatorPost(
-            "/operator/api/v1/batches/$importBatch/activate",
-            "batch-import-activate",
+            path = "/operator/api/v1/batches/$importBatch/activate",
+            idempotencyKey = "batch-import-activate",
             ifMatch = "\"2\"",
             body = emptyMap<String, String>(),
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"3\"")
             .expectBody().jsonPath("$.state").isEqualTo("ACTIVE")
 
         val generateCampaign = activeCampaign("http-generate")
         val generateBatch = UUID.randomUUID()
         val generateManifest = digestHex(11)
+
         operatorPost(
-            "/operator/api/v1/batches/generate",
-            "batch-generate-create",
+            path = "/operator/api/v1/batches/generate",
+            idempotencyKey = "batch-generate-create",
             ifNoneMatch = "*",
             body = mapOf(
                 "batchId" to generateBatch,
@@ -241,12 +276,13 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
                 "expectedCount" to 1,
                 "activatesAt" to now.minusSeconds(30),
             ),
-        ).expectStatus().isCreated
+        )
+            .expectStatus().isCreated
             .expectHeader().valueEquals("ETag", "\"0\"")
 
         operatorPost(
-            "/operator/api/v1/batches/$generateBatch/generate-chunks",
-            "batch-generate-chunk",
+            path = "/operator/api/v1/batches/$generateBatch/generate-chunks",
+            idempotencyKey = "batch-generate-chunk",
             ifMatch = "\"0\"",
             body = mapOf(
                 "campaignId" to generateCampaign,
@@ -254,7 +290,8 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
                 "manifestDigest" to generateManifest,
                 "count" to 1,
             ),
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"1\"")
             .expectBody().jsonPath("$.acceptedCount").isEqualTo(1)
     }
@@ -263,6 +300,7 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
     fun `operator command precondition failures use bounded errors`() {
         val campaignId = UUID.randomUUID()
         val now = Instant.now()
+
         val body = mapOf(
             "campaignId" to campaignId,
             "startsAt" to now,
@@ -275,16 +313,20 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
 
         operatorPost("/operator/api/v1/campaigns", "missing-create-precondition", body = body)
             .expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
 
         operatorPost("/operator/api/v1/campaigns", "stale-campaign-create", ifNoneMatch = "*", body = body)
             .expectStatus().isCreated
+
         operatorPost(
             "/operator/api/v1/campaigns/$campaignId/activate",
             "stale-campaign-activate",
             ifMatch = "\"99\"",
-        ).expectStatus().isEqualTo(409)
-            .expectBody().jsonPath("$.code").isEqualTo("STALE_REVISION")
+        )
+            .expectStatus().isEqualTo(409)
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("STALE_REVISION")
     }
 
     @Test
@@ -292,35 +334,42 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val campaignId = activeCampaign("pause-resume-campaign")
 
         operatorPost(
-            "/operator/api/v1/campaigns/$campaignId/pause",
-            "pause-campaign-http",
+            path = "/operator/api/v1/campaigns/$campaignId/pause",
+            idempotencyKey = "pause-campaign-http",
             ifMatch = "\"1\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"2\"")
-            .expectBody().jsonPath("$.state").isEqualTo("PAUSED")
+            .expectBody()
+            .jsonPath("$.state").isEqualTo("PAUSED")
 
         operatorPost(
-            "/operator/api/v1/campaigns/$campaignId/resume",
-            "resume-campaign-http",
+            path = "/operator/api/v1/campaigns/$campaignId/resume",
+            idempotencyKey = "resume-campaign-http",
             ifMatch = "\"2\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"3\"")
-            .expectBody().jsonPath("$.state").isEqualTo("ACTIVE")
+            .expectBody()
+            .jsonPath("$.state").isEqualTo("ACTIVE")
 
         val fixture = activePool("pause-resume-batch")
         operatorPost(
-            "/operator/api/v1/batches/${fixture.batchId}/pause",
-            "pause-batch-http",
+            path = "/operator/api/v1/batches/${fixture.batchId}/pause",
+            idempotencyKey = "pause-batch-http",
             ifMatch = "\"2\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"3\"")
-            .expectBody().jsonPath("$.state").isEqualTo("PAUSED")
+            .expectBody()
+            .jsonPath("$.state").isEqualTo("PAUSED")
 
         operatorPost(
             "/operator/api/v1/batches/${fixture.batchId}/resume",
             "resume-batch-http",
             ifMatch = "\"3\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectHeader().valueEquals("ETag", "\"4\"")
             .expectBody().jsonPath("$.state").isEqualTo("ACTIVE")
     }
@@ -330,6 +379,7 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val token = "single-use-preview-token"
         val now = Instant.parse("2026-07-21T00:00:00Z")
         val aggregateId = UUID.randomUUID()
+
         val snapshot = RevokePreviewSnapshot(
             aggregateType = RevokeAggregateType.BATCH,
             aggregateId = aggregateId,
@@ -360,6 +410,9 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             requestId = "request-preview-redaction",
         )
 
+        log.debug { "snapshot: $snapshot" }
+        log.debug { "response: $response" }
+
         snapshot.toString() shouldNotContain token
         response.toString() shouldNotContain token
     }
@@ -367,17 +420,19 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
     @Test
     fun `revoke preview separates mutable impact from currently eligible depth`() {
         val fixture = activePool("batch-revoke-paused-depth")
+
         operatorPost(
-            "/operator/api/v1/batches/${fixture.batchId}/pause",
-            "pause-before-revoke-preview",
+            path = "/operator/api/v1/batches/${fixture.batchId}/pause",
+            idempotencyKey = "pause-before-revoke-preview",
             ifMatch = "\"2\"",
         ).expectStatus().isOk
 
         operatorPost(
-            "/operator/api/v1/batches/${fixture.batchId}/revoke-preview",
-            "unused-preview-key",
+            path = "/operator/api/v1/batches/${fixture.batchId}/revoke-preview",
+            idempotencyKey = "unused-preview-key",
             ifMatch = "\"3\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.affectedCount").isEqualTo(2)
             .jsonPath("$.eligibleDepth").isEqualTo(0)
@@ -387,11 +442,13 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
     fun `operator batch revoke consumes a revision bound preview once and hands off a durable claim`() {
         val fixture = activePool("batch-revoke")
         val other = activePool("batch-revoke-other")
+
         val previewBody = operatorPost(
-            "/operator/api/v1/batches/${fixture.batchId}/revoke-preview",
-            "unused-preview-key",
+            path = "/operator/api/v1/batches/${fixture.batchId}/revoke-preview",
+            idempotencyKey = "unused-preview-key",
             ifMatch = "\"2\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.aggregateType").isEqualTo("BATCH")
             .jsonPath("$.aggregateId").isEqualTo(fixture.batchId.toString())
@@ -399,7 +456,10 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .jsonPath("$.counts.AVAILABLE").isEqualTo(2)
             .jsonPath("$.previewToken").isNotEmpty
             .returnResult().responseBody ?: error("preview response is required")
-        val previewToken = objectMapper.readTree(previewBody).required("previewToken").asString()
+
+        val previewToken = objectMapper.readTree(previewBody)
+            .required("previewToken")
+            .asString()
         val revokeBody = mapOf(
             "previewToken" to previewToken,
             "confirmedBatchId" to fixture.batchId,
@@ -411,8 +471,10 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             ifMatch = "\"2\"",
             body = mapOf("previewToken" to previewToken, "confirmedBatchId" to other.batchId),
         ).expectStatus().isBadRequest
+
         operatorGet("/operator/api/v1/batches/${other.batchId}")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectBody().jsonPath("$.revision").isEqualTo(2)
 
         operatorPost(
@@ -420,7 +482,8 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             "batch-revoke-command",
             ifMatch = "\"2\"",
             body = revokeBody,
-        ).expectStatus().isAccepted
+        )
+            .expectStatus().isAccepted
             .expectBody()
             .jsonPath("$.aggregateType").isEqualTo("BATCH")
             .jsonPath("$.aggregateId").isEqualTo(fixture.batchId.toString())
@@ -435,8 +498,10 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             ifMatch = "\"3\"",
             body = revokeBody,
         ).expectStatus().isBadRequest
+
         operatorGet("/operator/api/v1/batches/${fixture.batchId}")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectBody().jsonPath("$.revision").isEqualTo(3)
     }
 
@@ -445,24 +510,30 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val campaignId = activeCampaign("campaign-revoke")
         val firstBatch = activeBatch(campaignId, "campaign-revoke-a")
         val secondBatch = activeBatch(campaignId, "campaign-revoke-b")
+
         val previewBody = operatorPost(
             "/operator/api/v1/campaigns/$campaignId/revoke-preview",
             "unused-campaign-preview-key",
             ifMatch = "\"1\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.aggregateType").isEqualTo("CAMPAIGN")
             .jsonPath("$.aggregateId").isEqualTo(campaignId.toString())
             .jsonPath("$.affectedCount").isEqualTo(2)
             .returnResult().responseBody ?: error("campaign preview response is required")
-        val previewToken = objectMapper.readTree(previewBody).required("previewToken").asString()
+
+        val previewToken = objectMapper.readTree(previewBody)
+            .required("previewToken")
+            .asString()
 
         operatorPost(
             "/operator/api/v1/campaigns/$campaignId/revoke",
             "campaign-revoke-command",
             ifMatch = "\"1\"",
             body = mapOf("previewToken" to previewToken, "confirmedCampaignId" to campaignId),
-        ).expectStatus().isAccepted
+        )
+            .expectStatus().isAccepted
             .expectBody()
             .jsonPath("$.state").isEqualTo("REVOKING")
             .jsonPath("$.revision").isEqualTo(2)
@@ -474,9 +545,14 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
 
         workers.run(
             WorkerRunRequest(
-                TENANT, WorkerKind.CAMPAIGN_REVOKE, campaignId, "campaign-fanout-test", requestedLimit = 1,
+                tenantId = TENANT,
+                kind = WorkerKind.CAMPAIGN_REVOKE,
+                scopeId = campaignId,
+                owner = "campaign-fanout-test",
+                requestedLimit = 1,
             ),
         ).state shouldBeEqualTo WorkerRunState.COMPLETED
+
         workerClaimCount(firstBatch) shouldBeEqualTo 1
         workerClaimCount(secondBatch) shouldBeEqualTo 1
     }
@@ -488,22 +564,28 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             "/operator/api/v1/campaigns/$campaignId/revoke-preview",
             "unused-empty-campaign-preview-key",
             ifMatch = "\"1\"",
-        ).expectStatus().isOk
+        )
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.affectedCount").isEqualTo(0)
             .returnResult().responseBody ?: error("campaign preview response is required")
-        val previewToken = objectMapper.readTree(previewBody).required("previewToken").asString()
+
+        val previewToken = objectMapper.readTree(previewBody)
+            .required("previewToken")
+            .asString()
 
         operatorPost(
-            "/operator/api/v1/campaigns/$campaignId/revoke",
-            "empty-campaign-revoke-command",
+            path = "/operator/api/v1/campaigns/$campaignId/revoke",
+            idempotencyKey = "empty-campaign-revoke-command",
             ifMatch = "\"1\"",
             body = mapOf("previewToken" to previewToken, "confirmedCampaignId" to campaignId),
-        ).expectStatus().isAccepted
+        )
+            .expectStatus().isAccepted
             .expectBody()
             .jsonPath("$.state").isEqualTo("REVOKED")
             .jsonPath("$.revision").isEqualTo(3)
             .jsonPath("$.workerCount").isEqualTo(0)
+
         workerClaimCount(campaignId, "CAMPAIGN_REVOKE") shouldBeEqualTo 0
     }
 
@@ -511,34 +593,56 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
     fun `campaign revoke ignores historical claims for already terminal child batches`() {
         val fixture = activePool("campaign-revoke-terminal-child")
         val batchPreview = operatorPost(
-            "/operator/api/v1/batches/${fixture.batchId}/revoke-preview",
-            "unused-terminal-child-batch-preview",
+            path = "/operator/api/v1/batches/${fixture.batchId}/revoke-preview",
+            idempotencyKey = "unused-terminal-child-batch-preview",
             ifMatch = "\"2\"",
-        ).expectStatus().isOk.expectBody().returnResult().responseBody ?: error("batch preview is required")
-        val batchToken = objectMapper.readTree(batchPreview).required("previewToken").asString()
+        )
+            .expectStatus().isOk
+            .expectBody()
+            .returnResult().responseBody ?: error("batch preview is required")
+
+        val batchToken = objectMapper.readTree(batchPreview)
+            .required("previewToken")
+            .asString()
+
         operatorPost(
-            "/operator/api/v1/batches/${fixture.batchId}/revoke",
-            "terminal-child-batch-revoke",
+            path = "/operator/api/v1/batches/${fixture.batchId}/revoke",
+            idempotencyKey = "terminal-child-batch-revoke",
             ifMatch = "\"2\"",
             body = mapOf("previewToken" to batchToken, "confirmedBatchId" to fixture.batchId),
         ).expectStatus().isAccepted
+
         workers.run(
-            WorkerRunRequest(TENANT, WorkerKind.BATCH_REVOKE, fixture.batchId, "terminal-child-worker"),
+            WorkerRunRequest(
+                tenantId = TENANT,
+                kind = WorkerKind.BATCH_REVOKE,
+                scopeId = fixture.batchId,
+                owner = "terminal-child-worker"
+            ),
         ).state shouldBeEqualTo WorkerRunState.COMPLETED
+
         workerClaimCount(fixture.batchId) shouldBeEqualTo 1
 
         val campaignPreview = operatorPost(
-            "/operator/api/v1/campaigns/${fixture.campaignId}/revoke-preview",
-            "unused-terminal-child-campaign-preview",
+            path = "/operator/api/v1/campaigns/${fixture.campaignId}/revoke-preview",
+            idempotencyKey = "unused-terminal-child-campaign-preview",
             ifMatch = "\"1\"",
-        ).expectStatus().isOk.expectBody().returnResult().responseBody ?: error("campaign preview is required")
-        val campaignToken = objectMapper.readTree(campaignPreview).required("previewToken").asString()
+        )
+            .expectStatus().isOk
+            .expectBody()
+            .returnResult().responseBody ?: error("campaign preview is required")
+
+        val campaignToken = objectMapper.readTree(campaignPreview)
+            .required("previewToken")
+            .asString()
+
         operatorPost(
-            "/operator/api/v1/campaigns/${fixture.campaignId}/revoke",
-            "terminal-child-campaign-revoke",
+            path = "/operator/api/v1/campaigns/${fixture.campaignId}/revoke",
+            idempotencyKey = "terminal-child-campaign-revoke",
             ifMatch = "\"1\"",
             body = mapOf("previewToken" to campaignToken, "confirmedCampaignId" to fixture.campaignId),
-        ).expectStatus().isAccepted
+        )
+            .expectStatus().isAccepted
             .expectBody()
             .jsonPath("$.state").isEqualTo("REVOKED")
             .jsonPath("$.workerCount").isEqualTo(0)
@@ -556,6 +660,7 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .jsonPath("$.scopeId").isEqualTo(fixture.batchId.toString())
             .jsonPath("$.state").isEqualTo("IDLE")
             .jsonPath("$.nextAction").isEqualTo("CLAIM_AVAILABLE")
+
         workerClaimCount(fixture.batchId, "RECONCILIATION") shouldBeEqualTo 1
 
         operatorPost("/operator/api/v1/reconciliation/run", "reconciliation-run-competing", body = body)
@@ -568,7 +673,12 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .expectHeader().valueEquals("Duplicate-Request", "true")
 
         workers.run(
-            WorkerRunRequest(TENANT, WorkerKind.RECONCILIATION, fixture.batchId, "reconciliation-web-test"),
+            WorkerRunRequest(
+                tenantId = TENANT,
+                kind = WorkerKind.RECONCILIATION,
+                scopeId = fixture.batchId,
+                owner = "reconciliation-web-test"
+            ),
         ).state shouldBeEqualTo WorkerRunState.COMPLETED
 
         operatorPost("/operator/api/v1/reconciliation/run", "reconciliation-run-after-completion", body = body)
@@ -576,6 +686,7 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .expectBody()
             .jsonPath("$.state").isEqualTo("IDLE")
             .jsonPath("$.nextAction").isEqualTo("CLAIM_AVAILABLE")
+
         workerClaimCount(fixture.batchId, "RECONCILIATION") shouldBeEqualTo 1
     }
 
@@ -584,11 +695,13 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val fixture = activePool("diagnostic")
         val observed = operatorGet("/operator/api/v1/batches/${fixture.batchId}")
             .exchange().expectStatus().isOk
-            .returnResult(ByteArray::class.java)
-        val targetRequestId = checkNotNull(observed.responseHeaders.getFirst(REQUEST_ID_HEADER))
+            .returnResult<ByteArray>()
+
+        val targetRequestId = observed.responseHeaders.getFirst(REQUEST_ID_HEADER).shouldNotBeNull()
 
         operatorGet("/operator/api/v1/diagnostics/$targetRequestId")
-            .exchange().expectStatus().isOk
+            .exchange()
+            .expectStatus().isOk
             .expectBody()
             .jsonPath("$.targetRequestId").isEqualTo(targetRequestId)
             .jsonPath("$.method").isEqualTo("GET")
@@ -597,11 +710,13 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .jsonPath("$.requestId").isNotEmpty
 
         operatorGet("/operator/api/v1/diagnostics/$targetRequestId", tenant = "wrong-tenant")
-            .exchange().expectStatus().isNotFound
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     private fun operatorGet(path: String, tenant: String = TENANT): WebTestClient.RequestHeadersSpec<*> =
-        webTestClient.get().uri(path)
+        webTestClient.get()
+            .uri(path)
             .accept(MediaType.APPLICATION_JSON)
             .header("X-Workshop-Origin", "http://127.0.0.1:$port")
             .header(TENANT_HEADER, tenant)
@@ -615,7 +730,8 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         ifMatch: String? = null,
         body: Any = emptyMap<String, String>(),
     ): WebTestClient.ResponseSpec {
-        val request = webTestClient.post().uri(path)
+        val request = webTestClient.post()
+            .uri(path)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .header("Origin", "http://127.0.0.1:$port")
@@ -623,8 +739,10 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
             .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
             .header(IDEMPOTENCY_HEADER, idempotencyKey)
+
         ifNoneMatch?.let { request.header("If-None-Match", it) }
         ifMatch?.let { request.header("If-Match", it) }
+
         return request.bodyValue(body).exchange()
     }
 
@@ -633,59 +751,80 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val campaignId = UUID.randomUUID()
         val campaign = campaigns.createCampaign(
             CreateCampaignCommand(
-                TENANT,
-                campaignId,
-                now.minusSeconds(60),
-                now.plusSeconds(3_600),
-                VoucherPoolPolicy.of(3, 5.minutes, 30.minutes, 1),
-                "operator-web-create-only-$name",
+                tenantId = TENANT,
+                campaignId = campaignId,
+                startsAt = now.minusSeconds(60),
+                endsAt = now.plusSeconds(3_600),
+                policy = VoucherPoolPolicy(3, 5.minutes, 30.minutes, 1),
+                idempotencyKey = "operator-web-create-only-$name",
             ),
         ).applied()
+
         campaigns.activateCampaign(
-            CampaignRevisionCommand(TENANT, campaignId, campaign.revision, "operator-web-activate-only-$name"),
+            CampaignRevisionCommand(
+                tenantId = TENANT,
+                campaignId = campaignId,
+                expectedRevision = campaign.revision,
+                idempotencyKey = "operator-web-activate-only-$name"
+            ),
         ).applied()
+
         return campaignId
     }
 
     private fun digestHex(seed: Int): String =
-        ByteArray(32) { index -> (seed + index).toByte() }.joinToString("") { "%02x".format(Locale.ROOT, it) }
+        ByteArray(32) { index -> (seed + index).toByte() }
+            .joinToString("") { "%02x".format(Locale.ROOT, it) }
 
     private fun activePool(name: String): OperatorFixture {
         val now = Instant.now()
         val campaignId = UUID.randomUUID()
         val batchId = UUID.randomUUID()
-        val campaign =
-            campaigns.createCampaign(
-                CreateCampaignCommand(
-                    TENANT,
-                    campaignId,
-                    now.minusSeconds(60),
-                    now.plusSeconds(3_600),
-                    VoucherPoolPolicy.of(3, 5.minutes, 30.minutes, 1),
-                    "operator-web-create-campaign-$name",
-                ),
-            ).applied()
+        val campaign = campaigns.createCampaign(
+            CreateCampaignCommand(
+                tenantId = TENANT,
+                campaignId = campaignId,
+                startsAt = now.minusSeconds(60),
+                endsAt = now.plusSeconds(3_600),
+                policy = VoucherPoolPolicy.of(3, 5.minutes, 30.minutes, 1),
+                idempotencyKey = "operator-web-create-campaign-$name",
+            ),
+        ).applied()
+
         campaigns.activateCampaign(
-            CampaignRevisionCommand(TENANT, campaignId, campaign.revision, "operator-web-activate-campaign-$name"),
+            CampaignRevisionCommand(
+                tenantId = TENANT,
+                campaignId = campaignId,
+                expectedRevision = campaign.revision,
+                idempotencyKey = "operator-web-activate-campaign-$name"
+            ),
         ).applied()
-        val batch =
-            campaigns.createImportBatch(
-                CreateImportBatchCommand(
-                    TENANT,
-                    batchId,
-                    campaignId,
-                    BatchSourceKind.IMPORTED,
-                    digest(1),
-                    digest(2),
-                    2,
-                    now.minusSeconds(30),
-                    initialCodes = listOf("OPERATOR-WEB-$name-A", "OPERATOR-WEB-$name-B"),
-                    idempotencyKey = "operator-web-create-batch-$name",
-                ),
-            ).applied()
+
+        val batch = campaigns.createImportBatch(
+            CreateImportBatchCommand(
+                tenantId = TENANT,
+                batchId = batchId,
+                campaignId = campaignId,
+                sourceKind = BatchSourceKind.IMPORTED,
+                manifestDigest = digest(1),
+                requestFingerprint = digest(2),
+                expectedCount = 2,
+                activatesAt = now.minusSeconds(30),
+                initialCodes = listOf("OPERATOR-WEB-$name-A", "OPERATOR-WEB-$name-B"),
+                idempotencyKey = "operator-web-create-batch-$name",
+            ),
+        ).applied()
+
         campaigns.activateBatch(
-            BatchRevisionCommand(TENANT, campaignId, batchId, batch.revision, "operator-web-activate-batch-$name"),
+            BatchRevisionCommand(
+                tenantId = TENANT,
+                campaignId = campaignId,
+                batchId = batchId,
+                expectedRevision = batch.revision,
+                idempotencyKey = "operator-web-activate-batch-$name"
+            ),
         ).applied()
+
         return OperatorFixture(campaignId, batchId)
     }
 
@@ -694,40 +833,52 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         val batchId = UUID.randomUUID()
         val batch = campaigns.createImportBatch(
             CreateImportBatchCommand(
-                TENANT,
-                batchId,
-                campaignId,
-                BatchSourceKind.IMPORTED,
-                digest(name.hashCode()),
-                digest(name.hashCode() + 1),
-                1,
-                now.minusSeconds(30),
+                tenantId = TENANT,
+                batchId = batchId,
+                campaignId = campaignId,
+                sourceKind = BatchSourceKind.IMPORTED,
+                manifestDigest = digest(name.hashCode()),
+                requestFingerprint = digest(name.hashCode() + 1),
+                expectedCount = 1,
+                activatesAt = now.minusSeconds(30),
                 initialCodes = listOf("OPERATOR-WEB-$name"),
                 idempotencyKey = "operator-web-create-batch-$name",
             ),
         ).applied()
+
         campaigns.activateBatch(
-            BatchRevisionCommand(TENANT, campaignId, batchId, batch.revision, "operator-web-activate-batch-$name"),
+            BatchRevisionCommand(
+                tenantId = TENANT,
+                campaignId = campaignId,
+                batchId = batchId,
+                expectedRevision = batch.revision,
+                idempotencyKey = "operator-web-activate-batch-$name"
+            ),
         ).applied()
+
         return batchId
     }
 
     private fun expireReservation(reservationId: UUID) {
         val expiresAt = Instant.now().minusSeconds(60)
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(
                 "UPDATE voucher_pool_reservations SET reservation_expires_at=? WHERE tenant_id=? AND reservation_id=?",
-            ).use { statement ->
-                statement.setTimestamp(1, Timestamp.from(expiresAt))
-                statement.setString(2, TENANT)
-                statement.setObject(3, reservationId)
-                statement.executeUpdate()
+            ).use { stmt ->
+                stmt.setTimestamp(1, Timestamp.from(expiresAt))
+                stmt.setString(2, TENANT)
+                stmt.setObject(3, reservationId)
+                stmt.executeUpdate()
             }
-            connection.prepareStatement(
-                """UPDATE voucher_pool_entries e SET reserved_at=?,reservation_expires_at=?
-                    FROM voucher_pool_reservations r
-                    WHERE r.tenant_id=e.tenant_id AND r.entry_id=e.entry_id
-                      AND r.tenant_id=? AND r.reservation_id=?""",
+            conn.prepareStatement(
+                """
+                    UPDATE voucher_pool_entries e 
+                       SET reserved_at=?,reservation_expires_at=?
+                      FROM voucher_pool_reservations r
+                     WHERE r.tenant_id=e.tenant_id 
+                       AND r.entry_id=e.entry_id
+                      AND r.tenant_id=? AND r.reservation_id=?
+                    """.trimIndent(),
             ).use { statement ->
                 statement.setTimestamp(1, Timestamp.from(expiresAt.minusSeconds(60)))
                 statement.setTimestamp(2, Timestamp.from(expiresAt))
@@ -741,25 +892,30 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
     private fun workerClaimCount(scopeId: UUID, kind: String = "BATCH_REVOKE"): Int =
         dataSource.connection.use { connection ->
             connection.prepareStatement(
-                "SELECT count(*) FROM voucher_pool_worker_claims WHERE tenant_id=? AND worker_type=? AND scope_id=?",
+                """
+                    SELECT count(*) 
+                      FROM voucher_pool_worker_claims 
+                     WHERE tenant_id=? 
+                       AND worker_type=? 
+                    AND scope_id=?
+                    """.trimIndent(),
             ).use { statement ->
                 statement.setString(1, TENANT)
                 statement.setString(2, kind)
                 statement.setObject(3, scopeId)
-                statement.executeQuery().use { result -> result.next(); result.getInt(1) }
+                statement.executeQuery().use { result ->
+                    result.singleInt()
+                }
             }
         }
 
-    private fun digest(seed: Int): DigestValue = DigestValue.of(ByteArray(32) { index -> (seed + index).toByte() })
+    private fun digest(seed: Int): DigestValue =
+        DigestValue(ByteArray(32) { index -> (seed + index).toByte() })
 
-    private data class OperatorFixture(val campaignId: UUID, val batchId: UUID)
-
-    private companion object {
-        const val TENANT = "tenant-operator-web"
-        const val PRINCIPAL = "principal-operator-web"
-        const val OPERATOR_SECRET = "test-operator-secret-0000000000000001"
-        const val OPERATOR_GUARD = "test-voucher-pool-operator-guard"
-    }
+    private data class OperatorFixture(
+        val campaignId: UUID,
+        val batchId: UUID,
+    )
 }
 
 @TestConfiguration(proxyBeanMethods = false)

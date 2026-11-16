@@ -1,9 +1,14 @@
 package io.bluetape4k.workshop.multitenant
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.tenant.MissingTenantContextException
 import io.bluetape4k.workshop.multitenant.domain.InvoiceRecord
 import io.bluetape4k.workshop.multitenant.domain.TenantId
@@ -20,11 +25,10 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import java.math.BigDecimal
-import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.seconds
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -32,6 +36,8 @@ class TenantContextCarrierExampleTest @Autowired constructor(
     private val carrier: TenantContextCarrierService,
     private val invoiceService: TenantInvoiceService,
 ) {
+
+    companion object: KLogging()
 
     @AfterEach
     fun reset() {
@@ -55,6 +61,7 @@ class TenantContextCarrierExampleTest @Autowired constructor(
         }
 
         carrier.currentMvcTenant().shouldBeNull()
+
         assertThrows<MissingTenantContextException> {
             carrier.findInvoiceWithMvcTenant(invoice.id)
         }
@@ -71,16 +78,15 @@ class TenantContextCarrierExampleTest @Autowired constructor(
                 executor.submit<TenantId> {
                     carrier.withMvcTenant(tenantId) {
                         ready.countDown()
-                        release.await(5, TimeUnit.SECONDS)
+                        release.await(5.seconds)
                         carrier.requireMvcTenant()
                     }
                 }
             }
 
-            ready.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            ready.await(5.seconds).shouldBeTrue()
             release.countDown()
-            futures.map { it.get(5, TimeUnit.SECONDS) }.toSet() shouldBeEqualTo
-                setOf(TenantId.ALPHA, TenantId.BETA)
+            futures.map { it.get(5.seconds) }.toSet() shouldBeEqualTo setOf(TenantId.ALPHA, TenantId.BETA)
         } finally {
             release.countDown()
             executor.shutdownNow()
@@ -108,12 +114,12 @@ class TenantContextCarrierExampleTest @Autowired constructor(
                         carrier.requireVirtualThreadTenant()
                     }
                 }
-            }.get(5, TimeUnit.SECONDS)
+            }.get(5.seconds)
             observed shouldBeEqualTo TenantId.BETA
 
             executor.submit<TenantId?> {
                 carrier.currentVirtualThreadTenant()
-            }.get(5, TimeUnit.SECONDS).shouldBeNull()
+            }.get(5.seconds).shouldBeNull()
         }
     }
 
@@ -122,11 +128,15 @@ class TenantContextCarrierExampleTest @Autowired constructor(
         val alphaInvoice = invoiceService.createInvoice(invoice(TenantId.ALPHA, "Alpha Hospital"))
         val betaInvoice = invoiceService.createInvoice(invoice(TenantId.BETA, "Beta Clinic"))
         val scheduler = Schedulers.newParallel("tenant-context", 2)
+
         try {
-            val observed = Flux.merge(
-                reactorTenantProbe(TenantId.ALPHA, alphaInvoice.id, scheduler),
-                reactorTenantProbe(TenantId.BETA, betaInvoice.id, scheduler),
-            ).collectList().block(Duration.ofSeconds(5)) ?: emptyList()
+            val observed = Flux
+                .merge(
+                    reactorTenantProbe(TenantId.ALPHA, alphaInvoice.id, scheduler),
+                    reactorTenantProbe(TenantId.BETA, betaInvoice.id, scheduler),
+                )
+                .collectList()
+                .block(5.seconds()) ?: emptyList()
 
             observed.toSet() shouldBeEqualTo setOf(TenantId.ALPHA, TenantId.BETA)
         } finally {
@@ -138,17 +148,19 @@ class TenantContextCarrierExampleTest @Autowired constructor(
     fun `Reactor carrier cancellation does not leave context behind`() {
         val started = CountDownLatch(1)
         val cancelled = AtomicBoolean(false)
-        val subscription = carrier.withReactorTenant(
-            TenantId.ALPHA,
-            Mono.deferContextual { contextView ->
-                carrier.requireReactorTenant(contextView)
-                started.countDown()
-                Mono.never<TenantId>().doOnCancel { cancelled.set(true) }
-            },
-        ).subscribe()
+        val subscription = carrier
+            .withReactorTenant(
+                TenantId.ALPHA,
+                Mono.deferContextual { contextView ->
+                    carrier.requireReactorTenant(contextView)
+                    started.countDown()
+                    Mono.never<TenantId>().doOnCancel { cancelled.set(true) }
+                },
+            )
+            .subscribe()
 
         try {
-            started.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            started.await(5.seconds).shouldBeTrue()
         } finally {
             subscription.dispose()
         }
@@ -163,9 +175,13 @@ class TenantContextCarrierExampleTest @Autowired constructor(
         invoiceService.findInvoice(TenantId.ALPHA, invoice.id)
 
         val meter = carrier.invoiceReadMeter(TenantId.ALPHA)
+        log.debug { "meter id=${meter.id}" }
         meter.id.getTag("tenant").shouldBeNull()
         meter.id.getTag("tenant_fingerprint") shouldBeEqualTo TenantMetrics.tenantFingerprint(TenantId.ALPHA)
-        TenantMetrics.tenantFingerprint(TenantId.ALPHA).contains(TenantId.ALPHA.value).shouldBeFalse()
+
+        val fingerPrint = TenantMetrics.tenantFingerprint(TenantId.ALPHA)
+        log.debug { "fingerPrint=$fingerPrint" }
+        fingerPrint shouldNotContain TenantId.ALPHA.value
     }
 
     private fun reactorTenantProbe(
@@ -175,7 +191,7 @@ class TenantContextCarrierExampleTest @Autowired constructor(
     ): Mono<TenantId> = carrier.withReactorTenant(
         tenantId,
         Mono.deferContextual { contextView ->
-                invoiceService.findInvoice(carrier.requireReactorTenant(contextView), invoiceId)
+            invoiceService.findInvoice(carrier.requireReactorTenant(contextView), invoiceId)
                 ?.tenantId
                 ?.let { Mono.just(it) }
                 ?.publishOn(scheduler)

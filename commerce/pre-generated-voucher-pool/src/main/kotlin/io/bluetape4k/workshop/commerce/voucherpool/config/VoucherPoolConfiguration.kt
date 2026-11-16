@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
@@ -60,8 +62,10 @@ internal data class VoucherPoolProperties(
     val sse: VoucherPoolSseProperties = VoucherPoolSseProperties(),
     val http: VoucherPoolHttpProperties,
     val workerInstanceId: String = "voucher-pool-${Base58.randomString(DEFAULT_WORKER_INSTANCE_SUFFIX_LENGTH)}",
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class VoucherPoolSseProperties(
@@ -72,11 +76,11 @@ internal data class VoucherPoolSseProperties(
     val maxPollRows: Int = DEFAULT_SSE_MAX_POLL_ROWS,
     val maxPollBytes: Int = DEFAULT_SSE_MAX_POLL_BYTES,
     val maxCustomerCampaigns: Int = DEFAULT_SSE_MAX_CUSTOMER_CAMPAIGNS,
-    val pollInterval: Duration = Duration.ofMillis(DEFAULT_SSE_POLL_INTERVAL_MILLIS),
-    val maxIdleInterval: Duration = Duration.ofSeconds(DEFAULT_SSE_MAX_IDLE_INTERVAL_SECONDS),
-    val heartbeatInterval: Duration = Duration.ofSeconds(DEFAULT_SSE_HEARTBEAT_INTERVAL_SECONDS),
-    val writeTimeout: Duration = Duration.ofSeconds(DEFAULT_SSE_WRITE_TIMEOUT_SECONDS),
-) : Serializable {
+    val pollInterval: Duration = DEFAULT_SSE_POLL_INTERVAL_MILLIS.millis(),
+    val maxIdleInterval: Duration = DEFAULT_SSE_MAX_IDLE_INTERVAL_SECONDS.seconds(),
+    val heartbeatInterval: Duration = DEFAULT_SSE_HEARTBEAT_INTERVAL_SECONDS.seconds(),
+    val writeTimeout: Duration = DEFAULT_SSE_WRITE_TIMEOUT_SECONDS.seconds(),
+): Serializable {
     init {
         require(maxSubscribers > 0 && maxSubscribersPerScope in 1..maxSubscribers)
         require(queueSize > 1 && maxQueueBytes > 0 && maxPollRows > 0 && maxPollBytes > 0)
@@ -87,33 +91,37 @@ internal data class VoucherPoolSseProperties(
         require(!writeTimeout.isZero && !writeTimeout.isNegative)
     }
 
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class VoucherPoolDatabaseProperties(
     val foreground: VoucherPoolLaneProperties =
         VoucherPoolLaneProperties(
             capacity = DEFAULT_FOREGROUND_CAPACITY,
-            permitWait = Duration.ofMillis(DEFAULT_FOREGROUND_PERMIT_WAIT_MILLIS),
-            transactionTimeout = Duration.ofSeconds(DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS),
-            lockTimeout = Duration.ofSeconds(DEFAULT_FOREGROUND_LOCK_TIMEOUT_SECONDS),
+            permitWait = DEFAULT_FOREGROUND_PERMIT_WAIT_MILLIS.millis(),
+            transactionTimeout = DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS.seconds(),
+            lockTimeout = DEFAULT_FOREGROUND_LOCK_TIMEOUT_SECONDS.seconds(),
         ),
     val worker: VoucherPoolLaneProperties =
         VoucherPoolLaneProperties(
             capacity = DEFAULT_WORKER_CAPACITY,
-            permitWait = Duration.ofSeconds(DEFAULT_WORKER_PERMIT_WAIT_SECONDS),
-            transactionTimeout = Duration.ofSeconds(DEFAULT_WORKER_TRANSACTION_TIMEOUT_SECONDS),
-            lockTimeout = Duration.ofSeconds(DEFAULT_WORKER_LOCK_TIMEOUT_SECONDS),
+            permitWait = DEFAULT_WORKER_PERMIT_WAIT_SECONDS.seconds(),
+            transactionTimeout = DEFAULT_WORKER_TRANSACTION_TIMEOUT_SECONDS.seconds(),
+            lockTimeout = DEFAULT_WORKER_LOCK_TIMEOUT_SECONDS.seconds(),
         ),
     val sse: VoucherPoolLaneProperties =
         VoucherPoolLaneProperties(
             capacity = DEFAULT_SSE_CAPACITY,
-            permitWait = Duration.ofSeconds(DEFAULT_SSE_PERMIT_WAIT_SECONDS),
-            transactionTimeout = Duration.ofSeconds(DEFAULT_SSE_TRANSACTION_TIMEOUT_SECONDS),
-            lockTimeout = Duration.ofSeconds(DEFAULT_SSE_LOCK_TIMEOUT_SECONDS),
+            permitWait = DEFAULT_SSE_PERMIT_WAIT_SECONDS.seconds(),
+            transactionTimeout = DEFAULT_SSE_TRANSACTION_TIMEOUT_SECONDS.seconds(),
+            lockTimeout = DEFAULT_SSE_LOCK_TIMEOUT_SECONDS.seconds(),
         ),
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class VoucherPoolLaneProperties(
@@ -121,22 +129,26 @@ internal data class VoucherPoolLaneProperties(
     val permitWait: Duration,
     val transactionTimeout: Duration,
     val lockTimeout: Duration,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(VoucherPoolProperties::class)
 internal class VoucherPoolConfiguration {
+
+    companion object: KLogging()
+
     @Bean("springTransactionManager")
     fun springTransactionManager(dataSource: DataSource): PlatformTransactionManager =
         SpringTransactionManager(dataSource, DatabaseConfig {}, false)
 
     @Bean(destroyMethod = "close")
     fun voucherPoolExecutor(): ExecutorService =
-        VirtualThreads.executorService().also {
-            log.info { "voucher_pool_executor_created virtualThreads=true" }
-        }
+        VirtualThreads.executorService()
+            .also { log.info { "voucher_pool_executor_created virtualThreads=true" } }
 
     @Bean
     fun databasePermitGate(
@@ -146,12 +158,11 @@ internal class VoucherPoolConfiguration {
         val database = properties.database
         return DatabasePermitGate(
             hikariMaximumPoolSize = dataSource.requireHikariDataSource().maximumPoolSize,
-            configs =
-                mapOf(
-                    PermitLane.FOREGROUND to database.foreground.toPermitConfig(),
-                    PermitLane.WORKER to database.worker.toPermitConfig(),
-                    PermitLane.SSE to database.sse.toPermitConfig(),
-                ),
+            configs = mapOf(
+                PermitLane.FOREGROUND to database.foreground.toPermitConfig(),
+                PermitLane.WORKER to database.worker.toPermitConfig(),
+                PermitLane.SSE to database.sse.toPermitConfig(),
+            ),
         )
     }
 
@@ -168,8 +179,9 @@ internal class VoucherPoolConfiguration {
     ): VoucherPoolJdbcTimeouts {
         val database = properties.database
         val hikariDataSource = dataSource.requireHikariDataSource()
+
         return VoucherPoolJdbcTimeouts(
-            connectionAcquisition = Duration.ofMillis(hikariDataSource.connectionTimeout),
+            connectionAcquisition = hikariDataSource.connectionTimeout.millis(),
             foregroundTransaction = database.foreground.transactionTimeout,
             operatorTransaction = database.foreground.transactionTimeout,
             workerChunkTransaction = database.worker.transactionTimeout,
@@ -206,9 +218,7 @@ internal class VoucherPoolConfiguration {
     private fun DataSource.requireHikariDataSource(): HikariDataSource =
         this as? HikariDataSource
             ?: error(
-                "pre-generated-voucher-pool requires HikariDataSource so the live pool size and connection timeout " +
-                    "remain authoritative",
+                "pre-generated-voucher-pool requires HikariDataSource " +
+                        "so the live pool size and connection timeout remain authoritative",
             )
-
-    companion object : KLogging()
 }

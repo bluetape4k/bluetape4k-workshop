@@ -1,9 +1,10 @@
 package io.bluetape4k.workshop.mongodb.domain
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,7 +16,7 @@ class RepositoryTest @Autowired constructor(
     private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {
@@ -27,6 +28,8 @@ class RepositoryTest @Autowired constructor(
         val person = repository.save(newPerson())
 
         val loaded = repository.findOneByFirstname(person.firstname.shouldNotBeNull())
+
+        log.debug { "loaded=$loaded" }
         loaded shouldBeEqualTo person
     }
 }

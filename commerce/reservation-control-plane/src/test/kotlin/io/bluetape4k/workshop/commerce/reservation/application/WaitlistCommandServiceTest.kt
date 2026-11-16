@@ -2,24 +2,26 @@ package io.bluetape4k.workshop.commerce.reservation.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
 import io.bluetape4k.workshop.commerce.reservation.domain.WaitlistState
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import org.junit.jupiter.api.Test
 import java.time.Clock
-import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 
 class WaitlistCommandServiceTest {
+
+    companion object: KLogging()
+
     private val now = Instant.parse("2026-07-19T00:00:00Z")
     private val credentialService = ReservationCredentialService("0123456789abcdef0123456789abcdef")
 
@@ -33,11 +35,12 @@ class WaitlistCommandServiceTest {
             val first = service.join(JoinWaitlistCommand(resource.id, "owner-one"))
             val second = service.join(JoinWaitlistCommand(resource.id, "owner-two"))
 
-            val offer = service.promote(resource.id)
+            service.promote(resource.id)?.let { offer ->
+                offer.entryId shouldBeEqualTo first.id
+                offer.state shouldBeEqualTo OfferState.ACTIVE
+                offer.expiresAt shouldBeEqualTo now + 20.seconds()
+            }
 
-            offer?.entryId shouldBeEqualTo first.id
-            offer?.state shouldBeEqualTo OfferState.ACTIVE
-            offer?.expiresAt shouldBeEqualTo now.plusSeconds(20)
             waitlists.findById(first.id).state shouldBeEqualTo WaitlistState.OFFERED
             waitlists.findById(second.id).state shouldBeEqualTo WaitlistState.WAITING
         }
@@ -51,7 +54,8 @@ class WaitlistCommandServiceTest {
             val offers = ReservationOfferRepository()
             val service = service(waitlists, offers)
             service.join(JoinWaitlistCommand(resource.id, "offer-owner"))
-            val offer = service.promote(resource.id)!!
+
+            val offer = service.promote(resource.id).shouldNotBeNull()
 
             assertFailsWith<WaitlistCommandException> {
                 service.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "other-owner"))
@@ -60,10 +64,9 @@ class WaitlistCommandServiceTest {
                 service.accept(AcceptOfferCommand(offer.id, expectedRevision = 9, ownerToken = "offer-owner"))
             }
 
-            val accepted =
-                service.accept(
-                    AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner")
-                )
+            val accepted = service.accept(
+                AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner")
+            )
 
             accepted.offer.state shouldBeEqualTo OfferState.ACCEPTED
             accepted.offer.revision shouldBeEqualTo 1L
@@ -81,15 +84,28 @@ class WaitlistCommandServiceTest {
             val joinService = service(waitlists, offers)
             val entry = joinService.join(JoinWaitlistCommand(resource.id, "offer-owner"))
             val offer = joinService.promote(resource.id)!!
-            val expiredClock = Clock.fixed(now.plusSeconds(21), ZoneOffset.UTC)
-            val acceptService =
-                WaitlistCommandService(waitlists, offers, credentialService, expiredClock, Duration.ofSeconds(20))
+            val expiredClock = Clock.fixed(now + 21.seconds(), ZoneOffset.UTC)
+
+            val acceptService = WaitlistCommandService(
+                waitlists = waitlists,
+                offers = offers,
+                credentials = credentialService,
+                clock = expiredClock,
+                offerTtl = 20.seconds()
+            )
 
             val error = assertFailsWith<WaitlistCommandException> {
-                acceptService.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner"))
+                acceptService.accept(
+                    AcceptOfferCommand(
+                        offerId = offer.id,
+                        expectedRevision = 0,
+                        ownerToken = "offer-owner"
+                    )
+                )
             }
 
             error.reason shouldBeEqualTo "OFFER_EXPIRED"
+
             offers.findById(offer.id).state shouldBeEqualTo OfferState.ACTIVE
             waitlists.findById(entry.id).state shouldBeEqualTo WaitlistState.OFFERED
         }
@@ -98,11 +114,12 @@ class WaitlistCommandServiceTest {
     private fun service(
         waitlists: WaitlistEntryRepository,
         offers: ReservationOfferRepository,
-    ) = WaitlistCommandService(
-        waitlists = waitlists,
-        offers = offers,
-        credentials = credentialService,
-        clock = Clock.fixed(now, ZoneOffset.UTC),
-        offerTtl = Duration.ofSeconds(20)
-    )
+    ): WaitlistCommandService =
+        WaitlistCommandService(
+            waitlists = waitlists,
+            offers = offers,
+            credentials = credentialService,
+            clock = Clock.fixed(now, ZoneOffset.UTC),
+            offerTtl = 20.seconds()
+        )
 }

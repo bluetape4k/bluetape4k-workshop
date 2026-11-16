@@ -3,9 +3,15 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -18,9 +24,9 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-import java.time.Instant
 import java.time.Duration
-import java.util.UUID
+import java.time.Instant
+import java.util.*
 import kotlin.time.TimeSource
 import kotlin.time.toJavaDuration
 
@@ -33,23 +39,26 @@ internal interface EventStoreTransactionRunner {
 
 internal class ExposedEventStoreTransactionRunner(
     private val database: Database,
-) : EventStoreTransactionRunner {
-    override fun <T> readTransaction(block: () -> T): T = transaction(database) { block() }
+): EventStoreTransactionRunner {
+    override fun <T> readTransaction(block: () -> T): T =
+        transaction(database) {
+            block()
+        }
 }
 
 /** production read는 HikariCP에 connection을 요청하기 전에 foreground permit을 획득합니다. */
 internal class PermittedEventStoreTransactionRunner(
     database: Database,
     permits: EventSourcedDatabasePermitGate,
-) : EventStoreTransactionRunner {
-    private val transactions =
-        EventSourcedPermitTransactionRunner(
-            database,
-            permits,
-            EventSourcedDatabaseLane.FOREGROUND,
-        )
+): EventStoreTransactionRunner {
+    private val transactions = EventSourcedPermitTransactionRunner(
+        database = database,
+        permits = permits,
+        lane = EventSourcedDatabaseLane.FOREGROUND,
+    )
 
-    override fun <T> readTransaction(block: () -> T): T = transactions.inTransaction(block)
+    override fun <T> readTransaction(block: () -> T): T =
+        transactions.inTransaction(block)
 }
 
 /**
@@ -60,25 +69,29 @@ internal class PermittedEventStoreTransactionRunner(
 internal class EventStoreRepository(
     private val reads: EventStoreTransactionRunner,
     private val metrics: EventStoreAppendMetrics = EventStoreAppendMetrics.NONE,
-) : EventStorePort {
+): EventStorePort {
 
-    override fun load(read: EventStoreRead): EventPage = reads.readTransaction { loadInCurrentTransaction(read) }
+    override fun load(read: EventStoreRead): EventPage =
+        reads.readTransaction {
+            loadInCurrentTransaction(read)
+        }
 
     override fun loadInCurrentTransaction(read: EventStoreRead): EventPage {
         TransactionManager.current()
         val committedHead = headVersion(read.stream)
-        val events =
-            EventLog
-                .selectAll()
-                .where {
-                    (EventLog.tenantId eq read.stream.tenantId.value) and
+        val events = EventLog
+            .selectAll()
+            .where {
+                (EventLog.tenantId eq read.stream.tenantId.value) and
                         (EventLog.streamType eq read.stream.streamType) and
                         (EventLog.streamId eq read.stream.streamId) and
                         (EventLog.streamVersion greater read.afterVersion) and
                         (EventLog.streamVersion lessEq committedHead)
-                }.orderBy(EventLog.streamVersion to SortOrder.ASC)
-                .limit(read.limit)
-                .map(::toEnvelope)
+            }
+            .orderBy(EventLog.streamVersion to SortOrder.ASC)
+            .limit(read.limit)
+            .map(::toEnvelope)
+
         return EventPage(events, committedHead)
     }
 
@@ -93,7 +106,9 @@ internal class EventStoreRepository(
 
         val streamHeadStarted = TimeSource.Monotonic.markNow()
         val heads = ordered.associate { append -> append.stream to lockHead(append.stream) }
+
         metrics.streamHeadWait(streamHeadStarted.elapsedNow().toJavaDuration())
+
         val conflict = ordered.firstOrNull { append -> heads.getValue(append.stream) != append.expectedVersion }
         if (conflict != null) {
             return AppendResult.Conflict(
@@ -175,10 +190,10 @@ internal class EventStoreRepository(
             ?.get(StreamHeads.version)
             ?: 0
 
-    private fun streamHeadPredicate(stream: StreamKey) =
+    private fun streamHeadPredicate(stream: StreamKey): Op<Boolean> =
         (StreamHeads.tenantId eq stream.tenantId.value) and
-            (StreamHeads.streamType eq stream.streamType) and
-            (StreamHeads.streamId eq stream.streamId)
+                (StreamHeads.streamType eq stream.streamType) and
+                (StreamHeads.streamId eq stream.streamId)
 
     private fun eventAlreadyRecorded(eventId: UUID): Boolean =
         EventLog.selectAll().where { EventLog.id eq eventId }.limit(1).any()
@@ -188,12 +203,12 @@ internal class EventStoreRepository(
             row[AppendFences.id] = EVENT_STORE_FENCE_ID
             row[AppendFences.nextGlobalPosition] = 1
         }
-        val fence =
-            AppendFences
-                .selectAll()
-                .where { AppendFences.id eq EVENT_STORE_FENCE_ID }
-                .forUpdate()
-                .single()
+        val fence = AppendFences
+            .selectAll()
+            .where { AppendFences.id eq EVENT_STORE_FENCE_ID }
+            .forUpdate()
+            .single()
+
         return fence[AppendFences.nextGlobalPosition]
     }
 
@@ -212,15 +227,14 @@ internal class EventStoreRepository(
         globalPosition: Long,
         recordedAt: Instant,
     ) =
-        io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope(
+        EventEnvelope(
             eventId = eventId,
             tenantId = stream.tenantId,
-            stream =
-                io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference(
-                    stream.streamType,
-                    stream.streamId,
-                    streamVersion,
-                ),
+            stream = StreamReference(
+                stream.streamType,
+                stream.streamId,
+                streamVersion,
+            ),
             globalPosition = globalPosition,
             eventType = eventType,
             schemaVersion = schemaVersion,
@@ -233,27 +247,25 @@ internal class EventStoreRepository(
             actorHmacKeyVersion = actorHmacKeyVersion,
         )
 
-    private fun toEnvelope(row: org.jetbrains.exposed.v1.core.ResultRow) =
-        io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope(
-            eventId = row[EventLog.id].value,
-            tenantId = io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId(row[EventLog.tenantId]),
-            stream =
-                io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference(
-                    row[EventLog.streamType],
-                    row[EventLog.streamId],
-                    row[EventLog.streamVersion],
-                ),
-            globalPosition = row[EventLog.globalPosition],
-            eventType = row[EventLog.eventType],
-            schemaVersion = row[EventLog.schemaVersion],
-            occurredAt = row[EventLog.occurredAt],
-            recordedAt = row[EventLog.recordedAt],
-            correlationId = row[EventLog.correlationId],
-            causationId = row[EventLog.causationId],
-            actorSurrogate = row[EventLog.actorSurrogate],
-            payload = io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload(row[EventLog.payload]),
-            actorHmacKeyVersion = row[EventLog.actorHmacKeyVersion],
-        )
+    private fun toEnvelope(row: ResultRow) = EventEnvelope(
+        eventId = row[EventLog.id].value,
+        tenantId = TenantId(row[EventLog.tenantId]),
+        stream = StreamReference(
+            row[EventLog.streamType],
+            row[EventLog.streamId],
+            row[EventLog.streamVersion],
+        ),
+        globalPosition = row[EventLog.globalPosition],
+        eventType = row[EventLog.eventType],
+        schemaVersion = row[EventLog.schemaVersion],
+        occurredAt = row[EventLog.occurredAt],
+        recordedAt = row[EventLog.recordedAt],
+        correlationId = row[EventLog.correlationId],
+        causationId = row[EventLog.causationId],
+        actorSurrogate = row[EventLog.actorSurrogate],
+        payload = EventPayload(row[EventLog.payload]),
+        actorHmacKeyVersion = row[EventLog.actorHmacKeyVersion],
+    )
 }
 
 internal interface EventStoreAppendMetrics {
@@ -262,11 +274,9 @@ internal interface EventStoreAppendMetrics {
     fun appendFenceWait(duration: Duration)
 
     companion object {
-        val NONE =
-            object : EventStoreAppendMetrics {
-                override fun streamHeadWait(duration: Duration) = Unit
-
-                override fun appendFenceWait(duration: Duration) = Unit
-            }
+        val NONE = object: EventStoreAppendMetrics {
+            override fun streamHeadWait(duration: Duration) = Unit
+            override fun appendFenceWait(duration: Duration) = Unit
+        }
     }
 }

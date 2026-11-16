@@ -15,7 +15,7 @@ class CborConfigTest @Autowired constructor(
     private val courseRepository: CourseRepository,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

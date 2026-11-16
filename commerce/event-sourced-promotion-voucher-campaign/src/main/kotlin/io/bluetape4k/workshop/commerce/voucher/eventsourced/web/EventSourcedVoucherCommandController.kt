@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.application.AllocateVoucherCommandInput
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.application.EventSourcedVoucherCommands
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.application.EventSourcedVoucherLifecycleCommands
@@ -11,8 +11,8 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.application.VoucherC
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 private const val FINGERPRINT_CONFLICT_STATUS = 409
 private const val VOUCHER_PUBLIC_REVISION_OFFSET = 2
@@ -75,6 +75,14 @@ internal class VoucherCommandHttpService(
     private val lifecycle: EventSourcedVoucherLifecycleCommands,
     private val snapshots: CampaignProjectionSnapshotReader,
 ) {
+
+    private companion object: KLogging() {
+        val TRANSITION_SUCCESS_OUTCOMES = setOf(
+            ReceiptOutcome.VOUCHER_REDEEMED,
+            ReceiptOutcome.VOUCHER_RELEASED
+        )
+    }
+
     fun allocate(
         tenant: String,
         principal: String,
@@ -84,7 +92,7 @@ internal class VoucherCommandHttpService(
     ): VoucherAllocationHttpResult =
         commands
             .allocate(
-                AllocateVoucherCommandInput(
+                input = AllocateVoucherCommandInput(
                     tenant = tenant,
                     principal = principal,
                     idempotencyKey = idempotencyKey,
@@ -102,7 +110,7 @@ internal class VoucherCommandHttpService(
     ): VoucherTransitionHttpResult =
         lifecycle
             .redeem(
-                RedeemVoucherCommandInput(
+                input = RedeemVoucherCommandInput(
                     tenant = tenant,
                     principal = principal,
                     idempotencyKey = idempotencyKey,
@@ -122,7 +130,7 @@ internal class VoucherCommandHttpService(
     ): VoucherTransitionHttpResult =
         lifecycle
             .release(
-                ReleaseVoucherCommandInput(
+                input = ReleaseVoucherCommandInput(
                     tenant = tenant,
                     principal = principal,
                     idempotencyKey = idempotencyKey,
@@ -134,93 +142,79 @@ internal class VoucherCommandHttpService(
     private fun VoucherCommandExecution.toHttp(
         tenant: String,
         campaignId: UUID,
-    ): VoucherAllocationHttpResult =
-        when (this) {
-            is VoucherCommandExecution.Completed ->
-                if (descriptor.outcome == ReceiptOutcome.VOUCHER_ALLOCATED) {
-                    val allocationId = checkNotNull(descriptor.allocationId)
-                    val voucher = checkNotNull(commands.voucher(tenant, allocationId))
-                    val streamPosition = checkNotNull(descriptor.streamPosition)
-                    val projectionPosition =
-                        snapshots
-                            .read(TenantId(tenant), campaignId)
-                            .positions.projectionPosition
-                            .coerceAtMost(streamPosition)
-                    VoucherAllocationHttpResult.Allocated(
-                        body =
-                            VoucherAllocationHttpResponse(
-                                claimId = allocationId,
-                                state = voucher.state.name,
-                                revision = voucher.version - VOUCHER_PUBLIC_REVISION_OFFSET,
-                                policyVersion = voucher.policyVersion - 1,
-                                expiresAt = voucher.expiresAt,
-                                reviewId = null,
-                                code =
-                                    commands.voucherCode(
-                                        tenant = tenant,
-                                        campaignId = campaignId,
-                                        allocationId = allocationId,
-                                        keyVersion = checkNotNull(descriptor.generationKeyVersion),
-                                    ),
-                            ),
-                        replayed = replayed,
-                        positions = ProjectionPositions(streamPosition, projectionPosition),
-                    )
-                } else {
-                    VoucherAllocationHttpResult.Rejected(descriptor.status, descriptor.outcome.toFailureCode())
-                }
+    ): VoucherAllocationHttpResult = when (this) {
+        is VoucherCommandExecution.Completed        ->
+            if (descriptor.outcome == ReceiptOutcome.VOUCHER_ALLOCATED) {
+                val allocationId = checkNotNull(descriptor.allocationId)
+                val voucher = checkNotNull(commands.voucher(tenant, allocationId))
+                val streamPosition = checkNotNull(descriptor.streamPosition)
+                val projectionPosition = snapshots
+                    .read(TenantId(tenant), campaignId)
+                    .positions.projectionPosition
+                    .coerceAtMost(streamPosition)
 
-            VoucherCommandExecution.FingerprintConflict ->
-                VoucherAllocationHttpResult.Rejected(
-                    FINGERPRINT_CONFLICT_STATUS,
-                    "IDEMPOTENCY_FINGERPRINT_CONFLICT",
+                VoucherAllocationHttpResult.Allocated(
+                    body = VoucherAllocationHttpResponse(
+                        claimId = allocationId,
+                        state = voucher.state.name,
+                        revision = voucher.version - VOUCHER_PUBLIC_REVISION_OFFSET,
+                        policyVersion = voucher.policyVersion - 1,
+                        expiresAt = voucher.expiresAt,
+                        reviewId = null,
+                        code = commands.voucherCode(
+                            tenant = tenant,
+                            campaignId = campaignId,
+                            allocationId = allocationId,
+                            keyVersion = checkNotNull(descriptor.generationKeyVersion),
+                        ),
+                    ),
+                    replayed = replayed,
+                    positions = ProjectionPositions(streamPosition, projectionPosition),
                 )
-            VoucherCommandExecution.InProgress -> VoucherAllocationHttpResult.InProgress
-            VoucherCommandExecution.KeyUnavailable -> VoucherAllocationHttpResult.KeyUnavailable
-        }
+            } else {
+                VoucherAllocationHttpResult.Rejected(descriptor.status, descriptor.outcome.toFailureCode())
+            }
 
-    private fun VoucherCommandExecution.toTransitionHttp(tenant: String): VoucherTransitionHttpResult =
-        when (this) {
-            is VoucherCommandExecution.Completed ->
-                if (descriptor.outcome in TRANSITION_SUCCESS_OUTCOMES) {
-                    val voucherId = checkNotNull(descriptor.allocationId)
-                    val voucher = checkNotNull(commands.voucher(tenant, voucherId))
-                    val streamPosition = checkNotNull(descriptor.streamPosition)
-                    val campaignId = checkNotNull(voucher.campaignId)
-                    val projectionPosition =
-                        snapshots
-                            .read(TenantId(tenant), campaignId)
-                            .positions.projectionPosition
-                            .coerceAtMost(streamPosition)
-                    VoucherTransitionHttpResult.Transitioned(
-                        body =
-                            VoucherClaimHttpResponse(
-                                campaignId = campaignId,
-                                claimId = voucherId,
-                                state = voucher.state.name,
-                                revision = voucher.version - VOUCHER_PUBLIC_REVISION_OFFSET,
-                                policyVersion = voucher.policyVersion - 1,
-                                expiresAt = voucher.expiresAt,
-                            ),
-                        replayed = replayed,
-                        positions = ProjectionPositions(streamPosition, projectionPosition),
-                    )
-                } else {
-                    VoucherTransitionHttpResult.Rejected(descriptor.status, descriptor.outcome.toFailureCode())
-                }
+        VoucherCommandExecution.FingerprintConflict ->
+            VoucherAllocationHttpResult.Rejected(FINGERPRINT_CONFLICT_STATUS, "IDEMPOTENCY_FINGERPRINT_CONFLICT")
 
-            VoucherCommandExecution.FingerprintConflict ->
-                VoucherTransitionHttpResult.Rejected(
-                    FINGERPRINT_CONFLICT_STATUS,
-                    "IDEMPOTENCY_FINGERPRINT_CONFLICT",
+        VoucherCommandExecution.InProgress          -> VoucherAllocationHttpResult.InProgress
+        VoucherCommandExecution.KeyUnavailable      -> VoucherAllocationHttpResult.KeyUnavailable
+    }
+
+    private fun VoucherCommandExecution.toTransitionHttp(tenant: String): VoucherTransitionHttpResult = when (this) {
+        is VoucherCommandExecution.Completed        ->
+            if (descriptor.outcome in TRANSITION_SUCCESS_OUTCOMES) {
+                val voucherId = checkNotNull(descriptor.allocationId)
+                val voucher = checkNotNull(commands.voucher(tenant, voucherId))
+                val streamPosition = checkNotNull(descriptor.streamPosition)
+                val campaignId = checkNotNull(voucher.campaignId)
+                val projectionPosition = snapshots
+                    .read(TenantId(tenant), campaignId)
+                    .positions.projectionPosition
+                    .coerceAtMost(streamPosition)
+
+                VoucherTransitionHttpResult.Transitioned(
+                    body = VoucherClaimHttpResponse(
+                        campaignId = campaignId,
+                        claimId = voucherId,
+                        state = voucher.state.name,
+                        revision = voucher.version - VOUCHER_PUBLIC_REVISION_OFFSET,
+                        policyVersion = voucher.policyVersion - 1,
+                        expiresAt = voucher.expiresAt,
+                    ),
+                    replayed = replayed,
+                    positions = ProjectionPositions(streamPosition, projectionPosition),
                 )
-            VoucherCommandExecution.InProgress -> VoucherTransitionHttpResult.InProgress
-            VoucherCommandExecution.KeyUnavailable -> VoucherTransitionHttpResult.KeyUnavailable
-        }
+            } else {
+                VoucherTransitionHttpResult.Rejected(descriptor.status, descriptor.outcome.toFailureCode())
+            }
 
-    private companion object {
-        val TRANSITION_SUCCESS_OUTCOMES =
-            setOf(ReceiptOutcome.VOUCHER_REDEEMED, ReceiptOutcome.VOUCHER_RELEASED)
+        VoucherCommandExecution.FingerprintConflict ->
+            VoucherTransitionHttpResult.Rejected(FINGERPRINT_CONFLICT_STATUS, "IDEMPOTENCY_FINGERPRINT_CONFLICT")
+
+        VoucherCommandExecution.InProgress          -> VoucherTransitionHttpResult.InProgress
+        VoucherCommandExecution.KeyUnavailable      -> VoucherTransitionHttpResult.KeyUnavailable
     }
 }
 
@@ -229,16 +223,16 @@ internal sealed interface VoucherAllocationHttpResult {
         val body: VoucherAllocationHttpResponse,
         val replayed: Boolean,
         val positions: ProjectionPositions,
-    ) : VoucherAllocationHttpResult
+    ): VoucherAllocationHttpResult
 
     data class Rejected(
         val status: Int,
         val code: String,
-    ) : VoucherAllocationHttpResult
+    ): VoucherAllocationHttpResult
 
-    data object InProgress : VoucherAllocationHttpResult
+    data object InProgress: VoucherAllocationHttpResult
 
-    data object KeyUnavailable : VoucherAllocationHttpResult
+    data object KeyUnavailable: VoucherAllocationHttpResult
 }
 
 internal sealed interface VoucherTransitionHttpResult {
@@ -246,16 +240,16 @@ internal sealed interface VoucherTransitionHttpResult {
         val body: VoucherClaimHttpResponse,
         val replayed: Boolean,
         val positions: ProjectionPositions,
-    ) : VoucherTransitionHttpResult
+    ): VoucherTransitionHttpResult
 
     data class Rejected(
         val status: Int,
         val code: String,
-    ) : VoucherTransitionHttpResult
+    ): VoucherTransitionHttpResult
 
-    data object InProgress : VoucherTransitionHttpResult
+    data object InProgress: VoucherTransitionHttpResult
 
-    data object KeyUnavailable : VoucherTransitionHttpResult
+    data object KeyUnavailable: VoucherTransitionHttpResult
 }
 
 @RestController
@@ -263,6 +257,9 @@ internal sealed interface VoucherTransitionHttpResult {
 internal class EventSourcedVoucherCommandController(
     private val service: VoucherCommandHttpService,
 ) {
+
+    companion object: KLogging()
+
     @PostMapping("/campaigns/{campaignId}/claims")
     fun allocate(
         @PathVariable campaignId: UUID,
@@ -271,11 +268,10 @@ internal class EventSourcedVoucherCommandController(
         @RequestHeader(IDEMPOTENCY_HEADER, required = false) idempotencyHeader: String?,
         @Valid @RequestBody body: AllocateVoucherHttpRequest,
     ): ResponseEntity<Any> {
-        val tenant = tenantHeader.requireNotNull(TENANT_HEADER).requireNotBlank(TENANT_HEADER)
-        val principal = principalHeader.requireNotNull(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER)
-        val idempotencyKey =
-            idempotencyHeader.requireNotNull(IDEMPOTENCY_HEADER)
-                .requireNotBlank(IDEMPOTENCY_HEADER)
+        val tenant = tenantHeader.requireNotBlank(TENANT_HEADER)
+        val principal = principalHeader.requireNotBlank(PRINCIPAL_HEADER)
+        val idempotencyKey = idempotencyHeader.requireNotBlank(IDEMPOTENCY_HEADER)
+
         return service.allocate(tenant, principal, idempotencyKey, campaignId, body).toResponse()
     }
 
@@ -287,11 +283,10 @@ internal class EventSourcedVoucherCommandController(
         @RequestHeader(IDEMPOTENCY_HEADER, required = false) idempotencyHeader: String?,
         @Valid @RequestBody body: RedeemVoucherHttpRequest,
     ): ResponseEntity<Any> {
-        val tenant = tenantHeader.requireNotNull(TENANT_HEADER).requireNotBlank(TENANT_HEADER)
-        val principal = principalHeader.requireNotNull(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER)
-        val idempotencyKey =
-            idempotencyHeader.requireNotNull(IDEMPOTENCY_HEADER)
-                .requireNotBlank(IDEMPOTENCY_HEADER)
+        val tenant = tenantHeader.requireNotBlank(TENANT_HEADER)
+        val principal = principalHeader.requireNotBlank(PRINCIPAL_HEADER)
+        val idempotencyKey = idempotencyHeader.requireNotBlank(IDEMPOTENCY_HEADER)
+
         return service.redeem(tenant, principal, idempotencyKey, claimId, body).toResponse()
     }
 
@@ -303,77 +298,73 @@ internal class EventSourcedVoucherCommandController(
         @RequestHeader(IDEMPOTENCY_HEADER, required = false) idempotencyHeader: String?,
         @Valid @RequestBody body: VoucherRevisionHttpRequest,
     ): ResponseEntity<Any> {
-        val tenant = tenantHeader.requireNotNull(TENANT_HEADER).requireNotBlank(TENANT_HEADER)
-        val principal = principalHeader.requireNotNull(PRINCIPAL_HEADER).requireNotBlank(PRINCIPAL_HEADER)
-        val idempotencyKey =
-            idempotencyHeader.requireNotNull(IDEMPOTENCY_HEADER)
-                .requireNotBlank(IDEMPOTENCY_HEADER)
+        val tenant = tenantHeader.requireNotBlank(TENANT_HEADER)
+        val principal = principalHeader.requireNotBlank(PRINCIPAL_HEADER)
+        val idempotencyKey = idempotencyHeader.requireNotBlank(IDEMPOTENCY_HEADER)
+
         return service.release(tenant, principal, idempotencyKey, claimId, body).toResponse()
     }
 }
 
-private fun VoucherAllocationHttpResult.toResponse(): ResponseEntity<Any> =
-    when (this) {
-        is VoucherAllocationHttpResult.Allocated ->
-            ResponseEntity.status(HttpStatus.CREATED)
-                .header(HttpHeaders.LOCATION, "/api/v1/claims/${body.claimId}")
-                .header("Idempotency-Replayed", replayed.toString())
-                .header(STREAM_POSITION_HEADER, positions.streamPosition.toString())
-                .header(PROJECTION_POSITION_HEADER, positions.projectionPosition.toString())
-                .header(PROJECTION_LAG_HEADER, positions.lag.toString())
-                .body(body)
+private fun VoucherAllocationHttpResult.toResponse(): ResponseEntity<Any> = when (this) {
+    is VoucherAllocationHttpResult.Allocated   ->
+        ResponseEntity.status(HttpStatus.CREATED)
+            .header(HttpHeaders.LOCATION, "/api/v1/claims/${body.claimId}")
+            .header("Idempotency-Replayed", replayed.toString())
+            .header(STREAM_POSITION_HEADER, positions.streamPosition.toString())
+            .header(PROJECTION_POSITION_HEADER, positions.projectionPosition.toString())
+            .header(PROJECTION_LAG_HEADER, positions.lag.toString())
+            .body(body)
 
-        is VoucherAllocationHttpResult.Rejected ->
-            ResponseEntity.status(status)
-                .body(EventSourcedApiError(code, "voucher allocation was rejected"))
+    is VoucherAllocationHttpResult.Rejected    ->
+        ResponseEntity.status(status)
+            .body(EventSourcedApiError(code, "voucher allocation was rejected"))
 
-        VoucherAllocationHttpResult.InProgress ->
-            ResponseEntity.status(HttpStatus.CONFLICT)
-                .header(HttpHeaders.RETRY_AFTER, "1")
-                .body(EventSourcedApiError("COMMAND_IN_PROGRESS", "command is already in progress"))
+    VoucherAllocationHttpResult.InProgress     ->
+        ResponseEntity.status(HttpStatus.CONFLICT)
+            .header(HttpHeaders.RETRY_AFTER, "1")
+            .body(EventSourcedApiError("COMMAND_IN_PROGRESS", "command is already in progress"))
 
-        VoucherAllocationHttpResult.KeyUnavailable ->
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(EventSourcedApiError("REPLAY_KEY_UNAVAILABLE", "command replay key is unavailable"))
-    }
+    VoucherAllocationHttpResult.KeyUnavailable ->
+        ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(EventSourcedApiError("REPLAY_KEY_UNAVAILABLE", "command replay key is unavailable"))
+}
 
-private fun VoucherTransitionHttpResult.toResponse(): ResponseEntity<Any> =
-    when (this) {
-        is VoucherTransitionHttpResult.Transitioned ->
-            ResponseEntity.ok()
-                .header("Idempotency-Replayed", replayed.toString())
-                .header(STREAM_POSITION_HEADER, positions.streamPosition.toString())
-                .header(PROJECTION_POSITION_HEADER, positions.projectionPosition.toString())
-                .header(PROJECTION_LAG_HEADER, positions.lag.toString())
-                .body(body)
+private fun VoucherTransitionHttpResult.toResponse(): ResponseEntity<Any> = when (this) {
+    is VoucherTransitionHttpResult.Transitioned ->
+        ResponseEntity.ok()
+            .header("Idempotency-Replayed", replayed.toString())
+            .header(STREAM_POSITION_HEADER, positions.streamPosition.toString())
+            .header(PROJECTION_POSITION_HEADER, positions.projectionPosition.toString())
+            .header(PROJECTION_LAG_HEADER, positions.lag.toString())
+            .body(body)
 
-        is VoucherTransitionHttpResult.Rejected ->
-            ResponseEntity.status(status)
-                .body(EventSourcedApiError(code, "voucher transition was rejected"))
+    is VoucherTransitionHttpResult.Rejected     ->
+        ResponseEntity.status(status)
+            .body(EventSourcedApiError(code, "voucher transition was rejected"))
 
-        VoucherTransitionHttpResult.InProgress ->
-            ResponseEntity.status(HttpStatus.CONFLICT)
-                .header(HttpHeaders.RETRY_AFTER, "1")
-                .body(EventSourcedApiError("COMMAND_IN_PROGRESS", "command is already in progress"))
+    VoucherTransitionHttpResult.InProgress      ->
+        ResponseEntity.status(HttpStatus.CONFLICT)
+            .header(HttpHeaders.RETRY_AFTER, "1")
+            .body(EventSourcedApiError("COMMAND_IN_PROGRESS", "command is already in progress"))
 
-        VoucherTransitionHttpResult.KeyUnavailable ->
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(EventSourcedApiError("REPLAY_KEY_UNAVAILABLE", "command replay key is unavailable"))
-    }
+    VoucherTransitionHttpResult.KeyUnavailable  ->
+        ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(EventSourcedApiError("REPLAY_KEY_UNAVAILABLE", "command replay key is unavailable"))
+}
 
-private fun ReceiptOutcome.toFailureCode(): String =
-    when (this) {
-        ReceiptOutcome.CAMPAIGN_NOT_FOUND -> "CAMPAIGN_NOT_FOUND"
-        ReceiptOutcome.CAMPAIGN_NOT_ACTIVE -> "CAMPAIGN_NOT_ACTIVE"
-        ReceiptOutcome.CAMPAIGN_NOT_STARTED -> "CAMPAIGN_NOT_STARTED"
-        ReceiptOutcome.CAMPAIGN_ENDED -> "CAMPAIGN_ENDED"
-        ReceiptOutcome.CAPACITY_EXHAUSTED -> "CAPACITY_EXHAUSTED"
-        ReceiptOutcome.PER_USER_LIMIT_REACHED -> "PER_USER_LIMIT_REACHED"
-        ReceiptOutcome.VOUCHER_NOT_FOUND -> "CLAIM_NOT_FOUND"
-        ReceiptOutcome.STALE_REVISION -> "STALE_REVISION"
-        ReceiptOutcome.INVALID_VOUCHER_CODE -> "INVALID_CODE"
-        ReceiptOutcome.VOUCHER_EXPIRED -> "VOUCHER_EXPIRED"
-        ReceiptOutcome.INVALID_TRANSITION -> "INVALID_TRANSITION"
-        ReceiptOutcome.CONCURRENT_MODIFICATION -> "CONCURRENT_MODIFICATION"
-        else -> "DOMAIN_REJECTED"
-    }
+private fun ReceiptOutcome.toFailureCode(): String = when (this) {
+    ReceiptOutcome.CAMPAIGN_NOT_FOUND      -> "CAMPAIGN_NOT_FOUND"
+    ReceiptOutcome.CAMPAIGN_NOT_ACTIVE     -> "CAMPAIGN_NOT_ACTIVE"
+    ReceiptOutcome.CAMPAIGN_NOT_STARTED    -> "CAMPAIGN_NOT_STARTED"
+    ReceiptOutcome.CAMPAIGN_ENDED          -> "CAMPAIGN_ENDED"
+    ReceiptOutcome.CAPACITY_EXHAUSTED      -> "CAPACITY_EXHAUSTED"
+    ReceiptOutcome.PER_USER_LIMIT_REACHED  -> "PER_USER_LIMIT_REACHED"
+    ReceiptOutcome.VOUCHER_NOT_FOUND       -> "CLAIM_NOT_FOUND"
+    ReceiptOutcome.STALE_REVISION          -> "STALE_REVISION"
+    ReceiptOutcome.INVALID_VOUCHER_CODE    -> "INVALID_CODE"
+    ReceiptOutcome.VOUCHER_EXPIRED         -> "VOUCHER_EXPIRED"
+    ReceiptOutcome.INVALID_TRANSITION      -> "INVALID_TRANSITION"
+    ReceiptOutcome.CONCURRENT_MODIFICATION -> "CONCURRENT_MODIFICATION"
+    else                                   -> "DOMAIN_REJECTED"
+}

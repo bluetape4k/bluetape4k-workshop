@@ -20,9 +20,9 @@ import org.junit.jupiter.api.TestInstance
  * base [cleanGraph] 설정을 통해 각 테스트 전에 실행됩니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AbuserDetectionSuspendTinkerGraphTest : AbstractAbuserDetectionSuspendTest() {
+class AbuserDetectionSuspendTinkerGraphTest: AbstractAbuserDetectionSuspendTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override val graphName = "test_abuser_suspend"
     override val ops: GraphSuspendOperations = TinkerGraphSuspendOperations()

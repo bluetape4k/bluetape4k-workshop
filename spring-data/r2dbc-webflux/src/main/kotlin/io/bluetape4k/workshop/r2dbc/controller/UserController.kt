@@ -23,7 +23,7 @@ class UserController(
     private val service: UserService,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @GetMapping("/users")
     fun findAll(): Flow<User> {
@@ -57,10 +57,11 @@ class UserController(
 
     @DeleteMapping("/users/{id}")
     suspend fun deleteUser(@PathVariable("id") id: Int): Boolean {
-        val deleted = service.deleteUser(id)
-        if (!deleted) {
+        return if (service.deleteUser(id)) {
+            true
+        } else {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "User[$id] not found")
         }
-        return deleted
+
     }
 }

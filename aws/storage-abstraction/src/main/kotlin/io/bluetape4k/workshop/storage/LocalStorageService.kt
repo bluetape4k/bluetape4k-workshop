@@ -26,7 +26,7 @@ import java.nio.file.Paths
  *
  * ```kotlin
  * // profile "local" 사용 시:
- * val url = storageService.upload("test.txt", "Hello".toByteArray(), "text/plain")
+ * val url = storageService.upload("test.txt", "Hello".toUtf8Bytes(), "text/plain")
  * // url = "file:///tmp/storage/test.txt"
  * ```
  */

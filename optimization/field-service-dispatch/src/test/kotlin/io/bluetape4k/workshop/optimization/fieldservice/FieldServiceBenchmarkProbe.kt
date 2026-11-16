@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.optimization.fieldservice
 
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AvailabilityWindow
 import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
@@ -15,9 +16,8 @@ import io.bluetape4k.workshop.optimization.fieldservice.planner.PlannerInput
 import io.bluetape4k.workshop.optimization.fieldservice.planner.TravelTimeMatrix
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** 외부 benchmark plugin 없이 max-envelope invariant report를 만드는 probe입니다. */
 object FieldServiceBenchmarkProbe {
@@ -28,11 +28,12 @@ object FieldServiceBenchmarkProbe {
         val input = fixture()
         val planner = DeterministicFieldServicePlanner()
         repeat(2) { planner.planWithMetrics(input) }
+
         val runs = (1..5).map { planner.planWithMetrics(input) }
         val metrics = runs.map { it.metrics }
         val invariantsPass = metrics.all {
             it.candidateEvaluations <= input.visits.size * input.workers.size &&
-                it.externalCalls == 0 && it.invariants == listOf("O(V*W+E)")
+                    it.externalCalls == 0 && it.invariants == listOf("O(V*W+E)")
         }
         Files.createDirectories(output.parent)
         Files.writeString(
@@ -63,27 +64,41 @@ object FieldServiceBenchmarkProbe {
     }
 
     private fun fixture(): PlannerInput {
-        val coordinates = (0 until 100).map { CoordinateId("coordinate-$it") }.toSet()
+        val coordinateSize = 100
+        val workerSize = 100
+        val visitSize = 500
+
+        val coordinates = List(coordinateSize) { CoordinateId("coordinate-$it") }.toSet()
         val edges = buildMap {
-            coordinates.forEach { from -> coordinates.forEach { to -> put(CoordinatePair(from, to), 60L) } }
+            coordinates.forEach { from ->
+                coordinates.forEach { to ->
+                    put(CoordinatePair(from, to), 60L)
+                }
+            }
         }
-        val workers = (0 until 100).map { index ->
+        val workers = List(workerSize) { index ->
             Worker(
                 workerId = WorkerId("worker-$index"),
                 name = "Synthetic worker $index",
                 skills = (0 until 20).mapTo(linkedSetOf()) { Skill("skill-$it") },
-                availability = (0 until 20).map { AvailabilityWindow(start.plus(Duration.ofMinutes(it.toLong() * 20)), end) },
+                availability = List(20) {
+                    AvailabilityWindow(
+                        start.plus((it.toLong() * 20).minutes()),
+                        end
+                    )
+                },
                 homeCoordinateId = coordinates.elementAt(index),
             )
         }
-        val visits = (0 until 500).map { index ->
+
+        val visits = List(visitSize) { index ->
             Visit(
                 visitId = VisitId("visit-$index"),
                 coordinateId = coordinates.elementAt(index % coordinates.size),
                 requiredSkill = Skill("skill-${index % 20}"),
                 windowStart = start,
                 windowEnd = end,
-                serviceDuration = Duration.ofMinutes(1),
+                serviceDuration = 1.minutes(),
             )
         }
         return PlannerInput(

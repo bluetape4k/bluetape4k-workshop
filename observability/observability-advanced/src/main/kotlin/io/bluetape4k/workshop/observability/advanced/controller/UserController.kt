@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.observability.advanced.controller
 
-import io.bluetape4k.workshop.observability.advanced.model.User
+import io.bluetape4k.workshop.observability.advanced.model.UserRecord
 import io.bluetape4k.workshop.observability.advanced.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -27,7 +27,7 @@ class UserController(
      * ID 로 user 를 조회합니다. 찾지 못하면 404 를 반환합니다.
      */
     @GetMapping("/{id}")
-    suspend fun getUser(@PathVariable id: Long): ResponseEntity<User> {
+    suspend fun getUser(@PathVariable id: Long): ResponseEntity<UserRecord> {
         val user = userService.getById(id)
         return if (user != null) ResponseEntity.ok(user)
         else ResponseEntity.notFound().build()
@@ -37,7 +37,7 @@ class UserController(
      * 새 user 를 생성합니다. 201 Created 를 반환합니다.
      */
     @PostMapping
-    suspend fun createUser(@RequestBody user: User): ResponseEntity<User> {
+    suspend fun createUser(@RequestBody user: UserRecord): ResponseEntity<UserRecord> {
         val created = userService.create(user)
         return ResponseEntity.created(URI.create("/users/${created.id}")).body(created)
     }

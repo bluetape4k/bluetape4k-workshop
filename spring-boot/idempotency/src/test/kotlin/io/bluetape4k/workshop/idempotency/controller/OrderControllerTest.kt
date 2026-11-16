@@ -8,6 +8,7 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.idempotency.AbstractIdempotencyTest
 import io.bluetape4k.workshop.idempotency.model.OrderRequest
 import io.bluetape4k.workshop.idempotency.model.OrderResponse
@@ -16,14 +17,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBody
 
-class OrderControllerTest : AbstractIdempotencyTest() {
+class OrderControllerTest: AbstractIdempotencyTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val ORDERS_PATH = "/api/orders"
         private const val IDEMPOTENCY_KEY_HEADER = "Idempotency-Key"
     }
 
-    private fun newIdempotencyKey(): String = Base58.randomString(16)
+    private fun newIdempotencyKey(): String = Base58.randomString(12)
 
     private val sampleRequest = OrderRequest(
         productId = "prod-001",
@@ -45,6 +46,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .responseBody
             .shouldNotBeNull()
             .also { response ->
+                log.debug { "response=$response" }
                 response.orderId.shouldNotBeEmpty()
                 response.status shouldBeEqualTo "CREATED"
             }
@@ -80,6 +82,9 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .responseBody
             .shouldNotBeNull()
 
+        log.debug { "first=$first" }
+        log.debug { "second=$second" }
+
         second.orderId shouldBeEqualTo first.orderId
         second.processedAt shouldBeEqualTo first.processedAt
     }
@@ -113,6 +118,9 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .responseBody
             .shouldNotBeNull()
 
+        log.debug { "responseA=$responseA" }
+        log.debug { "responseB=$responseB" }
+
         // 서로 다른 key 는 서로 다른 order ID 를 만듭니다.
         responseA.orderId shouldNotBeEqualTo responseB.orderId
     }
@@ -142,7 +150,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     fun `세 번 재전송해도 항상 동일한 응답을 반환한다`() = runSuspendIO {
         val key = newIdempotencyKey()
 
-        val responses = (1..3).map {
+        val responses = List(3) {
             client.post()
                 .uri(ORDERS_PATH)
                 .header(IDEMPOTENCY_KEY_HEADER, key)
@@ -153,7 +161,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
                 .returnResult()
                 .responseBody
                 .shouldNotBeNull()
-        }
+        }.onEach { log.debug { "response=$it" } }
 
         // 모든 response 는 같은 orderId 를 가져야 합니다.
         val distinctOrderIds = responses.map { it.orderId }.toSet()

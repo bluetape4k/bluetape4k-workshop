@@ -2,8 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-Abstract Factory groups related object creation behind one factory interface. This package models a
-kingdom family: every selected factory creates a matching `Castle`, `King`, and `Army`.
+Abstract Factory groups related object creation behind one factory interface. This package models a kingdom family: every selected factory creates a matching `Castle`, `King`, and `Army`.
 
 ## Architecture
 
@@ -11,13 +10,13 @@ kingdom family: every selected factory creates a matching `Castle`, `King`, and 
 
 ## Source map
 
-| source | role |
-|---|---|
-| `KingdomFactory` | common creation contract: `createCastle()`, `createKing()`, `createArmy()` |
-| `FactoryMaker` | chooses `ElfKingdomFactory` or `OrcKingdomFactory` from `KingdomType` |
-| `elf/*` | concrete Elf product family |
-| `orc/*` | concrete Orc product family |
-| `Castle`, `King`, `Army` | product interfaces shared by every family |
+| source                   | role                                                                       |
+|--------------------------|----------------------------------------------------------------------------|
+| `KingdomFactory`         | common creation contract: `createCastle()`, `createKing()`, `createArmy()` |
+| `FactoryMaker`           | chooses `ElfKingdomFactory` or `OrcKingdomFactory` from `KingdomType`      |
+| `elf/*`                  | concrete Elf product family                                                |
+| `orc/*`                  | concrete Orc product family                                                |
+| `Castle`, `King`, `Army` | product interfaces shared by every family                                  |
 
 ## Usage
 
@@ -29,5 +28,4 @@ val king = factory.createKing()
 val army = factory.createArmy()
 ```
 
-Use this pattern when the caller should choose a family once and then receive related products that
-belong together.
+Use this pattern when the caller should choose a family once and then receive related products that belong together.

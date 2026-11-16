@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
-import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
@@ -47,16 +48,16 @@ internal sealed interface RebuildManagementResult {
     data class Accepted(
         val generation: ProjectionGeneration,
         val replayed: Boolean,
-    ) : RebuildManagementResult
+    ): RebuildManagementResult
 
-    data class StaleToken(val currentToken: Long) : RebuildManagementResult
+    data class StaleToken(val currentToken: Long): RebuildManagementResult
 
     data class Conflict(
         val generation: ProjectionGeneration?,
         val reason: String,
-    ) : RebuildManagementResult
+    ): RebuildManagementResult
 
-    data object NotFound : RebuildManagementResult
+    data object NotFound: RebuildManagementResult
 }
 
 private data class RebuildAuditMutation(
@@ -88,9 +89,15 @@ internal class EventSourcedRebuildManagementService(
                 )
             audits.find(identity.tenant, identity.requestDigest, OperatorAuditAction.REBUILD_STARTED)
                 ?.let { return@inTransaction replay(it) }
-            val active = checkNotNull(findActive(validRequest.projection)) { "active projection does not exist" }
-            val activeGeneration =
-                checkNotNull(findGeneration(ProjectionKey(active.projection, active.generation)))
+
+            val active = findActive(validRequest.projection).checkNotNull { "active projection does not exist" }
+            val activeGeneration = findGeneration(
+                ProjectionKey(
+                    active.projection,
+                    active.generation
+                )
+            ).checkNotNull { "generation does not exist" }
+
             if (active.revision != validRequest.expectedToken) {
                 return@inTransaction rejectStart(
                     validRequest,
@@ -110,6 +117,7 @@ internal class EventSourcedRebuildManagementService(
                 )
             }
             val generation = rebuilds.start(validRequest.projection, validRequest.targetPosition, clock.instant())
+
             audits.append(
                 audit(
                     identity = identity,
@@ -135,7 +143,9 @@ internal class EventSourcedRebuildManagementService(
                 "REBUILD_STATUS",
                 validRequest.fingerprintMaterial(),
             )
-            val generation = findGeneration(validRequest.key) ?: return@inTransaction RebuildManagementResult.NotFound
+            val generation = findGeneration(validRequest.key)
+                ?: return@inTransaction RebuildManagementResult.NotFound
+
             if (generation.fencingToken != validRequest.expectedToken) {
                 RebuildManagementResult.StaleToken(generation.fencingToken)
             } else {
@@ -144,20 +154,30 @@ internal class EventSourcedRebuildManagementService(
         }
 
     fun cancel(request: RebuildGenerationRequest): RebuildManagementResult =
-        mutateGeneration(request, OperatorAuditAction.REBUILD_CANCELLED, CANCEL_CONFLICT_REASON) { generation ->
+        mutateGeneration(
+            request = request,
+            action = OperatorAuditAction.REBUILD_CANCELLED,
+            conflictReason = CANCEL_CONFLICT_REASON
+        ) { generation ->
             if (generation.state !in CANCELLABLE_STATES) {
                 generation
             } else {
-                checkNotNull(rebuilds.requestCancellation(generation.key, clock.instant()))
+                rebuilds
+                    .requestCancellation(generation.key, clock.instant())
+                    .checkNotNull { "cancellation does not exist" }
             }
         }
 
     fun resume(request: RebuildGenerationRequest): RebuildManagementResult =
-        mutateGeneration(request, OperatorAuditAction.REBUILD_RESUMED, RESUME_CONFLICT_REASON) { generation ->
+        mutateGeneration(
+            request,
+            OperatorAuditAction.REBUILD_RESUMED,
+            RESUME_CONFLICT_REASON
+        ) { generation ->
             if (generation.state != ProjectionGenerationState.FAILED || !generation.retryableFailure) {
                 generation
             } else {
-                checkNotNull(rebuilds.resume(generation.key, clock.instant()))
+                rebuilds.resume(generation.key, clock.instant())!!
             }
         }
 
@@ -169,14 +189,14 @@ internal class EventSourcedRebuildManagementService(
     ): RebuildManagementResult =
         transactions.inTransaction {
             val validRequest = request.validated()
-            val identity =
-                validRequest.identity.toAuditIdentity(
-                    hmacKeyRing,
-                    action.name,
-                    validRequest.fingerprintMaterial(),
-                )
+            val identity = validRequest.identity.toAuditIdentity(
+                hmacKeyRing,
+                action.name,
+                validRequest.fingerprintMaterial(),
+            )
             audits.find(identity.tenant, identity.requestDigest, action)
                 ?.let { return@inTransaction replay(it) }
+
             val before = findGeneration(validRequest.key) ?: return@inTransaction RebuildManagementResult.NotFound
             if (before.fencingToken != validRequest.expectedToken) {
                 audits.append(
@@ -248,14 +268,17 @@ internal class EventSourcedRebuildManagementService(
 
     private fun replay(entry: OperatorAuditEntry): RebuildManagementResult {
         val generation = findGeneration(ProjectionKey(entry.projection, entry.generation))
+
         return when {
             entry.outcome == OperatorAuditOutcome.APPLIED && generation != null ->
                 RebuildManagementResult.Accepted(generation, replayed = true)
             entry.reasonClass == STALE_TOKEN_REASON ->
                 RebuildManagementResult.StaleToken(
-                    generation?.fencingToken ?: checkNotNull(findActive(entry.projection)).revision,
+                    generation?.fencingToken
+                        ?: findActive(entry.projection).checkNotNull("active projection").revision,
                 )
-            else -> RebuildManagementResult.Conflict(generation, entry.reasonClass ?: "REBUILD_CONFLICT")
+            else                                    ->
+                RebuildManagementResult.Conflict(generation, entry.reasonClass ?: "REBUILD_CONFLICT")
         }
     }
 
@@ -268,26 +291,26 @@ internal class EventSourcedRebuildManagementService(
         OperatorAuditEntry(
             identity = identity,
             action = action,
-            target =
-                OperatorAuditTarget(
-                    generation.key.projection,
-                    generation.key.generation,
-                    mutation.expectedToken,
-                ),
-            transition =
-                OperatorAuditTransition(
-                    beforeState = mutation.before,
-                    afterState = mutation.after,
-                    checkpointPosition = generation.currentPosition,
-                    streamPosition = generation.targetPosition,
-                    reasonClass = mutation.reason,
-                ),
+            target = OperatorAuditTarget(
+                generation.key.projection,
+                generation.key.generation,
+                mutation.expectedToken,
+            ),
+            transition = OperatorAuditTransition(
+                beforeState = mutation.before,
+                afterState = mutation.after,
+                checkpointPosition = generation.currentPosition,
+                streamPosition = generation.targetPosition,
+                reasonClass = mutation.reason,
+            ),
             result = OperatorAuditResult(mutation.outcome, clock.instant()),
         )
 
     private companion object {
-        val CANCELLABLE_STATES =
-            setOf(ProjectionGenerationState.BUILDING, ProjectionGenerationState.VALIDATING)
+        val CANCELLABLE_STATES = setOf(
+            ProjectionGenerationState.BUILDING,
+            ProjectionGenerationState.VALIDATING
+        )
     }
 }
 
@@ -305,26 +328,25 @@ internal fun RebuildRequestIdentity.toAuditIdentity(
     )
     val validIdempotencyKey = idempotencyKey.requireNotBlank("idempotencyKey")
     val tenantId = TenantId(validTenant)
+
     return OperatorAuditIdentity(
-        actorDigest =
-            ReceiptDigest.of(
-                hmacKeyRing.digest(
-                    purpose = HmacPurpose.OPERATOR_ACTOR,
-                    tenantId = tenantId,
-                    domain = "operator-audit",
-                    value = validPrincipal,
-                ).value,
-            ),
+        actorDigest = ReceiptDigest.of(
+            hmacKeyRing.digest(
+                purpose = HmacPurpose.OPERATOR_ACTOR,
+                tenantId = tenantId,
+                domain = "operator-audit",
+                value = validPrincipal,
+            ).value,
+        ),
         tenant = validTenant,
-        requestDigest =
-            ReceiptDigest.of(
-                hmacKeyRing.digest(
-                    purpose = HmacPurpose.OPERATOR_REQUEST,
-                    tenantId = tenantId,
-                    domain = action.requireNotBlank("operator.action"),
-                    value = listOf(fingerprintMaterial, validIdempotencyKey).joinToString("\u0000"),
-                ).value,
-            ),
+        requestDigest = ReceiptDigest.of(
+            hmacKeyRing.digest(
+                purpose = HmacPurpose.OPERATOR_REQUEST,
+                tenantId = tenantId,
+                domain = action.requireNotBlank("operator.action"),
+                value = listOf(fingerprintMaterial, validIdempotencyKey).joinToString("\u0000"),
+            ).value,
+        ),
     )
 }
 

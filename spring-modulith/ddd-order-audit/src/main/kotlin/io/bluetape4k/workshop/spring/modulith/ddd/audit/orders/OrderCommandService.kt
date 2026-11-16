@@ -50,6 +50,7 @@ class OrderCommandService(
 
         val approved = current.toDomain().approve(command)
         orderRepository.save(current.apply(approved))
+
         val auditedOrder = approved.withoutEvents()
         auditService.commitAfterTransaction(
             author = command.approvedBy,

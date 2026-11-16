@@ -1,18 +1,22 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
+import io.bluetape4k.concurrent.tryAcquire
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.javatimes.requireZeroOrPositiveDuration
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.checkNull
 import io.bluetape4k.support.requireEquals
-import io.bluetape4k.support.requireGe
-import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requirePositiveNumber
 import java.time.Duration
 import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.toKotlinDuration
 
 internal enum class EventSourcedDatabaseLane {
     FOREGROUND,
@@ -25,9 +29,9 @@ internal enum class EventSourcedDatabaseLane {
 internal class DatabaseBulkheadRejected(
     val retryAfter: Duration = RETRY_AFTER,
     cause: Throwable? = null,
-) : RuntimeException("DATABASE_BULKHEAD_REJECTED", cause) {
+): RuntimeException("DATABASE_BULKHEAD_REJECTED", cause) {
     companion object {
-        private val RETRY_AFTER: Duration = Duration.ofSeconds(1)
+        private val RETRY_AFTER: Duration = 1.seconds()
     }
 }
 
@@ -65,6 +69,7 @@ internal data class EventSourcedDatabasePermitBudget private constructor(
             val validReadiness = readiness.requirePositiveNumber("readiness")
             (validForeground + validProjection + validRebuild + validMaintenance + validReadiness)
                 .requireEquals(HIKARI_CONNECTION_BUDGET, "permitCapacity.sum")
+
             return EventSourcedDatabasePermitBudget(
                 validForeground,
                 validProjection,
@@ -92,15 +97,14 @@ internal class EventSourcedDatabasePermitGate(
     acquireTimeout: Duration = DEFAULT_ACQUIRE_TIMEOUT,
     private val metrics: EventSourcedDatabasePermitMetrics = EventSourcedDatabasePermitMetrics.NONE,
 ) {
-    private val acquireTimeout = acquireTimeout.requireGt(Duration.ZERO, "acquireTimeout")
-    private val capacities =
-        mapOf(
-            EventSourcedDatabaseLane.FOREGROUND to budget.foreground,
-            EventSourcedDatabaseLane.PROJECTION to budget.projection,
-            EventSourcedDatabaseLane.REBUILD to budget.rebuild,
-            EventSourcedDatabaseLane.MAINTENANCE to budget.maintenance,
-            EventSourcedDatabaseLane.READINESS to budget.readiness,
-        )
+    private val acquireTimeout = acquireTimeout.requirePositiveDuration("acquireTimeout")
+    private val capacities = mapOf(
+        EventSourcedDatabaseLane.FOREGROUND to budget.foreground,
+        EventSourcedDatabaseLane.PROJECTION to budget.projection,
+        EventSourcedDatabaseLane.REBUILD to budget.rebuild,
+        EventSourcedDatabaseLane.MAINTENANCE to budget.maintenance,
+        EventSourcedDatabaseLane.READINESS to budget.readiness,
+    )
     private val semaphores = capacities.mapValues { (_, permits) -> Semaphore(permits, true) }
     private val heldLane = ThreadLocal<EventSourcedDatabaseLane?>()
     private val lifecycleLock = ReentrantLock()
@@ -133,8 +137,9 @@ internal class EventSourcedDatabasePermitGate(
     }
 
     fun awaitDrained(timeout: Duration): Boolean {
-        val validTimeout = timeout.requireGe(Duration.ZERO, "timeout")
+        val validTimeout = timeout.requireZeroOrPositiveDuration("timeout")
         var remaining = validTimeout.toNanos()
+
         lifecycleLock.withLock {
             while (activePermits > 0 && remaining > 0) {
                 remaining = drained.awaitNanos(remaining)
@@ -145,6 +150,7 @@ internal class EventSourcedDatabasePermitGate(
 
     fun snapshot(lane: EventSourcedDatabaseLane): EventSourcedDatabasePermitSnapshot {
         val available = semaphores.getValue(lane).availablePermits()
+
         return EventSourcedDatabasePermitSnapshot(
             available = available,
             active = capacities.getValue(lane) - available,
@@ -155,7 +161,7 @@ internal class EventSourcedDatabasePermitGate(
 
     private fun acquire(lane: EventSourcedDatabaseLane): PermitLease {
         ensureAccepting(lane)
-        check(heldLane.get() == null) { "nested database permit acquisition is forbidden" }
+        heldLane.get().checkNull { "nested database permit acquisition is forbidden" }
         val registeredForeground = registerForegroundParticipant(lane)
         val semaphore = semaphores.getValue(lane)
         val acquired = acquireSemaphore(lane, semaphore)
@@ -163,6 +169,7 @@ internal class EventSourcedDatabasePermitGate(
             unregisterForegroundParticipant(registeredForeground)
             throw reject(lane)
         }
+
         lifecycleLock.withLock {
             if (!accepting) {
                 semaphore.release()
@@ -177,7 +184,7 @@ internal class EventSourcedDatabasePermitGate(
 
     private fun acquireSemaphore(lane: EventSourcedDatabaseLane, semaphore: Semaphore): Boolean =
         try {
-            semaphore.tryAcquire(acquireTimeout.toNanos(), TimeUnit.NANOSECONDS)
+            semaphore.tryAcquire(acquireTimeout.toKotlinDuration())
         } catch (interrupted: InterruptedException) {
             Thread.currentThread().interrupt()
             throw reject(lane, interrupted)
@@ -185,9 +192,7 @@ internal class EventSourcedDatabasePermitGate(
 
     private fun registerForegroundParticipant(lane: EventSourcedDatabaseLane): Boolean {
         if (lane != EventSourcedDatabaseLane.FOREGROUND) return false
-        if (foregroundParticipants.incrementAndGet() <=
-            EventSourcedDatabasePermitBudget.MAX_FOREGROUND_PARTICIPANTS
-        ) {
+        if (foregroundParticipants.incrementAndGet() <= EventSourcedDatabasePermitBudget.MAX_FOREGROUND_PARTICIPANTS) {
             return true
         }
         foregroundParticipants.decrementAndGet()
@@ -229,7 +234,7 @@ internal class EventSourcedDatabasePermitGate(
         }
     }
 
-    private companion object : KLogging() {
-        private val DEFAULT_ACQUIRE_TIMEOUT: Duration = Duration.ofMillis(250)
+    private companion object: KLogging() {
+        private val DEFAULT_ACQUIRE_TIMEOUT: Duration = 250.millis()
     }
 }

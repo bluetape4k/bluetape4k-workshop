@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.messaging.nats
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.coroutines.flow.extensions.log
+import io.bluetape4k.logging.KLogging
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -29,6 +34,8 @@ import kotlin.time.Duration.Companion.seconds
 
 class JetStreamConsumerFlowsTest {
 
+    companion object: KLogging()
+
     @Test
     fun `pull flow is cold and creates a fresh adapter handle per collection`() = runTest {
         val context = mockk<ConsumerContext>()
@@ -36,13 +43,15 @@ class JetStreamConsumerFlowsTest {
         val secondConsumer = mockk<IterableConsumer>()
         val firstMessage = mockk<Message>()
         val secondMessage = mockk<Message>()
+
         every { context.iterate(any<ConsumeOptions>()) } returnsMany listOf(firstConsumer, secondConsumer)
         every { firstConsumer.nextMessage(any<Duration>()) } returns firstMessage
         every { secondConsumer.nextMessage(any<Duration>()) } returns secondMessage
         every { firstConsumer.close() } just runs
         every { secondConsumer.close() } just runs
 
-        val flow = JetStreamConsumerFlows.pull(context, NatsFlowLimits(capacity = 1))
+        val flow = JetStreamConsumerFlows.pull(context, NatsFlowLimits(capacity = 1)).log("Pull")
+
         verify(exactly = 0) { context.iterate(any<ConsumeOptions>()) }
 
         flow.take(1).toList()
@@ -61,8 +70,12 @@ class JetStreamConsumerFlowsTest {
         val message = mockk<Message>()
         val receiveStarted = CountDownLatch(1)
         val receiveInterrupted = CountDownLatch(1)
-        every { context.iterate(any<ConsumeOptions>()) } returnsMany listOf(cancelledConsumer, recollectedConsumer)
-        every { cancelledConsumer.nextMessage(any<Duration>()) } answers {
+        every {
+            context.iterate(any<ConsumeOptions>())
+        } returnsMany listOf(cancelledConsumer, recollectedConsumer)
+        every {
+            cancelledConsumer.nextMessage(any<Duration>())
+        } answers {
             receiveStarted.countDown()
             try {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(5))
@@ -76,15 +89,21 @@ class JetStreamConsumerFlowsTest {
         every { cancelledConsumer.close() } just runs
         every { recollectedConsumer.close() } just runs
 
-        val flow = JetStreamConsumerFlows.pull(context, NatsFlowLimits(capacity = 1))
-        val active = async(Dispatchers.Default) { flow.collect() }
-        check(receiveStarted.await(5, TimeUnit.SECONDS))
+        val flow = JetStreamConsumerFlows.pull(context, NatsFlowLimits(capacity = 1)).log("Pull")
+        val active = async(Dispatchers.Default) {
+            flow.collect()
+        }
+
+        receiveStarted.await(5.seconds).shouldBeTrue()
 
         active.cancelAndJoin()
-        check(receiveInterrupted.await(1, TimeUnit.SECONDS))
-        val recollected = withTimeout(5.seconds) { flow.take(1).toList() }
+        receiveInterrupted.await(1.seconds).shouldBeTrue()
 
-        check(recollected == listOf(message))
+        val recollected = withTimeout(5.seconds) {
+            flow.take(1).toList()
+        }
+
+        recollected shouldBeEqualTo listOf(message)
         verify(exactly = 2) { context.iterate(any<ConsumeOptions>()) }
         verify(exactly = 1) { cancelledConsumer.close() }
         verify(exactly = 1) { recollectedConsumer.close() }
@@ -107,7 +126,8 @@ class JetStreamConsumerFlowsTest {
             stream = "ORDERS",
             subject = "orders.created",
             limits = NatsFlowLimits(capacity = 1, pendingMessageLimit = 8, pendingByteLimit = 65_536),
-        )
+        ).log("Push")
+
         verify(exactly = 0) { jetStream.subscribe(any(), any<PushSubscribeOptions>()) }
 
         flow.take(1).toList()
@@ -127,13 +147,17 @@ class JetStreamConsumerFlowsTest {
         every {
             jetStream.subscribe("orders.created", any<PushSubscribeOptions>())
         } returnsMany listOf(cancelledSubscription, recollectedSubscription)
+
         listOf(cancelledSubscription, recollectedSubscription).forEach { subscription ->
             every { subscription.pendingMessageLimit } returns 8
             every { subscription.pendingByteLimit } returns 65_536
             every { subscription.droppedCount } returns 0
             every { subscription.unsubscribe() } just runs
         }
-        every { cancelledSubscription.nextMessage(any<Duration>()) } answers {
+
+        every {
+            cancelledSubscription.nextMessage(any<Duration>())
+        } answers {
             receiveStarted.countDown()
             try {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(5))
@@ -150,15 +174,21 @@ class JetStreamConsumerFlowsTest {
             stream = "ORDERS",
             subject = "orders.created",
             limits = NatsFlowLimits(capacity = 1, pendingMessageLimit = 8, pendingByteLimit = 65_536),
-        )
-        val active = async(Dispatchers.Default) { flow.collect() }
-        check(receiveStarted.await(5, TimeUnit.SECONDS))
+        ).log("Push")
+
+        val active = async(Dispatchers.Default) {
+            flow.collect()
+        }
+        receiveStarted.await(5.seconds).shouldBeTrue()
 
         active.cancelAndJoin()
-        check(receiveInterrupted.await(1, TimeUnit.SECONDS))
-        val recollected = withTimeout(5.seconds) { flow.take(1).toList() }
+        receiveInterrupted.await(1.seconds).shouldBeTrue()
 
-        check(recollected == listOf(message))
+        val recollected = withTimeout(5.seconds) {
+            flow.take(1).toList()
+        }
+
+        recollected shouldBeEqualTo listOf(message)
         verify(exactly = 2) { jetStream.subscribe("orders.created", any<PushSubscribeOptions>()) }
         verify(exactly = 1) { cancelledSubscription.unsubscribe() }
         verify(exactly = 1) { recollectedSubscription.unsubscribe() }

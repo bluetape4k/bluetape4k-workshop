@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.query
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.application.toSnapshot
 import io.bluetape4k.workshop.commerce.voucher.application.voucherUserDigest
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignSnapshot
@@ -18,7 +19,7 @@ import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherGenerationInput
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
-import java.util.UUID
+import java.util.*
 
 internal data class ClaimReplayDescriptor(
     val claim: ClaimSnapshot,
@@ -38,11 +39,15 @@ internal class VoucherQueryService(
     private val inbox: EventInboxRepository,
     private val codes: VoucherCodeService,
 ) {
+    companion object: KLogging()
+
     fun campaign(
         tenantId: String,
         campaignId: UUID,
     ): CampaignSnapshot? =
-        transactions.foregroundTransaction { campaigns.findPublic(tenantId, campaignId)?.toSnapshot() }
+        transactions.foregroundTransaction {
+            campaigns.findPublic(tenantId, campaignId)?.toSnapshot()
+        }
 
     fun claimOwned(
         tenantId: String,
@@ -75,14 +80,18 @@ internal class VoucherQueryService(
         afterId: Long?,
         limit: Int,
     ): List<ReviewRecord> =
-        transactions.foregroundTransaction { reviews.findPage(tenantId, status, afterId, limit) }
+        transactions.foregroundTransaction {
+            reviews.findPage(tenantId, status, afterId, limit)
+        }
 
     fun reconciliationBacklog(
         tenantId: String,
         afterId: Long?,
         limit: Int,
     ): List<EventInboxRecord> =
-        transactions.foregroundTransaction { inbox.findBacklogPage(tenantId, afterId, limit) }
+        transactions.foregroundTransaction {
+            inbox.findBacklogPage(tenantId, afterId, limit)
+        }
 
     /** allocated claim에 대해서만 code를 재구성하고 persisted digest와 대조해 검증합니다. */
     fun activeCode(
@@ -92,6 +101,7 @@ internal class VoucherQueryService(
         transactions.foregroundTransaction {
             val claim = claims.findPublic(tenantId, claimId) ?: return@foregroundTransaction null
             if (claim.state != ClaimState.ALLOCATED) return@foregroundTransaction null
+
             reconstruct(claim)
         }
 
@@ -108,12 +118,13 @@ internal class VoucherQueryService(
         val generationVersion = claim.generationKeyVersion ?: return null
         val verificationVersion = claim.verificationKeyVersion ?: return null
         val verifier = claim.codeVerifier ?: return null
-        val issued =
-            codes.reconstruct(
-                VoucherGenerationInput(claim.tenantId, claim.campaignId, claim.allocationId),
-                generationVersion,
-                verificationVersion,
-            ) ?: return null
+
+        val issued = codes.reconstruct(
+            VoucherGenerationInput(claim.tenantId, claim.campaignId, claim.allocationId),
+            generationVersion,
+            verificationVersion,
+        ) ?: return null
+
         return issued.code.takeIf { MessageDigest.isEqual(issued.verifier, verifier) }
     }
 }

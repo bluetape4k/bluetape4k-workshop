@@ -11,7 +11,7 @@ import io.bluetape4k.javers.repository.CdoSnapshotRepository
 internal fun CdoSnapshotRepository.requireConsistentOrderAuditHead(
     snapshotIndexExists: () -> Boolean,
 ) {
-    if (getHeadId() == null) {
+    if (headId == null) {
         check(!snapshotIndexExists()) {
             "Corrupted Redis audit metadata. persisted Order snapshots exist without head metadata."
         }

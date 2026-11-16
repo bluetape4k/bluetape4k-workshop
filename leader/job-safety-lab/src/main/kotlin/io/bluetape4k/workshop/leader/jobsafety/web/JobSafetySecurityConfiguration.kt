@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.web
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -12,6 +13,11 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 class JobSafetySecurityConfiguration {
+
+    companion object: KLogging() {
+        const val OPERATOR_ROLE: String = "JOB_SAFETY_OPERATOR"
+    }
+
     @Bean
     fun jobSafetySecurityFilterChain(http: HttpSecurity): SecurityFilterChain =
         http
@@ -31,7 +37,4 @@ class JobSafetySecurityConfiguration {
                     .anyRequest().denyAll()
             }.build()
 
-    companion object {
-        const val OPERATOR_ROLE: String = "JOB_SAFETY_OPERATOR"
-    }
 }

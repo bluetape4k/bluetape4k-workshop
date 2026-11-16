@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.redis.commands
 
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.coroutines.support.asFlow
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
@@ -9,8 +11,6 @@ import io.bluetape4k.workshop.redis.AbstractRedisTest
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
@@ -24,7 +24,7 @@ class KeyOperationsTest(
     @param:Autowired private val connectionFactory: RedisConnectionFactory,
 ): AbstractRedisTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private val PREFIX: String = KeyOperationsTest::class.simpleName.shouldNotBeNull()
         private val KEY_PATTERN = "$PREFIX*"
         private const val KEY_SIZE = 5000

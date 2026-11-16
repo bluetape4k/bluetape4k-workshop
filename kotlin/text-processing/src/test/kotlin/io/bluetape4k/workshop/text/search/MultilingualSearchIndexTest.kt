@@ -7,6 +7,7 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.text.detection.LanguageDetectionService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MultilingualSearchIndexTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val detectionService = LanguageDetectionService()
 
@@ -50,6 +51,8 @@ class MultilingualSearchIndexTest {
 
         hits shouldHaveSize 1
         val hit = hits.single()
+
+        log.debug { "hit=$hit" }
         hit.document.id shouldBeEqualTo "en-1"
         hit.language shouldBeEqualTo Language.ENGLISH
         hit.score shouldBeEqualTo 2
@@ -62,6 +65,8 @@ class MultilingualSearchIndexTest {
 
         hits shouldHaveSize 1
         val hit = hits.single()
+
+        log.debug { "hit=$hit" }
         hit.document.id shouldBeEqualTo "ko-1"
         hit.language shouldBeEqualTo Language.KOREAN
         hit.matches.map { it.text } shouldContain "서울"
@@ -75,6 +80,8 @@ class MultilingualSearchIndexTest {
 
         hits shouldHaveSize 1
         val hit = hits.single()
+
+        log.debug { "hit=$hit" }
         hit.document.id shouldBeEqualTo "ja-1"
         hit.language shouldBeEqualTo Language.JAPANESE
         hit.matches.map { it.text } shouldContain "東京"
@@ -85,14 +92,12 @@ class MultilingualSearchIndexTest {
     @Test
     fun `returns empty list for no match`() {
         val hits = index.search("payment invoice")
-
         hits shouldHaveSize 0
     }
 
     @Test
     fun `normalizes query case before candidate lookup and highlighting`() {
         val hits = index.search("SHIPMENT")
-
         hits shouldHaveSize 1
         hits.single().highlightedText shouldBeEqualTo "A <mark>shipment</mark> retry event updates the tracking pipeline."
     }
@@ -103,6 +108,8 @@ class MultilingualSearchIndexTest {
 
         hits shouldHaveSize 1
         val hit = hits.single()
+
+        log.debug { "hit=$hit" }
         hit.document.id shouldBeEqualTo "en-2"
         hit.matches.shouldNotBeEmpty()
         hit.matches.map { it.text } shouldContain "banana"

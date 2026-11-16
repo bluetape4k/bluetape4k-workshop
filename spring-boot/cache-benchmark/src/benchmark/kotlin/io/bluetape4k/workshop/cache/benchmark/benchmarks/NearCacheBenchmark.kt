@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Warmup(iterations = 2, time = 1)
 @Measurement(iterations = 5, time = 1)
-class NearCacheBenchmark : AbstractCacheBenchmark() {
+class NearCacheBenchmark: AbstractCacheBenchmark() {
     private lateinit var service: NearCacheService
 
     @Param("1", "100", "500")

@@ -7,14 +7,17 @@ import io.bluetape4k.workshop.messaging.kafka.KafkaApplication
 import io.bluetape4k.workshop.messaging.kafka.listener.LoggerMessageHandler
 import io.bluetape4k.workshop.messaging.kafka.model.GreetingRequest
 import kotlinx.coroutines.reactive.awaitSingle
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
+import org.awaitility.kotlin.withPollDelay
+import org.awaitility.kotlin.withPollInterval
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Disabled("Embedded Kafka 가 Spring Boot 4에서 안되네요.")
 @SpringBootTest(
@@ -53,9 +56,11 @@ class GreetingControllerTest(
             .expectStatus().isAccepted
 
         // Logger Topic 으로 전송된 메시지를 수신하는 것을 확인하기 위한 코드
-        await.atMost(Duration.ofSeconds(10))
-            .pollDelay(Duration.ofSeconds(1))
-            .pollInterval(Duration.ofSeconds(3))
-            .until { loggerMessageHandler.receivedMessages.peek() != null }
+        await.atMost(10.seconds)
+            .withPollDelay(1.seconds)
+            .withPollInterval(3.seconds)
+            .until {
+                loggerMessageHandler.receivedMessages.peek() != null
+            }
     }
 }

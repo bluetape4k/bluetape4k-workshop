@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 
+import io.bluetape4k.apache.containsIgnoreCase
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -16,6 +18,8 @@ import org.springframework.kafka.listener.ContainerProperties
  * producer, consumer, admin client에 전달되는 명시적 Kafka property를 검증합니다.
  */
 class KafkaFailoverKafkaConfigurationTest {
+
+    companion object: KLogging()
 
     @Test
     fun `configuration exposes strict producer consumer and admin properties`() {
@@ -35,7 +39,7 @@ class KafkaFailoverKafkaConfigurationTest {
         producer[ProducerConfig.RETRY_BACKOFF_MS_CONFIG] shouldBeEqualTo 200L
         producer[ProducerConfig.RETRY_BACKOFF_MAX_MS_CONFIG] shouldBeEqualTo 2_000L
         producer[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] shouldBeEqualTo true
-        (producer.keys.none { it.contains("type", ignoreCase = true) }).shouldBeTrue()
+        producer.keys.none { it.containsIgnoreCase("type") }.shouldBeTrue()
 
         consumer[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] shouldBeEqualTo "127.0.0.1:19092"
         consumer[ConsumerConfig.GROUP_ID_CONFIG] shouldBeEqualTo KafkaFailoverKafkaConfiguration.GROUP_ID
@@ -46,7 +50,7 @@ class KafkaFailoverKafkaConfigurationTest {
         consumer[ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG] shouldBeEqualTo 10_000
         consumer[ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG] shouldBeEqualTo 3_000
         consumer[ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG] shouldBeEqualTo 20_000
-        (consumer.keys.none { it.contains("type", ignoreCase = true) }).shouldBeTrue()
+        consumer.keys.none { it.containsIgnoreCase("type") }.shouldBeTrue()
 
         admin[AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG] shouldBeEqualTo "127.0.0.1:19092"
         admin[AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG] shouldBeEqualTo 5_000

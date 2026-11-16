@@ -30,7 +30,7 @@ data class EventLineageSeed(
     val manualNoteAdded: GraphVertex,
     val managerApproval: GraphVertex,
     val managerActor: GraphVertex,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -40,6 +40,7 @@ data class EventLineageSeed(
  * 결정적인 주문 승인 lineage 시나리오를 채웁니다.
  */
 fun seedEventLineage(service: EventLineageService): EventLineageSeed {
+
     val orderAggregate = service.addAggregate(
         aggregateId = "order-1001",
         aggregateType = "Order",

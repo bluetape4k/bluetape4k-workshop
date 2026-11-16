@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.javatimes.millis
 import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireZeroOrPositiveNumber
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference
@@ -16,16 +18,14 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 private const val MIN_POLL_BACKOFF_MILLIS = 100L
 private const val MAX_POLL_BACKOFF_MILLIS = 2_000L
-private val MIN_POLL_BACKOFF: Duration = Duration.ofMillis(MIN_POLL_BACKOFF_MILLIS)
-private val MAX_POLL_BACKOFF: Duration = Duration.ofMillis(MAX_POLL_BACKOFF_MILLIS)
+private val MIN_POLL_BACKOFF: Duration = MIN_POLL_BACKOFF_MILLIS.millis()
+private val MAX_POLL_BACKOFF: Duration = MAX_POLL_BACKOFF_MILLIS.millis()
 
 internal data class CommittedProjectionBatch(
     val events: List<EventEnvelope>,
@@ -42,26 +42,27 @@ internal interface ProjectionEventReader {
 }
 
 /** caller가 projection transaction을 소유하는 동안 committed keyset page 하나를 읽습니다. */
-internal class ExposedProjectionEventReader : ProjectionEventReader {
+internal class ExposedProjectionEventReader: ProjectionEventReader {
+
     override fun loadAfter(globalPosition: Long): CommittedProjectionBatch {
         TransactionManager.current()
         globalPosition.requireZeroOrPositiveNumber("globalPosition")
-        val events =
-            EventLog
-                .selectAll()
-                .where { EventLog.globalPosition greater globalPosition }
-                .orderBy(EventLog.globalPosition to SortOrder.ASC)
-                .limit(MAX_PROJECTION_BATCH_EVENTS)
-                .map(::toProjectionEnvelope)
-                .takeWithinByteCap()
-        val committedHead =
-            EventLog
-                .selectAll()
-                .orderBy(EventLog.globalPosition to SortOrder.DESC)
-                .limit(1)
-                .singleOrNull()
-                ?.get(EventLog.globalPosition)
-                ?: 0L
+
+        val events = EventLog
+            .selectAll()
+            .where { EventLog.globalPosition greater globalPosition }
+            .orderBy(EventLog.globalPosition to SortOrder.ASC)
+            .limit(MAX_PROJECTION_BATCH_EVENTS)
+            .map(::toProjectionEnvelope)
+            .takeWithinByteCap()
+        val committedHead = EventLog
+            .selectAll()
+            .orderBy(EventLog.globalPosition to SortOrder.DESC)
+            .limit(1)
+            .singleOrNull()
+            ?.get(EventLog.globalPosition)
+            ?: 0L
+
         return CommittedProjectionBatch(events, committedHead)
     }
 }
@@ -70,13 +71,13 @@ internal fun interface ProjectionEventHandler {
     fun verify(event: EventEnvelope)
 }
 
-internal object AcceptingProjectionEventHandler : ProjectionEventHandler {
+internal object AcceptingProjectionEventHandler: ProjectionEventHandler {
     override fun verify(event: EventEnvelope) = Unit
 }
 
 internal class ProjectionPoisonException(
     val reasonClass: String,
-) : IllegalArgumentException("projection event cannot be handled: $reasonClass") {
+): IllegalArgumentException("projection event cannot be handled: $reasonClass") {
     init {
         reasonClass.requireNotBlank("reasonClass")
     }
@@ -90,9 +91,9 @@ internal sealed interface ProjectionPollResult {
         val checkpointPosition: Long,
         val lag: Long,
         val lagAge: Duration,
-    ) : ProjectionPollResult
+    ): ProjectionPollResult
 
-    data object Idle : ProjectionPollResult
+    data object Idle: ProjectionPollResult
 
     data class Degraded(
         val eventId: UUID,
@@ -100,7 +101,7 @@ internal sealed interface ProjectionPollResult {
         val attempts: Int,
         val retryable: Boolean,
         val operatorAction: ProjectionOperatorAction,
-    ) : ProjectionPollResult
+    ): ProjectionPollResult
 }
 
 internal enum class ProjectionOperatorAction {
@@ -114,11 +115,12 @@ internal interface ProjectionTransactionRunner {
 internal class ExposedProjectionTransactionRunner(
     database: Database,
     permits: EventSourcedDatabasePermitGate,
-) : ProjectionTransactionRunner {
+): ProjectionTransactionRunner {
     private val transactions =
         EventSourcedPermitTransactionRunner(database, permits, EventSourcedDatabaseLane.PROJECTION)
 
-    override fun <T> inTransaction(block: () -> T): T = transactions.inTransaction(block)
+    override fun <T> inTransaction(block: () -> T): T =
+        transactions.inTransaction(block)
 }
 
 /** bounded poll 하나입니다. scheduling과 cooperative cancellation은 caller가 소유합니다. */
@@ -191,13 +193,12 @@ internal class ProjectionPollingLoop(
         backoff: Duration,
     ) {
         if (handle.cancelled) return
-        handle.task =
-            delay.schedule(backoff) {
-                val outcome = poll(key, ownerDigest, lease)
-                if (outcome.continuePolling) {
-                    scheduleNext(handle, key, ownerDigest, outcome.lease, outcome.nextBackoff)
-                }
+        handle.task = delay.schedule(backoff) {
+            val outcome = poll(key, ownerDigest, lease)
+            if (outcome.continuePolling) {
+                scheduleNext(handle, key, ownerDigest, outcome.lease, outcome.nextBackoff)
             }
+        }
     }
 
     private fun poll(
@@ -221,15 +222,13 @@ internal class ProjectionPollingLoop(
         existingLease: ProjectionLease?,
         now: Instant,
     ): ProjectionLease? =
-        existingLease
-            ?.let { lease ->
-                if (lease.isRenewalDue(now)) {
-                    leases.renewLease(key.projection, key.generation, lease, now)
-                } else {
-                    lease
-                }
+        existingLease?.let { lease ->
+            if (lease.isRenewalDue(now)) {
+                leases.renewLease(key.projection, key.generation, lease, now)
+            } else {
+                lease
             }
-            ?: leases.acquire(key.projection, key.generation, ownerDigest, now)
+        } ?: leases.acquire(key.projection, key.generation, ownerDigest, now)
 }
 
 internal class ProjectionLoopHandle {
@@ -256,19 +255,19 @@ private fun ProjectionApplyResult.toPollResult(
     now: Instant,
 ): ProjectionPollResult.Applied {
     val lag = (batch.committedHead - checkpoint.position).coerceAtLeast(0)
-    val lagAge =
-        if (lag == 0L) {
-            Duration.ZERO
-        } else {
-            Duration.between(batch.events.last().recordedAt, now).coerceAtLeast(Duration.ZERO)
-        }
+
+    val lagAge = if (lag == 0L) {
+        Duration.ZERO
+    } else {
+        Duration.between(batch.events.last().recordedAt, now).coerceAtLeast(Duration.ZERO)
+    }
+
     return ProjectionPollResult.Applied(
         appliedEventCount = appliedEventCount,
         duplicateEventCount = duplicateEventCount,
-        processedBytes =
-            batch.events.sumOf { event ->
-                event.payload.canonicalJson.toByteArray(StandardCharsets.UTF_8).size
-            },
+        processedBytes = batch.events.sumOf { event ->
+            event.payload.canonicalJson.toUtf8Bytes().size
+        },
         checkpointPosition = checkpoint.position,
         lag = lag,
         lagAge = lagAge,
@@ -287,14 +286,14 @@ private fun ProjectionPoisonRecord.toDegradedResult(reasonClass: String): Projec
 private fun ProjectionPollResult.toOutcome(lease: ProjectionLease): PollOutcome =
     when (this) {
         is ProjectionPollResult.Applied -> PollOutcome(lease, MIN_POLL_BACKOFF)
-        ProjectionPollResult.Idle -> PollOutcome(lease, MAX_POLL_BACKOFF)
+        ProjectionPollResult.Idle       -> PollOutcome(lease, MAX_POLL_BACKOFF)
         is ProjectionPollResult.Degraded -> PollOutcome(lease, MAX_POLL_BACKOFF, retryable)
     }
 
 private fun List<EventEnvelope>.takeWithinByteCap(): List<EventEnvelope> {
     var accumulated = 0
     return takeWhile { event ->
-        accumulated += event.payload.canonicalJson.toByteArray(StandardCharsets.UTF_8).size
+        accumulated += event.payload.canonicalJson.toUtf8Bytes().size
         accumulated <= MAX_PROJECTION_BATCH_BYTES
     }
 }

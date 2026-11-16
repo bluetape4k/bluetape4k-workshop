@@ -2,6 +2,8 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.CommandScope
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.EffectReference
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.IdempotencyDecision
@@ -15,12 +17,11 @@ import io.bluetape4k.workshop.commerce.voucherpool.worker.JdbcVoucherPoolWorkerR
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerClaimSnapshot
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerKind
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.currentOrNull
 import java.io.Serializable
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal enum class ReconciliationCommandFailure {
     SCOPE_NOT_FOUND,
@@ -29,19 +30,22 @@ internal enum class ReconciliationCommandFailure {
     REPLAY_WINDOW_EXPIRED,
 }
 
-internal class ReconciliationCommandException(val reason: ReconciliationCommandFailure) : IllegalStateException(reason.name)
+internal class ReconciliationCommandException(val reason: ReconciliationCommandFailure):
+    IllegalStateException(reason.name)
 
 internal data class ReconciliationCommand(
     val tenantId: String,
     val batchId: UUID,
     val idempotencyKey: String,
-) : Serializable {
+): Serializable {
     init {
         require(tenantId.isNotBlank() && tenantId.length <= MAX_TENANT_LENGTH)
         require(idempotencyKey.isNotBlank() && idempotencyKey.length <= MAX_IDEMPOTENCY_KEY_LENGTH)
     }
 
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class ReconciliationProgressSnapshot(
@@ -54,8 +58,10 @@ internal data class ReconciliationProgressSnapshot(
     val nextAction: String,
     val revision: Long,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal interface VoucherPoolReconciliationCommandService {
@@ -64,24 +70,31 @@ internal interface VoucherPoolReconciliationCommandService {
 }
 
 /** 공유 idempotency fence 뒤에서 durable batch-scoped reconciliation claim 하나를 생성합니다. */
+@Suppress("SqlResolve")
 internal class JdbcVoucherPoolReconciliationCommandService(
     private val executor: VoucherPoolJdbcExecutor,
     private val repository: VoucherPoolRepository,
     private val idempotency: VoucherPoolIdempotencyRepository,
     private val claims: JdbcVoucherPoolWorkerRepository,
-) : VoucherPoolReconciliationCommandService {
+): VoucherPoolReconciliationCommandService {
+
+    companion object: KLogging()
+
     override fun run(command: ReconciliationCommand): MutationResult<ReconciliationProgressSnapshot> {
         val decision = executor.operatorTransaction {
             idempotency.acquire(
-                CommandScope(command.tenantId, OP_RECONCILIATION_RUN),
-                command.idempotencyKey,
-                VoucherPoolFingerprint.command(OP_RECONCILIATION_RUN, mapOf("batchId" to command.batchId.toString())),
+                scope = CommandScope(command.tenantId, OP_RECONCILIATION_RUN),
+                rawKey = command.idempotencyKey,
+                fingerprint = VoucherPoolFingerprint.command(
+                    OP_RECONCILIATION_RUN,
+                    mapOf("batchId" to command.batchId.toString())
+                ),
             )
         }
         return when (decision) {
-            is IdempotencyDecision.Execute -> executeOwned(decision.owner, command)
-            is IdempotencyDecision.Replay -> MutationResult.Replay(decision.descriptor)
-            is IdempotencyDecision.Expired -> MutationResult.Expired(decision.effectId, decision.terminalCode)
+            is IdempotencyDecision.Execute    -> executeOwned(decision.owner, command)
+            is IdempotencyDecision.Replay     -> MutationResult.Replay(decision.descriptor)
+            is IdempotencyDecision.Expired    -> MutationResult.Expired(decision.effectId, decision.terminalCode)
             is IdempotencyDecision.InProgress -> fail(ReconciliationCommandFailure.COMMAND_IN_PROGRESS)
             IdempotencyDecision.FingerprintConflict -> fail(ReconciliationCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT)
         }
@@ -99,18 +112,27 @@ internal class JdbcVoucherPoolReconciliationCommandService(
         val progress = executor.operatorTransaction {
             val connection = currentConnection()
             idempotency.lockOwnerForExecution(owner)
+
             val campaignId = resolveCampaignId(connection, command.tenantId, command.batchId)
                 ?: fail(ReconciliationCommandFailure.SCOPE_NOT_FOUND)
+
             repository.lockCampaignForShare(command.tenantId, campaignId)
             repository.lockBatchForUpdate(command.tenantId, command.batchId)
                 ?: fail(ReconciliationCommandFailure.SCOPE_NOT_FOUND)
+
             val scheduled = claims.scheduleReconciliationInTransaction(connection, command.tenantId, command.batchId)
             if (!scheduled) fail(ReconciliationCommandFailure.COMMAND_IN_PROGRESS)
+
             val snapshot = checkNotNull(selectProgress(connection, command.tenantId, command.batchId, forUpdate = true))
             idempotency.finalize(
-                owner,
-                SafeResponseDescriptor.success(HTTP_ACCEPTED, "RECONCILIATION_ACCEPTED", command.batchId, snapshot.revision),
-                EffectReference.effect(command.batchId),
+                owner = owner,
+                descriptor = SafeResponseDescriptor.success(
+                    HTTP_ACCEPTED,
+                    "RECONCILIATION_ACCEPTED",
+                    command.batchId,
+                    snapshot.revision
+                ),
+                effect = EffectReference.effect(command.batchId),
             )
             snapshot
         }
@@ -122,7 +144,9 @@ internal class JdbcVoucherPoolReconciliationCommandService(
 
     private fun releaseOwner(owner: IdempotencyOwner) {
         try {
-            executor.operatorTransaction { idempotency.releaseRetryable(owner) }
+            executor.operatorTransaction {
+                idempotency.releaseRetryable(owner)
+            }
         } catch (_: RuntimeException) {
             // command failure는 authoritative로 남고, owner lease는 안전하게 만료됩니다.
         }
@@ -134,7 +158,9 @@ internal class JdbcVoucherPoolReconciliationCommandService(
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, batchId)
-            statement.executeQuery().use { result -> if (result.next()) result.getObject(1, UUID::class.java) else null }
+            statement.executeQuery().use { result ->
+                if (result.next()) result.getObject(1, UUID::class.java) else null
+            }
         }
 
     private fun selectProgress(
@@ -142,14 +168,17 @@ internal class JdbcVoucherPoolReconciliationCommandService(
         tenantId: String,
         batchId: UUID,
         forUpdate: Boolean,
-    ): ReconciliationProgressSnapshot? = connection.prepareStatement(
-        "SELECT *,transaction_timestamp() AS observed_at FROM voucher_pool_worker_claims " +
-            "WHERE tenant_id=? AND worker_type='RECONCILIATION' AND scope_id=?" + if (forUpdate) " FOR UPDATE" else "",
-    ).use { statement ->
-        statement.setString(1, tenantId)
-        statement.setObject(2, batchId)
-        statement.executeQuery().use { result -> if (result.next()) result.progressSnapshot() else null }
-    }
+    ): ReconciliationProgressSnapshot? =
+        connection.prepareStatement(
+            "SELECT *,transaction_timestamp() AS observed_at FROM voucher_pool_worker_claims " +
+                    "WHERE tenant_id=? AND worker_type='RECONCILIATION' AND scope_id=?" + if (forUpdate) " FOR UPDATE" else "",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, batchId)
+            statement.executeQuery().use { result ->
+                if (result.next()) result.progressSnapshot() else null
+            }
+        }
 
     private fun ResultSet.progressSnapshot(): ReconciliationProgressSnapshot {
         val worker = WorkerClaimSnapshot(
@@ -166,21 +195,22 @@ internal class JdbcVoucherPoolReconciliationCommandService(
             getLong("revision"),
         )
         return ReconciliationProgressSnapshot(
-            worker.kind,
-            worker.scopeId,
-            worker.state.name,
-            worker.cursor,
-            worker.checkpoint,
-            worker.attempt,
-            worker.nextAction,
-            worker.revision,
-            getTimestamp("observed_at").toInstant(),
+            kind = worker.kind,
+            scopeId = worker.scopeId,
+            state = worker.state.name,
+            cursor = worker.cursor,
+            checkpoint = worker.checkpoint,
+            attempt = worker.attempt,
+            nextAction = worker.nextAction,
+            revision = worker.revision,
+            observedAt = getTimestamp("observed_at").toInstant(),
         )
     }
 
-    private fun currentConnection(): Connection = checkNotNull(TransactionManager.currentOrNull()) {
-        "voucher pool reconciliation requires an active JDBC transaction"
-    }.connection.connection as Connection
+    private fun currentConnection(): Connection = TransactionManager.currentOrNull()
+        .checkNotNull { "voucher pool reconciliation requires an active JDBC transaction" }
+        .connection
+        .connection as Connection
 }
 
 private fun fail(reason: ReconciliationCommandFailure): Nothing = throw ReconciliationCommandException(reason)

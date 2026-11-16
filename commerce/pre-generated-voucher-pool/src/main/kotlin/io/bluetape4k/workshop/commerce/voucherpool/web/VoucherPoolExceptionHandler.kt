@@ -11,9 +11,9 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcTi
 import jakarta.servlet.AsyncContext
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ReadListener
+import jakarta.servlet.ServletInputStream
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
-import jakarta.servlet.ServletInputStream
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletRequestWrapper
 import jakarta.servlet.http.HttpServletResponse
@@ -27,9 +27,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.HandlerMapping
-import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import tools.jackson.databind.ObjectMapper
 import java.io.BufferedReader
@@ -81,14 +81,17 @@ internal class VoucherPoolExceptionHandler {
         val failureTypes = generateSequence<Throwable>(failure) { it.cause }
             .take(MAX_LOGGED_CAUSE_DEPTH)
             .joinToString(">") { it.javaClass.simpleName }
+
         log.warn { "voucher_pool_http_failed category=INTERNAL_ERROR failureTypes=$failureTypes" }
         request.allowJsonError()
-        return ResponseEntity.status(500).contentType(MediaType.APPLICATION_JSON).body(
-            ApiError("INTERNAL_ERROR", "request could not be completed", request.requestId()),
-        )
+
+        return ResponseEntity
+            .status(500)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(ApiError("INTERNAL_ERROR", "request could not be completed", request.requestId()))
     }
 
-    companion object : KLogging()
+    companion object: KLogging()
 }
 
 private const val MAX_LOGGED_CAUSE_DEPTH = 5
@@ -97,6 +100,7 @@ private fun VoucherPoolApiException.response(request: HttpServletRequest): Respo
     request.allowJsonError()
     val builder = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON)
     retryAfterSeconds?.let { builder.header("Retry-After", it.toString()) }
+
     return builder.body(toApiError(request.requestId()))
 }
 
@@ -109,7 +113,14 @@ private fun HttpServletRequest.allowJsonError() {
 @Order(Ordered.HIGHEST_PRECEDENCE)
 internal class VoucherPoolRequestSecurityFilter(
     private val diagnostics: VoucherPoolDiagnosticRegistry,
-) : OncePerRequestFilter() {
+): OncePerRequestFilter() {
+
+    companion object: KLogging() {
+        private const val CSP =
+            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; " +
+                    "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+    }
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -123,33 +134,28 @@ internal class VoucherPoolRequestSecurityFilter(
         response.setHeader("Referrer-Policy", "no-referrer")
         response.setHeader("Cache-Control", "no-store")
         val started = System.nanoTime()
+
         try {
             filterChain.doFilter(request, response)
         } finally {
             val elapsedMillis = (System.nanoTime() - started) / 1_000_000
             log.info {
                 "voucher_pool_http_completed method=${request.method} path=${request.requestURI} " +
-                    "status=${response.status} requestId=$requestId elapsedMillis=$elapsedMillis"
+                        "status=${response.status} requestId=$requestId elapsedMillis=$elapsedMillis"
             }
             diagnostics.record(
-                requestId,
-                request.getHeader(TENANT_HEADER),
-                request.method,
-                request.requestURI,
-                response.status,
-                elapsedMillis,
+                requestId = requestId,
+                tenantCandidate = request.getHeader(TENANT_HEADER),
+                method = request.method,
+                path = request.requestURI,
+                status = response.status,
+                elapsedMillis = elapsedMillis,
             )
         }
     }
 
     private fun isSafeRequestId(value: String): Boolean =
         value.length in 1..64 && value.all { it.code in 0x21..0x7e }
-
-    companion object : KLogging() {
-        private const val CSP =
-            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; " +
-                "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
-    }
 }
 
 /** controller deserialization과 application work 전에 transport-boundary value를 거부합니다. */
@@ -158,7 +164,10 @@ internal class VoucherPoolRequestSecurityFilter(
 internal class VoucherPoolInputBoundaryFilter(
     private val properties: VoucherPoolProperties,
     private val mapper: ObjectMapper,
-) : OncePerRequestFilter() {
+): OncePerRequestFilter() {
+
+    companion object: KLogging()
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -176,7 +185,7 @@ internal class VoucherPoolInputBoundaryFilter(
             if (response.isCommitted) {
                 log.warn {
                     "voucher_pool_http_rejected_after_commit category=${failure.stableCode} " +
-                        "requestId=${request.requestId()}"
+                            "requestId=${request.requestId()}"
                 }
                 throw failure
             }
@@ -203,14 +212,16 @@ internal class VoucherPoolInputBoundaryFilter(
     private fun decodeQueryComponent(value: String): String =
         runCatching { URLDecoder.decode(value, UTF_8) }.getOrElse { throw invalidRequest() }
 
-    companion object : KLogging()
 }
 
 private class BoundedPayloadRequestWrapper(
     request: HttpServletRequest,
     private val response: HttpServletResponse,
     maxPayloadBytes: Int,
-) : HttpServletRequestWrapper(request) {
+): HttpServletRequestWrapper(request) {
+
+    companion object: KLogging()
+
     private val originalRequest = request
     private val boundedInputStream by lazy {
         BoundedServletInputStream(originalRequest.inputStream, maxPayloadBytes.toLong())
@@ -233,18 +244,20 @@ private class BoundedPayloadRequestWrapper(
         ).also { boundedReader = it }
     }
 
-    override fun startAsync(): AsyncContext = originalRequest.startAsync(this, response)
+    override fun startAsync(): AsyncContext =
+        originalRequest.startAsync(this, response)
 
     override fun startAsync(
         servletRequest: ServletRequest,
         servletResponse: ServletResponse,
-    ): AsyncContext = originalRequest.startAsync(servletRequest, servletResponse)
+    ): AsyncContext =
+        originalRequest.startAsync(servletRequest, servletResponse)
 }
 
 private class BoundedServletInputStream(
     private val delegate: ServletInputStream,
     private val maxBytes: Long,
-) : ServletInputStream() {
+): ServletInputStream() {
     private var consumed = 0L
 
     override fun read(): Int {

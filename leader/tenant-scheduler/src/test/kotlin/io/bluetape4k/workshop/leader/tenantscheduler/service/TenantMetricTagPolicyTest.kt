@@ -3,12 +3,15 @@ package io.bluetape4k.workshop.leader.tenantscheduler.service
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TenantMetricTagPolicyTest {
+
+    companion object: KLogging()
 
     @Test
     fun `emits per tenant tags while tenant count stays inside local bound`() {
@@ -31,9 +34,7 @@ class TenantMetricTagPolicyTest {
         decision.cardinalityLimited.shouldBeTrue()
         decision.actualTenantCount shouldBeEqualTo 2
         decision.effectiveTenantTagLimit shouldBeEqualTo 1
-        decision.metricRows.map { it.tags } shouldBeEqualTo listOf(
-            mapOf("tenant" to "bounded"),
-        )
+        decision.metricRows.map { it.tags } shouldBeEqualTo listOf(mapOf("tenant" to "bounded"))
     }
 
     @Test
@@ -46,8 +47,6 @@ class TenantMetricTagPolicyTest {
         decision.cardinalityLimited.shouldBeTrue()
         decision.actualTenantCount shouldBeEqualTo 10_000
         decision.effectiveTenantTagLimit shouldBeEqualTo TenantMetricTagPolicy.MAX_LOCAL_TENANT_TAG_VALUES
-        decision.metricRows.map { it.tags } shouldBeEqualTo listOf(
-            mapOf("tenant" to "bounded"),
-        )
+        decision.metricRows.map { it.tags } shouldBeEqualTo listOf(mapOf("tenant" to "bounded"))
     }
 }

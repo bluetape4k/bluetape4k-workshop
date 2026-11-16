@@ -6,11 +6,14 @@ import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
 import io.bluetape4k.leader.micrometer.LeaderMetricTagOptions
 import io.bluetape4k.leader.micrometer.LeaderMetricTagRule
 import io.bluetape4k.leader.micrometer.LeaderMetricTagSanitizer
+import io.bluetape4k.logging.KLogging
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.milliseconds
 
 class K8sLeaseMetricsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `records leader state guard renew and task meters with stable tags`() {
@@ -26,27 +29,36 @@ class K8sLeaseMetricsTest {
         metrics.recordTask(tags, result = "success", duration = 25.milliseconds)
         metrics.markInactive(tags)
 
-        registry.counter("workshop.k8s.lease.guard.attempts", "lock.name", "redacted-lock", "namespace", "redacted").count() shouldBeEqualTo 1.0
+        registry.counter("workshop.k8s.lease.guard.attempts", "lock.name", "redacted-lock", "namespace", "redacted")
+            .count() shouldBeEqualTo 1.0
+
         registry.counter(
             "workshop.k8s.lease.guard.skipped",
             "lock.name", "redacted-lock", "namespace", "redacted",
             "reason",
             "not-elected",
         ).count() shouldBeEqualTo 1.0
-        registry.counter("workshop.k8s.lease.renew.attempts", "lock.name", "redacted-lock", "namespace", "redacted").count() shouldBeEqualTo 1.0
+
+        registry.counter("workshop.k8s.lease.renew.attempts", "lock.name", "redacted-lock", "namespace", "redacted")
+            .count() shouldBeEqualTo 1.0
+
         registry.counter(
             "workshop.k8s.lease.renew.failures",
             "lock.name", "redacted-lock", "namespace", "redacted",
             "reason",
             "backend-error",
         ).count() shouldBeEqualTo 1.0
+
         registry.counter(
             "workshop.k8s.lease.task.executions",
             "lock.name", "redacted-lock", "namespace", "redacted",
             "result",
             "success",
         ).count() shouldBeEqualTo 1.0
-        registry.timer("workshop.k8s.lease.task.duration", "lock.name", "redacted-lock", "namespace", "redacted").count() shouldBeEqualTo 1L
+
+        registry.timer("workshop.k8s.lease.task.duration", "lock.name", "redacted-lock", "namespace", "redacted")
+            .count() shouldBeEqualTo 1L
+
         registry.find("workshop.k8s.lease.leader.active")
             .tag("lock.name", "redacted-lock")
             .tag("namespace", "redacted")

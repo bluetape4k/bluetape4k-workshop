@@ -1,19 +1,26 @@
 package io.bluetape4k.workshop.commerce.ticket.idempotency
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.ticket.persistence.IdentityKind
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketDatabaseFixture
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class HttpIdempotencyRepositoryTest {
+
+    companion object: KLogging()
+
     @Test
     fun `nonterminal replay returns its attempt before any Redis decision`() {
         TicketDatabaseFixture().use { fixture ->
             val principal = Uuid.V7.nextId()
             val attemptId = Uuid.V7.nextId()
+
             fixture.seedAuthority(
                 saleId = Uuid.V7.nextId(),
                 userSubjectId = principal,
@@ -21,15 +28,29 @@ internal class HttpIdempotencyRepositoryTest {
                 firstAttemptId = attemptId,
                 secondAttemptId = Uuid.V7.nextId(),
             )
+
             val repository = HttpIdempotencyRepository(fixture.executor)
             val scope = scope(principal, rawKey = "same-key-1234567")
-            val fingerprint = IdempotencyFingerprint.request("POST", "/purchase", "{\"quantity\":1,\"grade\":\"GENERAL\"}")
+            val fingerprint = IdempotencyFingerprint.request(
+                method = "POST",
+                path = "/purchase",
+                body = "{\"quantity\":1,\"grade\":\"GENERAL\"}"
+            )
+            log.debug { "fingerprint=$fingerprint" }
 
-            val owner = repository.acquire(scope, fingerprint, Instant.parse("2026-07-21T10:00:00Z")) as IdempotencyDecision.Owner
+            val owner = repository.acquire(
+                scope,
+                fingerprint,
+                Instant.parse("2026-07-21T10:00:00Z")
+            )
+            owner.shouldBeInstanceOf<IdempotencyDecision.Owner>()
             repository.attachAttempt(owner.id, attemptId)
 
-            repository.acquire(scope, fingerprint, Instant.parse("2026-07-21T10:00:01Z")) shouldBeEqualTo
-                IdempotencyDecision.Replay(attemptId, completed = false)
+            repository.acquire(
+                scope = scope,
+                fingerprint = fingerprint,
+                now = Instant.parse("2026-07-21T10:00:01Z")
+            ) shouldBeEqualTo IdempotencyDecision.Replay(attemptId, completed = false)
         }
     }
 
@@ -47,17 +68,42 @@ internal class HttpIdempotencyRepositoryTest {
             val repository = HttpIdempotencyRepository(fixture.executor)
             val firstScope = scope(firstPrincipal, "same-key-1234567")
             val secondScope = scope(secondPrincipal, "same-key-1234567")
-            val first = IdempotencyFingerprint.request("POST", "/purchase", "{\"grade\":\"GENERAL\",\"quantity\":1}")
-            val reordered = IdempotencyFingerprint.request("POST", "/purchase", "{ \"quantity\": 1, \"grade\": \"GENERAL\" }")
-            val changed = IdempotencyFingerprint.request("POST", "/purchase", "{\"grade\":\"GENERAL\",\"quantity\":2}")
+
+            val first = IdempotencyFingerprint.request(
+                method = "POST",
+                path = "/purchase",
+                body = "{\"grade\":\"GENERAL\",\"quantity\":1}"
+            )
+            val reordered = IdempotencyFingerprint.request(
+                method = "POST",
+                path = "/purchase",
+                body = "{ \"quantity\": 1, \"grade\": \"GENERAL\" }"
+            )
+            val changed = IdempotencyFingerprint.request(
+                method = "POST",
+                path = "/purchase",
+                body = "{\"grade\":\"GENERAL\",\"quantity\":2}"
+            )
 
             first shouldBeEqualTo reordered
-            repository.acquire(firstScope, first, Instant.parse("2026-07-21T10:00:00Z"))::class shouldBeEqualTo
-                IdempotencyDecision.Owner::class
-            repository.acquire(firstScope, changed, Instant.parse("2026-07-21T10:00:01Z")) shouldBeEqualTo
-                IdempotencyDecision.Conflict
-            repository.acquire(secondScope, first, Instant.parse("2026-07-21T10:00:01Z"))::class shouldBeEqualTo
-                IdempotencyDecision.Owner::class
+
+            repository.acquire(
+                scope = firstScope,
+                fingerprint = first,
+                now = Instant.parse("2026-07-21T10:00:00Z")
+            ).shouldBeInstanceOf<IdempotencyDecision.Owner>()
+
+            repository.acquire(
+                scope = firstScope,
+                fingerprint = changed,
+                now = Instant.parse("2026-07-21T10:00:01Z")
+            ) shouldBeEqualTo IdempotencyDecision.Conflict
+
+            repository.acquire(
+                scope = secondScope,
+                fingerprint = first,
+                now = Instant.parse("2026-07-21T10:00:01Z")
+            ).shouldBeInstanceOf<IdempotencyDecision.Owner>()
         }
     }
 

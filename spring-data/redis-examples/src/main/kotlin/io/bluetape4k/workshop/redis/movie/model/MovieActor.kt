@@ -17,7 +17,7 @@ import java.io.Serializable
 data class MovieActor(
     @Indexed val movieHashId: String,
     @Indexed val actorHashId: String,
-) : Serializable {
+): Serializable {
 
     @get:Id
     var hashId: String? = null

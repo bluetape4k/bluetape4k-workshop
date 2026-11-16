@@ -8,62 +8,84 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.jdbc.sql.singleInt
+import io.bluetape4k.jdbc.sql.singleLong
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.database.getHikariDataSource
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigrationRunner
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
-import java.sql.SQLException
-import java.sql.DriverManager
+import tools.jackson.databind.JsonNode
 import java.nio.file.Files
 import java.nio.file.Path
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.SQLException
 import java.time.Instant
-import java.util.UUID
-import java.util.concurrent.CyclicBarrier
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
-import tools.jackson.databind.JsonNode
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.Executors
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
-@Suppress("LargeClass")
+@Suppress("LargeClass", "SqlResolve")
 internal class VoucherPoolRepositoryIntegrationTest {
-    private val dataSource = PGSimpleDataSource().apply {
-        setURL(postgres.jdbcUrl)
-        user = postgres.username ?: PostgreSQLServer.USERNAME
-        password = postgres.password ?: PostgreSQLServer.PASSWORD
-        currentSchema = SCHEMA
+
+    companion object: KLogging() {
+        private const val SCHEMA = "voucher_pool_task3"
+        private const val TENANT = "tenant-a"
+        private val postgres = PostgreSQLServer.Launcher.postgres
     }
+
+    private val dataSource = postgres.getHikariDataSource {
+        schema = SCHEMA
+    }
+
     private lateinit var repository: JdbcVoucherPoolRepository
 
     @BeforeAll
     fun migrate() {
-        adminConnection().use { connection ->
-            connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $SCHEMA CASCADE") }
-            connection.createStatement().use { it.execute("CREATE SCHEMA $SCHEMA") }
+        adminConnection().use { conn ->
+            conn.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $SCHEMA CASCADE") }
+            conn.createStatement().use { it.execute("CREATE SCHEMA $SCHEMA") }
         }
+
         VoucherPoolMigrationRunner(
-            dataSource,
-            VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
-            537002L,
+            dataSource = dataSource,
+            migration = VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
+            advisoryLockKey = 537002L,
         ).migrate()
+
         repository = JdbcVoucherPoolRepository()
+    }
+
+    @AfterAll
+    fun afterAll() {
+        dataSource.close()
     }
 
     @Test
     fun `existing JDBC transaction fixture rejects auto commit connections`() {
-        dataSource.connection.use { connection ->
+        dataSource.connection.use { conn ->
             assertFailsWith<IllegalStateException> {
-                withExistingJdbcTransaction(connection) { }
+                withExistingJdbcTransaction(conn) {
+                    // Nothing to do
+                }
             }
         }
     }
@@ -83,25 +105,29 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val batch = createBatch(TENANT, campaign)
         val staged = UUID.randomUUID()
         executeSql(
-            """INSERT INTO voucher_pool_entries
+            """
+            INSERT INTO voucher_pool_entries
                 (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
                  verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
                  wrap_nonce,kek_version,revision)
-                VALUES ('$TENANT','$staged','$campaign','$batch',700,'AVAILABLE',decode(md5('$staged-stable'),'hex'),
+            VALUES ('$TENANT','$staged','$campaign','$batch',700,'AVAILABLE',decode(md5('$staged-stable'),'hex'),
                         NULL,NULL,decode('01','hex'),decode(substr(md5('$staged-code'),1,24),'hex'),decode('02','hex'),
-                        decode(substr(md5('$staged-wrap'),1,24),'hex'),'test-kek',0)""",
+                        decode(substr(md5('$staged-wrap'),1,24),'hex'),'test-kek',0)
+            """.trimIndent(),
         )
 
         val invalid = UUID.randomUUID()
         assertFailsWith<SQLException> {
             executeSql(
-                """INSERT INTO voucher_pool_entries
+                """
+                INSERT INTO voucher_pool_entries
                     (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
                      verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
                      wrap_nonce,kek_version,revision)
-                    VALUES ('$TENANT','$invalid','$campaign','$batch',701,'AVAILABLE',decode(md5('$invalid-stable'),'hex'),
+                VALUES ('$TENANT','$invalid','$campaign','$batch',701,'AVAILABLE',decode(md5('$invalid-stable'),'hex'),
                             decode('01','hex'),NULL,decode('01','hex'),decode(substr(md5('$invalid-code'),1,24),'hex'),
-                            decode('02','hex'),decode(substr(md5('$invalid-wrap'),1,24),'hex'),'test-kek',0)""",
+                            decode('02','hex'),decode(substr(md5('$invalid-wrap'),1,24),'hex'),'test-kek',0)
+                """.trimIndent()
             )
         }
     }
@@ -113,25 +139,25 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val release = CyclicBarrier(5)
         val backendPids = ConcurrentLinkedQueue<Int>()
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-            val holders = (1..4).map {
+            val holders = List(4) {
                 executor.submit {
-                    dataSource.connection.use { connection ->
-                        connection.autoCommit = false
-                        withExistingJdbcTransaction(connection) {
-                            backendPids += backendPid(connection)
+                    dataSource.connection.use { conn ->
+                        conn.autoCommit = false
+                        withExistingJdbcTransaction(conn) {
+                            backendPids += backendPid(conn)
                             repository.lockCampaignForShare(TENANT, campaign)
-                            acquired.await(2, TimeUnit.SECONDS)
-                            release.await(2, TimeUnit.SECONDS)
-                            connection.commit()
+                            acquired.await(2.seconds)
+                            release.await(2.seconds)
+                            conn.commit()
                         }
                     }
                 }
             }
-            acquired.await(2, TimeUnit.SECONDS)
+            acquired.await(2.seconds)
             dataSource.sharedLockHolders(backendPids.toSet()) shouldBeEqualTo 4
             dataSource.lockWaiters(backendPids.toSet()) shouldBeEqualTo 0
-            release.await(2, TimeUnit.SECONDS)
-            holders.forEach { it.get(2, TimeUnit.SECONDS) }
+            release.await(2.seconds)
+            holders.forEach { it.get(2.seconds) }
         }
     }
 
@@ -142,6 +168,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
             reader.autoCommit = false
             withExistingJdbcTransaction(reader) {
                 repository.lockCampaignForShare(TENANT, campaign)
+
                 Executors.newVirtualThreadPerTaskExecutor().use { executor ->
                     val updaterReady = CountDownLatch(1)
                     val updaterPids = ConcurrentLinkedQueue<Int>()
@@ -151,11 +178,11 @@ internal class VoucherPoolRepositoryIntegrationTest {
                             updaterReady.countDown()
                         }
                     }
-                    updaterReady.await(2, TimeUnit.SECONDS).shouldBeTrue()
+                    updaterReady.await(2.seconds).shouldBeTrue()
                     dataSource.awaitLockWaiters(updaterPids.toSet(), expected = 1) shouldBeEqualTo 1
                     update.isDone.shouldBeFalse()
                     reader.commit()
-                    update.get(2, TimeUnit.SECONDS) shouldBeEqualTo 1
+                    update.get(2.seconds) shouldBeEqualTo 1
                 }
             }
         }
@@ -170,10 +197,15 @@ internal class VoucherPoolRepositoryIntegrationTest {
         dataSource.connection.use { blocker ->
             blocker.autoCommit = false
             repository.lockEntry(blocker, TENANT, first)
+
             dataSource.connection.use { contender ->
                 contender.autoCommit = false
                 withExistingJdbcTransaction(contender) {
-                    repository.selectAvailableEntrySkipLocked(TENANT, campaign, listOf(batch))?.entryId shouldBeEqualTo second
+                    repository.selectAvailableEntrySkipLocked(
+                        TENANT,
+                        campaign,
+                        listOf(batch)
+                    )?.entryId shouldBeEqualTo second
                 }
                 contender.rollback()
             }
@@ -198,16 +230,17 @@ internal class VoucherPoolRepositoryIntegrationTest {
         )
         createAvailableEntry(TENANT, campaign, laterBatch, 1)
         val expected = createAvailableEntry(TENANT, campaign, earlierBatch, 99)
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            withExistingJdbcTransaction(connection) {
+
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            withExistingJdbcTransaction(conn) {
                 repository.selectAvailableEntrySkipLocked(
-                    TENANT,
-                    campaign,
-                    listOf(earlierBatch, laterBatch),
+                    tenantId = TENANT,
+                    campaignId = campaign,
+                    lockedBatchIds = listOf(earlierBatch, laterBatch),
                 )?.entryId shouldBeEqualTo expected
             }
-            connection.rollback()
+            conn.rollback()
         }
     }
 
@@ -216,25 +249,36 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         val batch = createBatch(TENANT, campaign)
         val entry = createAvailableEntry(TENANT, campaign, batch, 10)
+
         assertSqlFails("UPDATE voucher_pool_campaigns SET revision=-1 WHERE tenant_id='$TENANT' AND campaign_id='$campaign'")
         assertSqlFails("UPDATE voucher_pool_entries SET code_nonce=NULL WHERE tenant_id='$TENANT' AND entry_id='$entry'")
-        assertSqlFails("INSERT INTO voucher_pool_user_limits(tenant_id,campaign_id,user_digest,active_reservations) VALUES ('$TENANT','$campaign',decode('01','hex'),-1)")
         assertSqlFails(
-            """INSERT INTO voucher_pool_batches
+            """
+            INSERT INTO voucher_pool_user_limits(tenant_id,campaign_id,user_digest,active_reservations) 
+            VALUES ('$TENANT','$campaign',decode('01','hex'),-1)
+            """.trimIndent()
+        )
+
+        assertSqlFails(
+            """
+            INSERT INTO voucher_pool_batches
                 (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
                  policy_version,activates_at,expected_count)
-                VALUES ('other','$entry','$campaign','ACTIVE','GENERATED',decode('01','hex'),
-                        decode('02','hex'),1,now(),0)""",
+            VALUES ('other','$entry','$campaign','ACTIVE','GENERATED',decode('01','hex'),
+                        decode('02','hex'),1,now(),0)
+            """.trimIndent()
         )
         assertSqlFails(
-            """INSERT INTO voucher_pool_entries
+            """
+            INSERT INTO voucher_pool_entries
                 (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
                  verification_digest,verification_key_version,code_ciphertext,wrapped_dek,code_nonce,
                  wrap_nonce,kek_version)
-                VALUES ('$TENANT',gen_random_uuid(),'$campaign','$batch',11,'AVAILABLE',decode(md5(random()::text),'hex'),
+            VALUES ('$TENANT',gen_random_uuid(),'$campaign','$batch',11,'AVAILABLE',decode(md5(random()::text),'hex'),
                         decode(md5(random()::text),'hex'),1,decode('01','hex'),decode('02','hex'),
                         (SELECT code_nonce FROM voucher_pool_entries WHERE tenant_id='$TENANT' AND entry_id='$entry'),
-                        decode(substr(md5(random()::text),1,24),'hex'),'test-kek')""",
+                        decode(substr(md5(random()::text),1,24),'hex'),'test-kek')
+            """.trimIndent()
         )
     }
 
@@ -244,22 +288,39 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val batch = createBatch(TENANT, campaign)
         val entry = createAvailableEntry(TENANT, campaign, batch, 12)
         assertSqlFails(
-            """UPDATE voucher_pool_entries SET state='ALLOCATED',reservation_id=gen_random_uuid(),
-                allocation_id=gen_random_uuid(),user_digest=decode('01','hex'),reserved_at=now(),
-                reservation_expires_at=now()+interval '2 hours',allocated_at=now(),
-                allocation_expires_at=now()+interval '1 hour',allocation_policy_version=1,
-                entitlement_root_id=gen_random_uuid(),verification_digest=NULL,verification_key_version=NULL
-                WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+            """
+            UPDATE voucher_pool_entries 
+               SET state='ALLOCATED',
+                   reservation_id=gen_random_uuid(),
+                   allocation_id=gen_random_uuid(),
+                   user_digest=decode('01','hex'),
+                   reserved_at=now(),
+                   reservation_expires_at=now()+interval '2 hours',
+                   allocated_at=now(),
+                   allocation_expires_at=now()+interval '1 hour',
+                   allocation_policy_version=1,
+                   entitlement_root_id=gen_random_uuid(),
+                   verification_digest=NULL,
+                   verification_key_version=NULL
+             WHERE tenant_id='$TENANT' 
+               AND entry_id='$entry'
+            """.trimIndent()
         )
         assertSqlFails(
-            """UPDATE voucher_pool_entries SET state='REVOKED',allocation_id=gen_random_uuid(),
+            """
+            UPDATE voucher_pool_entries SET state='REVOKED',allocation_id=gen_random_uuid(),
                 terminal_reason='TEST_REVOKE',verification_digest=NULL,verification_key_version=NULL
-                WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+             WHERE tenant_id='$TENANT' 
+               AND entry_id='$entry'
+            """.trimIndent()
         )
         assertSqlFails(
-            """UPDATE voucher_pool_entries SET state='REVOKED',allocation_id=gen_random_uuid(),
+            """
+            UPDATE voucher_pool_entries SET state='REVOKED',allocation_id=gen_random_uuid(),
                 terminal_reason='TEST_REVOKE',verification_digest=decode('01','hex'),verification_key_version=1
-                WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+            WHERE tenant_id='$TENANT' 
+              AND entry_id='$entry'
+           """.trimIndent()
         )
     }
 
@@ -268,12 +329,21 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         val batch = createBatch(TENANT, campaign)
         val entry = createAvailableEntry(TENANT, campaign, batch, 15)
+
         executeSql(
-            "UPDATE voucher_pool_entries SET created_at=now()+interval '1 hour',updated_at=now()+interval '1 hour' " +
-                "WHERE tenant_id='$TENANT' AND entry_id='$entry'",
+            """
+            UPDATE voucher_pool_entries 
+               SET created_at=now()+interval '1 hour',updated_at=now()+interval '1 hour' 
+             WHERE tenant_id='$TENANT' 
+               AND entry_id='$entry'
+            """.trimIndent()
         )
         executeSql(
-            "UPDATE voucher_pool_entries SET revision=revision+1 WHERE tenant_id='$TENANT' AND entry_id='$entry'",
+            """UPDATE voucher_pool_entries 
+                  SET revision=revision+1 
+                WHERE tenant_id='$TENANT' 
+                  AND entry_id='$entry'
+            """.trimIndent()
         )
     }
 
@@ -285,18 +355,26 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val secondEntry = createAvailableEntry(TENANT, campaign, batch, 14)
         val firstReservation = UUID.randomUUID()
         val secondReservation = UUID.randomUUID()
+
         executeSql(reservationInsert(firstReservation, campaign, batch, firstEntry, "ALLOCATED"))
         executeSql(reservationInsert(secondReservation, campaign, batch, secondEntry, "ALLOCATED"))
 
         assertSqlFails(
-            allocationInsert(firstReservation, secondEntry, AllocationScope(campaign, batch, UUID.randomUUID()), 0),
+            allocationInsert(
+                reservationId = firstReservation,
+                entryId = secondEntry,
+                scope = AllocationScope(campaign, batch, UUID.randomUUID()),
+                replacementOrdinal = 0
+            ),
         )
         assertSqlFails(
-            """INSERT INTO voucher_pool_allocations
+            """
+            INSERT INTO voucher_pool_allocations
                 (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,
                  entitlement_root_id,replacement_ordinal,allocation_expires_at,policy_version,revision)
-                VALUES ('$TENANT',gen_random_uuid(),'$firstReservation','$campaign','$batch','$firstEntry',
-                        decode('03','hex'),gen_random_uuid(),0,now()+interval '1 hour',1,0)""",
+            VALUES ('$TENANT',gen_random_uuid(),'$firstReservation','$campaign','$batch','$firstEntry',
+                    decode('03','hex'),gen_random_uuid(),0,now()+interval '1 hour',1,0)
+            """.trimIndent(),
         )
     }
 
@@ -331,7 +409,16 @@ internal class VoucherPoolRepositoryIntegrationTest {
             connection.autoCommit = false
             withExistingJdbcTransaction(connection) {
                 repository.appendAudit(
-                    VoucherPoolAuditRecord(TENANT, campaign, "CAMPAIGN", campaign, 0, 1, "SYSTEM", "CREATED"),
+                    VoucherPoolAuditRecord(
+                        tenantId = TENANT,
+                        campaignId = campaign,
+                        aggregateType = "CAMPAIGN",
+                        aggregateId = campaign,
+                        revision = 0,
+                        policyVersion = 1,
+                        actorType = "SYSTEM",
+                        reasonCode = "CREATED"
+                    ),
                 )
             }
             connection.commit()
@@ -346,20 +433,25 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val batch = createBatch(TENANT, campaign)
         val entry = createAvailableEntry(TENANT, campaign, batch, 20)
         val first = UUID.randomUUID()
+
         executeSql(reservationInsert(first, campaign, batch, entry, "RELEASED"))
         executeSql(reservationInsert(UUID.randomUUID(), campaign, batch, entry, "EXPIRED"))
         executeSql(reservationInsert(UUID.randomUUID(), campaign, batch, entry, "ACTIVE"))
         assertSqlFails(reservationInsert(UUID.randomUUID(), campaign, batch, entry, "ACTIVE"))
         assertSqlFails(
-            """INSERT INTO voucher_pool_entries
+            """
+            INSERT INTO voucher_pool_entries
                 (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
                  verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
                  wrap_nonce,kek_version,revision)
-                SELECT tenant_id,md5(random()::text)::uuid,campaign_id,batch_id,21,state,
-                       decode(md5(random()::text),'hex'),decode(md5(random()::text),'hex'),verification_key_version,
-                       code_ciphertext,code_nonce,wrapped_dek,decode(substr(md5(random()::text),1,24),'hex'),
-                       kek_version,revision
-                FROM voucher_pool_entries WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+            SELECT tenant_id,md5(random()::text)::uuid,campaign_id,batch_id,21,state,
+                   decode(md5(random()::text),'hex'),decode(md5(random()::text),'hex'),verification_key_version,
+                   code_ciphertext,code_nonce,wrapped_dek,decode(substr(md5(random()::text),1,24),'hex'),
+                   kek_version,revision
+              FROM voucher_pool_entries 
+             WHERE tenant_id='$TENANT' 
+               AND entry_id='$entry'
+             """.trimIndent(),
         )
     }
 
@@ -375,6 +467,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val rejectedReservation = UUID.randomUUID()
         val entitlement = UUID.randomUUID()
         val allocationScope = AllocationScope(campaign, batch, entitlement)
+
         executeSql(reservationInsert(originalReservation, campaign, batch, originalEntry, "ALLOCATED"))
         executeSql(reservationInsert(replacementReservation, campaign, batch, replacementEntry, "ALLOCATED"))
         executeSql(reservationInsert(rejectedReservation, campaign, batch, rejectedEntry, "ALLOCATED"))
@@ -382,27 +475,38 @@ internal class VoucherPoolRepositoryIntegrationTest {
         executeSql(allocationInsert(originalReservation, originalEntry, allocationScope, 0))
         executeSql(allocationInsert(replacementReservation, replacementEntry, allocationScope, 1))
         assertSqlFails(allocationInsert(rejectedReservation, rejectedEntry, allocationScope, 1))
+
         assertSqlFails(
-            """UPDATE voucher_pool_allocations SET entitlement_root_id=gen_random_uuid()
-                WHERE tenant_id='$TENANT' AND reservation_id='$originalReservation'""",
+            """
+            UPDATE voucher_pool_allocations SET entitlement_root_id=gen_random_uuid()
+             WHERE tenant_id='$TENANT' 
+               AND reservation_id='$originalReservation'
+            """.trimIndent(),
         )
         assertSqlFails(
-            """DELETE FROM voucher_pool_allocations
-                WHERE tenant_id='$TENANT' AND reservation_id='$originalReservation'""",
+            """
+            DELETE FROM voucher_pool_allocations
+             WHERE tenant_id='$TENANT' 
+               AND reservation_id='$originalReservation'
+            """.trimIndent(),
         )
     }
 
     @Test
     fun `durable lifecycle checks reject half owned claims and invalid state context`() {
         assertSqlFails(
-            """INSERT INTO voucher_pool_worker_claims
+            """
+            INSERT INTO voucher_pool_worker_claims
                 (tenant_id,worker_type,scope_id,owner_id,claim_until,attempt,next_attempt_at,checkpoint)
-                VALUES ('$TENANT','RESERVATION_EXPIRY',gen_random_uuid(),'owner',NULL,0,now(),0)""",
+            VALUES ('$TENANT','RESERVATION_EXPIRY',gen_random_uuid(),'owner',NULL,0,now(),0)
+            """.trimIndent(),
         )
         assertSqlFails(
-            """INSERT INTO voucher_pool_reconciliation_inbox
+            """
+            INSERT INTO voucher_pool_reconciliation_inbox
                 (tenant_id,event_id,payload_digest,status,attempt,next_attempt_at,claim_owner)
-                VALUES ('$TENANT',gen_random_uuid(),decode('01','hex'),'CLAIMED',0,now(),'owner')""",
+            VALUES ('$TENANT',gen_random_uuid(),decode('01','hex'),'CLAIMED',0,now(),'owner')
+            """.trimIndent(),
         )
     }
 
@@ -422,23 +526,41 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         val batch = createBatch(TENANT, campaign)
         val entry = createAvailableEntry(TENANT, campaign, batch, 30)
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            withExistingJdbcTransaction(connection) {
-                repository.lockCanonicalChain(WorkerCandidate(TENANT, campaign, batch, entry, 0, 0, 0))
-                    ?.entry?.entryId shouldBeEqualTo entry
+
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            withExistingJdbcTransaction(conn) {
+                repository.lockCanonicalChain(
+                    WorkerCandidate(
+                        tenantId = TENANT,
+                        campaignId = campaign,
+                        batchId = batch,
+                        entryId = entry,
+                        expectedCampaignRevision = 0,
+                        expectedBatchRevision = 0,
+                        expectedEntryRevision = 0
+                    )
+                )?.entry?.entryId shouldBeEqualTo entry
             }
-            connection.rollback()
+            conn.rollback()
         }
         executeSql("UPDATE voucher_pool_entries SET revision=1 WHERE tenant_id='$TENANT' AND entry_id='$entry'")
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            withExistingJdbcTransaction(connection) {
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            withExistingJdbcTransaction(conn) {
                 repository.lockCanonicalChain(
-                    WorkerCandidate(TENANT, campaign, batch, entry, 0, 0, 0),
+                    WorkerCandidate(
+                        tenantId = TENANT,
+                        campaignId = campaign,
+                        batchId = batch,
+                        entryId = entry,
+                        expectedCampaignRevision = 0,
+                        expectedBatchRevision = 0,
+                        expectedEntryRevision = 0
+                    ),
                 ).shouldBeNull()
             }
-            connection.rollback()
+            conn.rollback()
         }
     }
 
@@ -451,22 +573,24 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val secondUser = DigestValue.of(byteArrayOf(2))
         val firstReservation = UUID.fromString("00000000-0000-0000-0000-000000000001")
         val secondReservation = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff")
+
         executeSql(userLimitInsert(campaign, firstUser))
         executeSql(userLimitInsert(campaign, secondUser))
         executeSql(reservationInsert(firstReservation, campaign, batch, entry, "RELEASED"))
         executeSql(reservationInsert(secondReservation, campaign, batch, entry, "EXPIRED"))
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            withExistingJdbcTransaction(connection) {
+
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            withExistingJdbcTransaction(conn) {
                 val chain = repository.lockCanonicalChain(
                     WorkerCandidate(
-                        TENANT,
-                        campaign,
-                        batch,
-                        entry,
-                        0,
-                        0,
-                        0,
+                        tenantId = TENANT,
+                        campaignId = campaign,
+                        batchId = batch,
+                        entryId = entry,
+                        expectedCampaignRevision = 0,
+                        expectedBatchRevision = 0,
+                        expectedEntryRevision = 0,
                         userLimits = listOf(ExpectedUserLimit(secondUser, 0), ExpectedUserLimit(firstUser, 0)),
                         reservations = listOf(
                             ExpectedReservation(secondReservation, 0),
@@ -475,9 +599,12 @@ internal class VoucherPoolRepositoryIntegrationTest {
                     ),
                 )
                 chain?.userLimits?.map { it.userDigest } shouldBeEqualTo listOf(firstUser, secondUser)
-                chain?.reservations?.map { it.reservationId } shouldBeEqualTo listOf(firstReservation, secondReservation)
+                chain?.reservations?.map { it.reservationId } shouldBeEqualTo listOf(
+                    firstReservation,
+                    secondReservation
+                )
             }
-            connection.rollback()
+            conn.rollback()
         }
     }
 
@@ -489,23 +616,24 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val otherEntry = createAvailableEntry(TENANT, campaign, batch, 33)
         val otherReservation = UUID.randomUUID()
         executeSql(reservationInsert(otherReservation, campaign, batch, otherEntry, "ACTIVE"))
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            withExistingJdbcTransaction(connection) {
+
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            withExistingJdbcTransaction(conn) {
                 repository.lockCanonicalChain(
                     WorkerCandidate(
-                        TENANT,
-                        campaign,
-                        batch,
-                        targetEntry,
-                        0,
-                        0,
-                        0,
+                        tenantId = TENANT,
+                        campaignId = campaign,
+                        batchId = batch,
+                        entryId = targetEntry,
+                        expectedCampaignRevision = 0,
+                        expectedBatchRevision = 0,
+                        expectedEntryRevision = 0,
                         reservations = listOf(ExpectedReservation(otherReservation, 0)),
                     ),
                 ).shouldBeNull()
             }
-            connection.rollback()
+            conn.rollback()
         }
     }
 
@@ -514,7 +642,14 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         val batch = createBatch(TENANT, campaign)
         createAvailableEntry(TENANT, campaign, batch, 40)
-        executeSql("INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count) VALUES ('$TENANT','$batch','AVAILABLE',1)")
+
+        executeSql(
+            """
+            INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count) 
+            VALUES ('$TENANT','$batch','AVAILABLE',1)
+            """.trimIndent()
+        )
+
         dataSource.connection.use { connection ->
             connection.autoCommit = false
             withExistingJdbcTransaction(connection) {
@@ -528,15 +663,27 @@ internal class VoucherPoolRepositoryIntegrationTest {
     @Test
     fun `Exposed audit append participates in the caller transaction`() {
         val campaign = createCampaign(TENANT)
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            withExistingJdbcTransaction(connection) {
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            withExistingJdbcTransaction(conn) {
                 repository.appendAudit(
-                    VoucherPoolAuditRecord(TENANT, campaign, "CAMPAIGN", campaign, 0, 1, "SYSTEM", "CREATED"),
+                    VoucherPoolAuditRecord(
+                        tenantId = TENANT,
+                        campaignId = campaign,
+                        aggregateType = "CAMPAIGN",
+                        aggregateId = campaign,
+                        revision = 0,
+                        policyVersion = 1,
+                        actorType = "SYSTEM",
+                        reasonCode = "CREATED"
+                    ),
                 )
             }
-            queryLong(connection, "SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'") shouldBeEqualTo 1L
-            connection.rollback()
+            queryLong(
+                conn,
+                "SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'"
+            ) shouldBeEqualTo 1L
+            conn.rollback()
         }
         queryLong("SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'") shouldBeEqualTo 0L
     }
@@ -585,11 +732,16 @@ internal class VoucherPoolRepositoryIntegrationTest {
             val nodeTypes = nodes.map { it.path("Node Type").stringValue() }.toSet()
             require(nodeTypes in checkNotNull(allowedNodeSets[name])) { "$name used an unapproved plan tree: $nodeTypes" }
             val scans = nodes.filter { it.path("Node Type").stringValue().contains("Scan") }
-            require(scans.isNotEmpty()) { "$name omitted its bounded scan" }
+            scans.shouldNotBeEmpty() //  "$name omitted its bounded scan"
             val (rowCeiling, heapCeiling, blockCeiling) = checkNotNull(ceilings[name])
             requiredMetric(root, "Actual Rows") shouldBeAtMost rowCeiling
             scans.sumOf { heapAccesses(it) } shouldBeAtMost heapCeiling
-            scans.sumOf { requiredMetric(it, "Shared Hit Blocks") + requiredMetric(it, "Shared Read Blocks") } shouldBeAtMost blockCeiling
+            scans.sumOf {
+                requiredMetric(it, "Shared Hit Blocks") + requiredMetric(
+                    it,
+                    "Shared Read Blocks"
+                )
+            } shouldBeAtMost blockCeiling
         }
     }
 
@@ -597,33 +749,42 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val noiseCampaign = createCampaign("plan-noise")
         dataSource.connection.use { connection ->
             connection.createStatement().execute(
-                """INSERT INTO voucher_pool_entries
+                """
+                INSERT INTO voucher_pool_entries
                     (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
                      verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
                      wrap_nonce,kek_version,revision)
-                    SELECT '$TENANT',md5('entry-'||n)::uuid,'$campaign','$batch',n,'AVAILABLE',
+                SELECT '$TENANT',md5('entry-'||n)::uuid,'$campaign','$batch',n,'AVAILABLE',
                            decode(md5('stable-'||n),'hex'),decode(md5('verify-'||n),'hex'),1,decode('01','hex'),
                            decode(substr(md5('code-'||n),1,24),'hex'),decode('02','hex'),
                            decode(substr(md5('wrap-'||n),1,24),'hex'),'test-kek',0
-                    FROM generate_series(1,10000) n""",
+                FROM generate_series(1,10000) n
+                """.trimIndent(),
             )
             connection.createStatement().execute("ANALYZE voucher_pool_entries")
             connection.createStatement().execute(
-                "INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count) VALUES ('$TENANT','$batch','AVAILABLE',10000)",
+                """
+                INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count) 
+                VALUES ('$TENANT','$batch','AVAILABLE',10000)
+                """.trimIndent()
             )
             connection.createStatement().execute(
-                """INSERT INTO voucher_pool_batches
+                """
+                    INSERT INTO voucher_pool_batches
                     (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
                      policy_version,activates_at,expected_count,revision)
                     SELECT 'plan-noise',md5('batch-'||n)::uuid,'$noiseCampaign','ACTIVE','GENERATED',
                            decode(md5('provenance-'||n),'hex'),decode(md5('fingerprint-'||n),'hex'),
                            1,transaction_timestamp(),0,0
-                    FROM generate_series(1,1000) n""",
+                    FROM generate_series(1,1000) n
+                    """.trimIndent(),
             )
             connection.createStatement().execute(
-                """INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count)
+                """
+                    INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count)
                     SELECT tenant_id,batch_id,'AVAILABLE',0 FROM voucher_pool_batches
-                    WHERE tenant_id='plan-noise' AND campaign_id='$noiseCampaign'""",
+                    WHERE tenant_id='plan-noise' AND campaign_id='$noiseCampaign'
+                    """.trimIndent(),
             )
             connection.createStatement().execute("ANALYZE voucher_pool_pool_depth")
         }
@@ -639,9 +800,11 @@ internal class VoucherPoolRepositoryIntegrationTest {
 
     private fun createCampaign(tenantId: String): UUID = UUID.randomUUID().also { id ->
         executeSql(
-            """INSERT INTO voucher_pool_campaigns
+            """
+            INSERT INTO voucher_pool_campaigns
                 (tenant_id,campaign_id,state,user_identity_key_version,policy_version,revision)
-                VALUES ('$tenantId','$id','ACTIVE',1,1,0)""",
+            VALUES ('$tenantId','$id','ACTIVE',1,1,0)
+            """.trimIndent()
         )
     }
 
@@ -655,24 +818,29 @@ internal class VoucherPoolRepositoryIntegrationTest {
         activatesAt: Instant,
     ): UUID = batchId.also { id ->
         executeSql(
-            """INSERT INTO voucher_pool_batches
+            """
+            INSERT INTO voucher_pool_batches
                 (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
                  policy_version,activates_at,expected_count,revision)
-                VALUES ('$tenantId','$id','$campaignId','ACTIVE','GENERATED',decode('01','hex'),
-                        decode('02','hex'),1,'$activatesAt',0,0)""",
+            VALUES ('$tenantId','$id','$campaignId','ACTIVE','GENERATED',decode('01','hex'),
+                        decode('02','hex'),1,'$activatesAt',0,0)
+            """.trimIndent(),
         )
     }
 
     private fun createAvailableEntry(tenantId: String, campaignId: UUID, batchId: UUID, ordinal: Long): UUID =
         UUID.randomUUID().also { id ->
             executeSql(
-                """INSERT INTO voucher_pool_entries
+                """
+                INSERT INTO voucher_pool_entries
                     (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
                      verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
-                     wrap_nonce,kek_version,revision) VALUES ('$tenantId','$id','$campaignId','$batchId',$ordinal,
+                     wrap_nonce,kek_version,revision) 
+                VALUES ('$tenantId','$id','$campaignId','$batchId',$ordinal,
                     'AVAILABLE',decode(md5('$id-stable'),'hex'),decode(md5('$id-verification'),'hex'),1,
                     decode('01','hex'),decode(substr(md5('$id-code'),1,24),'hex'),decode('02','hex'),
-                    decode(substr(md5('$id-wrap'),1,24),'hex'),'test-kek',0)""",
+                    decode(substr(md5('$id-wrap'),1,24),'hex'),'test-kek',0)
+                """.trimIndent(),
             )
         }
 
@@ -682,14 +850,20 @@ internal class VoucherPoolRepositoryIntegrationTest {
         keyVersion: Int,
     ) {
         dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """INSERT INTO voucher_pool_code_dedup
-                    (tenant_id,stable_dedup_digest,first_campaign_id,first_batch_id,first_entry_id,key_version)
-                    VALUES (?,?,?,?,?,?)""",
-            ).use {
-                it.setString(1, tenantId); it.setBytes(2, digest); it.setObject(3, UUID.randomUUID())
-                it.setObject(4, UUID.randomUUID()); it.setObject(5, UUID.randomUUID())
-                it.setInt(6, keyVersion); it.executeUpdate()
+            val sql = """
+                INSERT INTO voucher_pool_code_dedup
+                (tenant_id,stable_dedup_digest,first_campaign_id,first_batch_id,first_entry_id,key_version)
+                VALUES (?,?,?,?,?,?)
+                """.trimIndent()
+
+            connection.prepareStatement(sql).use {
+                it.setString(1, tenantId)
+                it.setBytes(2, digest)
+                it.setObject(3, UUID.randomUUID())
+                it.setObject(4, UUID.randomUUID())
+                it.setObject(5, UUID.randomUUID())
+                it.setInt(6, keyVersion)
+                it.executeUpdate()
             }
         }
     }
@@ -698,24 +872,40 @@ internal class VoucherPoolRepositoryIntegrationTest {
         tenantId: String,
         campaignId: UUID,
         beforeExecute: (Int) -> Unit = {},
-    ): Int = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            """UPDATE voucher_pool_campaigns SET policy_version=policy_version+1,revision=revision+1
-                WHERE tenant_id=? AND campaign_id=?""",
-        ).use { statement ->
-            statement.setString(1, tenantId); statement.setObject(2, campaignId)
-            beforeExecute(backendPid(connection))
-            statement.executeUpdate()
+    ): Int =
+        dataSource.connection.use { connection ->
+            val sql = """
+                UPDATE voucher_pool_campaigns SET policy_version=policy_version+1,revision=revision+1
+                WHERE tenant_id=? AND campaign_id=?
+                """.trimIndent()
+            connection.prepareStatement(sql).use { stmt ->
+                stmt.setString(1, tenantId)
+                stmt.setObject(2, campaignId)
+                beforeExecute(backendPid(connection))
+                stmt.executeUpdate()
+            }
         }
-    }
 
     private fun backendPid(connection: java.sql.Connection): Int =
-        connection.createStatement().executeQuery("SELECT pg_backend_pid()").use { it.next(); it.getInt(1) }
+        connection
+            .createStatement().use { stmt ->
+                stmt.executeQuery("SELECT pg_backend_pid()").use {
+                    it.singleInt()
+                }
+            }
 
     private fun queryLong(connection: java.sql.Connection, sql: String): Long =
-        connection.createStatement().executeQuery(sql).use { it.next(); it.getLong(1) }
+        connection
+            .createStatement().use { stmt ->
+                stmt.executeQuery(sql).use {
+                    it.singleLong()
+                }
+            }
 
-    private fun queryLong(sql: String): Long = dataSource.connection.use { queryLong(it, sql) }
+    private fun queryLong(sql: String): Long =
+        dataSource.connection.use {
+            queryLong(it, sql)
+        }
 
     private fun reservationInsert(
         reservationId: UUID,
@@ -724,11 +914,13 @@ internal class VoucherPoolRepositoryIntegrationTest {
         entryId: UUID,
         state: String,
     ): String =
-        """INSERT INTO voucher_pool_reservations
+        """
+        INSERT INTO voucher_pool_reservations
             (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,idempotency_owner_digest,
              state,reservation_expires_at,policy_version,revision)
-            VALUES ('$TENANT','$reservationId','$campaignId','$batchId','$entryId',decode('01','hex'),
-                    decode('02','hex'),'$state',now()+interval '1 hour',1,0)"""
+        VALUES ('$TENANT','$reservationId','$campaignId','$batchId','$entryId',decode('01','hex'),
+               decode('02','hex'),'$state',now()+interval '1 hour',1,0)
+        """.trimIndent()
 
     private fun allocationInsert(
         reservationId: UUID,
@@ -736,27 +928,39 @@ internal class VoucherPoolRepositoryIntegrationTest {
         scope: AllocationScope,
         replacementOrdinal: Int,
     ): String =
-        """INSERT INTO voucher_pool_allocations
-            (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,
-             entitlement_root_id,replacement_ordinal,allocation_expires_at,policy_version,revision)
-            VALUES ('$TENANT',gen_random_uuid(),'$reservationId','${scope.campaignId}','${scope.batchId}','$entryId',
-                    decode('01','hex'),'${scope.entitlementRootId}',$replacementOrdinal,now()+interval '1 hour',1,0)"""
+        """
+        INSERT INTO voucher_pool_allocations
+        (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,
+         entitlement_root_id,replacement_ordinal,allocation_expires_at,policy_version,revision)
+        VALUES ('$TENANT',gen_random_uuid(),'$reservationId','${scope.campaignId}','${scope.batchId}','$entryId',
+                decode('01','hex'),'${scope.entitlementRootId}',$replacementOrdinal,now()+interval '1 hour',1,0)
+        """.trimIndent()
 
     private fun userLimitInsert(campaignId: UUID, userDigest: DigestValue): String =
-        """INSERT INTO voucher_pool_user_limits
-            (tenant_id,campaign_id,user_digest,active_reservations,active_allocations,lifetime_consumed,revision)
-            VALUES ('$TENANT','$campaignId',decode('${userDigest.copyBytes().toHexString()}','hex'),0,0,0,0)"""
+        """
+        INSERT INTO voucher_pool_user_limits
+          (tenant_id,campaign_id,user_digest,active_reservations,active_allocations,lifetime_consumed,revision)
+        VALUES ('$TENANT','$campaignId',decode('${userDigest.copyBytes().toHexString()}','hex'),0,0,0,0)
+        """.trimIndent()
 
-    private fun requiredColumns(tableName: String): Set<String> = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            """SELECT column_name FROM information_schema.columns
-                WHERE table_schema=? AND table_name=? ORDER BY ordinal_position""",
-        ).use { statement ->
-            statement.setString(1, SCHEMA)
-            statement.setString(2, tableName)
-            statement.executeQuery().use { result -> buildSet { while (result.next()) add(result.getString(1)) } }
+    private fun requiredColumns(tableName: String): Set<String> =
+        dataSource.connection.use { conn ->
+            val sql = """
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema=? AND table_name=? ORDER BY ordinal_position
+                """.trimIndent()
+
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setString(1, SCHEMA)
+                stmt.setString(2, tableName)
+                stmt.executeQuery().use { result ->
+                    buildSet {
+                        while (result.next())
+                            add(result.getString(1))
+                    }
+                }
+            }
         }
-    }
 
     private fun explain(sql: String, bind: (java.sql.PreparedStatement) -> Unit): String =
         dataSource.connection.use { connection ->
@@ -781,27 +985,24 @@ internal class VoucherPoolRepositoryIntegrationTest {
         return node.path(name).longValue()
     }
 
-    private fun heapAccesses(node: JsonNode): Long = when (node.path("Node Type").stringValue()) {
-        "Index Only Scan" -> requiredMetric(node, "Heap Fetches")
-        "Index Scan", "Bitmap Heap Scan" -> requiredMetric(node, "Actual Rows") +
-            optionalMetric(node, "Rows Removed by Filter") +
-            optionalMetric(node, "Rows Removed by Index Recheck")
-        else -> 0L
-    }
+    private fun heapAccesses(node: JsonNode): Long =
+        when (node.path("Node Type").stringValue()) {
+            "Index Only Scan"                -> requiredMetric(node, "Heap Fetches")
+            "Index Scan", "Bitmap Heap Scan" -> requiredMetric(node, "Actual Rows") +
+                    optionalMetric(node, "Rows Removed by Filter") +
+                    optionalMetric(node, "Rows Removed by Index Recheck")
+            else                             -> 0L
+        }
 
-    private fun optionalMetric(node: JsonNode, name: String): Long = node.get(name)?.longValue() ?: 0L
+    private fun optionalMetric(node: JsonNode, name: String): Long =
+        node.get(name)?.longValue() ?: 0L
 
-    private fun adminConnection() = DriverManager.getConnection(
-        postgres.jdbcUrl,
-        postgres.username ?: PostgreSQLServer.USERNAME,
-        postgres.password ?: PostgreSQLServer.PASSWORD,
-    )
-
-    companion object {
-        private const val SCHEMA = "voucher_pool_task3"
-        private const val TENANT = "tenant-a"
-        private val postgres = PostgreSQLServer.Launcher.postgres
-    }
+    private fun adminConnection(): Connection =
+        DriverManager.getConnection(
+            postgres.jdbcUrl,
+            postgres.username ?: PostgreSQLServer.USERNAME,
+            postgres.password ?: PostgreSQLServer.PASSWORD,
+        )
 
     private data class AllocationScope(
         val campaignId: UUID,

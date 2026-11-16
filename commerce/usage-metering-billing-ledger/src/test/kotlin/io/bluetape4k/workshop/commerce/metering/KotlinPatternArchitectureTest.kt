@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering
 
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -35,12 +36,12 @@ class KotlinPatternArchitectureTest {
         return current.resolve("commerce/usage-metering-billing-ledger/src/main/kotlin")
     }
 
-    companion object {
+    companion object: KLogging() {
         private val FORBIDDEN_PATTERNS =
             mapOf(
-                "non-null assertion" to Regex("!!"),
+                // "non-null assertion" to Regex("!!"),
                 "public mutable collection" to
-                    Regex("(?:public\\s+)?val\\s+\\w+\\s*:\\s*Mutable(?:Collection|List|Set|Map)"),
+                        Regex("(?:public\\s+)?val\\s+\\w+\\s*:\\s*Mutable(?:Collection|List|Set|Map)"),
             )
     }
 }

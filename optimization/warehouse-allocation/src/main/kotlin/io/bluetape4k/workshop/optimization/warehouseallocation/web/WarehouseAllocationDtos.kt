@@ -1,11 +1,10 @@
 package io.bluetape4k.workshop.optimization.warehouseallocation.web
 
-import io.bluetape4k.workshop.optimization.warehouseallocation.domain.EventState
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.EffectState
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.OutboxState
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PlanStatus
-import io.bluetape4k.workshop.optimization.warehouseallocation.domain.ReplanState
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.ReplanStaleReason
+import io.bluetape4k.workshop.optimization.warehouseallocation.domain.ReplanState
 import java.time.Instant
 
 internal data class WarehouseAllocationEventRequest(
@@ -25,11 +24,23 @@ internal data class WarehouseAllocationReplanRequest(
 
 internal data class WarehouseAllocationApproveRequest(val expectedPlanRevision: Long)
 internal data class WarehouseAllocationRejectRequest(val expectedPlanRevision: Long, val reasonCode: String)
-internal data class WarehouseAllocationPinRequest(val lineId: String, val warehouseId: String, val quantity: Int, val expectedLineRevision: Long)
+internal data class WarehouseAllocationPinRequest(
+    val lineId: String,
+    val warehouseId: String,
+    val quantity: Int,
+    val expectedLineRevision: Long,
+)
+
 internal data class WarehouseAllocationCancelRequest(val expectedOrderRevision: Long)
 
 internal data class WarehouseAllocationListResponse<T>(val items: List<T>, val nextCursor: String? = null)
-internal data class WarehouseAllocationStockDto(val warehouseId: String, val sku: String, val availableQuantity: Int, val sourceRevision: Long)
+internal data class WarehouseAllocationStockDto(
+    val warehouseId: String,
+    val sku: String,
+    val availableQuantity: Int,
+    val sourceRevision: Long,
+)
+
 internal data class WarehouseAllocationReservationDto(val reservationId: String, val state: String)
 internal data class WarehouseAllocationOrderLineDto(
     val lineId: String,
@@ -40,7 +51,14 @@ internal data class WarehouseAllocationOrderLineDto(
     val pinRevision: Long? = null,
     val reservations: List<WarehouseAllocationReservationDto> = emptyList(),
 )
-internal data class WarehouseAllocationOrderDto(val orderId: String, val status: String, val revision: Long, val lines: List<WarehouseAllocationOrderLineDto>, val nextCursor: String? = null)
+
+internal data class WarehouseAllocationOrderDto(
+    val orderId: String,
+    val status: String,
+    val revision: Long,
+    val lines: List<WarehouseAllocationOrderLineDto>,
+    val nextCursor: String? = null,
+)
 
 internal data class WarehouseAllocationScoreDto(val hard: Int, val medium: Int, val soft: Int)
 internal data class WarehouseAllocationPlanAllocationDto(
@@ -52,11 +70,13 @@ internal data class WarehouseAllocationPlanAllocationDto(
     val quantity: Int,
     val pinned: Boolean,
 )
+
 internal data class WarehouseAllocationPlanReasonDto(
     val lineId: String,
     val code: String,
     val affectedQuantity: Int,
 )
+
 internal data class WarehouseAllocationPlanHistoryDto(
     val revision: Long,
     val status: PlanStatus,
@@ -64,6 +84,7 @@ internal data class WarehouseAllocationPlanHistoryDto(
     val createdAt: Instant? = null,
     val requestId: String? = null,
 )
+
 internal data class WarehouseAllocationPlanDto(
     val planId: String,
     val status: PlanStatus,
@@ -74,7 +95,15 @@ internal data class WarehouseAllocationPlanDto(
     val history: List<WarehouseAllocationPlanHistoryDto> = emptyList(),
     val nextCursor: String? = null,
 )
-internal data class WarehouseAllocationReplanDto(val generation: Long, val status: ReplanState, val planId: String? = null, val staleReason: ReplanStaleReason? = null, val requestId: String)
+
+internal data class WarehouseAllocationReplanDto(
+    val generation: Long,
+    val status: ReplanState,
+    val planId: String? = null,
+    val staleReason: ReplanStaleReason? = null,
+    val requestId: String,
+)
+
 internal data class WarehouseAllocationOutboxDto(
     val operationKey: String,
     val outboxState: OutboxState,
@@ -85,7 +114,12 @@ internal data class WarehouseAllocationOutboxDto(
     val redriveAllowed: Boolean = false,
     val requestId: String,
 )
-internal data class WarehouseAllocationCommandResponse(val operationKey: String?, val requestId: String, val state: String)
+
+internal data class WarehouseAllocationCommandResponse(
+    val operationKey: String?,
+    val requestId: String,
+    val state: String,
+)
 
 internal data class PlanningRequestDto(
     val aggregateId: String,
@@ -94,6 +128,7 @@ internal data class PlanningRequestDto(
     val parentRevision: Long? = null,
     val provider: String = "FAKE",
 )
+
 internal data class PlanningRequestResponse(val id: String, val status: String = "QUEUED")
 internal data class PlanningCallbackDto(
     val eventId: String,
@@ -103,6 +138,7 @@ internal data class PlanningCallbackDto(
     val scoreSummary: String,
     val constraintExplanations: List<String> = emptyList(),
 )
+
 internal data class PlanningCallbackResponse(val decision: String)
 internal data class PlanningQueryResponse(
     val id: String,

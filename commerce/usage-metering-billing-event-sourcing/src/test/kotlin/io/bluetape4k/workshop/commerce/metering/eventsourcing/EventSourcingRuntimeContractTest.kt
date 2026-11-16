@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import java.lang.management.ManagementFactory
 
 class EventSourcingRuntimeContractTest {
+
     @Test
     fun `advanced billing example runs on Java 25 without preview`() {
         Runtime.version().feature().shouldBeEqualTo(25)

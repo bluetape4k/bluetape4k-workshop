@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.fallback.observability
 
+import io.bluetape4k.logging.KLogging
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Component
 
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component
 class OutboxMetrics(
     private val meterRegistry: MeterRegistry,
 ) {
+
+    companion object: KLogging()
 
     fun recordDirectPublish(result: String) {
         meterRegistry.counter("workshop.outbox.direct.publish.attempts", "result", result).increment()

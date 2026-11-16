@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.leader.tenantscheduler.domain
 
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
-import java.util.Locale
+import java.util.*
 
 private val SAFE_ALIAS_PATTERN = Regex("[a-z][a-z0-9-]*[a-z0-9]")
 private val EMAIL_LIKE_PATTERN = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")

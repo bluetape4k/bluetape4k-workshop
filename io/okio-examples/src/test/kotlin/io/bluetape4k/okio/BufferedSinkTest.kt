@@ -1,6 +1,8 @@
 package io.bluetape4k.okio
 
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -15,8 +17,6 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.EOFException
 import okio.Sink
 import okio.Source
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.ByteBuffer

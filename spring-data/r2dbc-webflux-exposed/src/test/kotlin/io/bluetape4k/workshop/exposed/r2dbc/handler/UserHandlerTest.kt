@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.exposed.r2dbc.handler
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.r2dbc.AbstractWebfluxR2dbcExposedApplicationTest
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
@@ -8,8 +10,6 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -20,7 +20,7 @@ import reactor.kotlin.core.publisher.toMono
 
 class UserHandlerTest: AbstractWebfluxR2dbcExposedApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val service = mockk<UserService>(relaxUnitFun = true)
     private val request = mockk<ServerRequest>(relaxUnitFun = true)

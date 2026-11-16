@@ -2,9 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-This module demonstrates Spring Data JPA repositories with Querydsl custom search logic.
-It models `Team` and `Member`, projects joined query results into DTOs, and compares
-simple, deferred, and optimized count strategies for pageable search.
+This module demonstrates Spring Data JPA repositories with Querydsl custom search logic. It models `Team` and `Member`, projects joined query results into DTOs, and compares simple, deferred, and optimized count strategies for pageable search.
 
 ## What this example shows
 
@@ -18,25 +16,22 @@ simple, deferred, and optimized count strategies for pageable search.
 
 ![JPA Querydsl ERD](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-readme-erd-01.png)
 
-`Member` has an optional lazy `ManyToOne` relationship to `Team`. `Team.members` is the
-inverse collection mapped by `Member.team`, so `Team.addMember()` and
+`Member` has an optional lazy `ManyToOne` relationship to `Team`. `Team.members` is the inverse collection mapped by `Member.team`, so `Team.addMember()` and
 `Member.changeTeam()` keep the two sides in sync in the sample domain model.
 
 ## Querydsl paths
 
-| Path | Method | What it demonstrates |
-|---|---|---|
-| Derived repository query | `findAllByName`, `findAllByTeam` | Standard Spring Data method-name queries over JPA entities. |
-| Dynamic DTO search | `search(MemberSearchCondition)` | `leftJoin(member.team, team)`, nullable predicates, and constructor projection to `MemberTeamDto`. |
-| Simple page | `searchPageSimple` | Separate content query and deprecated `fetchCount()` count query. |
-| Deferred count page | `searchPageComplex` | `PageableExecutionUtils.getPage()` defers the count query when possible. |
-| Optimized count page | `searchPageExtremeCountQuery` | Counts distinct member ids instead of fetching a full entity count. |
+| Path                     | Method                           | What it demonstrates                                                                               |
+|--------------------------|----------------------------------|----------------------------------------------------------------------------------------------------|
+| Derived repository query | `findAllByName`, `findAllByTeam` | Standard Spring Data method-name queries over JPA entities.                                        |
+| Dynamic DTO search       | `search(MemberSearchCondition)`  | `leftJoin(member.team, team)`, nullable predicates, and constructor projection to `MemberTeamDto`. |
+| Simple page              | `searchPageSimple`               | Separate content query and deprecated `fetchCount()` count query.                                  |
+| Deferred count page      | `searchPageComplex`              | `PageableExecutionUtils.getPage()` defers the count query when possible.                           |
+| Optimized count page     | `searchPageExtremeCountQuery`    | Counts distinct member ids instead of fetching a full entity count.                                |
 
 ## Test runtime
 
-The tests use `@DataJpaTest`, which starts an embedded H2 database. The JDBC URL is written
-as `jdbc:mysql://localhost:3306/test;` so H2 runs in MySQL compatibility mode for this
-slice. `InitMemberService` seeds `teamA`, `teamB`, and members before repository tests.
+The tests use `@DataJpaTest`, which starts an embedded H2 database. The JDBC URL is written as `jdbc:mysql://localhost:3306/test;` so H2 runs in MySQL compatibility mode for this slice. `InitMemberService` seeds `teamA`, `teamB`, and members before repository tests.
 
 ## Key files
 

@@ -4,6 +4,7 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.leader.audit.LeaderAuditExportEvent
 import io.bluetape4k.leader.audit.http.LeaderAuditHttpPayload
 import io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder
+import io.bluetape4k.support.requireInRange
 import java.time.Instant
 
 /**
@@ -18,12 +19,15 @@ import java.time.Instant
  */
 class JobSafetyAuditPayloadEncoder(
     private val maxPayloadBytes: Int,
-) : LeaderAuditPayloadEncoder {
+): LeaderAuditPayloadEncoder {
+
+    private companion object {
+        const val CONTENT_TYPE = "application/json"
+        const val MAX_PAYLOAD_BYTES = 1024 * 1024
+    }
 
     init {
-        require(maxPayloadBytes in 1..MAX_PAYLOAD_BYTES) {
-            "maxPayloadBytes must be in 1..$MAX_PAYLOAD_BYTES: $maxPayloadBytes"
-        }
+        maxPayloadBytes.requireInRange(1, MAX_PAYLOAD_BYTES, "maxPayloadBytes")
     }
 
     override fun encode(event: LeaderAuditExportEvent): LeaderAuditHttpPayload {
@@ -76,8 +80,4 @@ class JobSafetyAuditPayloadEncoder(
         }
     }
 
-    private companion object {
-        const val CONTENT_TYPE = "application/json"
-        const val MAX_PAYLOAD_BYTES = 1024 * 1024
-    }
 }

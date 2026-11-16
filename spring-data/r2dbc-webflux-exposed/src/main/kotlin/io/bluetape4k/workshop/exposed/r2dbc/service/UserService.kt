@@ -2,8 +2,10 @@ package io.bluetape4k.workshop.exposed.r2dbc.service
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserQbeResponse
+import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserSummary
 import io.bluetape4k.workshop.exposed.r2dbc.domain.repository.UserExposedRepository
 import io.bluetape4k.workshop.exposed.r2dbc.domain.repository.UserQueryByExampleRepository
@@ -23,34 +25,40 @@ class UserService(
     private val queryByExampleRepository: UserQueryByExampleRepository,
 ) {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
-    suspend fun findAll(): List<UserRecord> = suspendTransaction(db = database) {
-        repository.findAll().toList()
-    }
+    suspend fun findAll(): List<UserRecord> =
+        suspendTransaction(db = database) {
+            repository.findAll().toList()
+        }
 
-    suspend fun findByIdOrNull(id: Int): UserRecord? = suspendTransaction(db = database) {
-        repository.findByIdOrNull(id)
-    }
+    suspend fun findByIdOrNull(id: Int): UserRecord? =
+        suspendTransaction(db = database) {
+            repository.findByIdOrNull(id)
+        }
 
-    suspend fun findByEmail(email: String): List<UserRecord> = suspendTransaction(db = database) {
-        repository.findByEmail(email).toList()
-    }
+    suspend fun findByEmail(email: String): List<UserRecord> =
+        suspendTransaction(db = database) {
+            repository.findByEmail(email).toList()
+        }
 
-    suspend fun addUser(user: UserRecord): UserRecord? = suspendTransaction(db = database) {
-        log.debug { "Save new user. $user" }
-        val newId = repository.save(user)
-        user.withId(newId.value)
-    }
+    suspend fun addUser(user: UserRecord): UserRecord? =
+        suspendTransaction(db = database) {
+            log.debug { "Save new user. $user" }
+            val newId = repository.save(user)
+            user.withId(newId)
+        }
 
-    suspend fun updateUser(id: Int, user: UserRecord): UserRecord? = suspendTransaction(db = database) {
-        val count = repository.update(user.withId(id))
-        if (count > 0) user else null
-    }
+    suspend fun updateUser(id: Int, user: UserRecord): UserRecord? =
+        suspendTransaction(db = database) {
+            val count = repository.update(user.withId(id))
+            if (count > 0) user else null
+        }
 
-    suspend fun deleteUser(id: Int): Boolean = suspendTransaction(db = database) {
-        repository.deleteById(id) > 0
-    }
+    suspend fun deleteUser(id: Int): Boolean =
+        suspendTransaction(db = database) {
+            repository.deleteById(id) > 0
+        }
 
     /**
      * Spring Data Exposed 2.1.0-SNAPSHOT coroutine-native QBE와 projection을 조합합니다.
@@ -63,8 +71,8 @@ class UserService(
         page: Int,
         size: Int,
     ): UserQbeResponse {
-        require(page >= 0) { "page must be non-negative" }
-        require(size in 1..100) { "size must be between 1 and 100" }
+        page.requireZeroOrPositiveNumber("page")
+        size.requireInRange(1, 100, "size")
 
         val example = userExample(loginPrefix, email)
         val resultPage = queryByExampleRepository.findBy(example) { query ->

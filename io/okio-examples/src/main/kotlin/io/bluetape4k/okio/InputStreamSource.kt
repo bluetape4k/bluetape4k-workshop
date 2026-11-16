@@ -28,7 +28,7 @@ class InputStreamSource(
             val length = byteCount.toInt().coerceAtMost(input.available())
 
             cursor.expandBuffer(byteCount.toInt())
-            val read = input.read(cursor.data, cursor.start, length)
+            val read = input.read(cursor.data!!, cursor.start, length)
             log.debug { "Read $read bytes from channel at position=${cursor.start}" }
             if (read == -1) {
                 cursor.resizeBuffer(originalSize)

@@ -4,10 +4,15 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
 
 internal class TicketRepositoryIntegrationTest {
+
+    companion object: KLogging()
+
     @Test
     fun `inventory check rejects held plus sold above total`() {
         TicketDatabaseFixture().use { fixture ->
@@ -35,6 +40,7 @@ internal class TicketRepositoryIntegrationTest {
 
             repository.insert(saleId, IdentityKind.USER, userSubjectId, firstAttemptId)
             repository.insert(saleId, IdentityKind.IP, ipSubjectId, firstAttemptId)
+
             assertFailsWith<SQLException> {
                 repository.insert(saleId, IdentityKind.USER, userSubjectId, secondAttemptId)
             }
@@ -57,6 +63,7 @@ internal class TicketRepositoryIntegrationTest {
             }
 
             val claimed = repository.claimBatch(saleId, limit = 3)
+                .onEach { log.debug { "claimed=$it" } }
             claimed.map { it.sequence } shouldBeEqualTo listOf(93L, 94L, 95L)
             repository.explainClaim(saleId).any { it.contains("ticket_waiting_claim_idx") }.shouldBeTrue()
         }

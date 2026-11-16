@@ -18,13 +18,15 @@ import io.bluetape4k.workshop.lock.domain.InventoryStore
  */
 class UnsafeInventoryService(private val store: InventoryStore) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     fun deduct(id: Long, qty: Int): DeductionResult {
         qty.requirePositiveNumber("qty")
         val current = store.currentStock(id)
         if (current < qty) return InsufficientStock(qty, current)
+
         Thread.sleep(1)  // 의도적인 경쟁 창
+
         val remaining = store.applyChange(id, -qty)
         return Success(remaining)
     }

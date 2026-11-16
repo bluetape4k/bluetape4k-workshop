@@ -6,7 +6,7 @@ data class Student(
     val id: Int? = null,
     val name: String? = null,
     val passportNumber: String? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

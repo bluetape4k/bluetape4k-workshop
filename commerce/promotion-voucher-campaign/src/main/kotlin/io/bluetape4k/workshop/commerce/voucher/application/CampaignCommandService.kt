@@ -12,7 +12,7 @@ import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherTransactionRun
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class CampaignTransitionCommand(
     val tenantId: String,
@@ -47,33 +47,36 @@ internal class CampaignCommandService(
     private val audits: AuditRepository,
     private val clock: Clock,
 ) {
+
+    companion object: KLogging()
+
     fun create(command: CreateCampaignCommand): CampaignSnapshot {
         require(command.tenantId.isNotBlank()) { "tenantId must not be blank" }
         require(command.startsAt.isBefore(command.endsAt)) { "startsAt must precede endsAt" }
         require(command.capacity > 0) { "capacity must be positive" }
         require(command.perUserLimit > 0) { "perUserLimit must be positive" }
         require(command.redemptionTtlSeconds > 0) { "redemptionTtlSeconds must be positive" }
+
         return transactions.foregroundTransaction {
             if (campaigns.findPublic(command.tenantId, command.campaignId) != null) {
                 fail(VoucherCommandFailure.CAMPAIGN_ALREADY_EXISTS)
             }
-            val created =
-                campaigns.create(
-                    CampaignRecord(
-                        id = 0,
-                        tenantId = command.tenantId,
-                        campaignId = command.campaignId,
-                        state = io.bluetape4k.workshop.commerce.voucher.domain.CampaignState.DRAFT,
-                        startsAt = command.startsAt,
-                        endsAt = command.endsAt,
-                        capacity = command.capacity,
-                        allocatedCount = 0,
-                        perUserLimit = command.perUserLimit,
-                        redemptionTtlSeconds = command.redemptionTtlSeconds,
-                        policyVersion = 0,
-                        revision = 0,
-                    ),
-                )
+            val created = campaigns.create(
+                CampaignRecord(
+                    id = 0,
+                    tenantId = command.tenantId,
+                    campaignId = command.campaignId,
+                    state = io.bluetape4k.workshop.commerce.voucher.domain.CampaignState.DRAFT,
+                    startsAt = command.startsAt,
+                    endsAt = command.endsAt,
+                    capacity = command.capacity,
+                    allocatedCount = 0,
+                    perUserLimit = command.perUserLimit,
+                    redemptionTtlSeconds = command.redemptionTtlSeconds,
+                    policyVersion = 0,
+                    revision = 0,
+                ),
+            )
             audits.append(created.auditCampaign("CAMPAIGN_CREATED"))
             log.debug { "voucher_campaign_created campaignId=${created.campaignId}" }
             created.toSnapshot()
@@ -95,40 +98,41 @@ internal class CampaignCommandService(
             VoucherPolicies.endCampaign(campaign, command.expectedRevision)
         }
 
-    fun updatePolicy(command: CampaignPolicyCommand): CampaignSnapshot =
-        transition(
-            CampaignTransitionCommand(command.tenantId, command.campaignId, command.expectedRevision),
-            "CAMPAIGN_POLICY_UPDATED",
-        ) { campaign ->
+    fun updatePolicy(command: CampaignPolicyCommand): CampaignSnapshot {
+        val compaignCmd = CampaignTransitionCommand(command.tenantId, command.campaignId, command.expectedRevision)
+        return transition(compaignCmd, "CAMPAIGN_POLICY_UPDATED") { campaign ->
             VoucherPolicies.updateCampaignPolicy(
-                campaign,
-                command.expectedRevision,
-                command.capacity,
-                command.perUserLimit,
-                command.redemptionTtlSeconds,
+                campaign = campaign,
+                expectedRevision = command.expectedRevision,
+                capacity = command.capacity,
+                perUserLimit = command.perUserLimit,
+                redemptionTtlSeconds = command.redemptionTtlSeconds,
             )
         }
+    }
 
-    private fun transition(
+    private inline fun transition(
         command: CampaignTransitionCommand,
         reasonCode: String,
-        policyTransition: (CampaignSnapshot) -> CampaignSnapshot,
+        crossinline policyTransition: (CampaignSnapshot) -> CampaignSnapshot,
     ): CampaignSnapshot =
         transactions.foregroundTransaction {
-            val persisted =
-                campaigns.findPublicForUpdate(command.tenantId, command.campaignId)
-                    ?: fail(VoucherCommandFailure.CAMPAIGN_NOT_FOUND)
-            if (persisted.revision != command.expectedRevision) fail(VoucherCommandFailure.STALE_REVISION)
+            val persisted = campaigns.findPublicForUpdate(command.tenantId, command.campaignId)
+                ?: fail(VoucherCommandFailure.CAMPAIGN_NOT_FOUND)
+
+            if (persisted.revision != command.expectedRevision) {
+                fail(VoucherCommandFailure.STALE_REVISION)
+            }
             val updated = persisted.apply(policy { policyTransition(persisted.toSnapshot()) })
+
             if (!campaigns.transition(updated, persisted.revision)) {
                 fail(VoucherCommandFailure.CONCURRENT_MODIFICATION)
             }
             audits.append(updated.auditCampaign(reasonCode))
             log.debug { "voucher_campaign_transitioned campaignId=${updated.campaignId} state=${updated.state}" }
+
             updated.toSnapshot()
         }
-
-    companion object : KLogging()
 }
 
 internal fun CampaignRecord.apply(snapshot: CampaignSnapshot): CampaignRecord =

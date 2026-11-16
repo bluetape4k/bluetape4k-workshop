@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.shared.testcontainers
 
-import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.testcontainers.spring.registerDynamicProperties
+import io.bluetape4k.testcontainers.storage.RedisServer
 import org.springframework.test.context.DynamicPropertyRegistry
 
 /**

@@ -20,10 +20,10 @@ import org.neo4j.driver.GraphDatabase
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class Neo4jAbuserDetectionTest : AbstractAbuserDetectionTest() {
+class Neo4jAbuserDetectionTest: AbstractAbuserDetectionTest() {
 
-    companion object : KLogging() {
-        private val neo4j = Neo4jServer.Launcher.neo4j
+    companion object: KLogging() {
+        private val neo4j by lazy { Neo4jServer.Launcher.neo4j }
     }
 
     override val graphName = "neo4j"
@@ -42,7 +42,10 @@ class Neo4jAbuserDetectionTest : AbstractAbuserDetectionTest() {
 
     @AfterAll
     fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed during tearDown — possible resource leak" } }
+        runCatching {
+            driver.close()
+        }.onFailure {
+            log.warn(it) { "Driver close failed during tearDown — possible resource leak" }
+        }
     }
 }

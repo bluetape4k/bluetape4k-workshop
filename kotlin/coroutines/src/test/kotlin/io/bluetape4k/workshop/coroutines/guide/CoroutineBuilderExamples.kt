@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.seconds
 
 class CoroutineBuilderExamples {
 
@@ -17,7 +18,7 @@ class CoroutineBuilderExamples {
     @Test
     fun `job example`() = runTest {
         val job = launch(Dispatchers.Default) {
-            delay(1000)
+            delay(1.seconds)
         }.log("job")
         job.join()
     }
@@ -25,7 +26,7 @@ class CoroutineBuilderExamples {
     @Test
     fun `async example`() = runTest {
         val task: Deferred<Long> = async(Dispatchers.IO) {
-            delay(1000)
+            delay(1.seconds)
             42L
         }.log("task")
         task.await()

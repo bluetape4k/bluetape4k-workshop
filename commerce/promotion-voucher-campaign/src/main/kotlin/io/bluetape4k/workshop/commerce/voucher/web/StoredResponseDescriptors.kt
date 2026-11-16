@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignSnapshot
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimSnapshot
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** raw JSON을 저장하지 않고 원래 HTTP body를 재현하는 데 사용하는 닫힌 bounded metadata입니다. */
 internal fun CampaignSnapshot.storedCampaignResponse(
@@ -14,14 +15,14 @@ internal fun CampaignSnapshot.storedCampaignResponse(
     publicHeaders: Map<String, String> = emptyMap(),
 ): StoredHttpResponse =
     StoredHttpResponse(
-        kind,
-        status,
-        publicHeaders + (CAMPAIGN_DESCRIPTOR_HEADER to campaignDescriptor()),
-        campaignId,
-        null,
-        revision,
-        null,
-        null,
+        responseKind = kind,
+        status = status,
+        headers = publicHeaders + (CAMPAIGN_DESCRIPTOR_HEADER to campaignDescriptor()),
+        aggregateId = campaignId,
+        allocationId = null,
+        aggregateRevision = revision,
+        generationKeyVersion = null,
+        verificationKeyVersion = null,
     )
 
 internal fun ClaimSnapshot.storedClaimResponse(
@@ -33,14 +34,14 @@ internal fun ClaimSnapshot.storedClaimResponse(
     verificationKeyVersion: Int? = null,
 ): StoredHttpResponse =
     StoredHttpResponse(
-        kind,
-        status,
-        publicHeaders + (CLAIM_DESCRIPTOR_HEADER to claimDescriptor()),
-        claimId,
-        allocationId,
-        revision,
-        generationKeyVersion,
-        verificationKeyVersion,
+        responseKind = kind,
+        status = status,
+        headers = publicHeaders + (CLAIM_DESCRIPTOR_HEADER to claimDescriptor()),
+        aggregateId = claimId,
+        allocationId = allocationId,
+        aggregateRevision = revision,
+        generationKeyVersion = generationKeyVersion,
+        verificationKeyVersion = verificationKeyVersion,
     )
 
 internal fun ClaimSnapshot.storedAllocationResponse(
@@ -52,17 +53,17 @@ internal fun ClaimSnapshot.storedAllocationResponse(
     verificationKeyVersion: Int?,
 ): StoredHttpResponse =
     StoredHttpResponse(
-        kind,
-        status,
-        mapOf(
+        responseKind = kind,
+        status = status,
+        headers = mapOf(
             "Location" to "/api/v1/claims/$claimId",
             ALLOCATION_DESCRIPTOR_HEADER to allocationDescriptor(reviewId),
         ),
-        claimId,
-        allocationId,
-        revision,
-        generationKeyVersion,
-        verificationKeyVersion,
+        aggregateId = claimId,
+        allocationId = allocationId,
+        aggregateRevision = revision,
+        generationKeyVersion = generationKeyVersion,
+        verificationKeyVersion = verificationKeyVersion,
     )
 
 internal fun StoredHttpResponse.campaignBody(): CampaignHttpResponse {
@@ -108,11 +109,11 @@ internal fun StoredHttpResponse.allocationBody(code: String?): AllocationHttpRes
 
 internal fun String.isStoredDescriptorHeader(): Boolean =
     this == CAMPAIGN_DESCRIPTOR_HEADER ||
-        this == CLAIM_DESCRIPTOR_HEADER ||
-        this == ALLOCATION_DESCRIPTOR_HEADER ||
-        this == RECONCILIATION_DESCRIPTOR_HEADER ||
-        this == "X-Workshop-Fixture-Evidence" ||
-        this == "X-Workshop-Fixture-Reset-Result"
+            this == CLAIM_DESCRIPTOR_HEADER ||
+            this == ALLOCATION_DESCRIPTOR_HEADER ||
+            this == RECONCILIATION_DESCRIPTOR_HEADER ||
+            this == "X-Workshop-Fixture-Evidence" ||
+            this == "X-Workshop-Fixture-Reset-Result"
 
 private fun CampaignSnapshot.campaignDescriptor(): String =
     listOf(
@@ -127,8 +128,13 @@ private fun CampaignSnapshot.campaignDescriptor(): String =
     ).joinToString(DESCRIPTOR_SEPARATOR)
 
 private fun ClaimSnapshot.claimDescriptor(): String =
-    listOf(campaignId, state.name, revision, allocationPolicyVersion, expiresAt?.toEpochMilli() ?: NULL_VALUE)
-        .joinToString(DESCRIPTOR_SEPARATOR)
+    listOf(
+        campaignId,
+        state.name,
+        revision,
+        allocationPolicyVersion,
+        expiresAt?.toEpochMilli() ?: NULL_VALUE
+    ).joinToString(DESCRIPTOR_SEPARATOR)
 
 private fun ClaimSnapshot.allocationDescriptor(reviewId: Long?): String =
     listOf(
@@ -143,13 +149,20 @@ private fun StoredHttpResponse.descriptor(
     header: String,
     expectedSize: Int,
 ): List<String> =
-    requireNotNull(headers[header]) { "stored response descriptor is missing" }
+    headers[header]
+        .requireNotNull { "stored response descriptor is missing" }
         .split(DESCRIPTOR_SEPARATOR)
-        .also { require(it.size == expectedSize) { "stored response descriptor is invalid" } }
+        .also {
+            require(it.size == expectedSize) {
+                "stored response descriptor is invalid"
+            }
+        }
 
-private fun String.instantOrNull(): Instant? = takeUnless { it == NULL_VALUE }?.toLong()?.let(Instant::ofEpochMilli)
+private fun String.instantOrNull(): Instant? =
+    takeUnless { it == NULL_VALUE }?.toLong()?.let(Instant::ofEpochMilli)
 
-private fun String.longOrNull(): Long? = takeUnless { it == NULL_VALUE }?.toLong()
+private fun String.longOrNull(): Long? =
+    takeUnless { it == NULL_VALUE }?.toLong()
 
 internal const val RECONCILIATION_DESCRIPTOR_HEADER = "X-Workshop-Reconciliation-Result"
 private const val CAMPAIGN_DESCRIPTOR_HEADER = "X-Workshop-Campaign-Descriptor"

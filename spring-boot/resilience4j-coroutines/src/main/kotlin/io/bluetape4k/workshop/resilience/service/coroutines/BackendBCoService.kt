@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.resilience.service.coroutines
 
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.exception.BusinessException
 import kotlinx.coroutines.CancellationException
@@ -16,7 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 @Service("backendBCoService")
 class BackendBCoService: CoService {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_B = "backendB"
     }
 
@@ -52,16 +53,16 @@ class BackendBCoService: CoService {
     }
 
     override fun flowSuccess(): Flow<String> {
-        return flowOf("Hello", "World")
+        return flowOf("Hello", "World").log("SUCCESS")
     }
 
     override fun flowFailure(): Flow<String> {
-        return flowOf("Hello", "World")
+        return flowOf("Hello", "World").log("FAILURE")
             .onStart { throw IOException("BAM!") }
     }
 
     override fun flowTimeout(): Flow<String> {
-        return flowOf("Hello World from backend B Coroutines")
+        return flowOf("Hello World from backend B Coroutines").log("TIMEOUT")
             .onStart { delay(3.seconds) }
     }
 }

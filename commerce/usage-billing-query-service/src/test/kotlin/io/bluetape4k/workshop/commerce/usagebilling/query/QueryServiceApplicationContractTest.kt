@@ -7,6 +7,6 @@ class QueryServiceApplicationContractTest {
     @Test
     fun `query service exposes its own boot application class`() {
         Class.forName("io.bluetape4k.workshop.commerce.usagebilling.query.QueryServiceApplication").name shouldBeEqualTo
-            "io.bluetape4k.workshop.commerce.usagebilling.query.QueryServiceApplication"
+                "io.bluetape4k.workshop.commerce.usagebilling.query.QueryServiceApplication"
     }
 }

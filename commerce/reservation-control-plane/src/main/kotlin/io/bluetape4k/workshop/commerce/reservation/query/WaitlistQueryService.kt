@@ -19,6 +19,8 @@ internal class WaitlistQueryService(
     private val offers: ReservationOfferRepository,
     private val credentials: ReservationCredentialService,
 ) {
+    companion object: KLogging()
+    
     @Transactional(readOnly = true)
     fun entry(
         entryId: Long,
@@ -26,14 +28,20 @@ internal class WaitlistQueryService(
     ): WaitlistSnapshot {
         val entry = waitlists.findById(entryId)
         requireOwner(rawOwner, entry.ownerDigest, entry.revision)
-        val position =
-            waitlists
-                .snapshots(entry.resourceId)
-                .filter { it.state.name == "WAITING" || it.id == entry.id }
-                .indexOfFirst { it.id == entry.id }
-                .let { if (it < 0) 0 else it + 1 }
+
+        val position = waitlists
+            .snapshots(entry.resourceId)
+            .filter { it.state.name == "WAITING" || it.id == entry.id }
+            .indexOfFirst { it.id == entry.id }
+            .let { if (it < 0) 0 else it + 1 }
+
         log.debug { "waitlist_snapshot_queried entryId=$entryId position=$position" }
-        return WaitlistSnapshot(entry, position, offers.activeForEntry(entry.id))
+
+        return WaitlistSnapshot(
+            entry = entry,
+            position = position,
+            activeOffer = offers.activeForEntry(entry.id)
+        )
     }
 
     @Transactional(readOnly = true)
@@ -56,15 +64,13 @@ internal class WaitlistQueryService(
             throw WaitlistCommandException("OWNER_MISMATCH", revision)
         }
     }
-
-    companion object : KLogging()
 }
 
 internal data class WaitlistSnapshot(
     val entry: WaitlistEntryRecord,
     val position: Int,
     val activeOffer: ReservationOfferRecord?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

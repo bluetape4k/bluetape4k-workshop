@@ -31,7 +31,7 @@ data class CandidateExclusion(
     val candidateId: GraphElementId,
     val reason: RecommendationExclusionReason,
     val via: GraphVertex? = null,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -48,7 +48,7 @@ data class ProductEvidencePath(
     val sharedProduct: GraphVertex,
     val coBuyer: GraphVertex,
     val candidateProduct: GraphVertex,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -69,7 +69,7 @@ data class ExplainedProductRecommendation(
     val recommendation: ProductRecommendation,
     val evidencePaths: List<ProductEvidencePath>,
     val excludedCandidates: List<CandidateExclusion>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -84,7 +84,7 @@ data class ExplainedProductRecommendation(
 data class FollowEvidencePath(
     val intermediary: GraphVertex,
     val candidate: GraphVertex,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -97,7 +97,7 @@ data class ExplainedFollowRecommendation(
     val recommendation: FollowRecommendation,
     val evidencePaths: List<FollowEvidencePath>,
     val excludedCandidates: List<CandidateExclusion>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

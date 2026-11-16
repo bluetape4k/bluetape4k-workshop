@@ -2,11 +2,12 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeAggregateType
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
-import io.bluetape4k.workshop.commerce.voucherpool.application.RevokeAggregateType
 import io.bluetape4k.workshop.commerce.voucherpool.query.BatchReadModel
 import io.bluetape4k.workshop.commerce.voucherpool.query.CampaignReadModel
 import io.bluetape4k.workshop.commerce.voucherpool.query.PoolDepthReadModel
@@ -14,24 +15,24 @@ import io.bluetape4k.workshop.commerce.voucherpool.query.StuckReservationCursor
 import io.bluetape4k.workshop.commerce.voucherpool.query.StuckReservationPage
 import io.bluetape4k.workshop.commerce.voucherpool.query.StuckReservationReadModel
 import io.bluetape4k.workshop.commerce.voucherpool.query.VoucherPoolQueryService
+import io.bluetape4k.workshop.commerce.voucherpool.web.VoucherPoolEventStream.StreamSubscription
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerKind
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.http.ResponseEntity
-import org.springframework.http.MediaType
 import java.io.Serializable
 import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 @RestController
 @RequestMapping("/operator/api/v1")
@@ -267,8 +268,9 @@ internal class OperatorVoucherPoolController(
         @RequestHeader(TENANT_HEADER) tenantId: String,
         @PathVariable requestId: String,
         request: HttpServletRequest,
-    ): OperatorDiagnosticResponse = diagnostics.find(tenantId, requestId)
-        ?.toResponse(request.requestId()) ?: throw resourceNotFound()
+    ): OperatorDiagnosticResponse =
+        diagnostics.find(tenantId, requestId)
+            ?.toResponse(request.requestId()) ?: throw resourceNotFound()
 
     @GetMapping("/snapshots")
     fun snapshots(
@@ -276,12 +278,13 @@ internal class OperatorVoucherPoolController(
         @RequestParam(required = false) campaignId: UUID?,
         @RequestParam(required = false) batchId: UUID?,
         request: HttpServletRequest,
-    ): VoucherPoolSnapshotResponse = streams.operatorSnapshot(
-        tenantId,
-        campaignId,
-        batchId,
-        request.requestId(),
-    )
+    ): VoucherPoolSnapshotResponse =
+        streams.operatorSnapshot(
+            tenantId,
+            campaignId,
+            batchId,
+            request.requestId(),
+        )
 
     @GetMapping("/events", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun events(
@@ -292,11 +295,11 @@ internal class OperatorVoucherPoolController(
         @RequestHeader("Last-Event-ID", required = false) lastEventId: String?,
         response: HttpServletResponse,
     ) {
-        val subscription = streams.openOperator(
-            tenantId,
-            campaignId,
-            batchId,
-            resolveEventCursor(cursor, lastEventId),
+        val subscription: StreamSubscription = streams.openOperator(
+            tenantId = tenantId,
+            campaignId = campaignId,
+            batchId = batchId,
+            cursor = resolveEventCursor(cursor, lastEventId),
         )
         response.contentType = MediaType.TEXT_EVENT_STREAM_VALUE
         streams.write(subscription, response.outputStream)
@@ -311,7 +314,7 @@ internal data class OperatorCreateCampaignRequest(
     val reservationTtlSeconds: Long,
     val allocationTtlSeconds: Long,
     val replacementAllowance: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -322,7 +325,7 @@ internal data class OperatorCampaignPolicyRequest(
     val reservationTtlSeconds: Long,
     val allocationTtlSeconds: Long,
     val replacementAllowance: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -336,10 +339,18 @@ internal data class OperatorCreateBatchRequest(
     val activatesAt: Instant,
     val expiresAt: Instant? = null,
     val codes: List<String> = emptyList(),
-) : Serializable {
+): Serializable {
+
     override fun toString(): String =
-        "OperatorCreateBatchRequest(batchId=$batchId,campaignId=$campaignId,manifestDigest=[REDACTED]," +
-            "expectedCount=$expectedCount,activatesAt=$activatesAt,expiresAt=$expiresAt,codes=[REDACTED])"
+        ToStringBuilder(this)
+            .add("batchId", batchId)
+            .add("campaignId", campaignId)
+            .add("manifestDigest", "[REDACTED]")
+            .add("expectedCount", expectedCount)
+            .add("activatesAt", activatesAt)
+            .add("expiresAt", expiresAt)
+            .add("codes", "[REDACTED]")
+            .toString()
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -351,10 +362,11 @@ internal data class OperatorImportChunkRequest(
     val firstOrdinal: Long,
     val manifestDigest: String,
     val codes: List<String>,
-) : Serializable {
+): Serializable {
+
     override fun toString(): String =
         "OperatorImportChunkRequest(campaignId=$campaignId,firstOrdinal=$firstOrdinal," +
-            "manifestDigest=[REDACTED],codes=[REDACTED])"
+                "manifestDigest=[REDACTED],codes=[REDACTED])"
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -366,7 +378,7 @@ internal data class OperatorGenerateChunkRequest(
     val firstOrdinal: Long,
     val manifestDigest: String,
     val count: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -375,21 +387,25 @@ internal data class OperatorGenerateChunkRequest(
 internal data class OperatorCampaignRevokeRequest(
     val previewToken: String,
     val confirmedCampaignId: UUID,
-) : Serializable {
+): Serializable {
     override fun toString(): String =
         "OperatorCampaignRevokeRequest(previewToken=[REDACTED],confirmedCampaignId=$confirmedCampaignId)"
 
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorBatchRevokeRequest(
     val previewToken: String,
     val confirmedBatchId: UUID,
-) : Serializable {
+): Serializable {
     override fun toString(): String =
         "OperatorBatchRevokeRequest(previewToken=[REDACTED],confirmedBatchId=$confirmedBatchId)"
 
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorRevokePreviewResponse(
@@ -406,15 +422,17 @@ internal data class OperatorRevokePreviewResponse(
     val expiresAt: Instant,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
+): Serializable {
     override fun toString(): String =
         "OperatorRevokePreviewResponse(aggregateType=$aggregateType,aggregateId=$aggregateId,revision=$revision," +
-            "counts=$counts,eligibleDepth=$eligibleDepth,activeReservations=$activeReservations," +
-            "activeAllocations=$activeAllocations,alreadyTerminalCount=$alreadyTerminalCount," +
-            "affectedCount=$affectedCount,previewToken=[REDACTED],expiresAt=$expiresAt," +
-            "observedAt=$observedAt,requestId=$requestId)"
+                "counts=$counts,eligibleDepth=$eligibleDepth,activeReservations=$activeReservations," +
+                "activeAllocations=$activeAllocations,alreadyTerminalCount=$alreadyTerminalCount," +
+                "affectedCount=$affectedCount,previewToken=[REDACTED],expiresAt=$expiresAt," +
+                "observedAt=$observedAt,requestId=$requestId)"
 
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorWorkerProgressResponse(
@@ -425,14 +443,18 @@ internal data class OperatorWorkerProgressResponse(
     val workerCount: Int,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorReconciliationRequest(
     val batchId: UUID,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorReconciliationProgressResponse(
@@ -446,8 +468,10 @@ internal data class OperatorReconciliationProgressResponse(
     val revision: Long,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorDiagnosticResponse(
@@ -458,8 +482,10 @@ internal data class OperatorDiagnosticResponse(
     val elapsedMillis: Long,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorCampaignResponse(
@@ -476,8 +502,10 @@ internal data class OperatorCampaignResponse(
     val nextAction: String,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorBatchResponse(
@@ -496,8 +524,10 @@ internal data class OperatorBatchResponse(
     val nextAction: String,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorPoolDepthResponse(
@@ -508,8 +538,10 @@ internal data class OperatorPoolDepthResponse(
     val expiredButNotTerminalized: Long,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorStuckReservationResponse(
@@ -520,8 +552,10 @@ internal data class OperatorStuckReservationResponse(
     val state: ReservationState,
     val expiresAt: Instant,
     val revision: Long,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class OperatorStuckReservationPageResponse(
@@ -529,83 +563,86 @@ internal data class OperatorStuckReservationPageResponse(
     val nextCursor: String?,
     val observedAt: Instant,
     val requestId: String,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal fun BatchReadModel.toOperatorResponse(requestId: String) =
     OperatorBatchResponse(
-        batchId,
-        campaignId,
-        state,
-        sourceKind,
-        activatesAt,
-        expiresAt,
-        nextSourceOrdinal,
-        expectedCount,
-        acceptedCount,
-        rejectedCount,
-        lastFailureCode,
-        revision,
-        nextAction,
-        observedAt,
-        requestId,
+        batchId = batchId,
+        campaignId = campaignId,
+        state = state,
+        sourceKind = sourceKind,
+        activatesAt = activatesAt,
+        expiresAt = expiresAt,
+        nextSourceOrdinal = nextSourceOrdinal,
+        expectedCount = expectedCount,
+        acceptedCount = acceptedCount,
+        rejectedCount = rejectedCount,
+        lastFailureCode = lastFailureCode,
+        revision = revision,
+        nextAction = nextAction,
+        observedAt = observedAt,
+        requestId = requestId,
     )
 
 internal fun CampaignReadModel.toOperatorResponse(requestId: String) =
     OperatorCampaignResponse(
-        campaignId,
-        state,
-        startsAt,
-        endsAt,
-        perUserLimit,
-        reservationTtlSeconds,
-        allocationTtlSeconds,
-        replacementAllowance,
-        policyVersion,
-        revision,
-        when (state) {
-            CampaignState.DRAFT -> "UPDATE_POLICY_OR_ACTIVATE"
-            CampaignState.ACTIVE -> "PAUSE_OR_REVOKE"
-            CampaignState.PAUSED -> "UPDATE_POLICY_RESUME_OR_REVOKE"
+        campaignId = campaignId,
+        state = state,
+        startsAt = startsAt,
+        endsAt = endsAt,
+        perUserLimit = perUserLimit,
+        reservationTtlSeconds = reservationTtlSeconds,
+        allocationTtlSeconds = allocationTtlSeconds,
+        replacementAllowance = replacementAllowance,
+        policyVersion = policyVersion,
+        revision = revision,
+        nextAction = when (state) {
+            CampaignState.DRAFT   -> "UPDATE_POLICY_OR_ACTIVATE"
+            CampaignState.ACTIVE  -> "PAUSE_OR_REVOKE"
+            CampaignState.PAUSED  -> "UPDATE_POLICY_RESUME_OR_REVOKE"
             CampaignState.REVOKING -> "WAIT_FOR_REVOCATION"
             CampaignState.REVOKED -> "COMPLETE"
         },
-        observedAt,
-        requestId,
+        observedAt = observedAt,
+        requestId = requestId,
     )
 
 private fun PoolDepthReadModel.toResponse(requestId: String) =
     OperatorPoolDepthResponse(
-        campaignId,
-        batchId,
-        EntryState.entries.associateWith { counts[it] ?: 0L },
-        eligibleAvailable,
-        expiredButNotTerminalized,
-        observedAt,
-        requestId,
+        campaignId = campaignId,
+        batchId = batchId,
+        counts = EntryState.entries.associateWith { counts[it] ?: 0L },
+        eligibleAvailable = eligibleAvailable,
+        expiredButNotTerminalized = expiredButNotTerminalized,
+        observedAt = observedAt,
+        requestId = requestId,
     )
 
 private fun StuckReservationPage.toResponse(requestId: String) =
     OperatorStuckReservationPageResponse(
-        items.map(StuckReservationReadModel::toResponse),
-        nextCursor?.encode(),
-        observedAt,
-        requestId,
+        items = items.map(StuckReservationReadModel::toResponse),
+        nextCursor = nextCursor?.encode(),
+        observedAt = observedAt,
+        requestId = requestId,
     )
 
 private fun StuckReservationReadModel.toResponse() =
     OperatorStuckReservationResponse(reservationId, campaignId, batchId, entryId, state, expiresAt, revision)
 
-private fun VoucherPoolDiagnosticRecord.toResponse(requestId: String) = OperatorDiagnosticResponse(
-    targetRequestId,
-    method,
-    path,
-    status,
-    elapsedMillis,
-    observedAt,
-    requestId,
-)
+private fun VoucherPoolDiagnosticRecord.toResponse(requestId: String) =
+    OperatorDiagnosticResponse(
+        targetRequestId = targetRequestId,
+        method = method,
+        path = path,
+        status = status,
+        elapsedMillis = elapsedMillis,
+        observedAt = observedAt,
+        requestId = requestId,
+    )
 
 private fun StuckReservationCursor.encode(): String {
     val bytes = ByteBuffer.allocate(CURSOR_BYTES)
@@ -614,22 +651,25 @@ private fun StuckReservationCursor.encode(): String {
         .putLong(reservationId.mostSignificantBits)
         .putLong(reservationId.leastSignificantBits)
         .array()
+
     return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
 }
 
-private fun String.decodeCursor(): StuckReservationCursor = try {
-    val bytes = Base64.getUrlDecoder().decode(this)
-    if (bytes.size != CURSOR_BYTES) throw invalidRequest()
-    val buffer = ByteBuffer.wrap(bytes)
-    StuckReservationCursor(
-        Instant.ofEpochSecond(buffer.long, buffer.int.toLong()),
-        UUID(buffer.long, buffer.long),
-    )
-} catch (failure: VoucherPoolApiException) {
-    throw failure
-} catch (_: RuntimeException) {
-    throw invalidRequest()
-}
+private fun String.decodeCursor(): StuckReservationCursor =
+    try {
+        val bytes = Base64.getUrlDecoder().decode(this)
+        if (bytes.size != CURSOR_BYTES) throw invalidRequest()
+        val buffer = ByteBuffer.wrap(bytes)
+
+        StuckReservationCursor(
+            expiresAt = Instant.ofEpochSecond(buffer.long, buffer.int.toLong()),
+            reservationId = UUID(buffer.long, buffer.long),
+        )
+    } catch (failure: VoucherPoolApiException) {
+        throw failure
+    } catch (_: RuntimeException) {
+        throw invalidRequest()
+    }
 
 private const val CURSOR_BYTES = 28
 private const val MAX_STUCK_PAGE_SIZE = 100

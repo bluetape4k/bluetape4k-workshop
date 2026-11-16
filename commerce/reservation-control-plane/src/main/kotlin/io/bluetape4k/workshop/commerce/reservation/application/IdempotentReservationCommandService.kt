@@ -4,6 +4,8 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.checkBeTrue
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.commerce.reservation.idempotency.AcquireResult
 import io.bluetape4k.workshop.commerce.reservation.idempotency.HttpIdempotencyRepository
 import io.bluetape4k.workshop.commerce.reservation.idempotency.IdempotencyFingerprint
@@ -19,7 +21,7 @@ internal data class IdempotentCommandResult<T>(
     val status: Int,
     val value: T,
     val replayed: Boolean,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -34,8 +36,10 @@ internal class IdempotentReservationCommandService(
     private val clock: Clock,
     @Value("\${reservation.tenant-id}") private val tenantId: String,
 ) {
+    companion object: KLogging()
+    
     @Transactional
-    fun <T : Any> execute(
+    fun <T: Any> execute(
         operation: String,
         rawKey: String,
         rawOwner: String,
@@ -44,38 +48,39 @@ internal class IdempotentReservationCommandService(
         bodyType: Class<T>,
         action: () -> T,
     ): IdempotentCommandResult<T> {
-        require(rawKey.length in 16..200) { "Idempotency-Key must contain 16..200 characters" }
+        rawKey.length.requireInRange(16, 200, "rawKey.length")
+
         val ownerDigest = credentials.ownerDigest(rawOwner)
-        val scope =
-            IdempotencyScope(
-                tenantId = tenantId,
-                operation = operation,
-                keyDigest = credentials.idempotencyDigest(tenantId, operation, rawKey)
-            )
+        val scope = IdempotencyScope(
+            tenantId = tenantId,
+            operation = operation,
+            keyDigest = credentials.idempotencyDigest(tenantId, operation, rawKey)
+        )
         val fingerprint = IdempotencyFingerprint.request(operation, "$canonicalPayload\nowner=$ownerDigest")
         val ownerToken = Uuid.V7.nextId()
-        return when (val acquired = repository.acquire(scope, fingerprint, ownerToken, clock.instant())) {
+
+        val acquired = repository.acquire(scope, fingerprint, ownerToken, clock.instant())
+        return when (acquired) {
             is AcquireResult.New,
             is AcquireResult.Takeover,
-                -> {
-                    val record =
-                        when (acquired) {
-                            is AcquireResult.New -> acquired.record
-                            is AcquireResult.Takeover -> acquired.record
-                        }
-                    val response = action()
-                    val body = objectMapper.writeValueAsString(response)
-                    check(repository.finalize(record.id, ownerToken, successStatus, body, failed = false)) {
-                        "idempotency owner lost before command finalize"
+                                        -> {
+                val record =
+                    when (acquired) {
+                        is AcquireResult.New      -> acquired.record
+                        is AcquireResult.Takeover -> acquired.record
                     }
-                    log.info { "reservation_idempotency_completed operation=$operation status=$successStatus" }
-                    IdempotentCommandResult(successStatus, response, replayed = false)
-                }
-            is AcquireResult.Replay -> {
+                val response = action()
+                val body = objectMapper.writeValueAsString(response)
+                repository.finalize(record.id, ownerToken, successStatus, body, failed = false)
+                    .checkBeTrue { "idempotency owner lost before command finalize" }
+                log.info { "reservation_idempotency_completed operation=$operation status=$successStatus" }
+                IdempotentCommandResult(successStatus, response, replayed = false)
+            }
+            is AcquireResult.Replay     -> {
                 log.info { "reservation_idempotency_replayed operation=$operation status=${acquired.status}" }
                 IdempotentCommandResult(
-                    acquired.status,
-                    objectMapper.readValue(acquired.body, bodyType),
+                    status = acquired.status,
+                    value = objectMapper.readValue(acquired.body, bodyType),
                     replayed = true
                 )
             }
@@ -90,6 +95,4 @@ internal class IdempotentReservationCommandService(
             }
         }
     }
-
-    companion object : KLogging()
 }

@@ -1,7 +1,9 @@
-@file:Suppress("LongParameterList", "MagicNumber", "TooManyFunctions")
+@file:Suppress("LongParameterList", "MagicNumber", "TooManyFunctions", "SqlResolve")
 
 package io.bluetape4k.workshop.commerce.voucherpool.query
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
@@ -15,7 +17,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class ReservationReadModel(
     val reservationId: UUID,
@@ -29,8 +31,10 @@ internal data class ReservationReadModel(
     val policyVersion: Long,
     val revision: Long,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class AllocationReadModel(
@@ -46,8 +50,10 @@ internal data class AllocationReadModel(
     val policyVersion: Long,
     val revision: Long,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class BatchReadModel(
@@ -65,8 +71,10 @@ internal data class BatchReadModel(
     val revision: Long,
     val nextAction: String,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class CampaignReadModel(
@@ -81,8 +89,10 @@ internal data class CampaignReadModel(
     val policyVersion: Long,
     val revision: Long,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class PoolDepthReadModel(
@@ -92,15 +102,19 @@ internal data class PoolDepthReadModel(
     val eligibleAvailable: Long,
     val expiredButNotTerminalized: Long,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class StuckReservationCursor(
     val expiresAt: Instant,
     val reservationId: UUID,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class StuckReservationReadModel(
@@ -111,16 +125,20 @@ internal data class StuckReservationReadModel(
     val state: ReservationState,
     val expiresAt: Instant,
     val revision: Long,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class StuckReservationPage(
     val items: List<StuckReservationReadModel>,
     val nextCursor: StuckReservationCursor?,
     val observedAt: Instant,
-) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal interface VoucherPoolQueryService {
@@ -141,12 +159,17 @@ internal class JdbcVoucherPoolQueryService(
     private val executor: VoucherPoolJdbcExecutor,
     private val store: VoucherPoolQueryStore,
     private val digests: VoucherDigestService,
-) : VoucherPoolQueryService {
+): VoucherPoolQueryService {
+
+    private companion object: KLogging() {
+        const val MAX_PAGE_SIZE = 100
+    }
+
     override fun reservation(tenantId: String, principalId: String, reservationId: UUID): ReservationReadModel? =
         executor.foregroundTransaction {
-            val campaignId =
-                store.resolveReservationCampaign(tenantId, reservationId)
-                    ?: return@foregroundTransaction null
+            val campaignId = store.resolveReservationCampaign(tenantId, reservationId)
+                ?: return@foregroundTransaction null
+
             withUserDigest(tenantId, campaignId, principalId) { ownerDigest ->
                 store.findOwnedReservation(tenantId, reservationId, ownerDigest)
             }
@@ -154,9 +177,9 @@ internal class JdbcVoucherPoolQueryService(
 
     override fun allocation(tenantId: String, principalId: String, allocationId: UUID): AllocationReadModel? =
         executor.foregroundTransaction {
-            val campaignId =
-                store.resolveAllocationCampaign(tenantId, allocationId)
-                    ?: return@foregroundTransaction null
+            val campaignId = store.resolveAllocationCampaign(tenantId, allocationId)
+                ?: return@foregroundTransaction null
+
             withUserDigest(tenantId, campaignId, principalId) { ownerDigest ->
                 store.findOwnedAllocation(tenantId, allocationId, ownerDigest)
             }
@@ -180,14 +203,15 @@ internal class JdbcVoucherPoolQueryService(
         cursor: StuckReservationCursor?,
         limit: Int,
     ): StuckReservationPage? {
-        require(limit in 1..MAX_PAGE_SIZE) { "stuck reservation limit must be between 1 and $MAX_PAGE_SIZE" }
+        limit.requireInRange(1, MAX_PAGE_SIZE, "limit")
+
         return executor.operatorTransaction {
             if (!store.scopeExists(tenantId, campaignId, null)) return@operatorTransaction null
             store.findStuckReservations(tenantId, campaignId, cursor, limit)
         }
     }
 
-    private fun <T> withUserDigest(
+    private inline fun <T> withUserDigest(
         tenantId: String,
         campaignId: UUID,
         principalId: String,
@@ -195,15 +219,12 @@ internal class JdbcVoucherPoolQueryService(
     ): T {
         val keyVersion = checkNotNull(store.findUserIdentityKeyVersion(tenantId, campaignId))
         val digest = digests.userIdentity(tenantId, campaignId, principalId, keyVersion).copyBytes()
+
         return try {
             block(digest)
         } finally {
             digest.fill(0)
         }
-    }
-
-    private companion object {
-        const val MAX_PAGE_SIZE = 100
     }
 }
 
@@ -225,27 +246,37 @@ internal interface VoucherPoolQueryStore {
     ): StuckReservationPage
 }
 
-internal class JdbcVoucherPoolQueryStore : VoucherPoolQueryStore {
+internal class JdbcVoucherPoolQueryStore: VoucherPoolQueryStore {
+
+    private companion object: KLogging() {
+        val RESOURCE_LOOKUPS = setOf(
+            "voucher_pool_reservations" to "reservation_id",
+            "voucher_pool_allocations" to "allocation_id",
+        )
+    }
+
     override fun findUserIdentityKeyVersion(tenantId: String, campaignId: UUID): Int? =
         currentConnection().prepareStatement(
             "SELECT user_identity_key_version FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, campaignId)
-            statement.executeQuery().use { result -> if (result.next()) result.getInt(1) else null }
+            statement.executeQuery().use { result ->
+                if (result.next()) result.getInt(1) else null
+            }
         }
 
     override fun scopeExists(tenantId: String, campaignId: UUID?, batchId: UUID?): Boolean {
         if (campaignId == null && batchId == null) return true
-        val (sql, id) =
-            when {
-                campaignId != null && batchId != null ->
-                    "SELECT 1 FROM voucher_pool_batches WHERE tenant_id=? AND campaign_id=? AND batch_id=?" to null
-                campaignId != null ->
-                    "SELECT 1 FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?" to campaignId
-                else ->
-                    "SELECT 1 FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?" to checkNotNull(batchId)
-            }
+        val (sql, id) = when {
+            campaignId != null && batchId != null ->
+                "SELECT 1 FROM voucher_pool_batches WHERE tenant_id=? AND campaign_id=? AND batch_id=?" to null
+            campaignId != null                    ->
+                "SELECT 1 FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?" to campaignId
+            else                                  ->
+                "SELECT 1 FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?" to checkNotNull(batchId)
+        }
+
         return currentConnection().prepareStatement(sql).use { statement ->
             statement.setString(1, tenantId)
             if (campaignId != null && batchId != null) {
@@ -254,50 +285,69 @@ internal class JdbcVoucherPoolQueryStore : VoucherPoolQueryStore {
             } else {
                 statement.setObject(2, id)
             }
+
             statement.executeQuery().use(ResultSet::next)
         }
     }
 
     override fun resolveReservationCampaign(tenantId: String, reservationId: UUID): UUID? =
-        resolveCampaign("voucher_pool_reservations", "reservation_id", tenantId, reservationId)
+        resolveCampaign(
+            table = "voucher_pool_reservations",
+            idColumn = "reservation_id",
+            tenantId = tenantId,
+            resourceId = reservationId
+        )
 
     override fun findOwnedReservation(
         tenantId: String,
         reservationId: UUID,
         ownerDigest: ByteArray,
-    ): ReservationReadModel? = currentConnection().prepareStatement(
-        """SELECT reservation_id,campaign_id,batch_id,entry_id,state,reservation_expires_at,
+    ): ReservationReadModel? =
+        currentConnection().prepareStatement(
+            """SELECT reservation_id,campaign_id,batch_id,entry_id,state,reservation_expires_at,
                   entitlement_root_id,replacement_ordinal,policy_version,revision,transaction_timestamp()
             FROM voucher_pool_reservations
-            WHERE tenant_id=? AND reservation_id=? AND user_digest=?""",
-    ).use { statement ->
-        statement.setString(1, tenantId)
-        statement.setObject(2, reservationId)
-        statement.setBytes(3, ownerDigest)
-        statement.executeQuery().use { result -> if (result.next()) result.reservationReadModel() else null }
-    }
+            WHERE tenant_id=? AND reservation_id=? AND user_digest=?""".trimIndent(),
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, reservationId)
+            statement.setBytes(3, ownerDigest)
+
+            statement.executeQuery().use { result ->
+                if (result.next()) result.reservationReadModel() else null
+            }
+        }
 
     override fun resolveAllocationCampaign(tenantId: String, allocationId: UUID): UUID? =
-        resolveCampaign("voucher_pool_allocations", "allocation_id", tenantId, allocationId)
+        resolveCampaign(
+            table = "voucher_pool_allocations",
+            idColumn = "allocation_id",
+            tenantId = tenantId,
+            resourceId = allocationId
+        )
 
     override fun findOwnedAllocation(
         tenantId: String,
         allocationId: UUID,
         ownerDigest: ByteArray,
-    ): AllocationReadModel? = currentConnection().prepareStatement(
-        """SELECT a.allocation_id,a.reservation_id,a.campaign_id,a.batch_id,a.entry_id,e.state,
+    ): AllocationReadModel? =
+        currentConnection().prepareStatement(
+            """SELECT a.allocation_id,a.reservation_id,a.campaign_id,a.batch_id,a.entry_id,e.state,
                   a.allocation_expires_at,a.entitlement_root_id,a.replacement_ordinal,a.policy_version,
                   a.revision,transaction_timestamp()
             FROM voucher_pool_allocations a
             JOIN voucher_pool_entries e
               ON e.tenant_id=a.tenant_id AND e.entry_id=a.entry_id
-            WHERE a.tenant_id=? AND a.allocation_id=? AND a.user_digest=?""",
-    ).use { statement ->
-        statement.setString(1, tenantId)
-        statement.setObject(2, allocationId)
-        statement.setBytes(3, ownerDigest)
-        statement.executeQuery().use { result -> if (result.next()) result.allocationReadModel() else null }
-    }
+            WHERE a.tenant_id=? AND a.allocation_id=? AND a.user_digest=?""".trimIndent(),
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, allocationId)
+            statement.setBytes(3, ownerDigest)
+
+            statement.executeQuery().use { result ->
+                if (result.next()) result.allocationReadModel() else null
+            }
+        }
 
     override fun findBatch(tenantId: String, batchId: UUID): BatchReadModel? =
         currentConnection().prepareStatement(
@@ -314,11 +364,14 @@ internal class JdbcVoucherPoolQueryStore : VoucherPoolQueryStore {
         currentConnection().prepareStatement(
             """SELECT campaign_id,state,starts_at,ends_at,per_user_limit,reservation_ttl_seconds,
                       allocation_ttl_seconds,replacement_allowance,policy_version,revision,transaction_timestamp()
-                FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?""",
+                FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?""".trimIndent(),
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, campaignId)
-            statement.executeQuery().use { result -> if (result.next()) result.campaignReadModel() else null }
+
+            statement.executeQuery().use { result ->
+                if (result.next()) result.campaignReadModel() else null
+            }
         }
 
     @Suppress("LongMethod", "NestedBlockDepth") // Keep the one-statement MVCC snapshot and its parser adjacent.
@@ -327,8 +380,8 @@ internal class JdbcVoucherPoolQueryStore : VoucherPoolQueryStore {
         val clauses = mutableListOf("b.tenant_id=?")
         if (campaignId != null) clauses += "b.campaign_id=?"
         if (batchId != null) clauses += "b.batch_id=?"
-        val sql =
-            """WITH scoped_batches AS (
+
+        val sql = """WITH scoped_batches AS (
                     SELECT b.tenant_id,b.campaign_id,b.batch_id,b.state,b.activates_at,b.expires_at
                     FROM voucher_pool_batches b
                     WHERE ${clauses.joinToString(" AND ")}
@@ -359,7 +412,8 @@ internal class JdbcVoucherPoolQueryStore : VoucherPoolQueryStore {
                        transaction_timestamp()
                 FROM derived_depth d
                 LEFT JOIN raw_depth r ON TRUE
-                ORDER BY r.state"""
+                ORDER BY r.state""".trimIndent()
+
         return connection.prepareStatement(sql).use { statement ->
             statement.bindScope(tenantId, campaignId, batchId)
             statement.executeQuery().use { result ->
@@ -367,8 +421,12 @@ internal class JdbcVoucherPoolQueryStore : VoucherPoolQueryStore {
                 var eligibleAvailable = 0L
                 var expiredButNotTerminalized = 0L
                 var observedAt: Instant? = null
+
                 while (result.next()) {
-                    result.getString(1)?.let { state -> counts[EntryState.valueOf(state)] = result.getLong(2) }
+                    result.getString(1)
+                        ?.let { state ->
+                            counts[EntryState.valueOf(state)] = result.getLong(2)
+                        }
                     eligibleAvailable = result.getLong(3)
                     expiredButNotTerminalized = result.getLong(4)
                     observedAt = result.getTimestamp(5).toInstant()
@@ -396,54 +454,50 @@ internal class JdbcVoucherPoolQueryStore : VoucherPoolQueryStore {
         val clauses = mutableListOf("tenant_id=?", "state='ACTIVE'", "reservation_expires_at<=?")
         if (campaignId != null) clauses += "campaign_id=?"
         if (cursor != null) clauses += "(reservation_expires_at,reservation_id)>(?,?)"
-        val sql =
-            """SELECT reservation_id,campaign_id,batch_id,entry_id,state,reservation_expires_at,revision
+        val sql = """SELECT reservation_id,campaign_id,batch_id,entry_id,state,reservation_expires_at,revision
                 FROM voucher_pool_reservations
                 WHERE ${clauses.joinToString(" AND ")}
                 ORDER BY reservation_expires_at,reservation_id
-                LIMIT ?"""
+                LIMIT ?""".trimIndent()
+
         val rows = connection.prepareStatement(sql).use { statement ->
             statement.bindStuckQuery(tenantId, campaignId, cursor, observedAt, limit + 1)
             statement.executeQuery().use { result ->
                 buildList {
-                    while (result.next()) add(result.stuckReservationReadModel())
+                    while (result.next()) {
+                        add(result.stuckReservationReadModel())
+                    }
                 }
             }
         }
         val items = rows.take(limit)
-        val nextCursor =
-            if (rows.size > limit) {
-                items.last().let { StuckReservationCursor(it.expiresAt, it.reservationId) }
-            } else {
-                null
-            }
+        val nextCursor = if (rows.size > limit) {
+            items.last().let { StuckReservationCursor(it.expiresAt, it.reservationId) }
+        } else {
+            null
+        }
         return StuckReservationPage(items, nextCursor, observedAt)
     }
 
     private fun resolveCampaign(table: String, idColumn: String, tenantId: String, resourceId: UUID): UUID? {
         require(table to idColumn in RESOURCE_LOOKUPS)
+
         return currentConnection().prepareStatement(
             "SELECT campaign_id FROM $table WHERE tenant_id=? AND $idColumn=?",
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, resourceId)
+
             statement.executeQuery().use { result ->
                 if (result.next()) result.getObject(1, UUID::class.java) else null
             }
         }
     }
 
-    private fun currentConnection(): Connection = checkNotNull(TransactionManager.currentOrNull()) {
-        "voucher pool queries require an active VoucherPoolJdbcExecutor transaction"
-    }.connection.connection as Connection
-
-    private companion object {
-        val RESOURCE_LOOKUPS =
-            setOf(
-                "voucher_pool_reservations" to "reservation_id",
-                "voucher_pool_allocations" to "allocation_id",
-            )
-    }
+    private fun currentConnection(): Connection = TransactionManager.currentOrNull()
+        ?.connection
+        ?.connection as? Connection
+        ?: error("voucher pool queries require an active VoucherPoolJdbcExecutor transaction")
 }
 
 private fun PreparedStatement.bindScope(tenantId: String, campaignId: UUID?, batchId: UUID?) {
@@ -453,9 +507,13 @@ private fun PreparedStatement.bindScope(tenantId: String, campaignId: UUID?, bat
     batchId?.let { setObject(index++, it) }
 }
 
-private fun Connection.observedAt(): Instant = prepareStatement("SELECT transaction_timestamp()").use { statement ->
-    statement.executeQuery().use { result -> result.next(); result.getTimestamp(1).toInstant() }
-}
+private fun Connection.observedAt(): Instant =
+    prepareStatement("SELECT transaction_timestamp()").use { statement ->
+        statement.executeQuery().use { result ->
+            result.next()
+            result.getTimestamp(1).toInstant()
+        }
+    }
 
 private fun PreparedStatement.bindStuckQuery(
     tenantId: String,
@@ -475,7 +533,7 @@ private fun PreparedStatement.bindStuckQuery(
     setInt(index, limit)
 }
 
-private fun ResultSet.reservationReadModel() =
+private fun ResultSet.reservationReadModel(): ReservationReadModel =
     ReservationReadModel(
         reservationId = getObject(1, UUID::class.java),
         campaignId = getObject(2, UUID::class.java),
@@ -490,7 +548,7 @@ private fun ResultSet.reservationReadModel() =
         observedAt = getTimestamp(11).toInstant(),
     )
 
-private fun ResultSet.allocationReadModel() =
+private fun ResultSet.allocationReadModel(): AllocationReadModel =
     AllocationReadModel(
         allocationId = getObject(1, UUID::class.java),
         reservationId = getObject(2, UUID::class.java),
@@ -508,6 +566,7 @@ private fun ResultSet.allocationReadModel() =
 
 private fun ResultSet.batchReadModel(): BatchReadModel {
     val state = BatchState.valueOf(getString(3))
+
     return BatchReadModel(
         batchId = getObject(1, UUID::class.java),
         campaignId = getObject(2, UUID::class.java),
@@ -526,7 +585,7 @@ private fun ResultSet.batchReadModel(): BatchReadModel {
     )
 }
 
-private fun ResultSet.campaignReadModel() =
+private fun ResultSet.campaignReadModel(): CampaignReadModel =
     CampaignReadModel(
         campaignId = getObject(1, UUID::class.java),
         state = CampaignState.valueOf(getString(2)),
@@ -541,7 +600,7 @@ private fun ResultSet.campaignReadModel() =
         observedAt = getTimestamp(11).toInstant(),
     )
 
-private fun ResultSet.stuckReservationReadModel() =
+private fun ResultSet.stuckReservationReadModel(): StuckReservationReadModel =
     StuckReservationReadModel(
         reservationId = getObject(1, UUID::class.java),
         campaignId = getObject(2, UUID::class.java),
@@ -554,15 +613,15 @@ private fun ResultSet.stuckReservationReadModel() =
 
 private fun BatchState.nextAction(): String =
     when (this) {
-        BatchState.STAGING -> "CONTINUE_OR_ACTIVATE"
-        BatchState.ACTIVE -> "PAUSE_OR_REVOKE"
-        BatchState.PAUSED -> "RESUME_OR_REVOKE"
+        BatchState.STAGING         -> "CONTINUE_OR_ACTIVATE"
+        BatchState.ACTIVE          -> "PAUSE_OR_REVOKE"
+        BatchState.PAUSED          -> "RESUME_OR_REVOKE"
         BatchState.REVOKING,
         BatchState.EXPIRING,
-        -> "WAIT_FOR_WORKER"
+                                   -> "WAIT_FOR_WORKER"
         BatchState.FAILED_RETRYABLE -> "RESUME_OR_REVOKE"
         BatchState.FAILED_TERMINAL -> "OPERATOR_REVIEW_REQUIRED"
         BatchState.REVOKED,
         BatchState.EXPIRED,
-        -> "NONE"
+                                   -> "NONE"
     }

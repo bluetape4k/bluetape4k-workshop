@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.identity
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotEmpty
@@ -10,7 +12,7 @@ import java.net.InetAddress
 /** 신뢰된 network hop에서 들어온 forwarded-address input이 유효하지 않음을 나타냅니다. */
 class InvalidClientAddress(
     cause: Throwable? = null,
-) : IllegalArgumentException("invalid_client_address", cause) {
+): IllegalArgumentException("invalid_client_address", cause) {
     companion object {
         @Serial
         private const val serialVersionUID: Long = 1L
@@ -25,7 +27,7 @@ class TrustedClientAddressResolver(
 
     init {
         trustedNetworks.requireNotEmpty("trustedNetworks")
-        trustedNetworks.none { it.prefixLength == 0 }.requireEquals(true, "trustedNetworks.hasNoWildcard")
+        require(trustedNetworks.all { it.prefixLength > 0 }) { "trustedNetworks.hasNoWildcard all it's prefix length greater than 0" }
     }
 
     fun resolve(
@@ -36,53 +38,67 @@ class TrustedClientAddressResolver(
         if (trustedNetworks.none { it.contains(remote) }) return remote.hostAddress
         if (xForwardedFor.isNullOrBlank()) return remote.hostAddress
 
-        val hops =
-            xForwardedFor.split(',').map { value ->
-                if (value != value.trim() && value.trim().isEmpty()) throw InvalidClientAddress()
+        val hops = xForwardedFor
+            .split(',')
+            .map { value ->
+                if (value != value.trim() && value.trim().isEmpty()) {
+                    throw InvalidClientAddress()
+                }
                 parseAddress(value.trim())
             } + remote
-        return hops.asReversed().firstOrNull { hop -> trustedNetworks.none { it.contains(hop) } }
-            ?.hostAddress
-            ?: hops.first().hostAddress
+
+        return hops.asReversed()
+            .firstOrNull { hop ->
+                trustedNetworks.none { it.contains(hop) }
+            }?.hostAddress ?: hops.first().hostAddress
     }
 
     private fun parseAddress(value: String): InetAddress =
         try {
-            IP_LITERAL.matches(value).requireEquals(true, "clientAddress.isIpLiteral")
+            require(IP_LITERAL.matches(value)) { "clientAddress.isIpLiteral matches to IP_LITERAL: $value" }
             InetAddress.getByName(value)
         } catch (failure: Exception) {
             throw InvalidClientAddress(failure)
         }
 
+    @Suppress("ArrayInDataClass")
     private data class Cidr(
         val network: ByteArray,
         val prefixLength: Int,
-    ) : Serializable {
+    ): Serializable {
         fun contains(address: InetAddress): Boolean {
             val candidate = address.address
             if (candidate.size != network.size) return false
+
             val wholeBytes = prefixLength / 8
             val remainingBits = prefixLength % 8
+
             if (!(0 until wholeBytes).all { network[it] == candidate[it] }) return false
             if (remainingBits == 0) return true
+
             val mask = (0xff shl (8 - remainingBits)) and 0xff
             return (network[wholeBytes].toInt() and mask) == (candidate[wholeBytes].toInt() and mask)
         }
 
-        companion object {
+        companion object: KLogging() {
             fun parse(value: String): Cidr {
                 val parts = value.split('/')
                 parts.size.requireEquals(2, "trustedProxy.parts.size")
-                val address =
-                    try {
-                        IP_LITERAL.matches(parts[0]).requireEquals(true, "trustedProxy.address.isIpLiteral")
-                        InetAddress.getByName(parts[0])
-                    } catch (failure: Exception) {
-                        throw IllegalArgumentException("invalid trusted proxy CIDR", failure)
-                    }
+
+                val address = try {
+                    IP_LITERAL.matches(parts[0]).requireEquals(true, "trustedProxy.address.isIpLiteral")
+                    InetAddress.getByName(parts[0])
+                } catch (failure: Exception) {
+                    throw IllegalArgumentException("invalid trusted proxy CIDR", failure)
+                }
+
                 val prefix = parts[1].toIntOrNull() ?: throw IllegalArgumentException("invalid CIDR prefix")
+
                 prefix.requireInRange(0, address.address.size * 8, "trustedProxy.prefix")
-                return Cidr(address.address, prefix)
+
+                return Cidr(address.address, prefix).apply {
+                    log.debug { "Parsed Cidr=$this, value=$value" }
+                }
             }
 
             @Serial

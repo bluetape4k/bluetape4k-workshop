@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.model
 
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.support.hashOf
 import java.io.Serializable
 
 data class OriginalImageMetadata(
@@ -10,7 +12,7 @@ data class OriginalImageMetadata(
     val height: Int,
     val contentType: String,
     val sizeBytes: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -24,7 +26,7 @@ data class ImageVariantMetadata(
     val height: Int,
     val contentType: String,
     val sizeBytes: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -37,7 +39,7 @@ data class ImageProcessingResponse(
     val variants: List<ImageVariantMetadata>,
     val durationMillis: Long,
     val warnings: List<String> = emptyList(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -46,7 +48,7 @@ data class ImageProcessingResponse(
 data class OriginalImageInfo(
     val width: Int,
     val height: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -59,18 +61,41 @@ data class ProcessedImageVariant(
     val width: Int,
     val height: Int,
     val contentType: String,
-) : Serializable {
+): Serializable {
     val sizeBytes: Long get() = bytes.size.toLong()
 
     companion object {
         private const val serialVersionUID: Long = 1L
     }
+
+    override fun equals(other: Any?): Boolean {
+        return this === other ||
+                other is ProcessedImageVariant &&
+                name == other.name &&
+                key == other.key &&
+                bytes.contentEquals(other.bytes) &&
+                width == other.width &&
+                height == other.height &&
+                contentType == other.contentType
+    }
+
+    override fun hashCode(): Int = hashOf(name, key, bytes.contentHashCode(), width, height, contentType)
+
+    override fun toString(): String =
+        ToStringBuilder(this)
+            .add("name", name)
+            .add("key", key)
+            .add("bytesSize", bytes.size)
+            .add("width", width)
+            .add("height", height)
+            .add("contentType", contentType)
+            .toString()
 }
 
 data class ProcessedImageSet(
     val original: OriginalImageInfo,
     val variants: List<ProcessedImageVariant>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

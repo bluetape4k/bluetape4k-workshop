@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.r2dbc.domain
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -12,7 +12,7 @@ class MemberRepositoryTest(
     @param:Autowired private val memberRepository: MemberRepository,
 ): AbstractR2dbcApplicationTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {
@@ -27,9 +27,7 @@ class MemberRepositoryTest(
         savedMember.shouldNotBeNull()
         savedMember.id.shouldNotBeNull()
 
-        val loadedMember = checkNotNull(memberRepository.findById(savedMember.id)) { "saved member must exist." }
-        loadedMember.name shouldBeEqualTo member.name
-        loadedMember.age shouldBeEqualTo member.age
-        loadedMember.email shouldBeEqualTo member.email
+        val loadedMember = memberRepository.findById(savedMember.id).shouldNotBeNull()
+        loadedMember shouldBeEqualTo savedMember
     }
 }

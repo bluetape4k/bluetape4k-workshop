@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -10,13 +14,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.redisson.api.RRateLimiter
 import org.redisson.api.RateType
-import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Redisson의 [RRateLimiter]의 사용 예
@@ -41,7 +42,7 @@ class RateLimiterExamples: AbstractRedissonTest() {
         val limiter: RRateLimiter = redisson.getRateLimiter(randomName())
 
         // 100초 동안 5개의 request 만 허용
-        limiter.trySetRateAsync(RateType.OVERALL, 5, Duration.ofSeconds(100)).await()
+        limiter.trySetRateAsync(RateType.OVERALL, 5, 100.seconds()).await()
 
         // 3개
         limiter.tryAcquireAsync(1).await().shouldBeTrue()
@@ -74,7 +75,7 @@ class RateLimiterExamples: AbstractRedissonTest() {
 
         val limiter1 = redisson.getRateLimiter(limiterName)
         // 100초 동안 각 client 별로 3개의 request 만 허용
-        limiter1.trySetRate(RateType.PER_CLIENT, 3, Duration.ofSeconds(100))
+        limiter1.trySetRate(RateType.PER_CLIENT, 3, 100.seconds())
         // Redisson이 Initialize 할 시간이 필요함
         limiter1.acquire()
         limiter1.acquire()
@@ -95,7 +96,7 @@ class RateLimiterExamples: AbstractRedissonTest() {
                     limiter2.trySetRate(
                         RateType.PER_CLIENT,
                         3,
-                        Duration.ofSeconds(100)
+                        100.seconds()
                     ).shouldBeFalse()               // 이미 limiter1 에서 initialize 했으므로, false 를 반환한다
                     Thread.sleep(1)
 
@@ -126,7 +127,7 @@ class RateLimiterExamples: AbstractRedissonTest() {
 
         val limiter1 = redisson.getRateLimiter(limiterName)
         // 100초 동안 각 client 별로 3개의 request 만 허용
-        limiter1.trySetRate(RateType.PER_CLIENT, 3, Duration.ofSeconds(100))
+        limiter1.trySetRate(RateType.PER_CLIENT, 3, 100.seconds())
         // Redisson이 Initialize 할 시간이 필요함
         limiter1.acquire()
         limiter1.acquire()
@@ -146,7 +147,7 @@ class RateLimiterExamples: AbstractRedissonTest() {
                     limiter2.trySetRate(
                         RateType.PER_CLIENT,
                         3,
-                        Duration.ofSeconds(100)
+                        100.seconds()
                     ).shouldBeFalse()               // 이미 limiter1 에서 initialize 했으므로, false 를 반환한다
                     Thread.sleep(1)
 
@@ -177,12 +178,13 @@ class RateLimiterExamples: AbstractRedissonTest() {
 
         val limiter1 = redisson.getRateLimiter(limiterName)
         // 2초 동안 각 client 별로 3개의 request 만 허용
-        limiter1.trySetRateAsync(RateType.PER_CLIENT, 3, Duration.ofSeconds(100)).await()
+        limiter1.trySetRateAsync(RateType.PER_CLIENT, 3, 100.seconds()).await()
         // Redisson이 Initialize 할 시간이 필요함
         limiter1.acquireAsync().await()
         limiter1.acquireAsync().await()
         limiter1.acquireAsync().await()
-        delay(10)
+        delay(10.milliseconds)
+
         limiter1.availablePermitsAsync().await() shouldBeEqualTo 0L
         limiter1.tryAcquireAsync(1).await().shouldBeFalse()
 
@@ -200,23 +202,23 @@ class RateLimiterExamples: AbstractRedissonTest() {
                     limiter2.trySetRateAsync(
                         RateType.PER_CLIENT,
                         3,
-                        Duration.ofSeconds(100)
+                        100.seconds()
                     ).await().shouldBeFalse()               // 이미 limiter1 에서 initialize 했으므로, false 를 반환한다
 
-                    delay(1)
+                    delay(1.milliseconds)
 
                     // limiter2는 3개 모두 소진
                     repeat(3) {
                         limiter2.tryAcquireAsync(1).await().shouldBeTrue()
                     }
-                    delay(1)
+                    delay(1.milliseconds)
                     // limiter2는 모두 소진됨
                     limiter2.availablePermitsAsync().await() shouldBeEqualTo 0L
                     limiter2.tryAcquireAsync(1).await().shouldBeFalse()
                 } finally {
                     redisson1.shutdown()
                 }
-                delay(1)
+                delay(1.milliseconds)
             }
             .run()
 

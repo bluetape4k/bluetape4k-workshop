@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.admission
 
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requirePositiveNumber
@@ -18,7 +20,7 @@ internal enum class DatabaseLane {
 internal class DatabasePermitRejected(
     val retryAfter: Duration,
     cause: Throwable? = null,
-) : RuntimeException("database permit unavailable", cause)
+): RuntimeException("database permit unavailable", cause)
 
 internal fun interface DatabasePermitMetrics {
     fun rejected(lane: DatabaseLane)
@@ -38,17 +40,22 @@ internal class DatabasePermitGate(
     foregroundPermits: Int = 12,
     workerPermits: Int = 1,
     sseMaintenancePermits: Int = 3,
-    private val acquireTimeout: Duration = Duration.ofMillis(250),
+    private val acquireTimeout: Duration = 250.millis(),
     private val metrics: DatabasePermitMetrics = DatabasePermitMetrics.NONE,
 ) {
-    private val permitCapacities =
-        mapOf(
-            DatabaseLane.FOREGROUND to foregroundPermits.requirePositiveNumber("foregroundPermits"),
-            DatabaseLane.WORKER to workerPermits.requirePositiveNumber("workerPermits"),
-            DatabaseLane.SSE_MAINTENANCE to sseMaintenancePermits.requirePositiveNumber("sseMaintenancePermits"),
-        )
-    private val semaphores =
-        permitCapacities.mapValues { (_, permits) -> Semaphore(permits, true) }
+    companion object: KLogging() {
+        private val RETRY_AFTER: Duration = 1.seconds()
+    }
+
+    private val permitCapacities = mapOf(
+        DatabaseLane.FOREGROUND to foregroundPermits.requirePositiveNumber("foregroundPermits"),
+        DatabaseLane.WORKER to workerPermits.requirePositiveNumber("workerPermits"),
+        DatabaseLane.SSE_MAINTENANCE to sseMaintenancePermits.requirePositiveNumber("sseMaintenancePermits"),
+    )
+
+    private val semaphores: Map<DatabaseLane, Semaphore> = permitCapacities.mapValues { (_, permits) ->
+        Semaphore(permits, true)
+    }
     private val heldLane = ThreadLocal<DatabaseLane?>()
     private val lifecycleLock = ReentrantLock()
     private val drained = lifecycleLock.newCondition()
@@ -70,14 +77,15 @@ internal class DatabasePermitGate(
     ): T {
         if (!accepting) throw DatabasePermitRejected(RETRY_AFTER)
         check(heldLane.get() == null) { "nested database permit acquisition is forbidden" }
+
         val semaphore = semaphores.getValue(lane)
-        val acquired =
-            try {
-                semaphore.tryAcquire(acquireTimeout.toNanos(), TimeUnit.NANOSECONDS)
-            } catch (interrupted: InterruptedException) {
-                Thread.currentThread().interrupt()
-                throw DatabasePermitRejected(RETRY_AFTER, interrupted)
-            }
+        val acquired = try {
+            semaphore.tryAcquire(acquireTimeout.toNanos(), TimeUnit.NANOSECONDS)
+        } catch (interrupted: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw DatabasePermitRejected(RETRY_AFTER, interrupted)
+        }
+
         if (!acquired) {
             metrics.rejected(lane)
             log.debug { "voucher_db_permit_rejected lane=$lane" }
@@ -94,6 +102,7 @@ internal class DatabasePermitGate(
         }
 
         heldLane.set(lane)
+
         return try {
             block()
         } finally {
@@ -118,6 +127,7 @@ internal class DatabasePermitGate(
     fun awaitDrained(timeout: Duration): Boolean {
         require(!timeout.isNegative) { "timeout must not be negative" }
         var remaining = timeout.toNanos()
+
         lifecycleLock.withLock {
             while (activePermits > 0 && remaining > 0) {
                 remaining = drained.awaitNanos(remaining)
@@ -133,18 +143,19 @@ internal class DatabasePermitGate(
     }
 
     /** transaction facade가 permit을 다시 얻지 않고 자신의 foreground boundary에 참여할 수 있게 합니다. */
-    fun isHeld(lane: DatabaseLane): Boolean = heldLane.get() == lane
+    fun isHeld(lane: DatabaseLane): Boolean =
+        heldLane.get() == lane
 
     /** health probe와 결정적 leak test를 위해 lane-local capacity를 노출합니다. */
-    fun availablePermits(lane: DatabaseLane): Int = semaphores.getValue(lane).availablePermits()
+    fun availablePermits(lane: DatabaseLane): Int =
+        semaphores.getValue(lane).availablePermits()
 
     /** permit을 얻지 않고 lane-local occupancy를 노출합니다. */
-    fun inUsePermits(lane: DatabaseLane): Int = permitCapacities.getValue(lane) - availablePermits(lane)
+    fun inUsePermits(lane: DatabaseLane): Int =
+        permitCapacities.getValue(lane) - availablePermits(lane)
 
     /** bounded operational sampling을 위해 fair semaphore queue depth를 노출합니다. */
-    fun waitingThreads(lane: DatabaseLane): Int = semaphores.getValue(lane).queueLength
+    fun waitingThreads(lane: DatabaseLane): Int =
+        semaphores.getValue(lane).queueLength
 
-    companion object : KLogging() {
-        private val RETRY_AFTER: Duration = Duration.ofSeconds(1)
-    }
 }

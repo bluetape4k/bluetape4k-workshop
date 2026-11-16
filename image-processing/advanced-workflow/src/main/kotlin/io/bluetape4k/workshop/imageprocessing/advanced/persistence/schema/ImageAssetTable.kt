@@ -14,7 +14,7 @@ import io.bluetape4k.exposed.core.auditable.AuditableLongIdTable
  * - `updated_by` — audited UPDATE 시 설정됩니다.
  * - `updated_at` — audited UPDATE 시 DB `CURRENT_TIMESTAMP`입니다.
  */
-object ImageAssetTable : AuditableLongIdTable("image_assets") {
+object ImageAssetTable: AuditableLongIdTable("image_assets") {
 
     /** 공개 이미지 식별자로 호출자에게 노출하는 UUID v4 문자열입니다. */
     val externalId = varchar("external_id", 36).uniqueIndex()
@@ -38,6 +38,5 @@ object ImageAssetTable : AuditableLongIdTable("image_assets") {
     val checksum = varchar("checksum", 64).uniqueIndex()
 
     /** 이 asset의 현재 생명주기 상태입니다. */
-    val status = enumerationByName("status", 20, ImageAssetStatus::class)
-        .default(ImageAssetStatus.PROCESSING)
+    val status = enumerationByName<ImageAssetStatus>("status", 20).default(ImageAssetStatus.PROCESSING)
 }

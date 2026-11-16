@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.leader.service
 
 import io.bluetape4k.leader.lettuce.LettuceSuspendLeaderElector
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import kotlinx.coroutines.delay
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * [LettuceSuspendLeaderElector]를 사용해 coroutine-first leadership을 보여주는 leader election service입니다.
@@ -26,12 +27,13 @@ import java.util.concurrent.atomic.AtomicInteger
 class SuspendLeaderService(
     private val suspendLeaderElector: LettuceSuspendLeaderElector,
 ) {
-    /** 이 instance가 선출되어 leader action을 실행한 횟수입니다. */
-    val executionCount = AtomicInteger(0)
 
-    companion object : KLogging() {
+    companion object: KLoggingChannel() {
         const val LOCK_NAME = "leader:suspend-demo"
     }
+
+    /** 이 instance가 선출되어 leader action을 실행한 횟수입니다. */
+    val executionCount = AtomicInteger(0)
 
     /**
      * coroutine leader action을 실행합니다.
@@ -42,7 +44,7 @@ class SuspendLeaderService(
     suspend fun runLeaderWork(): String? =
         suspendLeaderElector.runIfLeader(LOCK_NAME) {
             log.info { "[SuspendLeaderService] Coroutine leader work started" }
-            delay(20) // simulate async I/O without blocking a thread
+            delay(20.milliseconds) // simulate async I/O without blocking a thread
             executionCount.incrementAndGet()
             log.info { "[SuspendLeaderService] Coroutine leader work complete (total=${executionCount.get()})" }
             "done"

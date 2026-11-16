@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.elasticsearch.repository
 
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +19,7 @@ class ReactiveElasticsearchRepositoryTest(
     @param:Autowired private val repository: ReactiveConferenceRepository,
 ): AbstractElasticsearchTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Test
     fun `search all conference`() = runSuspendIO {

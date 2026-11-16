@@ -61,7 +61,8 @@ internal data class ExpectedAppend(
     init {
         expectedVersion.requireZeroOrPositiveNumber("expectedVersion")
         events.requireNotEmpty("events")
-        events.map(EventToAppend::eventId).toSet().size.requireEquals(events.size, "uniqueEventIds.size")
+        events.map(EventToAppend::eventId)
+            .toSet().size.requireEquals(events.size, "uniqueEventIds.size")
     }
 }
 

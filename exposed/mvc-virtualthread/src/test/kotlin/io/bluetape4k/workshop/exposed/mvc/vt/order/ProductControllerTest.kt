@@ -2,14 +2,20 @@ package io.bluetape4k.workshop.exposed.mvc.vt.order
 
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.mvc.vt.AbstractMvcVirtualThreadTest
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.mvc.vt.order.dto.ProductDTO
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.test.web.reactive.server.expectBodyList
 import java.math.BigDecimal
 
-class ProductControllerTest : AbstractMvcVirtualThreadTest() {
+class ProductControllerTest: AbstractMvcVirtualThreadTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `GET products returns seeded products`() {
@@ -17,9 +23,11 @@ class ProductControllerTest : AbstractMvcVirtualThreadTest() {
             .uri("/api/v1/products")
             .exchange()
             .expectStatus().isOk
-            .expectBodyList(ProductDTO::class.java)
+            .expectBodyList<ProductDTO>()
             .returnResult()
+
         result.responseBody.shouldNotBeNull()
+            .onEach { log.debug { "product=$it" } }
     }
 
     @Test
@@ -35,10 +43,12 @@ class ProductControllerTest : AbstractMvcVirtualThreadTest() {
             .bodyValue(req)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(ProductDTO::class.java)
+            .expectBody<ProductDTO>()
             .returnResult()
-        val body = result.responseBody.shouldNotBeNull()
-        body.id shouldBeGreaterOrEqualTo 1L
+
+        val product = result.responseBody.shouldNotBeNull()
+        log.debug { "product=$product" }
+        product.id shouldBeGreaterOrEqualTo 1L
     }
 
     @Test

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.projection
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -10,7 +11,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.Billin
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 enum class ProjectionModelType {
     USAGE_TIMELINE,
@@ -80,28 +81,43 @@ data class NewProjectionFailure(
 class ProjectionHandlers(
     private val repository: BillingReadModelRepository,
 ) {
+
+    companion object: KLogging()
+
     fun handle(context: ProjectionEventContext, event: DomainEvent) {
         when (event) {
             is UsageAccepted -> append(
-                context,
-                event,
-                ProjectionModelType.USAGE_TIMELINE,
-                ProjectionValues(quantity = event.quantity, provenance = event.sourceEventId),
+                context = context,
+                event = event,
+                modelType = ProjectionModelType.USAGE_TIMELINE,
+                values = ProjectionValues(
+                    quantity = event.quantity,
+                    provenance = event.sourceEventId
+                ),
             )
-            is UsageRated -> append(
-                context,
-                event,
-                ProjectionModelType.LEDGER_DEBIT,
-                ProjectionValues(event.quantity, event.amount, event.currency, event.usageEventId),
+            is UsageRated    -> append(
+                context = context,
+                event = event,
+                modelType = ProjectionModelType.LEDGER_DEBIT,
+                values = ProjectionValues(
+                    quantity = event.quantity,
+                    amount = event.amount,
+                    currency = event.currency,
+                    provenance = event.usageEventId
+                ),
             )
             is InvoiceIssued -> append(
-                context,
-                event,
-                ProjectionModelType.INVOICE,
-                ProjectionValues(amount = event.total, currency = event.currency, provenance = event.invoiceId),
+                context = context,
+                event = event,
+                modelType = ProjectionModelType.INVOICE,
+                values = ProjectionValues(
+                    amount = event.total,
+                    currency = event.currency,
+                    provenance = event.invoiceId
+                ),
             )
             is AdjustmentPosted -> appendAdjustment(context, event)
-            else -> Unit
+            else             -> Unit
         }
         append(
             context,
@@ -118,10 +134,14 @@ class ProjectionHandlers(
             ProjectionModelType.LEDGER_CREDIT
         }
         append(
-            context,
-            event,
-            type,
-            ProjectionValues(amount = event.amount, currency = event.currency, provenance = event.sourceEventId),
+            context = context,
+            event = event,
+            modelType = type,
+            values = ProjectionValues(
+                amount = event.amount,
+                currency = event.currency,
+                provenance = event.sourceEventId
+            ),
         )
     }
 

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.optimization.planning.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningAggregateRecord
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal data class CreatePlanningRequest(
     val aggregateId: String,
@@ -22,15 +23,15 @@ internal data class CreatePlanningRequest(
     val parentRevision: Long?,
     val provider: PlanningProvider,
 ) {
+    companion object {
+        private val IDENTIFIER = Regex("[A-Za-z0-9._:-]{1,160}")
+    }
+
     init {
         require(IDENTIFIER.matches(aggregateId)) { "aggregateId has an invalid format" }
         require(IDENTIFIER.matches(datasetId)) { "datasetId has an invalid format" }
         require(aggregateVersion >= 0) { "aggregateVersion must not be negative" }
         require(parentRevision == null || parentRevision >= 0) { "parentRevision must not be negative" }
-    }
-
-    companion object {
-        private val IDENTIFIER = Regex("[A-Za-z0-9._:-]{1,160}")
     }
 }
 
@@ -42,6 +43,8 @@ internal class PlanningRequestService(
     private val clock: Clock,
     private val planningEngine: io.bluetape4k.workshop.optimization.planning.domain.PlanningEngine,
 ) {
+
+    companion object: KLogging()
 
     @Transactional
     fun create(
@@ -71,6 +74,7 @@ internal class PlanningRequestService(
                 nextAttemptAt = Instant.now(clock),
             ),
         )
+
         return request
     }
 

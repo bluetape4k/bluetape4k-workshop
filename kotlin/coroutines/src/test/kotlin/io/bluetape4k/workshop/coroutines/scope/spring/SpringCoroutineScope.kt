@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.scope.spring
 
+import io.bluetape4k.support.requireNotNull
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,17 +33,15 @@ interface SpringCoroutineScope: CoroutineScope, DisposableBean {
     val job: Job
 }
 
-@Suppress("TestFunctionName")
 fun SpringCoroutineScope(
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     job: Job = Job(),
 ): SpringCoroutineScope = SpringCoroutineScope(dispatcher + job)
 
-@Suppress("TestFunctionName")
 fun SpringCoroutineScope(coroutineContext: CoroutineContext): SpringCoroutineScope {
     return object: SpringCoroutineScope, CoroutineScope by CoroutineScope(coroutineContext), DisposableBean {
         override val job: Job
-            get() = requireNotNull(coroutineContext[Job]) {
+            get() = coroutineContext[Job].requireNotNull {
                 "SpringCoroutineScope requires a Job in coroutineContext."
             }
 
@@ -51,7 +50,6 @@ fun SpringCoroutineScope(coroutineContext: CoroutineContext): SpringCoroutineSco
         }
     }
 }
-
 
 abstract class AbstractSpringCoroutineScope(
     dispatcher: CoroutineDispatcher = Dispatchers.Default,

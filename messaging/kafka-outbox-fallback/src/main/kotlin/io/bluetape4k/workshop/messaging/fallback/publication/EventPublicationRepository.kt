@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.messaging.fallback.publication
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
 import io.bluetape4k.workshop.messaging.fallback.domain.OrderTable
@@ -17,10 +19,12 @@ import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.upsert
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -37,6 +41,8 @@ class EventPublicationRepository(
     private val clock: Clock,
 ) {
 
+    companion object: KLogging()
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun upsertNotPublished(
         event: OrderPlacedEvent,
@@ -45,39 +51,58 @@ class EventPublicationRepository(
         errorCode: String,
         errorSummary: String,
     ) {
+        log.debug {
+            "Upsert not published. event=$event payload=$payload, directAttemptCount=$directAttemptCount, " +
+                    "errorCode=$errorCode, errorSummary=$errorSummary"
+        }
         val now = LocalDateTime.now(clock)
-        val existing = EventPublicationTable.selectAll()
-            .where { EventPublicationTable.eventId eq event.eventId }
-            .singleOrNull()
+//        val existing = EventPublicationTable.selectAll()
+//            .where { EventPublicationTable.eventId eq event.eventId }
+//            .firstOrNull()
 
-        if (existing == null) {
-            EventPublicationTable.insert {
-                it[eventId] = event.eventId
-                it[aggregateType] = "Order"
-                it[aggregateId] = event.orderId.toString()
-                it[eventType] = "OrderPlaced"
-                it[EventPublicationTable.payload] = payload
-                it[status] = EventPublicationStatus.NOT_PUBLISHED
-                it[EventPublicationTable.directAttemptCount] = directAttemptCount
-                it[relayRetryCount] = 0
-                it[lastErrorCode] = errorCode
-                it[lastErrorSummary] = sanitize(errorSummary)
-                it[nextAttemptAt] = now
-                it[updatedAt] = now
-            }
-        } else {
-            EventPublicationTable.update({ EventPublicationTable.eventId eq event.eventId }) {
-                it[EventPublicationTable.payload] = payload
-                it[status] = EventPublicationStatus.NOT_PUBLISHED
-                it[EventPublicationTable.directAttemptCount] = directAttemptCount
-                it[relayRetryCount] = 0
-                it[lastErrorCode] = errorCode
-                it[lastErrorSummary] = sanitize(errorSummary)
-                it[nextAttemptAt] = now
-                it[claimedBy] = null
-                it[claimedUntil] = null
-                it[updatedAt] = now
-            }
+//        if (existing == null) {
+//            EventPublicationTable.insert {
+//                it[eventId] = event.eventId
+//                it[aggregateType] = "Order"
+//                it[aggregateId] = event.orderId.toString()
+//                it[eventType] = "OrderPlaced"
+//                it[EventPublicationTable.payload] = payload
+//                it[status] = EventPublicationStatus.NOT_PUBLISHED
+//                it[EventPublicationTable.directAttemptCount] = directAttemptCount
+//                it[relayRetryCount] = 0
+//                it[lastErrorCode] = errorCode
+//                it[lastErrorSummary] = sanitize(errorSummary)
+//                it[nextAttemptAt] = now
+//                it[updatedAt] = now
+//            }
+//        } else {
+//            EventPublicationTable.update({ EventPublicationTable.eventId eq event.eventId }) {
+//                it[EventPublicationTable.payload] = payload
+//                it[status] = EventPublicationStatus.NOT_PUBLISHED
+//                it[EventPublicationTable.directAttemptCount] = directAttemptCount
+//                it[relayRetryCount] = 0
+//                it[lastErrorCode] = errorCode
+//                it[lastErrorSummary] = sanitize(errorSummary)
+//                it[nextAttemptAt] = now
+//                it[claimedBy] = null
+//                it[claimedUntil] = null
+//                it[updatedAt] = now
+//            }
+//        }
+
+        EventPublicationTable.upsert(EventPublicationTable.eventId) {
+            it[eventId] = event.eventId
+            it[aggregateType] = "Order"
+            it[aggregateId] = event.orderId.toString()
+            it[eventType] = "OrderPlaced"
+            it[EventPublicationTable.payload] = payload
+            it[status] = EventPublicationStatus.NOT_PUBLISHED
+            it[EventPublicationTable.directAttemptCount] = directAttemptCount
+            it[relayRetryCount] = 0
+            it[lastErrorCode] = errorCode
+            it[lastErrorSummary] = sanitize(errorSummary)
+            it[nextAttemptAt] = now
+            it[updatedAt] = now
         }
     }
 
@@ -206,9 +231,8 @@ class EventPublicationRepository(
         )
 
         return OrderTable.selectAll()
-            .where {
-                (OrderTable.createdAt lessEq cutoff) and missingPublication
-            }
+            .andWhere { OrderTable.createdAt lessEq cutoff }
+            .andWhere { missingPublication }
             .orderBy(OrderTable.createdAt to SortOrder.ASC, OrderTable.id to SortOrder.ASC)
             .map { row ->
                 OrderPlacedEvent(
@@ -255,10 +279,11 @@ class EventPublicationRepository(
     private fun eligibleForClaim(now: LocalDateTime): Op<Boolean> {
         val retryableStatus =
             (EventPublicationTable.status eq EventPublicationStatus.NOT_PUBLISHED) or
-                (EventPublicationTable.status eq EventPublicationStatus.FAILED)
+                    (EventPublicationTable.status eq EventPublicationStatus.FAILED)
         val claimExpired =
             EventPublicationTable.claimedUntil.isNull() or
-                (EventPublicationTable.claimedUntil less now)
+                    (EventPublicationTable.claimedUntil less now)
+
         return retryableStatus and (EventPublicationTable.nextAttemptAt lessEq now) and claimExpired
     }
 }
@@ -284,7 +309,7 @@ data class EventPublicationRecord(
     val createdAt: LocalDateTime,
     val publishedAt: LocalDateTime?,
     val updatedAt: LocalDateTime,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

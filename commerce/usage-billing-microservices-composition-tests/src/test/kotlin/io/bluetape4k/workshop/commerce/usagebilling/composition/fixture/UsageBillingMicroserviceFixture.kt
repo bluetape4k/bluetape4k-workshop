@@ -2,11 +2,14 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.composition.fixture
 
-import eu.rekawek.toxiproxy.ToxiproxyClient
 import eu.rekawek.toxiproxy.Proxy
+import eu.rekawek.toxiproxy.ToxiproxyClient
 import eu.rekawek.toxiproxy.model.ToxicDirection
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.infra.ToxiproxyServer
 import io.bluetape4k.workshop.commerce.usagebilling.billing.BillingServiceApplication
@@ -25,6 +28,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.invoice.persistence.InvoiceL
 import io.bluetape4k.workshop.commerce.usagebilling.meter.MeterServiceApplication
 import io.bluetape4k.workshop.commerce.usagebilling.meter.application.MeterCommandService
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.ActivatePriceCommand
+import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterActivationResult
 import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxPublisher
 import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxStatus
 import io.bluetape4k.workshop.commerce.usagebilling.meter.persistence.MeterOutboxRepository
@@ -38,15 +42,17 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.application.UsageComma
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceJournal
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceResult
 import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.UsageOutboxPublisher
 import io.bluetape4k.workshop.commerce.usagebilling.usage.persistence.UsageOutboxRepository
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.NewTopic
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -54,12 +60,9 @@ import org.testcontainers.containers.Network
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.math.BigDecimal
-import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.Properties
-import java.util.HexFormat
-import java.util.UUID
+import java.util.*
 
 data class MeterOutboxState(
     val status: MeterOutboxStatus,
@@ -68,19 +71,45 @@ data class MeterOutboxState(
 
 class UsageBillingMicroserviceFixture(
     private val brokerPathProxy: Boolean = false,
-) : AutoCloseable {
+): AutoCloseable {
+
+    private companion object: KLogging() {
+        const val KAFKA_NETWORK_ALIAS = "kafka"
+        const val KAFKA_PROXY_TARGET_PORT = 19092
+        const val TOXIPROXY_LISTEN_PORT = 8666
+        const val CUT_UPSTREAM = "cut-kafka-upstream"
+        const val CUT_DOWNSTREAM = "cut-kafka-downstream"
+        const val METER_TOPIC = "meter.events.v1"
+        const val USAGE_TOPIC = "usage.events.v1"
+        const val INVOICE_TOPIC = "invoice.events.v1"
+        val TOPICS = listOf(
+            METER_TOPIC,
+            USAGE_TOPIC,
+            BILLING_TOPIC,
+            INVOICE_TOPIC,
+        )
+
+        const val BILLING_TOPIC = "billing.events.v1"
+
+        fun digestOf(value: String): String =
+            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
+    }
+
     private val brokerPathNetwork: Network by lazy { Network.newNetwork() }
     private val toxiproxy: ToxiproxyServer by lazy {
         ToxiproxyServer(image = "ghcr.io/shopify/toxiproxy", tag = "2.5.0").apply {
             withNetwork(brokerPathNetwork)
         }
     }
-    private val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0")).apply {
-        if (brokerPathProxy) {
-            withNetwork(brokerPathNetwork)
-            withListener("$KAFKA_NETWORK_ALIAS:$KAFKA_PROXY_TARGET_PORT") { brokerPathBootstrapServers() }
+    private val kafka by lazy {
+        KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0")).apply {
+            if (brokerPathProxy) {
+                withNetwork(brokerPathNetwork)
+                withListener("$KAFKA_NETWORK_ALIAS:$KAFKA_PROXY_TARGET_PORT") { brokerPathBootstrapServers() }
+            }
         }
     }
+
     private val meterDatabase = postgresServer()
     private val usageDatabase = postgresServer()
     private val billingDatabase = postgresServer()
@@ -124,6 +153,7 @@ class UsageBillingMicroserviceFixture(
     fun cutBrokerPath() {
         brokerPathProxy.requireEquals(true, "brokerPathProxy")
         check(!isBrokerPathCut) { "broker_path_already_cut" }
+
         brokerPath.toxics().bandwidth(CUT_UPSTREAM, ToxicDirection.UPSTREAM, 0)
         brokerPath.toxics().bandwidth(CUT_DOWNSTREAM, ToxicDirection.DOWNSTREAM, 0)
         isBrokerPathCut = true
@@ -132,49 +162,56 @@ class UsageBillingMicroserviceFixture(
     fun restoreBrokerPath() {
         brokerPathProxy.requireEquals(true, "brokerPathProxy")
         if (!isBrokerPathCut) return
+
         brokerPath.toxics().get(CUT_UPSTREAM).remove()
         brokerPath.toxics().get(CUT_DOWNSTREAM).remove()
         isBrokerPathCut = false
     }
 
-    fun activatePrice(tenantId: String, meterCode: String, amount: BigDecimal) =
-        meterContext.getBean(MeterCommandService::class.java).activatePrice(
-            ActivatePriceCommand(
-                idempotencyKey = UUID.randomUUID().toString(),
-                tenantId = tenantId,
-                meterCode = meterCode,
-                currency = "USD",
-                unitPrice = amount,
-                effectiveAt = Instant.parse("2026-07-23T00:00:00Z"),
-            ),
-        )
+    fun activatePrice(tenantId: String, meterCode: String, amount: BigDecimal): MeterActivationResult =
+        meterContext.getBean<MeterCommandService>()
+            .activatePrice(
+                ActivatePriceCommand(
+                    idempotencyKey = UUID.randomUUID().toString(),
+                    tenantId = tenantId,
+                    meterCode = meterCode,
+                    currency = "USD",
+                    unitPrice = amount,
+                    effectiveAt = Instant.parse("2026-07-23T00:00:00Z"),
+                ),
+            )
 
     fun publishMeterEvents() =
-        meterContext.getBean(MeterOutboxPublisher::class.java).publishPending()
+        meterContext.getBean<MeterOutboxPublisher>().publishPending()
 
-    fun acceptUsage(tenantId: String, meterCode: String, sourceEventId: String = UUID.randomUUID().toString()) =
-        usageContext.getBean(UsageCommandService::class.java).accept(
-            AcceptUsageCommand(
-                tenantId = tenantId,
-                sourceSystem = "composition-test",
-                sourceEventId = sourceEventId,
-                meterCode = meterCode,
-                currency = "USD",
-                quantity = BigDecimal("2"),
-                occurredAt = Instant.parse("2026-07-23T00:01:00Z"),
-            ),
-        )
+    fun acceptUsage(
+        tenantId: String,
+        meterCode: String,
+        sourceEventId: String = UUID.randomUUID().toString(),
+    ): UsageAcceptanceResult =
+        usageContext.getBean<UsageCommandService>()
+            .accept(
+                AcceptUsageCommand(
+                    tenantId = tenantId,
+                    sourceSystem = "composition-test",
+                    sourceEventId = sourceEventId,
+                    meterCode = meterCode,
+                    currency = "USD",
+                    quantity = BigDecimal("2"),
+                    occurredAt = Instant.parse("2026-07-23T00:01:00Z"),
+                ),
+            )
 
     fun publishUsageEvents() {
-        usageContext.getBean(UsageOutboxPublisher::class.java).publishPending()
+        usageContext.getBean<UsageOutboxPublisher>().publishPending()
     }
 
     fun publishBillingEvents() {
-        billingContext.getBean(BillingOutboxPublisher::class.java).publishPending()
+        billingContext.getBean<BillingOutboxPublisher>().publishPending()
     }
 
     fun publishInvoiceEvents() {
-        invoiceContext.getBean(InvoiceOutboxPublisher::class.java).publishPending()
+        invoiceContext.getBean<InvoiceOutboxPublisher>().publishPending()
     }
 
     fun sendUsageEvent(
@@ -229,15 +266,16 @@ class UsageBillingMicroserviceFixture(
         amount: BigDecimal,
         eventId: UUID = UUID.randomUUID(),
     ): BillingAdjustmentOutcome =
-        billingContext.getBean(BillingAdjustmentService::class.java).post(
-            BillingAdjustmentCommand(
-                adjustmentEventId = eventId,
-                tenantId = tenantId,
-                correctionOf = correctionOf,
-                amount = amount,
-                currency = "USD",
-            ),
-        )
+        billingContext.getBean<BillingAdjustmentService>()
+            .post(
+                BillingAdjustmentCommand(
+                    adjustmentEventId = eventId,
+                    tenantId = tenantId,
+                    correctionOf = correctionOf,
+                    amount = amount,
+                    currency = "USD",
+                ),
+            )
 
     fun restartUsageContext() {
         usageContext.close()
@@ -246,15 +284,17 @@ class UsageBillingMicroserviceFixture(
 
     fun redeliverLatestUsageEvent() {
         val event = transaction(usageContext) {
-            usageContext.getBean(UsageOutboxRepository::class.java).findAll().last()
+            usageContext.getBean<UsageOutboxRepository>().findAll().last()
         }
         usageKafkaTemplate().send(USAGE_TOPIC, event.partitionKey, event.payload).get()
     }
 
     fun outboxBacklog(service: String): Long {
         service.requireEquals("meter", "service")
+
         return meterTransaction {
-            meterContext.getBean(MeterOutboxRepository::class.java).findAll()
+            meterContext.getBean<MeterOutboxRepository>()
+                .findAll()
                 .count { it.status != MeterOutboxStatus.PUBLISHED.name }
                 .toLong()
         }
@@ -262,61 +302,62 @@ class UsageBillingMicroserviceFixture(
 
     fun meterOutboxState(eventId: UUID): MeterOutboxState =
         meterTransaction {
-            meterContext.getBean(MeterOutboxRepository::class.java).findAll()
+            meterContext.getBean<MeterOutboxRepository>()
+                .findAll()
                 .single { it.eventId == eventId }
                 .let { MeterOutboxState(MeterOutboxStatus.valueOf(it.status), it.attempt) }
         }
 
     fun priceEvidence(tenantId: String, meterCode: String): PriceEvidence? =
         usageTransactionNullable {
-            usageContext.getBean(UsageAcceptanceJournal::class.java)
+            usageContext.getBean<UsageAcceptanceJournal>()
                 .priceEvidence(tenantId, meterCode, "USD")
         }
 
     fun billingHasPriceEvidence(tenantId: String, meterCode: String): Boolean =
         transaction(billingContext) {
-            billingContext.getBean(BillingInboxJournal::class.java)
+            billingContext.getBean<BillingInboxJournal>()
                 .priceEvidence(tenantId, meterCode, "USD") != null
         }
 
     fun chargeCount(): Long =
         transaction(billingContext) {
-            billingContext.getBean(BillingChargeRepository::class.java).findAll().count().toLong()
+            billingContext.getBean<BillingChargeRepository>().findAll().count().toLong()
         }
 
     fun chargeAmounts(): List<BigDecimal> =
         transaction(billingContext) {
-            billingContext.getBean(BillingChargeRepository::class.java).findAll().map { it.amount }
+            billingContext.getBean<BillingChargeRepository>().findAll().map { it.amount }
         }
 
     fun latestBillingEventId(): UUID =
         transaction(billingContext) {
-            billingContext.getBean(BillingOutboxRepository::class.java).findAll().last().eventId
+            billingContext.getBean<BillingOutboxRepository>().findAll().last().eventId
         }
 
     fun invoiceLineCount(): Long =
         transaction(invoiceContext) {
-            invoiceContext.getBean(InvoiceLineRepository::class.java).findAll().count().toLong()
+            invoiceContext.getBean<InvoiceLineRepository>().findAll().count().toLong()
         }
 
     fun invoiceLines(): List<InvoiceLine> =
         transaction(invoiceContext) {
-            invoiceContext.getBean(InvoiceJournal::class.java).lines
+            invoiceContext.getBean<InvoiceJournal>().lines
         }
 
     fun queryAppliedEventCount(): Int =
         transaction(queryContext) {
-            queryContext.getBean(QueryProjectionJournal::class.java).readModelEventIds.size
+            queryContext.getBean<QueryProjectionJournal>().readModelEventIds.size
         }
 
     fun queryRecoverySnapshot(): QueryRecoverySnapshot =
         transaction(queryContext) {
-            queryContext.getBean(QueryRecoveryService::class.java).snapshot()
+            queryContext.getBean<QueryRecoveryService>().snapshot()
         }
 
     fun redriveQueryEvent(eventId: UUID): Boolean =
-        queryContext.getBean(QueryRecoveryService::class.java)
-            .redrive(eventId, "composition-operator", "correlation-$eventId")
+        queryContext.getBean<QueryRecoveryService>()
+            .redrive(eventId = eventId, "composition-operator", "correlation-$eventId")
             .requested
 
     fun queryTenantAccessAllowed(authenticationTenant: String, targetTenant: String): Boolean {
@@ -326,7 +367,7 @@ class UsageBillingMicroserviceFixture(
             listOf(SimpleGrantedAuthority("TENANT_$authenticationTenant")),
         )
         return try {
-            queryContext.getBean(QueryTenantAuthorizer::class.java).requireAccess(authentication, targetTenant)
+            queryContext.getBean<QueryTenantAuthorizer>().requireAccess(authentication, targetTenant)
             true
         } catch (_: AccessDeniedException) {
             false
@@ -340,12 +381,14 @@ class UsageBillingMicroserviceFixture(
         if (::billingContext.isInitialized) billingContext.close()
         if (::usageContext.isInitialized) usageContext.close()
         if (::meterContext.isInitialized) meterContext.close()
+
         queryDatabase.stop()
         invoiceDatabase.stop()
         billingDatabase.stop()
         usageDatabase.stop()
         meterDatabase.stop()
         kafka.stop()
+
         if (brokerPathProxy) {
             toxiproxy.stop()
             brokerPathNetwork.close()
@@ -354,8 +397,12 @@ class UsageBillingMicroserviceFixture(
 
     private fun createTopics() {
         val properties = Properties().also { it["bootstrap.servers"] = brokerBootstrapServers() }
+
         Admin.create(properties).use { admin ->
-            admin.createTopics(TOPICS.map { NewTopic(it, 1, 1.toShort()) }).all().get()
+            val topics = TOPICS.map {
+                NewTopic(it, 1, 1.toShort())
+            }
+            admin.createTopics(topics).all().get()
         }
     }
 
@@ -369,25 +416,24 @@ class UsageBillingMicroserviceFixture(
         } else {
             arrayOf(application)
         }
-        return SpringApplicationBuilder(*sources)
-            .properties(
-                "server.port=0",
-                "spring.datasource.url=${database.jdbcUrl}",
-                "spring.datasource.username=${database.username}",
-                "spring.datasource.password=${database.password}",
-                "usage-billing.$service.kafka.bootstrap-servers=${brokerBootstrapServers()}",
-                "usage-billing.$service.kafka.listener-auto-startup=true",
-                "management.datadog.metrics.export.enabled=false",
-                "spring.kafka.producer.properties.delivery.timeout.ms=5000",
-                "spring.kafka.producer.properties.request.timeout.ms=1000",
-                "spring.kafka.producer.properties.max.block.ms=3000",
-            )
-            .run()
+        return SpringApplicationBuilder(*sources).properties(
+            "server.port=0",
+            "spring.datasource.url=${database.jdbcUrl}",
+            "spring.datasource.username=${database.username}",
+            "spring.datasource.password=${database.password}",
+            "usage-billing.$service.kafka.bootstrap-servers=${brokerBootstrapServers()}",
+            "usage-billing.$service.kafka.listener-auto-startup=true",
+            "management.datadog.metrics.export.enabled=false",
+            "spring.kafka.producer.properties.delivery.timeout.ms=5000",
+            "spring.kafka.producer.properties.request.timeout.ms=1000",
+            "spring.kafka.producer.properties.max.block.ms=3000",
+        ).run()
     }
 
     private fun startBrokerPathProxy() {
         if (!brokerPathProxy) return
         toxiproxy.start()
+
         brokerPath = ToxiproxyClient(toxiproxy.host, toxiproxy.controlPort).createProxy(
             "kafka-broker-path",
             "0.0.0.0:$TOXIPROXY_LISTEN_PORT",
@@ -405,7 +451,7 @@ class UsageBillingMicroserviceFixture(
     private fun postgresServer(): PostgreSQLServer =
         PostgreSQLServer(image = "postgres", tag = "16-alpine")
 
-    private fun <T : Any> meterTransaction(block: () -> T): T =
+    private fun <T: Any> meterTransaction(block: () -> T): T =
         transaction(meterContext, block)
 
     @Suppress("UNCHECKED_CAST")
@@ -414,14 +460,17 @@ class UsageBillingMicroserviceFixture(
 
     private fun <T> usageTransactionNullable(block: () -> T?): T? {
         var result: T? = null
-        TransactionTemplate(usageContext.getBean(PlatformTransactionManager::class.java)).executeWithoutResult {
-            result = block()
-        }
+        TransactionTemplate(usageContext.getBean<PlatformTransactionManager>())
+            .executeWithoutResult {
+                result = block()
+            }
         return result
     }
 
-    private fun <T : Any> transaction(context: ConfigurableApplicationContext, block: () -> T): T =
-        requireNotNull(TransactionTemplate(context.getBean(PlatformTransactionManager::class.java)).execute { block() })
+    private fun <T: Any> transaction(context: ConfigurableApplicationContext, block: () -> T): T =
+        TransactionTemplate(context.getBean<PlatformTransactionManager>())
+            .execute { block() }
+            .shouldNotBeNull()
 
     private fun envelope(event: WireEvent): String =
         Jackson.defaultJsonMapper.writeValueAsString(
@@ -451,26 +500,4 @@ class UsageBillingMicroserviceFixture(
         val schemaVersion: Int = 1,
         val payloadDigest: String = digestOf(payload),
     )
-
-    private companion object {
-        const val KAFKA_NETWORK_ALIAS = "kafka"
-        const val KAFKA_PROXY_TARGET_PORT = 19092
-        const val TOXIPROXY_LISTEN_PORT = 8666
-        const val CUT_UPSTREAM = "cut-kafka-upstream"
-        const val CUT_DOWNSTREAM = "cut-kafka-downstream"
-        const val METER_TOPIC = "meter.events.v1"
-        const val USAGE_TOPIC = "usage.events.v1"
-        const val INVOICE_TOPIC = "invoice.events.v1"
-        val TOPICS = listOf(
-            METER_TOPIC,
-            USAGE_TOPIC,
-            BILLING_TOPIC,
-            INVOICE_TOPIC,
-        )
-
-        const val BILLING_TOPIC = "billing.events.v1"
-
-        fun digestOf(value: String): String =
-            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
-    }
 }

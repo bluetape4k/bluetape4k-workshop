@@ -28,7 +28,7 @@ class FencedInventoryService(
     private val fencedResources: FencedResources,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     fun deduct(
         id: Long,
@@ -47,13 +47,17 @@ class FencedInventoryService(
         try {
             val current = store.currentStock(id)
             if (current < qty) return InsufficientStock(qty, current)
+
             return fencedResources.forResource(id).apply(token) {
                 val remaining = store.applyChange(id, -qty)
                 Success(remaining, token)
             } ?: Rejected(token)
         } finally {
-            runCatching { fLock.unlock() }
-                .onFailure { log.warn(it) { "Fenced unlock failed (lease may have expired): $lockName" } }
+            runCatching {
+                fLock.unlock()
+            }.onFailure {
+                log.warn(it) { "Fenced unlock failed (lease may have expired): $lockName" }
+            }
         }
     }
 }

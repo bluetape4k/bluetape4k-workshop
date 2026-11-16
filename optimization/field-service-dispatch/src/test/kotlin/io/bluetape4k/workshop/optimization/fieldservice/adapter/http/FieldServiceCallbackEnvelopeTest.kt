@@ -4,7 +4,13 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.concurrent.get
 import io.bluetape4k.junit5.concurrency.TestingExecutors
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.fieldservice.adapter.fake.FieldServicePlanningFixture
 import io.bluetape4k.workshop.optimization.fieldservice.adapter.fake.FieldServicePlanningFixtureMetadata
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ConstraintReasonCode
@@ -14,12 +20,19 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ProviderRequestId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VersionVector
 import org.junit.jupiter.api.Test
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.Callable
 import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 class FieldServiceCallbackEnvelopeTest {
+
+    companion object: KLogging() {
+        private const val CALLBACK_TIMEOUT_SECONDS = 2L
+        private const val TERMINATION_TIMEOUT_SECONDS = 5L
+    }
+
     private val canonicalizer = FieldServiceCanonicalizer()
     private val signatureVerifier = FixtureFieldServiceSignatureVerifier()
 
@@ -39,17 +52,17 @@ class FieldServiceCallbackEnvelopeTest {
         }
         assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
-                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0,"secret":"token=abc"},"constraintExplanations":[]}""".toByteArray(),
+                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0,"secret":"token=abc"},"constraintExplanations":[]}""".toUtf8Bytes(),
             )
         }
         assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
-                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"raw provider address"}]}""".toByteArray(),
+                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"raw provider address"}]}""".toUtf8Bytes(),
             )
         }
         assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
-                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":NaN},"constraintExplanations":[]}""".toByteArray(),
+                """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":NaN},"constraintExplanations":[]}""".toUtf8Bytes(),
             )
         }
     }
@@ -78,12 +91,15 @@ class FieldServiceCallbackEnvelopeTest {
         val adapter = adapter(state)
         val firstBody = successBody()
         val first = FieldServiceCallbackEnvelope.parse(firstBody)
+
         adapter.acceptCallback(first, firstBody, sign(firstBody)).decision shouldBeEqualTo
-            FieldServiceCallbackDecision.ACCEPTED
+                FieldServiceCallbackDecision.ACCEPTED
 
         val staleRevisionBody = successBody(eventId = "event-stale", providerRevision = 0)
         val staleRevision = FieldServiceCallbackEnvelope.parse(staleRevisionBody)
         val staleResult = adapter.acceptCallback(staleRevision, staleRevisionBody, sign(staleRevisionBody))
+
+        log.debug { "staleResult=$staleResult" }
         staleResult.decision shouldBeEqualTo FieldServiceCallbackDecision.STALE_REVISION
         staleResult.auditOnly.shouldBeTrue()
         state.acceptedCount() shouldBeEqualTo 1
@@ -92,6 +108,8 @@ class FieldServiceCallbackEnvelopeTest {
         val staleGenerationBody = successBody(eventId = "event-generation-stale", requestGeneration = 0)
         val staleGeneration = FieldServiceCallbackEnvelope.parse(staleGenerationBody)
         val generationResult = adapter.acceptCallback(staleGeneration, staleGenerationBody, sign(staleGenerationBody))
+
+        log.debug { "generationResult=$generationResult" }
         generationResult.decision shouldBeEqualTo FieldServiceCallbackDecision.STALE_REQUEST_GENERATION
         generationResult.stateChanged.shouldBeFalse()
         state.acceptedCount() shouldBeEqualTo 1
@@ -107,8 +125,10 @@ class FieldServiceCallbackEnvelopeTest {
         val envelope = FieldServiceCallbackEnvelope.parse(mismatched)
         val result = adapter.acceptCallback(envelope, mismatched, sign(mismatched))
 
+        log.debug { "result=$result" }
         result.decision shouldBeEqualTo FieldServiceCallbackDecision.PROVIDER_REQUEST_MISMATCH
         result.stateChanged.shouldBeFalse()
+
         state.acceptedCount() shouldBeEqualTo 0
         state.auditCount(FieldServiceCallbackDecision.PROVIDER_REQUEST_MISMATCH) shouldBeEqualTo 0
     }
@@ -123,6 +143,7 @@ class FieldServiceCallbackEnvelopeTest {
 
         val result = adapter.acceptCallback(envelope, body, sign(body))
 
+        log.debug { "result=$result" }
         result.decision shouldBeEqualTo FieldServiceCallbackDecision.UNKNOWN_PROVIDER
         result.stateChanged.shouldBeFalse()
         state.acceptedCount() shouldBeEqualTo 0
@@ -136,14 +157,14 @@ class FieldServiceCallbackEnvelopeTest {
         val firstBody = successBody()
         val first = FieldServiceCallbackEnvelope.parse(firstBody)
         adapter.acceptCallback(first, firstBody, sign(firstBody)).decision shouldBeEqualTo
-            FieldServiceCallbackDecision.ACCEPTED
+                FieldServiceCallbackDecision.ACCEPTED
 
         adapter.acceptCallback(first, firstBody, sign(firstBody)).decision shouldBeEqualTo
-            FieldServiceCallbackDecision.DUPLICATE
+                FieldServiceCallbackDecision.DUPLICATE
         val changedBody = successBody(providerRevision = 2, scoreHardScore = 11)
         val changed = FieldServiceCallbackEnvelope.parse(changedBody)
         adapter.acceptCallback(changed, changedBody, sign(changedBody)).decision shouldBeEqualTo
-            FieldServiceCallbackDecision.EVENT_KEY_REUSED
+                FieldServiceCallbackDecision.EVENT_KEY_REUSED
         state.acceptedCount() shouldBeEqualTo 1
     }
 
@@ -159,24 +180,27 @@ class FieldServiceCallbackEnvelopeTest {
         try {
             val tasks = (1..2).map {
                 Callable {
-                    startGate.await(CALLBACK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    startGate.await(CALLBACK_TIMEOUT_SECONDS.seconds)
                     adapter.acceptCallback(envelope, body, sign(body)).decision
                 }
             }
-            val results = executor.invokeAll(tasks, CALLBACK_TIMEOUT_SECONDS, TimeUnit.SECONDS).map { future ->
-                future.isDone.shouldBeTrue()
-                future.isCancelled.shouldBeFalse()
-                future.get(CALLBACK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            }
+            val results = executor
+                .invokeAll(tasks, CALLBACK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .map { future ->
+                    future.isDone.shouldBeTrue()
+                    future.isCancelled.shouldBeFalse()
+                    future.get(CALLBACK_TIMEOUT_SECONDS.seconds)
+                }
+                .onEach { log.debug { "result=$it" } }
 
             results.count { it == FieldServiceCallbackDecision.ACCEPTED } shouldBeEqualTo 1
             results.count { it == FieldServiceCallbackDecision.DUPLICATE } shouldBeEqualTo 1
             state.acceptedCount() shouldBeEqualTo 1
         } finally {
             executor.shutdown()
-            if (!executor.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            if (!executor.awaitTermination(TERMINATION_TIMEOUT_SECONDS.seconds)) {
                 executor.shutdownNow()
-                executor.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS).shouldBeTrue()
+                executor.awaitTermination(TERMINATION_TIMEOUT_SECONDS.seconds).shouldBeTrue()
             }
         }
     }
@@ -198,7 +222,7 @@ class FieldServiceCallbackEnvelopeTest {
     fun `submission mapping keeps only the planning contract fields`() {
         var received: PlanningContractsSubmission? = null
         val adapter = PlanningContractsHttpAdapter(
-            transport = PlanningContractsTransport { request ->
+            transport = { request ->
                 received = request
                 PlanningContractsSubmissionResult(ProviderRequestId("provider-request"))
             },
@@ -223,7 +247,7 @@ class FieldServiceCallbackEnvelopeTest {
         state: InMemoryFieldServiceCallbackState,
         onSubmit: () -> Unit = {},
     ) = PlanningContractsHttpAdapter(
-        transport = PlanningContractsTransport {
+        transport = {
             onSubmit()
             PlanningContractsSubmissionResult(ProviderRequestId("provider-request"))
         },
@@ -244,7 +268,7 @@ class FieldServiceCallbackEnvelopeTest {
     private fun sign(body: ByteArray): String =
         signatureVerifier.sign(FieldServiceProvider.FAKE, canonicalizer.canonicalBytes(body))
 
-    private fun sign(body: String): String = sign(body.toByteArray())
+    private fun sign(body: String): String = sign(body.toUtf8Bytes())
 
     private fun successBody(
         provider: String = "FAKE",
@@ -254,10 +278,7 @@ class FieldServiceCallbackEnvelopeTest {
         requestGeneration: Long = 1,
         scoreHardScore: Long = 10,
         extraField: String = "",
-    ) = """{"provider":"$provider","eventId":"$eventId","planningRequestId":"request-1","providerRequestId":"$providerRequestId","providerRevision":$providerRevision,"requestGeneration":$requestGeneration,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":$scoreHardScore,"softScore":-2,"assignedCount":1,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"TIME_WINDOW"}]$extraField}""".toByteArray()
+    ) =
+        """{"provider":"$provider","eventId":"$eventId","planningRequestId":"request-1","providerRequestId":"$providerRequestId","providerRevision":$providerRevision,"requestGeneration":$requestGeneration,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":$scoreHardScore,"softScore":-2,"assignedCount":1,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"TIME_WINDOW"}]$extraField}""".toUtf8Bytes()
 
-    companion object {
-        private const val CALLBACK_TIMEOUT_SECONDS = 2L
-        private const val TERMINATION_TIMEOUT_SECONDS = 5L
-    }
 }

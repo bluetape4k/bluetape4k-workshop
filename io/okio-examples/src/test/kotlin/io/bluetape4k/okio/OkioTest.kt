@@ -1,31 +1,27 @@
 package io.bluetape4k.okio
 
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8Bytes
-import net.datafaker.Faker
 import okio.Buffer
 import okio.blackholeSink
 import okio.sink
 import okio.source
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.util.*
 
 @TempFolderTest
 class OkioTest: AbstractOkioTest() {
 
-    companion object: KLogging() {
-        val faker = Faker(Locale.getDefault())
-    }
+    companion object: KLogging()
 
     private lateinit var temp: TempFolder
 

@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.leader.jobsafety.persistence
 
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.requirePositiveDuration
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requirePositiveNumber
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -13,7 +15,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sql.DataSource
 
-class JobSafetyDatabasePermitUnavailable : IllegalStateException("job_safety_database_permit_unavailable")
+class JobSafetyDatabasePermitUnavailable: IllegalStateException("job_safety_database_permit_unavailable")
 
 class JobSafetyJdbcTransaction internal constructor(
     val exposed: JdbcTransaction,
@@ -24,19 +26,21 @@ class JobSafetyJdbcTransaction internal constructor(
 class JobSafetyJdbcExecutor(
     dataSource: DataSource,
     foregroundPermits: Int = 8,
-    private val permitTimeout: Duration = Duration.ofMillis(250),
-) : AutoCloseable {
+    private val permitTimeout: Duration = 250.millis(),
+): AutoCloseable {
+
+    companion object: KLogging()
+
     private val permits = Semaphore(foregroundPermits, true)
     private val closed = AtomicBoolean()
-    private val database =
-        Database.connect(
-            datasource = dataSource,
-            databaseConfig = DatabaseConfig { defaultMaxAttempts = 1 },
-        )
+    private val database = Database.connect(
+        datasource = dataSource,
+        databaseConfig = DatabaseConfig { defaultMaxAttempts = 1 },
+    )
 
     init {
         foregroundPermits.requirePositiveNumber("foregroundPermits")
-        permitTimeout.requireGt(Duration.ZERO, "permitTimeout")
+        permitTimeout.requirePositiveDuration("permitTimeout")
     }
 
     fun <T> transaction(block: JobSafetyJdbcTransaction.() -> T): T {

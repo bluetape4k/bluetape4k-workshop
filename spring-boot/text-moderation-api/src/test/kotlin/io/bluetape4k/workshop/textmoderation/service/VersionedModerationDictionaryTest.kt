@@ -6,19 +6,27 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.awaitTermination
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.tokenizer.utils.DictionaryVersion
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /** moderation blockword의 copy-on-write, bounded history, safe metadata 계약을 검증합니다. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class VersionedModerationDictionaryTest {
+
+    companion object: KLogging()
 
     @Test
     fun `blockword를 reload하고 bounded history 순서로 rollback한다`() {
@@ -31,7 +39,10 @@ class VersionedModerationDictionaryTest {
         dictionary.currentMetadata().version shouldBeEqualTo version(4)
         dictionary.rollback().version shouldBeEqualTo version(3)
         dictionary.rollback().version shouldBeEqualTo version(2)
-        assertFailsWith<IllegalStateException> { dictionary.rollback() }
+
+        assertFailsWith<IllegalStateException> {
+            dictionary.rollback()
+        }
     }
 
     @Test
@@ -78,7 +89,9 @@ class VersionedModerationDictionaryTest {
             wordCount = 1,
             totalCharacters = 5,
         )
-        assertFailsWith<IllegalStateException> { dictionary.rollback() }
+        assertFailsWith<IllegalStateException> {
+            dictionary.rollback()
+        }
     }
 
     @Test
@@ -88,6 +101,7 @@ class VersionedModerationDictionaryTest {
             dictionary.reload(version(2), listOf("private-blockword"))
         }.joinToString("\n")
 
+        log.debug { "logs=$logs" }
         logs shouldContain "operation=reload"
         logs shouldContain "previousRevision=1"
         logs shouldContain "revision=2"
@@ -106,21 +120,23 @@ class VersionedModerationDictionaryTest {
             val reload = executor.submit<ModerationDictionaryMetadata> {
                 dictionary.reload(version(2)) {
                     loaderStarted.countDown()
-                    releaseLoader.await(5, TimeUnit.SECONDS)
+                    releaseLoader.await(5.seconds)
                     listOf("beta")
                 }
             }
-            loaderStarted.await(5, TimeUnit.SECONDS) shouldBeEqualTo true
+            loaderStarted.await(5.seconds).shouldBeTrue()
 
             dictionary.currentMetadata().version shouldBeEqualTo version(1)
 
             releaseLoader.countDown()
-            val updated = reload.get(5, TimeUnit.SECONDS)
+            val updated = reload.get(5.seconds)
+
+            log.debug { "updated=$updated" }
             updated.version shouldBeEqualTo version(2)
         } finally {
             releaseLoader.countDown()
             executor.shutdownNow()
-            executor.awaitTermination(5, TimeUnit.SECONDS)
+            executor.awaitTermination(5.seconds)
         }
     }
 

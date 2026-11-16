@@ -2,13 +2,13 @@
 
 package io.bluetape4k.workshop.commerce.metering.persistence
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestamp
 
-object CommandReceipts : UUIDTable("metering_command_receipt", "receipt_id") {
+object CommandReceipts: TimebasedUUIDTable("metering_command_receipt", "receipt_id") {
     val tenantId = varchar("tenant_id", 64)
     val operation = varchar("operation", 64)
     val keyDigest = varchar("key_digest", 64)
@@ -29,7 +29,7 @@ object CommandReceipts : UUIDTable("metering_command_receipt", "receipt_id") {
     }
 }
 
-object Meters : UUIDTable("metering_meter", "meter_id") {
+object Meters: TimebasedUUIDTable("metering_meter", "meter_id") {
     val tenantId = varchar("tenant_id", 64)
     val meterCode = varchar("meter_code", 64)
     val unit = varchar("unit", 32)
@@ -42,7 +42,7 @@ object Meters : UUIDTable("metering_meter", "meter_id") {
     }
 }
 
-object PricingSchedules : UUIDTable("metering_pricing_schedule", "schedule_id") {
+object PricingSchedules: TimebasedUUIDTable("metering_pricing_schedule", "schedule_id") {
     val tenantId = varchar("tenant_id", 64)
     val meterId = reference("meter_id", Meters, onDelete = ReferenceOption.RESTRICT)
     val currency = varchar("currency", 3)
@@ -53,7 +53,7 @@ object PricingSchedules : UUIDTable("metering_pricing_schedule", "schedule_id") 
     }
 }
 
-object PriceVersions : UUIDTable("metering_price_version", "price_version_id") {
+object PriceVersions: TimebasedUUIDTable("metering_price_version", "price_version_id") {
     val tenantId = varchar("tenant_id", 64)
     val scheduleId = reference("schedule_id", PricingSchedules, onDelete = ReferenceOption.RESTRICT)
     val meterId = reference("meter_id", Meters, onDelete = ReferenceOption.RESTRICT)
@@ -69,7 +69,7 @@ object PriceVersions : UUIDTable("metering_price_version", "price_version_id") {
     }
 }
 
-object UsageEvents : UUIDTable("metering_usage_event", "usage_event_id") {
+object UsageEvents: TimebasedUUIDTable("metering_usage_event", "usage_event_id") {
     val tenantId = varchar("tenant_id", 64)
     val sourceSystem = varchar("source_system", 64)
     val sourceEventId = varchar("source_event_id", 128)
@@ -88,7 +88,7 @@ object UsageEvents : UUIDTable("metering_usage_event", "usage_event_id") {
     }
 }
 
-object BillingCalendars : UUIDTable("metering_billing_calendar", "calendar_id") {
+object BillingCalendars: TimebasedUUIDTable("metering_billing_calendar", "calendar_id") {
     val tenantId = varchar("tenant_id", 64)
     val currency = varchar("currency", 3)
     val createdAt = timestamp("created_at")
@@ -98,7 +98,7 @@ object BillingCalendars : UUIDTable("metering_billing_calendar", "calendar_id") 
     }
 }
 
-object BillingPeriods : UUIDTable("metering_billing_period", "period_id") {
+object BillingPeriods: TimebasedUUIDTable("metering_billing_period", "period_id") {
     val tenantId = varchar("tenant_id", 64)
     val calendarId = reference("calendar_id", BillingCalendars, onDelete = ReferenceOption.RESTRICT)
     val currency = varchar("currency", 3)
@@ -119,7 +119,7 @@ object BillingPeriods : UUIDTable("metering_billing_period", "period_id") {
     }
 }
 
-object CloseRuns : UUIDTable("metering_close_run", "run_id") {
+object CloseRuns: TimebasedUUIDTable("metering_close_run", "run_id") {
     val tenantId = varchar("tenant_id", 64)
     val periodId = reference("period_id", BillingPeriods, onDelete = ReferenceOption.RESTRICT)
     val cutoffReceivedAt = timestamp("cutoff_received_at")
@@ -140,7 +140,7 @@ object CloseRuns : UUIDTable("metering_close_run", "run_id") {
     }
 }
 
-object LedgerEntries : UUIDTable("metering_ledger_entry", "ledger_entry_id") {
+object LedgerEntries: TimebasedUUIDTable("metering_ledger_entry", "ledger_entry_id") {
     val tenantId = varchar("tenant_id", 64)
     val postingPeriodId = reference("posting_period_id", BillingPeriods, onDelete = ReferenceOption.RESTRICT)
     val servicePeriodId = reference("service_period_id", BillingPeriods, onDelete = ReferenceOption.RESTRICT)
@@ -169,7 +169,7 @@ object LedgerEntries : UUIDTable("metering_ledger_entry", "ledger_entry_id") {
     }
 }
 
-object Invoices : UUIDTable("metering_invoice", "invoice_id") {
+object Invoices: TimebasedUUIDTable("metering_invoice", "invoice_id") {
     val tenantId = varchar("tenant_id", 64)
     val periodId = reference("period_id", BillingPeriods, onDelete = ReferenceOption.RESTRICT)
     val currency = varchar("currency", 3)
@@ -182,7 +182,7 @@ object Invoices : UUIDTable("metering_invoice", "invoice_id") {
     }
 }
 
-object InvoiceLines : UUIDTable("metering_invoice_line", "invoice_line_id") {
+object InvoiceLines: TimebasedUUIDTable("metering_invoice_line", "invoice_line_id") {
     val tenantId = varchar("tenant_id", 64)
     val invoiceId = reference("invoice_id", Invoices, onDelete = ReferenceOption.RESTRICT)
     val meterId = reference("meter_id", Meters, onDelete = ReferenceOption.RESTRICT)
@@ -197,7 +197,7 @@ object InvoiceLines : UUIDTable("metering_invoice_line", "invoice_line_id") {
     }
 }
 
-object InvoiceLineEntries : UUIDTable("metering_invoice_line_entry", "mapping_id") {
+object InvoiceLineEntries: TimebasedUUIDTable("metering_invoice_line_entry", "mapping_id") {
     val tenantId = varchar("tenant_id", 64)
     val invoiceLineId = reference("invoice_line_id", InvoiceLines, onDelete = ReferenceOption.RESTRICT)
     val ledgerEntryId = reference("ledger_entry_id", LedgerEntries, onDelete = ReferenceOption.RESTRICT)
@@ -208,7 +208,7 @@ object InvoiceLineEntries : UUIDTable("metering_invoice_line_entry", "mapping_id
     }
 }
 
-object ReconciliationRuns : UUIDTable("metering_reconciliation_run", "reconciliation_run_id") {
+object ReconciliationRuns: TimebasedUUIDTable("metering_reconciliation_run", "reconciliation_run_id") {
     val tenantId = varchar("tenant_id", 64)
     val scope = varchar("scope", 128)
     val startedAt = timestamp("started_at")
@@ -221,7 +221,7 @@ object ReconciliationRuns : UUIDTable("metering_reconciliation_run", "reconcilia
     }
 }
 
-object ReconciliationFindings : UUIDTable("metering_reconciliation_finding", "finding_id") {
+object ReconciliationFindings: TimebasedUUIDTable("metering_reconciliation_finding", "finding_id") {
     val tenantId = varchar("tenant_id", 64)
     val runId = reference("reconciliation_run_id", ReconciliationRuns, onDelete = ReferenceOption.RESTRICT)
     val findingType = varchar("finding_type", 64)

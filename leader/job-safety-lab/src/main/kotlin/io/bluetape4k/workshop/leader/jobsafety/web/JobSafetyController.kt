@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.audit.JobSafetyAuditReport
 import io.bluetape4k.workshop.leader.jobsafety.audit.JobSafetyAuditReportPort
 import io.bluetape4k.workshop.leader.jobsafety.effect.EffectOperations
@@ -20,6 +21,8 @@ class JobSafetyController(
     private val effects: EffectOperations,
     private val audit: JobSafetyAuditReportPort,
 ) {
+    companion object: KLogging()
+
     @GetMapping("/scenarios")
     fun catalog(): List<JobSafetyScenario> = JobSafetyScenario.entries
 

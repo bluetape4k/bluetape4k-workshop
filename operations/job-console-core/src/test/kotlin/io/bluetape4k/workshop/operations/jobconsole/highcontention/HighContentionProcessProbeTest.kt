@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import org.junit.jupiter.api.Tag
@@ -18,17 +20,21 @@ import java.util.concurrent.locks.LockSupport
 @Tag("process-probe")
 class HighContentionProcessProbeTest {
 
+    private companion object: KLogging() {
+        const val POLL_INTERVAL_MILLIS = 25L
+    }
+
     @Test
     fun `worker publishes its pid starts one descendant and blocks for parent cleanup`() {
-        val probeRoot = Path.of(
-            System.getProperty("highContentionProbeRoot").requireNotNull("highContentionProbeRoot"),
-        ).toRealPath(NOFOLLOW_LINKS)
+        val probeRoot = Path.of(System.getProperty("highContentionProbeRoot").shouldNotBeNull())
+            .toRealPath(NOFOLLOW_LINKS)
+
         val deadlineEpochMillis = System.getProperty("highContentionProbeDeadlineEpochMillis")
-            .requireNotNull("highContentionProbeDeadlineEpochMillis")
+            .shouldNotBeNull()
             .toLong()
             .requirePositiveNumber("highContentionProbeDeadlineEpochMillis")
-        val processOwner = System.getProperty("highContentionProcessOwner")
-            .requireNotNull("highContentionProcessOwner")
+
+        val processOwner = System.getProperty("highContentionProcessOwner").shouldNotBeNull()
 
         val workerPid = ProcessHandle.current().pid()
         writeCreateNewAndForce(probeRoot.resolve("worker.pid"), "$workerPid\n")
@@ -96,7 +102,4 @@ class HighContentionProcessProbeTest {
         HighContentionArtifactPaths.forceDirectory(path.parent)
     }
 
-    private companion object {
-        const val POLL_INTERVAL_MILLIS = 25L
-    }
 }

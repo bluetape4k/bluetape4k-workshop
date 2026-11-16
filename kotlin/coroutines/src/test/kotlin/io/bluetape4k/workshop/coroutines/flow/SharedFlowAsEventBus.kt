@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 class SharedFlowAsEventBus {
 
@@ -108,21 +109,17 @@ class SharedFlowAsEventBus {
 
         val job = launch(Dispatchers.Default) {
             // 이벤트를 발행합니다.
-            delay(100)
+            delay(100.milliseconds)
             eventBus.sendEvent(Event.EventA)
-            delay(100)
+            delay(100.milliseconds)
             eventBus.sendEvent(Event.EventB)
-            delay(100)
-            eventBus.sendEvent(
-                Event.EventC(
-                    42
-                )
-            )
+            delay(100.milliseconds)
+            eventBus.sendEvent(Event.EventC(42))
         }
 
         job.join()
         // Wait for the listeners to process the events
-        delay(500)
+        delay(500.milliseconds)
 
         coroutineContext.cancelChildren()
     }

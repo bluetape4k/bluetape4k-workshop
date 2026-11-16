@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.service
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
@@ -27,7 +28,6 @@ import kotlinx.coroutines.flow.emptyFlow
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
-import io.bluetape4k.codec.Base58
 
 internal fun testProperties(
     publicBaseUrl: String = "http://localhost:8080/public-images",
@@ -63,7 +63,7 @@ internal data class RecordedUpload(
 
 internal class RecordingImageStorage(
     private val failOnKeyPart: String? = null,
-) : ImageStorage {
+): ImageStorage {
 
     val uploads = mutableListOf<RecordedUpload>()
     val deletes = mutableListOf<ImageObjectKey>()
@@ -132,7 +132,7 @@ internal class RecordingMetadataImageStorage(
             lastModified = Instant.EPOCH,
         )
     },
-) : ImageStorage by delegate, ImageObjectMetadataReader {
+): ImageStorage by delegate, ImageObjectMetadataReader {
 
     val uploads: MutableList<RecordedUpload>
         get() = delegate.uploads
@@ -168,7 +168,7 @@ internal class RecordingMetadataImageStorage(
 internal class StubImagePersistenceService(
     private val startResultFn: (() -> JobStartResult)? = null,
     private val detailResponseFn: ((String) -> ImageAssetDetailResponse?)? = null,
-) : ImagePersistenceService {
+): ImagePersistenceService {
 
     val events = mutableListOf<RecordedEvent>()
 
@@ -201,7 +201,7 @@ internal class StubImagePersistenceService(
 
 internal class StubDerivativeProcessor(
     private val keyFactory: ImageKeyFactory,
-) : DerivativeProcessor {
+): DerivativeProcessor {
 
     override suspend fun process(bytes: ByteArray, imageId: String): ProcessedImageSet =
         ProcessedImageSet(

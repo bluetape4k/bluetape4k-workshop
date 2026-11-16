@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.shared.voucher.NormalizedVoucherCampaignResult
 import io.bluetape4k.workshop.commerce.shared.voucher.NormalizedVoucherAllocationResult
@@ -15,7 +16,7 @@ internal class OperatorContractAccess private constructor(
     val secret: String,
     val guard: String,
 ) {
-    companion object {
+    companion object: KLogging() {
         operator fun invoke(
             origin: String,
             secret: String,
@@ -89,6 +90,7 @@ internal fun WebTestClient.RequestHeadersSpec<*>.assertNormalizedCampaign(
     val response = exchange().expectStatus().isEqualTo(expected.status)
     expected.replayed?.let { response.expectHeader().valueEquals("Idempotency-Replayed", it.toString()) }
     val body = response.expectBody()
+
     expected.code?.let { body.jsonPath("$.code").isEqualTo(it) }
     expected.state?.let { body.jsonPath("$.state").isEqualTo(it) }
     expected.revision?.let { body.jsonPath("$.revision").isEqualTo(it) }
@@ -106,10 +108,12 @@ internal fun WebTestClient.RequestHeadersSpec<*>.assertNormalizedAllocation(
     val response = exchange().expectStatus().isEqualTo(expected.status)
     expected.replayed?.let { response.expectHeader().valueEquals("Idempotency-Replayed", it.toString()) }
     val body = response.expectBody()
+
     expected.code?.let { body.jsonPath("$.code").isEqualTo(it) }
     expected.state?.let { body.jsonPath("$.state").isEqualTo(it) }
     expected.revision?.let { body.jsonPath("$.revision").isEqualTo(it) }
     expected.policyVersion?.let { body.jsonPath("$.policyVersion").isEqualTo(it) }
+
     if (expected.hasCode == true) {
         body.jsonPath("$.code").isNotEmpty
     }

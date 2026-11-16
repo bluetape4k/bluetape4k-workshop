@@ -20,7 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(VertxExtension::class)
 abstract class AbstractSqlClientTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
 
         val faker = Fakers.faker
 

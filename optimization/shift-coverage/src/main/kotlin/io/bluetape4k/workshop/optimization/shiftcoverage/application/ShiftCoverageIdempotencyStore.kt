@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireMatches
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.IdempotencyKey
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -18,7 +20,12 @@ data class IdempotencyRecord(
     val response: String? = null,
 )
 
-enum class IdempotencyClaimKind { NEW, REPLAY, REUSED, IN_PROGRESS }
+enum class IdempotencyClaimKind {
+    NEW,
+    REPLAY,
+    REUSED,
+    IN_PROGRESS
+}
 
 data class IdempotencyClaim(val kind: IdempotencyClaimKind, val response: String? = null)
 
@@ -32,29 +39,35 @@ interface ShiftCoverageIdempotencyPort {
 /** DB unique key와 동일한 semantics를 재현하는 restartable in-memory seam입니다. */
 class ShiftCoverageIdempotencyStore(
     private val records: MutableMap<IdempotencyNamespace, IdempotencyRecord> = mutableMapOf(),
-) : ShiftCoverageIdempotencyPort {
+): ShiftCoverageIdempotencyPort {
+
+    companion object: KLogging()
+
     private val lock = ReentrantLock()
 
-    override fun begin(namespace: IdempotencyNamespace, fingerprintSha256: String): IdempotencyClaim = lock.withLock {
-        validateFingerprint(fingerprintSha256)
-        val current = records[namespace]
-        if (current == null) {
-            records[namespace] = IdempotencyRecord(fingerprintSha256)
-            IdempotencyClaim(IdempotencyClaimKind.NEW)
-        } else if (current.fingerprintSha256 != fingerprintSha256) {
-            IdempotencyClaim(IdempotencyClaimKind.REUSED)
-        } else if (current.response == null) {
-            IdempotencyClaim(IdempotencyClaimKind.IN_PROGRESS)
-        } else {
-            IdempotencyClaim(IdempotencyClaimKind.REPLAY, current.response)
-        }
-    }
+    override fun begin(namespace: IdempotencyNamespace, fingerprintSha256: String): IdempotencyClaim =
+        lock.withLock {
+            validateFingerprint(fingerprintSha256)
+            val current = records[namespace]
 
-    override fun complete(namespace: IdempotencyNamespace, response: String): IdempotencyRecord = lock.withLock {
-        val current = records[namespace] ?: error("idempotency claim does not exist")
-        records[namespace] = current.copy(response = response)
-        records.getValue(namespace)
-    }
+            if (current == null) {
+                records[namespace] = IdempotencyRecord(fingerprintSha256)
+                IdempotencyClaim(IdempotencyClaimKind.NEW)
+            } else if (current.fingerprintSha256 != fingerprintSha256) {
+                IdempotencyClaim(IdempotencyClaimKind.REUSED)
+            } else if (current.response == null) {
+                IdempotencyClaim(IdempotencyClaimKind.IN_PROGRESS)
+            } else {
+                IdempotencyClaim(IdempotencyClaimKind.REPLAY, current.response)
+            }
+        }
+
+    override fun complete(namespace: IdempotencyNamespace, response: String): IdempotencyRecord =
+        lock.withLock {
+            val current = records[namespace] ?: error("idempotency claim does not exist")
+            records[namespace] = current.copy(response = response)
+            records.getValue(namespace)
+        }
 
     /** 결과가 쓰였다는 증거가 없는 실패는 retryable claim으로 되돌립니다. */
     override fun abort(namespace: IdempotencyNamespace) {
@@ -66,16 +79,17 @@ class ShiftCoverageIdempotencyStore(
     fun isWriteSuppressed(namespace: IdempotencyNamespace, fingerprintSha256: String): Boolean =
         beginWithoutMutation(namespace, fingerprintSha256).kind != IdempotencyClaimKind.NEW
 
-    private fun beginWithoutMutation(namespace: IdempotencyNamespace, fingerprintSha256: String): IdempotencyClaim = lock.withLock {
-        validateFingerprint(fingerprintSha256)
-        val current = records[namespace] ?: return@withLock IdempotencyClaim(IdempotencyClaimKind.NEW)
-        if (current.fingerprintSha256 == fingerprintSha256) {
-            if (current.response == null) IdempotencyClaim(IdempotencyClaimKind.IN_PROGRESS)
-            else IdempotencyClaim(IdempotencyClaimKind.REPLAY, current.response)
-        } else IdempotencyClaim(IdempotencyClaimKind.REUSED)
-    }
+    private fun beginWithoutMutation(namespace: IdempotencyNamespace, fingerprintSha256: String): IdempotencyClaim =
+        lock.withLock {
+            validateFingerprint(fingerprintSha256)
+            val current = records[namespace] ?: return@withLock IdempotencyClaim(IdempotencyClaimKind.NEW)
+            if (current.fingerprintSha256 == fingerprintSha256) {
+                if (current.response == null) IdempotencyClaim(IdempotencyClaimKind.IN_PROGRESS)
+                else IdempotencyClaim(IdempotencyClaimKind.REPLAY, current.response)
+            } else IdempotencyClaim(IdempotencyClaimKind.REUSED)
+        }
 
     private fun validateFingerprint(value: String) {
-        require(value.matches(Regex("[0-9a-f]{64}"))) { "fingerprint must be lowercase SHA-256" }
+        value.requireMatches(Regex("[0-9a-f]{64}"), "value") { "fingerprint must be lowercase SHA-256" }
     }
 }

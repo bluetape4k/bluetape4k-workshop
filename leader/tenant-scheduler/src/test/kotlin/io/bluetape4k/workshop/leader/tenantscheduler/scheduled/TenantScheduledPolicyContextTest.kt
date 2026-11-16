@@ -3,10 +3,15 @@ package io.bluetape4k.workshop.leader.tenantscheduler.scheduled
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.leader.annotation.LeaderElection
 import io.bluetape4k.leader.annotation.LeaderGroupElection
 import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
@@ -21,22 +26,18 @@ import io.bluetape4k.leader.spring.scheduling.LeaderScheduledPolicyAutoConfigura
 import io.bluetape4k.leader.spring.scheduling.LeaderScheduledPolicyBeanPostProcessor
 import io.bluetape4k.leader.spring.scheduling.LeaderScheduledPolicyProperties
 import io.bluetape4k.leader.spring.scheduling.LeaderScheduledPolicyRegistry
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.tenantscheduler.TenantSchedulerLabApp
 import io.micrometer.observation.Observation
 import io.micrometer.observation.ObservationHandler
 import io.micrometer.observation.ObservationRegistry
-import java.lang.reflect.Method
-import java.time.Duration
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertTimeout
 import org.springframework.aop.support.AopUtils
-import org.springframework.beans.factory.getBeansOfType
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.micrometer.observation.autoconfigure.ObservationAutoConfiguration
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer
@@ -49,12 +50,18 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.core.env.ConfigurableEnvironment
+import org.springframework.core.env.getProperty
 import org.springframework.core.io.ClassPathResource
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.config.ScheduledTaskHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import java.time.Duration
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.toKotlinDuration
 
 @SpringBootTest(
     classes = [TenantSchedulerLabApp::class],
@@ -79,16 +86,18 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
     private val observationHandler: RecordingObservationHandler,
 ) {
 
+    companion object: KLogging()
+
     @Test
     fun `scheduled policy profile binds packaged YAML and registers one Spring task`() {
-        environment.getProperty("bluetape4k.leader.scheduling.enabled", Boolean::class.java) shouldBeEqualTo true
+        environment.getProperty<Boolean>("bluetape4k.leader.scheduling.enabled").shouldBeTrue()
         policyProperties.enabled.shouldBeTrue()
         policyProperties.policies.single().let { policy ->
             policy.selector shouldBeEqualTo "tenantScheduledPolicyFixture#reconcile"
             policy.name shouldBeEqualTo "tenant-scheduler:reconcile"
             policy.waitTime shouldBeEqualTo Duration.ZERO
-            policy.leaseTime shouldBeEqualTo Duration.ofSeconds(30)
-            policy.minLeaseTime shouldBeEqualTo Duration.ofSeconds(5)
+            policy.leaseTime shouldBeEqualTo 30.seconds()
+            policy.minLeaseTime shouldBeEqualTo 5.seconds()
             policy.bean shouldBeEqualTo "localLeaderElectionFactory"
             policy.failureMode.name shouldBeEqualTo "SKIP"
         }
@@ -106,17 +115,19 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         observationRecorder.options.includeExceptionDetails.shouldBeFalse()
         observationRecorder.options.tagOptions.lockName.mode shouldBeEqualTo LeaderMetricTagMode.REDACT
         observationRecorder.options.tagOptions.lockName.redactedValue shouldBeEqualTo "redacted-lock"
-        leaderProperties.observability.tracing.includeLockName shouldBeEqualTo true
-        leaderProperties.observability.tracing.includeLeaderId shouldBeEqualTo false
-        leaderProperties.observability.tracing.includeExceptionDetails shouldBeEqualTo false
+        leaderProperties.observability.tracing.includeLockName.shouldBeTrue()
+        leaderProperties.observability.tracing.includeLeaderId.shouldBeFalse()
+        leaderProperties.observability.tracing.includeExceptionDetails.shouldBeFalse()
+
         ClassPathResource("application-scheduled-policy.yml").inputStream.bufferedReader().readText()
             .contains("include-lock-name: false").shouldBeTrue()
 
-        environment.getProperty("bluetape4k.leader.aop.strict", Boolean::class.java) shouldBeEqualTo true
-        environment.getProperty("bluetape4k.leader.aop.spel.allow-method-invocation", Boolean::class.java) shouldBeEqualTo false
+        environment.getProperty<Boolean>("bluetape4k.leader.aop.strict").shouldBeTrue()
+        environment.getProperty<Boolean>("bluetape4k.leader.aop.spel.allow-method-invocation").shouldBeFalse()
         environment.getProperty("bluetape4k.leader.aop.metrics.tags.lock-name.mode") shouldBeEqualTo "REDACT"
-        contextBeanNames().contains("localLeaderElectionFactory").shouldBeTrue()
-        contextBeanNames().contains("tenantScheduledPolicyFixture").shouldBeTrue()
+
+        contextBeanNames() shouldContain "localLeaderElectionFactory"
+        contextBeanNames() shouldContain "tenantScheduledPolicyFixture"
         contextBeanNames().any { it.endsWith("internalAutoProxyCreator") }.shouldBeTrue()
         scheduledTaskCount() shouldBeEqualTo 1
     }
@@ -125,7 +136,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
     fun `main source fixture is proxied and records sanitized leader observations on direct calls`() {
         observationHandler.clear()
 
-        assertTimeout(Duration.ofSeconds(15)) {
+        assertTimeout(15.seconds()) {
             fixture.reconcile()
             fixture.reconcile()
         }
@@ -133,12 +144,15 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         fixture.invocationCount() shouldBeEqualTo 2
         scheduledTaskCount() shouldBeEqualTo 1
         val observations = observationHandler.stopped.filter { it.name.startsWith("leader.aop.") }
+
         observations.count { it.name == "leader.aop.acquire" } shouldBeEqualTo 2
         observations.count { it.name == "leader.aop.execution" } shouldBeEqualTo 2
-        observations.filter { it.name == "leader.aop.acquire" }
-            .forEach { it.low["leader.operation"] shouldBeEqualTo "acquire"; it.low["outcome"] shouldBeEqualTo "acquired" }
-        observations.filter { it.name == "leader.aop.execution" }
-            .forEach { it.low["leader.operation"] shouldBeEqualTo "execute"; it.low["outcome"] shouldBeEqualTo "success" }
+        observations.filter { it.name == "leader.aop.acquire" }.forEach {
+            it.low["leader.operation"] shouldBeEqualTo "acquire"; it.low["outcome"] shouldBeEqualTo "acquired"
+        }
+        observations.filter { it.name == "leader.aop.execution" }.forEach {
+            it.low["leader.operation"] shouldBeEqualTo "execute"; it.low["outcome"] shouldBeEqualTo "success"
+        }
         observations.forEach { snapshot ->
             snapshot.high["lock.name"] shouldBeEqualTo "redacted-lock"
             snapshot.high.values.none { value -> value.contains("tenant-scheduler:reconcile") }.shouldBeTrue()
@@ -170,31 +184,34 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
             )
             .run { context ->
                 context.startupFailure.shouldBeNull()
-                val fixture = context.getBean(
+                val fixture = context.getBean<LeaderScheduledTriggerFixture>(
                     "leaderScheduledTriggerFixture",
-                    LeaderScheduledTriggerFixture::class.java,
                 )
-                val handler = context.getBean(RecordingObservationHandler::class.java)
+                val handler = context.getBean<RecordingObservationHandler>()
                 handler.clear(expectedStops = 2)
 
-                assertTimeout(Duration.ofSeconds(5)) {
-                    fixture.awaitStarted(Duration.ofSeconds(5)).shouldBeTrue()
-                    handler.awaitStops(Duration.ofSeconds(5)).shouldBeTrue()
+                assertTimeout(5.seconds()) {
+                    fixture.awaitStarted(5.seconds()).shouldBeTrue()
+                    handler.awaitStops(5.seconds()).shouldBeTrue()
                 }
 
-                (fixture.invocationCount() >= 1).shouldBeTrue()
+                fixture.invocationCount() shouldBeGreaterOrEqualTo 1
+
                 context.getBeansOfType<ScheduledTaskHolder>().values
                     .flatMap { it.scheduledTasks }
                     .toSet()
                     .size shouldBeEqualTo 1
-                (handler.stopped.count { it.name == "leader.aop.acquire" } >= 1).shouldBeTrue()
-                (handler.stopped.count { it.name == "leader.aop.execution" } >= 1).shouldBeTrue()
+
+                handler.stopped.count { it.name == "leader.aop.acquire" } shouldBeGreaterThan 0
+                handler.stopped.count { it.name == "leader.aop.execution" } shouldBeGreaterThan 0
                 handler.stopped
                     .filter { it.name.startsWith("leader.aop.") }
                     .forEach { snapshot ->
                         snapshot.high["lock.name"] shouldBeEqualTo "redacted-lock"
-                        snapshot.high.values.none { value -> value.contains("tenant-scheduler:trigger") }
-                            .shouldBeTrue()
+                        snapshot.high.values
+                            .none { value ->
+                                value.contains("tenant-scheduler:trigger")
+                            }.shouldBeTrue()
                     }
             }
     }
@@ -223,14 +240,15 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
             )
             .run { context ->
                 context.startupFailure.shouldBeNull()
-                val fixture = context.getBean(
+                val fixture = context.getBean<LeaderScheduledFailureFixture>(
                     "leaderScheduledFailureFixture",
-                    LeaderScheduledFailureFixture::class.java,
                 )
-                val handler = context.getBean(RecordingObservationHandler::class.java)
+                val handler = context.getBean<RecordingObservationHandler>()
                 handler.clear()
 
-                val error = assertFailsWith<Throwable> { fixture.fail() }
+                val error = assertFailsWith<Throwable> {
+                    fixture.fail()
+                }
                 generateSequence(error) { it.cause }
                     .last()
                     .message shouldBeEqualTo "sensitive-customer-id"
@@ -241,8 +259,10 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 failureObservation.low["exception"] shouldBeEqualTo "IllegalStateException"
                 failureObservation.error.shouldBeNull()
                 failureObservation.high["lock.name"] shouldBeEqualTo "redacted-lock"
-                failureObservation.high.values.none { value -> value.contains("sensitive-customer-id") }
-                    .shouldBeTrue()
+                failureObservation.high.values
+                    .none { value ->
+                        value.contains("sensitive-customer-id")
+                    }.shouldBeTrue()
             }
     }
 
@@ -263,7 +283,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
             .withUserConfiguration(ScheduledFixtureConfiguration::class.java)
             .withPropertyValues("bluetape4k.leader.scheduling.enabled=true")
             .run { context ->
-                context.startupFailure.shouldNotBeNull().message.orEmpty() shouldContain "property 'policies'"
+                context.startupFailure.shouldNotBeNull().message shouldContain "property 'policies'"
             }
     }
 
@@ -273,7 +293,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
             .withUserConfiguration(ScheduledFixtureConfiguration::class.java)
             .withPropertyValues("bluetape4k.leader.scheduling.enabled=true")
             .run { context ->
-                context.startupFailure.shouldNotBeNull().message.orEmpty() shouldContain "bluetape4k.leader.scheduling"
+                context.startupFailure?.message shouldContain "bluetape4k.leader.scheduling"
             }
     }
 
@@ -293,7 +313,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                     "bluetape4k.leader.scheduling.policies[0].name=scheduled",
                 )
                 .run { context ->
-                    context.startupFailure.shouldNotBeNull().message.orEmpty() shouldContain selector.trim()
+                    context.startupFailure?.message shouldContain selector.trim()
                 }
         }
 
@@ -322,7 +342,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 ),
             )
         }
-        error.message.orEmpty() shouldContain "scheduledFixture#reconcile"
+        error.message shouldContain "scheduledFixture#reconcile"
     }
 
     @Test
@@ -337,7 +357,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 "bluetape4k.leader.scheduling.policies[1].name=two",
             )
             .run { context ->
-                context.startupFailure.shouldNotBeNull().message.orEmpty() shouldContain "scheduledFixture#reconcile"
+                context.startupFailure?.message shouldContain "scheduledFixture#reconcile"
             }
 
         runner
@@ -348,7 +368,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 "bluetape4k.leader.scheduling.policies[0].name=missing",
             )
             .run { context ->
-                context.startupFailure.shouldNotBeNull().message.orEmpty() shouldContain "scheduledFixture#missing"
+                context.startupFailure?.message shouldContain "scheduledFixture#missing"
             }
     }
 
@@ -386,8 +406,8 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
             )
             .run { context ->
                 context.startupFailure.shouldBeNull()
-                val registry = context.getBean(LeaderScheduledPolicyRegistry::class.java)
-                val single = context.getBean("leaderAnnotationFixture", AnnotationPrecedenceFixture::class.java)
+                val registry = context.getBean<LeaderScheduledPolicyRegistry>()
+                val single = context.getBean<AnnotationPrecedenceFixture>("leaderAnnotationFixture")
                 val singleMethod = AnnotationPrecedenceFixture::class.java.getDeclaredMethod("single")
                 val groupMethod = AnnotationPrecedenceFixture::class.java.getDeclaredMethod("group")
 
@@ -404,12 +424,12 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         val methods = OverloadedScheduledFixture::class.java.declaredMethods
             .filter { it.name == "reconcile" }
             .sortedBy { it.parameterCount }
-        methods.size shouldBeEqualTo 2
+        methods shouldHaveSize 2
 
         val policy = LeaderScheduledPolicyProperties.Policy(
             selector = "overloadedScheduledFixture#reconcile",
             name = "overloaded-scheduled",
-            leaseTime = Duration.ofSeconds(30),
+            leaseTime = 30.seconds(),
         )
         val registry = LeaderScheduledPolicyRegistry(listOf(policy))
         registry.register("overloadedScheduledFixture", fixture, methods[0], policy)
@@ -417,7 +437,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         val error = assertFailsWith<IllegalStateException> {
             registry.register("overloadedScheduledFixture", fixture, methods[1], policy)
         }
-        error.message.orEmpty() shouldContain "overloaded methods are not supported"
+        error.message shouldContain "overloaded methods are not supported"
     }
 
     @Test
@@ -451,7 +471,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                     *properties.toTypedArray(),
                 )
                 .run { context ->
-                    context.startupFailure.shouldNotBeNull().message.orEmpty() shouldContain expectedProperty
+                    context.startupFailure?.message shouldContain expectedProperty
                 }
         }
     }
@@ -470,17 +490,20 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         val observation = imports.indexOf(LeaderObservationAutoConfiguration::class.qualifiedName)
         val aop = imports.indexOf(LeaderAopAutoConfiguration::class.qualifiedName)
 
-        (factory >= 0).shouldBeTrue()
-        (policy > factory).shouldBeTrue()
-        (micrometer > policy).shouldBeTrue()
-        (observation > micrometer).shouldBeTrue()
-        (aop > observation).shouldBeTrue()
+        factory shouldBeGreaterOrEqualTo 0
+        policy shouldBeGreaterThan factory
+        micrometer shouldBeGreaterThan policy
+        observation shouldBeGreaterThan micrometer
+        aop shouldBeGreaterThan observation
     }
 
     @Test
     fun `AOP opt out leaves plain scheduler task but removes leader infrastructure`() {
         runner
-            .withUserConfiguration(ScheduledFixtureConfiguration::class.java, ObservationConfiguration::class.java)
+            .withUserConfiguration(
+                ScheduledFixtureConfiguration::class.java,
+                ObservationConfiguration::class.java
+            )
             .withPropertyValues(
                 "bluetape4k.leader.aop.enabled=false",
                 "spring.aop.auto=false",
@@ -491,17 +514,18 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 context.containsBean("localLeaderElectionFactory").shouldBeFalse()
                 context.containsBean("leaderScheduledPolicyRegistry").shouldBeFalse()
                 context.containsBean("leaderScheduledPolicyBeanPostProcessor").shouldBeFalse()
+
                 context.getBeansOfType<ScheduledTaskHolder>().values
                     .flatMap { it.scheduledTasks }
-                    .toSet()
-                    .size shouldBeEqualTo 1
-                val fixture = context.getBean("scheduledFixture", ScheduledFixture::class.java)
+                    .toSet() shouldHaveSize 1
+
+
+                val fixture = context.getBean<ScheduledFixture>("scheduledFixture")
                 fixture.reconcile()
                 fixture.invocationCount() shouldBeEqualTo 1
-                context.getBean(RecordingObservationHandler::class.java).stopped
-                    .filter { it.name.startsWith("leader.aop.") }
-                    .isEmpty()
-                    .shouldBeTrue()
+                context.getBean<RecordingObservationHandler>()
+                    .stopped
+                    .none { it.name.startsWith("leader.aop.") }.shouldBeTrue()
             }
     }
 
@@ -511,7 +535,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         .toSet()
         .size
 
-    private fun contextBeanNames(): Set<String> = applicationContext.getBeanDefinitionNames().toSet()
+    private fun contextBeanNames(): Set<String> = applicationContext.beanDefinitionNames.toSet()
 
     private val runner = ApplicationContextRunner()
         .withConfiguration(
@@ -597,7 +621,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         }
 
         open fun awaitStarted(timeout: Duration): Boolean =
-            started.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
+            started.await(timeout.toKotlinDuration())
 
         open fun invocationCount(): Int = invocations.get()
     }
@@ -635,7 +659,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         fun recordingObservationHandler(): RecordingObservationHandler = RecordingObservationHandler()
     }
 
-    class RecordingObservationHandler : ObservationHandler<Observation.Context> {
+    class RecordingObservationHandler: ObservationHandler<Observation.Context> {
         val stopped = CopyOnWriteArrayList<ObservationSnapshot>()
 
         @Volatile
@@ -659,7 +683,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         }
 
         fun awaitStops(timeout: Duration): Boolean =
-            stopSignal.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
+            stopSignal.await(timeout.toKotlinDuration())
     }
 
     data class ObservationSnapshot(

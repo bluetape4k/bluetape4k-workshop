@@ -1,36 +1,47 @@
 package io.bluetape4k.workshop.operations.jobconsole.application
 
+import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.javatimes.days
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
-import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionOutcome
-import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
+import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
+import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCanonicalizer
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCommand
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyCoordinator
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyPolicy
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Abandoned
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Conflict
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.InFlightTimeout
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.OwnerCompleted
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Replayed
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.WaiterOverflow
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnerAction
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnership
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.PreparedJobSubmission
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.ReplayableJobSubmission
-import io.bluetape4k.workshop.operations.jobconsole.persistence.JdbcJobSubmissionIdempotencyRepository
-import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
-import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
-import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
-import io.bluetape4k.workshop.operations.jobconsole.signal.CancelSignal
-import io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal
-import io.bluetape4k.workshop.operations.jobconsole.queue.EtaEstimator
-import io.bluetape4k.workshop.operations.jobconsole.queue.QueueProjectionService
-import io.bluetape4k.workshop.operations.jobconsole.queue.QueuePage
 import io.bluetape4k.workshop.operations.jobconsole.observability.DependencyState
 import io.bluetape4k.workshop.operations.jobconsole.observability.JobConsoleReadiness
-import io.bluetape4k.jackson3.Jackson
-import java.nio.charset.StandardCharsets.UTF_8
+import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JdbcJobSubmissionIdempotencyRepository
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
+import io.bluetape4k.workshop.operations.jobconsole.queue.EtaEstimator
+import io.bluetape4k.workshop.operations.jobconsole.queue.QueuePage
+import io.bluetape4k.workshop.operations.jobconsole.queue.QueueProjectionService
+import io.bluetape4k.workshop.operations.jobconsole.signal.CancelSignal
+import io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal
+import tools.jackson.module.kotlin.readValue
 import java.time.Clock
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -95,8 +106,8 @@ class JobConsoleService(
             val remaining = deadline - System.nanoTime()
             if (remaining <= 0L) return false
             Thread.onSpinWait()
-            if (remaining > TimeUnit.MILLISECONDS.toNanos(1)) {
-                Thread.sleep(minOf(TimeUnit.NANOSECONDS.toMillis(remaining).coerceAtLeast(1L), 10L))
+            if (remaining > 1.millis().toNanos()) {
+                Thread.sleep(minOf(remaining.nanos().toMillis().coerceAtLeast(1L), 10L))
             }
         }
         return true
@@ -120,28 +131,27 @@ class JobConsoleService(
         return toPublicOutcome(
             submissionCoordinator.execute(
                 command,
-                object : JobSubmissionOwnerAction {
-                    override fun prepare(ownership: io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnership): PreparedJobSubmission {
-                        val initial =
-                            JobSnapshot(
-                                jobId = ownership.jobId,
-                                jobType = request.jobType,
-                                state = JobState.QUEUED,
-                                progress = 0,
-                                checkpoint = null,
-                                queue = null,
-                                version = 1,
-                                updatedAt = clock.instant(),
-                            )
+                object: JobSubmissionOwnerAction {
+                    override fun prepare(ownership: JobSubmissionOwnership): PreparedJobSubmission {
+                        val initial = JobSnapshot(
+                            jobId = ownership.jobId,
+                            jobType = request.jobType,
+                            state = JobState.QUEUED,
+                            progress = 0,
+                            checkpoint = null,
+                            queue = null,
+                            version = 1,
+                            updatedAt = clock.instant(),
+                        )
                         return PreparedJobSubmission(
                             request = request,
-                            responseBody = jsonMapper.writeValueAsString(initial).toByteArray(UTF_8),
+                            responseBody = jsonMapper.writeValueAsString(initial).toUtf8Bytes(),
                         )
                     }
 
                     override fun commit(
                         connection: java.sql.Connection,
-                        ownership: io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnership,
+                        ownership: JobSubmissionOwnership,
                         prepared: PreparedJobSubmission,
                     ): ReplayableJobSubmission =
                         submissionRepository.finalizeOwner(connection, ownership, prepared, clock.instant())
@@ -167,20 +177,20 @@ class JobConsoleService(
 
     private fun toPublicOutcome(
         outcome: io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome,
-    ): JobSubmissionOutcome =
-        when (outcome) {
-            is io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.OwnerCompleted ->
-                JobSubmissionOutcome.OwnerCompleted(outcome.snapshot.toJobSnapshot(), outcome.snapshot.responseHeaders)
-            is io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Replayed ->
-                JobSubmissionOutcome.Replayed(outcome.snapshot.toJobSnapshot(), outcome.snapshot.responseHeaders)
-            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Conflict -> JobSubmissionOutcome.Conflict
-            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.InFlightTimeout -> JobSubmissionOutcome.InFlightTimeout
-            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.WaiterOverflow -> JobSubmissionOutcome.WaiterOverflow
-            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Abandoned -> JobSubmissionOutcome.Abandoned
-        }
+    ): JobSubmissionOutcome = when (outcome) {
+        is OwnerCompleted ->
+            JobSubmissionOutcome.OwnerCompleted(outcome.snapshot.toJobSnapshot(), outcome.snapshot.responseHeaders)
+        is Replayed       ->
+            JobSubmissionOutcome.Replayed(outcome.snapshot.toJobSnapshot(), outcome.snapshot.responseHeaders)
+
+        Conflict          -> JobSubmissionOutcome.Conflict
+        InFlightTimeout   -> JobSubmissionOutcome.InFlightTimeout
+        WaiterOverflow    -> JobSubmissionOutcome.WaiterOverflow
+        Abandoned         -> JobSubmissionOutcome.Abandoned
+    }
 
     private fun ReplayableJobSubmission.toJobSnapshot(): JobSnapshot =
-        jsonMapper.readValue(responseBody.decodeToString(), JobSnapshot::class.java)
+        jsonMapper.readValue<JobSnapshot>(responseBody.toUtf8String())
 
     fun snapshot(scope: DemoCallerScope, jobId: UUID): JobSnapshot {
         val stored = repository.load(scope, jobId)
@@ -190,12 +200,11 @@ class JobConsoleService(
             } else {
                 val now = clock.instant()
                 val base = repository.queueProjection(scope.tenantId, jobId, now) ?: return snapshot(scope, jobId)
-                val estimate =
-                    etaEstimator.estimate(
-                        repository.durationSamples(stored.jobType, now.minus(Duration.ofDays(30)), 100),
-                        base.jobsAhead,
-                        now,
-                    )
+                val estimate = etaEstimator.estimate(
+                    repository.durationSamples(stored.jobType, now - 30.days(), 100),
+                    base.jobsAhead,
+                    now,
+                )
                 base.copy(
                     estimatedStartRange = estimate.startRange,
                     estimatedCompletionRange = estimate.completionRange,
@@ -233,11 +242,13 @@ class JobConsoleService(
         val postgresReady = repository.databaseReady()
         val redisAvailable = cancelSignal.isAvailable()
         val policyMatches = expectedPolicyFingerprint == null || expectedPolicyFingerprint == submissionPolicy.fingerprint
+
         val reason = when {
             !postgresReady -> "postgres"
             !policyMatches -> "policy"
             else -> null
         }
+
         return JobConsoleReadiness(
             ready = postgresReady && policyMatches,
             postgres = if (postgresReady) DependencyState.UP else DependencyState.DOWN,
@@ -250,8 +261,9 @@ class JobConsoleService(
 
     fun cancel(scope: DemoCallerScope, jobId: UUID): CancelServiceOutcome {
         val durable = repository.cancel(scope, jobId)
-        val signalDegraded =
-            durable.notificationRequired && runCatching { cancelSignal.publish(jobId) }.getOrNull()?.delivered != true
+        val signalDegraded = durable.notificationRequired &&
+                runCatching { cancelSignal.publish(jobId) }.getOrNull()?.delivered != true
+
         return CancelServiceOutcome(jobId, durable.state, signalDegraded)
     }
 }

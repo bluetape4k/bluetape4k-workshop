@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.resilience.service
 import io.bluetape4k.concurrent.completableFutureOf
 import io.bluetape4k.concurrent.failedCompletableFutureOf
 import io.bluetape4k.concurrent.futureOf
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.resilience.exception.BusinessException
@@ -15,7 +16,6 @@ import org.springframework.web.client.HttpServerErrorException
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.io.IOException
-import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
@@ -24,9 +24,9 @@ import kotlin.time.Duration.Companion.seconds
  * BackendBService를 사용하는 BackendBController 에서 annotation 방식이 아닌 프로그래밍 방식으로 적용합니다.
  */
 @Component("backendBService")
-class BackendBService : Service {
+class BackendBService: Service {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_B: String = "backendB"
     }
 
@@ -61,7 +61,7 @@ class BackendBService : Service {
 
     override fun fluxTimeout(): Flux<String> {
         return Flux.just("Hello World from backend B")
-            .delayElements(Duration.ofSeconds(3)) // time limiter 가 2s 로 설정되어 있으므로, timeout 이 발생합니다.
+            .delayElements(3.seconds()) // time limiter 가 2s 로 설정되어 있으므로, timeout 이 발생합니다.
     }
 
     override fun monoSuccess(): Mono<String> {
@@ -74,7 +74,7 @@ class BackendBService : Service {
 
     override fun monoTimeout(): Mono<String> {
         return Mono.just("Hello World from backend B")
-            .delayElement(Duration.ofSeconds(3)) // time limiter 가 2s 로 설정되어 있으므로, timeout 이 발생합니다.
+            .delayElement(3.seconds()) // time limiter 가 2s 로 설정되어 있으므로, timeout 이 발생합니다.
     }
 
     override fun futureSuccess(): CompletableFuture<String> {

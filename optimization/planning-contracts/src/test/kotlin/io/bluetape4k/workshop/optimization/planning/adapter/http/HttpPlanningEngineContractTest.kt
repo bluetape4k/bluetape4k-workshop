@@ -8,7 +8,11 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.testcontainers.http.WireMockServer
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateId
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateVersion
@@ -18,10 +22,13 @@ import io.bluetape4k.workshop.optimization.planning.domain.PlanningSubmission
 import io.bluetape4k.workshop.optimization.planning.domain.ProviderRequestId
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import tools.jackson.module.kotlin.jacksonObjectMapper
-import java.util.UUID
+import java.util.*
 
 internal class HttpPlanningEngineContractTest {
+
+    companion object: KLogging() {
+        private const val MAX_RESPONSE_BYTES = 64 * 1024
+    }
 
     private val wireMock = WireMockServer.Launcher.wireMock
 
@@ -33,8 +40,8 @@ internal class HttpPlanningEngineContractTest {
     @Test
     fun `timefold and custom solver map provider responses to one contract`() {
         listOf(
-            TimefoldPlatformPlanningEngine(wireMock.baseUrl, jacksonObjectMapper()),
-            CustomSolverPlanningEngine(wireMock.baseUrl, jacksonObjectMapper()),
+            TimefoldPlatformPlanningEngine(wireMock.baseUrl, Jackson.defaultJsonMapper),
+            CustomSolverPlanningEngine(wireMock.baseUrl, Jackson.defaultJsonMapper),
         ).forEach { engine ->
             engine.use {
                 wireMock.stubFor(
@@ -58,7 +65,7 @@ internal class HttpPlanningEngineContractTest {
 
     @Test
     fun `provider submit POST is not retried after server failure`() {
-        TimefoldPlatformPlanningEngine(wireMock.baseUrl, jacksonObjectMapper()).use { engine ->
+        TimefoldPlatformPlanningEngine(wireMock.baseUrl, Jackson.defaultJsonMapper).use { engine ->
             wireMock.stubFor(
                 post(urlEqualTo(engine.submitPath))
                     .inScenario("ambiguous-submit")
@@ -86,7 +93,7 @@ internal class HttpPlanningEngineContractTest {
 
     @Test
     fun `provider response is rejected before reading beyond the byte limit`() {
-        TimefoldPlatformPlanningEngine(wireMock.baseUrl, jacksonObjectMapper()).use { engine ->
+        TimefoldPlatformPlanningEngine(wireMock.baseUrl, Jackson.defaultJsonMapper).use { engine ->
             wireMock.stubFor(
                 post(urlEqualTo(engine.submitPath))
                     .willReturn(
@@ -106,7 +113,7 @@ internal class HttpPlanningEngineContractTest {
     @Test
     fun `response exactly at the byte limit is accepted for known length and chunked bodies`() {
         val prefix = "{\"providerRequestId\":\"provider-42\",\"status\":\"SUBMITTED\"}"
-        val responseBody = prefix + " ".repeat(MAX_RESPONSE_BYTES - prefix.toByteArray().size)
+        val responseBody = prefix + " ".repeat(MAX_RESPONSE_BYTES - prefix.toUtf8Bytes().size)
 
         listOf(
             aResponse()
@@ -119,7 +126,7 @@ internal class HttpPlanningEngineContractTest {
                 .withChunkedDribbleDelay(2, 1)
                 .withBody(responseBody),
         ).forEach { response ->
-            TimefoldPlatformPlanningEngine(wireMock.baseUrl, jacksonObjectMapper()).use { engine ->
+            TimefoldPlatformPlanningEngine(wireMock.baseUrl, Jackson.defaultJsonMapper).use { engine ->
                 wireMock.stubFor(post(urlEqualTo(engine.submitPath)).willReturn(response))
 
                 engine.submit(submission()).providerRequestId.value shouldBeEqualTo "provider-42"
@@ -130,7 +137,7 @@ internal class HttpPlanningEngineContractTest {
 
     @Test
     fun `multibyte response is rejected by byte limit without exposing the body`() {
-        TimefoldPlatformPlanningEngine(wireMock.baseUrl, jacksonObjectMapper()).use { engine ->
+        TimefoldPlatformPlanningEngine(wireMock.baseUrl, Jackson.defaultJsonMapper).use { engine ->
             wireMock.stubFor(
                 post(urlEqualTo(engine.submitPath))
                     .willReturn(
@@ -145,18 +152,20 @@ internal class HttpPlanningEngineContractTest {
                 engine.submit(submission())
             }
             failure.message shouldBeEqualTo "provider response exceeded the configured limit"
-            failure.message.orEmpty().contains("가").shouldBeFalse()
+            failure.message shouldNotContain "가"
         }
     }
 
     @Test
     fun `status preserves 404 null and bounded cleanup while decoding successful responses`() {
-        TimefoldPlatformPlanningEngine(wireMock.baseUrl, jacksonObjectMapper()).use { engine ->
+        TimefoldPlatformPlanningEngine(wireMock.baseUrl, Jackson.defaultJsonMapper).use { engine ->
             val providerRequestId = ProviderRequestId("provider-42")
-            wireMock.stubFor(get(urlEqualTo(engine.statusPathForTest()))
-                .willReturn(aResponse().withStatus(404)))
+            wireMock.stubFor(
+                get(urlEqualTo(engine.statusPathForTest()))
+                    .willReturn(aResponse().withStatus(404))
+            )
 
-            engine.status(providerRequestId) shouldBeEqualTo null
+            engine.status(providerRequestId).shouldBeNull()
             wireMock.resetAll()
 
             wireMock.stubFor(
@@ -185,9 +194,7 @@ internal class HttpPlanningEngineContractTest {
         parentRevision = null,
     )
 
+    @Suppress("UnusedReceiverParameter")
     private fun HttpPlanningEngine.statusPathForTest(): String = "/api/models/planning/jobs/provider-42"
 
-    companion object {
-        private const val MAX_RESPONSE_BYTES = 64 * 1024
-    }
 }

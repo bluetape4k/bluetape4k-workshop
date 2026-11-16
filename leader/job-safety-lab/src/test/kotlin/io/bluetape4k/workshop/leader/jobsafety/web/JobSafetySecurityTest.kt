@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.leader.jobsafety.effect.EffectOperations
 import io.bluetape4k.workshop.leader.jobsafety.effect.EffectWorkResult
 import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenarioService
@@ -21,6 +22,9 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.servlet.config.annotation.EnableWebMvc
 
 internal class JobSafetySecurityTest {
+
+    companion object: KLogging()
+
     private lateinit var context: AnnotationConfigWebApplicationContext
     private lateinit var mvc: MockMvc
 
@@ -30,11 +34,10 @@ internal class JobSafetySecurityTest {
         context.servletContext = MockServletContext()
         context.register(SecurityTestConfiguration::class.java)
         context.refresh()
-        mvc =
-            MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply<DefaultMockMvcBuilder>(springSecurity())
-                .build()
+        mvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply<DefaultMockMvcBuilder>(springSecurity())
+            .build()
     }
 
     @AfterEach
@@ -44,59 +47,74 @@ internal class JobSafetySecurityTest {
 
     @Test
     fun `anonymous request is challenged`() {
-        mvc.post("/api/job-safety/scenarios/LEASE_OVERRUN/run").andExpect {
-            status { isUnauthorized() }
-        }
+        mvc
+            .post("/api/job-safety/scenarios/LEASE_OVERRUN/run")
+            .andExpect {
+                status { isUnauthorized() }
+            }
     }
 
     @Test
     fun `authenticated viewer can run a safe scenario`() {
-        mvc.post("/api/job-safety/scenarios/LEASE_OVERRUN/run") {
-            with(user("viewer").roles("JOB_SAFETY_VIEWER"))
-        }.andExpect {
-            status { isOk() }
-        }
+        mvc
+            .post("/api/job-safety/scenarios/LEASE_OVERRUN/run") {
+                with(user("viewer").roles("JOB_SAFETY_VIEWER"))
+            }
+            .andExpect {
+                status { isOk() }
+            }
     }
 
     @Test
     fun `viewer cannot reconcile effects`() {
-        mvc.post("/api/job-safety/effects/reconcile") {
-            with(user("viewer").roles("JOB_SAFETY_VIEWER"))
-        }.andExpect {
-            status { isForbidden() }
-        }
+        mvc
+            .post("/api/job-safety/effects/reconcile") {
+                with(user("viewer").roles("JOB_SAFETY_VIEWER"))
+            }
+            .andExpect {
+                status { isForbidden() }
+            }
     }
 
     @Test
     fun `operator can reconcile and reset`() {
         val operator = user("operator").roles(JobSafetySecurityConfiguration.OPERATOR_ROLE)
 
-        mvc.post("/api/job-safety/effects/reconcile") { with(operator) }.andExpect {
-            status { isOk() }
-        }
-        mvc.post("/api/job-safety/scenarios/LEASE_OVERRUN/reset") { with(operator) }.andExpect {
-            status { isOk() }
-        }
+        mvc
+            .post("/api/job-safety/effects/reconcile") { with(operator) }
+            .andExpect {
+                status { isOk() }
+            }
+
+        mvc
+            .post("/api/job-safety/scenarios/LEASE_OVERRUN/reset") { with(operator) }
+            .andExpect {
+                status { isOk() }
+            }
     }
 
     @Test
     fun `viewer cannot read audit report`() {
-        mvc.get("/api/job-safety/audit") {
-            with(user("viewer").roles("JOB_SAFETY_VIEWER"))
-        }.andExpect {
-            status { isForbidden() }
-        }
+        mvc
+            .get("/api/job-safety/audit") {
+                with(user("viewer").roles("JOB_SAFETY_VIEWER"))
+            }
+            .andExpect {
+                status { isForbidden() }
+            }
     }
 
     @Test
     fun `operator can read audit report`() {
-        mvc.get("/api/job-safety/audit") {
-            with(user("operator").roles(JobSafetySecurityConfiguration.OPERATOR_ROLE))
-        }.andExpect {
-            status { isOk() }
-            jsonPath("$.transport") { value("MEMORY") }
-            jsonPath("$.endpoint") { doesNotExist() }
-        }
+        mvc
+            .get("/api/job-safety/audit") {
+                with(user("operator").roles(JobSafetySecurityConfiguration.OPERATOR_ROLE))
+            }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.transport") { value("MEMORY") }
+                jsonPath("$.endpoint") { doesNotExist() }
+            }
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -108,7 +126,7 @@ internal class JobSafetySecurityTest {
 
         @Bean
         fun effectOperations(): EffectOperations =
-            object : EffectOperations {
+            object: EffectOperations {
                 override fun deliverNext(): EffectWorkResult = EffectWorkResult.NO_WORK
 
                 override fun reconcileNext(): EffectWorkResult = EffectWorkResult.NO_WORK

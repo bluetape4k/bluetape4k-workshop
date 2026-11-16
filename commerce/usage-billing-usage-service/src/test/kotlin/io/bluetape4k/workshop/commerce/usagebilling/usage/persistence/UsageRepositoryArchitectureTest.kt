@@ -1,10 +1,14 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.persistence
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import org.junit.jupiter.api.Test
 
 class UsageRepositoryArchitectureTest {
+
+    companion object: KLogging()
+
     @Test
     fun `usage durable repositories implement ExposedJdbcRepository`() {
         listOf(
@@ -16,6 +20,6 @@ class UsageRepositoryArchitectureTest {
             ExposedJdbcRepository::class.java.isAssignableFrom(
                 Class.forName("io.bluetape4k.workshop.commerce.usagebilling.usage.persistence.$repository"),
             )
-        } shouldBeEqualTo true
+        }.shouldBeTrue()
     }
 }

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
  */
 class CapturingStreamListener: StreamListener<String, MapRecord<String, String, String>> {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val counter = atomic(0)
     private val dequeue = LinkedBlockingDeque<MapRecord<String, String, String>>()

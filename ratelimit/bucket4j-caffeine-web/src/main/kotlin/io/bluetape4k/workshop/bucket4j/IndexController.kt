@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class IndexController {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val RESPONSE_BODY = "Hello World"
     }
 

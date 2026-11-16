@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
@@ -9,16 +13,12 @@ import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberWithTeamDTO
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 
-class MemberControllerTest : AbstractVirtualThreadMvcTest() {
+class MemberControllerTest: AbstractVirtualThreadMvcTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Test
     fun `get all members`() = runSuspendIO {

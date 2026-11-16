@@ -14,7 +14,7 @@ import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 @SpringBootApplication(proxyBeanMethods = false)
 class R2dbcApplication {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     @Bean
     fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {

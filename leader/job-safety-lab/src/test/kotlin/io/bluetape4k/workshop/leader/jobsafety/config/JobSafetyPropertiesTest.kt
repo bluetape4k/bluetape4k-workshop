@@ -1,14 +1,20 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Configuration
-import java.time.Duration
 
 internal class JobSafetyPropertiesTest {
+
+    companion object: KLogging()
+
     private val runner =
         ApplicationContextRunner()
             .withUserConfiguration(PropertiesConfiguration::class.java)
@@ -16,12 +22,12 @@ internal class JobSafetyPropertiesTest {
     @Test
     fun `safe defaults bind successfully`() {
         runner.run { context ->
-            val properties = context.getBean(JobSafetyProperties::class.java)
+            val properties = context.getBean<JobSafetyProperties>()
 
             properties.region shouldBeEqualTo "region-a"
             properties.timelineLimit shouldBeEqualTo 128
-            properties.fencing.leaseTtl shouldBeEqualTo Duration.ofSeconds(5)
-            properties.lab.unsafeEnabled shouldBeEqualTo false
+            properties.fencing.leaseTtl shouldBeEqualTo 5.seconds()
+            properties.lab.unsafeEnabled.shouldBeFalse()
         }
     }
 

@@ -11,9 +11,13 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-enum class CommandReceiptStatus { IN_PROGRESS, SUCCEEDED, FAILED }
+enum class CommandReceiptStatus {
+    IN_PROGRESS,
+    SUCCEEDED,
+    FAILED
+}
 
 data class CommandReceiptInsert(
     val scope: CommandScope,
@@ -44,28 +48,33 @@ data class CommandReceiptCompletion(
 )
 
 @Repository
-class CommandReceiptRepository :
-    EventSourcingExposedJdbcRepository<CommandReceiptEntity, UUID>(CommandReceiptEntity::class.java) {
+class CommandReceiptRepository
+    : EventSourcingExposedJdbcRepository<CommandReceiptEntity, UUID>(CommandReceiptEntity::class) {
 
-    fun insertOwnerIfAbsent(request: CommandReceiptInsert): Boolean = CommandReceipts.insertIgnore {
-        it[id] = Uuid.V7.nextId()
-        it[tenantId] = request.scope.tenantId
-        it[operation] = request.scope.operation
-        it[keyDigest] = request.scope.keyDigest.value
-        it[fingerprint] = request.fingerprint.value
-        it[status] = CommandReceiptStatus.IN_PROGRESS.name
-        it[ownerToken] = request.ownerToken
-        it[leaseUntil] = request.leaseUntil
-        it[retentionUntil] = request.retentionUntil
-        it[createdAt] = request.now
-        it[updatedAt] = request.now
-    }.insertedCount == 1
+    fun insertOwnerIfAbsent(request: CommandReceiptInsert): Boolean =
+        CommandReceipts.insertIgnore {
+            it[id] = Uuid.V7.nextId()
+            it[tenantId] = request.scope.tenantId
+            it[operation] = request.scope.operation
+            it[keyDigest] = request.scope.keyDigest.value
+            it[fingerprint] = request.fingerprint.value
+            it[status] = CommandReceiptStatus.IN_PROGRESS.name
+            it[ownerToken] = request.ownerToken
+            it[leaseUntil] = request.leaseUntil
+            it[retentionUntil] = request.retentionUntil
+            it[createdAt] = request.now
+            it[updatedAt] = request.now
+        }.insertedCount == 1
 
-    fun find(scope: CommandScope): CommandReceiptSnapshot? = CommandReceiptEntity.find {
-        (CommandReceipts.tenantId eq scope.tenantId) and
-            (CommandReceipts.operation eq scope.operation) and
-            (CommandReceipts.keyDigest eq scope.keyDigest.value)
-    }.firstOrNull()?.snapshot()
+    fun find(scope: CommandScope): CommandReceiptSnapshot? =
+        CommandReceiptEntity
+            .find {
+                (CommandReceipts.tenantId eq scope.tenantId) and
+                        (CommandReceipts.operation eq scope.operation) and
+                        (CommandReceipts.keyDigest eq scope.keyDigest.value)
+            }
+            .firstOrNull()
+            ?.snapshot()
 
     fun takeover(
         current: CommandReceiptSnapshot,
@@ -73,45 +82,57 @@ class CommandReceiptRepository :
         leaseUntil: Instant,
         retentionUntil: Instant,
         now: Instant,
-    ): Boolean = CommandReceipts.update(
-        where = {
-            (CommandReceipts.id eq current.id) and
-                (CommandReceipts.status eq CommandReceiptStatus.IN_PROGRESS.name) and
-                (CommandReceipts.ownerToken eq current.ownerToken) and
-                (CommandReceipts.leaseUntil eq current.leaseUntil)
-        },
-    ) {
-        it[ownerToken] = owner
-        it[CommandReceipts.leaseUntil] = leaseUntil
-        it[CommandReceipts.retentionUntil] = retentionUntil
-        it[updatedAt] = now
-    } == 1
+    ): Boolean =
+        CommandReceipts.update(
+            where = {
+                (CommandReceipts.id eq current.id) and
+                        (CommandReceipts.status eq CommandReceiptStatus.IN_PROGRESS.name) and
+                        (CommandReceipts.ownerToken eq current.ownerToken) and
+                        (CommandReceipts.leaseUntil eq current.leaseUntil)
+            },
+        ) {
+            it[ownerToken] = owner
+            it[CommandReceipts.leaseUntil] = leaseUntil
+            it[CommandReceipts.retentionUntil] = retentionUntil
+            it[updatedAt] = now
+        } == 1
 
-    fun complete(completion: CommandReceiptCompletion): Boolean = CommandReceipts.update(
-        where = {
-            (CommandReceipts.id eq completion.receiptId) and
-                (CommandReceipts.ownerToken eq completion.owner) and
-                (CommandReceipts.status eq CommandReceiptStatus.IN_PROGRESS.name)
-        },
-    ) {
-        it[status] = CommandReceiptStatus.SUCCEEDED.name
-        it[httpStatus] = completion.httpStatus
-        it[response] = completion.response
-        it[terminalAt] = completion.now
-        it[CommandReceipts.retentionUntil] = completion.retentionUntil
-        it[updatedAt] = completion.now
-    } == 1
+    fun complete(completion: CommandReceiptCompletion): Boolean =
+        CommandReceipts.update(
+            where = {
+                (CommandReceipts.id eq completion.receiptId) and
+                        (CommandReceipts.ownerToken eq completion.owner) and
+                        (CommandReceipts.status eq CommandReceiptStatus.IN_PROGRESS.name)
+            },
+        ) {
+            it[status] = CommandReceiptStatus.SUCCEEDED.name
+            it[httpStatus] = completion.httpStatus
+            it[response] = completion.response
+            it[terminalAt] = completion.now
+            it[CommandReceipts.retentionUntil] = completion.retentionUntil
+            it[updatedAt] = completion.now
+        } == 1
 
     fun isActiveOwner(receiptId: UUID, owner: UUID, now: Instant): Boolean =
-        CommandReceipts.selectAll().where {
-            (CommandReceipts.id eq receiptId) and
-                (CommandReceipts.ownerToken eq owner) and
-                (CommandReceipts.status eq CommandReceiptStatus.IN_PROGRESS.name) and
-                (CommandReceipts.leaseUntil greater now)
-        }.forUpdate().singleOrNull() != null
+        CommandReceipts
+            .selectAll()
+            .where {
+                (CommandReceipts.id eq receiptId) and
+                        (CommandReceipts.ownerToken eq owner) and
+                        (CommandReceipts.status eq CommandReceiptStatus.IN_PROGRESS.name) and
+                        (CommandReceipts.leaseUntil greater now)
+            }
+            .forUpdate()
+            .singleOrNull() != null
 
-    private fun CommandReceiptEntity.snapshot() = CommandReceiptSnapshot(
-        id.value, CommandDigest(fingerprint), CommandReceiptStatus.valueOf(status),
-        ownerToken, leaseUntil, httpStatus, response,
-    )
+    private fun CommandReceiptEntity.snapshot(): CommandReceiptSnapshot =
+        CommandReceiptSnapshot(
+            id = id.value,
+            fingerprint = CommandDigest(fingerprint),
+            status = CommandReceiptStatus.valueOf(status),
+            ownerToken = ownerToken,
+            leaseUntil = leaseUntil,
+            httpStatus = httpStatus,
+            response = response,
+        )
 }

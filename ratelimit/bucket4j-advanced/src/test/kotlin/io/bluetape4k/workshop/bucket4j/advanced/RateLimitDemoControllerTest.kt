@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.returnResult
 
 /**
  * 세 가지 rate-limit 전략을 모두 검증하는 [RateLimitDemoController] 통합 테스트입니다.
@@ -27,9 +28,9 @@ import org.springframework.http.HttpStatus
  * - Combined  : 10초당 10 token
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
+class RateLimitDemoControllerTest: AbstractBucket4jAdvancedTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val ANONYMOUS_PATH = "/api/anonymous/hello"
         private const val AUTHENTICATED_PATH = "/api/authenticated/hello"
         private const val SENSITIVE_PATH = "/api/sensitive/hello"
@@ -66,9 +67,10 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
             .uri(ANONYMOUS_PATH)
             .header(HeaderConstants.X_FORWARDED_FOR, "1.2.3.4, 5.6.7.8")
             .exchange()
-            .returnResult(String::class.java)
+            .returnResult<String>()
 
         val status = result.status
+        log.debug { "status=$status" }
         (status == HttpStatus.OK || status == HttpStatus.TOO_MANY_REQUESTS).shouldBeTrue()
     }
 
@@ -77,10 +79,11 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     fun `IP rate limit - exhausts bucket and returns 429`() = runSuspendIO {
         var exhausted = false
         repeat(30) {
+            log.debug { "ip rate limit - call $it" }
             val status = client.get()
                 .uri(ANONYMOUS_PATH)
                 .exchange()
-                .returnResult(String::class.java)
+                .returnResult<String>()
                 .status
 
             if (status == HttpStatus.TOO_MANY_REQUESTS) {
@@ -96,10 +99,11 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     fun `IP rate limit - 429 response includes Retry-After header`() = runSuspendIO {
         // 이전 테스트에서 bucket이 이미 소진되었으므로 어떤 요청도 429를 반환해야 합니다.
         repeat(30) {
+            log.debug { "ip rate limit - call $it" }
             val result = client.get()
                 .uri(ANONYMOUS_PATH)
                 .exchange()
-                .returnResult(String::class.java)
+                .returnResult<String>()
 
             if (result.status == HttpStatus.TOO_MANY_REQUESTS) {
                 val retryAfter = result.responseHeaders.getFirst(HeaderConstants.RETRY_AFTER).shouldNotBeNull()
@@ -161,11 +165,12 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
         var exhausted = false
 
         repeat(55) {
+            log.debug { "user rate limit - call $it" }
             val status = client.get()
                 .uri(AUTHENTICATED_PATH)
                 .header(HeaderConstants.X_USER_ID, userId)
                 .exchange()
-                .returnResult(String::class.java)
+                .returnResult<String>()
                 .status
 
             if (status == HttpStatus.TOO_MANY_REQUESTS) {
@@ -210,6 +215,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
         // userId1의 combined bucket을 소진합니다(capacity = 10).
         repeat(12) {
+            log.debug { "combined rate limit - call $it" }
             client.get()
                 .uri(SENSITIVE_PATH)
                 .header(HeaderConstants.X_USER_ID, userId1)
@@ -231,11 +237,12 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
         var exhausted = false
 
         repeat(15) {
+            log.debug { "combined rate limit - call $it" }
             val status = client.get()
                 .uri(SENSITIVE_PATH)
                 .header(HeaderConstants.X_USER_ID, userId)
                 .exchange()
-                .returnResult(String::class.java)
+                .returnResult<String>()
                 .status
 
             if (status == HttpStatus.TOO_MANY_REQUESTS) {

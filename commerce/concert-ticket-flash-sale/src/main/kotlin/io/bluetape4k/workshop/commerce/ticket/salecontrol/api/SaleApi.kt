@@ -4,7 +4,7 @@ import io.bluetape4k.workshop.commerce.ticket.domain.SaleState
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /** admission과 purchase에 노출되는 immutable sale policy입니다. */
 data class SalePolicySnapshot(
@@ -13,7 +13,7 @@ data class SalePolicySnapshot(
     val policyVersion: Long,
     val opensAt: Instant,
     val closesAt: Instant,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -31,7 +31,7 @@ data class SalePurchasePolicy(
     val perUserLimit: Int,
     val maxQuantity: Int,
     val holdSeconds: Long,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

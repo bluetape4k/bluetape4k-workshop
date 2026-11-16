@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.textmoderation.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.textmoderation.TextModerationApplication
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -19,13 +20,16 @@ class TextModerationControllerTest @Autowired constructor(
     private val mockMvc: MockMvc,
 ) {
 
+    companion object: KLogging()
+
     @Test
     fun `POST analyze returns normalized moderation response`() {
-        mockMvc.perform(
-            post("/api/moderation/analyze")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"text":"Please block spam from this English request."}"""),
-        )
+        mockMvc
+            .perform(
+                post("/api/moderation/analyze")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"Please block spam from this English request."}"""),
+            )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.detectedLanguage").value("ENGLISH"))
             .andExpect(jsonPath("$.matchedTerms[0]").value("spam"))
@@ -35,11 +39,12 @@ class TextModerationControllerTest @Autowired constructor(
 
     @Test
     fun `POST analyze detects Korean text`() {
-        mockMvc.perform(
-            post("/api/moderation/analyze")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"text":"안녕하세요. 오늘 날씨가 좋고 안전한 문장입니다."}"""),
-        )
+        mockMvc
+            .perform(
+                post("/api/moderation/analyze")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"안녕하세요. 오늘 날씨가 좋고 안전한 문장입니다."}"""),
+            )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.detectedLanguage").value("KOREAN"))
             .andExpect(jsonPath("$.matchedTerms").isEmpty)
@@ -47,11 +52,12 @@ class TextModerationControllerTest @Autowired constructor(
 
     @Test
     fun `POST analyze returns bad request for blank text`() {
-        mockMvc.perform(
-            post("/api/moderation/analyze")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"text":"   "}"""),
-        )
+        mockMvc
+            .perform(
+                post("/api/moderation/analyze")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"   "}"""),
+            )
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.message").value("text must not be blank"))
@@ -59,22 +65,24 @@ class TextModerationControllerTest @Autowired constructor(
 
     @Test
     fun `POST analyze returns bad request for missing text`() {
-        mockMvc.perform(
-            post("/api/moderation/analyze")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{}"""),
-        )
+        mockMvc
+            .perform(
+                post("/api/moderation/analyze")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{}"""),
+            )
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.status").value(400))
     }
 
     @Test
     fun `POST analyze returns payload too large for oversized text`() {
-        mockMvc.perform(
-            post("/api/moderation/analyze")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"text":"${"x".repeat(2_001)}"}"""),
-        )
+        mockMvc
+            .perform(
+                post("/api/moderation/analyze")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"${"x".repeat(2_001)}"}"""),
+            )
             .andExpect(status().isContentTooLarge)
             .andExpect(jsonPath("$.status").value(413))
             .andExpect(jsonPath("$.error").value("Content Too Large"))

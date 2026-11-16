@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.order.repository
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.ProductDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.schema.ProductTable
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Repository
 @Repository
 class ProductRepository {
 
+    companion object: KLoggingChannel()
+
     fun findAll(): Flow<ProductDTO> =
         ProductTable.selectAll().map { it.toProductDTO() }
 
@@ -35,12 +38,13 @@ class ProductRepository {
             .firstOrNull()
 
     suspend fun insert(req: CreateProductRequest): Long {
-        val stmt = ProductTable.insert {
+        val newId = ProductTable.insert {
             it[name] = req.name
             it[price] = req.price
             it[stock] = req.stock
-        }
-        return stmt[ProductTable.id]
+        }[ProductTable.id]
+
+        return newId
     }
 
     suspend fun decrementStock(id: Long, quantity: Int) {

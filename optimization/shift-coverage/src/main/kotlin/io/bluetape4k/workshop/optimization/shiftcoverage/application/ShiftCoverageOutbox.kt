@@ -1,17 +1,28 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkNotNull
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.optimization.shiftcoverage.config.ShiftCoverageProperties
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.EffectKey
-import java.time.Duration
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Service
 
-enum class ShiftCoverageOutboxStatus { PENDING, CLAIMED, STARTED, APPLIED, COMPLETED, RETRYABLE, DEAD_LETTER, DELIVERY_UNKNOWN }
+enum class ShiftCoverageOutboxStatus {
+    PENDING,
+    CLAIMED,
+    STARTED,
+    APPLIED,
+    COMPLETED,
+    RETRYABLE,
+    DEAD_LETTER,
+    DELIVERY_UNKNOWN
+}
 
 data class ShiftCoverageOutboxRecord(
     val effectKey: EffectKey,
@@ -26,7 +37,7 @@ data class ShiftCoverageOutboxRecord(
     val lastError: String? = null,
 )
 
-class ShiftCoverageOutboxRedriveRejected(message: String) : IllegalStateException(message)
+class ShiftCoverageOutboxRedriveRejected(message: String): IllegalStateException(message)
 
 /** DB outbox transition과 lease fence를 결정론적 in-memory로 검증하는 경계입니다. */
 @Profile("demo")
@@ -34,22 +45,29 @@ class ShiftCoverageOutboxRedriveRejected(message: String) : IllegalStateExceptio
 class ShiftCoverageOutboxStore(
     properties: ShiftCoverageProperties = ShiftCoverageProperties(),
 ) {
+
+    companion object: KLogging()
+
     private val records = ConcurrentHashMap<EffectKey, ShiftCoverageOutboxRecord>()
     private val leaseDuration = properties.outboxLease
 
     fun enqueue(requestId: String, effectKey: EffectKey, now: Instant = Instant.now()): ShiftCoverageOutboxRecord =
-        records.computeIfAbsent(effectKey) { ShiftCoverageOutboxRecord(effectKey, requestId, nextAttemptAt = now) }
+        records.computeIfAbsent(effectKey) {
+            ShiftCoverageOutboxRecord(effectKey, requestId, nextAttemptAt = now)
+        }
 
     fun find(effectKey: EffectKey): ShiftCoverageOutboxRecord? = records[effectKey]
 
     fun claim(owner: String, now: Instant): ShiftCoverageOutboxRecord? {
         recoverExpired(now)
+
         val candidate = records.values.asSequence()
             .filter { it.status == ShiftCoverageOutboxStatus.PENDING || it.status == ShiftCoverageOutboxStatus.RETRYABLE }
             .filter { !it.nextAttemptAt.isAfter(now) }
-            .sortedBy { it.effectKey.value }
-            .firstOrNull() ?: return null
+            .minByOrNull { it.effectKey.value } ?: return null
+
         val claimed = AtomicBoolean(false)
+
         val result = records.computeIfPresent(candidate.effectKey) { _, current ->
             if ((current.status == ShiftCoverageOutboxStatus.PENDING || current.status == ShiftCoverageOutboxStatus.RETRYABLE) &&
                 !current.nextAttemptAt.isAfter(now)
@@ -66,18 +84,31 @@ class ShiftCoverageOutboxStore(
         return if (claimed.get()) result else null
     }
 
-    fun markStarted(record: ShiftCoverageOutboxRecord, owner: String, now: Instant = Instant.now()): Boolean = transition(record.effectKey) { current ->
-        if (current.status == ShiftCoverageOutboxStatus.CLAIMED && current.leaseOwner == owner && current.leaseToken == record.leaseToken &&
-            current.leaseExpiresAt?.isAfter(now) == true
-        ) {
-            current.copy(status = ShiftCoverageOutboxStatus.STARTED)
-        } else null
-    } != null
+    fun markStarted(record: ShiftCoverageOutboxRecord, owner: String, now: Instant = Instant.now()): Boolean =
+        transition(record.effectKey) { current ->
 
-    fun markDeliveryUnknown(effectKey: EffectKey, owner: String, leaseToken: String, now: Instant = Instant.now()): Boolean = transition(effectKey) { current ->
-        if (current.status == ShiftCoverageOutboxStatus.STARTED && current.leaseOwner == owner && current.leaseToken == leaseToken &&
-            current.leaseExpiresAt?.isAfter(now) == true
-        ) {
+            val isStarted = current.status == ShiftCoverageOutboxStatus.CLAIMED &&
+                    current.leaseOwner == owner &&
+                    current.leaseToken == record.leaseToken &&
+                    current.leaseExpiresAt?.isAfter(now) == true
+
+            if (isStarted) {
+                current.copy(status = ShiftCoverageOutboxStatus.STARTED)
+            } else null
+        } != null
+
+    fun markDeliveryUnknown(
+        effectKey: EffectKey,
+        owner: String,
+        leaseToken: String,
+        now: Instant = Instant.now(),
+    ): Boolean = transition(effectKey) { current ->
+        val deleveryUnkown = current.status == ShiftCoverageOutboxStatus.STARTED &&
+                current.leaseOwner == owner &&
+                current.leaseToken == leaseToken &&
+                current.leaseExpiresAt?.isAfter(now) == true
+
+        if (deleveryUnkown) {
             current.copy(status = ShiftCoverageOutboxStatus.DELIVERY_UNKNOWN, lastError = "delivery outcome unknown")
         } else null
     } != null
@@ -91,16 +122,28 @@ class ShiftCoverageOutboxStore(
                 definitiveLookupNotFound = !providerFound,
             )
         }
-        return checkNotNull(updated) { "outbox effect is not awaiting definitive lookup" }
+        return updated.checkNotNull { "outbox effect is not awaiting definitive lookup" }
     }
 
-    fun redrive(effectKey: EffectKey, operator: String, reason: String, now: Instant = Instant.now()): ShiftCoverageOutboxRecord? {
+    fun redrive(
+        effectKey: EffectKey,
+        operator: String,
+        reason: String,
+        now: Instant = Instant.now(),
+    ): ShiftCoverageOutboxRecord? {
         require(operator.isNotBlank() && reason.isNotBlank()) { "operator and reason are required" }
+
         val updated = transition(effectKey) { current ->
             if (current.status != ShiftCoverageOutboxStatus.RETRYABLE || !current.definitiveLookupNotFound) {
                 throw ShiftCoverageOutboxRedriveRejected("only definitively NOT_FOUND retryable effects can be redriven")
             }
-            current.copy(status = ShiftCoverageOutboxStatus.PENDING, nextAttemptAt = now, lastError = reason, leaseOwner = null, leaseToken = null)
+            current.copy(
+                status = ShiftCoverageOutboxStatus.PENDING,
+                nextAttemptAt = now,
+                lastError = reason,
+                leaseOwner = null,
+                leaseToken = null
+            )
         }
         return updated
     }
@@ -125,13 +168,17 @@ class ShiftCoverageOutboxStore(
                     recovered++
                     current.copy(status = ShiftCoverageOutboxStatus.DELIVERY_UNKNOWN, lastError = "lease expired")
                 }
-                else -> current
+                else ->
+                    current
             }
         }
         return recovered
     }
 
-    private fun transition(effectKey: EffectKey, update: (ShiftCoverageOutboxRecord) -> ShiftCoverageOutboxRecord?): ShiftCoverageOutboxRecord? {
+    private fun transition(
+        effectKey: EffectKey,
+        update: (ShiftCoverageOutboxRecord) -> ShiftCoverageOutboxRecord?,
+    ): ShiftCoverageOutboxRecord? {
         val rejected = AtomicBoolean(false)
         val updated = records.computeIfPresent(effectKey) { _, current ->
             val next = update(current)
@@ -158,7 +205,7 @@ class ShiftCoverageOutboxWorker(
     private val batchSize: Int = 10,
 ) {
     init {
-        require(batchSize > 0) { "outbox batch size must be positive" }
+        batchSize.requirePositiveNumber("batchSize")
     }
 
     fun admit(effectKey: EffectKey, requestId: String): Boolean {

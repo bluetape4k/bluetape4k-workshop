@@ -5,7 +5,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.micrometer.observation.coroutines.withObservationContextSuspending
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.workshop.observability.advanced.model.User
+import io.bluetape4k.workshop.observability.advanced.model.UserRecord
 import io.bluetape4k.workshop.observability.advanced.repository.UserCacheRepository
 import io.bluetape4k.workshop.observability.advanced.repository.UserRepository
 import io.micrometer.observation.ObservationRegistry
@@ -27,16 +27,16 @@ class UserService(
     private val cache: UserCacheRepository,
     private val observationRegistry: ObservationRegistry,
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
-     * cache-aside pattern 으로 [id] 에 해당하는 [User] 를 조회합니다.
+     * cache-aside pattern 으로 [id] 에 해당하는 [UserRecord] 를 조회합니다.
      *
      * cache hit: cached value 를 반환하고 DB span 은 건너뜁니다.
      * cache miss: DB 에서 조회한 뒤 cache 에 저장합니다.
      * Redis error: warning 을 log 하고 DB 로 fallback 합니다.
      */
-    suspend fun getById(id: Long): User? =
+    suspend fun getById(id: Long): UserRecord? =
         withObservationContextSuspending("user.service.get", observationRegistry) {
             val validId = id.requirePositiveNumber("id")
             // soft-fail 을 적용해 cache 를 읽습니다.
@@ -74,9 +74,9 @@ class UserService(
         }
 
     /**
-     * 새 [User] 를 생성하고 persist 한 뒤 saved entity 를 반환합니다.
+     * 새 [UserRecord] 를 생성하고 persist 한 뒤 saved entity 를 반환합니다.
      */
-    suspend fun create(user: User): User {
+    suspend fun create(user: UserRecord): UserRecord {
         withObservationContextSuspending("user.service.create", observationRegistry) {
             withObservationContextSuspending<Unit>("user.db.save", observationRegistry) {
                 repo.save(user)

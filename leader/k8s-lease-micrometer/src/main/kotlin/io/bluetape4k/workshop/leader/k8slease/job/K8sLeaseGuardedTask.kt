@@ -33,10 +33,10 @@ class K8sLeaseGuardedTask(
     private val observationRecorder: LeaderAopMetricsRecorder = LeaderAopMetricsRecorder.NoOp,
     private val observationListener: LeaderElectionListener = NoOpLeaderElectionListener,
 ) {
+    private companion object: KLogging()
+
     val executionCount: AtomicInteger = AtomicInteger()
     internal var failWork: Boolean = false
-
-    private companion object : KLogging()
 
     /**
      * Spring scheduler 진입점입니다.
@@ -91,14 +91,24 @@ class K8sLeaseGuardedTask(
                     LeaderTaskReport(executed = true, reason = "elected", executionCount = count)
                 } catch (e: CancellationException) {
                     observe {
-                        observationRecorder.onTaskFailed(properties.leaseName, executionStarted.elapsedNow(), e, context)
+                        observationRecorder.onTaskFailed(
+                            properties.leaseName,
+                            executionStarted.elapsedNow(),
+                            e,
+                            context
+                        )
                     }
                     throw e
                 } catch (e: Exception) {
                     metrics.recordRenewFailure(tags, "task-failed")
                     metrics.recordTask(tags, "failure", started.elapsedNow())
                     observe {
-                        observationRecorder.onTaskFailed(properties.leaseName, executionStarted.elapsedNow(), e, context)
+                        observationRecorder.onTaskFailed(
+                            properties.leaseName,
+                            executionStarted.elapsedNow(),
+                            e,
+                            context
+                        )
                     }
                     log.warn(e) { "Kubernetes Lease guarded task failed. lease=${properties.leaseName}" }
                     LeaderTaskReport(executed = false, reason = "task-failed", executionCount = executionCount.get())
@@ -145,13 +155,14 @@ class K8sLeaseGuardedTask(
     }
 
     private inline fun observe(block: () -> Unit) {
-        runCatching(block).onFailure { error ->
-            log.warn(error) { "Leader observation callback failed. lease=${properties.leaseName}" }
-        }
+        runCatching(block)
+            .onFailure { error ->
+                log.warn(error) { "Leader observation callback failed. lease=${properties.leaseName}" }
+            }
     }
 }
 
-private object NoOpLeaderElectionListener : LeaderElectionListener
+private object NoOpLeaderElectionListener: LeaderElectionListener
 
 /**
  * scheduled guard tick 하나의 결과입니다.
@@ -160,7 +171,7 @@ data class LeaderTaskReport(
     val executed: Boolean,
     val reason: String,
     val executionCount: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

@@ -1,36 +1,44 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.domain
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 internal class EventDecisionTest {
 
+    companion object: KLogging()
+
     @Test
     fun `command decision is immutable and does not mutate its aggregate`() {
-        val draft =
-            CampaignAggregate.replay(
-                listOf(
-                    CampaignEvent.CampaignCreated(
-                        TenantId("tenant-a"),
-                        UUID.randomUUID(),
-                        Instant.parse("2026-07-22T00:00:00Z"),
-                        Instant.parse("2026-07-22T01:00:00Z"),
-                        3,
-                        1,
-                        600,
-                    ),
+        val draft = CampaignAggregate.replay(
+            listOf(
+                CampaignEvent.CampaignCreated(
+                    tenantId = TenantId("tenant-a"),
+                    campaignId = UUID.randomUUID(),
+                    startsAt = Instant.parse("2026-07-22T00:00:00Z"),
+                    endsAt = Instant.parse("2026-07-22T01:00:00Z"),
+                    capacity = 3,
+                    perUserLimit = 1,
+                    redemptionTtlSeconds = 600,
                 ),
-            )
+            ),
+        )
 
         val decision = CampaignCommands.activate(draft)
 
+        log.debug { "draft=$draft" }
         draft.state shouldBeEqualTo CampaignState.DRAFT
         draft.version shouldBeEqualTo 1
+
+        log.debug { "decision=$decision" }
         decision.events shouldBeEqualTo listOf(CampaignEvent.CampaignActivated)
-        EventDecision.empty<CampaignEvent>().events shouldBeEqualTo emptyList()
+
+        EventDecision.empty<CampaignEvent>().events.shouldBeEmpty()
     }
 
     @Test
@@ -38,9 +46,12 @@ internal class EventDecisionTest {
         val first = envelope("0198a1b2-c3d4-7e5f-8123-456789abcdef", 2)
         val second = envelope("0198a1b2-c3d4-7e5f-8123-456789abcdee", 1)
 
-        EventReplay.ordered(listOf(first, second)).map { it.globalPosition } shouldBeEqualTo
-            listOf(1L, 2L)
-        assertFailsWith<IllegalArgumentException> { EventReplay.ordered(listOf(first, first)) }
+        EventReplay.ordered(listOf(first, second))
+            .map { it.globalPosition } shouldBeEqualTo listOf(1L, 2L)
+
+        assertFailsWith<IllegalArgumentException> {
+            EventReplay.ordered(listOf(first, first))
+        }
     }
 
     private fun envelope(eventId: String, globalPosition: Long): EventEnvelope =

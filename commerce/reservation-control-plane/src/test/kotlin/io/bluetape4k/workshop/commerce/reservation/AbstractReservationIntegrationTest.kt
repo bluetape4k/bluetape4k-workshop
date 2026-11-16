@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.reservation
 
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
 import org.junit.jupiter.api.BeforeEach
@@ -18,7 +20,6 @@ import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import java.time.Duration
 import javax.sql.DataSource
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -27,6 +28,19 @@ import javax.sql.DataSource
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 internal abstract class AbstractReservationIntegrationTest {
+
+    companion object: KLogging() {
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
+            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
+        }
+    }
+
     @LocalServerPort
     protected var port: Int = 0
 
@@ -39,6 +53,7 @@ internal abstract class AbstractReservationIntegrationTest {
     @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
+    @Suppress("SqlResolve")
     @BeforeEach
     fun resetReservationFixture() {
         JdbcTemplate(dataSource).execute(
@@ -54,32 +69,21 @@ internal abstract class AbstractReservationIntegrationTest {
             RESTART IDENTITY CASCADE
             """.trimIndent()
         )
+
         TransactionTemplate(transactionManager).executeWithoutResult {
             resources.create("demo-room-utc", capacity = 1, policyVersion = 1)
         }
     }
 
     protected val webTestClient: WebTestClient by lazy {
-        val connector =
-            JdkClientHttpConnector().apply {
-                setReadTimeout(Duration.ofSeconds(60))
-            }
+        val connector = JdkClientHttpConnector().apply {
+            setReadTimeout(60.seconds())
+        }
+
         WebTestClient
             .bindToServer(connector)
             .baseUrl("http://localhost:$port")
-            .responseTimeout(Duration.ofSeconds(60))
+            .responseTimeout(60.seconds())
             .build()
-    }
-
-    companion object {
-        val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
-            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
-        }
     }
 }

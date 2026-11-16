@@ -4,7 +4,7 @@ import java.io.Serializable
 
 data class Greeting(
     val content: String = "",
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

@@ -20,13 +20,13 @@
 
 **CBOR(Concise Binary Object Representation)**은 RFC 7049로 표준화된 바이너리 JSON 형식입니다.
 
-| 기능 | JSON | CBOR |
-|------|------|------|
-| 형식 | 텍스트(UTF-8) | 바이너리 |
-| 페이로드 크기 | 상대적으로 큼 | 20-50% 더 작음 |
-| 파싱 속도 | 보통 | 빠름(직접 바이너리 파싱) |
-| Content-Type | `application/json` | `application/cbor` |
-| 사람이 읽기 쉬움 | 예 | 아니오(디코더 필요) |
+| 기능             | JSON               | CBOR                     |
+|------------------|--------------------|--------------------------|
+| 형식             | 텍스트(UTF-8)      | 바이너리                 |
+| 페이로드 크기    | 상대적으로 큼      | 20-50% 더 작음           |
+| 파싱 속도        | 보통               | 빠름(직접 바이너리 파싱) |
+| Content-Type     | `application/json` | `application/cbor`       |
+| 사람이 읽기 쉬움 | 예                 | 아니오(디코더 필요)      |
 
 Jackson의 `CBORMapper`를 사용합니다. Spring MVC의 `HttpMessageConverter` 시스템에 `JacksonCborHttpMessageConverter`를 등록하면 JSON과 같은 컨트롤러 코드로 CBOR를 지원할 수 있습니다.
 
@@ -47,17 +47,17 @@ Course
 
 ## 주요 기능
 
-| 기능 | 구현 위치 | 설명 |
-|------|----------|------|
-| CBOR 컨버터 등록 | `CborConfig` | `JacksonCborHttpMessageConverter` 빈 + `WebMvcConfigurer` 등록 |
-| Course 조회 | `CourseController.course()` | `GET /courses/{id}` — CBOR 직렬화 응답 |
-| 인메모리 저장소 | `CourseRepository` | `Map<Int, Course>` 기반 단순 저장소 |
+| 기능             | 구현 위치                   | 설명                                                           |
+|------------------|-----------------------------|----------------------------------------------------------------|
+| CBOR 컨버터 등록 | `CborConfig`                | `JacksonCborHttpMessageConverter` 빈 + `WebMvcConfigurer` 등록 |
+| Course 조회      | `CourseController.course()` | `GET /courses/{id}` — CBOR 직렬화 응답                         |
+| 인메모리 저장소  | `CourseRepository`          | `Map<Int, Course>` 기반 단순 저장소                            |
 
 ## API 엔드포인트
 
-| 메서드 | 경로 | 설명 | Content-Type |
-|--------|------|------|-------------|
-| `GET` | `/courses/{id}` | 특정 course를 조회합니다. | `application/cbor` |
+| 메서드 | 경로            | 설명                      | Content-Type       |
+|--------|-----------------|---------------------------|--------------------|
+| `GET`  | `/courses/{id}` | 특정 course를 조회합니다. | `application/cbor` |
 
 ## 사용 예제
 

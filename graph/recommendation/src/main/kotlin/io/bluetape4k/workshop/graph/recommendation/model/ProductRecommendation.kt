@@ -29,7 +29,7 @@ data class ProductRecommendation(
     val score: Int,
     /** [score]를 만든 서로 다른 co-buyer 정점입니다. */
     val sharedBuyers: List<GraphVertex>,
-) : Serializable {
+): Serializable {
     init {
         score.requirePositiveNumber("score")
         sharedBuyers.size.requireEquals(score, "sharedBuyers.size")

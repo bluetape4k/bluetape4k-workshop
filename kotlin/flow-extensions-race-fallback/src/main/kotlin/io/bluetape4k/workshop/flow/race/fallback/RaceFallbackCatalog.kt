@@ -39,7 +39,7 @@ class RaceFallbackCatalog {
         return flow {
             onStart()
             try {
-                delay(delayMs)
+                delay(timeMillis = delayMs)
                 if (failWith != null) {
                     throw failWith
                 }

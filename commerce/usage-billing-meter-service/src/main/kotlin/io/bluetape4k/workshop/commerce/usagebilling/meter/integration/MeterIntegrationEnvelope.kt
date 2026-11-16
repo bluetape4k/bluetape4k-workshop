@@ -8,7 +8,7 @@ import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.tink.digest.TinkDigesters
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * Kafka publication 전에 local outbox에 저장되는 Versioned Meter event contract입니다.
@@ -28,7 +28,7 @@ class MeterIntegrationEnvelope private constructor(
     val payloadDigest: String,
     val occurredAt: Instant,
     val recordedAt: Instant,
-) : Serializable {
+): Serializable {
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -115,7 +115,7 @@ class MeterEnvelopeCodecRegistry {
 data class MeterEnvelopeSchema(
     val eventType: String,
     val schemaVersion: Int,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -124,6 +124,6 @@ data class MeterEnvelopeSchema(
 class UnsupportedMeterEnvelopeVersion(
     eventType: String,
     schemaVersion: Int,
-) : IllegalArgumentException("unsupported_meter_envelope:$eventType:$schemaVersion")
+): IllegalArgumentException("unsupported_meter_envelope:$eventType:$schemaVersion")
 
-class InvalidMeterEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_meter_envelope_digest:$eventId")
+class InvalidMeterEnvelopeDigest(eventId: UUID): IllegalArgumentException("invalid_meter_envelope_digest:$eventId")

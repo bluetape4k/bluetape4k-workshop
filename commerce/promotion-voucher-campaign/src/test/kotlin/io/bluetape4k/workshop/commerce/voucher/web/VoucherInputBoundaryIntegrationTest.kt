@@ -1,9 +1,13 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import org.junit.jupiter.api.Test
 
-internal class VoucherInputBoundaryIntegrationTest : AbstractVoucherIntegrationTest() {
+internal class VoucherInputBoundaryIntegrationTest: AbstractVoucherIntegrationTest() {
+
+    companion object: KLogging()
+
     @Test
     fun `ASCII header limits accept N and reject N plus one before allocation`() {
         val tenant = "t".repeat(64)
@@ -11,21 +15,26 @@ internal class VoucherInputBoundaryIntegrationTest : AbstractVoucherIntegrationT
         val campaignId = createActiveCampaign(tenant)
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$campaignId/claims",
-            "k".repeat(65),
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = "k".repeat(65),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
 
         customerPost(
-            tenant,
-            principal,
-            "/api/v1/campaigns/$campaignId/claims",
-            "k".repeat(64),
-            mapOf("userRef" to principal),
-        ).exchange().expectStatus().isCreated
+            tenant = tenant,
+            principal = principal,
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = "k".repeat(64),
+            body = mapOf("userRef" to principal),
+        )
+            .exchange()
+            .expectStatus().isCreated
     }
 
     @Test
@@ -34,21 +43,27 @@ internal class VoucherInputBoundaryIntegrationTest : AbstractVoucherIntegrationT
         val campaignId = createActiveCampaign(tenant)
 
         customerPost(
-            "t".repeat(65),
-            "principal-a",
-            "/api/v1/campaigns/$campaignId/claims",
-            randomIdentifier(),
-            mapOf("userRef" to "principal-a"),
-        ).exchange().expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+            tenant = "t".repeat(65),
+            principal = "principal-a",
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = randomIdentifier(),
+            body = mapOf("userRef" to "principal-a"),
+        )
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
 
         customerPost(
-            tenant,
-            "principal-a",
-            "/api/v1/campaigns/$campaignId/claims",
-            "invalid key",
-            mapOf("userRef" to "principal-a"),
-        ).exchange().expectStatus().isBadRequest
-            .expectBody().jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+            tenant = tenant,
+            principal = "principal-a",
+            path = "/api/v1/campaigns/$campaignId/claims",
+            idempotencyKey = "invalid key",
+            body = mapOf("userRef" to "principal-a"),
+        )
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
     }
 }
