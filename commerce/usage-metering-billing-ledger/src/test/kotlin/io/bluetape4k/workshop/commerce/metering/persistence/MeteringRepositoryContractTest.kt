@@ -2,13 +2,15 @@ package io.bluetape4k.workshop.commerce.metering.persistence
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-@Tag("integration")
+
 class MeteringRepositoryContractTest {
+
+    companion object: KLogging()
 
     @Test
     fun `fixture seeds authority through Exposed and tenant meter uniqueness is enforced`() {

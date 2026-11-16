@@ -4,7 +4,9 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.ActivatePriceCommand
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandJournal
@@ -12,6 +14,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandRec
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterIdempotencyConflict
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterOutboxRecord
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterPriceVersion
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.security.MessageDigest
@@ -21,9 +24,19 @@ import java.time.ZoneOffset
 import java.util.*
 
 class MeterCommandServiceTest {
+
+    private companion object: KLogging() {
+        val EVENT_ID: UUID = UUID.fromString("a93d0384-cdf2-446a-991d-7e014c8b8e7e")
+    }
+
     private val now = Instant.parse("2026-07-22T00:00:00Z")
     private val journal = InMemoryMeterCommandJournal()
     private val service = MeterCommandService(journal, Clock.fixed(now, ZoneOffset.UTC)) { EVENT_ID }
+
+    @BeforeEach
+    fun beforeEach() {
+        journal.reset()
+    }
 
     @Test
     fun `price activation appends a version and PriceActivated outbox record together`() {
@@ -33,10 +46,12 @@ class MeterCommandServiceTest {
         journal.priceVersions.single().meterCode shouldBeEqualTo "api_calls"
         journal.outboxRecords.single().eventType shouldBeEqualTo "PriceActivated"
         journal.outboxRecords.single().partitionKey shouldBeEqualTo "tenant-a|Meter|api_calls"
+
         val outbox = journal.outboxRecords.single()
         val wire = Jackson.defaultJsonMapper.readTree(outbox.payload)
-        requireNotNull(wire.get("eventId")).asString() shouldBeEqualTo EVENT_ID.toString()
-        requireNotNull(wire.get("tenantId")).asString() shouldBeEqualTo "tenant-a"
+        wire.get("eventId")!!.asString() shouldBeEqualTo EVENT_ID.toString()
+        wire.get("tenantId")!!.asString() shouldBeEqualTo "tenant-a"
+
         outbox.payloadDigest shouldBeEqualTo digestOf(outbox.payload)
     }
 
@@ -46,8 +61,8 @@ class MeterCommandServiceTest {
         val replay = service.activatePrice(command())
 
         replay.replayed.shouldBeTrue()
-        journal.priceVersions.size shouldBeEqualTo 1
-        journal.outboxRecords.size shouldBeEqualTo 1
+        journal.priceVersions shouldHaveSize 1
+        journal.outboxRecords shouldHaveSize 1
     }
 
     @Test
@@ -59,8 +74,8 @@ class MeterCommandServiceTest {
         }
 
         failure::class.simpleName shouldBeEqualTo "MeterIdempotencyConflict"
-        journal.priceVersions.size shouldBeEqualTo 1
-        journal.outboxRecords.size shouldBeEqualTo 1
+        journal.priceVersions shouldHaveSize 1
+        journal.outboxRecords shouldHaveSize 1
     }
 
     private fun command(unitPrice: BigDecimal = BigDecimal("0.10")): ActivatePriceCommand =
@@ -92,10 +107,11 @@ class MeterCommandServiceTest {
             priceVersions += priceVersion
             outboxRecords += outboxRecord
         }
-    }
 
-    private companion object {
-        val EVENT_ID: UUID = UUID.fromString("a93d0384-cdf2-446a-991d-7e014c8b8e7e")
+        fun reset() {
+            priceVersions.clear()
+            outboxRecords.clear()
+            receipts.clear()
+        }
     }
-
 }

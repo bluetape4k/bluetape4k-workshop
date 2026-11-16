@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.persistence
 
 import io.bluetape4k.concurrent.tryAcquire
 import io.bluetape4k.javatimes.millis
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.support.requirePositiveNumber
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -23,7 +23,7 @@ class MeteringDatabasePermitUnavailable: IllegalStateException("metering_databas
 class MeteringJdbcTransaction internal constructor(
     val exposed: JdbcTransaction,
 ) {
-    fun <T> withExposed(block: JdbcTransaction.() -> T): T = exposed.block()
+    inline fun <T> withExposed(block: JdbcTransaction.() -> T): T = exposed.block()
 }
 
 class MeteringJdbcExecutor(
@@ -33,11 +33,10 @@ class MeteringJdbcExecutor(
 ): AutoCloseable {
     private val permits = Semaphore(foregroundPermits, true)
     private val closed = AtomicBoolean()
-    private val database =
-        Database.connect(
-            datasource = dataSource,
-            databaseConfig = DatabaseConfig { defaultMaxAttempts = 1 },
-        )
+    private val database = Database.connect(
+        datasource = dataSource,
+        databaseConfig = DatabaseConfig { defaultMaxAttempts = 1 },
+    )
 
     init {
         foregroundPermits.requirePositiveNumber("foregroundPermits")

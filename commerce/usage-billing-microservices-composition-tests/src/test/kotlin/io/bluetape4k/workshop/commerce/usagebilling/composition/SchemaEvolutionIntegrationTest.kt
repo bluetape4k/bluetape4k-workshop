@@ -1,19 +1,24 @@
 package io.bluetape4k.workshop.commerce.usagebilling.composition
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBillingMicroserviceFixture
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-@Tag("integration")
 class SchemaEvolutionIntegrationTest {
+
+    private companion object: KLogging() {
+        val TIMEOUT: kotlin.time.Duration = 20.seconds
+        const val TENANT = "tenant-schema"
+    }
+
     @Test
     fun `Query accepts additive v2 and quarantines an unknown mandatory version`() {
         UsageBillingMicroserviceFixture().use { fixture ->
@@ -29,10 +34,5 @@ class SchemaEvolutionIntegrationTest {
                 fixture.queryRecoverySnapshot().quarantineCount shouldBeEqualTo 1L
             }
         }
-    }
-
-    private companion object {
-        val TIMEOUT: kotlin.time.Duration = 20.seconds
-        const val TENANT = "tenant-schema"
     }
 }

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingCloseBatchRated
@@ -26,18 +27,25 @@ import java.util.*
 class DomainEventJsonCodec(
     private val mapper: ObjectMapper = Jackson.defaultJsonMapper,
 ) {
-    val registry: EventCodecRegistry = EventCodecRegistry().apply {
-        register<MeterRegistered>()
-        register<PriceActivated>()
-        register<UsageAccepted>()
-        register<UsageRated>()
-        register<BillingPeriodOpened>()
-        register<BillingCloseStarted>()
-        register<BillingCloseBatchRated>()
-        register<BillingPeriodFinalized>()
-        register<InvoiceIssued>()
-        register<AdjustmentPosted>()
+
+    private companion object: KLogging() {
+        const val MAX_PAYLOAD_BYTES = 64 * 1024
+        const val MAX_METADATA_BYTES = 4 * 1024
     }
+
+    val registry: EventCodecRegistry = EventCodecRegistry()
+        .apply {
+            register<MeterRegistered>()
+            register<PriceActivated>()
+            register<UsageAccepted>()
+            register<UsageRated>()
+            register<BillingPeriodOpened>()
+            register<BillingCloseStarted>()
+            register<BillingCloseBatchRated>()
+            register<BillingPeriodFinalized>()
+            register<InvoiceIssued>()
+            register<AdjustmentPosted>()
+        }
 
     fun encode(
         event: DomainEvent,
@@ -69,10 +77,5 @@ class DomainEventJsonCodec(
         InvoiceIssued::class.java       -> "invoice.issued"
         AdjustmentPosted::class.java    -> "adjustment.posted"
         else                            -> error("unsupported_event_type:${type.name}")
-    }
-
-    private companion object {
-        const val MAX_PAYLOAD_BYTES = 64 * 1024
-        const val MAX_METADATA_BYTES = 4 * 1024
     }
 }

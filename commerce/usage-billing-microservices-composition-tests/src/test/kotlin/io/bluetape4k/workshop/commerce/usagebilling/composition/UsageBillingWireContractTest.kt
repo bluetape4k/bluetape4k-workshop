@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.commerce.usagebilling.composition
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.commerce.usagebilling.billing.integration.BillingIntegrationEnvelope
 import io.bluetape4k.workshop.commerce.usagebilling.billing.messaging.BillingInboundEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.messaging.BillingInboundEventDecoder
-import io.bluetape4k.workshop.commerce.usagebilling.billing.integration.BillingIntegrationEnvelope
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging.BillingChargeDecoder
 import io.bluetape4k.workshop.commerce.usagebilling.meter.integration.MeterIntegrationEnvelope
 import io.bluetape4k.workshop.commerce.usagebilling.query.messaging.QueryInboundEventDecoder
@@ -11,9 +13,14 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.integration.UsageInteg
 import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.MeterPriceEvidenceDecoder
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class UsageBillingWireContractTest {
+
+    private companion object: KLogging() {
+        val NOW: Instant = Instant.parse("2026-07-23T00:00:00Z")
+    }
+
     private val meterPriceEvidenceDecoder = MeterPriceEvidenceDecoder()
     private val billingDecoder = BillingInboundEventDecoder()
     private val invoiceDecoder = BillingChargeDecoder()
@@ -33,9 +40,13 @@ class UsageBillingWireContractTest {
             recordedAt = NOW,
         )
 
-        meterPriceEvidenceDecoder.decode(event.wirePayload()).evidence.unitPrice.toPlainString() shouldBeEqualTo "0.10"
-        (billingDecoder.decode(event.wirePayload()) as BillingInboundEvent.PriceActivated)
-            .event.evidence.meterCode shouldBeEqualTo "api_calls"
+        meterPriceEvidenceDecoder.decode(event.wirePayload())
+            .evidence.unitPrice.toPlainString() shouldBeEqualTo "0.10"
+
+        val billingEvent = billingDecoder.decode(event.wirePayload())
+        billingEvent.shouldBeInstanceOf<BillingInboundEvent.PriceActivated>()
+        billingEvent.event.evidence.meterCode shouldBeEqualTo "api_calls"
+
         queryDecoder.decode(event.wirePayload()).aggregateType shouldBeEqualTo "Meter"
     }
 
@@ -53,10 +64,12 @@ class UsageBillingWireContractTest {
             recordedAt = NOW,
         )
 
-        val billingEvent = billingDecoder.decode(event.wirePayload()) as BillingInboundEvent.UsageAccepted
+        val billingEvent = billingDecoder.decode(event.wirePayload())
 
+        billingEvent.shouldBeInstanceOf<BillingInboundEvent.UsageAccepted>()
         billingEvent.event.quantity.toPlainString() shouldBeEqualTo "2.5"
         billingEvent.event.payloadDigest shouldBeEqualTo event.payloadDigest
+
         queryDecoder.decode(event.wirePayload()).aggregateType shouldBeEqualTo "Usage"
     }
 
@@ -76,9 +89,5 @@ class UsageBillingWireContractTest {
 
         invoiceDecoder.decode(event.wirePayload()).amount.toPlainString() shouldBeEqualTo "0.25"
         queryDecoder.decode(event.wirePayload()).aggregateType shouldBeEqualTo "BillingPeriod"
-    }
-
-    private companion object {
-        val NOW: Instant = Instant.parse("2026-07-23T00:00:00Z")
     }
 }

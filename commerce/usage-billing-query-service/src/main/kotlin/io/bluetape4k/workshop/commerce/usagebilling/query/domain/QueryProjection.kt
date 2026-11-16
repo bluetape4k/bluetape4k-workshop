@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.domain
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class QueryInboxEvent(
     val eventId: UUID,
@@ -15,7 +15,7 @@ data class QueryInboxEvent(
     val payload: String = "{}",
     val payloadDigest: String = EMPTY_JSON_DIGEST,
     val receivedAt: Instant = Instant.now(),
-) : Serializable {
+): Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         eventType.requireNotBlank("eventType")
@@ -33,7 +33,7 @@ data class QueryInboxEvent(
 
 data class QueryApplyResult(
     val applied: Boolean,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -45,7 +45,7 @@ data class QueryQuarantineEvent(
     val eventType: String,
     val reason: String,
     val quarantinedAt: Instant,
-) : Serializable {
+): Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         eventType.requireNotBlank("eventType")
@@ -60,7 +60,7 @@ data class QueryQuarantineEvent(
 data class QueryRecoverySnapshot(
     val quarantineCount: Long,
     val oldestQuarantineAt: Instant?,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -68,7 +68,7 @@ data class QueryRecoverySnapshot(
 
 data class QueryRedriveResult(
     val requested: Boolean,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

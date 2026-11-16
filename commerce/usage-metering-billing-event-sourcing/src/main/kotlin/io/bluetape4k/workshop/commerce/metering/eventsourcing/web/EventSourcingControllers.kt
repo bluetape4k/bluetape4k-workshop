@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.web
 
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.nanos
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.MeterCommandService
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.MeterRegistration
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.ReconciliationQuery
@@ -23,6 +25,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
+import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -35,7 +38,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import java.time.Clock
 import java.time.Duration
@@ -59,7 +61,7 @@ data class ProjectionStatusResponse(
     val actorId: String? = null,
 )
 
-class ProjectionNotCaughtUpException : IllegalStateException("projection_not_caught_up")
+class ProjectionNotCaughtUpException: IllegalStateException("projection_not_caught_up")
 
 @Component
 class ProjectionConsistencyWaiter(
@@ -89,6 +91,13 @@ class EventSourcingCommandController(
     private val metrics: EventSourcingMetrics,
     private val clock: Clock,
 ) {
+
+    private companion object: KLogging() {
+        const val DEFAULT_CURRENCY = "USD"
+        const val APPEND_SUCCESS = "success"
+        const val APPEND_CONFLICT = "conflict"
+    }
+
     @PostMapping("/meters")
     @Transactional
     fun registerMeter(
@@ -103,8 +112,9 @@ class EventSourcingCommandController(
             "meter-register",
             mapOf("code" to request.code, "unit" to request.unit),
         )
+
         return when (val acquired = receipts.acquire(scope, fingerprint, clock.instant())) {
-            is CommandAcquireResult.Owned -> registerOwned(tenantId, request, acquired, authentication.name)
+            is CommandAcquireResult.Owned  -> registerOwned(tenantId, request, acquired, authentication.name)
             is CommandAcquireResult.Replay -> ResponseEntity.status(acquired.httpStatus)
                 .header("Idempotency-Replayed", "true")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +122,7 @@ class EventSourcingCommandController(
             is CommandAcquireResult.InProgress -> ResponseEntity.status(HttpStatus.CONFLICT)
                 .header("Retry-After", acquired.retryAfter.seconds.coerceAtLeast(1).toString())
                 .body(ApiError("command_in_progress", "command_in_progress"))
-            CommandAcquireResult.Conflict -> ResponseEntity.status(HttpStatus.CONFLICT)
+            CommandAcquireResult.Conflict  -> ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiError("idempotency_conflict", "idempotency_conflict"))
         }
     }
@@ -127,36 +137,31 @@ class EventSourcingCommandController(
         val startedAt = System.nanoTime()
         try {
             val commandId = owned.receiptId.toString()
-            meters.register(MeterRegistration(
-                tenantId,
-                request.code,
-                request.unit,
-                DEFAULT_CURRENCY,
-                clock.instant(),
-                EventMetadata(commandId, commandId, commandId, actorId),
-            ))
+            meters.register(
+                MeterRegistration(
+                    tenantId,
+                    request.code,
+                    request.unit,
+                    DEFAULT_CURRENCY,
+                    clock.instant(),
+                    EventMetadata(commandId, commandId, commandId, actorId),
+                )
+            )
             metrics.recordAppend(APPEND_SUCCESS, (System.nanoTime() - startedAt).nanos())
         } catch (failure: OptimisticConcurrencyException) {
             metrics.recordAppend(APPEND_CONFLICT, (System.nanoTime() - startedAt).nanos())
             throw failure
         }
         val response = MeterResponse(request.code, request.unit)
-        val receiptCompleted = receipts.succeed(
-            owned,
-            HttpStatus.CREATED.value(),
-            mapper.writeValueAsString(response),
-            clock.instant(),
-        )
-        check(receiptCompleted) {
-            "command_receipt_owner_lost"
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(response)
-    }
 
-    private companion object {
-        const val DEFAULT_CURRENCY = "USD"
-        const val APPEND_SUCCESS = "success"
-        const val APPEND_CONFLICT = "conflict"
+        val receiptCompleted = receipts.succeed(
+            owned = owned,
+            httpStatus = HttpStatus.CREATED.value(),
+            response = mapper.writeValueAsString(response),
+            now = clock.instant(),
+        )
+        check(receiptCompleted) { "command_receipt_owner_lost" }
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 }
 
@@ -176,9 +181,11 @@ class EventSourcingQueryController(
     ): ResponseEntity<BillingSummary> {
         requireTenant(authentication, tenantId)
         waitForPosition?.let { consistency.await(BILLING_PROJECTION, it) }
+
         val active = checkNotNull(generations.active(BILLING_PROJECTION)) { "active_projection_missing" }
         val total = readModels.financialTotal(BILLING_PROJECTION, active.generation, tenantId)
         val lag = (active.highWatermark - active.checkpoint).coerceAtLeast(0)
+
         return ResponseEntity.ok()
             .header("Projection-Position", active.checkpoint.toString())
             .header("Projection-Lag", lag.toString())
@@ -198,10 +205,15 @@ class EventSourcingAdminController(
     private val rebuilds: ProjectionRebuildCommandService,
     private val reconciliation: ReconciliationService,
 ) {
+
+    private companion object: KLogging() {
+        const val BILLING_PROJECTION = "billing"
+    }
+
     @GetMapping("/projections/{projectionName}")
     @Transactional(readOnly = true)
     fun projection(@PathVariable projectionName: String): ProjectionStatusResponse {
-        val active = checkNotNull(generations.active(projectionName)) { "active_projection_missing" }
+        val active = generations.active(projectionName).checkNotNull { "active_projection_missing" }
         return status(active)
     }
 
@@ -210,8 +222,9 @@ class EventSourcingAdminController(
     fun generation(
         @PathVariable projectionName: String,
         @PathVariable generation: Int,
-    ): ProjectionStatusResponse = status(
-        checkNotNull(generations.get(projectionName, generation)) { "projection_generation_missing" },
+    ): ProjectionStatusResponse =
+        status(
+            generations.get(projectionName, generation).checkNotNull { "projection_generation_missing" },
     )
 
     @PostMapping("/projections/{projectionName}/rebuilds")
@@ -220,7 +233,8 @@ class EventSourcingAdminController(
         @PathVariable projectionName: String,
         @RequestHeader("Idempotency-Key") key: String,
         authentication: Authentication,
-    ): ResponseEntity<Any> = rebuilds.begin(projectionName, key, authentication.name)
+    ): ResponseEntity<Any> =
+        rebuilds.begin(projectionName, key, authentication.name)
 
     @GetMapping("/reconciliation")
     @Transactional(readOnly = true)
@@ -236,26 +250,27 @@ class EventSourcingAdminController(
     private fun status(generation: ProjectionGeneration, actorId: String? = null): ProjectionStatusResponse {
         val failure = failures.latest(generation.projectionName, generation.generation)
         return ProjectionStatusResponse(
-            generation.projectionName,
-            generation.generation,
-            generation.state.name,
-            generation.checkpoint,
-            generation.highWatermark,
-            (generation.highWatermark - generation.checkpoint).coerceAtLeast(0),
-            failure != null,
-            failure?.globalPosition,
-            failure?.attemptCount,
-            actorId,
+            name = generation.projectionName,
+            generation = generation.generation,
+            state = generation.state.name,
+            checkpoint = generation.checkpoint,
+            highWatermark = generation.highWatermark,
+            lag = (generation.highWatermark - generation.checkpoint).coerceAtLeast(0),
+            quarantined = failure != null,
+            failedPosition = failure?.globalPosition,
+            failureAttempts = failure?.attemptCount,
+            actorId = actorId,
         )
-    }
-
-    private companion object {
-        const val BILLING_PROJECTION = "billing"
     }
 }
 
 @RestControllerAdvice
 class EventSourcingErrorAdvice {
+
+    private companion object: KLogging() {
+        val STABLE_ERROR_CODE = Regex("[a-z][a-z0-9_]*")
+    }
+
     @ExceptionHandler(ProjectionNotCaughtUpException::class)
     fun projectionNotCaughtUp(): ResponseEntity<ApiError> = ResponseEntity.status(HttpStatus.CONFLICT)
         .body(ApiError("projection_not_caught_up", "projection_not_caught_up"))
@@ -281,10 +296,6 @@ class EventSourcingErrorAdvice {
         ?.substringBefore(':')
         ?.takeIf { it.matches(STABLE_ERROR_CODE) }
         ?: fallback
-
-    private companion object {
-        val STABLE_ERROR_CODE = Regex("[a-z][a-z0-9_]*")
-    }
 }
 
 private fun requireTenant(authentication: Authentication, tenantId: String) {

@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventHashMaterial
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterReducer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterRegistered
@@ -16,11 +19,25 @@ import java.time.Instant
 import java.util.UUID
 
 class AggregateReplayTest {
+
+    companion object: KLogging()
+
     private val stream = StreamKey("tenant-a", "Meter", "api_calls")
+
     private val registry = EventCodecRegistry()
-        .register("meter.registered", 1) { MeterRegistered("api_calls", "request", "USD") }
+        .register("meter.registered", 1) {
+            MeterRegistered(
+                meterCode = "api_calls",
+                unit = "request",
+                currency = "USD"
+            )
+        }
         .register("price.activated", 1) {
-            PriceActivated("USD", BigDecimal("0.10"), Instant.parse("2026-06-01T00:00:00Z"))
+            PriceActivated(
+                currency = "USD",
+                unitPrice = BigDecimal("0.10"),
+                effectiveFrom = Instant.parse("2026-06-01T00:00:00Z")
+            )
         }
     private val policy = ReplayPolicy(registry, 1)
 
@@ -33,8 +50,9 @@ class AggregateReplayTest {
         val full = AggregateReplayer.replay(events, MeterState.Empty, MeterReducer, null, policy)
         val restored = AggregateReplayer.replay(events, MeterState.Empty, MeterReducer, snapshot, policy)
 
-        restored.shouldBeEqualTo(full)
-        restored.streamVersion.shouldBeEqualTo(2L)
+        log.debug { "restored: $restored" }
+        restored shouldBeEqualTo full
+        restored.streamVersion shouldBeEqualTo 2L
     }
 
     @Test
@@ -48,10 +66,13 @@ class AggregateReplayTest {
             telemetry,
         )
 
-        restored.streamVersion.shouldBeEqualTo(2L)
-        (restored.state as MeterState.Active).meterCode.shouldBeEqualTo("api_calls")
-        telemetry.snapshotFallbacks.shouldBeEqualTo(listOf("invalid"))
-        telemetry.replays.shouldBeEqualTo(listOf("success" to 2))
+        log.debug { "restored: $restored" }
+        restored.streamVersion shouldBeEqualTo 2L
+        restored.state.shouldBeInstanceOf<MeterState.Active>().meterCode shouldBeEqualTo "api_calls"
+
+        log.debug { "telemetry: $telemetry" }
+        telemetry.snapshotFallbacks shouldBeEqualTo listOf("invalid")
+        telemetry.replays shouldBeEqualTo listOf("success" to 2)
     }
 
     @Test
@@ -60,7 +81,13 @@ class AggregateReplayTest {
         events[1] = events[1].copy(payload = """{"unitPrice":999}""")
 
         assertFailsWith<EventHashMismatchException> {
-            AggregateReplayer.replay(events, MeterState.Empty, MeterReducer, null, policy)
+            AggregateReplayer.replay(
+                events = events,
+                initialState = MeterState.Empty,
+                reducer = MeterReducer,
+                snapshot = null,
+                policy = policy
+            )
         }
     }
 
@@ -71,10 +98,28 @@ class AggregateReplayTest {
     }
 
     private fun persisted(version: Long, type: String, payload: String, previousHash: String?): PersistedEvent {
-        val material = EventHashMaterial(stream, version, type, 1, payload, "{}", previousHash)
+        val material = EventHashMaterial(
+            stream = stream,
+            streamVersion = version,
+            eventType = type,
+            schemaVersion = 1,
+            payload = payload,
+            metadata = "{}",
+            previousHash = previousHash
+        )
         return PersistedEvent(
-            UUID.randomUUID(), stream, version, version, type, 1, payload, "{}", previousHash,
-            CanonicalEventHash.sha256(material), Instant.EPOCH, Instant.EPOCH,
+            eventId = UUID.randomUUID(),
+            stream = stream,
+            streamVersion = version,
+            globalPosition = version,
+            eventType = type,
+            schemaVersion = 1,
+            payload = payload,
+            metadata = "{}",
+            previousHash = previousHash,
+            eventHash = CanonicalEventHash.sha256(material),
+            occurredAt = Instant.EPOCH,
+            recordedAt = Instant.EPOCH,
         )
     }
 

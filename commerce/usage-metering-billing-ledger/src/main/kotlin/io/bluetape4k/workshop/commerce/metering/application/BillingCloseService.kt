@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.metering.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.CloseRunState
 import io.bluetape4k.workshop.commerce.metering.domain.LedgerEntryType
@@ -8,19 +11,20 @@ import io.bluetape4k.workshop.commerce.metering.persistence.BillingPeriodReposit
 import io.bluetape4k.workshop.commerce.metering.persistence.CloseRunRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.CloseRuns
 import io.bluetape4k.workshop.commerce.metering.persistence.LedgerEntries
-import io.bluetape4k.workshop.commerce.metering.persistence.PriceVersionRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.PriceVersionEntity
+import io.bluetape4k.workshop.commerce.metering.persistence.PriceVersionRepository
+import io.bluetape4k.workshop.commerce.metering.persistence.UsageCloseQuery
 import io.bluetape4k.workshop.commerce.metering.persistence.UsageEventEntity
 import io.bluetape4k.workshop.commerce.metering.persistence.UsageEventRepository
-import io.bluetape4k.workshop.commerce.metering.persistence.UsageCloseQuery
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.core.eq
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 
 private const val MONEY_SCALE = 6
 
@@ -43,22 +47,29 @@ class BillingCloseService(
 ) {
     @Transactional
     fun processNextBatch(tenantId: String, runId: UUID, requestedBatchSize: Int? = null): CloseBatchResult {
-        CloseRuns.selectAll().where { CloseRuns.id eq runId }.forUpdate().singleOrNull()
-            ?: error("close_run_not_found")
-        val run = requireNotNull(runs.findTenant(runId, tenantId)) { "close_run_not_found" }
-        require(run.state == CloseRunState.RUNNING.name) { "close_run_not_running" }
-        val period = requireNotNull(periods.findTenant(run.periodId.value, tenantId))
+        CloseRuns
+            .selectAll()
+            .where { CloseRuns.id eq runId }
+            .forUpdate()
+            .singleOrNull() ?: error("close_run_not_found")
+
+        val run = runs.findTenant(runId, tenantId).requireNotNull("CloseRunEntity")
+        run.state.requireEquals(CloseRunState.RUNNING.name) { "run.state is not running" }
+        val period = periods.findTenant(run.periodId.value, tenantId).requireNotNull("BillingPeriodEntity")
         val batchSize = (requestedBatchSize ?: properties.close.batchSize).coerceAtMost(properties.close.maxBatchSize)
-        require(batchSize > 0) { "invalid_batch_size" }
-        val batch = usageEvents.closeBatch(UsageCloseQuery(
-            tenantId = tenantId,
-            startsAt = period.startsAt,
-            endsAt = period.endsAt,
-            cutoff = run.cutoffReceivedAt,
-            lastOccurredAt = run.lastOccurredAt,
-            lastId = run.lastUsageEventId,
-            limit = batchSize,
-        ))
+        batchSize.requirePositiveNumber("batchSize")
+
+        val batch = usageEvents.closeBatch(
+            UsageCloseQuery(
+                tenantId = tenantId,
+                startsAt = period.startsAt,
+                endsAt = period.endsAt,
+                cutoff = run.cutoffReceivedAt,
+                lastOccurredAt = run.lastOccurredAt,
+                lastId = run.lastUsageEventId,
+                limit = batchSize,
+            )
+        )
         var priced = 0
         var unpriced = 0
         batch.forEach { usage ->
@@ -79,16 +90,22 @@ class BillingCloseService(
         run.unpricedCount += unpriced
         run.checkpointVersion += 1
         run.updatedAt = clock.instant()
+
         if (batch.size < batchSize) {
-            run.state =
-                if (run.unpricedCount == 0L) {
-                    CloseRunState.READY_TO_FINALIZE.name
-                } else {
-                    CloseRunState.FAILED_VALIDATION.name
-                }
+            run.state = if (run.unpricedCount == 0L) {
+                CloseRunState.READY_TO_FINALIZE.name
+            } else {
+                CloseRunState.FAILED_VALIDATION.name
+            }
             run.lastErrorCategory = if (run.unpricedCount == 0L) null else "PRICE_NOT_FOUND"
         }
-        return CloseBatchResult(runId, CloseRunState.valueOf(run.state), batch.size, priced, unpriced)
+        return CloseBatchResult(
+            runId = runId,
+            state = CloseRunState.valueOf(run.state),
+            scanned = batch.size,
+            priced = priced,
+            unpriced = unpriced
+        )
     }
 
     @Transactional
@@ -103,10 +120,15 @@ class BillingCloseService(
 
     @Transactional
     fun resumeAfterPriceRepair(tenantId: String, runId: UUID): CloseBatchResult {
-        CloseRuns.selectAll().where { CloseRuns.id eq runId }.forUpdate().singleOrNull()
-            ?: error("close_run_not_found")
-        val run = requireNotNull(runs.findTenant(runId, tenantId)) { "close_run_not_found" }
-        require(run.state == CloseRunState.FAILED_VALIDATION.name) { "close_run_not_failed_validation" }
+        CloseRuns.selectAll()
+            .where { CloseRuns.id eq runId }
+            .forUpdate()
+            .singleOrNull() ?: error("CloseRuns not found. runId=$runId")
+
+        val run =
+            runs.findTenant(runId, tenantId).requireNotNull { "close_run_not_found. runId=$runId, tenantId=$tenantId" }
+        run.state.requireEquals(CloseRunState.FAILED_VALIDATION.name) { "run.state is not running" }
+
         run.state = CloseRunState.RUNNING.name
         run.lastOccurredAt = null
         run.lastUsageEventId = null
@@ -116,7 +138,14 @@ class BillingCloseService(
         run.lastErrorCategory = null
         run.checkpointVersion += 1
         run.updatedAt = clock.instant()
-        return CloseBatchResult(runId, CloseRunState.RUNNING, 0, 0, 0)
+
+        return CloseBatchResult(
+            runId = runId,
+            state = CloseRunState.RUNNING,
+            scanned = 0,
+            priced = 0,
+            unpriced = 0
+        )
     }
 
     private fun appendCharge(
@@ -126,7 +155,10 @@ class BillingCloseService(
         usage: UsageEventEntity,
         price: PriceVersionEntity,
     ) {
-        val amount = usage.quantity.multiply(price.unitPrice).setScale(MONEY_SCALE, RoundingMode.HALF_UP)
+        val amount: BigDecimal = usage.quantity
+            .multiply(price.unitPrice)
+            .setScale(MONEY_SCALE, RoundingMode.HALF_UP)
+        
         LedgerEntries.insertIgnore {
             it[id] = Uuid.V7.nextId()
             it[LedgerEntries.tenantId] = tenantId

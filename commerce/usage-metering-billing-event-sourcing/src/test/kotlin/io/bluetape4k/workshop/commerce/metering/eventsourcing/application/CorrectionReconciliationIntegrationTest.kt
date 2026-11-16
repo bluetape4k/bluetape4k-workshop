@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -24,16 +25,18 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.Project
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionHandlers
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionLease
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionModelType
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
-@Tag("integration")
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CorrectionReconciliationIntegrationTest {
+
+    companion object: KLogging()
+
     private val fixture = EventStoreDatabaseFixture()
     private val eventStore = EventStoreRepository()
     private val codec = DomainEventJsonCodec()
@@ -45,18 +48,33 @@ class CorrectionReconciliationIntegrationTest {
     private val coordinator = ProjectionCoordinator(checkpoints)
     private val reconciliation = ReconciliationService(eventStore, codec, generations, readModels)
     private val now = Instant.parse("2026-07-01T00:00:00Z")
-    private val query = ReconciliationQuery("tenant-a", "billing", now.minusSeconds(1), now.plusSeconds(3600))
+    private val query = ReconciliationQuery(
+        tenantId = "tenant-a",
+        projectionName = "billing",
+        startsAt = now.minusSeconds(1),
+        endsAt = now.plusSeconds(3600)
+    )
 
     @Test
     fun `adjustment is append-only idempotent and conflicting reuse is rejected`() {
         fixture.reset()
         val credit = credit("2.00")
 
-        fixture.executor.transaction { adjustments.post("tenant-a", "correction-1", credit, now) }
-        fixture.executor.transaction { adjustments.post("tenant-a", "correction-1", credit, now) }.shouldBeFalse()
+        fixture.executor.transaction {
+            adjustments.post(tenantId = "tenant-a", "correction-1", credit, now)
+        }
+        fixture.executor.transaction {
+            adjustments.post(tenantId = "tenant-a", "correction-1", credit, now)
+        }.shouldBeFalse()
+
         assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
-                adjustments.post("tenant-a", "correction-1", credit.copy(amount = BigDecimal.ONE), now)
+                adjustments.post(
+                    tenantId = "tenant-a",
+                    adjustmentId = "correction-1",
+                    adjustment = credit.copy(amount = BigDecimal.ONE),
+                    now = now
+                )
             }
         }
     }
@@ -66,15 +84,15 @@ class CorrectionReconciliationIntegrationTest {
         fixture.reset()
         fixture.executor.transaction {
             val rated = UsageRated(
-                "usage-1",
-                "api_calls",
-                BigDecimal.TEN,
-                BigDecimal("0.50"),
-                BigDecimal("5.00"),
-                "USD",
+                usageEventId = "usage-1",
+                meterCode = "api_calls",
+                quantity = BigDecimal.TEN,
+                unitPrice = BigDecimal("0.50"),
+                amount = BigDecimal("5.00"),
+                currency = "USD",
             )
             eventStore.append(StreamKey("tenant-a", "Rating", "usage-1"), 0, listOf(codec.encode(rated, now)))
-            adjustments.post("tenant-a", "correction-1", credit("2.00"), now + 1.seconds())
+            adjustments.post(tenantId = "tenant-a", "correction-1", credit("2.00"), now + 1.seconds())
             generations.createInitialActive("billing", 1, now)
         }
         projectGeneration(1)
@@ -83,53 +101,78 @@ class CorrectionReconciliationIntegrationTest {
         fixture.executor.transaction {
             readModels.append(
                 NewBillingReadModelEntry(
-                    "billing", 1, "tenant-a", ProjectionModelType.LEDGER_DEBIT, "corrupt", "corrupt", 99,
-                    amount = BigDecimal.ONE, currency = "USD", occurredAt = now,
+                    projectionName = "billing",
+                    generation = 1,
+                    tenantId = "tenant-a",
+                    modelType = ProjectionModelType.LEDGER_DEBIT,
+                    entryId = "corrupt",
+                    eventType = "corrupt",
+                    globalPosition = 99,
+                    amount = BigDecimal.ONE,
+                    currency = "USD",
+                    occurredAt = now,
                 ),
             )
         }
-        val finding = fixture.executor.transaction { reconciliation.inspect(query) }
-        finding.shouldNotBeNull()
+        val finding = fixture.executor.transaction {
+            reconciliation.inspect(query)
+        }.shouldNotBeNull()
 
-        fixture.executor.transaction { generations.createBuilding("billing", 2, 2, now) }
+        fixture.executor.transaction {
+            generations.createBuilding("billing", 2, 2, now)
+        }
+
         val lease = projectGeneration(2)
         fixture.executor.transaction { generations.switchActive(lease, 1, now) }
         fixture.executor.transaction { reconciliation.inspect(query) }.shouldBeNull()
-        fixture.executor.transaction { reconciliation.isStillCurrent(query, checkNotNull(finding)) }.shouldBeFalse()
+        fixture.executor.transaction { reconciliation.isStillCurrent(query, finding) }.shouldBeFalse()
     }
 
     private fun projectGeneration(generation: Int): ProjectionLease {
         val lease = acquire(generation)
-        financialEvents().sortedBy(PersistedEvent::globalPosition).forEach { persisted ->
-            val event = codec.registry.decode(persisted.eventType, persisted.schemaVersion, persisted.payload)
-            val context = ProjectionEventContext(
-                "billing", generation, persisted.stream.tenantId, persisted.eventId,
-                persisted.globalPosition, persisted.occurredAt,
-            )
-            fixture.executor.transaction {
-                coordinator.apply(lease, persisted.eventId, persisted.globalPosition) {
-                    handlers.handle(context, event as DomainEvent)
+
+        financialEvents()
+            .sortedBy(PersistedEvent::globalPosition)
+            .forEach { persisted ->
+                val event = codec.registry.decode(persisted.eventType, persisted.schemaVersion, persisted.payload)
+                val context = ProjectionEventContext(
+                    "billing", generation, persisted.stream.tenantId, persisted.eventId,
+                    persisted.globalPosition, persisted.occurredAt,
+                )
+                fixture.executor.transaction {
+                    coordinator.apply(lease, persisted.eventId, persisted.globalPosition) {
+                        handlers.handle(context, event as DomainEvent)
+                    }
                 }
             }
-        }
         return lease
     }
 
     private fun financialEvents(): List<PersistedEvent> = fixture.executor.transaction {
         listOf("usage.rated", "adjustment.posted").flatMap { type ->
-            eventStore.loadByType(EventTypeQuery("tenant-a", type, query.startsAt, query.endsAt, limit = 100))
+            val query = EventTypeQuery("tenant-a", type, query.startsAt, query.endsAt, limit = 100)
+            eventStore.loadByType(query)
         }
     }
 
-    private fun acquire(generation: Int): ProjectionLease = fixture.executor.transaction {
-        checkpoints.acquireLease("billing", generation, UUID.randomUUID(), now, 1.minutes())
-    } ?: error("lease must be acquired")
+    private fun acquire(generation: Int): ProjectionLease =
+        fixture.executor.transaction {
+            checkpoints.acquireLease(
+                projectionName = "billing",
+                generation = generation,
+                ownerToken = UUID.randomUUID(),
+                now = now,
+                duration = 1.minutes()
+            )
+        } ?: error("lease must be acquired")
 
-    private fun credit(amount: String) = AdjustmentPosted(
-        AdjustmentDirection.CREDIT,
-        BigDecimal(amount),
-        "USD",
-        "late usage correction",
-        "usage-1",
-    )
+    @Suppress("SameParameterValue")
+    private fun credit(amount: String): AdjustmentPosted =
+        AdjustmentPosted(
+            direction = AdjustmentDirection.CREDIT,
+            amount = amount.toBigDecimal(),
+            currency = "USD",
+            reason = "late usage correction",
+            sourceEventId = "usage-1",
+        )
 }

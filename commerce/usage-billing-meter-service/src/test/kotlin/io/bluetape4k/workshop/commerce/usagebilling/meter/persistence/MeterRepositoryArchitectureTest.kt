@@ -1,10 +1,14 @@
 package io.bluetape4k.workshop.commerce.usagebilling.meter.persistence
 
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import org.junit.jupiter.api.Test
 
 class MeterRepositoryArchitectureTest {
+
+    companion object: KLogging()
+
     @Test
     fun `meter outbox repository implements ExposedJdbcRepository`() {
         ExposedJdbcRepository::class.java.isAssignableFrom(

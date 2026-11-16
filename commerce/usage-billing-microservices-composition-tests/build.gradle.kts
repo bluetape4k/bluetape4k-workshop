@@ -1,11 +1,12 @@
-import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
     `java-test-fixtures`
+    kotlin("kapt")
 }
 
 java {
@@ -54,17 +55,4 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
-}
-
-tasks.test {
-    useJUnitPlatform { excludeTags("integration") }
-}
-
-tasks.register<Test>("integrationTest") {
-    description = "Runs usage billing microservice Kafka/PostgreSQL composition tests."
-    group = "verification"
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    useJUnitPlatform { includeTags("integration") }
-    shouldRunAfter(tasks.test)
 }

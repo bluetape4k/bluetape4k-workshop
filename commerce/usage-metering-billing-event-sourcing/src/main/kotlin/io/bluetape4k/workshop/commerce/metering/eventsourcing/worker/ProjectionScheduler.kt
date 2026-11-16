@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.worker
 
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationQueryRepository
@@ -28,16 +29,25 @@ class ProjectionGenerationRunner(
     private val generations: ProjectionGenerationRepository,
     private val generationQueries: ProjectionGenerationQueryRepository,
 ) {
+    companion object: KLogging()
+
     private val transactions = TransactionTemplate(transactionManager)
 
     fun runOnce(projectionName: String): ProjectionCycle? {
         val active = transactions.execute { generations.active(projectionName) } ?: return null
         worker.runOnce(projectionName, active.generation, Uuid.V7.nextId())
-        val building = transactions.execute { generationQueries.building(projectionName) }
+
+        val building = transactions.execute {
+            generationQueries.building(projectionName)
+        }
         val buildingResult = building?.let {
             worker.runOnce(projectionName, it.generation, Uuid.V7.nextId())
         }
-        return ProjectionCycle(active.generation, building?.generation, buildingResult)
+        return ProjectionCycle(
+            activeGeneration = active.generation,
+            buildingGeneration = building?.generation,
+            buildingResult = buildingResult
+        )
     }
 }
 
@@ -49,6 +59,11 @@ class ProjectionGenerationSwitcher(
     private val eventStore: EventStore,
     private val clock: Clock,
 ) {
+
+    private companion object: KLogging() {
+        val SWITCH_LEASE: Duration = 30.seconds()
+    }
+
     private val transactions = TransactionTemplate(transactionManager)
 
     fun switchIfCaughtUp(projectionName: String, cycle: ProjectionCycle): Boolean {
@@ -56,21 +71,24 @@ class ProjectionGenerationSwitcher(
         val result = cycle.buildingResult
         val switchReady = result?.let { it.acquired && it.lag == 0L } == true
         if (generation == null || !switchReady) return false
+
         return transactions.execute {
             val now = clock.instant()
             val lease = checkpoints.acquireLease(
-                projectionName,
-                generation,
-                Uuid.V7.nextId(),
-                now,
-                SWITCH_LEASE,
+                projectionName = projectionName,
+                generation = generation,
+                ownerToken = Uuid.V7.nextId(),
+                now = now,
+                duration = SWITCH_LEASE,
             ) ?: return@execute false
-            rebuilder.catchUpAndSwitch(lease, cycle.activeGeneration, eventStore.latestGlobalPosition(), now)
-        }
-    }
 
-    private companion object {
-        val SWITCH_LEASE: Duration = 30.seconds()
+            rebuilder.catchUpAndSwitch(
+                lease = lease,
+                expectedActiveGeneration = cycle.activeGeneration,
+                observedHighWatermark = eventStore.latestGlobalPosition(),
+                now = now
+            )
+        }
     }
 }
 
@@ -85,6 +103,11 @@ class ProjectionScheduler(
     private val runner: ProjectionGenerationRunner,
     private val switcher: ProjectionGenerationSwitcher,
 ) {
+
+    private companion object: KLogging() {
+        const val BILLING_PROJECTION = "billing"
+    }
+
     @Scheduled(
         fixedDelayString = "\${workshop.metering-events.projection.fixed-delay:1s}",
         initialDelayString = "\${workshop.metering-events.projection.initial-delay:1s}",
@@ -92,9 +115,5 @@ class ProjectionScheduler(
     fun runOnce() {
         val cycle = runner.runOnce(BILLING_PROJECTION) ?: return
         switcher.switchIfCaughtUp(BILLING_PROJECTION, cycle)
-    }
-
-    private companion object {
-        const val BILLING_PROJECTION = "billing"
     }
 }

@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    kotlin("kapt")
 }
 
 java {
@@ -118,29 +119,4 @@ fun Test.useJava25Runtime() {
     setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
     usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
     verifyExecution()
-}
-
-tasks.test {
-    useJava25Runtime()
-    useJUnitPlatform { excludeTags("integration", "stress") }
-}
-
-tasks.register<Test>("integrationTest") {
-    description = "Runs PostgreSQL integration tests for event-sourced usage billing."
-    group = "verification"
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    useJava25Runtime()
-    useJUnitPlatform { includeTags("integration") }
-    shouldRunAfter(tasks.test)
-}
-
-tasks.register<Test>("stressTest") {
-    description = "Runs event-sourced usage billing stress tests."
-    group = "verification"
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    useJava25Runtime()
-    useJUnitPlatform { includeTags("stress") }
-    shouldRunAfter(tasks.test)
 }

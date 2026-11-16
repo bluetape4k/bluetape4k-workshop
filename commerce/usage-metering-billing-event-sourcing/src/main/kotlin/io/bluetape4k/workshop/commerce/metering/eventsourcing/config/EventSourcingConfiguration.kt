@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.config
 
 import io.bluetape4k.javatimes.days
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency.CommandReceiptService
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
 import org.jetbrains.exposed.v1.core.DatabaseConfig
@@ -15,6 +16,12 @@ import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration(proxyBeanMethods = false)
 class EventSourcingConfiguration {
+
+    private companion object: KLogging() {
+        val COMMAND_LEASE_DURATION: Duration = 30.seconds()
+        val COMMAND_RETENTION: Duration = 7.days()
+    }
+
     @Bean
     fun eventSourcingClock(): Clock = Clock.systemUTC()
 
@@ -26,8 +33,4 @@ class EventSourcingConfiguration {
     fun commandReceiptService(repository: CommandReceiptRepository): CommandReceiptService =
         CommandReceiptService(repository, COMMAND_LEASE_DURATION, COMMAND_RETENTION)
 
-    private companion object {
-        val COMMAND_LEASE_DURATION: Duration = 30.seconds()
-        val COMMAND_RETENTION: Duration = 7.days()
-    }
 }

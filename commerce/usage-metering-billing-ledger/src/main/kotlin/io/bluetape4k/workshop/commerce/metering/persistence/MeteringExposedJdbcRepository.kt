@@ -4,13 +4,14 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.dao.Entity
+import kotlin.reflect.KClass
 
 /** 이 예제에 필요한 Bluetape Spring Data repository delegate입니다. */
 @Suppress("AbstractClassCanBeConcreteClass")
 abstract class MeteringExposedJdbcRepository<E: Entity<ID>, ID: Any>(
-    domainClass: Class<E>,
+    domainClass: KClass<E>,
 ): ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
-    ExposedEntityInformationImpl(domainClass),
+    ExposedEntityInformationImpl(domainClass.java),
 )
 
 /**
@@ -19,7 +20,7 @@ abstract class MeteringExposedJdbcRepository<E: Entity<ID>, ID: Any>(
  */
 @Suppress("AbstractClassCanBeConcreteClass")
 abstract class AppendOnlyMeteringExposedJdbcRepository<E: Entity<ID>, ID: Any>(
-    domainClass: Class<E>,
+    domainClass: KClass<E>,
 ): MeteringExposedJdbcRepository<E, ID>(domainClass) {
     final override fun <S: E> save(entity: S): S = immutableMutation()
 

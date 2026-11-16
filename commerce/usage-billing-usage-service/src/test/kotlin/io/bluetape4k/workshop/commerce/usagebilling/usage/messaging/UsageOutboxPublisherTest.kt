@@ -1,16 +1,29 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.messaging
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 
 class UsageOutboxPublisherTest {
+
+    private companion object: KLogging() {
+        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
+    }
+
     private val journal = InMemoryUsageOutboxJournal()
     private val transport = RecordingUsageEventTransport()
     private val publisher = UsageOutboxPublisher(journal, transport, Clock.fixed(NOW, ZoneOffset.UTC))
+
+    @BeforeEach
+    fun beforeEach() {
+        journal.reset()
+        transport.reset()
+    }
 
     @Test
     fun `broker success marks the locally claimed Usage outbox event published`() {
@@ -33,9 +46,13 @@ class UsageOutboxPublisherTest {
     }
 
     private fun event(): UsageOutboxLease =
-        UsageOutboxLease(UUID.randomUUID(), "tenant-a|Usage|source-1", "{\"event\":\"UsageAccepted\"}")
+        UsageOutboxLease(
+            eventId = UUID.randomUUID(),
+            partitionKey = "tenant-a|Usage|source-1",
+            payload = "{\"event\":\"UsageAccepted\"}"
+        )
 
-    private class InMemoryUsageOutboxJournal : UsageOutboxJournal {
+    private class InMemoryUsageOutboxJournal: UsageOutboxJournal {
         val events = mutableListOf<UsageOutboxLease>()
         private val statusByEvent = mutableMapOf<UUID, UsageOutboxStatus>()
         private val ownerByEvent = mutableMapOf<UUID, String>()
@@ -62,9 +79,15 @@ class UsageOutboxPublisherTest {
 
         fun statusOf(eventId: UUID): UsageOutboxStatus =
             statusByEvent[eventId] ?: UsageOutboxStatus.PENDING
+
+        fun reset() {
+            events.clear()
+            statusByEvent.clear()
+            ownerByEvent.clear()
+        }
     }
 
-    private class RecordingUsageEventTransport : UsageEventTransport {
+    private class RecordingUsageEventTransport: UsageEventTransport {
         val keys = mutableListOf<String>()
         var failure: UsageEventTransportFailure? = null
 
@@ -72,9 +95,11 @@ class UsageOutboxPublisherTest {
             failure?.let { throw it }
             keys += partitionKey
         }
+
+        fun reset() {
+            keys.clear()
+            failure = null
+        }
     }
 
-    private companion object {
-        val NOW: Instant = Instant.parse("2026-07-22T00:00:00Z")
-    }
 }

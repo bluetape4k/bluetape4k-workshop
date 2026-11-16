@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    kotlin("kapt")
 }
 
 java {
@@ -63,17 +64,4 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
     testImplementation(libs.mockk)
-}
-
-tasks.test {
-    useJUnitPlatform { excludeTags("integration") }
-}
-
-tasks.register<Test>("integrationTest") {
-    description = "Runs PostgreSQL-backed Query service integration tests."
-    group = "verification"
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    shouldRunAfter(tasks.test)
-    useJUnitPlatform { includeTags("integration") }
 }

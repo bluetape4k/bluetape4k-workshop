@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -9,6 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.sql.DataSource
 
 class MeteringEventsJdbcExecutor(dataSource: DataSource) : AutoCloseable {
+
+    companion object: KLogging()
+
     private val closed = AtomicBoolean()
     private val database = Database.connect(
         datasource = dataSource,

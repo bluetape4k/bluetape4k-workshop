@@ -18,7 +18,10 @@ data class StreamAppend(
     val events: List<NewEvent>,
 )
 
-data class OccurredEventCursor(val occurredAt: java.time.Instant, val eventId: java.util.UUID)
+data class OccurredEventCursor(
+    val occurredAt: java.time.Instant,
+    val eventId: java.util.UUID,
+)
 
 data class EventTypeQuery(
     val tenantId: String,

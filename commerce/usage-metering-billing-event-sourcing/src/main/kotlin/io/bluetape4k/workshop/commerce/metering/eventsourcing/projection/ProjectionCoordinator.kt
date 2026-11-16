@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.projection
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -10,6 +11,9 @@ class ProjectionCoordinator(
     private val repository: ProjectionCheckpointRepository,
     private val clock: Clock = Clock.systemUTC(),
 ) {
+
+    companion object: KLogging()
+
     fun apply(
         lease: ProjectionLease,
         eventId: UUID,
@@ -19,6 +23,7 @@ class ProjectionCoordinator(
         repository.requireOwnership(lease)
         val inserted = repository.insertAppliedEvent(lease, eventId, globalPosition, clock.instant())
         if (inserted) handler()
+
         repository.advanceCheckpoint(lease, globalPosition, clock.instant())
         return if (inserted) ProjectionApplyResult.APPLIED else ProjectionApplyResult.ALREADY_APPLIED
     }

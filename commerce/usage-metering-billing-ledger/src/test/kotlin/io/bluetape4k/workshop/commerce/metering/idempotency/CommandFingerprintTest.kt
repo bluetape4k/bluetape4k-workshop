@@ -1,24 +1,30 @@
 package io.bluetape4k.workshop.commerce.metering.idempotency
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
 
 class CommandFingerprintTest {
 
+    companion object: KLogging()
+
     @Test
     fun `field order does not change a domain separated fingerprint`() {
-        val first =
-            CommandFingerprint.request(
-                "usage-ingest",
-                mapOf("quantity" to "1.0", "occurredAt" to "2026-07-01T00:00:00Z"),
-            )
-        val second =
-            CommandFingerprint.request(
-                "usage-ingest",
-                linkedMapOf("occurredAt" to "2026-07-01T00:00:00Z", "quantity" to "1.0"),
-            )
+        val first = CommandFingerprint.request(
+            "usage-ingest",
+            mapOf("quantity" to "1.0", "occurredAt" to "2026-07-01T00:00:00Z"),
+        )
+        val second = CommandFingerprint.request(
+            "usage-ingest",
+            linkedMapOf("occurredAt" to "2026-07-01T00:00:00Z", "quantity" to "1.0"),
+        )
+
+        log.debug { "first=$first" }
+        log.debug { "second=$second" }
 
         first shouldBeEqualTo second
         first.value.length shouldBeEqualTo 64
@@ -37,7 +43,8 @@ class CommandFingerprintTest {
         val rawKey = "customer-visible-secret-key"
         val digest = CommandFingerprint.key(rawKey)
 
+        log.debug { "digest=$digest" }
         digest.value.length shouldBeEqualTo 64
-        digest.value shouldBeEqualTo rawKey
+        digest.value shouldNotBeEqualTo rawKey
     }
 }

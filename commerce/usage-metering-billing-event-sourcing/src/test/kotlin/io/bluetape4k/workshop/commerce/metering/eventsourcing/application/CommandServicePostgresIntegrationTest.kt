@@ -3,12 +3,16 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -16,9 +20,11 @@ import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
-@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandServicePostgresIntegrationTest {
+
+    companion object: KLogging()
+
     private val fixture = EventStoreDatabaseFixture()
     private val eventStore = EventStoreRepository()
     private val codec = DomainEventJsonCodec()
@@ -31,11 +37,17 @@ class CommandServicePostgresIntegrationTest {
     @Test
     fun `meter registration and price activation use replayed invariants`() {
         fixture.reset()
-        fixture.executor.transaction { meters.register("tenant-a", "api_calls", "request", "USD", now) }
-        fixture.executor.transaction { meters.activatePrice("tenant-a", "api_calls", BigDecimal("0.10"), "USD", now) }
+        fixture.executor.transaction {
+            meters.register("tenant-a", "api_calls", "request", "USD", now)
+        }
+        fixture.executor.transaction {
+            meters.activatePrice("tenant-a", "api_calls", BigDecimal("0.10"), "USD", now)
+        }
 
         assertFailsWith<IllegalStateException> {
-            fixture.executor.transaction { meters.register("tenant-a", "api_calls", "request", "USD", now) }
+            fixture.executor.transaction {
+                meters.register("tenant-a", "api_calls", "request", "USD", now)
+            }
         }
         assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
@@ -50,8 +62,9 @@ class CommandServicePostgresIntegrationTest {
         val usage = UsageAccepted("gateway", "source-1", "api_calls", BigDecimal.TEN, now)
         val start = CountDownLatch(1)
         val pool = Executors.newFixedThreadPool(10)
+
         try {
-            val results = (1..20).map {
+            val results = List(20) {
                 pool.submit<Boolean> {
                     start.await()
                     fixture.executor.transaction { usages.accept("tenant-a", usage, now).created }
@@ -63,9 +76,16 @@ class CommandServicePostgresIntegrationTest {
             pool.shutdownNow()
         }
 
-        val replay = fixture.executor.transaction { usages.accept("tenant-a", usage, now) }
+        val replay = fixture.executor.transaction {
+            usages.accept("tenant-a", usage, now)
+        }
+        log.debug { "replay=$replay" }
         replay.created.shouldBeFalse()
-        fixture.executor.transaction { eventStore.load(replay.stream).size }.shouldBeEqualTo(1)
+
+        fixture.executor.transaction {
+            eventStore.load(replay.stream).size
+        } shouldBeEqualTo 1
+
         assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
                 usages.accept("tenant-a", usage.copy(quantity = BigDecimal.ONE), now)
@@ -76,38 +96,60 @@ class CommandServicePostgresIntegrationTest {
     @Test
     fun `period close and invoice issue are replay guarded and tenant isolated`() {
         fixture.reset()
-        fixture.executor.transaction { billing.open("tenant-a", "2026-07", "USD", now, now.plusSeconds(3600)) }
-        fixture.executor.transaction { billing.startClose("tenant-a", "2026-07", now.plusSeconds(3600)) }
-        fixture.executor.transaction { billing.issueInvoice("tenant-a", "invoice-1", BigDecimal.TEN, "USD", now) }
+        fixture.executor.transaction {
+            billing.open("tenant-a", "2026-07", "USD", now, now + 6.hours())
+        }
+        fixture.executor.transaction {
+            billing.startClose("tenant-a", "2026-07", now + 6.hours())
+        }
+        fixture.executor.transaction {
+            billing.issueInvoice("tenant-a", "invoice-1", BigDecimal.TEN, "USD", now)
+        }
 
         fixture.executor.transaction {
             billing.issueInvoice("tenant-a", "invoice-1", BigDecimal.TEN, "USD", now)
         }.shouldBeFalse()
-        fixture.executor.transaction { eventStore.load(StreamKey("tenant-b", "Invoice", "invoice-1")).size }
-            .shouldBeEqualTo(0)
+
+        fixture.executor.transaction {
+            eventStore.load(StreamKey("tenant-b", "Invoice", "invoice-1")).size
+        } shouldBeEqualTo 0
     }
 
     @Test
     fun `restartable close rates usage from event history without a projection`() {
         fixture.reset()
-        fixture.executor.transaction { meters.register("tenant-a", "api_calls", "request", "USD", now) }
         fixture.executor.transaction {
-            meters.activatePrice("tenant-a", "api_calls", BigDecimal("0.50"), "USD", now.minusSeconds(1))
-            billing.open("tenant-a", "2026-07", "USD", now, now.plusSeconds(3600))
+            meters.register("tenant-a", "api_calls", "request", "USD", now)
+        }
+        fixture.executor.transaction {
+            meters.activatePrice("tenant-a", "api_calls", BigDecimal("0.50"), "USD", now - 1.seconds())
+            billing.open("tenant-a", "2026-07", "USD", now, now + 3600.seconds())
             usages.accept("tenant-a", UsageAccepted("gateway", "one", "api_calls", BigDecimal("2"), now), now)
             usages.accept("tenant-a", UsageAccepted("gateway", "two", "api_calls", BigDecimal("3"), now), now)
-            billing.startClose("tenant-a", "2026-07", now.plusSeconds(3600))
+            billing.startClose("tenant-a", "2026-07", now + 6.hours())
         }
 
-        fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) }
-            .shouldBeEqualTo(BillingCloseBatchResult.APPLIED)
-        fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) }
-            .shouldBeEqualTo(BillingCloseBatchResult.APPLIED)
-        fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) }
-            .shouldBeEqualTo(BillingCloseBatchResult.FINALIZED)
+        fixture.executor.transaction {
+            closer.closeNextBatch("tenant-a", "2026-07", 1, now)
+        } shouldBeEqualTo BillingCloseBatchResult.APPLIED
+
+        fixture.executor.transaction {
+            closer.closeNextBatch("tenant-a", "2026-07", 1, now)
+        } shouldBeEqualTo BillingCloseBatchResult.APPLIED
+
+        fixture.executor.transaction {
+            closer.closeNextBatch("tenant-a", "2026-07", 1, now)
+        } shouldBeEqualTo BillingCloseBatchResult.FINALIZED
+
         val rated = fixture.executor.transaction {
             eventStore.loadByType(
-                EventTypeQuery("tenant-a", "usage.rated", now.minusSeconds(1), now.plusSeconds(3600), limit = 10),
+                EventTypeQuery(
+                    tenantId = "tenant-a",
+                    eventType = "usage.rated",
+                    startsAt = now - 1.seconds(),
+                    endsAt = now + 6.hours(),
+                    limit = 10
+                ),
             )
         }
         rated.size.shouldBeEqualTo(2)
@@ -118,18 +160,21 @@ class CommandServicePostgresIntegrationTest {
         fixture.reset()
         fixture.executor.transaction {
             meters.register("tenant-a", "api_calls", "request", "USD", now)
-            meters.activatePrice("tenant-a", "api_calls", BigDecimal.ONE, "USD", now.minusSeconds(1))
-            billing.open("tenant-a", "2026-07", "USD", now, now.plusSeconds(3600))
+            meters.activatePrice("tenant-a", "api_calls", BigDecimal.ONE, "USD", now - 1.seconds())
+            billing.open("tenant-a", "2026-07", "USD", now, now + 6.hours())
             usages.accept("tenant-a", UsageAccepted("gateway", "one", "api_calls", BigDecimal.ONE, now), now)
             billing.startClose("tenant-a", "2026-07", now.plusSeconds(3600))
         }
         val start = CountDownLatch(1)
         val pool = Executors.newFixedThreadPool(10)
+
         try {
-            val attempts = (1..20).map {
+            val attempts = List(20) {
                 pool.submit<BillingCloseBatchResult> {
                     start.await()
-                    fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 10, now) }
+                    fixture.executor.transaction {
+                        closer.closeNextBatch("tenant-a", "2026-07", 10, now)
+                    }
                 }
             }
             start.countDown()
@@ -137,12 +182,23 @@ class CommandServicePostgresIntegrationTest {
         } finally {
             pool.shutdownNow()
         }
-        fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 10, now) }
+
+        fixture.executor.transaction {
+            closer.closeNextBatch("tenant-a", "2026-07", 10, now)
+        }
+
         val rated = fixture.executor.transaction {
             eventStore.loadByType(
-                EventTypeQuery("tenant-a", "usage.rated", now.minusSeconds(1), now.plusSeconds(3600), limit = 10),
+                EventTypeQuery(
+                    tenantId = "tenant-a",
+                    eventType = "usage.rated",
+                    startsAt = now - 1.seconds(),
+                    endsAt = now + 6.hours(),
+                    limit = 10
+                ),
             )
         }
-        rated.size.shouldBeEqualTo(1)
+        log.debug { "rated: $rated" }
+        rated shouldHaveSize 1
     }
 }

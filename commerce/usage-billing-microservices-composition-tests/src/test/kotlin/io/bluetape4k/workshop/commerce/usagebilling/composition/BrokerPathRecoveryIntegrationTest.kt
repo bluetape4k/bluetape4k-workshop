@@ -4,32 +4,39 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javatimes.nanos
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.MeterOutboxState
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBillingMicroserviceFixture
 import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxStatus
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
-import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-@Tag("integration")
 class BrokerPathRecoveryIntegrationTest {
+
+    private companion object: KLogging() {
+        val TIMEOUT: Duration = 30.seconds()
+        const val TENANT = "tenant-broker-path"
+        const val METER_CODE = "api_calls"
+    }
+
     @Test
     fun `real Kafka broker path outage preserves the Meter outbox row and recovers delivery`() {
         UsageBillingMicroserviceFixture(brokerPathProxy = true).use { fixture ->
+
             fixture.start()
             val activation = fixture.activatePrice(TENANT, METER_CODE, BigDecimal("0.10"))
             val recoveryStartedAt = System.nanoTime()
             fixture.cutBrokerPath()
+
             try {
                 fixture.publishMeterEvents().retryWait shouldBeEqualTo 1
             } finally {
@@ -42,11 +49,14 @@ class BrokerPathRecoveryIntegrationTest {
             await withPollInterval 1.seconds atMost TIMEOUT untilAsserted {
                 fixture.publishMeterEvents().published shouldBeEqualTo 1
             }
+
             fixture.meterOutboxState(activation.eventId) shouldBeEqualTo
                     MeterOutboxState(MeterOutboxStatus.PUBLISHED, attempt = 1)
-            await().atMost(TIMEOUT).untilAsserted {
+
+            await atMost TIMEOUT untilAsserted {
                 (fixture.priceEvidence(TENANT, METER_CODE) != null).shouldBeTrue()
             }
+
             KafkaRecoveryConformanceFixture(TIMEOUT).assertTransportRecovery(
                 KafkaRecoveryObservation(
                     path = KafkaRecoveryPath.TRANSPORT_INTERRUPTION,
@@ -64,11 +74,5 @@ class BrokerPathRecoveryIntegrationTest {
                 ),
             )
         }
-    }
-
-    private companion object {
-        val TIMEOUT: Duration = 30.seconds()
-        const val TENANT = "tenant-broker-path"
-        const val METER_CODE = "api_calls"
     }
 }

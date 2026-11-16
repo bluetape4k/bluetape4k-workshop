@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.javatimes.days
 import io.bluetape4k.javatimes.hours
 import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.javatimes.seconds
@@ -23,7 +24,7 @@ class MeteringPropertiesTest {
         properties.commandReceipt.retention shouldBeEqualTo 24.hours()
         properties.commandReceipt.terminalResponseBytes shouldBeEqualTo 16 * 1024
         properties.allowedLateness shouldBeEqualTo 48.hours()
-        properties.occurredAtRetention shouldBeEqualTo 400.hours()
+        properties.occurredAtRetention shouldBeEqualTo 400.days()
         properties.occurredAtFutureSkew shouldBeEqualTo 5.minutes()
         properties.close.batchSize shouldBeEqualTo 200
         properties.close.maxBatchSize shouldBeEqualTo 1_000
@@ -39,7 +40,7 @@ class MeteringPropertiesTest {
             MeteringProperties.CommandReceipt(lease = 4.seconds())
         }
         assertFailsWith<IllegalArgumentException> {
-            MeteringProperties.CommandReceipt(lease = 6.seconds())
+            MeteringProperties.CommandReceipt(lease = 6.minutes())
         }
         assertFailsWith<IllegalArgumentException> {
             MeteringProperties.CommandReceipt(

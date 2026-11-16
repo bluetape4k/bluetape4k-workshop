@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.domain
 
-import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import java.math.BigDecimal
 import java.io.Serializable
+import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class AcceptUsageCommand(
     val tenantId: String,
@@ -16,7 +16,7 @@ data class AcceptUsageCommand(
     val currency: String,
     val quantity: BigDecimal,
     val occurredAt: Instant,
-) : Serializable {
+): Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         sourceSystem.requireNotBlank("sourceSystem")
@@ -39,7 +39,7 @@ data class PriceEvidence(
     val currency: String,
     val unitPrice: BigDecimal,
     val effectiveAt: Instant,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -50,7 +50,7 @@ data class PriceEvidenceInboxEvent(
     val tenantId: String,
     val payloadDigest: String,
     val evidence: PriceEvidence,
-) : Serializable {
+): Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         payloadDigest.requireNotBlank("payloadDigest")
@@ -80,7 +80,7 @@ data class UsageRecord(
     val quantity: BigDecimal,
     val unitPrice: BigDecimal,
     val occurredAt: Instant,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -93,7 +93,7 @@ data class UsageOutboxRecord(
     val payload: String,
     val payloadDigest: String,
     val createdAt: Instant,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -103,7 +103,7 @@ data class UsageAcceptanceResult(
     val usageId: UUID,
     val eventId: UUID,
     val replayed: Boolean,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -117,6 +117,6 @@ interface UsageAcceptanceJournal {
     fun append(usage: UsageRecord, outboxRecord: UsageOutboxRecord)
 }
 
-class MissingPriceEvidence : IllegalArgumentException("missing_price_evidence")
+class MissingPriceEvidence: IllegalArgumentException("missing_price_evidence")
 
-class UsageSourceConflict : IllegalArgumentException("usage_source_conflict")
+class UsageSourceConflict: IllegalArgumentException("usage_source_conflict")

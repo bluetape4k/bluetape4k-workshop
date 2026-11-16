@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.config
 
 import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryRecoveryService
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
@@ -17,7 +18,7 @@ import java.time.Instant
 data class QueryProperties(
     val maxQuarantineBacklog: Long = 0,
     val maxOldestQuarantineAge: Duration = DEFAULT_MAX_OLDEST_QUARANTINE_AGE,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -31,6 +32,20 @@ private val DEFAULT_MAX_OLDEST_QUARANTINE_AGE: Duration =
 class QueryMetrics(
     private val registry: MeterRegistry,
 ) {
+    private companion object: KLogging() {
+        val OUTCOMES = setOf("APPLIED", "DUPLICATE", "DEFERRED", "QUARANTINED")
+        val REDRIVE_OUTCOMES = setOf("REQUESTED", "NOT_FOUND")
+        val EVENT_TYPES = setOf(
+            "PriceActivated",
+            "UsageAccepted",
+            "UsageCorrected",
+            "ChargeRated",
+            "AdjustmentPosted",
+            "InvoiceIssued",
+            "InvoiceCorrectionIssued",
+        )
+    }
+
     fun inboxOutcome(outcome: String, eventType: String) {
         check(outcome in OUTCOMES) { "unsupported_query_inbox_outcome:$outcome" }
         check(eventType in EVENT_TYPES) { "unsupported_query_event_type:$eventType" }
@@ -51,19 +66,6 @@ class QueryMetrics(
             .increment()
     }
 
-    private companion object {
-        val OUTCOMES = setOf("APPLIED", "DUPLICATE", "DEFERRED", "QUARANTINED")
-        val REDRIVE_OUTCOMES = setOf("REQUESTED", "NOT_FOUND")
-        val EVENT_TYPES = setOf(
-            "PriceActivated",
-            "UsageAccepted",
-            "UsageCorrected",
-            "ChargeRated",
-            "AdjustmentPosted",
-            "InvoiceIssued",
-            "InvoiceCorrectionIssued",
-        )
-    }
 }
 
 @Component("usageBillingQueryRecovery")
@@ -71,12 +73,16 @@ class QueryRecoveryHealthIndicator(
     private val recovery: QueryRecoveryService,
     private val properties: QueryProperties,
     private val clock: Clock,
-) : HealthIndicator {
+): HealthIndicator {
+
+    companion object: KLogging()
+
     override fun health(): Health {
         val snapshot = recovery.snapshot()
         val oldestAge = snapshot.oldestQuarantineAt?.let { Duration.between(it, Instant.now(clock)) }
         val degraded = snapshot.quarantineCount > properties.maxQuarantineBacklog ||
-            (oldestAge != null && oldestAge > properties.maxOldestQuarantineAge)
+                (oldestAge != null && oldestAge > properties.maxOldestQuarantineAge)
+
         return (if (degraded) Health.down() else Health.up())
             .withDetail("quarantineCount", snapshot.quarantineCount)
             .withDetail("oldestQuarantineAgeSeconds", oldestAge?.seconds ?: 0)

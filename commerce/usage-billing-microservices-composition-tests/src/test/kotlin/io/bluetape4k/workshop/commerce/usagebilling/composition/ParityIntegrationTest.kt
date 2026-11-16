@@ -2,18 +2,26 @@ package io.bluetape4k.workshop.commerce.usagebilling.composition
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBillingMicroserviceFixture
 import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 
-@Tag("integration")
 class ParityIntegrationTest {
+
+    private companion object: KLogging() {
+        val TIMEOUT: kotlin.time.Duration = 20.seconds
+        val UNIT_PRICE: BigDecimal = BigDecimal("0.10")
+        val EXPECTED_TOTAL: BigDecimal = BigDecimal("0.200000")
+        const val TENANT = "tenant-parity"
+        const val METER_CODE = "api_calls"
+    }
+
     @Test
     fun `distributed charge and invoice totals retain the established billing contract`() {
         UsageBillingMicroserviceFixture().use { fixture ->
@@ -39,13 +47,5 @@ class ParityIntegrationTest {
                 fixture.queryAppliedEventCount() shouldBeEqualTo 4
             }
         }
-    }
-
-    private companion object {
-        val TIMEOUT: kotlin.time.Duration = 20.seconds
-        val UNIT_PRICE: BigDecimal = BigDecimal("0.10")
-        val EXPECTED_TOTAL: BigDecimal = BigDecimal("0.200000")
-        const val TENANT = "tenant-parity"
-        const val METER_CODE = "api_calls"
     }
 }

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.MissingPriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceJournal
@@ -12,7 +13,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.integration.UsageInteg
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 
 @Service
 class UsageCommandService(
@@ -20,15 +21,21 @@ class UsageCommandService(
     private val clock: Clock,
     private val nextEventId: () -> UUID = Uuid.V7::nextId,
 ) {
+    companion object: KLogging()
+
     @Transactional
     fun accept(command: AcceptUsageCommand): UsageAcceptanceResult {
         val fingerprint = command.fingerprint()
-        journal.findUsage(command.tenantId, command.sourceSystem, command.sourceEventId)?.let { existing ->
-            if (existing.fingerprint != fingerprint) throw UsageSourceConflict()
-            return UsageAcceptanceResult(existing.usageId, existing.eventId, replayed = true)
-        }
+
+        journal.findUsage(command.tenantId, command.sourceSystem, command.sourceEventId)
+            ?.let { existing ->
+                if (existing.fingerprint != fingerprint) throw UsageSourceConflict()
+                return UsageAcceptanceResult(existing.usageId, existing.eventId, replayed = true)
+            }
+
         val evidence = journal.priceEvidence(command.tenantId, command.meterCode, command.currency)
             ?: throw MissingPriceEvidence()
+
         val now = clock.instant()
         val eventId = nextEventId()
         val usage = UsageRecord(
@@ -72,8 +79,8 @@ class UsageCommandService(
 
     private fun usageAcceptedPayload(usage: UsageRecord): String =
         """{"usageId":"${usage.usageId}",""" +
-            """"meterCode":"${usage.meterCode}",""" +
-            """"currency":"${usage.currency}",""" +
-            """"quantity":"${usage.quantity}",""" +
-            """"unitPrice":"${usage.unitPrice}"}"""
+                """"meterCode":"${usage.meterCode}",""" +
+                """"currency":"${usage.currency}",""" +
+                """"quantity":"${usage.quantity}",""" +
+                """"unitPrice":"${usage.unitPrice}"}"""
 }

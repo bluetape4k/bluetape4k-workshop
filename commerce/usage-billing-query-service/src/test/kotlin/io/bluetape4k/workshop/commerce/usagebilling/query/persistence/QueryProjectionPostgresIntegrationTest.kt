@@ -3,13 +3,15 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.persistence
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryRecoveryService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -18,35 +20,47 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-@Tag("integration")
 @SpringBootTest
-@Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class QueryProjectionPostgresIntegrationTest {
-    @Autowired
-    private lateinit var inbox: QueryInboxService
+
+    private companion object: KLogging() {
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
+            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
+            registry.add("management.datadog.metrics.export.enabled") { false }
+        }
+    }
 
     @Autowired
-    private lateinit var inboxEvents: QueryInboxRepository
+    private val inbox: QueryInboxService = uninitialized()
 
     @Autowired
-    private lateinit var readModels: QueryReadModelRepository
+    private val inboxEvents: QueryInboxRepository = uninitialized()
 
     @Autowired
-    private lateinit var checkpoints: QueryCheckpointRepository
+    private val readModels: QueryReadModelRepository = uninitialized()
 
     @Autowired
-    private lateinit var recovery: QueryRecoveryService
+    private val checkpoints: QueryCheckpointRepository = uninitialized()
 
     @Autowired
-    private lateinit var quarantine: QueryQuarantineService
+    private val recovery: QueryRecoveryService = uninitialized()
 
     @Autowired
-    private lateinit var redriveAudits: QueryRedriveAuditRepository
+    private val quarantine: QueryQuarantineService = uninitialized()
 
     @Autowired
-    private lateinit var transactionManager: PlatformTransactionManager
+    private val redriveAudits: QueryRedriveAuditRepository = uninitialized()
+
+    @Autowired
+    private val transactionManager: PlatformTransactionManager = uninitialized()
 
     @Test
     fun `replay persists one inbox receipt and one read model while advancing one checkpoint`() {
@@ -68,28 +82,21 @@ class QueryProjectionPostgresIntegrationTest {
         val auditCount = transaction { redriveAudits.findAll().count() }
         val eventId = UUID.randomUUID()
         quarantine.record(
-            QueryQuarantineEvent(eventId, "tenant-a", "InvoiceIssued", "unsupported_schema", Instant.now()),
+            QueryQuarantineEvent(
+                eventId = eventId,
+                tenantId = "tenant-a",
+                eventType = "InvoiceIssued",
+                reason = "unsupported_schema",
+                quarantinedAt = Instant.now()
+            ),
         )
 
-        recovery.redrive(eventId, "operator-a", "correlation-a").requested.shouldBeTrue()
+        recovery.redrive(eventId = eventId, "operator-a", "correlation-a").requested.shouldBeTrue()
 
         transaction { redriveAudits.findAll().count() } shouldBeEqualTo auditCount + 1
         transaction { requireNotNull(redriveAudits.findAll().last()).currentState } shouldBeEqualTo "REDRIVE_REQUESTED"
     }
 
-    private fun <T : Any> transaction(block: () -> T): T =
-        requireNotNull(TransactionTemplate(transactionManager).execute { block() })
-
-    private companion object {
-        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
-            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
-            registry.add("management.datadog.metrics.export.enabled") { false }
-        }
-    }
+    private inline fun <T: Any> transaction(crossinline block: () -> T): T =
+        TransactionTemplate(transactionManager).execute { block() }.shouldNotBeNull()
 }

@@ -10,22 +10,26 @@ import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javatimes.hours
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
-@Tag("integration")
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandReceiptPostgresIntegrationTest {
+
+    companion object: KLogging()
+
     private val fixture = EventStoreDatabaseFixture()
     private val repository = CommandReceiptRepository()
     private val eventStore = EventStoreRepository()
@@ -37,26 +41,41 @@ class CommandReceiptPostgresIntegrationTest {
     fun `same command replays its exact terminal response`() {
         fixture.reset()
         val now = Instant.parse("2026-07-01T00:00:00Z")
-        val owned =
-            fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
-        fixture.executor.transaction { service.succeed(owned, 201, "{\"code\":\"api_calls\"}", now) }.shouldBeTrue()
 
-        val replay = fixture.executor.transaction { service.acquire(scope, fingerprint, now) }
+        val owned = fixture.executor.transaction {
+            service.acquire(scope, fingerprint, now)
+        }.shouldBeInstanceOf<CommandAcquireResult.Owned>()
 
-        replay.shouldBeEqualTo(CommandAcquireResult.Replay(201, "{\"code\":\"api_calls\"}"))
+        fixture.executor.transaction {
+            service.succeed(owned, 201, "{\"code\":\"api_calls\"}", now)
+        }.shouldBeTrue()
+
+        val replay = fixture.executor.transaction {
+            service.acquire(scope, fingerprint, now)
+        }
+
+        log.debug { "replay: $replay" }
+        replay shouldBeEqualTo CommandAcquireResult.Replay(201, "{\"code\":\"api_calls\"}")
     }
 
     @Test
     fun `same key with different fingerprint conflicts`() {
         fixture.reset()
         val now = Instant.parse("2026-07-01T00:00:00Z")
-        fixture.executor.transaction { service.acquire(scope, fingerprint, now) }
 
-        val result = fixture.executor.transaction {
-            service.acquire(scope, CommandFingerprint.request("meter-register", mapOf("code" to "other")), now)
+        fixture.executor.transaction {
+            service.acquire(scope, fingerprint, now)
         }
 
-        result.shouldBeEqualTo(CommandAcquireResult.Conflict)
+        val result = fixture.executor.transaction {
+            service.acquire(
+                scope,
+                CommandFingerprint.request("meter-register", mapOf("code" to "other")),
+                now
+            )
+        }
+
+        result shouldBeEqualTo CommandAcquireResult.Conflict
     }
 
     @Test
@@ -69,15 +88,18 @@ class CommandReceiptPostgresIntegrationTest {
                 fingerprint,
                 acquiredAt
             )
-        } as CommandAcquireResult.Owned
-        val second = fixture.executor.transaction {
-            service.acquire(scope, fingerprint, acquiredAt.plusSeconds(31))
-        }
+        }.shouldBeInstanceOf<CommandAcquireResult.Owned>()
 
-        val secondOwned = second.shouldBeInstanceOf<CommandAcquireResult.Owned>()
-        fixture.executor.transaction { service.succeed(first, 201, "{}", acquiredAt.plusSeconds(31)) }.shouldBeFalse()
+        val second = fixture.executor.transaction {
+            service.acquire(scope, fingerprint, acquiredAt + 31.seconds())
+        }.shouldBeInstanceOf<CommandAcquireResult.Owned>()
+
         fixture.executor.transaction {
-            service.succeed(secondOwned, 201, "{}", acquiredAt.plusSeconds(31))
+            service.succeed(first, 201, "{}", acquiredAt + 31.seconds())
+        }.shouldBeFalse()
+
+        fixture.executor.transaction {
+            service.succeed(second, 201, "{}", acquiredAt + 31.seconds())
         }.shouldBeTrue()
     }
 
@@ -91,11 +113,16 @@ class CommandReceiptPostgresIntegrationTest {
                 fingerprint,
                 acquiredAt
             )
-        } as CommandAcquireResult.Owned
-        fixture.executor.transaction { service.acquire(scope, fingerprint, acquiredAt.plusSeconds(31)) }
+        }.shouldBeInstanceOf<CommandAcquireResult.Owned>()
+
+        fixture.executor.transaction {
+            service.acquire(scope, fingerprint, acquiredAt + 31.seconds())
+        }
 
         assertFailsWith<CommandOwnerLostException> {
-            fixture.executor.transaction { service.requireOwnership(first, acquiredAt.plusSeconds(31)) }
+            fixture.executor.transaction {
+                service.requireOwnership(first, acquiredAt + 31.seconds())
+            }
         }
     }
 
@@ -103,8 +130,10 @@ class CommandReceiptPostgresIntegrationTest {
     fun `event append and terminal response roll back together`() {
         fixture.reset()
         val now = Instant.parse("2026-07-01T00:00:00Z")
-        val owned =
-            fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
+        val owned = fixture.executor.transaction {
+            service.acquire(scope, fingerprint, now)
+        }.shouldBeInstanceOf<CommandAcquireResult.Owned>()
+
         val stream = StreamKey("tenant-a", "Usage", "atomic")
 
         assertFailsWith<IllegalStateException> {
@@ -117,15 +146,23 @@ class CommandReceiptPostgresIntegrationTest {
         }
 
         fixture.executor.transaction { eventStore.load(stream) }.shouldBeEmpty()
-        fixture.executor.transaction { service.acquire(scope, fingerprint, now + 1.seconds()) }
-            .shouldBeInstanceOf<CommandAcquireResult.InProgress>()
+        fixture.executor.transaction {
+            service.acquire(scope, fingerprint, now + 1.seconds())
+        }.shouldBeInstanceOf<CommandAcquireResult.InProgress>()
     }
 
-    private fun usageEvent(now: Instant): NewEvent = NewEvent(
-        UUID.randomUUID(),
-        UsageAccepted("gateway", "atomic", "api_calls", BigDecimal.ONE, now),
-        """{"sourceEventId":"atomic","quantity":1}""",
-        """{"actor":"tenant-a"}""",
-        now,
-    )
+    private fun usageEvent(now: Instant): NewEvent =
+        NewEvent(
+            eventId = UUID.randomUUID(),
+            event = UsageAccepted(
+                sourceSystem = "gateway",
+                sourceEventId = "atomic",
+                meterCode = "api_calls",
+                quantity = BigDecimal.ONE,
+                occurredAt = now
+            ),
+            payload = """{"sourceEventId":"atomic","quantity":1}""",
+            metadata = """{"actor":"tenant-a"}""",
+            occurredAt = now,
+        )
 }

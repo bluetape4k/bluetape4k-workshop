@@ -2,11 +2,14 @@ package io.bluetape4k.workshop.commerce.metering.domain
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.*
 
 class MeteringTypesTest {
+
+    companion object: KLogging()
 
     @Test
     fun `identifiers reject blank and oversized values`() {
@@ -48,7 +51,9 @@ class MeteringTypesTest {
         val dollars = Money(BigDecimal("10.00"), Currency.getInstance("USD"))
         val won = Money(BigDecimal("10"), Currency.getInstance("KRW"))
 
-        assertFailsWith<IllegalArgumentException> { dollars + won }
+        assertFailsWith<IllegalArgumentException> {
+            dollars + won
+        }
     }
 
     @Test

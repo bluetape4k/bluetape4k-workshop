@@ -1,10 +1,14 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import org.junit.jupiter.api.Test
 
 class RepositoryArchitectureTest {
+
+    companion object: KLogging()
+
     @Test
     fun `every concrete event store repository implements ExposedJdbcRepository`() {
         val repositories = listOf(

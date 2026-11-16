@@ -2,11 +2,13 @@ package io.bluetape4k.workshop.commerce.usagebilling.meter.persistence
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.meter.application.MeterCommandService
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.ActivatePriceCommand
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -16,12 +18,25 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-@Tag("integration")
 @SpringBootTest
 @Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class MeterOutboxPostgresIntegrationTest {
+
+    private companion object: KLogging() {
+        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun postgresProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
+            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
+            registry.add("management.datadog.metrics.export.enabled") { false }
+        }
+    }
+
     @Autowired
     private lateinit var service: MeterCommandService
 
@@ -77,25 +92,40 @@ class MeterOutboxPostgresIntegrationTest {
 
     @Test
     fun `an expired outbox claim can be safely reclaimed by a later worker`() {
-        val result = service.activatePrice(activation("lease-${UUID.randomUUID()}", "lease-meter", Instant.EPOCH))
+        val activation = activation(
+            idempotencyKey = "lease-${UUID.randomUUID()}",
+            meterCode = "lease-meter",
+            effectiveAt = Instant.EPOCH
+        )
+        val result = service.activatePrice(activation)
         val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
 
-        outboxJournal.claim("worker-a", claimedAt, 100).map { it.eventId }.contains(result.eventId).shouldBeTrue()
-        outboxJournal.claim("worker-b", claimedAt.plusSeconds(31), 100)
+        outboxJournal
+            .claim("worker-a", claimedAt, 100)
+            .map { it.eventId }
+            .contains(result.eventId).shouldBeTrue()
+
+        outboxJournal
+            .claim("worker-b", claimedAt.plusSeconds(31), 100)
             .first { it.eventId == result.eventId }
             .claimOwner shouldBeEqualTo "worker-b"
     }
 
     @Test
     fun `conditional claim prevents a second worker from leasing an active event`() {
-        val result =
-            service.activatePrice(activation("active-${UUID.randomUUID()}", "active-meter", Instant.EPOCH))
+        val activation = activation("active-${UUID.randomUUID()}", "active-meter", Instant.EPOCH)
+        val result = service.activatePrice(activation)
         val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
 
-        outboxJournal.claim("worker-a", claimedAt, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo
-            true
-        outboxJournal.claim("worker-b", claimedAt, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo
-            false
+        outboxJournal
+            .claim("worker-a", claimedAt, 100)
+            .map { it.eventId }
+            .contains(result.eventId).shouldBeTrue()
+
+        outboxJournal
+            .claim("worker-b", claimedAt, 100)
+            .map { it.eventId }
+            .contains(result.eventId).shouldBeFalse()
     }
 
     private fun activation(
@@ -112,19 +142,6 @@ class MeterOutboxPostgresIntegrationTest {
             effectiveAt = effectiveAt,
         )
 
-    private fun <T : Any> transaction(block: () -> T): T =
-        requireNotNull(TransactionTemplate(transactionManager).execute { block() })
-
-    private companion object {
-        val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
-            registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
-            registry.add("management.datadog.metrics.export.enabled") { false }
-        }
-    }
+    private inline fun <T: Any> transaction(crossinline block: () -> T): T =
+        TransactionTemplate(transactionManager).execute { block() }.shouldNotBeNull()
 }

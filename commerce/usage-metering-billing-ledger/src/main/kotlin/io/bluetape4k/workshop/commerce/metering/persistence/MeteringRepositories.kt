@@ -61,7 +61,7 @@ data class UsageCloseQuery(
 
 @Repository
 class CommandReceiptRepository:
-    MeteringExposedJdbcRepository<CommandReceiptEntity, UUID>(CommandReceiptEntity::class.java) {
+    MeteringExposedJdbcRepository<CommandReceiptEntity, UUID>(CommandReceiptEntity::class) {
 
     fun insertOwnerIfAbsent(request: CommandReceiptOwnerInsert): Boolean =
         CommandReceipts.insertIgnore {
@@ -78,11 +78,14 @@ class CommandReceiptRepository:
         }.insertedCount == 1
 
     fun find(scope: CommandReceiptScope): CommandReceiptSnapshot? =
-        CommandReceiptEntity.find {
-            (CommandReceipts.tenantId eq scope.tenantId) and
-                    (CommandReceipts.operation eq scope.operation) and
-                    (CommandReceipts.keyDigest eq scope.keyDigest)
-        }.firstOrNull()?.toSnapshot()
+        CommandReceiptEntity
+            .find {
+                (CommandReceipts.tenantId eq scope.tenantId) and
+                        (CommandReceipts.operation eq scope.operation) and
+                        (CommandReceipts.keyDigest eq scope.keyDigest)
+            }
+            .firstOrNull()
+            ?.toSnapshot()
 
     fun takeover(
         current: CommandReceiptSnapshot,
@@ -122,17 +125,17 @@ class CommandReceiptRepository:
         } == 1
 
     fun deleteExpiredTerminalBatch(now: Instant, limit: Int): Int {
-        val ids =
-            CommandReceipts
-                .selectAll()
-                .where {
-                    ((CommandReceipts.status eq CommandReceiptStatus.SUCCEEDED.name) or
-                            (CommandReceipts.status eq CommandReceiptStatus.FAILED.name)) and
-                            (CommandReceipts.retentionDeadline less now)
-                }
-                .orderBy(CommandReceipts.retentionDeadline to SortOrder.ASC, CommandReceipts.id to SortOrder.ASC)
-                .limit(limit)
-                .map { it[CommandReceipts.id] }
+        val ids = CommandReceipts
+            .selectAll()
+            .where {
+                ((CommandReceipts.status eq CommandReceiptStatus.SUCCEEDED.name) or
+                        (CommandReceipts.status eq CommandReceiptStatus.FAILED.name)) and
+                        (CommandReceipts.retentionDeadline less now)
+            }
+            .orderBy(CommandReceipts.retentionDeadline to SortOrder.ASC, CommandReceipts.id to SortOrder.ASC)
+            .limit(limit)
+            .map { it[CommandReceipts.id] }
+
         if (ids.isEmpty()) return 0
         return CommandReceipts.deleteWhere {
             (CommandReceipts.id inList ids) and
@@ -155,9 +158,11 @@ class CommandReceiptRepository:
 }
 
 @Repository
-class MeterRepository: MeteringExposedJdbcRepository<MeterEntity, UUID>(MeterEntity::class.java) {
+class MeterRepository: MeteringExposedJdbcRepository<MeterEntity, UUID>(MeterEntity::class) {
     fun find(tenantId: String, meterCode: String): MeterEntity? =
-        MeterEntity.find { (Meters.tenantId eq tenantId) and (Meters.meterCode eq meterCode) }.firstOrNull()
+        MeterEntity
+            .find { (Meters.tenantId eq tenantId) and (Meters.meterCode eq meterCode) }
+            .firstOrNull()
 
     fun createIfAbsent(request: MeterInsert): Boolean =
         Meters.insertIgnore {
@@ -173,8 +178,15 @@ class MeterRepository: MeteringExposedJdbcRepository<MeterEntity, UUID>(MeterEnt
 
 @Repository
 class PricingScheduleRepository:
-    MeteringExposedJdbcRepository<PricingScheduleEntity, UUID>(PricingScheduleEntity::class.java) {
-    fun getOrCreate(id: UUID, tenantId: String, meterId: UUID, currency: String, now: Instant): PricingScheduleEntity {
+    MeteringExposedJdbcRepository<PricingScheduleEntity, UUID>(PricingScheduleEntity::class) {
+
+    fun getOrCreate(
+        id: UUID,
+        tenantId: String,
+        meterId: UUID,
+        currency: String,
+        now: Instant,
+    ): PricingScheduleEntity {
         PricingSchedules.insertIgnore {
             it[PricingSchedules.id] = id
             it[PricingSchedules.tenantId] = tenantId
@@ -182,7 +194,8 @@ class PricingScheduleRepository:
             it[PricingSchedules.currency] = currency
             it[createdAt] = now
         }
-        PricingSchedules.selectAll()
+        PricingSchedules
+            .selectAll()
             .where {
                 (PricingSchedules.tenantId eq tenantId) and
                         (PricingSchedules.meterId eq meterId) and
@@ -190,144 +203,181 @@ class PricingScheduleRepository:
             }
             .forUpdate()
             .single()
-        return PricingScheduleEntity.find {
-            (PricingSchedules.tenantId eq tenantId) and
-                    (PricingSchedules.meterId eq meterId) and
-                    (PricingSchedules.currency eq currency)
-        }.single()
+
+        return PricingScheduleEntity
+            .find {
+                (PricingSchedules.tenantId eq tenantId) and
+                        (PricingSchedules.meterId eq meterId) and
+                        (PricingSchedules.currency eq currency)
+            }
+            .single()
     }
 }
 
 @Repository
-class PriceVersionRepository:
-    AppendOnlyMeteringExposedJdbcRepository<PriceVersionEntity, UUID>(PriceVersionEntity::class.java) {
+class PriceVersionRepository
+    : AppendOnlyMeteringExposedJdbcRepository<PriceVersionEntity, UUID>(PriceVersionEntity::class) {
+    
     fun timeline(scheduleId: UUID): List<PriceVersionEntity> =
         PriceVersionEntity.find { PriceVersions.scheduleId eq scheduleId }
             .orderBy(PriceVersions.effectiveFrom to SortOrder.ASC)
             .toList()
 
     fun select(tenantId: String, meterId: UUID, currency: String, occurredAt: Instant): PriceVersionEntity? =
-        PriceVersionEntity.find {
-            (PriceVersions.tenantId eq tenantId) and
-                    (PriceVersions.meterId eq meterId) and
-                    (PriceVersions.currency eq currency) and
-                    (PriceVersions.effectiveFrom lessEq occurredAt) and
-                    ((PriceVersions.effectiveTo greater occurredAt) or PriceVersions.effectiveTo.isNull())
-        }.orderBy(PriceVersions.effectiveFrom to SortOrder.DESC).firstOrNull()
+        PriceVersionEntity
+            .find {
+                (PriceVersions.tenantId eq tenantId) and
+                        (PriceVersions.meterId eq meterId) and
+                        (PriceVersions.currency eq currency) and
+                        (PriceVersions.effectiveFrom lessEq occurredAt) and
+                        ((PriceVersions.effectiveTo greater occurredAt) or PriceVersions.effectiveTo.isNull())
+            }
+            .orderBy(PriceVersions.effectiveFrom to SortOrder.DESC)
+            .firstOrNull()
 
     fun isReferenced(priceVersionId: UUID): Boolean =
-        LedgerEntries.selectAll().where { LedgerEntries.priceVersionId eq priceVersionId }.limit(1).any()
+        LedgerEntries
+            .selectAll()
+            .where { LedgerEntries.priceVersionId eq priceVersionId }
+            .limit(1)
+            .any()
 }
 
 @Repository
 class UsageEventRepository:
-    AppendOnlyMeteringExposedJdbcRepository<UsageEventEntity, UUID>(UsageEventEntity::class.java) {
+    AppendOnlyMeteringExposedJdbcRepository<UsageEventEntity, UUID>(UsageEventEntity::class) {
     fun findSource(tenantId: String, sourceSystem: String, sourceEventId: String): UsageEventEntity? =
-        UsageEventEntity.find {
-            (UsageEvents.tenantId eq tenantId) and
-                    (UsageEvents.sourceSystem eq sourceSystem) and
-                    (UsageEvents.sourceEventId eq sourceEventId)
-        }.firstOrNull()
+        UsageEventEntity
+            .find {
+                (UsageEvents.tenantId eq tenantId) and
+                        (UsageEvents.sourceSystem eq sourceSystem) and
+                        (UsageEvents.sourceEventId eq sourceEventId)
+            }
+            .firstOrNull()
 
     fun closeBatch(query: UsageCloseQuery): List<UsageEventEntity> =
-        UsageEventEntity.find {
-            val afterCheckpoint =
-                if (query.lastOccurredAt == null || query.lastId == null) {
+        UsageEventEntity
+            .find {
+                val afterCheckpoint = if (query.lastOccurredAt == null || query.lastId == null) {
                     UsageEvents.occurredAt greaterEq query.startsAt
                 } else {
                     (UsageEvents.occurredAt greater query.lastOccurredAt) or
                             ((UsageEvents.occurredAt eq query.lastOccurredAt) and (UsageEvents.id greater query.lastId))
                 }
-            (UsageEvents.tenantId eq query.tenantId) and
-                    (UsageEvents.occurredAt greaterEq query.startsAt) and
-                    (UsageEvents.occurredAt less query.endsAt) and
-                    (UsageEvents.receivedAt lessEq query.cutoff) and afterCheckpoint
-        }.orderBy(UsageEvents.occurredAt to SortOrder.ASC, UsageEvents.id to SortOrder.ASC)
+
+                (UsageEvents.tenantId eq query.tenantId) and
+                        (UsageEvents.occurredAt greaterEq query.startsAt) and
+                        (UsageEvents.occurredAt less query.endsAt) and
+                        (UsageEvents.receivedAt lessEq query.cutoff) and afterCheckpoint
+            }
+            .orderBy(UsageEvents.occurredAt to SortOrder.ASC, UsageEvents.id to SortOrder.ASC)
             .limit(query.limit)
             .toList()
 }
 
 @Repository
 class BillingCalendarRepository:
-    MeteringExposedJdbcRepository<BillingCalendarEntity, UUID>(BillingCalendarEntity::class.java)
+    MeteringExposedJdbcRepository<BillingCalendarEntity, UUID>(BillingCalendarEntity::class)
 
 @Repository
 class BillingPeriodRepository:
-    MeteringExposedJdbcRepository<BillingPeriodEntity, UUID>(BillingPeriodEntity::class.java) {
+    MeteringExposedJdbcRepository<BillingPeriodEntity, UUID>(BillingPeriodEntity::class) {
+
     fun findTenant(id: UUID, tenantId: String): BillingPeriodEntity? =
-        BillingPeriodEntity.find { (BillingPeriods.id eq id) and (BillingPeriods.tenantId eq tenantId) }.firstOrNull()
+        BillingPeriodEntity
+            .find {
+                (BillingPeriods.id eq id) and (BillingPeriods.tenantId eq tenantId)
+            }
+            .firstOrNull()
 
     fun overlapping(calendarId: UUID, startsAt: Instant, endsAt: Instant): Boolean =
-        BillingPeriods.selectAll().where {
-            (BillingPeriods.calendarId eq calendarId) and
-                    (BillingPeriods.startsAt less endsAt) and
-                    (BillingPeriods.endsAt greater startsAt)
-        }.limit(1).any()
+        BillingPeriods
+            .selectAll()
+            .where {
+                (BillingPeriods.calendarId eq calendarId) and
+                        (BillingPeriods.startsAt less endsAt) and
+                        (BillingPeriods.endsAt greater startsAt)
+            }
+            .limit(1)
+            .any()
 
     fun openAt(tenantId: String, currency: String, instant: Instant): BillingPeriodEntity? =
-        BillingPeriodEntity.find {
-            (BillingPeriods.tenantId eq tenantId) and
-                    (BillingPeriods.currency eq currency) and
-                    (BillingPeriods.state eq "OPEN") and
-                    (BillingPeriods.startsAt lessEq instant) and
-                    (BillingPeriods.endsAt greater instant)
-        }.firstOrNull()
+        BillingPeriodEntity
+            .find {
+                (BillingPeriods.tenantId eq tenantId) and
+                        (BillingPeriods.currency eq currency) and
+                        (BillingPeriods.state eq "OPEN") and
+                        (BillingPeriods.startsAt lessEq instant) and
+                        (BillingPeriods.endsAt greater instant)
+            }
+            .firstOrNull()
 }
 
 @Repository
-class CloseRunRepository: MeteringExposedJdbcRepository<CloseRunEntity, UUID>(CloseRunEntity::class.java) {
+class CloseRunRepository
+    : MeteringExposedJdbcRepository<CloseRunEntity, UUID>(CloseRunEntity::class) {
+
     fun findTenant(id: UUID, tenantId: String): CloseRunEntity? =
-        CloseRunEntity.find { (CloseRuns.id eq id) and (CloseRuns.tenantId eq tenantId) }.firstOrNull()
+        CloseRunEntity
+            .find { (CloseRuns.id eq id) and (CloseRuns.tenantId eq tenantId) }
+            .firstOrNull()
 
     fun running(limit: Int): List<CloseRunEntity> =
-        CloseRunEntity.find { CloseRuns.state eq "RUNNING" }
+        CloseRunEntity
+            .find { CloseRuns.state eq "RUNNING" }
             .orderBy(CloseRuns.updatedAt to SortOrder.ASC, CloseRuns.id to SortOrder.ASC)
             .limit(limit)
             .toList()
 }
 
 @Repository
-class LedgerEntryRepository:
-    AppendOnlyMeteringExposedJdbcRepository<LedgerEntryEntity, UUID>(LedgerEntryEntity::class.java) {
+class LedgerEntryRepository
+    : AppendOnlyMeteringExposedJdbcRepository<LedgerEntryEntity, UUID>(LedgerEntryEntity::class) {
+
     fun forPostingPeriod(tenantId: String, periodId: UUID): List<LedgerEntryEntity> =
-        LedgerEntryEntity.find {
-            (LedgerEntries.tenantId eq tenantId) and (LedgerEntries.postingPeriodId eq periodId)
-        }.orderBy(LedgerEntries.id to SortOrder.ASC).toList()
+        LedgerEntryEntity
+            .find {
+                (LedgerEntries.tenantId eq tenantId) and (LedgerEntries.postingPeriodId eq periodId)
+            }
+            .orderBy(LedgerEntries.id to SortOrder.ASC)
+            .toList()
 
     fun findSource(tenantId: String, type: String, sourceType: String, sourceId: String): LedgerEntryEntity? =
-        LedgerEntryEntity.find {
-            (LedgerEntries.tenantId eq tenantId) and
-                    (LedgerEntries.entryType eq type) and
-                    (LedgerEntries.sourceReferenceType eq sourceType) and
-                    (LedgerEntries.sourceReferenceId eq sourceId)
-        }.firstOrNull()
+        LedgerEntryEntity
+            .find {
+                (LedgerEntries.tenantId eq tenantId) and
+                        (LedgerEntries.entryType eq type) and
+                        (LedgerEntries.sourceReferenceType eq sourceType) and
+                        (LedgerEntries.sourceReferenceId eq sourceId)
+            }
+            .firstOrNull()
 }
 
 @Repository
-class InvoiceRepository:
-    AppendOnlyMeteringExposedJdbcRepository<InvoiceEntity, UUID>(InvoiceEntity::class.java) {
+class InvoiceRepository
+    : AppendOnlyMeteringExposedJdbcRepository<InvoiceEntity, UUID>(InvoiceEntity::class) {
     fun findPeriod(tenantId: String, periodId: UUID, currency: String): InvoiceEntity? =
-        InvoiceEntity.find {
-            (Invoices.tenantId eq tenantId) and
-                    (Invoices.periodId eq periodId) and
-                    (Invoices.currency eq currency)
-        }.firstOrNull()
+        InvoiceEntity
+            .find {
+                (Invoices.tenantId eq tenantId) and
+                        (Invoices.periodId eq periodId) and
+                        (Invoices.currency eq currency)
+            }
+            .firstOrNull()
 }
 
 @Repository
 class InvoiceLineRepository:
-    AppendOnlyMeteringExposedJdbcRepository<InvoiceLineEntity, UUID>(InvoiceLineEntity::class.java)
+    AppendOnlyMeteringExposedJdbcRepository<InvoiceLineEntity, UUID>(InvoiceLineEntity::class)
 
 @Repository
 class InvoiceLineEntryRepository:
-    AppendOnlyMeteringExposedJdbcRepository<InvoiceLineEntryEntity, UUID>(InvoiceLineEntryEntity::class.java)
+    AppendOnlyMeteringExposedJdbcRepository<InvoiceLineEntryEntity, UUID>(InvoiceLineEntryEntity::class)
 
 @Repository
 class ReconciliationRunRepository:
-    MeteringExposedJdbcRepository<ReconciliationRunEntity, UUID>(ReconciliationRunEntity::class.java)
+    MeteringExposedJdbcRepository<ReconciliationRunEntity, UUID>(ReconciliationRunEntity::class)
 
 @Repository
-class ReconciliationFindingRepository:
-    AppendOnlyMeteringExposedJdbcRepository<ReconciliationFindingEntity, UUID>(
-        ReconciliationFindingEntity::class.java,
-    )
+class ReconciliationFindingRepository
+    : AppendOnlyMeteringExposedJdbcRepository<ReconciliationFindingEntity, UUID>(ReconciliationFindingEntity::class)

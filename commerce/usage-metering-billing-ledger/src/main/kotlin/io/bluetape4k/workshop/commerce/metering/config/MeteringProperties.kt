@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.commerce.metering.config
 
+import io.bluetape4k.javatimes.days
 import io.bluetape4k.javatimes.hours
 import io.bluetape4k.javatimes.minutes
+import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireInRange
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -19,6 +22,22 @@ data class MeteringProperties(
     val schemaInitializerEnabled: Boolean = false,
     val demoEnabled: Boolean = false,
 ) {
+
+    companion object: KLogging() {
+        val DEFAULT_ALLOWED_LATENESS: Duration = 48.hours()
+        val DEFAULT_OCCURRED_AT_RETENTION: Duration = 400.days()
+        val DEFAULT_FUTURE_SKEW: Duration = 5.minutes()
+        val DEFAULT_RECEIPT_LEASE: Duration = 30.seconds()
+        val DEFAULT_RECEIPT_RETENTION: Duration = 24.hours()
+        val DEFAULT_SCHEDULER_DELAY: Duration = 5.seconds()
+        private val MIN_RECEIPT_LEASE: Duration = 5.seconds()
+        private val MAX_RECEIPT_LEASE: Duration = 5.minutes()
+        const val MAX_TERMINAL_RESPONSE_BYTES: Int = 16 * 1024
+        const val MAX_CLOSE_BATCH_SIZE: Int = 1_000
+        const val MAX_BATCHES_PER_TICK: Int = 20
+        const val MAX_RECONCILIATION_PAGE_SIZE: Int = 500
+    }
+
     init {
         allowedLateness.requirePositiveDuration("allowedLateness")
         occurredAtRetention.requirePositiveDuration("occurredAtRetention")
@@ -32,10 +51,8 @@ data class MeteringProperties(
         val terminalResponseBytes: Int = MAX_TERMINAL_RESPONSE_BYTES,
     ) {
         init {
-            require(lease in MIN_RECEIPT_LEASE..MAX_RECEIPT_LEASE) {
-                "command receipt lease must be between $MIN_RECEIPT_LEASE and $MAX_RECEIPT_LEASE"
-            }
-            require(retention > lease) { "command receipt retention must be longer than lease" }
+            lease.requireInRange(MIN_RECEIPT_LEASE, MAX_RECEIPT_LEASE, "lease")
+            retention.requireGt(lease, "retention")
             terminalResponseBytes.requireInRange(1, MAX_TERMINAL_RESPONSE_BYTES, "terminalResponseBytes")
         }
     }
@@ -63,20 +80,5 @@ data class MeteringProperties(
             maxPageSize.requireInRange(1, MAX_RECONCILIATION_PAGE_SIZE, "maxPageSize")
             pageSize.requireInRange(1, maxPageSize, "pageSize")
         }
-    }
-
-    companion object {
-        val DEFAULT_ALLOWED_LATENESS: Duration = 48.hours()
-        val DEFAULT_OCCURRED_AT_RETENTION: Duration = 400.hours()
-        val DEFAULT_FUTURE_SKEW: Duration = 5.minutes()
-        val DEFAULT_RECEIPT_LEASE: Duration = 30.seconds()
-        val DEFAULT_RECEIPT_RETENTION: Duration = 24.hours()
-        val DEFAULT_SCHEDULER_DELAY: Duration = 5.seconds()
-        private val MIN_RECEIPT_LEASE: Duration = 5.seconds()
-        private val MAX_RECEIPT_LEASE: Duration = 5.minutes()
-        const val MAX_TERMINAL_RESPONSE_BYTES: Int = 16 * 1024
-        const val MAX_CLOSE_BATCH_SIZE: Int = 1_000
-        const val MAX_BATCHES_PER_TICK: Int = 20
-        const val MAX_RECONCILIATION_PAGE_SIZE: Int = 500
     }
 }

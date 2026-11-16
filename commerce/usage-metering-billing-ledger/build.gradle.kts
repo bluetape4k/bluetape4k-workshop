@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    kotlin("kapt")
 }
 
 java {
@@ -125,40 +126,4 @@ fun Test.verifyNonEmptyXmlResults() {
             "$name did not produce non-empty XML test results"
         }
     }
-}
-
-tasks.test {
-    setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
-    useJUnitPlatform {
-        excludeTags("integration", "stress")
-    }
-    failOnZeroTests()
-    verifyNonEmptyXmlResults()
-    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
-}
-
-tasks.register<Test>("integrationTest") {
-    description = "Runs PostgreSQL integration tests for usage metering and billing."
-    group = "verification"
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    setJvmArgs((tasks.test.get().jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
-    useJUnitPlatform { includeTags("integration") }
-    failOnZeroTests()
-    verifyNonEmptyXmlResults()
-    shouldRunAfter(tasks.test)
-    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
-}
-
-tasks.register<Test>("stressTest") {
-    description = "Runs usage metering and billing stress tests."
-    group = "verification"
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    setJvmArgs((tasks.test.get().jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
-    useJUnitPlatform { includeTags("stress") }
-    failOnZeroTests()
-    verifyNonEmptyXmlResults()
-    shouldRunAfter(tasks.test)
-    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
 }

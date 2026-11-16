@@ -3,6 +3,7 @@
 package io.bluetape4k.workshop.commerce.metering.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.domain.CloseRunState
@@ -23,7 +24,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -32,9 +32,13 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.util.*
 
-@Tag("stress")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BillingCloseStressTest {
+
+    private companion object: KLogging() {
+        const val USAGE_COUNT = 10_000
+    }
+
     private val fixture = MeteringDatabaseFixture()
     private val clock = Clock.fixed(Instant.parse("2026-07-04T00:00:00Z"), ZoneOffset.UTC)
     private val properties = MeteringProperties(close = MeteringProperties.Close(batchSize = 500))
@@ -47,47 +51,62 @@ class BillingCloseStressTest {
     @AfterAll
     fun close(): Unit = fixture.close()
 
+    private inline fun <T> transaction(crossinline block: () -> T): T =
+        fixture.executor.transaction { block() }
+
+
     @Test
     fun `ten thousand usage rows close exactly once across bounded restartable batches`() {
         val seed = fixture.resetAndSeed()
         val tenant = TenantId(seed.tenantId)
         val currency = Currency.getInstance(seed.currency)
         transaction {
-            PriceActivationService(meters, PricingScheduleRepository(), prices, clock).activate(
-                tenant,
-                MeterCode(seed.meterCode),
-                currency,
-                UnitPrice(BigDecimal("0.010000")),
-                Instant.parse("2026-06-01T00:00:00Z"),
-            )
+            PriceActivationService(meters, PricingScheduleRepository(), prices, clock)
+                .activate(
+                    tenantId = tenant,
+                    meterCode = MeterCode(seed.meterCode),
+                    currency = currency,
+                    unitPrice = UnitPrice(BigDecimal("0.010000")),
+                    effectiveFrom = Instant.parse("2026-06-01T00:00:00Z"),
+                )
             insertUsage(seed.tenantId, seed.meterId)
         }
         val periodService = BillingPeriodService(periods, properties, clock)
         val run = transaction {
             val periodId = periodService.create(
-                tenant,
-                currency,
-                Instant.parse("2026-06-01T00:00:00Z"),
-                Instant.parse("2026-07-01T00:00:00Z"),
+                tenantId = tenant,
+                currency = currency,
+                startsAt = Instant.parse("2026-06-01T00:00:00Z"),
+                endsAt = Instant.parse("2026-07-01T00:00:00Z"),
             )
             periodService.startClose(tenant, periodId)
         }
 
         var result = CloseBatchResult(run.id, CloseRunState.RUNNING, 0, 0, 0)
+
         while (result.state == CloseRunState.RUNNING) {
             val restartedWorker = BillingCloseService(runs, periods, usage, prices, properties, clock)
-            result = transaction { restartedWorker.processNextBatch(seed.tenantId, run.id) }
+            result = transaction {
+                restartedWorker.processNextBatch(seed.tenantId, run.id)
+            }
         }
 
         result.state shouldBeEqualTo CloseRunState.READY_TO_FINALIZE
         transaction {
-            LedgerEntries.selectAll().where { LedgerEntries.tenantId eq seed.tenantId }.count()
+            LedgerEntries
+                .selectAll()
+                .where { LedgerEntries.tenantId eq seed.tenantId }
+                .count()
         } shouldBeEqualTo USAGE_COUNT.toLong()
-        transaction { runs.findTenant(run.id, seed.tenantId)?.scannedCount } shouldBeEqualTo USAGE_COUNT.toLong()
+
+        transaction {
+            runs.findTenant(run.id, seed.tenantId)?.scannedCount
+        } shouldBeEqualTo USAGE_COUNT.toLong()
     }
 
     private fun insertUsage(tenantId: String, meterId: UUID) {
         val occurredAt = Instant.parse("2026-06-15T00:00:00Z")
+
         UsageEvents.batchInsert(0 until USAGE_COUNT) { sequence ->
             val eventId = UUID.nameUUIDFromBytes("usage-$sequence".toUtf8Bytes())
             this[UsageEvents.id] = eventId
@@ -104,9 +123,4 @@ class BillingCloseStressTest {
         }
     }
 
-    private fun <T> transaction(block: () -> T): T = fixture.executor.transaction { block() }
-
-    private companion object {
-        const val USAGE_COUNT = 10_000
-    }
 }

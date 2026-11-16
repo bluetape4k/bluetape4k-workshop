@@ -1,12 +1,11 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
-import java.util.UUID
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
 
-class EventStreamHeadEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<EventStreamHeadEntity>(EventStreamHeads)
+class EventStreamHeadEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<EventStreamHeadEntity>(EventStreamHeads)
 
     var tenantId by EventStreamHeads.tenantId
     var streamType by EventStreamHeads.streamType
@@ -17,8 +16,8 @@ class EventStreamHeadEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by EventStreamHeads.updatedAt
 }
 
-class DomainEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<DomainEventEntity>(DomainEvents)
+class DomainEventEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<DomainEventEntity>(DomainEvents)
 
     var tenantId by DomainEvents.tenantId
     var streamType by DomainEvents.streamType
@@ -35,8 +34,8 @@ class DomainEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var recordedAt by DomainEvents.recordedAt
 }
 
-class CommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<CommandReceiptEntity>(CommandReceipts)
+class CommandReceiptEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<CommandReceiptEntity>(CommandReceipts)
 
     var tenantId by CommandReceipts.tenantId
     var operation by CommandReceipts.operation
@@ -53,8 +52,8 @@ class CommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by CommandReceipts.updatedAt
 }
 
-class AggregateSnapshotEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<AggregateSnapshotEntity>(AggregateSnapshots)
+class AggregateSnapshotEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<AggregateSnapshotEntity>(AggregateSnapshots)
 
     var tenantId by AggregateSnapshots.tenantId
     var streamType by AggregateSnapshots.streamType
@@ -66,8 +65,8 @@ class AggregateSnapshotEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by AggregateSnapshots.createdAt
 }
 
-class ProjectionGenerationEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<ProjectionGenerationEntity>(ProjectionGenerations)
+class ProjectionGenerationEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<ProjectionGenerationEntity>(ProjectionGenerations)
 
     var projectionName by ProjectionGenerations.projectionName
     var generation by ProjectionGenerations.generation
@@ -82,8 +81,8 @@ class ProjectionGenerationEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by ProjectionGenerations.updatedAt
 }
 
-class BillingReadModelEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<BillingReadModelEntity>(BillingReadModels)
+class BillingReadModelEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<BillingReadModelEntity>(BillingReadModels)
 
     var projectionName by BillingReadModels.projectionName
     var generation by BillingReadModels.generation
@@ -99,8 +98,8 @@ class BillingReadModelEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var occurredAt by BillingReadModels.occurredAt
 }
 
-class ProjectionFailureEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<ProjectionFailureEntity>(ProjectionFailures)
+class ProjectionFailureEntity(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<ProjectionFailureEntity>(ProjectionFailures)
 
     var projectionName by ProjectionFailures.projectionName
     var generation by ProjectionFailures.generation

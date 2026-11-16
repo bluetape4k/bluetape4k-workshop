@@ -1,12 +1,16 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.web
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
-import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class QueryTenantAuthorizerTest {
+
+    companion object: KLogging()
+
     private val authorizer = QueryTenantAuthorizer()
 
     @Test
@@ -21,6 +25,10 @@ class QueryTenantAuthorizerTest {
         }
     }
 
-    private fun authentication(authority: String) =
-        TestingAuthenticationToken("customer", "unused", listOf(SimpleGrantedAuthority(authority)))
+    private fun authentication(authority: String): TestingAuthenticationToken =
+        TestingAuthenticationToken(
+            "customer",
+            "unused",
+            listOf(SimpleGrantedAuthority(authority))
+        )
 }
