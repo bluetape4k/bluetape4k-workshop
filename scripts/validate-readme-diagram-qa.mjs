@@ -547,37 +547,6 @@ function auditSequenceShape(file, svg) {
   }
 }
 
-function auditSequenceReferenceFallback(file, svg) {
-  const scope = rel(file);
-  const connectors = [...svg.matchAll(/<path\b([^>]*\bclass="[^"]*\b(?:call|work|return)\b[^"]*"[^>]*)\/?\s*>/g)];
-  let diagonalSegments = 0;
-  let missingMarkers = 0;
-  let malformedPaths = 0;
-  for (const connector of connectors) {
-    const attrs = parseAttrs(connector[1]);
-    const points = parsePathEndPoints(attrs.d || "");
-    if (points.length < 2) malformedPaths += 1;
-    if (!attrs["marker-end"]) missingMarkers += 1;
-    for (let index = 1; index < points.length; index += 1) {
-      if (segmentDirection(points[index - 1], points[index]) === "diagonal") diagonalSegments += 1;
-    }
-  }
-  const failures = malformedPaths + missingMarkers + diagonalSegments;
-  if (failures > 0) {
-    fail(
-      scope,
-      "fallback sequence reference audit",
-      `connectors=${connectors.length} malformed_paths=${malformedPaths} missing_markers=${missingMarkers} diagonal_segments=${diagonalSegments}`,
-    );
-    return;
-  }
-  addRow(
-    scope,
-    "fallback sequence reference audit",
-    `connectors=${connectors.length} geometry=PASS endpoint=PASS connector=PASS mixed_corner=PASS diagonal_segments=0`,
-  );
-}
-
 function referenceAuditsAvailable() {
   return [
     "diagram-geometry-audit.py",
@@ -590,13 +559,7 @@ function referenceAuditsAvailable() {
 function runSkillAudits(file, svg) {
   const scope = rel(file);
   const isConnectorHeavy = /data-connector=|class="edge"|data-edge=|marker-end\s*:|marker-end=/.test(svg);
-  const hasDeterministicSequenceFallback =
-    (svg.includes('data-diagram-kind="sequence"') || path.basename(file).includes("sequence")) &&
-    /class="[^"]*\b(?:call|work|return)\b[^"]*"/.test(svg);
   if (!isConnectorHeavy) return;
-  if (hasDeterministicSequenceFallback && !referenceAuditsAvailable()) {
-    auditSequenceReferenceFallback(file, svg);
-  }
 
   const audits = [
     ["geometry", "diagram-geometry-audit.py"],
@@ -607,7 +570,7 @@ function runSkillAudits(file, svg) {
   for (const [gate, script] of audits) {
     const scriptPath = path.join(skillAuditDir, script);
     if (!fs.existsSync(scriptPath)) {
-      addRow(scope, gate + " reference audit", scriptPath + " missing", "UNAVAILABLE");
+      fail(scope, gate + " reference audit", scriptPath + " missing");
       continue;
     }
     const result = run("python3", [scriptPath, rel(file)]);
@@ -677,6 +640,8 @@ if (sequenceTargets.length > 0) {
       const resultLabel = /sequence_files=0/.test(evidence) ? "WEAK" : "PASS";
       addRow("diagram-set", "sequence style reference audit", evidence.split("\n").at(-1) || "exit=0", resultLabel);
     }
+  } else {
+    fail("diagram-set", "sequence style reference audit", `${sequenceStyle} missing`);
   }
 }
 

@@ -1,0 +1,3 @@
+package io.bluetape4k.workshop.optimization.warehouseallocation.planner
+
+internal typealias WarehouseAllocationPlannerInput = io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationPlannerInput
