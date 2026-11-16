@@ -14,7 +14,7 @@ kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.
 spring-boot4 = "4.1.2"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
 spring-cloud = "2025.1.4"  # https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
 spring-cloud-gateway = "5.0.4"  # https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-gateway-server-webflux
-spring-integration = "7.1.1"  # https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-bom
+spring-integration = "7.1.2"  # https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-bom
 spring-modulith = "2.1.2"  # https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
 reactor-bom = "2025.0.8"  # https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
