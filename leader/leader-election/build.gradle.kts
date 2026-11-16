@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
-    kotlin("kapt")
 }
 
 springBoot {

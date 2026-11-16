@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /** worker eligibility와 schedule version의 source of truth입니다. */
-object FieldServiceWorkersTable: Table("field_service_workers") {
+object FieldServiceWorkersTable : Table("field_service_workers") {
     val id = long("id").autoIncrement()
     val workerId = varchar("worker_id", FieldServiceLimits.MAX_STRING_LENGTH).uniqueIndex()
     val payload = text("payload")
@@ -19,7 +19,7 @@ object FieldServiceWorkersTable: Table("field_service_workers") {
 }
 
 /** synthetic visit state와 business version의 source of truth입니다. */
-object FieldServiceVisitsTable: Table("field_service_visits") {
+object FieldServiceVisitsTable : Table("field_service_visits") {
     val id = long("id").autoIncrement()
     val visitId = varchar("visit_id", FieldServiceLimits.MAX_STRING_LENGTH).uniqueIndex()
     val payload = text("payload")
@@ -29,7 +29,7 @@ object FieldServiceVisitsTable: Table("field_service_visits") {
 }
 
 /** 모든 planner snapshot이 사용하는 versioned sparse travel-time projection입니다. */
-object FieldServiceTravelTimesTable: Table("field_service_travel_times") {
+object FieldServiceTravelTimesTable : Table("field_service_travel_times") {
     val id = long("id").autoIncrement()
     val matrixRevision = long("matrix_revision")
     val fromCoordinateId = varchar("from_coordinate_id", FieldServiceLimits.MAX_STRING_LENGTH)
@@ -46,7 +46,7 @@ object FieldServiceTravelTimesTable: Table("field_service_travel_times") {
 }
 
 /** 불변 plan proposal metadata와 redacted serialized proposal입니다. */
-object FieldServicePlansTable: LongIdTable("field_service_plans") {
+object FieldServicePlansTable : LongIdTable("field_service_plans") {
     val planId = varchar("plan_id", FieldServiceLimits.MAX_STRING_LENGTH)
     val planRevision = long("plan_revision")
     val parentRevision = long("parent_revision").nullable()
@@ -65,7 +65,7 @@ object FieldServicePlansTable: LongIdTable("field_service_plans") {
 }
 
 /** proposal에 속한 불변 worker route row입니다. */
-object FieldServicePlanAssignmentsTable: Table("field_service_plan_assignments") {
+object FieldServicePlanAssignmentsTable : Table("field_service_plan_assignments") {
     val id = long("id").autoIncrement()
     val planId = varchar("plan_id", FieldServiceLimits.MAX_STRING_LENGTH)
     val planRevision = long("plan_revision")
@@ -86,7 +86,7 @@ object FieldServicePlanAssignmentsTable: Table("field_service_plan_assignments")
 }
 
 /** authoritative committed assignment projection이며 방문별 current assignment 하나를 보유합니다. */
-object FieldServiceDispatchAssignmentsTable: Table("field_service_dispatch_assignments") {
+object FieldServiceDispatchAssignmentsTable : Table("field_service_dispatch_assignments") {
     val id = long("id").autoIncrement()
     val visitId = varchar("visit_id", FieldServiceLimits.MAX_STRING_LENGTH).uniqueIndex()
     val workerId = varchar("worker_id", FieldServiceLimits.MAX_STRING_LENGTH)
@@ -99,7 +99,7 @@ object FieldServiceDispatchAssignmentsTable: Table("field_service_dispatch_assig
 }
 
 /** canonical event idempotency log이며 provider raw body나 secret을 저장하지 않습니다. */
-object FieldServiceEventsTable: Table("field_service_events") {
+object FieldServiceEventsTable : Table("field_service_events") {
     val id = long("id").autoIncrement()
     val aggregateType = varchar("aggregate_type", 64)
     val aggregateId = varchar("aggregate_id", FieldServiceLimits.MAX_STRING_LENGTH)
@@ -121,7 +121,7 @@ object FieldServiceEventsTable: Table("field_service_events") {
 }
 
 /** append-only redacted decision audit입니다. */
-object FieldServiceAuditsTable: Table("field_service_audits") {
+object FieldServiceAuditsTable : Table("field_service_audits") {
     val id = long("id").autoIncrement()
     val aggregateType = varchar("aggregate_type", 64)
     val aggregateId = varchar("aggregate_id", FieldServiceLimits.MAX_STRING_LENGTH)
@@ -134,7 +134,7 @@ object FieldServiceAuditsTable: Table("field_service_audits") {
 }
 
 /** command/replan 작업의 bounded retry와 fencing state입니다. */
-object FieldServiceOutboxTable: Table("field_service_outbox") {
+object FieldServiceOutboxTable : Table("field_service_outbox") {
     val id = long("id").autoIncrement()
     val payload = text("payload")
     val status = enumerationByName<OutboxStatus>("status", 24)

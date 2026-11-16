@@ -2,9 +2,7 @@ package io.bluetape4k.workshop.leader.jobsafety.config
 
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -12,17 +10,11 @@ import org.junit.jupiter.api.Test
 
 internal class JobSafetyAuditScopeTest {
 
-    companion object: KLoggingChannel()
-
     @Test
     fun `application scopes own independent supervisor jobs and close idempotently`() = runSuspendIO {
         val first = JobSafetyAuditScope()
         val second = JobSafetyAuditScope()
-
-        val child = first.launch {
-            awaitCancellation()
-        }.log("Child")
-        
+        val child = first.launch { awaitCancellation() }
         yield()
 
         first.close()
@@ -32,9 +24,7 @@ internal class JobSafetyAuditScopeTest {
         first.scopeClosed.shouldBeTrue()
         first.scopeCancelled.shouldBeTrue()
         first.isActive.shouldBeFalse()
-
         child.isCancelled.shouldBeTrue()
-
         second.scopeClosed.shouldBeFalse()
         second.scopeCancelled.shouldBeFalse()
         second.isActive.shouldBeTrue()
