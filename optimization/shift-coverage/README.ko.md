@@ -1,6 +1,8 @@
 # Shift Coverage
 
-이 Spring Boot 참조 애플리케이션은 synthetic multi-site worker·shift coverage와 사람이 확인하는 shift swap을 보여 줍니다. planner는 immutable canonical snapshot만 읽어 deterministic proposal을 반환하며, assignment projection을 변경하는 경로는 manager approval과 swap acceptance뿐입니다.
+[English](README.md) | 한국어
+
+이 Spring Boot 참조 애플리케이션은 synthetic multi-site worker·shift coverage와 사람이 확인하는 shift swap을 보여 줍니다. planner는 worker, shift, assignment를 담은 불변 `ShiftCoverageSnapshot`을 읽고 결정론적 제안을 반환합니다. assignment projection을 변경하는 경로는 manager approval과 swap acceptance뿐입니다.
 
 ## 경계
 

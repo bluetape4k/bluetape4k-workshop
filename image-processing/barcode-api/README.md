@@ -19,6 +19,14 @@ implementation only at the configuration boundary.
   multipart reads.
 - Deterministic `/sample`, `/no-result`, and `/malformed` routes for smoke tests.
 
+## Design and verification
+
+The request path checks upload metadata and dimensions before decoding, then passes the image through
+the bounded decoder before calling the injected `BarcodeReader`. This keeps the HTTP 413 response
+independent of the ZXing adapter. `BarcodeExtractionServiceTest` covers supported image formats,
+size and dimension rejection, malformed input, provider failures, and cancellation;
+`BarcodeApiApplicationTest` checks the HTTP contract.
+
 ## Run
 
 ```bash

@@ -1,6 +1,8 @@
 # Warehouse Allocation
 
-`optimization-warehouse-allocation`은 결정론적 warehouse allocation과 pick-wave 제안을 보여 주는 Java 25/Spring Boot reference application입니다. synthetic order와 stock snapshot을 사용하며, 승인 시 reservation의 최종 권위는 PostgreSQL에 있습니다. planner는 제안만 반환합니다.
+[English](README.md) | 한국어
+
+`optimization-warehouse-allocation`은 결정론적 warehouse allocation과 pick-wave 제안을 보여 주는 Java 25/Spring Boot reference application입니다. synthetic order와 `SkuStockSnapshot` 재고 기록을 사용하며, 승인 시 reservation의 최종 권위는 PostgreSQL에 있습니다. planner는 제안만 반환합니다.
 
 ## 범위
 

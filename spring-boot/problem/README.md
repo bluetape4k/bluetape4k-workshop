@@ -139,7 +139,7 @@ interface Resilience4jTrait : AdviceTrait {
 ## How to Run
 
 ```bash
-./gradlew :problem:bootRun
+./gradlew :spring-boot-problem:bootRun
 
 # Query a nonexistent task -> 404 Problem JSON response
 curl http://localhost:8080/tasks/999
@@ -147,6 +147,12 @@ curl http://localhost:8080/tasks/999
 # Invalid ID -> 400 Bad Request
 curl http://localhost:8080/tasks/-1
 ```
+
+## Verification
+
+Run `./gradlew :spring-boot-problem:test`. `TaskControllerTest` checks the 400 response for an invalid
+task id and the 404 response for a missing task. `Resilience4jControllerTest` checks the 503 open
+circuit-breaker response and the 500 response after retries are exhausted.
 
 ## References
 

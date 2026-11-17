@@ -28,3 +28,9 @@ pattern.
 
 The examples intentionally stay small so the pattern mechanics are visible without unrelated
 application code.
+
+## Verification
+
+Run `./gradlew :kotlin-design-patterns:test`. `AbstractFactoryTest` checks that each factory creates
+a consistent family, the builder tests cover required and default values, lazy-loading tests check
+deferred construction, and `SingletonTest` checks instance identity across execution contexts.

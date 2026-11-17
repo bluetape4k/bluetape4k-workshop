@@ -47,6 +47,13 @@ http :8082/swagger-ui.html
 http :8082/actuator
 ```
 
+## 검증
+
+`./gradlew :orders:test`를 실행합니다. `OrderControllerTest`, `ProductControllerTest`는 샘플 HTTP
+응답을 확인하고, `RedirectWebFilterTest`는 landing page 경로 재작성과 controller/model test의
+validation 동작을 확인합니다. 이 테스트는 인메모리 워크숍 계약을 대상으로 하며 persistence는
+검증하지 않습니다.
+
 ## bluetape4k 사용 지점
 
 | Library | Usage |

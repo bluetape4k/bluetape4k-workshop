@@ -1,5 +1,7 @@
 # Clinic Appointment Solver
 
+[한국어](README.ko.md) | English
+
 This Spring Boot reference application embeds `ai.timefold.solver:timefold-solver-core`
 to optimize a synthetic clinic appointment schedule. It models providers, rooms, equipment, operating windows, requested slots, and confirmed appointments pinned by Timefold.
 

@@ -1,6 +1,8 @@
 # Warehouse Allocation
 
-`optimization-warehouse-allocation` is a Java 25/Spring Boot reference application for deterministic warehouse allocation and pick-wave proposals. It uses synthetic orders and stock snapshots. PostgreSQL is the final authority for approval-time reservations; the planner only returns a proposal.
+[한국어](README.ko.md) | English
+
+`optimization-warehouse-allocation` is a Java 25/Spring Boot reference application for deterministic warehouse allocation and pick-wave proposals. It uses synthetic orders and `SkuStockSnapshot` stock records. PostgreSQL is the final authority for approval-time reservations; the planner only returns a proposal.
 
 ## Scope
 

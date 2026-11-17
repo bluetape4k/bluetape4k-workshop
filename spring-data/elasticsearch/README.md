@@ -34,6 +34,13 @@ The operations and reactive repository tests are currently disabled because the
 Elasticsearch Java client used by this stack is still Jackson 2 based, while this Spring
 Boot 4 sample line uses Jackson 3.
 
+## Verification status
+
+Run `./gradlew :spring-data-elasticsearch:test`. `ElasticsearchServerTest` exercises the OSS
+Testcontainers launcher. `ElasticsearchOperationsTest`, `ReactiveElasticsearchOperationsTest`, and
+`ReactiveElasticsearchRepositoryTest` are marked `@Disabled` for the Jackson 2/3 conflict, so this
+task does not verify the disabled query paths.
+
 ## Domain model
 
 `Conference` is stored in `conference-index` with:

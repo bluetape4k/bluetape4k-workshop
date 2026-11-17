@@ -18,6 +18,13 @@ ZXing 구현은 configuration 경계에서 주입합니다.
 - PNG/JPEG/WebP 디코드, malformed/unknown-dimension 거부, cancellation-safe multipart 읽기
 - smoke test를 위한 결정적인 `/sample`, `/no-result`, `/malformed` 경로
 
+## 설계 경계와 검증
+
+요청 경로는 디코딩 전에 업로드 메타데이터와 이미지 크기를 확인하고, 제한된 decoder를 거친
+이미지만 주입된 `BarcodeReader`에 전달합니다. 이 구조는 HTTP 413 응답과 ZXing adapter를
+분리합니다. `BarcodeExtractionServiceTest`는 지원 이미지 형식, 크기 제한, 손상 입력, provider
+오류와 취소 처리를 확인하고, `BarcodeApiApplicationTest`는 HTTP 계약을 확인합니다.
+
 ## 실행
 
 ```bash

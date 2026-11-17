@@ -68,15 +68,22 @@ fun sayHelloWithName(name: String): String {
 ## 테스트
 
 ```bash
-./gradlew :observability-micrometer-observation:test
+./gradlew :micrometer-observation:test
 ```
 
 테스트는 직접 `ObservationRegistry` 사용과 `TestObservationRegistry` 기반 service tracing을 다룬다.
 
+## 설정 경계
+
+`application.yml`은 Actuator HTTP endpoint 전체를 노출하고 health 상세 정보도 항상 반환합니다.
+로컬 관측 예제 설정이므로 공유 환경에서는 endpoint 노출 범위와 접근 정책을 제한해야 합니다.
+기본 설정은 Datadog metrics export를 활성화하고 `DD_API_KEY`, `DD_APPLICATION_KEY`를 참조하므로
+해당 exporter로 실행할 때는 두 환경 값을 제공해야 합니다.
+
 ## 실행
 
 ```bash
-./gradlew :observability-micrometer-observation:bootRun
+./gradlew :micrometer-observation:bootRun
 curl "http://localhost:8080/greeting/for?name=Debop"
 curl "http://localhost:8080/actuator/prometheus"
 ```

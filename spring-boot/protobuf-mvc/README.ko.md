@@ -146,3 +146,9 @@ protobuf {
     generateProtoTasks { all().forEach { it.builtins { id("kotlin") } } }
 }
 ```
+
+## 검증
+
+`./gradlew :spring-boot-protobuf-mvc:test`를 실행합니다. `ProtobufConverterTest`는 JSON 상호 변환을,
+`ProtobufByteBufferConverterTest`는 heap/direct buffer 재사용과 실패 동작을 확인합니다.
+`ProtobufApplicationIT`는 여러 HTTP client로 Protobuf 응답을 읽는 경로를 검증합니다.

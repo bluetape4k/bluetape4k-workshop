@@ -47,6 +47,13 @@ refresh the index after writes so searches observe the new documents. The test c
 currently disabled because the Elasticsearch Java client stack in this sample line is
 Jackson 2 based while the Spring Boot 4 baseline uses Jackson 3.
 
+## Verification status
+
+Run `./gradlew :spring-data-elasticsearch-webflux:test`. The REST and service integration tests, including
+`BookControllerTest` and `DefaultBookServiceTest`, inherit `@Disabled` from
+`AbstractElasticsearchApplicationTest` because of the Jackson 2/3 conflict. The task therefore does not
+verify the `/v1/books` integration behavior while that compatibility issue remains.
+
 ## References
 
 - [Spring Data Elasticsearch Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/reference/)

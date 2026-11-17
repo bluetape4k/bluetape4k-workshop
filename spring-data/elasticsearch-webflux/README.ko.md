@@ -47,6 +47,13 @@ write 이후 검색이 새 document를 볼 수 있도록 index를 refresh합니�
 비활성화되어 있습니다. 이 sample line의 Elasticsearch Java client stack은 Jackson 2 기반인
 반면 Spring Boot 4 baseline은 Jackson 3를 사용하기 때문입니다.
 
+## 검증 상태
+
+`./gradlew :spring-data-elasticsearch-webflux:test`를 실행합니다. `BookControllerTest`와
+`DefaultBookServiceTest` 등 REST/service integration test는 `AbstractElasticsearchApplicationTest`의
+`@Disabled`를 상속합니다. Jackson 2/3 충돌이 해소되기 전에는 이 task가 `/v1/books` integration
+동작을 검증하지 않습니다.
+
 ## 참고
 
 - [Spring Data Elasticsearch Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/reference/)

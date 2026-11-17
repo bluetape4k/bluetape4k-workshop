@@ -39,17 +39,22 @@
 애플리케이션을 실행하고 직접 발행 엔드포인트를 호출합니다.
 
 ```bash
-./gradlew :spring-boot:application-event-demo:bootRun
+./gradlew :spring-boot-application-event-demo:bootRun
 curl "http://localhost:8080/event?message=hello"
 ```
 
 집중 테스트를 실행합니다.
 
 ```bash
-./gradlew :spring-boot:application-event-demo:test
+./gradlew :spring-boot-application-event-demo:test
 ```
 
 `CustomEventPublisherTest`는 `WebTestClient`로 HTTP 발행 경로를 검증합니다. `AspectFlowEventEmitterTest`는 aspect가 반환된 `OperationParams.id`에서 메시지를 만들어 `AspectEvent`를 발행하는지 검증합니다.
+
+## 이벤트 경계
+
+이 이벤트는 현재 Spring `ApplicationContext` 안에서 발행됩니다. 예제는 이벤트를 저장하거나
+프로세스 사이에 전달하지 않으며, 프로세스 내부 application event 처리만 보여 줍니다.
 
 ## 참고
 

@@ -70,9 +70,15 @@ override fun handle(session: WebSocketSession): Mono<Void> {
 ## How to Run
 
 ```bash
-./gradlew :webflux-websocket:bootRun
+./gradlew :spring-boot-webflux-websocket:bootRun
 # WebSocket endpoint: ws://localhost:8080/event-emitter
 ```
+
+## Verification scope
+
+Run `./gradlew :spring-boot-webflux-websocket:test`. `WebsocketApplicationTest` checks that `/quotes`
+and `/quotes/50` return NDJSON with positive prices. It does not open a WebSocket session or test the
+`/event-emitter` transport.
 
 ## References
 

@@ -107,7 +107,7 @@ fun reactorResourceFactory(): ReactorResourceFactory = ReactorResourceFactory().
 ## Run
 
 ```bash
-./gradlew :webflux-coroutines:bootRun
+./gradlew :spring-boot-webflux-coroutines:bootRun
 
 # VT Dispatcher endpoints
 curl http://localhost:8080/controller/vt/suspend
@@ -116,6 +116,12 @@ curl http://localhost:8080/controller/vt/concurrent-flow
 # Functional router endpoint
 curl http://localhost:8080/handler/banners
 ```
+
+## Verification
+
+Run `./gradlew :spring-boot-webflux-coroutines:test`. `DefaultCoroutineControllerTest` checks suspend,
+deferred, sequential and concurrent Flow endpoints; `CoroutineHandlerTest` checks the functional
+router paths, and `VTCoroutineControllerTest` covers the virtual-thread dispatcher endpoints.
 
 ## References
 

@@ -24,7 +24,8 @@ fun messageFromJson(json: String): Message {
 }
 
 inline fun <reified T: Message> messageFromJsonOrNull(json: String): T? {
-    val builder = T::class.members.find { it.name == "newBuilder" }?.callBy(emptyMap()) as? Builder<*>
+    val newBuilder = T::class.java.methods.firstOrNull { it.name == "newBuilder" && it.parameterCount == 0 }
+    val builder = newBuilder?.invoke(null) as? Builder<*>
     return builder?.let {
         JsonFormat.parser().ignoringUnknownFields().merge(json, it)
         it.build() as? T

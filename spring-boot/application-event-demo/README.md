@@ -39,17 +39,23 @@ Both paths meet at Spring `ApplicationEventPublisher`. The direct path builds a 
 Run the application and call the direct endpoint:
 
 ```bash
-./gradlew :spring-boot:application-event-demo:bootRun
+./gradlew :spring-boot-application-event-demo:bootRun
 curl "http://localhost:8080/event?message=hello"
 ```
 
 Run the focused tests:
 
 ```bash
-./gradlew :spring-boot:application-event-demo:test
+./gradlew :spring-boot-application-event-demo:test
 ```
 
 `CustomEventPublisherTest` verifies the HTTP publishing path with `WebTestClient`. `AspectFlowEventEmitterTest` verifies that the aspect emits an `AspectEvent` whose message is created from the returned `OperationParams.id`.
+
+## Event boundary
+
+These events are published through the current Spring `ApplicationContext`. The example does not
+persist events or deliver them across process boundaries; it demonstrates in-process application
+event handling, not durable messaging.
 
 ## References
 
