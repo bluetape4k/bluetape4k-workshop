@@ -23,12 +23,15 @@
 - `StudentTable` 정의와 `StudentJdbcRepository`의 Exposed DSL CRUD
 - `DataSource`와 Exposed `Database`를 연결하는 Spring 설정
 - repository의 H2 기반 CRUD 회귀 테스트
+- Exposed가 생성하는 quoted identifier와 맞추기 위한 H2 `schema.sql`의
+  `name` 컬럼 quoting 조정
 - Chaos Monkey README 두 로케일의 구현 설명과 Gradle task 경로
 - 모듈 의존성에 기존 catalog alias 기반의 Exposed JDBC 모듈 추가
 
 ### 제외
 
-- `schema.sql`과 `data.sql`의 H2 bootstrap SQL 교체
+- `schema.sql`과 `data.sql`의 H2 bootstrap 방식 교체(단, `name` 식별자 quoting
+  조정은 Exposed/H2 호환을 위해 포함)
 - `commerce`·`operations`의 PostgreSQL 제어/마이그레이션 SQL
 - R2DBC, Vert.x SQL client, Redisson 등 기술 시연 목적의 다른 예제
 - 중앙 `bluetape4k-dependencies` catalog 변경
@@ -40,10 +43,16 @@
   직접 읽고 쓴다.
 - `schema.sql`은 `student(id, name, passport_number)`를 생성하며 `id`는
   애플리케이션이 전달하는 정수 primary key다.
+- H2는 unquoted `name`을 대문자 `NAME`으로 저장하지만 Exposed는 예약어 충돌을
+  피하려고 `"name"`을 생성하므로 bootstrap schema도 동일하게 quoting해야 한다.
 - `spring-boot/multi-tenant-data-isolation`과 `exposed/mvc-virtualthread`는
   `org.jetbrains.exposed.v1.*` DSL과 명시적인 `Database` 연결을 사용한다.
 - workshop 루트는 `bluetape4k-dependencies` BOM을 적용하고, catalog의
   `libs.exposed.core`·`libs.exposed.jdbc` alias를 제공한다.
+- 현재 `StudentService`에는 여러 repository 호출을 묶는 `@Transactional` 경계가
+  없으므로 각 repository 메서드가 소유하는 transaction을 사용한다. Spring
+  transaction manager와의 다중 호출 atomicity는 이번 좁은 예제 전환의
+  비목표다.
 
 ## 선택한 구조
 
@@ -56,7 +65,9 @@
    한 곳에 둔다.
 4. 기존의 양수 ID·비어 있지 않은 문자열 검증은 repository 진입점에 그대로
    남긴다. CRUD 반환값은 기존 JDBC update count와 동일하게 유지한다.
-5. 테스트는 별도 H2 memory database와 `SchemaUtils.create(StudentTable)`를
+5. H2 bootstrap schema의 `name` 컬럼은 `"name"`으로 선언해 Exposed가 생성하는
+   quoted identifier와 일치시킨다. 테스트는 별도 H2 memory database와
+   `SchemaUtils.create(StudentTable)`를
    사용해 실제 repository entrypoint를 호출한다. 운영 bootstrap SQL의
    동작은 기존 Spring Boot controller test가 계속 확인한다.
 
@@ -74,6 +85,8 @@
   실패한다. 모듈 context test가 이를 조기에 드러낸다.
 - 테이블/컬럼 이름이 `schema.sql`과 달라지면 H2 CRUD가 실패한다. table
   정의와 repository test가 동일한 실제 컬럼명을 사용한다.
+- H2 예약어/식별자 case가 달라지면 Spring context가 시작되지 않는다. schema와
+  Exposed table의 quoted identifier를 함께 검증한다.
 - `findById`가 없는 행을 조회하면 기존과 같이 `null`을 반환한다.
 - insert/update/delete가 영향을 준 행 수를 0으로 반환하는 경우도 기존 JDBC
   계약대로 그대로 반환한다.
@@ -85,6 +98,8 @@
 - repository 소스에 `JdbcTemplate`, `RowMapper`, raw SQL 문자열이 없다.
 - `findAll`, `findById`, `insert`, `update`, `deleteById`가 기존 모델과 반환
   계약을 유지하며 Exposed DSL transaction으로 동작한다.
+- 현재 caller가 요구하지 않는 Spring `@Transactional` 다중 호출 경계는
+  범위 밖임을 문서화하고, 예외 타입 변환 호환성은 보장하지 않는다.
 - repository H2 CRUD 테스트와 기존 controller 테스트가 통과한다.
 - Chaos Monkey README 두 로케일이 실제 class 이름인
   `StudentJdbcRepository`의 Exposed DSL 경계를 설명하고 실제 project path

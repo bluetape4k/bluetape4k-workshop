@@ -4,44 +4,44 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.chaos.model.Student
-import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.RowMapper
+import io.bluetape4k.workshop.chaos.model.StudentTable
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
-import java.sql.ResultSet
 
 @Repository
 class StudentJdbcRepository(
-    private val jdbcTemplate: JdbcTemplate,
+    private val database: Database,
 ) {
 
     companion object: KLogging()
 
-    class StudentRowMapper: RowMapper<Student> {
-        override fun mapRow(rs: ResultSet, rowNum: Int): Student {
-            return Student(
-                id = rs.getInt("id"),
-                name = rs.getString("name"),
-                passportNumber = rs.getString("passport_number"),
-            )
-        }
-    }
-
-    fun findAll(): List<Student> {
-        return jdbcTemplate.query("select * from student", StudentRowMapper())
+    fun findAll(): List<Student> = transaction(database) {
+        StudentTable.selectAll().map { it.toStudent() }
     }
 
     fun findById(id: Int): Student? {
         val studentId = id.requirePositiveNumber("id")
-        return jdbcTemplate.query(
-            "select * from student where id=?",
-            StudentRowMapper(),
-            studentId,
-        ).firstOrNull()
+        return transaction(database) {
+            StudentTable
+                .selectAll()
+                .where { StudentTable.id eq studentId }
+                .firstOrNull()
+                ?.toStudent()
+        }
     }
 
     fun deleteById(id: Int): Int {
         val studentId = id.requirePositiveNumber("id")
-        return jdbcTemplate.update("delete from student where id=?", studentId)
+        return transaction(database) {
+            StudentTable.deleteWhere { StudentTable.id eq studentId }
+        }
     }
 
     fun insert(student: Student): Int {
@@ -49,12 +49,13 @@ class StudentJdbcRepository(
         val name = student.name.requireNotBlank("student.name")
         val passportNumber = student.passportNumber.requireNotBlank("student.passportNumber")
 
-        return jdbcTemplate.update(
-            "insert into student (id, name, passport_number) values(?, ?, ?)",
-            studentId,
-            name,
-            passportNumber,
-        )
+        return transaction(database) {
+            StudentTable.insert {
+                it[StudentTable.id] = studentId
+                it[StudentTable.name] = name
+                it[StudentTable.passportNumber] = passportNumber
+            }.let { 1 }
+        }
     }
 
     fun update(student: Student): Int {
@@ -62,11 +63,17 @@ class StudentJdbcRepository(
         val name = student.name.requireNotBlank("student.name")
         val passportNumber = student.passportNumber.requireNotBlank("student.passportNumber")
 
-        return jdbcTemplate.update(
-            "update student set name=?, passport_number=? where id=?",
-            name,
-            passportNumber,
-            studentId,
-        )
+        return transaction(database) {
+            StudentTable.update({ StudentTable.id eq studentId }) {
+                it[StudentTable.name] = name
+                it[StudentTable.passportNumber] = passportNumber
+            }
+        }
     }
+
+    private fun ResultRow.toStudent(): Student = Student(
+        id = this[StudentTable.id],
+        name = this[StudentTable.name],
+        passportNumber = this[StudentTable.passportNumber],
+    )
 }

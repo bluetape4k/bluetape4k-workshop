@@ -8,7 +8,7 @@
 
 ![Chaos Monkey architecture](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-architecture-01.png)
 
-애플리케이션은 `application.properties`에서 `chaos-monkey` profile을 활성화합니다. Controller, REST controller, service, repository watcher가 켜져 있습니다. Student data path는 의도적으로 단순합니다: `StudentController` → `StudentService` → `StudentJdbcRepository` → H2 `student` table.
+애플리케이션은 `application.properties`에서 `chaos-monkey` profile을 활성화합니다. Controller, REST controller, service, repository watcher가 켜져 있습니다. Student 데이터 경로는 의도적으로 단순합니다: `StudentController` → `StudentService` → `StudentJdbcRepository`(Exposed DSL) → H2 `student` table. Spring 관리 `DataSource`로 Exposed `Database`를 구성하고, 각 repository 메서드는 Exposed `transaction` 안에서 CRUD를 수행합니다.
 
 ## Assault 흐름
 
@@ -49,7 +49,7 @@ management.endpoints.web.exposure.include=*
 ## 실행
 
 ```bash
-./gradlew :spring-boot:chaos-monkey:bootRun
+./gradlew :spring-boot-chaos-monkey:bootRun
 curl http://localhost:8080/students
 curl http://localhost:8080/actuator/chaosmonkey
 ```
@@ -57,7 +57,7 @@ curl http://localhost:8080/actuator/chaosmonkey
 Controller 테스트를 실행합니다.
 
 ```bash
-./gradlew :spring-boot:chaos-monkey:test
+./gradlew :spring-boot-chaos-monkey:test
 ```
 
 ## 참고
