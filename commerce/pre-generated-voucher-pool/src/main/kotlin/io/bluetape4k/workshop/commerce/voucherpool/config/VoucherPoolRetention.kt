@@ -13,6 +13,38 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireZeroOrPositiveNumber
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAllocationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBackupInventoryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBatchTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCampaignTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCodeDedupTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCommandTombstoneTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolDepthTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolEntryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolHttpIdempotencyTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolLegalHoldTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolQuarantineTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReconciliationInboxTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReservationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRevokePreviewGrantTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolUserLimitTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolWorkerClaimTable
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import java.io.Serializable
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -205,30 +237,27 @@ internal class PostgresVoucherPoolKeyReferenceSource(
                        retained_until>statement_timestamp() OR restore_rehearsed_at IS NULL AS blocking
                 FROM voucher_pool_backup_inventory""".trimIndent()
 
-        val LIVE_KEY_SQL =
-            """SELECT kek_version FROM voucher_pool_entries WHERE kek_version IS NOT NULL
-                UNION SELECT verification_key_version::text FROM voucher_pool_entries WHERE verification_key_version IS NOT NULL
-                UNION SELECT user_identity_key_version::text FROM voucher_pool_campaigns
-                UNION SELECT signature_key_version::text FROM voucher_pool_revoke_preview_grants""".trimIndent()
-        const val TOMBSTONE_KEY_SQL = "SELECT key_version::text FROM voucher_pool_command_tombstones"
-        const val DEDUP_KEY_SQL = "SELECT key_version::text FROM voucher_pool_code_dedup"
-        const val AUDIT_KEY_SQL =
-            "SELECT audit_key_version::text FROM voucher_pool_audits WHERE audit_key_version IS NOT NULL"
     }
 
     override fun referencedKeys(): VoucherPoolReferencedKeys =
-        dataSource.connection.use { connection ->
+        withExposedTransaction { connection ->
             val backup = readBackupInventory(connection)
             VoucherPoolReferencedKeys(
-                liveRows = queryStrings(connection, LIVE_KEY_SQL),
-                commandTombstones = queryStrings(connection, TOMBSTONE_KEY_SQL),
-                stableDedup = queryStrings(connection, DEDUP_KEY_SQL),
-                audits = queryStrings(connection, AUDIT_KEY_SQL),
+                liveRows = buildSet {
+                    addAll(queryStrings(VoucherPoolEntryTable.kekVersion) { VoucherPoolEntryTable.select(VoucherPoolEntryTable.kekVersion).where { VoucherPoolEntryTable.kekVersion.isNotNull() } })
+                    addAll(queryNullableInts(VoucherPoolEntryTable.verificationKeyVersion) { VoucherPoolEntryTable.select(VoucherPoolEntryTable.verificationKeyVersion).where { VoucherPoolEntryTable.verificationKeyVersion.isNotNull() } })
+                    addAll(queryInts(VoucherPoolCampaignTable.userIdentityKeyVersion) { VoucherPoolCampaignTable.select(VoucherPoolCampaignTable.userIdentityKeyVersion) })
+                    addAll(queryInts(VoucherPoolRevokePreviewGrantTable.signatureKeyVersion) { VoucherPoolRevokePreviewGrantTable.select(VoucherPoolRevokePreviewGrantTable.signatureKeyVersion) })
+                },
+                commandTombstones = queryInts(VoucherPoolCommandTombstoneTable.keyVersion) { VoucherPoolCommandTombstoneTable.select(VoucherPoolCommandTombstoneTable.keyVersion) },
+                stableDedup = queryInts(VoucherPoolCodeDedupTable.keyVersion) { VoucherPoolCodeDedupTable.select(VoucherPoolCodeDedupTable.keyVersion) },
+                audits = queryNullableInts(VoucherPoolAuditTable.auditKeyVersion) { VoucherPoolAuditTable.select(VoucherPoolAuditTable.auditKeyVersion).where { VoucherPoolAuditTable.auditKeyVersion.isNotNull() } },
                 backupInventory = backup.keys,
                 restoreRehearsalPassed = backup.allRehearsed,
             )
         }
 
+    /** PostgreSQL array materialization과 statement-clock hold를 함께 읽어야 하므로 raw로 유지합니다. */
     private fun readBackupInventory(connection: Connection): BackupReferences {
         val result = connection.createStatement().use { statement ->
             statement.executeQuery(BACKUP_INVENTORY_SQL).use(::collectBackupReferences)
@@ -260,16 +289,25 @@ internal class PostgresVoucherPoolKeyReferenceSource(
         return BackupReferenceResult(backup, backupCount, rehearsedCount)
     }
 
-    private fun queryStrings(connection: Connection, sql: String): Set<String> =
-        connection.createStatement().use { statement ->
-            statement.executeQuery(sql).use { result ->
-                buildSet {
-                    while (result.next()) {
-                        add(result.getString(1))
-                    }
-                }
+    private fun queryStrings(column: Column<String?>, query: () -> Query): Set<String> =
+        query().withDistinct().orderBy(column to SortOrder.ASC).mapNotNull { it[column] }.toSet()
+
+    private fun queryInts(column: Column<Int>, query: () -> Query): Set<String> =
+        query().withDistinct().orderBy(column to SortOrder.ASC).map { it[column].toString() }.toSet()
+
+    private fun queryNullableInts(column: Column<Int?>, query: () -> Query): Set<String> =
+        query().withDistinct().orderBy(column to SortOrder.ASC).mapNotNull { it[column]?.toString() }.toSet()
+
+    private inline fun <T> withExposedTransaction(crossinline block: (Connection) -> T): T {
+        val database = Database.connect(dataSource)
+        return try {
+            transaction(database) {
+                block(TransactionManager.current().connection.connection as Connection)
             }
+        } finally {
+            TransactionManager.closeAndUnregister(database)
         }
+    }
 
     private fun Any.asStringSet(): Set<String> = when (this) {
         is Array<*> -> filterIsInstance<String>().toSet()
@@ -378,7 +416,12 @@ internal class VoucherPoolRetention(
     private val dataSource: DataSource,
     private val policy: VoucherPoolRetentionPolicy = VoucherPoolRetentionPolicy(),
 ) {
-    /** PostgreSQL time을 사용해 bounded-cardinality due-row count와 oldest overdue age를 반환합니다. */
+    /**
+     * PostgreSQL `statement_timestamp()`와 interval projection을 한 snapshot에 고정해
+     * bounded-cardinality due-row count와 oldest overdue age를 반환합니다.
+     * Exposed DSL에는 이 statement-clock/interval projection을 같은 SQL 경계로 표현하는
+     * portable API가 없어 backlog read-model은 raw SQL로 유지합니다.
+     */
     fun backlog(): VoucherPoolRetentionBacklog =
         dataSource.connection.use { connection ->
             VoucherPoolRetentionBacklog(
@@ -443,7 +486,7 @@ internal class VoucherPoolRetention(
         tenantId.requireNotBlank("tenantId")
 
         return transaction { connection ->
-            if (isTenantHeld(connection, tenantId) || !isTenantBackupDeletionReady(connection, tenantId)) {
+            if (isTenantHeld(tenantId) || !isTenantBackupDeletionReady(tenantId)) {
                 log.warn { "voucher_pool_tenant_delete_held" }
                 return@transaction false
             }
@@ -451,12 +494,23 @@ internal class VoucherPoolRetention(
                 statement.execute("SET LOCAL voucher_pool.retention_purge = 'on'")
                 statement.execute("SET CONSTRAINTS ALL DEFERRED")
             }
-            TENANT_DELETE_ORDER.forEach { table ->
-                connection.prepareStatement("DELETE FROM $table WHERE tenant_id=?").use { statement ->
-                    statement.setString(1, tenantId)
-                    statement.executeUpdate()
-                }
-            }
+            VoucherPoolQuarantineTable.deleteWhere { VoucherPoolQuarantineTable.tenantId eq tenantId }
+            VoucherPoolRevokePreviewGrantTable.deleteWhere { VoucherPoolRevokePreviewGrantTable.tenantId eq tenantId }
+            VoucherPoolReconciliationInboxTable.deleteWhere { VoucherPoolReconciliationInboxTable.tenantId eq tenantId }
+            VoucherPoolWorkerClaimTable.deleteWhere { VoucherPoolWorkerClaimTable.tenantId eq tenantId }
+            VoucherPoolDepthTable.deleteWhere { VoucherPoolDepthTable.tenantId eq tenantId }
+            VoucherPoolAllocationTable.deleteWhere { VoucherPoolAllocationTable.tenantId eq tenantId }
+            VoucherPoolReservationTable.deleteWhere { VoucherPoolReservationTable.tenantId eq tenantId }
+            VoucherPoolUserLimitTable.deleteWhere { VoucherPoolUserLimitTable.tenantId eq tenantId }
+            VoucherPoolAuditTable.deleteWhere { VoucherPoolAuditTable.tenantId eq tenantId }
+            VoucherPoolEntryTable.deleteWhere { VoucherPoolEntryTable.tenantId eq tenantId }
+            VoucherPoolBatchTable.deleteWhere { VoucherPoolBatchTable.tenantId eq tenantId }
+            VoucherPoolCampaignTable.deleteWhere { VoucherPoolCampaignTable.tenantId eq tenantId }
+            VoucherPoolHttpIdempotencyTable.deleteWhere { VoucherPoolHttpIdempotencyTable.tenantId eq tenantId }
+            VoucherPoolCommandTombstoneTable.deleteWhere { VoucherPoolCommandTombstoneTable.tenantId eq tenantId }
+            VoucherPoolCodeDedupTable.deleteWhere { VoucherPoolCodeDedupTable.tenantId eq tenantId }
+            VoucherPoolLegalHoldTable.deleteWhere { VoucherPoolLegalHoldTable.tenantId eq tenantId }
+            VoucherPoolBackupInventoryTable.deleteWhere { VoucherPoolBackupInventoryTable.tenantId eq tenantId }
             log.info { "voucher_pool_tenant_deleted" }
             true
         }
@@ -561,35 +615,47 @@ internal class VoucherPoolRetention(
         ).executeRetention(policy.audit, limit)
     }
 
-    private fun isTenantHeld(connection: Connection, tenantId: String): Boolean =
-        connection.prepareStatement(
-            """SELECT EXISTS (
-                    SELECT 1 FROM voucher_pool_legal_holds h
-                    WHERE h.tenant_id=? AND h.released_at IS NULL
-                      AND (h.hold_until IS NULL OR h.hold_until>statement_timestamp())
-                    UNION ALL
-                    SELECT 1 FROM voucher_pool_quarantines q
-                    WHERE q.tenant_id=? AND q.resolved_at IS NULL)""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setString(2, tenantId)
-            statement.executeQuery().use { result ->
-                check(result.next()); result.getBoolean(1)
+    private fun isTenantHeld(tenantId: String): Boolean {
+        val legalHold = VoucherPoolLegalHoldTable
+            .select(VoucherPoolLegalHoldTable.holdId)
+            .where {
+                (VoucherPoolLegalHoldTable.tenantId eq tenantId) and
+                        VoucherPoolLegalHoldTable.releasedAt.isNull() and
+                        (VoucherPoolLegalHoldTable.holdUntil.isNull() or
+                                (VoucherPoolLegalHoldTable.holdUntil greater CurrentTimestamp))
             }
-        }
+            .limit(1)
+            .singleOrNull() != null
+        if (legalHold) return true
 
-    private fun isTenantBackupDeletionReady(connection: Connection, tenantId: String): Boolean =
-        connection.prepareStatement(
-            """SELECT EXISTS (SELECT 1 FROM voucher_pool_backup_inventory WHERE tenant_id=?)
-                   AND NOT EXISTS (SELECT 1 FROM voucher_pool_backup_inventory
-                       WHERE tenant_id=? AND (retained_until>statement_timestamp() OR restore_rehearsed_at IS NULL))""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setString(2, tenantId)
-            statement.executeQuery().use { result ->
-                check(result.next()); result.getBoolean(1)
+        return VoucherPoolQuarantineTable
+            .select(VoucherPoolQuarantineTable.entryId)
+            .where {
+                (VoucherPoolQuarantineTable.tenantId eq tenantId) and
+                        VoucherPoolQuarantineTable.resolvedAt.isNull()
             }
-        }
+            .limit(1)
+            .singleOrNull() != null
+    }
+
+    private fun isTenantBackupDeletionReady(tenantId: String): Boolean {
+        val hasBackup = VoucherPoolBackupInventoryTable
+            .select(VoucherPoolBackupInventoryTable.backupId)
+            .where { VoucherPoolBackupInventoryTable.tenantId eq tenantId }
+            .limit(1)
+            .singleOrNull() != null
+        if (!hasBackup) return false
+
+        return VoucherPoolBackupInventoryTable
+            .select(VoucherPoolBackupInventoryTable.backupId)
+            .where {
+                (VoucherPoolBackupInventoryTable.tenantId eq tenantId) and
+                        ((VoucherPoolBackupInventoryTable.retainedUntil greater CurrentTimestamp) or
+                                VoucherPoolBackupInventoryTable.restoreRehearsedAt.isNull())
+            }
+            .limit(1)
+            .singleOrNull() == null
+    }
 
     private fun heldTenantSql(alias: String): String =
         """EXISTS (SELECT 1 FROM voucher_pool_legal_holds h
@@ -631,21 +697,20 @@ internal class VoucherPoolRetention(
             }
         }
 
-    private inline fun <T> transaction(block: (Connection) -> T): T =
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            runCatching {
-                block(connection).also { connection.commit() }
-            }.getOrElse { failure ->
-                try {
-                    connection.rollback()
-                } catch (rollbackFailure: SQLException) {
-                    failure.addSuppressed(rollbackFailure)
+    private inline fun <T> transaction(crossinline block: (Connection) -> T): T {
+        val database = Database.connect(dataSource)
+        return try {
+            org.jetbrains.exposed.v1.jdbc.transactions.transaction(database) {
+                val connection = TransactionManager.current().connection.connection as Connection
+                runCatching { block(connection) }.getOrElse { failure ->
+                    log.warn(failure) { "voucher_pool_retention_transaction_failed" }
+                    throw failure
                 }
-                log.warn(failure) { "voucher_pool_retention_transaction_failed" }
-                throw failure
             }
+        } finally {
+            TransactionManager.closeAndUnregister(database)
         }
+    }
 
     companion object: KLogging() {
         private const val MAX_PURGE_LIMIT = 1_000
@@ -684,24 +749,5 @@ internal class VoucherPoolRetention(
                 FROM voucher_pool_audits
                 WHERE created_at+(? * interval '1 millisecond')<=statement_timestamp()""".trimIndent()
 
-        private val TENANT_DELETE_ORDER = listOf(
-            "voucher_pool_quarantines",
-            "voucher_pool_revoke_preview_grants",
-            "voucher_pool_reconciliation_inbox",
-            "voucher_pool_worker_claims",
-            "voucher_pool_pool_depth",
-            "voucher_pool_allocations",
-            "voucher_pool_reservations",
-            "voucher_pool_user_limits",
-            "voucher_pool_audits",
-            "voucher_pool_entries",
-            "voucher_pool_batches",
-            "voucher_pool_campaigns",
-            "voucher_pool_http_idempotency",
-            "voucher_pool_command_tombstones",
-            "voucher_pool_code_dedup",
-            "voucher_pool_legal_holds",
-            "voucher_pool_backup_inventory",
-        )
     }
 }

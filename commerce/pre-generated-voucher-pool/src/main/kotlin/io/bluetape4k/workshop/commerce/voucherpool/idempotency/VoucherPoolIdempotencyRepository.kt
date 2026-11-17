@@ -30,10 +30,23 @@ import io.bluetape4k.workshop.commerce.voucherpool.domain.DescriptorAction
 import io.bluetape4k.workshop.commerce.voucherpool.domain.TombstoneAction
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCatalog
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCommandTombstoneTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolHttpIdempotencyTable
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigest
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.plus
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import java.io.Serializable
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -288,7 +301,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
             ?.let { current ->
                 return decideCurrent(connection, scope, keyDigest, fingerprint, current)
             }
-        findTombstone(connection, scope, keyDigest.copyBytes())
+        findTombstone(scope, keyDigest.copyBytes())
             ?.let { tombstone ->
                 return tombstone.decision(fingerprint)
             }
@@ -300,7 +313,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         }
 
         val current = lockRow(connection, scope, keyDigest.copyBytes())
-            ?: findTombstone(connection, scope, keyDigest.copyBytes())?.let { return it.decision(fingerprint) }
+            ?: findTombstone(scope, keyDigest.copyBytes())?.let { return it.decision(fingerprint) }
             ?: error("idempotency row disappeared")
 
         return decideCurrent(connection, scope, keyDigest, fingerprint, current, owner)
@@ -320,11 +333,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         }
         return when (current.status) {
             IdempotencyStatus.COMPLETED        ->
-                current.completedDecision(
-                    connection = connection,
-                    scope = scope,
-                    scopedKeyDigest = keyDigest.copyBytes()
-                )
+                current.completedDecision(scope = scope, scopedKeyDigest = keyDigest.copyBytes())
 
             IdempotencyStatus.OWNED            ->
                 if (current.active) {
@@ -347,18 +356,21 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     }
 
     override fun lockOwnerForExecution(owner: IdempotencyOwner) {
-        val active = currentConnection().prepareStatement(
-            """SELECT 1 FROM voucher_pool_http_idempotency
-                WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
-                  AND status='OWNED' AND owner_token_digest=?
-                  AND lease_until>=statement_timestamp() AND command_deadline>=statement_timestamp()
-                FOR UPDATE""".trimIndent(),
-        ).use { statement ->
-            owner.bindScope(statement, start = 1)
-            statement.setBytes(4, owner.fingerprint.copyBytes())
-            statement.setBytes(5, owner.copyTokenDigest())
-            statement.executeQuery().use(ResultSet::next)
-        }
+        val active = VoucherPoolHttpIdempotencyTable
+            .selectAll()
+            .where {
+                (VoucherPoolHttpIdempotencyTable.tenantId eq owner.scope.tenantId) and
+                        (VoucherPoolHttpIdempotencyTable.operation eq owner.scope.operation) and
+                        (VoucherPoolHttpIdempotencyTable.scopedKeyDigest eq owner.copyScopedKeyDigest()) and
+                        (VoucherPoolHttpIdempotencyTable.fingerprint eq owner.fingerprint.copyBytes()) and
+                        (VoucherPoolHttpIdempotencyTable.status eq IdempotencyStatus.OWNED.name) and
+                        (VoucherPoolHttpIdempotencyTable.ownerTokenDigest eq owner.copyTokenDigest()) and
+                        (VoucherPoolHttpIdempotencyTable.leaseUntil greaterEq CurrentTimestamp) and
+                        (VoucherPoolHttpIdempotencyTable.commandDeadline greaterEq CurrentTimestamp)
+            }
+            .forUpdate()
+            .limit(1)
+            .any()
         if (!active) ownershipLost()
     }
 
@@ -369,6 +381,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     ): Boolean {
         requireDescriptorMatchesEffect(descriptor, effect)
         val connection = currentConnection()
+        // descriptor는 PostgreSQL JSONB cast와 statement_timestamp() 기반 만료 계산을 함께 원자화해야 합니다.
         val updated = connection.prepareStatement(
             """UPDATE voucher_pool_http_idempotency
                 SET status='COMPLETED',owner_token_digest=NULL,lease_until=NULL,descriptor=?::jsonb,
@@ -387,24 +400,26 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         }
         if (updated == 0) ownershipLost()
 
-        insertOrVerifyTombstone(connection, owner, effect)
+        insertOrVerifyTombstone(owner, effect)
         log.debug { "voucher_pool_idempotency_finalized operation=${owner.scope.operation}" }
         return true
     }
 
     override fun releaseRetryable(owner: IdempotencyOwner): Boolean {
-        val released = currentConnection().prepareStatement(
-            """UPDATE voucher_pool_http_idempotency
-                SET status='RETRYABLE_FAILED',owner_token_digest=NULL,lease_until=NULL,completed_at=NULL,
-                    revision=revision+1
-                WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
-                  AND status='OWNED' AND owner_token_digest=?""".trimIndent(),
-        ).use { statement ->
-            owner.bindScope(statement, start = 1)
-            statement.setBytes(4, owner.fingerprint.copyBytes())
-            statement.setBytes(5, owner.copyTokenDigest())
-            statement.executeUpdate() == 1
+        val released = VoucherPoolHttpIdempotencyTable.update({
+            (VoucherPoolHttpIdempotencyTable.tenantId eq owner.scope.tenantId) and
+                    (VoucherPoolHttpIdempotencyTable.operation eq owner.scope.operation) and
+                    (VoucherPoolHttpIdempotencyTable.scopedKeyDigest eq owner.copyScopedKeyDigest()) and
+                    (VoucherPoolHttpIdempotencyTable.fingerprint eq owner.fingerprint.copyBytes()) and
+                    (VoucherPoolHttpIdempotencyTable.status eq IdempotencyStatus.OWNED.name) and
+                    (VoucherPoolHttpIdempotencyTable.ownerTokenDigest eq owner.copyTokenDigest())
+        }) {
+            it[VoucherPoolHttpIdempotencyTable.status] = IdempotencyStatus.RETRYABLE_FAILED.name
+            it[VoucherPoolHttpIdempotencyTable.ownerTokenDigest] = null
+            it[VoucherPoolHttpIdempotencyTable.leaseUntil] = null
+            it[VoucherPoolHttpIdempotencyTable.revision] = VoucherPoolHttpIdempotencyTable.revision + 1
         }
+            .let { it == 1 }
         log.debug { "voucher_pool_idempotency_retryable_release operation=${owner.scope.operation} released=$released" }
         return released
     }
@@ -412,6 +427,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     override fun purgeDescriptors(limit: Int): Int {
         limit.requireInRange(1, MAX_PURGE_LIMIT, "limit")
         val connection = currentConnection()
+        // tombstone과 idempotency row를 함께 `SKIP LOCKED`로 선점하는 bounded purge는 PostgreSQL 전용 경계입니다.
         val candidates = connection.prepareStatement(
             """SELECT i.tenant_id,i.operation,i.scoped_key_digest,i.fingerprint,
                        t.key_version,t.effect_id,t.terminal_code
@@ -451,7 +467,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
             if (!MessageDigest.isEqual(candidate.tombstone.fingerprint, candidate.fingerprint)) {
                 log.warn { "voucher_pool_idempotency_purge_fenced operation=${candidate.operation}" }
             } else {
-                purged += clearDescriptor(connection, candidate)
+                purged += clearDescriptor(candidate)
             }
         }
         log.debug { "voucher_pool_idempotency_descriptors_purged count=$purged" }
@@ -459,6 +475,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     }
 
     private fun insertOwner(connection: Connection, owner: IdempotencyOwner): Boolean =
+        // lease/deadline/retention의 statement_timestamp() 계산과 conflict 무시를 한 INSERT로 유지합니다.
         connection.prepareStatement(
             """INSERT INTO voucher_pool_http_idempotency
                 (tenant_id,operation,scoped_key_digest,fingerprint,status,owner_token_digest,lease_until,
@@ -478,6 +495,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         }
 
     private fun takeOver(connection: Connection, owner: IdempotencyOwner, expectedRevision: Long): IdempotencyDecision {
+        // owner takeover는 여러 만료 시각을 같은 statement snapshot으로 계산하는 CAS이므로 raw SQL을 유지합니다.
         val updated = connection.prepareStatement(
             """UPDATE voucher_pool_http_idempotency
                 SET status='OWNED',owner_token_digest=?,lease_until=statement_timestamp()+(? * interval '1 millisecond'),
@@ -501,6 +519,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     }
 
     private fun lockRow(connection: Connection, scope: CommandScope, scopedKeyDigest: ByteArray): IdempotencyRow? =
+        // JSONB descriptor와 retry milliseconds projection을 잠금과 함께 계산해야 하므로 DSL로 분해하지 않습니다.
         connection.prepareStatement(
             """SELECT fingerprint,status,descriptor,revision,
                     COALESCE(lease_until>statement_timestamp() AND command_deadline>statement_timestamp(),false) AS active,
@@ -512,45 +531,40 @@ internal class JdbcVoucherPoolIdempotencyRepository(
             statement.executeQuery().use { result -> if (result.next()) result.idempotencyRow() else null }
         }
 
-    private fun findTombstone(
-        connection: Connection,
-        scope: CommandScope,
-        scopedKeyDigest: ByteArray,
-    ): TombstoneRow? = connection.prepareStatement(
-        """SELECT key_version,fingerprint,effect_id,terminal_code FROM voucher_pool_command_tombstones
-            WHERE tenant_id=? AND operation=? AND scoped_key_digest=?""".trimIndent(),
-    ).use { statement ->
-        statement.bindScope(scope, scopedKeyDigest)
-        statement.executeQuery().use { result ->
-            if (!result.next()) {
-                null
-            } else {
-                TombstoneRow(
-                    keyVersion = result.getInt("key_version"),
-                    fingerprint = result.getBytes("fingerprint"),
-                    effectId = result.getObject("effect_id", UUID::class.java),
-                    terminalCode = result.getString("terminal_code")?.let(VoucherPoolErrorCode::valueOf),
-                ).also(::requireCurrentTombstoneVersion)
-            }
+    private fun findTombstone(scope: CommandScope, scopedKeyDigest: ByteArray): TombstoneRow? =
+        VoucherPoolCommandTombstoneTable
+        .select(
+            VoucherPoolCommandTombstoneTable.keyVersion,
+            VoucherPoolCommandTombstoneTable.fingerprint,
+            VoucherPoolCommandTombstoneTable.effectId,
+            VoucherPoolCommandTombstoneTable.terminalCode,
+        )
+        .where {
+            (VoucherPoolCommandTombstoneTable.tenantId eq scope.tenantId) and
+                    (VoucherPoolCommandTombstoneTable.operation eq scope.operation) and
+                    (VoucherPoolCommandTombstoneTable.scopedKeyDigest eq scopedKeyDigest)
         }
-    }
+        .singleOrNull()
+        ?.let {
+            TombstoneRow(
+                keyVersion = it[VoucherPoolCommandTombstoneTable.keyVersion],
+                fingerprint = it[VoucherPoolCommandTombstoneTable.fingerprint],
+                effectId = it[VoucherPoolCommandTombstoneTable.effectId],
+                terminalCode = it[VoucherPoolCommandTombstoneTable.terminalCode]?.let(VoucherPoolErrorCode::valueOf),
+            ).also(::requireCurrentTombstoneVersion)
+        }
 
-    private fun insertOrVerifyTombstone(connection: Connection, owner: IdempotencyOwner, effect: EffectReference) {
-        connection.prepareStatement(
-            """INSERT INTO voucher_pool_command_tombstones
-                (tenant_id,operation,key_version,scoped_key_digest,fingerprint,effect_id,terminal_code)
-                VALUES (?,?,?,?,?,?,?) ON CONFLICT DO NOTHING""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, owner.scope.tenantId)
-            statement.setString(2, owner.scope.operation)
-            statement.setInt(3, owner.keyVersion)
-            statement.setBytes(4, owner.copyScopedKeyDigest())
-            statement.setBytes(5, owner.fingerprint.copyBytes())
-            statement.setObject(6, effect.effectId)
-            statement.setString(7, effect.terminalCode?.name)
-            statement.executeUpdate()
+    private fun insertOrVerifyTombstone(owner: IdempotencyOwner, effect: EffectReference) {
+        VoucherPoolCommandTombstoneTable.insertIgnore {
+            it[VoucherPoolCommandTombstoneTable.tenantId] = owner.scope.tenantId
+            it[VoucherPoolCommandTombstoneTable.operation] = owner.scope.operation
+            it[VoucherPoolCommandTombstoneTable.keyVersion] = owner.keyVersion
+            it[VoucherPoolCommandTombstoneTable.scopedKeyDigest] = owner.copyScopedKeyDigest()
+            it[VoucherPoolCommandTombstoneTable.fingerprint] = owner.fingerprint.copyBytes()
+            it[VoucherPoolCommandTombstoneTable.effectId] = effect.effectId
+            it[VoucherPoolCommandTombstoneTable.terminalCode] = effect.terminalCode?.name
         }
-        val stored = checkNotNull(findTombstone(connection, owner.scope, owner.copyScopedKeyDigest()))
+        val stored = checkNotNull(findTombstone(owner.scope, owner.copyScopedKeyDigest()))
         if (!MessageDigest.isEqual(stored.fingerprint, owner.fingerprint.copyBytes())) {
             tombstoneIntegrityFailure()
         }
@@ -559,23 +573,25 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         }
     }
 
-    private fun clearDescriptor(connection: Connection, candidate: PurgeCandidate): Int =
-        connection.prepareStatement(
-            """UPDATE voucher_pool_http_idempotency SET descriptor=NULL,revision=revision+1
-                WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
-                  AND status='COMPLETED' AND descriptor IS NOT NULL AND expires_at<=statement_timestamp()""".trimIndent(),
-        ).use { statement ->
-            statement.bindScope(candidate.scope, candidate.scopedKeyDigest)
-            statement.setBytes(4, candidate.fingerprint)
-            statement.executeUpdate()
+    private fun clearDescriptor(candidate: PurgeCandidate): Int =
+        VoucherPoolHttpIdempotencyTable.update({
+            (VoucherPoolHttpIdempotencyTable.tenantId eq candidate.scope.tenantId) and
+                    (VoucherPoolHttpIdempotencyTable.operation eq candidate.scope.operation) and
+                    (VoucherPoolHttpIdempotencyTable.scopedKeyDigest eq candidate.scopedKeyDigest) and
+                    (VoucherPoolHttpIdempotencyTable.fingerprint eq candidate.fingerprint) and
+                    (VoucherPoolHttpIdempotencyTable.status eq IdempotencyStatus.COMPLETED.name) and
+                    VoucherPoolHttpIdempotencyTable.descriptor.isNotNull() and
+                    (VoucherPoolHttpIdempotencyTable.expiresAt lessEq CurrentTimestamp)
+        }) {
+            it[VoucherPoolHttpIdempotencyTable.descriptor] = null
+            it[VoucherPoolHttpIdempotencyTable.revision] = VoucherPoolHttpIdempotencyTable.revision + 1
         }
 
     private fun IdempotencyRow.completedDecision(
-        connection: Connection,
         scope: CommandScope,
         scopedKeyDigest: ByteArray,
     ): IdempotencyDecision {
-        val tombstone = findTombstone(connection, scope, scopedKeyDigest) ?: tombstoneIntegrityFailure()
+        val tombstone = findTombstone(scope, scopedKeyDigest) ?: tombstoneIntegrityFailure()
         if (!MessageDigest.isEqual(tombstone.fingerprint, fingerprint.copyBytes())) {
             tombstoneIntegrityFailure()
         }

@@ -10,15 +10,26 @@ import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.toUtf8String
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCampaignTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCodeDedupTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCommandTombstoneTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolEntryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRevokePreviewGrantTable
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKekRing
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKeyMaterialUnavailableException
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.core.io.Resource
 import java.security.MessageDigest
 import java.sql.Connection
-import java.sql.ResultSet
 import java.sql.SQLException
 import java.time.Duration
 import java.util.concurrent.locks.LockSupport
@@ -113,7 +124,7 @@ internal class VoucherPoolMigrationRunner(
 
                     )
                 }
-                when (val checksum = appliedChecksum(connection, script.version)) {
+                when (appliedChecksum(connection, script.version)) {
                     null            ->
                         apply(connection, script).also {
                             log.info { "voucher_pool_migration_applied version=${script.version}" }
@@ -299,9 +310,9 @@ internal class VoucherPoolMigrationRunner(
         }
         current.toString().trim().takeIf(String::isNotEmpty)?.let(statements::add)
 
-        return statements.also { stmt ->
-            stmt.forEachIndexed { index, sql ->
-                log.debug { "sql[$index]: $sql" }
+        return statements.also { parsedStatements ->
+            parsedStatements.forEachIndexed { index, statementSql ->
+                log.debug { "sql[$index]: $statementSql" }
             }
         }
     }
@@ -315,68 +326,78 @@ internal class VoucherPoolReferencedKeyPreflight(
 ) {
     private companion object: KLogging() {
         const val MAX_REFERENCED_VERSIONS = 64
-        const val KEK_SQL =
-            "SELECT DISTINCT kek_version FROM voucher_pool_entries WHERE kek_version IS NOT NULL ORDER BY 1 LIMIT ?"
-
-        const val VERIFICATION_SQL =
-            "SELECT DISTINCT verification_key_version FROM voucher_pool_entries " +
-                    "WHERE verification_key_version IS NOT NULL ORDER BY 1 LIMIT ?"
-
-        const val USER_IDENTITY_SQL =
-            "SELECT DISTINCT user_identity_key_version FROM voucher_pool_campaigns ORDER BY 1 LIMIT ?"
-
-        const val AUDIT_SQL =
-            "SELECT version FROM (SELECT audit_key_version AS version FROM voucher_pool_audits " +
-                    "WHERE audit_key_version IS NOT NULL UNION SELECT signature_key_version AS version " +
-                    "FROM voucher_pool_revoke_preview_grants) referenced ORDER BY 1 LIMIT ?"
-
-        const val STABLE_DEDUP_SQL = "SELECT DISTINCT key_version FROM voucher_pool_code_dedup ORDER BY 1 LIMIT ?"
-        const val COMMAND_TOMBSTONE_SQL =
-            "SELECT DISTINCT key_version FROM voucher_pool_command_tombstones ORDER BY 1 LIMIT ?"
     }
 
     fun verify() {
-        referencedStrings(KEK_SQL).forEach(kekRing::require)
-        referencedInts(VERIFICATION_SQL).forEach {
-            digests.requireAvailable(DigestPurpose.VERIFICATION, it)
-        }
-        referencedInts(USER_IDENTITY_SQL).forEach {
-            digests.requireAvailable(DigestPurpose.USER_IDENTITY, it)
-        }
-        referencedInts(AUDIT_SQL).forEach {
-            digests.requireAvailable(DigestPurpose.AUDIT, it)
-        }
-        referencedInts(STABLE_DEDUP_SQL).forEach {
-            digests.requireAvailable(DigestPurpose.STABLE_DEDUP, it)
-        }
-        referencedInts(COMMAND_TOMBSTONE_SQL).forEach {
-            digests.requireAvailable(DigestPurpose.COMMAND_TOMBSTONE, it)
+        withExposedTransaction {
+            distinctStrings(VoucherPoolEntryTable.kekVersion) {
+                VoucherPoolEntryTable.select(VoucherPoolEntryTable.kekVersion)
+                    .where { VoucherPoolEntryTable.kekVersion.isNotNull() }
+            }.forEach(kekRing::require)
+
+            distinctNullableInts(VoucherPoolEntryTable.verificationKeyVersion) {
+                VoucherPoolEntryTable.select(VoucherPoolEntryTable.verificationKeyVersion)
+                    .where { VoucherPoolEntryTable.verificationKeyVersion.isNotNull() }
+            }.forEach {
+                digests.requireAvailable(DigestPurpose.VERIFICATION, it)
+            }
+            distinctInts(VoucherPoolCampaignTable.userIdentityKeyVersion) {
+                VoucherPoolCampaignTable.select(VoucherPoolCampaignTable.userIdentityKeyVersion)
+            }.forEach {
+                digests.requireAvailable(DigestPurpose.USER_IDENTITY, it)
+            }
+            val auditVersions = buildList {
+                addAll(distinctNullableInts(VoucherPoolAuditTable.auditKeyVersion) {
+                    VoucherPoolAuditTable.select(VoucherPoolAuditTable.auditKeyVersion)
+                        .where { VoucherPoolAuditTable.auditKeyVersion.isNotNull() }
+                })
+                addAll(distinctInts(VoucherPoolRevokePreviewGrantTable.signatureKeyVersion) {
+                    VoucherPoolRevokePreviewGrantTable.select(VoucherPoolRevokePreviewGrantTable.signatureKeyVersion)
+                })
+            }.distinct().sorted().also(::requireBounded)
+            auditVersions.forEach {
+                digests.requireAvailable(DigestPurpose.AUDIT, it)
+            }
+            distinctInts(VoucherPoolCodeDedupTable.keyVersion) {
+                VoucherPoolCodeDedupTable.select(VoucherPoolCodeDedupTable.keyVersion)
+            }.forEach {
+                digests.requireAvailable(DigestPurpose.STABLE_DEDUP, it)
+            }
+            distinctInts(VoucherPoolCommandTombstoneTable.keyVersion) {
+                VoucherPoolCommandTombstoneTable.select(VoucherPoolCommandTombstoneTable.keyVersion)
+            }.forEach {
+                digests.requireAvailable(DigestPurpose.COMMAND_TOMBSTONE, it)
+            }
         }
     }
 
-    private fun referencedInts(sql: String): List<Int> =
-        referenced(sql) { it.getInt(1) }
+    private fun distinctInts(column: org.jetbrains.exposed.v1.core.Column<Int>, query: () -> org.jetbrains.exposed.v1.jdbc.Query): List<Int> =
+        query().withDistinct().orderBy(column to SortOrder.ASC).limit(MAX_REFERENCED_VERSIONS + 1)
+            .map { it[column] }
+            .also(::requireBounded)
 
-    private fun referencedStrings(sql: String): List<String> =
-        referenced(sql) { it.getString(1) }
+    private fun distinctNullableInts(column: org.jetbrains.exposed.v1.core.Column<Int?>, query: () -> org.jetbrains.exposed.v1.jdbc.Query): List<Int> =
+        query().withDistinct().orderBy(column to SortOrder.ASC).limit(MAX_REFERENCED_VERSIONS + 1)
+            .mapNotNull { it[column] }
+            .also(::requireBounded)
 
-    private inline fun <T> referenced(sql: String, read: (ResultSet) -> T): List<T> =
-        dataSource.connection.use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                stmt.setInt(1, MAX_REFERENCED_VERSIONS + 1)
-                stmt.executeQuery().use { result ->
-                    buildList {
-                        while (result.next()) {
-                            add(read(result))
-                        }
-                    }.also { versions ->
-                        if (versions.size > MAX_REFERENCED_VERSIONS) {
-                            throw VoucherKeyMaterialUnavailableException()
-                        }
-                    }
-                }
-            }
+    private fun distinctStrings(column: org.jetbrains.exposed.v1.core.Column<String?>, query: () -> org.jetbrains.exposed.v1.jdbc.Query): List<String> =
+        query().withDistinct().orderBy(column to SortOrder.ASC).limit(MAX_REFERENCED_VERSIONS + 1)
+            .mapNotNull { it[column] }
+            .also(::requireBounded)
+
+    private fun requireBounded(versions: List<*>): List<*> = versions.also {
+        if (it.size > MAX_REFERENCED_VERSIONS) throw VoucherKeyMaterialUnavailableException()
+    }
+
+    private inline fun <T> withExposedTransaction(crossinline block: () -> T): T {
+        val database = Database.connect(dataSource)
+        return try {
+            transaction(database) { block() }
+        } finally {
+            TransactionManager.closeAndUnregister(database)
         }
+    }
 }
 
 /** migration과 live referenced-key verification이 완료된 뒤에만 readiness를 엽니다. */
