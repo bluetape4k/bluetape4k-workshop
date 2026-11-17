@@ -2,13 +2,13 @@
 
 [English](README.md) | 한국어
 
-`bucket4j-advanced`는 Spring WebFlux coroutine filter에서 세 가지 독립 Bucket4j rate-limit 전략을 보여줍니다. 각 filter는 하나의 path prefix, 하나의 identity key 형태, 하나의 bucket 설정을 소유합니다. Bucket 상태는 모두 같은 Redis/Lettuce proxy manager를 통해 저장합니다.
+`bucket4j-advanced`는 Spring WebFlux coroutine filter에서 네 가지 독립 Bucket4j rate-limit 전략을 보여줍니다. 각 filter는 하나의 path prefix와 하나의 identity key 형태를 소유하며, OR filter는 별도 key prefix로 IP와 user limiter 설정을 재사용합니다. Bucket 상태는 모두 같은 Redis/Lettuce proxy manager를 통해 저장합니다.
 
 ## 아키텍처
 
 ![bucket4j-advanced architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
 
-필터는 path prefix로 분리됩니다. Anonymous traffic은 IP bucket을 사용하고, authenticated traffic은 `X-User-ID`를 사용하며, sensitive traffic은 IP와 user ID를 조합합니다. Rate-limit 실패는 표준 header를 반환하고, limiter 내부 오류는 fail-open으로 처리해 예제 endpoint 가용성을 유지합니다.
+필터는 path prefix로 분리됩니다. Anonymous traffic은 IP bucket을 사용하고, authenticated traffic은 `X-User-ID`를 사용하며, sensitive traffic은 IP와 user ID를 조합하고, OR 예제는 IP와 user bucket을 별도로 소비합니다. OR filter는 두 bucket을 동시에 시도하며, 거절 결과가 내부 오류보다 우선하고 오류만 발생하면 fail-open으로 통과시킵니다. 두 저장소 소비는 원자적이지 않으므로 한쪽이 거절된 요청에서도 다른 bucket의 token이 소비될 수 있습니다. Rate-limit 실패는 표준 header를 반환하고, limiter 내부 오류는 fail-open으로 처리해 예제 endpoint 가용성을 유지합니다.
 
 ## Strategy Map
 
@@ -18,20 +18,22 @@
 
 | 전략              | 엔드포인트                     | 키                       | 버킷             | 필요한 헤더 |
 |-------------------|--------------------------------|--------------------------|------------------|-------------|
-| IP 기반           | `GET /api/anonymous/hello`     | `ip:<address>`           | 20 tokens / 10 s | 없음        |
+| IP 기반           | `GET /api/anonymous/hello`     | `ip:<address>`           | 20 tokens / 30 s | 없음        |
 | userId 기반       | `GET /api/authenticated/hello` | `user:<userId>`          | 50 tokens / 10 s | `X-User-ID` |
 | 조합(IP + userId) | `GET /api/sensitive/hello`     | `combined:<ip>:<userId>` | 10 tokens / 10 s | `X-User-ID` |
+| OR(IP 또는 userId) | `GET /api/sensitive-or/hello` | `or:ip:<address>` + `or:user:<userId>` | IP 20 / 30 s, user 50 / 10 s | `X-User-ID` |
 
 ## 적용 전 / 후 비교
 
 | 관심사         | 적용 전(기본 `bucker4j-bluetape4k-webflux`) | 적용 후(이 모듈)                                   |
 |----------------|---------------------------------------------|----------------------------------------------------|
-| 식별 전략      | 단일 전략(userId 또는 IP)                   | 세 개의 독립 전략                                  |
+| 식별 전략      | 단일 전략(userId 또는 IP)                   | 네 개의 독립 전략                                  |
 | 필터 격리      | 겹치는 필터 두 개가 이중 카운팅을 유발      | 각 필터가 자신의 경로 prefix만 처리                |
 | 응답 헤더      | `X-BLUETAPE4K-REMAINING-TOKEN`(커스텀)      | `X-RateLimit-Remaining` + `Retry-After`(HTTP 표준) |
 | 사용자 ID 헤더 | `X-BLUETAPE4K-UID`                          | `X-User-ID`                                        |
 | 누락된 식별자  | 조용히 remoteAddress로 대체                 | 명시적 오류 코드(400 / 401)                        |
 | 조합 quota     | 지원하지 않음                               | IP+userId 복합 키                                  |
+| OR quota       | 지원하지 않음                               | IP와 userId를 별도 적용하며 하나라도 초과하면 429 |
 
 ## 응답 헤더
 
@@ -74,6 +76,9 @@ curl -H "X-User-ID: alice" http://localhost:8080/api/authenticated/hello
 
 # Combined IP + userId (sensitive)
 curl -H "X-User-ID: alice" http://localhost:8080/api/sensitive/hello
+
+# OR: IP와 userId를 별도로 적용하는 민감 endpoint
+curl -H "X-User-ID: alice" http://localhost:8080/api/sensitive-or/hello
 ```
 
 ## 의존성

@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration
 import java.time.Duration
 
 /**
- * 서로 다른 세 가지 rate-limit 전략을 설정합니다.
+ * 서로 다른 네 가지 rate-limit 경로 전략을 설정합니다.
  *
  * - **IP 기반**(`ipRateLimiter`): client IP 주소별로 제한합니다.
  *   한 출발지에서 익명 endpoint를 과도하게 호출하지 못하게 할 때 적합합니다.
@@ -29,9 +29,12 @@ import java.time.Duration
  * - **Combined**(`combinedRateLimiter`): `"ip:userId"` 복합 bucket key를 사용합니다.
  *   (IP, userId) 쌍마다 하나의 bucket을 유지하므로, 사용자는 자신의 combined quota만 소진하고
  *   전역 IP quota나 다른 사용자의 quota를 소진하지 않습니다. 반대 방향도 동일합니다.
+ * - **OR**([OrRateLimitWebFilter]): 기존 IP와 user limiter를 별도 key prefix로 각각 소비합니다.
+ *   어느 하나라도 소진되면 요청을 거절합니다.
  *
- * 세 전략은 같은 [ProxyManager]와 같은 Redis instance를 공유하지만,
- * 각 limiter는 capacity가 다른 별도 [BucketConfiguration]을 사용합니다.
+ * 네 경로 전략은 같은 [ProxyManager]와 같은 Redis instance를 공유합니다.
+ * IP, user, combined limiter는 capacity가 다른 별도 [BucketConfiguration]을 사용하고,
+ * OR filter는 IP와 user limiter를 각각 재사용합니다.
  */
 @Configuration(proxyBeanMethods = false)
 class RateLimitConfig {
@@ -56,7 +59,7 @@ class RateLimitConfig {
     // 전략별 BucketConfiguration
     // ------------------------------------------------------------------
 
-    /** IP 기반 bucket입니다. 익명 traffic에 10초당 20 token, 분당 100 token을 허용합니다. */
+    /** IP 기반 bucket입니다. 익명 traffic에 30초당 20 token, 분당 100 token을 허용합니다. */
     @Bean
     @Qualifier("ipBucketConfiguration")
     fun ipBucketConfiguration(): BucketConfiguration = bucketConfiguration {

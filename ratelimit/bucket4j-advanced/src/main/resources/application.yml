@@ -34,7 +34,7 @@ ratelimit:
 
 info:
   name: ${spring.application.name}
-  description: Bucket4j advanced rate limit demo — IP / userId / combined strategies
+  description: Bucket4j advanced rate limit demo — IP / userId / combined / OR strategies
   environment: ${spring.profiles.active}
   version: 1.0.0
 

@@ -21,9 +21,6 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 
-// TODO: Combine 은 ip and user 를 key 로 삼는 것인데, 실제 필요한 것은 ip or user 로 rate limit 거는 것이다.
-// 
-
 /**
  * `/api/sensitive/` 요청에 combined IP+userId rate limit을 적용하는 [WebFilter]입니다.
  *
@@ -33,7 +30,7 @@ import reactor.core.publisher.Mono
  * NAT 같은 공유 IP도 뒤쪽의 모든 사용자에게 불이익을 주지 않습니다.
  *
  * ## 동작 계약
- * - path가 `/api/sensitive`로 시작하는 요청만 가로챕니다.
+ * - path가 `/api/sensitive/`로 시작하는 요청만 가로챕니다.
  * - IP와 `X-User-ID` header가 모두 필요하며, 어느 하나라도 없으면 HTTP 400으로 응답합니다.
  * - combined bucket이 소진되면 HTTP 429와 `Retry-After`로 응답합니다.
  * - 내부 오류가 나면 서비스 중단을 피하려고 fail-open으로 통과시킵니다.
@@ -48,7 +45,7 @@ class CombinedRateLimitWebFilter(
 ): WebFilter {
 
     companion object: KLoggingChannel() {
-        private const val TARGET_PATH_PREFIX = "/api/sensitive"
+        private const val TARGET_PATH_PREFIX = "/api/sensitive/"
     }
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> = mono(Dispatchers.IO) {

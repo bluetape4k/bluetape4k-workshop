@@ -9,7 +9,7 @@ springBoot {
     buildInfo {
         properties {
             additional.put("name", "Bucket4j Advanced Rate Limit Demo")
-            additional.put("description", "IP/userId/combined rate limit strategies")
+            additional.put("description", "IP/userId/combined/OR rate limit strategies")
             version = "1.0.0"
             additional.put("java.version", JavaVersion.current())
         }

@@ -2,13 +2,13 @@
 
 [한국어](README.ko.md) | English
 
-`bucket4j-advanced` demonstrates three independent Bucket4j rate-limit strategies on Spring WebFlux coroutine filters. Each filter owns one path prefix, one identity key shape, and one bucket configuration. All buckets are stored through the same Redis/Lettuce proxy manager.
+`bucket4j-advanced` demonstrates four independent Bucket4j rate-limit strategies on Spring WebFlux coroutine filters. Each filter owns one path prefix and one identity key shape; the OR filter reuses the IP and user limiter configurations with separate key prefixes. All buckets are stored through the same Redis/Lettuce proxy manager.
 
 ## Architecture
 
 ![bucket4j-advanced architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
 
-The filters are isolated by path prefix: anonymous traffic uses an IP bucket, authenticated traffic uses `X-User-ID`, and sensitive traffic combines IP and user ID. Rate-limit failures return standard headers; internal limiter errors fail open so the example endpoint remains available.
+The filters are isolated by path prefix: anonymous traffic uses an IP bucket, authenticated traffic uses `X-User-ID`, sensitive traffic combines IP and user ID, and the OR example consumes separate IP and user buckets. The OR filter attempts both buckets concurrently; a rejection takes precedence over an internal error, while error-only checks fail open. Because the two stores are non-atomic, a rejected request may still consume a token from the other bucket. Rate-limit failures return standard headers; internal limiter errors fail open so the example endpoint remains available.
 
 ## Strategy Map
 
@@ -18,20 +18,22 @@ The filters are isolated by path prefix: anonymous traffic uses an IP bucket, au
 
 | Strategy               | Endpoint                       | Key                      | Bucket           | Header required |
 |------------------------|--------------------------------|--------------------------|------------------|-----------------|
-| IP-based               | `GET /api/anonymous/hello`     | `ip:<address>`           | 20 tokens / 10 s | none            |
+| IP-based               | `GET /api/anonymous/hello`     | `ip:<address>`           | 20 tokens / 30 s | none            |
 | userId-based           | `GET /api/authenticated/hello` | `user:<userId>`          | 50 tokens / 10 s | `X-User-ID`     |
 | Combined (IP + userId) | `GET /api/sensitive/hello`     | `combined:<ip>:<userId>` | 10 tokens / 10 s | `X-User-ID`     |
+| OR (IP or userId)      | `GET /api/sensitive-or/hello`  | `or:ip:<address>` + `or:user:<userId>` | IP 20 / 30 s, user 50 / 10 s | `X-User-ID` |
 
 ## Before / After Comparison
 
 | Concern             | Before (basic `bucker4j-bluetape4k-webflux`)   | After (this module)                                     |
 |---------------------|------------------------------------------------|---------------------------------------------------------|
-| Identity strategies | Single strategy (userId or IP)                 | Three independent strategies                            |
+| Identity strategies | Single strategy (userId or IP)                 | Four independent strategies                             |
 | Filter isolation    | Two overlapping filters caused double-counting | Each filter only handles its own path prefix            |
 | Response headers    | `X-BLUETAPE4K-REMAINING-TOKEN` (custom)        | `X-RateLimit-Remaining` + `Retry-After` (HTTP standard) |
 | User ID header      | `X-BLUETAPE4K-UID`                             | `X-User-ID`                                             |
 | Missing identity    | Falls back to remoteAddress silently           | Explicit error codes (400 / 401)                        |
 | Combined quota      | Not supported                                  | IP+userId composite key                                 |
+| OR quota            | Not supported                                  | Separate IP and userId keys; either rejection returns 429 |
 
 ## Response Headers
 
@@ -74,6 +76,9 @@ curl -H "X-User-ID: alice" http://localhost:8080/api/authenticated/hello
 
 # Combined IP + userId (sensitive)
 curl -H "X-User-ID: alice" http://localhost:8080/api/sensitive/hello
+
+# OR: separate IP and userId limits (sensitive)
+curl -H "X-User-ID: alice" http://localhost:8080/api/sensitive-or/hello
 ```
 
 ## Dependencies

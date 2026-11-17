@@ -16,14 +16,15 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 
 /**
- * 세 가지 rate-limit 전략을 모두 검증하는 [RateLimitDemoController] 통합 테스트입니다.
+ * IP, userId, combined rate-limit 전략을 검증하는 [RateLimitDemoController] 통합 테스트입니다.
+ * OR 전략은 [OrRateLimitDemoControllerTest]에서 별도로 검증합니다.
  *
  * bucket을 소진하지 않는 검사를 먼저 실행하고, bucket을 비우는 테스트를 뒤에 실행하도록 순서를 고정합니다.
  * 모든 IP 기반 테스트가 같은 `127.0.0.1` Redis bucket key를 공유하기 때문에 필요합니다.
  * User 기반과 combined 테스트는 항상 고유한 random user ID를 사용하므로 서로 독립적입니다.
  *
  * Bucket capacity([RateLimitConfig] 기준):
- * - IP 기반   : 10초당 20 token
+ * - IP 기반   : 30초당 20 token
  * - User 기반 : 10초당 50 token
  * - Combined  : 10초당 10 token
  */
