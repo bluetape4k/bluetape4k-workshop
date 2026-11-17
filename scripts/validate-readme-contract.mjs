@@ -73,7 +73,7 @@ function hasDesignEvidence(markdown, locale) {
 function hasTestEvidence(markdown, moduleDir) {
   if (moduleDir !== root && !fs.existsSync(path.join(moduleDir, "src", "test"))) return false;
 
-  const hasTestSection = /^#{2,4} .*?(?:test|verif|evidence|smoke|run|검증|테스트|실행|증거)/im.test(markdown);
+  const hasTestSection = /^#{2,4} .*?(?:test|verif|evidence|smoke|검증|테스트|증거)/im.test(markdown);
   const hasTestCommand = /(?:\.\/gradlew|gradle\s+)[^\n]*(?::[\w-]+)*(?:test|integrationTest|check|build)\b/i.test(markdown);
   const hasTestClaim = /(?:test(?:s|ing)?|검증|테스트).{0,160}(?:verify|cover|assert|exercise|check|prove|compare|확인|비교|검사|다룬다|검증)/i.test(markdown);
   const hasTestClass = /\b[A-Z][A-Za-z0-9_]*(?:Test|Tests|IT)\b/.test(markdown);

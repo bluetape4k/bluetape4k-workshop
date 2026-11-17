@@ -40,6 +40,12 @@ http :8081/swagger-ui.html
 http :8081/actuator
 ```
 
+## Verification
+
+Run `./gradlew :customers:test`. `CustomerTest` verifies blank-name validation,
+`CustomerControllerTest` verifies the customer endpoint response, and
+`RedirectWebFilterTest` verifies the root-to-Swagger redirect.
+
 ## bluetape4k Usage
 
 | Library | Usage |

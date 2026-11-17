@@ -40,6 +40,12 @@ http :8081/swagger-ui.html
 http :8081/actuator
 ```
 
+## 검증
+
+`./gradlew :customers:test`를 실행합니다. `CustomerTest`는 빈 이름 검증을,
+`CustomerControllerTest`는 customer endpoint 응답을, `RedirectWebFilterTest`는
+root에서 Swagger로의 redirect를 확인합니다.
+
 ## bluetape4k 사용 지점
 
 | Library | Usage |
