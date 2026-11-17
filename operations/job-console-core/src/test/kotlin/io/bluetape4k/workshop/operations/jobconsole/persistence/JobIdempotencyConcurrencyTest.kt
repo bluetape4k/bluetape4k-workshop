@@ -49,4 +49,38 @@ class JobIdempotencyConcurrencyTest {
             fixture.count("job_requests") shouldBeEqualTo 1L
         }
     }
+
+    @Test
+    fun `concurrent distinct submits allocate unique enqueue sequences for one tenant`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val repository = JobRepository(fixture.dataSource)
+            val scope = DemoCallerScope("tenant-a", "submitter-a")
+            val ready = CountDownLatch(8)
+            val start = CountDownLatch(1)
+
+            val results = Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                List(8) { index ->
+                    executor.submit<SubmitJobResult> {
+                        ready.countDown()
+                        start.await()
+                        repository.submit(
+                            scope,
+                            "distinct-key-$index",
+                            SubmitJobRequest(JobType.DOCUMENT_EXPORT, 10),
+                            Instant.parse("2026-07-21T00:00:00Z"),
+                        )
+                    }
+                }.also {
+                    ready.await()
+                    start.countDown()
+                }.map { it.get() }
+            }
+
+            results.map(SubmitJobResult::enqueueSequence).distinct().size shouldBeEqualTo 8
+            results.map(SubmitJobResult::enqueueSequence).sorted() shouldBeEqualTo (1L..8L).toList()
+            fixture.count("jobs") shouldBeEqualTo 8L
+            fixture.count("job_requests") shouldBeEqualTo 8L
+        }
+    }
 }

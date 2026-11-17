@@ -191,6 +191,9 @@ class JobRepository(
             }
 
             val jobId = Uuid.V7.nextId()
+            // MAX(enqueue_sequence)+1은 tenant별 queue lock 안에서만 읽고 삽입해야 합니다.
+            // legacy 경로도 bounded idempotency 경로와 같은 PostgreSQL 직렬화 경계를 사용합니다.
+            advisoryLock(connection, "queue:${scope.tenantId}")
             val sequence = nextEnqueueSequenceDsl(scope.tenantId)
             insertJobDsl(scope, request, jobId, sequence, now)
             insertRequestDsl(scope, keyHash, fingerprint, jobId, now)
