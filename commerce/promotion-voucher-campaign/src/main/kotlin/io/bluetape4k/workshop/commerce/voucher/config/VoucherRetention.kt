@@ -3,9 +3,17 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
 import io.bluetape4k.javatimes.days
-import io.bluetape4k.jdbc.sql.getIntOrNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.workshop.commerce.voucher.idempotency.HttpIdempotencyTable
+import io.bluetape4k.workshop.commerce.voucher.persistence.ClaimTable
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.sql.Connection
 import java.time.Duration
 import java.time.Instant
 import javax.sql.DataSource
@@ -63,39 +71,49 @@ internal class PostgresReferencedKeyVersionSource(
                AND to_regclass(current_schema() || '.voucher_http_idempotency') IS NOT NULL
             """.trimIndent()
 
-        val REFERENCED_KEY_SQL =
-            """
-            SELECT generation_key_version, verification_key_version
-              FROM voucher_claims
-             WHERE generation_key_version IS NOT NULL OR verification_key_version IS NOT NULL
-            UNION ALL
-            SELECT generation_key_version, verification_key_version
-              FROM voucher_http_idempotency
-             WHERE generation_key_version IS NOT NULL OR verification_key_version IS NOT NULL
-            """.trimIndent()
     }
 
     override fun referencedVersions(): ReferencedKeyVersions {
         val generation = linkedSetOf<Int>()
         val verification = linkedSetOf<Int>()
 
-        dataSource.connection.use { conn ->
-            if (!conn.hasReferenceTables()) return ReferencedKeyVersions()
-
-            conn.prepareStatement(REFERENCED_KEY_SQL).use { stmt ->
-                stmt.executeQuery().use { rows ->
-                    while (rows.next()) {
-                        rows.getIntOrNull("generation_key_version")?.let(generation::add)
-                        rows.getIntOrNull("verification_key_version")?.let(verification::add)
-                    }
+        val database = Database.connect(dataSource)
+        return try {
+            transaction(database) {
+                val connection = TransactionManager.current().connection.connection as Connection
+                if (!connection.hasReferenceTables()) {
+                    ReferencedKeyVersions()
+                } else {
+                    ClaimTable
+                        .select(ClaimTable.generationKeyVersion, ClaimTable.verificationKeyVersion)
+                        .where {
+                            ClaimTable.generationKeyVersion.isNotNull() or
+                                    ClaimTable.verificationKeyVersion.isNotNull()
+                        }
+                        .forEach { row ->
+                            row[ClaimTable.generationKeyVersion]?.let(generation::add)
+                            row[ClaimTable.verificationKeyVersion]?.let(verification::add)
+                        }
+                    HttpIdempotencyTable
+                        .select(HttpIdempotencyTable.generationKeyVersion, HttpIdempotencyTable.verificationKeyVersion)
+                        .where {
+                            HttpIdempotencyTable.generationKeyVersion.isNotNull() or
+                                    HttpIdempotencyTable.verificationKeyVersion.isNotNull()
+                        }
+                        .forEach { row ->
+                            row[HttpIdempotencyTable.generationKeyVersion]?.let(generation::add)
+                            row[HttpIdempotencyTable.verificationKeyVersion]?.let(verification::add)
+                        }
+                    ReferencedKeyVersions(generation, verification)
                 }
             }
+        } finally {
+            TransactionManager.closeAndUnregister(database)
         }
-        return ReferencedKeyVersions(generation, verification)
     }
 
     /** fresh database는 migration callback 실행 전에 검증되므로 아직 reference가 없습니다. */
-    private fun java.sql.Connection.hasReferenceTables(): Boolean =
+    private fun Connection.hasReferenceTables(): Boolean =
         prepareStatement(REFERENCE_TABLES_SQL).use { statement ->
             statement.executeQuery().use { rows ->
                 check(rows.next())

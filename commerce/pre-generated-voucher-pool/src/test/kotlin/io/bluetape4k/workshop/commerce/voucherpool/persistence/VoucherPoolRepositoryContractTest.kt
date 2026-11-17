@@ -157,6 +157,60 @@ internal class VoucherPoolRepositoryContractTest {
         reconciliationSource shouldContain "transaction_timestamp()"
     }
 
+    @Test
+    fun `key guards and tenant cleanup use Exposed for ordinary persistence`() {
+        val migrationSource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolMigrationRunner.kt",
+        )
+        val retentionSource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolRetention.kt",
+        )
+        val voucherRetentionSource = sourceFile(
+            "commerce/promotion-voucher-campaign/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucher/config/VoucherRetention.kt",
+        )
+
+        section(migrationSource, "internal class VoucherPoolReferencedKeyPreflight", "/** migration과 live")
+            .also {
+                it shouldContain "VoucherPoolEntryTable"
+                it shouldContain "VoucherPoolCommandTombstoneTable"
+                it shouldContain ".select("
+                it shouldNotContain "prepareStatement(\"SELECT DISTINCT"
+            }
+        section(
+            retentionSource,
+            "internal class PostgresVoucherPoolKeyReferenceSource",
+            "internal class VoucherPoolKeyRetirementPolicy",
+        )
+            .also {
+                it shouldContain "VoucherPoolEntryTable"
+                it shouldContain "VoucherPoolCommandTombstoneTable"
+                it shouldContain ".select("
+                it shouldContain "BACKUP_INVENTORY_SQL"
+                it shouldContain "array materialization"
+            }
+        section(retentionSource, "fun deleteTenant", "private fun purgeDescriptors")
+            .also {
+                it shouldContain "deleteWhere"
+                it shouldNotContain "DELETE FROM \$table"
+            }
+        retentionSource shouldContain "statement_timestamp()`와 interval projection"
+        section(
+            voucherRetentionSource,
+            "override fun referencedVersions",
+            "private fun Connection.hasReferenceTables",
+        )
+            .also {
+                it shouldContain "ClaimTable"
+                it shouldContain "HttpIdempotencyTable"
+                it shouldContain ".select("
+                it shouldNotContain "REFERENCED_KEY_SQL"
+                it shouldNotContain "prepareStatement("
+            }
+    }
+
     private fun section(source: String, start: String, end: String): String {
         val startIndex = source.indexOf(start).also { check(it >= 0) { "missing source marker: $start" } }
         val endIndex = source.indexOf(end, startIndex + start.length)

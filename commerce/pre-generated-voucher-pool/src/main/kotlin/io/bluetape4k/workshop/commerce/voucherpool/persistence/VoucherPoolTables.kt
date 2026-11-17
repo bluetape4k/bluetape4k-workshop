@@ -185,6 +185,7 @@ internal object VoucherPoolAuditTable: Table("voucher_pool_audits") {
     val reasonCode = varchar("reason_code", 64)
     val correlationDigest = binary("correlation_digest").nullable()
     val requestDigest = binary("request_digest").nullable()
+    val auditKeyVersion = integer("audit_key_version").nullable()
     val beforeCount = long("before_count").nullable()
     val afterCount = long("after_count").nullable()
     val createdAt = timestamp("created_at")
@@ -215,6 +216,24 @@ internal object VoucherPoolQuarantineTable: Table("voucher_pool_quarantines") {
     val resolvedAt = timestamp("resolved_at").nullable()
     val resolution = varchar("resolution", 64).nullable()
     override val primaryKey = PrimaryKey(tenantId, entryId)
+}
+
+internal object VoucherPoolLegalHoldTable: Table("voucher_pool_legal_holds") {
+    val tenantId = varchar("tenant_id", 64)
+    val holdId = long("hold_id")
+    val holdUntil = timestamp("hold_until").nullable()
+    val releasedAt = timestamp("released_at").nullable()
+
+    override val primaryKey = PrimaryKey(tenantId, holdId)
+}
+
+internal object VoucherPoolBackupInventoryTable: Table("voucher_pool_backup_inventory") {
+    val backupId = javaUUID("backup_id")
+    val tenantId = varchar("tenant_id", 64)
+    val retainedUntil = timestamp("retained_until")
+    val restoreRehearsedAt = timestamp("restore_rehearsed_at").nullable()
+
+    override val primaryKey = PrimaryKey(backupId)
 }
 
 internal object VoucherPoolWorkerClaimTable: Table("voucher_pool_worker_claims") {
@@ -269,4 +288,6 @@ internal val voucherPoolAuthorityTables = arrayOf(
     VoucherPoolQuarantineTable,
     VoucherPoolWorkerClaimTable,
     VoucherPoolDepthTable,
+    VoucherPoolLegalHoldTable,
+    VoucherPoolBackupInventoryTable,
 )
