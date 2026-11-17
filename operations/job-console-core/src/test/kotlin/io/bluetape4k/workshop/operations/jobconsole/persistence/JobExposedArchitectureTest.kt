@@ -17,6 +17,10 @@ class JobExposedArchitectureTest {
 
         repository.contains("fun load(jobId: UUID): StoredJob? = jdbc.exposedTransaction").shouldBeTrue()
         repository.contains("fun loadTenantJobs(tenantId: String): List<StoredJob> = jdbc.exposedTransaction").shouldBeTrue()
+        val tenantListing = repository.substringAfter("fun loadTenantJobs(tenantId: String): List<StoredJob> = jdbc.exposedTransaction")
+            .substringBefore("/** PostgreSQL")
+        tenantListing.contains("leftJoin(JobCheckpointTable").shouldBeTrue()
+        tenantListing.contains("JobCheckpointTable.select").shouldBeFalse()
         repository.contains("private fun queryQueueRows").shouldBeTrue()
         repository.contains(".selectAll()").shouldBeTrue()
         repository.contains("PostgreSQL 제어 경로").shouldBeTrue()

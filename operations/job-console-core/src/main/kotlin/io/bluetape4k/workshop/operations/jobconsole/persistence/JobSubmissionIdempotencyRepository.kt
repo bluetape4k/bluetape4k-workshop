@@ -592,10 +592,10 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             }
         if (forUpdate) query = query.forUpdate()
         val row = query.singleOrNull() ?: return null
-        val databaseNow =
-            JobRequestTable
-                .select(CurrentTimestamp)
-                .single()[CurrentTimestamp]
+        // lock 대기 이후의 실제 DB 시각을 같은 connection에서 다시 읽습니다.
+        // JobRequestTable.select(CurrentTimestamp)는 모든 request row를 반환하므로 single()을
+        // 사용하면 다른 request가 존재할 때 오히려 lease 판정이 실패합니다.
+        val databaseNow = currentDatabaseTimestamp(connection)
         val jobId = row[JobRequestTable.jobId]
         val enqueueSequence = JobTable
             .select(JobTable.enqueueSequence)

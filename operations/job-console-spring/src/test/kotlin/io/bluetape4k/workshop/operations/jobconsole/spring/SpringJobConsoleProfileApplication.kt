@@ -672,14 +672,19 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     }
 
     private fun closeApplication(running: RunningSpringJobConsole) {
-        if (!running.context.isActive) return
-        VirtualThreads.executorService().use { closer ->
-            val close = closer.submit(running.context::close)
-            close.get(10, TimeUnit.SECONDS)
+        try {
+            if (!running.context.isActive) return
+            VirtualThreads.executorService().use { closer ->
+                val close = closer.submit(running.context::close)
+                close.get(10, TimeUnit.SECONDS)
+            }
+            check(!running.context.isActive) { "Spring context remained active after bounded close" }
+            check(running.workerExecutor.isShutdown) { "context-owned worker executor remained active" }
+            check(running.dataSource.isClosed) { "context-owned Hikari pool remained active" }
+        } finally {
+            // Spring bean이 아닌 수동 outbox repository도 Exposed manager를 해제해야 합니다.
+            running.outboxRepository.close()
         }
-        check(!running.context.isActive) { "Spring context remained active after bounded close" }
-        check(running.workerExecutor.isShutdown) { "context-owned worker executor remained active" }
-        check(running.dataSource.isClosed) { "context-owned Hikari pool remained active" }
     }
 
     private fun createProfileOwnedDataSource(): HikariDataSource =

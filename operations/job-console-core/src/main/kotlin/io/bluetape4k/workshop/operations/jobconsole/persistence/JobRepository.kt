@@ -26,6 +26,7 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.leftJoin
 import org.jetbrains.exposed.v1.core.max
 import org.jetbrains.exposed.v1.core.min
 import org.jetbrains.exposed.v1.core.Op
@@ -466,19 +467,13 @@ class JobRepository(
     }
 
     fun loadTenantJobs(tenantId: String): List<StoredJob> = jdbc.exposedTransaction {
+        // checkpoint를 job별로 다시 조회하지 않고 한 번의 LEFT JOIN으로 읽습니다.
         JobTable
+            .leftJoin(JobCheckpointTable, { JobTable.jobId }, { JobCheckpointTable.jobId })
             .selectAll()
             .where { JobTable.tenantId eq tenantId }
             .orderBy(JobTable.enqueueSequence to SortOrder.ASC)
-            .map { job ->
-                val completedChunk = JobCheckpointTable
-                    .select(JobCheckpointTable.completedChunk)
-                    .where { JobCheckpointTable.jobId eq job[JobTable.jobId] }
-                    .singleOrNull()
-                    ?.get(JobCheckpointTable.completedChunk)
-                    ?: 0L
-                job.toStoredJob(completedChunk)
-            }
+            .map { job -> job.toStoredJob(job.getOrNull(JobCheckpointTable.completedChunk) ?: 0L) }
     }
 
     /** PostgreSQL 제어 경로: row lock과 CAS `RETURNING`으로 cancellation 경쟁을 보호합니다. */
