@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.bucket4j.advanced
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.workshop.bucket4j.advanced.filter.OrRateLimitDecision
 import io.bluetape4k.workshop.bucket4j.advanced.filter.decideOrRateLimit
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
@@ -20,18 +20,18 @@ class OrRateLimitDecisionTest {
 
     @Test
     fun `rejection takes precedence over an error`() {
-        assertEquals(OrRateLimitDecision.REJECT, decideOrRateLimit(rejected, error))
-        assertEquals(OrRateLimitDecision.REJECT, decideOrRateLimit(error, rejected))
+        decideOrRateLimit(rejected, error) shouldBeEqualTo OrRateLimitDecision.REJECT
+        decideOrRateLimit(error, rejected) shouldBeEqualTo OrRateLimitDecision.REJECT
     }
 
     @Test
     fun `error without rejection fails open`() {
-        assertEquals(OrRateLimitDecision.FAIL_OPEN, decideOrRateLimit(consumed, error))
-        assertEquals(OrRateLimitDecision.FAIL_OPEN, decideOrRateLimit(error, consumed))
+        decideOrRateLimit(consumed, error) shouldBeEqualTo OrRateLimitDecision.FAIL_OPEN
+        decideOrRateLimit(error, consumed) shouldBeEqualTo OrRateLimitDecision.FAIL_OPEN
     }
 
     @Test
     fun `two consumed results allow the request`() {
-        assertEquals(OrRateLimitDecision.ALLOW, decideOrRateLimit(consumed, consumed))
+        decideOrRateLimit(consumed, consumed) shouldBeEqualTo OrRateLimitDecision.ALLOW
     }
 }
