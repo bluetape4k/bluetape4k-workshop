@@ -1,8 +1,5 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
-import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
-import io.bluetape4k.workshop.operations.jobconsole.api.JobType
-import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestamp
@@ -46,11 +43,12 @@ object JobTable: Table("jobs") {
     val jobId = javaUUID("job_id")
     val tenantId = varchar("tenant_id", 64)
     val submitterHash = char("submitter_hash", 64)
-    val jobType = enumerationByName<JobType>("job_type", 48)
+    // 스키마에는 enum 이름이 아니라 `document_export`와 같은 wire value를 저장합니다.
+    val jobType = varchar("job_type", 48)
     val workUnits = integer("work_units")
-    val failureMode = enumerationByName<FailureMode>("failure_mode", 32)
+    val failureMode = varchar("failure_mode", 32)
     val enqueueSequence = long("enqueue_sequence")
-    val state = enumerationByName<JobState>("state", 32)
+    val state = varchar("state", 32)
     val queueVersion = long("queue_version")
     val leaseToken = javaUUID("lease_token").nullable()
     val leaseExpiresAt = timestamp("lease_expires_at").nullable()
@@ -62,4 +60,66 @@ object JobTable: Table("jobs") {
     val updatedAt = timestamp("updated_at")
 
     override val primaryKey = PrimaryKey(jobId)
+}
+
+/** 작업 lease가 소유하는 영속 checkpoint 상태입니다. */
+object JobCheckpointTable: Table("job_checkpoints") {
+    val jobId = javaUUID("job_id")
+    val leaseToken = javaUUID("lease_token")
+    val completedChunk = long("completed_chunk")
+    val resumeCursor = varchar("resume_cursor", 256).nullable()
+    val progress = integer("progress")
+    val updatedAt = timestamp("updated_at")
+
+    override val primaryKey = PrimaryKey(jobId)
+}
+
+/** claim된 시도마다 한 행을 저장하며, migration/schema 소유권은 SQL 리소스에 있습니다. */
+object JobAttemptTable: Table("job_attempts") {
+    val jobId = javaUUID("job_id")
+    val attempt = integer("attempt")
+    val leaseToken = javaUUID("lease_token")
+    val startedAt = timestamp("started_at")
+    val endedAt = timestamp("ended_at").nullable()
+    val failureClass = varchar("failure_class", 64).nullable()
+
+    override val primaryKey = PrimaryKey(jobId, attempt)
+}
+
+/** 프레임워크와 무관한 outbox poller가 소비하는 알림 행입니다. */
+object JobOutboxTable: Table("job_outbox") {
+    val eventId = javaUUID("event_id")
+    val jobId = javaUUID("job_id")
+    val eventType = varchar("event_type", 48)
+    val resourceVersion = long("resource_version")
+    val queueVersion = long("queue_version")
+    val occurredAt = timestamp("occurred_at")
+    val publishedAt = timestamp("published_at").nullable()
+    val claimToken = javaUUID("claim_token").nullable()
+    val claimExpiresAt = timestamp("claim_expires_at").nullable()
+
+    override val primaryKey = PrimaryKey(eventId)
+}
+
+/** 진단과 replay 테스트에 사용하는 append-only 상태 전이 이력입니다. */
+object JobHistoryTable: Table("job_history") {
+    val historyId = javaUUID("history_id")
+    val jobId = javaUUID("job_id")
+    val fromState = varchar("from_state", 32).nullable()
+    val toState = varchar("to_state", 32)
+    val reasonCode = varchar("reason_code", 64)
+    val resourceVersion = long("resource_version")
+    val occurredAt = timestamp("occurred_at")
+
+    override val primaryKey = PrimaryKey(historyId)
+}
+
+/** ETA 추정에 사용하는 제한된 실행 시간 표본입니다. */
+object JobDurationSampleTable: Table("job_duration_samples") {
+    val sampleId = long("sample_id").autoIncrement()
+    val jobType = varchar("job_type", 48)
+    val durationMillis = long("duration_millis")
+    val completedAt = timestamp("completed_at")
+
+    override val primaryKey = PrimaryKey(sampleId)
 }

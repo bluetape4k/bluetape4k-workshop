@@ -224,6 +224,9 @@ internal fun Application.jobConsoleModule(
             outboxJob.cancelAndJoin()
         }
         redisSignal?.close()
+        service.close()
+        outboxRepository.close()
+        repository.close()
         executor.close()
         (dataSource as? AutoCloseable)?.close()
     }

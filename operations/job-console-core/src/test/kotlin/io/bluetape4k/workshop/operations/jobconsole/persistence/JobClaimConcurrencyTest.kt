@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
+import io.bluetape4k.workshop.operations.jobconsole.domain.JobSignal
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -77,6 +79,38 @@ class JobClaimConcurrencyTest {
             val tenantBNext = repository.claimNext("tenant-b", 30.seconds())
             log.debug { "tenantB - Next=$tenantBNext" }
             tenantBNext?.enqueueSequence shouldBeEqualTo 1L
+        }
+    }
+
+    @Test
+    fun `tenant job listing keeps checkpoint values without duplicate jobs`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val repository = JobRepository(fixture.dataSource)
+            val scope = DemoCallerScope("tenant-checkpoint", "submitter-a")
+            val submitted =
+                (1..3).map { index ->
+                    repository.submit(
+                        scope,
+                        "checkpoint-key-$index",
+                        SubmitJobRequest(JobType.DOCUMENT_EXPORT, index),
+                        NOW.plusSeconds(index.toLong()),
+                    ).jobId
+                }
+
+            submitted.forEachIndexed { index, _ ->
+                val claim = repository.claimNext(scope.tenantId, 30.seconds()).shouldNotBeNull()
+                repository.checkpoint(
+                    claim.lease,
+                    completedChunk = (index + 1).toLong(),
+                    progress = (index + 1) * 10,
+                )
+                repository.complete(claim.lease, JobSignal.SUCCESS)
+            }
+
+            val listed = repository.loadTenantJobs(scope.tenantId)
+            listed.map { it.jobId } shouldBeEqualTo submitted
+            listed.map { it.completedChunk } shouldBeEqualTo listOf(1L, 2L, 3L)
         }
     }
 }

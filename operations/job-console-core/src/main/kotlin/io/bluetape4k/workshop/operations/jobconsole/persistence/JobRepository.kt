@@ -17,10 +17,28 @@ import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobTransitions
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueueProjectionService
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueueRow
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.leftJoin
+import org.jetbrains.exposed.v1.core.max
+import org.jetbrains.exposed.v1.core.min
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.ResultSet
-import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -89,7 +107,14 @@ class JobRepositoryException(
 
 class JobRepository(
     internal val dataSource: DataSource,
-) {
+) : AutoCloseable {
+
+    private val jdbc = JobJdbcExecutor(dataSource)
+
+    /** Exposed database manager를 애플리케이션 lifecycle과 함께 해제합니다. */
+    override fun close() {
+        jdbc.close()
+    }
 
     companion object: KLogging() {
         const val MAX_DURATION_SAMPLES: Int = 100
@@ -98,30 +123,28 @@ class JobRepository(
     fun runnableTenantIds(limit: Int): List<String> {
         limit.requireInRange(1, 100, "limit")
 
-        return dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """
-                SELECT tenant_id, MIN(updated_at) AS oldest_updated_at
-                FROM jobs
-                WHERE state = ?
-                   OR (state IN (?, ?) AND lease_expires_at <= CURRENT_TIMESTAMP)
-                GROUP BY tenant_id
-                ORDER BY oldest_updated_at, tenant_id
-                LIMIT ?
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, JobState.QUEUED.wireValue)
-                statement.setString(2, JobState.RUNNING.wireValue)
-                statement.setString(3, JobState.CANCEL_REQUESTED.wireValue)
-                statement.setInt(4, limit)
-                statement.executeQuery()
-                    .use { result -> buildList { while (result.next()) add(result.getString("tenant_id")) } }
-            }
+        return jdbc.exposedTransaction {
+            val oldestUpdatedAt = JobTable.updatedAt.min()
+            JobTable
+                .select(JobTable.tenantId, oldestUpdatedAt)
+                .where {
+                    (JobTable.state eq JobState.QUEUED.wireValue) or
+                        ((JobTable.state inList listOf(JobState.RUNNING.wireValue, JobState.CANCEL_REQUESTED.wireValue)) and
+                            (JobTable.leaseExpiresAt lessEq CurrentTimestamp))
+                }
+                .groupBy(JobTable.tenantId)
+                .orderBy(
+                    oldestUpdatedAt to SortOrder.ASC,
+                    JobTable.tenantId to SortOrder.ASC,
+                )
+                .limit(limit)
+                .map { it[JobTable.tenantId] }
         }
     }
 
+    /** 애플리케이션 테이블에 의존하지 않는 connection 생존성 확인입니다. */
     fun databaseReady(): Boolean = runCatching {
-        dataSource.connection.use { connection ->
+        jdbc.transaction { connection ->
             connection.prepareStatement("SELECT 1").use { statement ->
                 statement.executeQuery().use { result -> result.next() && result.getInt(1) == 1 }
             }
@@ -140,31 +163,44 @@ class JobRepository(
         val keyHash = sha256("${scope.tenantId}:${scope.submitterHash}:$idempotencyKey")
         val fingerprint = sha256("${request.jobType.wireValue}:${request.workUnits}:${request.failureMode.wireValue}")
 
-        return dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            try {
-                advisoryLock(connection, "request:$keyHash")
-                existingRequest(connection, scope, keyHash)?.let { existing ->
-                    if (existing.fingerprint != fingerprint) {
-                        throw JobRepositoryException(JobProblemCode.IDEMPOTENCY_KEY_REUSED)
+        return jdbc.transaction { connection ->
+            advisoryLock(connection, "request:$keyHash")
+            val existing =
+                JobRequestTable
+                    .select(JobRequestTable.requestFingerprint, JobRequestTable.jobId)
+                    .where {
+                        (JobRequestTable.tenantId eq scope.tenantId) and
+                            (JobRequestTable.submitterHash eq normalizedSubmitterHash(scope.submitterHash)) and
+                            (JobRequestTable.keyHash eq keyHash)
                     }
-                    connection.commit()
-                    return@use SubmitJobResult(
-                        existing.jobId,
-                        enqueueSequence(connection, existing.jobId),
-                        replayed = true
-                    )
+                    .singleOrNull()
+                    ?.let {
+                        ExistingRequest(
+                            fingerprint = it[JobRequestTable.requestFingerprint].trim(),
+                            jobId = it[JobRequestTable.jobId],
+                        )
+                    }
+            existing?.let { existing ->
+                if (existing.fingerprint != fingerprint) {
+                    throw JobRepositoryException(JobProblemCode.IDEMPOTENCY_KEY_REUSED)
                 }
-
-                val jobId = Uuid.V7.nextId()
-                val created = insertSubmittedJob(connection, scope, request, jobId, now)
-                insertRequest(connection, scope, keyHash, fingerprint, jobId, now)
-                connection.commit()
-                SubmitJobResult(jobId, created.enqueueSequence, replayed = false)
-            } catch (failure: Throwable) {
-                runCatching { connection.rollback() }
-                throw failure
+                return@transaction SubmitJobResult(
+                    existing.jobId,
+                    enqueueSequenceDsl(existing.jobId),
+                    replayed = true,
+                )
             }
+
+            val jobId = Uuid.V7.nextId()
+            // MAX(enqueue_sequence)+1은 tenant별 queue lock 안에서만 읽고 삽입해야 합니다.
+            // legacy 경로도 bounded idempotency 경로와 같은 PostgreSQL 직렬화 경계를 사용합니다.
+            advisoryLock(connection, "queue:${scope.tenantId}")
+            val sequence = nextEnqueueSequenceDsl(scope.tenantId)
+            insertJobDsl(scope, request, jobId, sequence, now)
+            insertRequestDsl(scope, keyHash, fingerprint, jobId, now)
+            insertOutboxDsl(jobId, now)
+            insertHistoryDsl(jobId, now)
+            SubmitJobResult(jobId, sequence, replayed = false)
         }
     }
 
@@ -176,16 +212,98 @@ class JobRepository(
         now: Instant,
     ): InsertedSubmittedJob {
         advisoryLock(connection, "queue:${scope.tenantId}")
-        val sequence = nextEnqueueSequence(connection, scope.tenantId)
-        insertJob(connection, scope, request, jobId, sequence, now)
-        insertOutbox(connection, jobId, now)
-        insertHistory(connection, jobId, now)
+        val sequence = nextEnqueueSequenceDsl(scope.tenantId)
+        insertJobDsl(scope, request, jobId, sequence, now)
+        insertOutboxDsl(jobId, now)
+        insertHistoryDsl(jobId, now)
         return InsertedSubmittedJob(jobId, sequence)
     }
 
+    private fun nextEnqueueSequenceDsl(tenantId: String): Long {
+        val maximum = JobTable.enqueueSequence.max()
+        return (JobTable
+            .select(maximum)
+            .where { JobTable.tenantId eq tenantId }
+            .singleOrNull()
+            ?.get(maximum) ?: 0L) + 1L
+    }
+
+    private fun enqueueSequenceDsl(jobId: UUID): Long =
+        JobTable
+            .select(JobTable.enqueueSequence)
+            .where { JobTable.jobId eq jobId }
+            .single()[JobTable.enqueueSequence]
+
+    private fun insertJobDsl(
+        scope: DemoCallerScope,
+        request: SubmitJobRequest,
+        jobId: UUID,
+        sequence: Long,
+        now: Instant,
+    ) {
+        JobTable.insert { statement ->
+            statement[JobTable.jobId] = jobId
+            statement[JobTable.tenantId] = scope.tenantId
+            statement[JobTable.submitterHash] = normalizedSubmitterHash(scope.submitterHash)
+            statement[JobTable.jobType] = request.jobType.wireValue
+            statement[JobTable.workUnits] = request.workUnits
+            statement[JobTable.failureMode] = request.failureMode.wireValue
+            statement[JobTable.enqueueSequence] = sequence
+            statement[JobTable.state] = JobState.QUEUED.wireValue
+            statement[JobTable.createdAt] = now
+            statement[JobTable.updatedAt] = now
+        }
+    }
+
+    private fun insertRequestDsl(
+        scope: DemoCallerScope,
+        keyHash: String,
+        fingerprint: String,
+        jobId: UUID,
+        now: Instant,
+    ) {
+        JobRequestTable.insert { statement ->
+            statement[JobRequestTable.tenantId] = scope.tenantId
+            statement[JobRequestTable.submitterHash] = normalizedSubmitterHash(scope.submitterHash)
+            statement[JobRequestTable.keyHash] = keyHash
+            statement[JobRequestTable.requestFingerprint] = fingerprint
+            statement[JobRequestTable.jobId] = jobId
+            statement[JobRequestTable.createdAt] = now
+            statement[JobRequestTable.state] = "TERMINAL"
+            statement[JobRequestTable.generation] = 1L
+            statement[JobRequestTable.updatedAt] = now
+        }
+    }
+
+    private fun insertOutboxDsl(jobId: UUID, now: Instant) {
+        listOf("job.updated", "queue.updated").forEach { eventType ->
+            JobOutboxTable.insert { statement ->
+                statement[JobOutboxTable.eventId] = Uuid.V7.nextId()
+                statement[JobOutboxTable.jobId] = jobId
+                statement[JobOutboxTable.eventType] = eventType
+                statement[JobOutboxTable.resourceVersion] = 1L
+                statement[JobOutboxTable.queueVersion] = 1L
+                statement[JobOutboxTable.occurredAt] = now
+            }
+        }
+    }
+
+    private fun insertHistoryDsl(jobId: UUID, now: Instant) {
+        JobHistoryTable.insert { statement ->
+            statement[JobHistoryTable.historyId] = Uuid.V7.nextId()
+            statement[JobHistoryTable.jobId] = jobId
+            statement[JobHistoryTable.fromState] = null
+            statement[JobHistoryTable.toState] = JobState.QUEUED.wireValue
+            statement[JobHistoryTable.reasonCode] = "submitted"
+            statement[JobHistoryTable.resourceVersion] = 1L
+            statement[JobHistoryTable.occurredAt] = now
+        }
+    }
+
+    /** PostgreSQL 제어 경로: advisory lock과 `FOR UPDATE SKIP LOCKED`로 lease 공정성을 보장합니다. */
     fun claimNext(tenantId: String, leaseDuration: Duration): ClaimedJob? = inTransaction { connection ->
         advisoryLock(connection, "claim:$tenantId")
-        if (hasActiveLease(connection, tenantId)) return@inTransaction null
+        if (hasActiveLease(tenantId)) return@inTransaction null
         val candidate = connection.prepareStatement(
             """
                     SELECT job_id, job_type, failure_mode, work_units, enqueue_sequence, version
@@ -203,6 +321,7 @@ class JobRepository(
         activateLease(connection, tenantId, candidate, leaseDuration, JobState.QUEUED)
     }
 
+    /** PostgreSQL row lock과 database clock으로 만료 lease를 직렬화하는 제어 경로입니다. */
     fun reclaimExpired(tenantId: String, leaseDuration: Duration): ClaimedJob? =
         inTransaction { connection ->
             advisoryLock(connection, "claim:$tenantId")
@@ -227,6 +346,7 @@ class JobRepository(
             activateLease(connection, tenantId, candidate, leaseDuration, null)
         }
 
+    /** PostgreSQL 제어 경로: CAS update는 `RETURNING`과 interval 식을 하나의 원자 연산으로 사용합니다. */
     fun checkpoint(
         lease: JobLease,
         completedChunk: Long,
@@ -277,6 +397,7 @@ class JobRepository(
             CheckpointResult(updated, completedChunk, progress, nextState)
         }
 
+    /** PostgreSQL 제어 경로: lease CAS와 `RETURNING`은 하나의 statement로 유지해야 합니다. */
     fun complete(lease: JobLease, signal: JobSignal): StoredJob =
         inTransaction { connection ->
             val leaseState = currentLeaseState(connection, lease)
@@ -289,7 +410,12 @@ class JobRepository(
                     signal
                 }
             val next = JobTransitions.next(current, effectiveSignal)
-            val progress = if (next == JobState.SUCCEEDED) 100 else load(lease.jobId, connection)?.progress ?: 0
+            val progress =
+                if (next == JobState.SUCCEEDED) {
+                    100
+                } else {
+                    loadInCurrentTransaction(lease.jobId)?.progress ?: 0
+                }
             val version =
                 connection.prepareStatement(
                     """
@@ -314,10 +440,23 @@ class JobRepository(
                     }
                 }
             appendTransition(connection, effectiveLease.jobId, current, next, effectiveSignal.name.lowercase(), version)
-            requireNotNull(load(effectiveLease.jobId, connection))
+            requireNotNull(loadInCurrentTransaction(effectiveLease.jobId))
         }
 
-    fun load(jobId: UUID): StoredJob? = dataSource.connection.use { load(jobId, it) }
+    fun load(jobId: UUID): StoredJob? = jdbc.exposedTransaction {
+        val job = JobTable
+            .selectAll()
+            .where { JobTable.jobId eq jobId }
+            .singleOrNull()
+            ?: return@exposedTransaction null
+        val completedChunk = JobCheckpointTable
+            .select(JobCheckpointTable.completedChunk)
+            .where { JobCheckpointTable.jobId eq jobId }
+            .singleOrNull()
+            ?.get(JobCheckpointTable.completedChunk)
+            ?: 0L
+        job.toStoredJob(completedChunk)
+    }
 
     fun load(scope: DemoCallerScope, jobId: UUID): StoredJob {
         val stored = load(jobId) ?: throw JobRepositoryException(JobProblemCode.JOB_NOT_FOUND)
@@ -327,24 +466,17 @@ class JobRepository(
         return stored
     }
 
-    fun loadTenantJobs(tenantId: String): List<StoredJob> =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """
-                SELECT j.job_id, j.tenant_id, j.submitter_hash, j.job_type, j.state, j.progress,
-                       j.enqueue_sequence, j.version, j.updated_at,
-                       COALESCE(c.completed_chunk, 0) AS completed_chunk
-                FROM jobs j
-                LEFT JOIN job_checkpoints c ON c.job_id = j.job_id
-                WHERE j.tenant_id = ?
-                ORDER BY j.enqueue_sequence
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, tenantId)
-                statement.executeQuery().use { result -> buildList { while (result.next()) add(result.toStoredJob()) } }
-            }
-        }
+    fun loadTenantJobs(tenantId: String): List<StoredJob> = jdbc.exposedTransaction {
+        // checkpoint를 job별로 다시 조회하지 않고 한 번의 LEFT JOIN으로 읽습니다.
+        JobTable
+            .leftJoin(JobCheckpointTable, { JobTable.jobId }, { JobCheckpointTable.jobId })
+            .selectAll()
+            .where { JobTable.tenantId eq tenantId }
+            .orderBy(JobTable.enqueueSequence to SortOrder.ASC)
+            .map { job -> job.toStoredJob(job.getOrNull(JobCheckpointTable.completedChunk) ?: 0L) }
+    }
 
+    /** PostgreSQL 제어 경로: row lock과 CAS `RETURNING`으로 cancellation 경쟁을 보호합니다. */
     fun cancel(scope: DemoCallerScope, jobId: UUID): CancelJobResult = inTransaction { connection ->
         val row =
             connection.prepareStatement(
@@ -405,297 +537,136 @@ class JobRepository(
         )
 
     private fun queryQueueRows(tenantId: String, afterSequence: Long?, boundedLimit: Int): List<QueueRow> {
-        return dataSource.connection.use { connection ->
-            val cursorClause = if (afterSequence == null) "" else "AND enqueue_sequence > ?"
-            connection.prepareStatement(
-                """
-                SELECT job_id, job_type, state, enqueue_sequence, queue_version, updated_at
-                FROM jobs
-                WHERE tenant_id = ?
-                  AND state IN (?, ?, ?)
-                  $cursorClause
-                ORDER BY enqueue_sequence
-                LIMIT ?
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, tenantId)
-                statement.setString(2, JobState.QUEUED.wireValue)
-                statement.setString(3, JobState.RUNNING.wireValue)
-                statement.setString(4, JobState.CANCEL_REQUESTED.wireValue)
-                if (afterSequence == null) {
-                    statement.setInt(5, boundedLimit)
-                } else {
-                    statement.setLong(5, afterSequence)
-                    statement.setInt(6, boundedLimit)
+        return jdbc.exposedTransaction {
+            JobTable
+                .select(
+                    JobTable.jobId,
+                    JobTable.jobType,
+                    JobTable.state,
+                    JobTable.enqueueSequence,
+                    JobTable.queueVersion,
+                    JobTable.updatedAt,
+                )
+                .where {
+                    (JobTable.tenantId eq tenantId) and
+                        (JobTable.state inList listOf(
+                            JobState.QUEUED.wireValue,
+                            JobState.RUNNING.wireValue,
+                            JobState.CANCEL_REQUESTED.wireValue,
+                        )) and
+                        (afterSequence?.let { JobTable.enqueueSequence greater it } ?: Op.TRUE)
                 }
-                statement.executeQuery().use { result ->
-                    buildList {
-                        while (result.next()) {
-                            add(
-                                QueueRow(
-                                    jobId = result.getObject("job_id", UUID::class.java),
-                                    jobType = JobType.entries.single { it.wireValue == result.getString("job_type") },
-                                    state = JobState.entries.single { it.wireValue == result.getString("state") },
-                                    enqueueSequence = result.getLong("enqueue_sequence"),
-                                    queueVersion = result.getLong("queue_version"),
-                                    updatedAt = result.getTimestamp("updated_at").toInstant(),
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
+                .orderBy(JobTable.enqueueSequence to SortOrder.ASC)
+                .limit(boundedLimit)
+                .map { it.toQueueRow() }
         }
     }
 
     fun queueProjection(tenantId: String, jobId: UUID, now: Instant): QueueProjection? =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """
-                SELECT target.queue_version,
-                       COUNT(earlier.job_id) AS jobs_ahead
-                FROM jobs target
-                LEFT JOIN jobs earlier
-                  ON earlier.tenant_id = target.tenant_id
-                 AND earlier.enqueue_sequence < target.enqueue_sequence
-                 AND earlier.state IN (?, ?, ?)
-                WHERE target.tenant_id = ?
-                  AND target.job_id = ?
-                  AND target.state IN (?, ?, ?)
-                GROUP BY target.queue_version
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, JobState.QUEUED.wireValue)
-                statement.setString(2, JobState.RUNNING.wireValue)
-                statement.setString(3, JobState.CANCEL_REQUESTED.wireValue)
-                statement.setString(4, tenantId)
-                statement.setObject(5, jobId)
-                statement.setString(6, JobState.QUEUED.wireValue)
-                statement.setString(7, JobState.RUNNING.wireValue)
-                statement.setString(8, JobState.CANCEL_REQUESTED.wireValue)
-                statement.executeQuery().use { result ->
-                    if (!result.next()) return@use null
-                    val jobsAhead = result.getInt("jobs_ahead")
-                    QueueProjection(
-                        position = jobsAhead + 1,
-                        jobsAhead = jobsAhead,
-                        estimatedStartRange = null,
-                        estimatedCompletionRange = null,
-                        confidence = EtaConfidence.INSUFFICIENT_DATA,
-                        sampleSize = 0,
-                        queueVersion = result.getLong("queue_version"),
-                        updatedAt = now,
-                    )
+        jdbc.exposedTransaction {
+            val activeStates = listOf(
+                JobState.QUEUED.wireValue,
+                JobState.RUNNING.wireValue,
+                JobState.CANCEL_REQUESTED.wireValue,
+            )
+            val target = JobTable
+                .select(JobTable.enqueueSequence, JobTable.queueVersion)
+                .where {
+                    (JobTable.tenantId eq tenantId) and
+                        (JobTable.jobId eq jobId) and
+                        (JobTable.state inList activeStates)
                 }
-            }
+                .singleOrNull()
+                ?: return@exposedTransaction null
+            val targetSequence = target[JobTable.enqueueSequence]
+            val jobsAhead = JobTable
+                .select(JobTable.jobId)
+                .where {
+                    (JobTable.tenantId eq tenantId) and
+                        (JobTable.enqueueSequence less targetSequence) and
+                        (JobTable.state inList activeStates)
+                }
+                .count()
+                .toInt()
+            QueueProjection(
+                position = jobsAhead + 1,
+                jobsAhead = jobsAhead,
+                estimatedStartRange = null,
+                estimatedCompletionRange = null,
+                confidence = EtaConfidence.INSUFFICIENT_DATA,
+                sampleSize = 0,
+                queueVersion = target[JobTable.queueVersion],
+                updatedAt = now,
+            )
         }
 
     fun submitterQueuePageRows(scope: DemoCallerScope, afterSequence: Long?, pageSize: Int): List<QueueRow> =
-        dataSource.connection.use { connection ->
-            val cursorClause = if (afterSequence == null) "" else "AND enqueue_sequence > ?"
-            connection.prepareStatement(
-                """
-                SELECT job_id, job_type, state, enqueue_sequence, queue_version, updated_at
-                FROM jobs
-                WHERE tenant_id = ? AND submitter_hash = ? AND state IN (?, ?, ?)
-                $cursorClause
-                ORDER BY enqueue_sequence
-                LIMIT ?
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, scope.tenantId)
-                statement.setString(2, normalizedSubmitterHash(scope.submitterHash))
-                statement.setString(3, JobState.QUEUED.wireValue)
-                statement.setString(4, JobState.RUNNING.wireValue)
-                statement.setString(5, JobState.CANCEL_REQUESTED.wireValue)
-                if (afterSequence == null) {
-                    statement.setInt(6, pageSize.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE) + 1)
-                } else {
-                    statement.setLong(6, afterSequence)
-                    statement.setInt(7, pageSize.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE) + 1)
+        jdbc.exposedTransaction {
+            JobTable
+                .select(
+                    JobTable.jobId,
+                    JobTable.jobType,
+                    JobTable.state,
+                    JobTable.enqueueSequence,
+                    JobTable.queueVersion,
+                    JobTable.updatedAt,
+                )
+                .where {
+                    (JobTable.tenantId eq scope.tenantId) and
+                        (JobTable.submitterHash eq normalizedSubmitterHash(scope.submitterHash)) and
+                        (JobTable.state inList listOf(
+                            JobState.QUEUED.wireValue,
+                            JobState.RUNNING.wireValue,
+                            JobState.CANCEL_REQUESTED.wireValue,
+                        )) and
+                        (afterSequence?.let { JobTable.enqueueSequence greater it } ?: Op.TRUE)
                 }
-                statement.executeQuery().use { result ->
-                    buildList {
-                        while (result.next()) {
-                            add(
-                                QueueRow(
-                                    jobId = result.getObject("job_id", UUID::class.java),
-                                    jobType = JobType.entries.single { it.wireValue == result.getString("job_type") },
-                                    state = JobState.entries.single { it.wireValue == result.getString("state") },
-                                    enqueueSequence = result.getLong("enqueue_sequence"),
-                                    queueVersion = result.getLong("queue_version"),
-                                    updatedAt = result.getTimestamp("updated_at").toInstant(),
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
+                .orderBy(JobTable.enqueueSequence to SortOrder.ASC)
+                .limit(pageSize.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE) + 1)
+                .map { it.toQueueRow() }
         }
 
     fun recordDuration(jobType: JobType, duration: Duration, completedAt: Instant) {
         require(!duration.isNegative && !duration.isZero) { "duration must be positive" }
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "INSERT INTO job_duration_samples(job_type, duration_millis, completed_at) VALUES (?, ?, ?)",
-            ).use { statement ->
-                statement.setString(1, jobType.wireValue)
-                statement.setLong(2, duration.toMillis())
-                statement.setTimestamp(3, Timestamp.from(completedAt))
-                statement.executeUpdate()
+        jdbc.exposedTransaction {
+            JobDurationSampleTable.insert { statement ->
+                statement[JobDurationSampleTable.jobType] = jobType.wireValue
+                statement[JobDurationSampleTable.durationMillis] = duration.toMillis()
+                statement[JobDurationSampleTable.completedAt] = completedAt
             }
         }
     }
 
     fun durationSamples(jobType: JobType, since: Instant, limit: Int): List<Duration> {
         val boundedLimit = limit.coerceIn(1, MAX_DURATION_SAMPLES)
-        return dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """
-                SELECT duration_millis
-                FROM job_duration_samples
-                WHERE job_type = ? AND completed_at >= ?
-                ORDER BY completed_at DESC, sample_id DESC
-                LIMIT ?
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, jobType.wireValue)
-                statement.setTimestamp(2, Timestamp.from(since))
-                statement.setInt(3, boundedLimit)
-                statement.executeQuery().use { result ->
-                    buildList { while (result.next()) add(Duration.ofMillis(result.getLong("duration_millis"))) }
+        return jdbc.exposedTransaction {
+            JobDurationSampleTable
+                .selectAll()
+                .where {
+                    (JobDurationSampleTable.jobType eq jobType.wireValue) and
+                        (JobDurationSampleTable.completedAt greaterEq since)
                 }
+                .orderBy(
+                    JobDurationSampleTable.completedAt to SortOrder.DESC,
+                    JobDurationSampleTable.sampleId to SortOrder.DESC,
+                )
+                .limit(boundedLimit)
+                .map { row -> Duration.ofMillis(row[JobDurationSampleTable.durationMillis]) }
+        }
+    }
+
+    private fun hasActiveLease(tenantId: String): Boolean =
+        JobTable
+            .select(JobTable.jobId)
+            .where {
+                (JobTable.tenantId eq tenantId) and
+                    (JobTable.state inList listOf(JobState.RUNNING.wireValue, JobState.CANCEL_REQUESTED.wireValue)) and
+                    (JobTable.leaseExpiresAt greater CurrentTimestamp)
             }
-        }
-    }
+            .limit(1)
+            .any()
 
-    private fun existingRequest(
-        connection: Connection,
-        scope: DemoCallerScope,
-        keyHash: String,
-    ): ExistingRequest? =
-        connection.prepareStatement(
-            """
-            SELECT request_fingerprint, job_id
-            FROM job_requests
-            WHERE tenant_id = ? AND submitter_hash = ? AND key_hash = ?
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setString(1, scope.tenantId)
-            statement.setString(2, normalizedSubmitterHash(scope.submitterHash))
-            statement.setString(3, keyHash)
-            statement.executeQuery().use { result ->
-                if (result.next()) ExistingRequest(
-                    result.getString(1).trim(),
-                    result.getObject(2, UUID::class.java)
-                ) else null
-            }
-        }
-
-    private fun nextEnqueueSequence(connection: Connection, tenantId: String): Long =
-        connection.prepareStatement("SELECT COALESCE(MAX(enqueue_sequence), 0) + 1 FROM jobs WHERE tenant_id = ?")
-            .use { statement ->
-                statement.setString(1, tenantId)
-                statement.executeQuery().use { result -> result.next(); result.getLong(1) }
-            }
-
-    private fun enqueueSequence(connection: Connection, jobId: UUID): Long =
-        connection.prepareStatement("SELECT enqueue_sequence FROM jobs WHERE job_id = ?").use { statement ->
-            statement.setObject(1, jobId)
-            statement.executeQuery().use { result -> result.requireNext(); result.getLong(1) }
-        }
-
-    private fun insertJob(
-        connection: Connection,
-        scope: DemoCallerScope,
-        request: SubmitJobRequest,
-        jobId: UUID,
-        sequence: Long,
-        now: Instant,
-    ) {
-        connection.prepareStatement(
-            """
-            INSERT INTO jobs(
-                job_id, tenant_id, submitter_hash, job_type, work_units, failure_mode,
-                enqueue_sequence, state, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setObject(1, jobId)
-            statement.setString(2, scope.tenantId)
-            statement.setString(3, normalizedSubmitterHash(scope.submitterHash))
-            statement.setString(4, request.jobType.wireValue)
-            statement.setInt(5, request.workUnits)
-            statement.setString(6, request.failureMode.wireValue)
-            statement.setLong(7, sequence)
-            statement.setString(8, JobState.QUEUED.wireValue)
-            statement.setTimestamp(9, Timestamp.from(now))
-            statement.setTimestamp(10, Timestamp.from(now))
-            statement.executeUpdate()
-        }
-    }
-
-    private fun insertRequest(
-        connection: Connection,
-        scope: DemoCallerScope,
-        keyHash: String,
-        fingerprint: String,
-        jobId: UUID,
-        now: Instant,
-    ) {
-        connection.prepareStatement(
-            "INSERT INTO job_requests(tenant_id, submitter_hash, key_hash, request_fingerprint, job_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-        ).use { statement ->
-            statement.setString(1, scope.tenantId)
-            statement.setString(2, normalizedSubmitterHash(scope.submitterHash))
-            statement.setString(3, keyHash)
-            statement.setString(4, fingerprint)
-            statement.setObject(5, jobId)
-            statement.setTimestamp(6, Timestamp.from(now))
-            statement.executeUpdate()
-        }
-    }
-
-    private fun insertOutbox(connection: Connection, jobId: UUID, now: Instant) {
-        connection.prepareStatement(
-            """
-            INSERT INTO job_outbox(event_id, job_id, event_type, resource_version, queue_version, occurred_at)
-            VALUES (?, ?, 'job.updated', 1, 1, ?), (?, ?, 'queue.updated', 1, 1, ?)
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setObject(1, Uuid.V7.nextId())
-            statement.setObject(2, jobId)
-            statement.setTimestamp(3, Timestamp.from(now))
-            statement.setObject(4, Uuid.V7.nextId())
-            statement.setObject(5, jobId)
-            statement.setTimestamp(6, Timestamp.from(now))
-            statement.executeUpdate()
-        }
-    }
-
-    private fun insertHistory(connection: Connection, jobId: UUID, now: Instant) {
-        connection.prepareStatement(
-            "INSERT INTO job_history(history_id, job_id, from_state, to_state, reason_code, resource_version, occurred_at) VALUES (?, ?, NULL, ?, ?, 1, ?)",
-        ).use { statement ->
-            statement.setObject(1, Uuid.V7.nextId())
-            statement.setObject(2, jobId)
-            statement.setString(3, JobState.QUEUED.wireValue)
-            statement.setString(4, "submitted")
-            statement.setTimestamp(5, Timestamp.from(now))
-            statement.executeUpdate()
-        }
-    }
-
-    private fun hasActiveLease(connection: Connection, tenantId: String): Boolean =
-        connection.prepareStatement(
-            "SELECT EXISTS(SELECT 1 FROM jobs WHERE tenant_id = ? AND state IN (?, ?) AND lease_expires_at > CURRENT_TIMESTAMP)",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setString(2, JobState.RUNNING.wireValue)
-            statement.setString(3, JobState.CANCEL_REQUESTED.wireValue)
-            statement.executeQuery().use { result -> result.requireNext(); result.getBoolean(1) }
-        }
-
+    /** 만료된 cancellation을 `FOR UPDATE`와 CAS `RETURNING`으로 한 번에 전이합니다. */
     private fun cancelExpiredLease(connection: Connection, tenantId: String): Boolean {
         val candidate =
             connection.prepareStatement(
@@ -747,6 +718,7 @@ class JobRepository(
         return true
     }
 
+    /** database clock, interval, `RETURNING`이 필요한 PostgreSQL lease 제어 경로입니다. */
     private fun activateLease(
         connection: Connection,
         tenantId: String,
@@ -806,10 +778,11 @@ class JobRepository(
             failureMode = candidate.failureMode,
             workUnits = candidate.workUnits,
             enqueueSequence = candidate.enqueueSequence,
-            completedChunk = checkpointChunk(connection, candidate.jobId),
+            completedChunk = checkpointChunk(candidate.jobId),
         )
     }
 
+    /** 유효한 lease를 `FOR UPDATE`로 잠그는 PostgreSQL 제어 경로입니다. */
     private fun currentLeaseState(connection: Connection, lease: JobLease): LeaseState =
         connection.prepareStatement(
             "SELECT state, version, retry_budget FROM jobs " +
@@ -827,6 +800,7 @@ class JobRepository(
             }
         }
 
+    /** PostgreSQL `ON CONFLICT`와 database clock을 보존하는 checkpoint upsert입니다. */
     private fun upsertCheckpoint(connection: Connection, jobId: UUID, token: UUID, chunk: Long, progress: Int) {
         connection.prepareStatement(
             """
@@ -845,13 +819,15 @@ class JobRepository(
         }
     }
 
-    private fun checkpointChunk(connection: Connection, jobId: UUID): Long =
-        connection.prepareStatement("SELECT COALESCE((SELECT completed_chunk FROM job_checkpoints WHERE job_id = ?), 0)")
-            .use { statement ->
-                statement.setObject(1, jobId)
-                statement.executeQuery().use { result -> result.requireNext(); result.getLong(1) }
-            }
+    private fun checkpointChunk(jobId: UUID): Long =
+        JobCheckpointTable
+            .select(JobCheckpointTable.completedChunk)
+            .where { JobCheckpointTable.jobId eq jobId }
+            .singleOrNull()
+            ?.get(JobCheckpointTable.completedChunk)
+            ?: 0L
 
+    /** PostgreSQL `ON CONFLICT`와 `INSERT ... SELECT ... CURRENT_TIMESTAMP`를 보존하는 raw 경로입니다. */
     private fun appendTransition(
         connection: Connection,
         jobId: UUID,
@@ -887,45 +863,51 @@ class JobRepository(
         }
     }
 
-    internal fun load(jobId: UUID, connection: Connection): StoredJob? =
-        connection.prepareStatement(
-            """
-            SELECT j.job_id, j.tenant_id, j.submitter_hash, j.job_type, j.state, j.progress,
-                   j.enqueue_sequence, j.version, j.updated_at,
-                   COALESCE(c.completed_chunk, 0) AS completed_chunk
-            FROM jobs j LEFT JOIN job_checkpoints c ON c.job_id = j.job_id
-            WHERE j.job_id = ?
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setObject(1, jobId)
-            statement.executeQuery().use { result -> if (result.next()) result.toStoredJob() else null }
-        }
+    /** 현재 Exposed transaction에서 job snapshot을 읽습니다. */
+    internal fun loadInCurrentTransaction(jobId: UUID): StoredJob? {
+        val job =
+            JobTable
+                .selectAll()
+                .where { JobTable.jobId eq jobId }
+                .singleOrNull()
+                ?: return null
+        val completedChunk =
+            JobCheckpointTable
+                .select(JobCheckpointTable.completedChunk)
+                .where { JobCheckpointTable.jobId eq jobId }
+                .singleOrNull()
+                ?.get(JobCheckpointTable.completedChunk)
+                ?: 0L
+        return job.toStoredJob(completedChunk)
+    }
 
-    private fun ResultSet.toStoredJob(): StoredJob =
+    private fun ResultRow.toStoredJob(completedChunk: Long): StoredJob =
         StoredJob(
-            jobId = getObject("job_id", UUID::class.java),
-            tenantId = getString("tenant_id"),
-            submitterHash = getString("submitter_hash").trim(),
-            jobType = JobType.entries.single { it.wireValue == getString("job_type") },
-            state = JobState.entries.single { it.wireValue == getString("state") },
-            progress = getInt("progress"),
-            completedChunk = getLong("completed_chunk"),
-            enqueueSequence = getLong("enqueue_sequence"),
-            version = getLong("version"),
-            updatedAt = getTimestamp("updated_at").toInstant(),
+            jobId = this[JobTable.jobId],
+            tenantId = this[JobTable.tenantId],
+            submitterHash = this[JobTable.submitterHash].trim(),
+            jobType = JobType.entries.single { it.wireValue == this[JobTable.jobType] },
+            state = JobState.entries.single { it.wireValue == this[JobTable.state] },
+            progress = this[JobTable.progress],
+            completedChunk = completedChunk,
+            enqueueSequence = this[JobTable.enqueueSequence],
+            version = this[JobTable.version],
+            updatedAt = this[JobTable.updatedAt],
         )
 
-    private inline fun <T> inTransaction(block: (Connection) -> T): T =
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            try {
-                block(connection).also { connection.commit() }
-            } catch (failure: Throwable) {
-                runCatching { connection.rollback() }
-                throw failure
-            }
-        }
+    private fun ResultRow.toQueueRow(): QueueRow =
+        QueueRow(
+            jobId = this[JobTable.jobId],
+            jobType = JobType.entries.single { it.wireValue == this[JobTable.jobType] },
+            state = JobState.entries.single { it.wireValue == this[JobTable.state] },
+            enqueueSequence = this[JobTable.enqueueSequence],
+            queueVersion = this[JobTable.queueVersion],
+            updatedAt = this[JobTable.updatedAt],
+        )
 
+    private fun <T> inTransaction(block: (Connection) -> T): T = jdbc.transaction(block)
+
+    /** tenant/request 단위 직렬화를 위한 PostgreSQL transaction advisory lock입니다. */
     private fun advisoryLock(connection: Connection, value: String) {
         connection.prepareStatement("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))").use { statement ->
             statement.setString(1, value)

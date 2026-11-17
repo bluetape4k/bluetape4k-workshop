@@ -13,7 +13,11 @@ class JobOutboxPoller(
     private val fanout: BoundedJobEventFanout,
     private val batchSize: Int = 25,
     private val claimDuration: Duration = Duration.ofSeconds(30),
-) {
+) : AutoCloseable {
+    override fun close() {
+        repository.close()
+    }
+
     fun pollOnce(): OutboxPollResult {
         val claim = repository.claim(batchSize, claimDuration)
         var published = 0

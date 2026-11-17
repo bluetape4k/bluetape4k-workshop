@@ -59,7 +59,7 @@ class JobConsoleService(
     private val boundedWaitEnabled: Boolean = true,
     private val expectedPolicyFingerprint: String? = null,
     private val executor: ExecutorService = ForkJoinPool.commonPool(),
-) {
+) : AutoCloseable {
     private val submissionPolicy = JobSubmissionIdempotencyPolicy()
     private val submissionCanonicalizer = JobSubmissionCanonicalizer()
     private val submissionRepository =
@@ -69,6 +69,11 @@ class JobConsoleService(
     private val jsonMapper = Jackson.defaultJsonMapper
     private val acceptingSubmissions = AtomicBoolean(true)
     private val activeSubmissions = AtomicInteger(0)
+
+    /** bounded-wait repository의 Exposed manager를 서비스 종료 시 해제합니다. */
+    override fun close() {
+        submissionRepository.close()
+    }
 
     fun submit(
         scope: DemoCallerScope,

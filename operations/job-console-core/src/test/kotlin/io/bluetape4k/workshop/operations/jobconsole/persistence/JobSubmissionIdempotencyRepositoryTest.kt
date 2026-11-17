@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
@@ -30,6 +32,9 @@ import org.junit.jupiter.api.Test
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Tag("integration")
 class JobSubmissionIdempotencyRepositoryTest {
@@ -266,6 +271,123 @@ class JobSubmissionIdempotencyRepositoryTest {
             log.debug { "failure=$failure" }
             failure.code shouldBeEqualTo JobProblemCode.LEASE_LOST
             fixture.count("jobs") shouldBeEqualTo 0L
+        }
+    }
+
+    @Test
+    fun `owner lease and abandonment use database clock rather than caller clock`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val policy = JobSubmissionIdempotencyPolicy(ownerLease = 30.seconds())
+            val repository =
+                JdbcJobSubmissionIdempotencyRepository(fixture.dataSource, JobRepository(fixture.dataSource), policy)
+            val command = command(policy)
+
+            // 호출자 clock이 DB보다 크게 과거/미래여도 lease 경계는 DB clock에 고정되어야 합니다.
+            val owner = repository.reserve(command, Instant.parse("1900-01-01T00:00:00Z"))
+            owner.shouldBeInstanceOf<Reservation.Owner>()
+            fixture.queryLines(
+                """
+                SELECT created_at >= CURRENT_TIMESTAMP - INTERVAL '5 seconds'
+                   AND owner_lease_expires_at >= CURRENT_TIMESTAMP + INTERVAL '20 seconds'
+                FROM job_requests
+                """.trimIndent(),
+            ).single() shouldBeEqualTo "t"
+
+            repository.abandon(owner.ownership, AbandonReason.PREPARE_FAILED, Instant.parse("2099-01-01T00:00:00Z"))
+                .shouldBeTrue()
+            fixture.queryLines(
+                """
+                SELECT updated_at >= CURRENT_TIMESTAMP - INTERVAL '5 seconds'
+                   AND abandoned_until BETWEEN CURRENT_TIMESTAMP + INTERVAL '50 seconds'
+                                             AND CURRENT_TIMESTAMP + INTERVAL '70 seconds'
+                FROM job_requests
+                """.trimIndent(),
+            ).single() shouldBeEqualTo "t"
+        }
+    }
+
+    @Test
+    fun `lease clock is sampled after lock wait even when another request exists`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val policy =
+                JobSubmissionIdempotencyPolicy(
+                    ownerLease = Duration.ofSeconds(1),
+                    prepareDeadline = Duration.ofMillis(500),
+                    statementTimeout = Duration.ofSeconds(2),
+                    connectionAcquireTimeout = Duration.ofSeconds(1),
+                )
+            val repository =
+                JdbcJobSubmissionIdempotencyRepository(fixture.dataSource, JobRepository(fixture.dataSource), policy)
+            val command = command(policy)
+            val owner = repository.reserve(command, NOW)
+            owner.shouldBeInstanceOf<Reservation.Owner>()
+
+            // 다른 request row가 존재해도 DB clock 조회가 단일 row를 가정하지 않아야 합니다.
+            repository.reserve(command.copy(keyHash = "b".repeat(64)), NOW)
+                .shouldBeInstanceOf<Reservation.Owner>()
+
+            fixture.dataSource.connection.use { blocker ->
+                blocker.autoCommit = false
+                blocker.prepareStatement(
+                    """
+                    SELECT key_hash
+                    FROM job_requests
+                    WHERE tenant_id = ? AND key_hash = ?
+                    FOR UPDATE
+                    """.trimIndent(),
+                ).use { statement ->
+                    statement.setString(1, command.scope.tenantId)
+                    statement.setString(2, command.keyHash)
+                    statement.executeQuery().use { result -> result.next().shouldBeTrue() }
+                }
+
+                val started = CountDownLatch(1)
+                Executors.newSingleThreadExecutor().use { executor ->
+                    val waiter = executor.submit<Reservation> {
+                        started.countDown()
+                        repository.reserve(command, NOW)
+                    }
+                    started.await(1, TimeUnit.SECONDS).shouldBeTrue()
+                    // owner lease보다 길게 row lock을 유지하여, lock 해제 직후 fresh DB clock이면 takeover가 됩니다.
+                    Thread.sleep(1_200)
+                    blocker.commit()
+
+                    val recovered = waiter.get(5, TimeUnit.SECONDS)
+                    recovered.shouldBeInstanceOf<Reservation.Owner>()
+                    recovered.ownership.ownerToken shouldNotBeEqualTo owner.ownership.ownerToken
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `waiter reserve with a single connection pool reuses the committed connection`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            HikariDataSource(
+                HikariConfig().apply {
+                    jdbcUrl = fixture.dataSource.jdbcUrl
+                    username = fixture.dataSource.username
+                    password = fixture.dataSource.password
+                    schema = fixture.dataSource.schema
+                    maximumPoolSize = 1
+                    connectionTimeout = 2_000
+                    poolName = "job-console-single-connection"
+                },
+            ).use { singleConnectionDataSource ->
+                val repository =
+                    JdbcJobSubmissionIdempotencyRepository(
+                        singleConnectionDataSource,
+                        JobRepository(singleConnectionDataSource),
+                    )
+                val command = command()
+                repository.reserve(command, NOW).shouldBeInstanceOf<Reservation.Owner>()
+
+                // afterCommit이 두 번째 connection을 요구하면 이 호출은 pool timeout으로 실패합니다.
+                repository.reserve(command, NOW.plusMillis(10)).shouldBeInstanceOf<Reservation.Wait>()
+            }
         }
     }
 
