@@ -28,7 +28,7 @@ class JobConsoleSpringConfiguration {
 
     companion object: KLogging()
 
-    @Bean
+    @Bean(destroyMethod = "close")
     fun jobRepository(dataSource: DataSource): JobRepository {
         JobMigrationRunner(
             dataSource,
@@ -45,7 +45,7 @@ class JobConsoleSpringConfiguration {
     fun jobEventFanout(jobWorkerExecutor: ExecutorService): BoundedJobEventFanout =
         BoundedJobEventFanout(2.seconds(), jobWorkerExecutor)
 
-    @Bean
+    @Bean(destroyMethod = "close")
     fun jobConsoleService(
         repository: JobRepository,
         signalProvider: ObjectProvider<CancelSignal>,
@@ -73,7 +73,7 @@ class JobConsoleSpringConfiguration {
     @Bean(destroyMethod = "close")
     fun jobWorkerExecutor(): ExecutorService = VirtualThreads.executorService()
 
-    @Bean
+    @Bean(destroyMethod = "close")
     fun jobOutboxPoller(dataSource: DataSource, fanout: BoundedJobEventFanout): JobOutboxPoller =
         JobOutboxPoller(JobOutboxRepository(dataSource), fanout)
 

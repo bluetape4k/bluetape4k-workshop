@@ -24,8 +24,13 @@ data class OutboxClaim(
 
 class JobOutboxRepository(
     private val dataSource: DataSource,
-) {
+) : AutoCloseable {
     private val jdbc = JobJdbcExecutor(dataSource)
+
+    /** Exposed database manager를 outbox poller lifecycle과 함께 해제합니다. */
+    override fun close() {
+        jdbc.close()
+    }
     companion object: KLogging() {
         const val MAX_BATCH_SIZE: Int = 100
     }

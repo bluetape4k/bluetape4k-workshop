@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
@@ -266,6 +268,68 @@ class JobSubmissionIdempotencyRepositoryTest {
             log.debug { "failure=$failure" }
             failure.code shouldBeEqualTo JobProblemCode.LEASE_LOST
             fixture.count("jobs") shouldBeEqualTo 0L
+        }
+    }
+
+    @Test
+    fun `owner lease and abandonment use database clock rather than caller clock`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val policy = JobSubmissionIdempotencyPolicy(ownerLease = 30.seconds())
+            val repository =
+                JdbcJobSubmissionIdempotencyRepository(fixture.dataSource, JobRepository(fixture.dataSource), policy)
+            val command = command(policy)
+
+            // 호출자 clock이 DB보다 크게 과거/미래여도 lease 경계는 DB clock에 고정되어야 합니다.
+            val owner = repository.reserve(command, Instant.parse("1900-01-01T00:00:00Z"))
+            owner.shouldBeInstanceOf<Reservation.Owner>()
+            fixture.queryLines(
+                """
+                SELECT created_at >= CURRENT_TIMESTAMP - INTERVAL '5 seconds'
+                   AND owner_lease_expires_at >= CURRENT_TIMESTAMP + INTERVAL '20 seconds'
+                FROM job_requests
+                """.trimIndent(),
+            ).single() shouldBeEqualTo "t"
+
+            repository.abandon(owner.ownership, AbandonReason.PREPARE_FAILED, Instant.parse("2099-01-01T00:00:00Z"))
+                .shouldBeTrue()
+            fixture.queryLines(
+                """
+                SELECT updated_at >= CURRENT_TIMESTAMP - INTERVAL '5 seconds'
+                   AND abandoned_until BETWEEN CURRENT_TIMESTAMP + INTERVAL '50 seconds'
+                                             AND CURRENT_TIMESTAMP + INTERVAL '70 seconds'
+                FROM job_requests
+                """.trimIndent(),
+            ).single() shouldBeEqualTo "t"
+        }
+    }
+
+    @Test
+    fun `waiter reserve with a single connection pool reuses the committed connection`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            HikariDataSource(
+                HikariConfig().apply {
+                    jdbcUrl = fixture.dataSource.jdbcUrl
+                    username = fixture.dataSource.username
+                    password = fixture.dataSource.password
+                    schema = fixture.dataSource.schema
+                    maximumPoolSize = 1
+                    connectionTimeout = 2_000
+                    poolName = "job-console-single-connection"
+                },
+            ).use { singleConnectionDataSource ->
+                val repository =
+                    JdbcJobSubmissionIdempotencyRepository(
+                        singleConnectionDataSource,
+                        JobRepository(singleConnectionDataSource),
+                    )
+                val command = command()
+                repository.reserve(command, NOW).shouldBeInstanceOf<Reservation.Owner>()
+
+                // afterCommit이 두 번째 connection을 요구하면 이 호출은 pool timeout으로 실패합니다.
+                repository.reserve(command, NOW.plusMillis(10)).shouldBeInstanceOf<Reservation.Wait>()
+            }
         }
     }
 

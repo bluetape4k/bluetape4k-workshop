@@ -106,9 +106,14 @@ class JobRepositoryException(
 
 class JobRepository(
     internal val dataSource: DataSource,
-) {
+) : AutoCloseable {
 
     private val jdbc = JobJdbcExecutor(dataSource)
+
+    /** Exposed database manager를 애플리케이션 lifecycle과 함께 해제합니다. */
+    override fun close() {
+        jdbc.close()
+    }
 
     companion object: KLogging() {
         const val MAX_DURATION_SAMPLES: Int = 100

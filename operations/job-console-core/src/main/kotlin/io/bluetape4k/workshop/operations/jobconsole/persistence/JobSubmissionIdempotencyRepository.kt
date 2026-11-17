@@ -163,9 +163,14 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     private val policy: JobSubmissionIdempotencyPolicy = JobSubmissionIdempotencyPolicy(),
     private val snapshotPolicy: JobSubmissionSnapshotPolicy = JobSubmissionSnapshotPolicy(policy),
     private val executor: ExecutorService = ForkJoinPool.commonPool(),
-) : JobSubmissionIdempotencyRepository {
+) : JobSubmissionIdempotencyRepository, AutoCloseable {
     private val boundedConnectionAcquirer = BoundedConnectionAcquirer(dataSource, executor)
     private val jdbc = JobJdbcExecutor(dataSource)
+
+    /** Exposed database manager를 bounded-wait service lifecycle과 함께 해제합니다. */
+    override fun close() {
+        jdbc.close()
+    }
 
     override fun reserve(command: JobSubmissionCommand, now: Instant): Reservation {
         var attempt = 0
@@ -174,12 +179,12 @@ internal class JdbcJobSubmissionIdempotencyRepository(
                 return inTransaction(
                     connectionTimeout = policy.connectionAcquireTimeout,
                     block = { connection -> reserveInTransaction(connection, command) },
-                    afterCommit = { reservation ->
+                    afterCommit = { connection, reservation ->
                         if (reservation is Reservation.Wait) {
                             // request 조회 시각은 lock/update 작업보다 앞설 수 있습니다. transaction이
                             // 외부에 commit된 뒤 PostgreSQL clock을 다시 읽어 waiter deadline의 기준을
                             // 실제 완료 시각에 맞춥니다.
-                            reservation.copy(databaseNow = currentDatabaseTimestamp())
+                            reservation.copy(databaseNow = currentDatabaseTimestamp(connection))
                         } else {
                             reservation
                         }
@@ -194,18 +199,18 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     }
 
     /** commit 이후 waiter deadline 기준을 맞추기 위한 PostgreSQL clock 조회입니다. */
-    private fun currentDatabaseTimestamp(): Instant =
-        jdbc.transaction { connection ->
-            val timeoutMillis = policy.statementTimeout.toMillis().coerceAtLeast(1L).coerceAtMost(Int.MAX_VALUE.toLong())
-            connection.setNetworkTimeout(executor, timeoutMillis.toInt())
-            applyStatementTimeout(connection, policy.statementTimeout)
-            connection.createStatement().use { statement ->
-                statement.executeQuery("SELECT clock_timestamp()").use { result ->
-                    check(result.next()) { "database clock query returned no row" }
-                    result.getTimestamp(1).toInstant()
-                }
+    /** commit 직후에도 기존 transaction connection을 재사용하여 단일 pool을 보호합니다. */
+    private fun currentDatabaseTimestamp(connection: Connection): Instant {
+        val timeoutMillis = policy.statementTimeout.toMillis().coerceAtLeast(1L).coerceAtMost(Int.MAX_VALUE.toLong())
+        connection.setNetworkTimeout(executor, timeoutMillis.toInt())
+        applyStatementTimeout(connection, policy.statementTimeout)
+        return connection.createStatement().use { statement ->
+            statement.executeQuery("SELECT clock_timestamp()").use { result ->
+                check(result.next()) { "database clock query returned no row" }
+                result.getTimestamp(1).toInstant()
             }
         }
+    }
 
     override fun registerWaiter(ownership: InFlightOwnership, now: Instant): WaiterRegistration =
         registerWaiterInTransaction(ownership, now, policy.waiterTimeout, null)
@@ -374,23 +379,24 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     }
 
     override fun abandon(ownership: JobSubmissionOwnership, reason: AbandonReason, now: Instant): Boolean =
-        inTransaction(connectionTimeout = policy.connectionAcquireTimeout) { _ ->
-            JobRequestTable.update(
-                where = {
-                    (JobRequestTable.tenantId eq ownership.scope.tenantId) and
-                        (JobRequestTable.submitterHash eq normalizedSubmitterHash(ownership.scope.submitterHash)) and
-                        (JobRequestTable.keyHash eq ownership.keyHash) and
-                        (JobRequestTable.state eq RequestState.IN_FLIGHT.name) and
-                        (JobRequestTable.generation eq ownership.generation) and
-                        (JobRequestTable.ownerToken eq ownership.ownerToken)
-                },
-            ) { statement ->
-                statement[JobRequestTable.state] = RequestState.ABANDONED.name
-                statement[JobRequestTable.ownerToken] = null
-                statement[JobRequestTable.ownerLeaseExpiresAt] = null
-                statement[JobRequestTable.abandonedUntil] = now.plus(Duration.ofMinutes(1))
-                statement[JobRequestTable.updatedAt] = now
-            } == 1
+        inTransaction(connectionTimeout = policy.connectionAcquireTimeout) { connection ->
+            // lease/abandonment 경계는 애플리케이션 clock이 아니라 DB clock으로 계산합니다.
+            connection.prepareStatement(
+                """
+                UPDATE job_requests
+                SET state = 'ABANDONED', owner_token = NULL, owner_lease_expires_at = NULL,
+                    abandoned_until = CURRENT_TIMESTAMP + interval '1 minute', updated_at = CURRENT_TIMESTAMP
+                WHERE tenant_id = ? AND submitter_hash = ? AND key_hash = ?
+                  AND state = 'IN_FLIGHT' AND generation = ? AND owner_token = ?
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, ownership.scope.tenantId)
+                statement.setString(2, normalizedSubmitterHash(ownership.scope.submitterHash))
+                statement.setString(3, ownership.keyHash)
+                statement.setLong(4, ownership.generation)
+                statement.setObject(5, ownership.ownerToken)
+                statement.executeUpdate() == 1
+            }
         }
 
     override fun cleanupExpired(now: Instant, batchSize: Int): CleanupReport {
@@ -502,36 +508,37 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
-    private fun insertInFlightRequest(_connection: Connection, command: JobSubmissionCommand): JobSubmissionOwnership {
+    private fun insertInFlightRequest(connection: Connection, command: JobSubmissionCommand): JobSubmissionOwnership {
         val jobId = Uuid.V7.nextId()
         val ownerToken = UUID.randomUUID()
-        val createdAt = Instant.now()
-        val leaseExpiresAt = createdAt.plus(policy.ownerLease)
-        JobRequestTable.insert { statement ->
-            statement[JobRequestTable.tenantId] = command.scope.tenantId
-            statement[JobRequestTable.submitterHash] = normalizedSubmitterHash(command.scope.submitterHash)
-            statement[JobRequestTable.keyHash] = command.keyHash
-            statement[JobRequestTable.requestFingerprint] = command.requestFingerprint
-            statement[JobRequestTable.jobId] = jobId
-            statement[JobRequestTable.createdAt] = createdAt
-            statement[JobRequestTable.state] = RequestState.IN_FLIGHT.name
-            statement[JobRequestTable.generation] = 1L
-            statement[JobRequestTable.ownerToken] = ownerToken
-            statement[JobRequestTable.ownerLeaseExpiresAt] = leaseExpiresAt
-            statement[JobRequestTable.updatedAt] = createdAt
-        }
-        return JobSubmissionOwnership(
-            command.scope,
-            command.keyHash,
-            1L,
-            jobId,
-            ownerToken,
-            leaseExpiresAt,
-        )
+        val row =
+            connection.prepareStatement(
+                """
+                INSERT INTO job_requests(
+                    tenant_id, submitter_hash, key_hash, request_fingerprint, job_id, created_at,
+                    state, generation, owner_token, owner_lease_expires_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 'IN_FLIGHT', 1, ?,
+                          CURRENT_TIMESTAMP + (? * INTERVAL '1 millisecond'), CURRENT_TIMESTAMP)
+                RETURNING generation, owner_lease_expires_at
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, command.scope.tenantId)
+                statement.setString(2, normalizedSubmitterHash(command.scope.submitterHash))
+                statement.setString(3, command.keyHash)
+                statement.setString(4, command.requestFingerprint)
+                statement.setObject(5, jobId)
+                statement.setObject(6, ownerToken)
+                statement.setLong(7, policy.ownerLease.toMillis())
+                statement.executeQuery().use { result ->
+                    check(result.next())
+                    result.getLong("generation") to result.getTimestamp("owner_lease_expires_at").toInstant()
+                }
+            }
+        return JobSubmissionOwnership(command.scope, command.keyHash, row.first, jobId, ownerToken, row.second)
     }
 
     private fun takeOver(
-        _connection: Connection,
+        connection: Connection,
         request: RequestRow,
         command: JobSubmissionCommand,
         incrementGeneration: Boolean,
@@ -539,33 +546,34 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         val jobId = Uuid.V7.nextId()
         val ownerToken = UUID.randomUUID()
         val generation = if (incrementGeneration) request.generation + 1L else request.generation
-        val now = Instant.now()
-        val leaseExpiresAt = now.plus(policy.ownerLease)
-        val updated = JobRequestTable.update(
-            where = {
-                (JobRequestTable.tenantId eq request.scope.tenantId) and
-                    (JobRequestTable.submitterHash eq normalizedSubmitterHash(request.scope.submitterHash)) and
-                    (JobRequestTable.keyHash eq request.keyHash) and
-                    (JobRequestTable.generation eq request.generation)
-            },
-        ) { statement ->
-            statement[JobRequestTable.requestFingerprint] = command.requestFingerprint
-            statement[JobRequestTable.state] = RequestState.IN_FLIGHT.name
-            statement[JobRequestTable.generation] = generation
-            statement[JobRequestTable.jobId] = jobId
-            statement[JobRequestTable.ownerToken] = ownerToken
-            statement[JobRequestTable.ownerLeaseExpiresAt] = leaseExpiresAt
-            statement[JobRequestTable.abandonedUntil] = null
-            statement[JobRequestTable.responseStatus] = null
-            statement[JobRequestTable.responseBody] = null
-            statement[JobRequestTable.responseContentType] = null
-            statement[JobRequestTable.responseHeaders] = null
-            statement[JobRequestTable.terminalAt] = null
-            statement[JobRequestTable.retainedUntil] = null
-            statement[JobRequestTable.updatedAt] = now
-        }
-        if (updated != 1) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
-        return JobSubmissionOwnership(command.scope, command.keyHash, generation, jobId, ownerToken, leaseExpiresAt)
+        val sqlGeneration = if (incrementGeneration) "generation + 1" else "generation"
+        val row =
+            connection.prepareStatement(
+                """
+                UPDATE job_requests
+                SET request_fingerprint = ?, state = 'IN_FLIGHT', generation = $sqlGeneration, job_id = ?,
+                    owner_token = ?, owner_lease_expires_at = CURRENT_TIMESTAMP + (? * INTERVAL '1 millisecond'),
+                    abandoned_until = NULL, response_status = NULL, response_body = NULL,
+                    response_content_type = NULL, response_headers = NULL, terminal_at = NULL,
+                    retained_until = NULL, updated_at = CURRENT_TIMESTAMP
+                WHERE tenant_id = ? AND submitter_hash = ? AND key_hash = ? AND generation = ?
+                RETURNING generation, owner_lease_expires_at
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, command.requestFingerprint)
+                statement.setObject(2, jobId)
+                statement.setObject(3, ownerToken)
+                statement.setLong(4, policy.ownerLease.toMillis())
+                statement.setString(5, request.scope.tenantId)
+                statement.setString(6, normalizedSubmitterHash(request.scope.submitterHash))
+                statement.setString(7, request.keyHash)
+                statement.setLong(8, request.generation)
+                statement.executeQuery().use { result ->
+                    if (!result.next()) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
+                    result.getLong("generation") to result.getTimestamp("owner_lease_expires_at").toInstant()
+                }
+            }
+        return JobSubmissionOwnership(command.scope, command.keyHash, row.first, jobId, ownerToken, row.second)
     }
 
     private fun loadRequest(
@@ -783,7 +791,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         statementTimeout: Duration = policy.statementTimeout,
         connectionTimeout: Duration? = null,
         deadlineNanos: Long? = null,
-        afterCommit: (T) -> T = { result -> result },
+        afterCommit: (Connection, T) -> T = { _, result -> result },
         crossinline block: (Connection) -> T,
     ): T {
         val acquisitionTimeout =
@@ -834,7 +842,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
                     val remaining = deadlineNanos - System.nanoTime()
                     if (remaining <= 0L) throw TransactionDeadlineExceeded()
                 }
-                afterCommit(result)
+                afterCommit(connection, result)
             } catch (failure: SQLException) {
                 val hardExpired = deadlineNanos != null && System.nanoTime() >= deadlineNanos
                 val deadlineFailure =
