@@ -10,8 +10,6 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.concurrent.await
-import io.bluetape4k.jdbc.sql.singleInt
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.checkBeTrue
@@ -34,6 +32,16 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcVoucherPoolRe
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.ReservationGuards
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAllocationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBatchTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCampaignTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCommandTombstoneTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolEntryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolHttpIdempotencyTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolDepthTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReservationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolUserLimitTable
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.lockWaiters
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.sharedLockHolders
 import io.bluetape4k.workshop.commerce.voucherpool.security.AesGcmVoucherEnvelopeCrypto
@@ -45,6 +53,15 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKek
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKekRing
 import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -588,6 +605,7 @@ internal class LifecycleHarness(private val suffix: String) {
     private val dataSource = postgres.getHikariDataSource {
         schema = tenantSchema
     }
+    private val database = Database.connect(dataSource)
 
     private lateinit var digests: VoucherDigestService
     private lateinit var commandService: JdbcCampaignBatchCommandService
@@ -614,6 +632,8 @@ internal class LifecycleHarness(private val suffix: String) {
         adminConnection().use {
             it.createStatement().execute("DROP SCHEMA IF EXISTS $tenantSchema CASCADE")
         }
+        TransactionManager.closeAndUnregister(database)
+        dataSource.close()
     }
 
     fun reset() {
@@ -704,75 +724,68 @@ internal class LifecycleHarness(private val suffix: String) {
             idempotencyKey = this.key(key),
         )
 
-    fun entryState(entryId: UUID): EntryState =
-        query(
-            sql = "SELECT state FROM voucher_pool_entries " +
-                    "WHERE tenant_id=? AND entry_id=?",
-            id = entryId
-        ) {
-            EntryState.valueOf(it.getString(1))
-        }
+    fun entryState(entryId: UUID): EntryState = transaction(database) {
+        VoucherPoolEntryTable
+            .selectAll()
+            .where { (VoucherPoolEntryTable.tenantId eq tenant) and (VoucherPoolEntryTable.entryId eq entryId) }
+            .single()[VoucherPoolEntryTable.state]
+    }
 
-    fun hasVerificationDigest(entryId: UUID): Boolean =
-        query(
-            sql = "SELECT verification_digest IS NOT NULL FROM voucher_pool_entries " +
-                    "WHERE tenant_id=? AND entry_id=?",
-            id = entryId,
-        ) {
-            it.getBoolean(1)
-        }
+    fun hasVerificationDigest(entryId: UUID): Boolean = transaction(database) {
+        VoucherPoolEntryTable
+            .selectAll()
+            .where { (VoucherPoolEntryTable.tenantId eq tenant) and (VoucherPoolEntryTable.entryId eq entryId) }
+            .single()[VoucherPoolEntryTable.verificationDigest] != null
+    }
 
-    fun hasCiphertext(entryId: UUID): Boolean =
-        query(
-            sql = "SELECT code_ciphertext IS NOT NULL FROM voucher_pool_entries " +
-                    "WHERE tenant_id=? AND entry_id=?",
-            id = entryId,
-        ) {
-            it.getBoolean(1)
-        }
+    fun hasCiphertext(entryId: UUID): Boolean = transaction(database) {
+        VoucherPoolEntryTable
+            .selectAll()
+            .where { (VoucherPoolEntryTable.tenantId eq tenant) and (VoucherPoolEntryTable.entryId eq entryId) }
+            .single()[VoucherPoolEntryTable.codeCiphertext] != null
+    }
 
-    fun consumedEntries(): Long =
-        scalar("SELECT count(*) FROM voucher_pool_entries WHERE tenant_id=? AND state<>'AVAILABLE'")
+    fun consumedEntries(): Long = transaction(database) {
+        VoucherPoolEntryTable
+            .selectAll()
+            .where { (VoucherPoolEntryTable.tenantId eq tenant) and (VoucherPoolEntryTable.state neq EntryState.AVAILABLE) }
+            .count()
+    }
 
     fun lifetimeConsumed(campaignId: UUID, user: String): Int {
         val digest = digests.userIdentity(tenant, campaignId, user)
 
-        return dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "SELECT lifetime_consumed FROM voucher_pool_user_limits " +
-                        "WHERE tenant_id=? AND campaign_id=? AND user_digest=?"
-            ).use { statement ->
-                statement.setString(1, tenant)
-                statement.setObject(2, campaignId)
-                statement.setBytes(3, digest.copyBytes())
-                statement.executeQuery().use { result ->
-                    result.singleInt()
+        return transaction(database) {
+            VoucherPoolUserLimitTable
+                .selectAll()
+                .where {
+                    (VoucherPoolUserLimitTable.tenantId eq tenant) and
+                            (VoucherPoolUserLimitTable.campaignId eq campaignId) and
+                            (VoucherPoolUserLimitTable.userDigest eq digest.copyBytes())
                 }
-            }
+                .single()[VoucherPoolUserLimitTable.lifetimeConsumed]
         }
     }
 
     fun userCounts(campaignId: UUID, user: String): UserCounts {
         val digest = digests.userIdentity(tenant, campaignId, user)
 
-        return dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "SELECT active_reservations,active_allocations,lifetime_consumed " +
-                        "FROM voucher_pool_user_limits " +
-                        "WHERE tenant_id=? AND campaign_id=? AND user_digest=?",
-            ).use { statement ->
-                statement.setString(1, tenant)
-                statement.setObject(2, campaignId)
-                statement.setBytes(3, digest.copyBytes())
-                statement.executeQuery().use { result ->
-                    result.next()
+        return transaction(database) {
+            VoucherPoolUserLimitTable
+                .selectAll()
+                .where {
+                    (VoucherPoolUserLimitTable.tenantId eq tenant) and
+                            (VoucherPoolUserLimitTable.campaignId eq campaignId) and
+                            (VoucherPoolUserLimitTable.userDigest eq digest.copyBytes())
+                }
+                .single()
+                .let { row ->
                     UserCounts(
-                        activeReservations = result.getInt(1),
-                        activeAllocations = result.getInt(2),
-                        lifetimeConsumed = result.getInt(3)
+                        activeReservations = row[VoucherPoolUserLimitTable.activeReservations],
+                        activeAllocations = row[VoucherPoolUserLimitTable.activeAllocations],
+                        lifetimeConsumed = row[VoucherPoolUserLimitTable.lifetimeConsumed],
                     )
                 }
-            }
         }
     }
 
@@ -813,38 +826,36 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
-    fun reservationCount(): Long =
-        scalar("SELECT count(*) FROM voucher_pool_reservations WHERE tenant_id=?")
+    fun reservationCount(): Long = transaction(database) {
+        VoucherPoolReservationTable.selectAll().where { VoucherPoolReservationTable.tenantId eq tenant }.count()
+    }
 
-    fun allocationCount(): Long =
-        scalar("SELECT count(*) FROM voucher_pool_allocations WHERE tenant_id=?")
+    fun allocationCount(): Long = transaction(database) {
+        VoucherPoolAllocationTable.selectAll().where { VoucherPoolAllocationTable.tenantId eq tenant }.count()
+    }
 
     fun completedIdempotencyCount(operation: String): Long =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "SELECT count(*) FROM voucher_pool_http_idempotency " +
-                        "WHERE tenant_id=? AND operation=? AND status='COMPLETED' AND descriptor IS NOT NULL",
-            ).use { statement ->
-                statement.setString(1, tenant)
-                statement.setString(2, operation)
-                statement.executeQuery().use { result ->
-                    result.singleLong()
+        transaction(database) {
+            VoucherPoolHttpIdempotencyTable
+                .selectAll()
+                .where {
+                    (VoucherPoolHttpIdempotencyTable.tenantId eq tenant) and
+                            (VoucherPoolHttpIdempotencyTable.operation eq operation) and
+                            (VoucherPoolHttpIdempotencyTable.status eq "COMPLETED") and
+                            VoucherPoolHttpIdempotencyTable.descriptor.isNotNull()
                 }
-            }
+                .count()
         }
 
     fun tombstoneCount(operation: String): Long =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id=? AND operation=?",
-            ).use { statement ->
-                statement.setString(1, tenant)
-                statement.setString(2, operation)
-
-                statement.executeQuery().use { result ->
-                    result.singleLong()
+        transaction(database) {
+            VoucherPoolCommandTombstoneTable
+                .selectAll()
+                .where {
+                    (VoucherPoolCommandTombstoneTable.tenantId eq tenant) and
+                            (VoucherPoolCommandTombstoneTable.operation eq operation)
                 }
-            }
+                .count()
         }
 
     fun installReservationGuardProbe(parties: Int): ReservationGuardProbe =
@@ -860,32 +871,28 @@ internal class LifecycleHarness(private val suffix: String) {
     fun guardWaiters(probe: ReservationGuardProbe): Int =
         dataSource.lockWaiters(probe.backendPids.toSet())
 
-    fun terminalAuditCount(allocationId: UUID): Long = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            "SELECT count(*) FROM voucher_pool_audits " +
-                    "WHERE tenant_id=? AND aggregate_type='ALLOCATION' AND aggregate_id=? AND reason_code IN ('REDEEMED','OPERATOR_REVOKED')",
-        ).use { statement ->
-            statement.setString(1, tenant)
-            statement.setObject(2, allocationId)
-
-            statement.executeQuery().use { result ->
-                result.singleLong()
+    fun terminalAuditCount(allocationId: UUID): Long = transaction(database) {
+        VoucherPoolAuditTable
+            .selectAll()
+            .where {
+                (VoucherPoolAuditTable.tenantId eq tenant) and
+                        (VoucherPoolAuditTable.aggregateType eq "ALLOCATION") and
+                        (VoucherPoolAuditTable.aggregateId eq allocationId) and
+                        (VoucherPoolAuditTable.reasonCode inList listOf("REDEEMED", "OPERATOR_REVOKED"))
             }
-        }
+            .count()
     }
 
-    fun revokeRaceLostAuditCount(allocationId: UUID): Long = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            "SELECT count(*) FROM voucher_pool_audits " +
-                    "WHERE tenant_id=? AND aggregate_type='ALLOCATION' AND aggregate_id=? AND reason_code='REVOKE_RACE_LOST'",
-        ).use { statement ->
-            statement.setString(1, tenant)
-            statement.setObject(2, allocationId)
-
-            statement.executeQuery().use { result ->
-                result.singleLong()
+    fun revokeRaceLostAuditCount(allocationId: UUID): Long = transaction(database) {
+        VoucherPoolAuditTable
+            .selectAll()
+            .where {
+                (VoucherPoolAuditTable.tenantId eq tenant) and
+                        (VoucherPoolAuditTable.aggregateType eq "ALLOCATION") and
+                        (VoucherPoolAuditTable.aggregateId eq allocationId) and
+                        (VoucherPoolAuditTable.reasonCode eq "REVOKE_RACE_LOST")
             }
-        }
+            .count()
     }
 
     fun expireAllocation(allocationId: UUID) {
@@ -908,15 +915,22 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
-    fun reservationState(reservationId: UUID): ReservationState = query(
-        "SELECT state FROM voucher_pool_reservations WHERE tenant_id=? AND reservation_id=?",
-        reservationId,
-    ) { ReservationState.valueOf(it.getString(1)) }
+    fun reservationState(reservationId: UUID): ReservationState = transaction(database) {
+        VoucherPoolReservationTable
+            .selectAll()
+            .where {
+                (VoucherPoolReservationTable.tenantId eq tenant) and
+                        (VoucherPoolReservationTable.reservationId eq reservationId)
+            }
+            .single()[VoucherPoolReservationTable.state]
+    }
 
-    fun batchState(batchId: UUID): BatchState = query(
-        "SELECT state FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
-        batchId,
-    ) { BatchState.valueOf(it.getString(1)) }
+    fun batchState(batchId: UUID): BatchState = transaction(database) {
+        VoucherPoolBatchTable
+            .selectAll()
+            .where { (VoucherPoolBatchTable.tenantId eq tenant) and (VoucherPoolBatchTable.batchId eq batchId) }
+            .single()[VoucherPoolBatchTable.state]
+    }
 
     fun expireBatch(batchId: UUID) {
         execute(
@@ -925,10 +939,12 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
-    fun campaignState(campaignId: UUID): CampaignState = query(
-        "SELECT state FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
-        campaignId,
-    ) { CampaignState.valueOf(it.getString(1)) }
+    fun campaignState(campaignId: UUID): CampaignState = transaction(database) {
+        VoucherPoolCampaignTable
+            .selectAll()
+            .where { (VoucherPoolCampaignTable.tenantId eq tenant) and (VoucherPoolCampaignTable.campaignId eq campaignId) }
+            .single()[VoucherPoolCampaignTable.state]
+    }
 
     fun setCampaignState(campaignId: UUID, state: CampaignState) {
         execute(
@@ -963,36 +979,31 @@ internal class LifecycleHarness(private val suffix: String) {
         }
     }
 
-    fun auditCount(aggregateType: String, aggregateId: UUID, reasonCode: String): Long =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "SELECT count(*) FROM voucher_pool_audits WHERE tenant_id=? AND aggregate_type=? AND aggregate_id=? AND reason_code=?",
-            ).use { statement ->
-                statement.setString(1, tenant)
-                statement.setString(2, aggregateType)
-                statement.setObject(3, aggregateId)
-                statement.setString(4, reasonCode)
-
-                statement.executeQuery().use { result ->
-                    result.singleLong()
-                }
+    fun auditCount(aggregateType: String, aggregateId: UUID, reasonCode: String): Long = transaction(database) {
+        VoucherPoolAuditTable
+            .selectAll()
+            .where {
+                (VoucherPoolAuditTable.tenantId eq tenant) and
+                        (VoucherPoolAuditTable.aggregateType eq aggregateType) and
+                        (VoucherPoolAuditTable.aggregateId eq aggregateId) and
+                        (VoucherPoolAuditTable.reasonCode eq reasonCode)
             }
-        }
+            .count()
+    }
 
-    fun reconciliationAuditCounts(batchId: UUID): Pair<Long, Long> = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            """SELECT before_count,after_count FROM voucher_pool_audits
-                WHERE tenant_id=? AND aggregate_type='RECONCILIATION' AND aggregate_id=?
-                ORDER BY revision DESC LIMIT 1""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenant)
-            statement.setObject(2, batchId)
-
-            statement.executeQuery().use { result ->
-                result.next()
-                result.getLong(1) to result.getLong(2)
+    fun reconciliationAuditCounts(batchId: UUID): Pair<Long, Long> = transaction(database) {
+        VoucherPoolAuditTable
+            .selectAll()
+            .where {
+                (VoucherPoolAuditTable.tenantId eq tenant) and
+                        (VoucherPoolAuditTable.aggregateType eq "RECONCILIATION") and
+                        (VoucherPoolAuditTable.aggregateId eq batchId)
             }
-        }
+            .maxBy { it[VoucherPoolAuditTable.revision] }
+            .let { row ->
+                (row[VoucherPoolAuditTable.beforeCount] ?: 0L) to
+                        (row[VoucherPoolAuditTable.afterCount] ?: 0L)
+            }
     }
 
     fun workerExecutor(): VoucherPoolJdbcExecutor = jdbcExecutor
@@ -1006,10 +1017,12 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
-    fun isQuarantined(entryId: UUID): Boolean = query(
-        "SELECT quarantined_at IS NOT NULL FROM voucher_pool_entries WHERE tenant_id=? AND entry_id=?",
-        entryId,
-    ) { it.getBoolean(1) }
+    fun isQuarantined(entryId: UUID): Boolean = transaction(database) {
+        VoucherPoolEntryTable
+            .selectAll()
+            .where { (VoucherPoolEntryTable.tenantId eq tenant) and (VoucherPoolEntryTable.entryId eq entryId) }
+            .single()[VoucherPoolEntryTable.quarantinedAt] != null
+    }
 
     fun markQuarantined(entryId: UUID) {
         execute(
@@ -1026,19 +1039,15 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
-    @Suppress("NestedBlockDepth") // Explicit JDBC resource scopes keep the projection query leak-free.
-    fun poolDepth(batchId: UUID, state: EntryState): Long = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            "SELECT entry_count FROM voucher_pool_pool_depth WHERE tenant_id=? AND batch_id=? AND state=?",
-        ).use { statement ->
-            statement.setString(1, tenant)
-            statement.setObject(2, batchId)
-            statement.setString(3, state.name)
-
-            statement.executeQuery().use { result ->
-                if (result.next()) result.getLong(1) else 0L
+    fun poolDepth(batchId: UUID, state: EntryState): Long = transaction(database) {
+        VoucherPoolDepthTable
+            .selectAll()
+            .where {
+                (VoucherPoolDepthTable.tenantId eq tenant) and
+                        (VoucherPoolDepthTable.batchId eq batchId) and
+                        (VoucherPoolDepthTable.state eq state)
             }
-        }
+            .singleOrNull()?.get(VoucherPoolDepthTable.entryCount) ?: 0L
     }
 
     fun pauseBatch(batchId: UUID) {
@@ -1110,27 +1119,6 @@ internal class LifecycleHarness(private val suffix: String) {
                 DigestPurpose.AUDIT to DigestKeyRing.of(DigestKey.of(5, keyBytes(5))),
             ),
         )
-
-    private inline fun <T> query(sql: String, id: UUID, mapper: (java.sql.ResultSet) -> T): T =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(sql).use { statement ->
-                statement.setString(1, tenant); statement.setObject(2, id)
-                statement.executeQuery().use { result ->
-                    result.next()
-                    mapper(result)
-                }
-            }
-        }
-
-    private fun scalar(sql: String): Long =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(sql).use { statement ->
-                statement.setString(1, tenant)
-                statement.executeQuery().use { result ->
-                    result.singleLong()
-                }
-            }
-        }
 
     private fun execute(sql: String) {
         dataSource.connection.use { connection ->

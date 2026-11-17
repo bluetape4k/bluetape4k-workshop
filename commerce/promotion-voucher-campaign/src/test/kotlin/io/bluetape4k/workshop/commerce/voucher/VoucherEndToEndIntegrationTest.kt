@@ -376,17 +376,10 @@ internal class VoucherEndToEndIntegrationTest: VoucherCommandTestSupport() {
     }
 
     private fun contributingClaims(campaignId: java.util.UUID): Long =
-        queryLong(
-            """
-            SELECT count(*) FROM voucher_claims
-             WHERE campaign_id = '$campaignId'
-               AND capacity_reserved = true
-               AND state IN ('ALLOCATED', 'REVIEW_REQUIRED', 'REDEEMED')
-            """.trimIndent(),
-        )
+        contributingClaimCount(campaignId)
 
     private fun totalClaims(campaignId: java.util.UUID): Long =
-        queryLong("SELECT count(*) FROM voucher_claims WHERE campaign_id = '$campaignId'")
+        totalClaimCount(campaignId)
 
     private class SequenceRateLimiter(vararg results: RateLimitResult): RateLimiter<String> {
         private val results = ArrayDeque(results.toList())

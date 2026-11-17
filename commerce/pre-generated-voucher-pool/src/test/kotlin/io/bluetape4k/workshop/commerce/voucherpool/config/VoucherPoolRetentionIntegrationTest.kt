@@ -9,12 +9,29 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldBeZero
 import io.bluetape4k.codec.Base58
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.database.getHikariDataSource
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBackupInventoryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCodeDedupTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCommandTombstoneTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolEntryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolHttpIdempotencyTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReconciliationInboxTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReservationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolWorkerClaimTable
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -37,6 +54,7 @@ internal class VoucherPoolRetentionIntegrationTest {
 
     private lateinit var voucherSchema: String
     private lateinit var dataSource: HikariDataSource
+    private lateinit var database: Database
     private lateinit var retention: VoucherPoolRetention
     private val policy = VoucherPoolRetentionPolicy()
 
@@ -45,6 +63,7 @@ internal class VoucherPoolRetentionIntegrationTest {
         voucherSchema = "voucher_retention_${Base58.randomString(8).lowercase()}"
         VOUCHER_POOL_TASK_12_POSTGRES.createSchema(voucherSchema)
         dataSource = postgresDataSource(voucherSchema)
+        database = Database.connect(dataSource)
         migrationRunner(dataSource).migrate()
         retention = VoucherPoolRetention(dataSource, policy)
     }
@@ -52,6 +71,7 @@ internal class VoucherPoolRetentionIntegrationTest {
     @AfterAll
     fun dropSchema() {
         VOUCHER_POOL_TASK_12_POSTGRES.dropSchema(voucherSchema)
+        TransactionManager.closeAndUnregister(database)
         dataSource.close()
     }
 
@@ -78,10 +98,7 @@ internal class VoucherPoolRetentionIntegrationTest {
             deleteFixtureTenant(tenantBefore)
             deleteFixtureTenant(tenantAt)
         }
-        queryLong(
-            "SELECT count(*) FROM voucher_pool_backup_inventory " +
-                    "WHERE tenant_id IN ('$tenantBefore','$tenantAt')",
-        ).shouldBeZero()
+        backupCount(setOf(tenantBefore, tenantAt)).shouldBeZero()
     }
 
     @Test
@@ -144,8 +161,8 @@ internal class VoucherPoolRetentionIntegrationTest {
         report.count(RetentionStage.TERMINAL_RESERVATIONS_AND_ENTRIES) shouldBeEqualTo 2
         report.count(RetentionStage.AUDIT) shouldBeEqualTo 1
 
-        queryLong("SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id='$tenant'") shouldBeEqualTo 1L
-        queryLong("SELECT count(*) FROM voucher_pool_code_dedup WHERE tenant_id='$tenant'") shouldBeEqualTo 1L
+        tombstoneCount(tenant) shouldBeEqualTo 1L
+        codeDedupCount(tenant) shouldBeEqualTo 1L
     }
 
     @Test
@@ -173,11 +190,11 @@ internal class VoucherPoolRetentionIntegrationTest {
     fun `audit cursor remains monotonic after retained history is purged`() {
         val tenant = "cursor-restart"
         seed(RetentionKind.AUDIT, tenant, "91 days")
-        val oldCursor = queryLong("SELECT max(id) FROM voucher_pool_audits WHERE tenant_id='$tenant'")
+        val oldCursor = maxAuditId(tenant)
 
         retention.purge(limit = 100)
         seed(RetentionKind.AUDIT, tenant, "1 second")
-        val restartedCursor = queryLong("SELECT max(id) FROM voucher_pool_audits WHERE tenant_id='$tenant'")
+        val restartedCursor = maxAuditId(tenant)
 
         restartedCursor shouldBeGreaterThan oldCursor
     }
@@ -204,10 +221,7 @@ internal class VoucherPoolRetentionIntegrationTest {
         invalid.get() shouldBeEqualTo 0
         hasReplayDecision(tenant).shouldBeTrue()
 
-        queryLong(
-            "SELECT count(*) FROM voucher_pool_http_idempotency " +
-                    "WHERE tenant_id='$tenant' AND descriptor IS NULL"
-        ) shouldBeEqualTo 1L
+        descriptorlessIdempotencyCount(tenant) shouldBeEqualTo 1L
     }
 
     @Test
@@ -230,7 +244,7 @@ internal class VoucherPoolRetentionIntegrationTest {
         execute("UPDATE voucher_pool_backup_inventory SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'")
         retention.deleteTenant(tenant).shouldBeTrue()
 
-        queryLong("SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id='$tenant'") shouldBeEqualTo 0L
+        tombstoneCount(tenant) shouldBeEqualTo 0L
     }
 
     @Test
@@ -240,7 +254,7 @@ internal class VoucherPoolRetentionIntegrationTest {
         execute("DELETE FROM voucher_pool_backup_inventory WHERE tenant_id='$tenant'")
 
         retention.deleteTenant(tenant).shouldBeFalse()
-        queryLong("SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id='$tenant'") shouldBeEqualTo 1L
+        tombstoneCount(tenant) shouldBeEqualTo 1L
     }
 
     private fun seed(kind: RetentionKind, tenant: String, age: String, backupReady: Boolean = true) {
@@ -380,26 +394,44 @@ internal class VoucherPoolRetentionIntegrationTest {
     private fun retainedCount(kind: RetentionKind, tenant: String): Long =
         when (kind) {
             RetentionKind.DESCRIPTOR                 ->
-                queryLong("SELECT count(*) FROM voucher_pool_http_idempotency WHERE tenant_id='$tenant' AND descriptor IS NOT NULL")
+                transaction(database) {
+                    VoucherPoolHttpIdempotencyTable
+                        .selectAll()
+                        .where {
+                            (VoucherPoolHttpIdempotencyTable.tenantId eq tenant) and
+                                    VoucherPoolHttpIdempotencyTable.descriptor.isNotNull()
+                        }
+                        .count()
+                }
             RetentionKind.TERMINAL_INBOX_CLAIM       ->
-                queryLong(
-                    "SELECT (SELECT count(*) FROM voucher_pool_reconciliation_inbox WHERE tenant_id='$tenant') + " +
-                            "(SELECT count(*) FROM voucher_pool_worker_claims WHERE tenant_id='$tenant')"
-                )
+                transaction(database) {
+                    VoucherPoolReconciliationInboxTable.selectAll()
+                        .where { VoucherPoolReconciliationInboxTable.tenantId eq tenant }
+                        .count() +
+                            VoucherPoolWorkerClaimTable.selectAll()
+                                .where { VoucherPoolWorkerClaimTable.tenantId eq tenant }
+                                .count()
+                }
             RetentionKind.TERMINAL_ENTRY_RESERVATION ->
-                queryLong(
-                    "SELECT (SELECT count(*) FROM voucher_pool_entries WHERE tenant_id='$tenant') + " +
-                            "(SELECT count(*) FROM voucher_pool_reservations WHERE tenant_id='$tenant')"
-                )
+                transaction(database) {
+                    VoucherPoolEntryTable.selectAll()
+                        .where { VoucherPoolEntryTable.tenantId eq tenant }
+                        .count() +
+                            VoucherPoolReservationTable.selectAll()
+                                .where { VoucherPoolReservationTable.tenantId eq tenant }
+                                .count()
+                }
             RetentionKind.AUDIT                      ->
-                queryLong("SELECT count(*) FROM voucher_pool_audits WHERE tenant_id='$tenant'")
+                transaction(database) {
+                    VoucherPoolAuditTable.selectAll().where { VoucherPoolAuditTable.tenantId eq tenant }.count()
+                }
         }
 
     private fun expectedRows(kind: RetentionKind): Long =
         if (kind == RetentionKind.TERMINAL_INBOX_CLAIM || kind == RetentionKind.TERMINAL_ENTRY_RESERVATION) 2L else 1L
 
     private fun deleteFixtureTenant(tenant: String) {
-        if (queryLong("SELECT count(*) FROM voucher_pool_backup_inventory WHERE tenant_id='$tenant'") == 0L) return
+        if (backupCount(setOf(tenant)) == 0L) return
         execute(
             "UPDATE voucher_pool_backup_inventory " +
                     "SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'",
@@ -415,33 +447,88 @@ internal class VoucherPoolRetentionIntegrationTest {
         }
     }
 
-    private fun queryLong(sql: String): Long =
-        dataSource.connection.use { conn ->
-            conn.createStatement().use { stmt ->
-                stmt.executeQuery(sql).use { result ->
-                    result.singleLong()
-                }
+    private fun backupCount(tenants: Set<String>): Long = transaction(database) {
+        VoucherPoolBackupInventoryTable
+            .selectAll()
+            .where { VoucherPoolBackupInventoryTable.tenantId inList tenants.toList() }
+            .count()
+    }
+
+    private fun tombstoneCount(tenant: String): Long = transaction(database) {
+        VoucherPoolCommandTombstoneTable
+            .selectAll()
+            .where { VoucherPoolCommandTombstoneTable.tenantId eq tenant }
+            .count()
+    }
+
+    private fun codeDedupCount(tenant: String): Long = transaction(database) {
+        VoucherPoolCodeDedupTable
+            .selectAll()
+            .where { VoucherPoolCodeDedupTable.tenantId eq tenant }
+            .count()
+    }
+
+    private fun maxAuditId(tenant: String): Long = transaction(database) {
+        VoucherPoolAuditTable
+            .selectAll()
+            .where { VoucherPoolAuditTable.tenantId eq tenant }
+            .maxOfOrNull { it[VoucherPoolAuditTable.id] }
+            ?: 0L
+    }
+
+    private fun descriptorlessIdempotencyCount(tenant: String): Long = transaction(database) {
+        VoucherPoolHttpIdempotencyTable
+            .selectAll()
+            .where {
+                (VoucherPoolHttpIdempotencyTable.tenantId eq tenant) and
+                        VoucherPoolHttpIdempotencyTable.descriptor.isNull()
             }
-        }
+            .count()
+    }
 
     @Suppress("SameParameterValue")
-    private fun hasReplayDecision(tenant: String): Boolean =
-        dataSource.connection.use { conn ->
-            conn.createStatement().use { stmt ->
-                stmt.executeQuery(
-                    """
-                    SELECT i.descriptor IS NOT NULL OR t.effect_id IS NOT NULL OR t.terminal_code IS NOT NULL
-                      FROM voucher_pool_http_idempotency i
-                      JOIN voucher_pool_command_tombstones t 
-                        ON t.tenant_id=i.tenant_id AND t.operation=i.operation AND t.scoped_key_digest=i.scoped_key_digest
-                    WHERE i.tenant_id='$tenant'
-                    """.trimIndent(),
-                ).use { result ->
-                    result.next()
-                    result.getBoolean(1)
-                }
+    private fun hasReplayDecision(tenant: String): Boolean = transaction(database) {
+        val idempotencyRows = VoucherPoolHttpIdempotencyTable
+            .selectAll()
+            .where { VoucherPoolHttpIdempotencyTable.tenantId eq tenant }
+            .map {
+                ReplayOwner(
+                    operation = it[VoucherPoolHttpIdempotencyTable.operation],
+                    scopedKeyDigest = it[VoucherPoolHttpIdempotencyTable.scopedKeyDigest],
+                    hasDescriptor = it[VoucherPoolHttpIdempotencyTable.descriptor] != null,
+                )
+            }
+        val terminalRows = VoucherPoolCommandTombstoneTable
+            .selectAll()
+            .where { VoucherPoolCommandTombstoneTable.tenantId eq tenant }
+            .map {
+                ReplayTombstone(
+                    operation = it[VoucherPoolCommandTombstoneTable.operation],
+                    scopedKeyDigest = it[VoucherPoolCommandTombstoneTable.scopedKeyDigest],
+                    hasTerminalEffect = it[VoucherPoolCommandTombstoneTable.effectId] != null ||
+                            it[VoucherPoolCommandTombstoneTable.terminalCode] != null,
+                )
+            }
+        idempotencyRows.any { owner ->
+            terminalRows.any { tombstone ->
+                owner.operation == tombstone.operation &&
+                        owner.scopedKeyDigest.contentEquals(tombstone.scopedKeyDigest) &&
+                        (owner.hasDescriptor || tombstone.hasTerminalEffect)
             }
         }
+    }
+
+    private data class ReplayOwner(
+        val operation: String,
+        val scopedKeyDigest: ByteArray,
+        val hasDescriptor: Boolean,
+    )
+
+    private data class ReplayTombstone(
+        val operation: String,
+        val scopedKeyDigest: ByteArray,
+        val hasTerminalEffect: Boolean,
+    )
 }
 
 internal fun migrationRunner(dataSource: DataSource): VoucherPoolMigrationRunner =

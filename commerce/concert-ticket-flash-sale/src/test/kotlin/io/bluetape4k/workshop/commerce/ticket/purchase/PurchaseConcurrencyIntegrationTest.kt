@@ -72,10 +72,4 @@ internal class PurchaseConcurrencyIntegrationTest {
 }
 
 private fun PurchaseFixture.guardCount(kind: String, subjectId: UUID): Int =
-    queryInt(
-        "SELECT COUNT(*) FROM ticket_active_identity_guards " +
-                "WHERE sale_id = '$saleId' AND identity_kind = '$kind' AND identity_subject_id = '$subjectId'",
-    )
-
-private fun PurchaseFixture.inventoryHeld(): Int =
-    queryInt("SELECT held_quantity FROM ticket_inventory WHERE sale_id = '$saleId' AND grade = 'GENERAL'")
+    identityGuardCount(kind, subjectId)

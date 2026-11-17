@@ -415,13 +415,13 @@ class JobSubmissionIdempotencyRepositoryTest {
             log.debug { "first=$first" }
             first.waitersDeleted shouldBeEqualTo 0
             first.requestsDeleted shouldBeEqualTo 100
-            fixture.countWhere("job_requests", "tenant_id = 'tenant-cleanup-batch'") shouldBeEqualTo 5L
+            fixture.countRequestsForTenant("tenant-cleanup-batch") shouldBeEqualTo 5L
 
             val second = repository.cleanupExpired(NOW, batchSize = 100)
             log.debug { "second=$second" }
             second.waitersDeleted shouldBeEqualTo 0
             second.requestsDeleted shouldBeEqualTo 5
-            fixture.countWhere("job_requests", "tenant_id = 'tenant-cleanup-batch'") shouldBeEqualTo 0L
+            fixture.countRequestsForTenant("tenant-cleanup-batch") shouldBeEqualTo 0L
         }
     }
 
@@ -450,7 +450,7 @@ class JobSubmissionIdempotencyRepositoryTest {
             replay.snapshot.responseStatus shouldBeEqualTo 202
             replay.snapshot.responseBody.decodeToString().contains(legacy.jobId.toString()).shouldBeTrue()
 
-            fixture.countWhere("job_requests", "response_status = 202") shouldBeEqualTo 1L
+            fixture.countRequestsByResponseStatus(202) shouldBeEqualTo 1L
 
             fixture.execute("UPDATE job_requests SET retained_until = CURRENT_TIMESTAMP")
             val newCommand = command.copy(requestFingerprint = "f".repeat(64))

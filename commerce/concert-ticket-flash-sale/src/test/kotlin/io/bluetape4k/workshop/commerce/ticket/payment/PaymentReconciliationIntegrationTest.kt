@@ -58,16 +58,13 @@ internal class PaymentReconciliationIntegrationTest {
             provider.authorizationCount(command.authorizationOperationId) shouldBeEqualTo 1
             fixture.attemptState(command.attemptId) shouldBeEqualTo "approved"
             fixture.inventoryCounts() shouldBeEqualTo (0 to 1)
-            fixture.queryInt(
-                "SELECT COUNT(*) FROM ticket_orders WHERE attempt_id = '${command.attemptId}'"
-            ) shouldBeEqualTo 1
+            fixture.orderCount(command.attemptId) shouldBeEqualTo 1
         }
     }
 }
 
 private fun PurchaseFixture.attemptState(attemptId: java.util.UUID): String =
-    queryString("SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '$attemptId'")
+    purchaseAttemptState(attemptId)
 
 private fun PurchaseFixture.inventoryCounts(): Pair<Int, Int> =
-    queryInt("SELECT held_quantity FROM ticket_inventory WHERE sale_id = '$saleId' AND grade = 'GENERAL'") to
-            queryInt("SELECT sold_quantity FROM ticket_inventory WHERE sale_id = '$saleId' AND grade = 'GENERAL'")
+    inventoryQuantities().let { it.held to it.sold }

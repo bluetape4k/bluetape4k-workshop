@@ -19,7 +19,6 @@ import io.bluetape4k.javatimes.hours
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.javatimes.seconds
-import io.bluetape4k.jdbc.sql.singleInt
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
@@ -31,7 +30,15 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKey
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKeyRing
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCommandTombstoneTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolHttpIdempotencyTable
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterAll
@@ -103,6 +110,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
             conn.createStatement().execute("DROP SCHEMA IF EXISTS $voucherSchema CASCADE")
         }
 
+        TransactionManager.closeAndUnregister(database)
         dataSource.close()
     }
 
@@ -707,48 +715,46 @@ internal class VoucherPoolIdempotencyIntegrationTest {
             ?.connection as? Connection ?: error("Expected a connection")
 
     private fun effectCount(effectId: UUID): Int {
-        val sql = "SELECT count(*) FROM voucher_pool_test_effects WHERE effect_id=?"
-        return scalarCount(sql) {
-            it.setObject(1, effectId)
+        return transaction(database) {
+            VoucherPoolTestEffectTable
+                .selectAll()
+                .where { VoucherPoolTestEffectTable.effectId eq effectId }
+                .count()
+                .toInt()
         }
     }
 
     private fun tombstoneCount(owner: IdempotencyOwner): Int {
-        val sql =
-            "SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id=? AND operation=? AND scoped_key_digest=?"
-        return scalarCount(sql) { stmt ->
-            owner.bindScope(stmt)
+        return transaction(database) {
+            VoucherPoolCommandTombstoneTable
+                .selectAll()
+                .where {
+                    (VoucherPoolCommandTombstoneTable.tenantId eq owner.scope.tenantId) and
+                            (VoucherPoolCommandTombstoneTable.operation eq owner.scope.operation) and
+                            (VoucherPoolCommandTombstoneTable.scopedKeyDigest eq owner.copyScopedKeyDigest())
+                }
+                .count()
+                .toInt()
         }
     }
 
     private fun descriptorCount(owner: IdempotencyOwner): Int {
-        val sql = """
-            SELECT count(*) 
-              FROM voucher_pool_http_idempotency 
-             WHERE tenant_id=? 
-               AND operation=? 
-               AND scoped_key_digest=? 
-               AND descriptor IS NOT NULL
-            """.trimIndent()
-
-        return scalarCount(sql) { stmt ->
-            owner.bindScope(stmt)
+        return transaction(database) {
+            VoucherPoolHttpIdempotencyTable
+                .selectAll()
+                .where {
+                    (VoucherPoolHttpIdempotencyTable.tenantId eq owner.scope.tenantId) and
+                            (VoucherPoolHttpIdempotencyTable.operation eq owner.scope.operation) and
+                            (VoucherPoolHttpIdempotencyTable.scopedKeyDigest eq owner.copyScopedKeyDigest()) and
+                            VoucherPoolHttpIdempotencyTable.descriptor.isNotNull()
+                }
+                .count()
+                .toInt()
         }
     }
 
     private fun idempotencyCount(): Int {
-        return scalarCount("SELECT count(*) FROM voucher_pool_http_idempotency")
-    }
-
-    private inline fun scalarCount(sql: String, bind: (java.sql.PreparedStatement) -> Unit = {}): Int {
-        return dataSource.connection.use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                bind(stmt)
-                stmt.executeQuery().use { result ->
-                    result.singleInt()
-                }
-            }
-        }
+        return transaction(database) { VoucherPoolHttpIdempotencyTable.selectAll().count().toInt() }
     }
 
     private inline fun <T> tx(crossinline block: () -> T): T {
@@ -788,4 +794,10 @@ internal class VoucherPoolIdempotencyIntegrationTest {
 
     private class SimulatedCommitLoss: RuntimeException()
 
+}
+
+private object VoucherPoolTestEffectTable: Table("voucher_pool_test_effects") {
+    val effectId = javaUUID("effect_id")
+    val marker = varchar("marker", 64)
+    override val primaryKey = PrimaryKey(effectId)
 }

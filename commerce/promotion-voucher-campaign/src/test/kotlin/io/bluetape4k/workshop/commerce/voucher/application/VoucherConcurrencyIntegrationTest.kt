@@ -75,14 +75,7 @@ internal class VoucherConcurrencyIntegrationTest: VoucherCommandTestSupport() {
         outcomes.filter(Result<Any>::isFailure).all { it.exceptionOrNull() is VoucherCommandException }.shouldBeTrue()
 
         val campaign = campaignSnapshot()
-        val contributingClaims = queryLong(
-            """
-                SELECT count(*)
-                  FROM voucher_claims
-                 WHERE capacity_reserved = true
-                   AND state IN ('ALLOCATED', 'REVIEW_REQUIRED', 'REDEEMED')
-                """.trimIndent(),
-        )
+        val contributingClaims = contributingClaimCount(CAMPAIGN_ID)
         campaign.allocatedCount.toLong() shouldBeEqualTo contributingClaims
     }
 

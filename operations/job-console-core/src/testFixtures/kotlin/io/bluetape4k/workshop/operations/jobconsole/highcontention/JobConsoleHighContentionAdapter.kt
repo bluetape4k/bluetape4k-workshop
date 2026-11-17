@@ -381,22 +381,10 @@ class JobConsoleHighContentionAdapter private constructor(
         }
 
     private fun authorityBaseline(): JobConsoleAuthorityBaseline =
-        dataSource.connection.use { connection ->
-            JobConsoleAuthorityBaseline(
-                jobs = connection.countRows("jobs"),
-                effects = connection.countRows("job_history"),
-                receipts = connection.countRows("job_outbox"),
-            )
-        }
+        JobConsoleAuthorityQueries.baseline(dataSource)
 
     private fun authorityBaseline(jobId: UUID): JobConsoleAuthorityBaseline =
-        dataSource.connection.use { connection ->
-            JobConsoleAuthorityBaseline(
-                jobs = connection.countRows("jobs", jobId),
-                effects = connection.countRows("job_history", jobId),
-                receipts = connection.countRows("job_outbox", jobId),
-            )
-        }
+        JobConsoleAuthorityQueries.baseline(dataSource, jobId)
 
     override fun close() {
         dataSource.close()
@@ -430,20 +418,3 @@ class JobConsoleHighContentionAdapter private constructor(
         }
     }
 }
-
-private fun java.sql.Connection.countRows(table: String): Long =
-    createStatement().use { statement ->
-        statement.executeQuery("SELECT count(*) FROM $table").use { result ->
-            check(result.next())
-            result.getLong(1)
-        }
-    }
-
-private fun java.sql.Connection.countRows(table: String, jobId: UUID): Long =
-    prepareStatement("SELECT count(*) FROM $table WHERE job_id = ?").use { statement ->
-        statement.setObject(1, jobId)
-        statement.executeQuery().use { result ->
-            check(result.next())
-            result.getLong(1)
-        }
-    }

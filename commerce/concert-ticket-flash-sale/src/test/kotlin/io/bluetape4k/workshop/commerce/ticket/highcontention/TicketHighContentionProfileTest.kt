@@ -303,17 +303,9 @@ private class TicketLiveProfileAdapter(
 
     fun assertProfileInvariants() {
         check(injected.get()) { "declared Ticket failure was not observed" }
-        val inventory = application.queryLong(
-            "SELECT held_quantity + sold_quantity FROM ticket_inventory WHERE sale_id = '${measuredSale.saleId}'",
-        )
+        val inventory = application.committedInventoryQuantity(measuredSale.saleId)
         check(inventory <= measuredInventory()) { "Ticket inventory oversold" }
-        val duplicateEffects = application.queryLong(
-            """
-            SELECT COUNT(*) FROM (
-              SELECT operation_id FROM ticket_effect_receipts GROUP BY operation_id HAVING COUNT(*) > 1
-            ) duplicated
-            """.trimIndent(),
-        )
+        val duplicateEffects = application.duplicateEffectReceiptCount()
         check(duplicateEffects == 0L) { "duplicate Ticket effect receipt committed" }
 
         when (profile.failure.kind) {
@@ -444,9 +436,7 @@ private class TicketLiveProfileAdapter(
         application.paymentProvider.timeout(command.authorizationOperationId)
         check(application.paymentWorker.run(command.authorizationOperationId) == ApplyResult.APPLIED)
         check(
-            application.queryString(
-                "SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '${command.attemptId}'",
-            ) == "reconciliation_required",
+            application.purchaseAttemptState(command.attemptId) == "reconciliation_required",
         )
         val worker = PaymentWorker(
             jdbc = application.jdbc,
@@ -534,10 +524,7 @@ private class TicketLiveProfileAdapter(
         application.paymentProvider.complete(command.authorizationOperationId, PaymentOutcome.APPROVED)
         check(application.paymentWorker.run(command.authorizationOperationId) == ApplyResult.APPLIED)
 
-        val operationId = application.queryUuid(
-            "SELECT operation_id FROM ticket_effect_operations WHERE effect_kind = 'issue' " +
-                    "AND order_id = (SELECT order_id FROM ticket_orders WHERE attempt_id = '${command.attemptId}')",
-        )
+        val operationId = application.issueEffectOperationId(command.attemptId)
         application.ticketProvider.succeedButLoseResponse(operationId)
 
         application.ticketWorker.run(operationId).shouldBeTrue()
@@ -546,9 +533,7 @@ private class TicketLiveProfileAdapter(
         
         evidence = mapOf(
             "providerIssueCount" to application.ticketProvider.issueCount(operationId),
-            "receiptCount" to application.queryLong(
-                "SELECT COUNT(*) FROM ticket_effect_receipts WHERE operation_id = '$operationId'",
-            ),
+            "receiptCount" to application.effectReceiptCount(operationId),
             "duplicateDeliverySuppressed" to true,
         )
     }
@@ -574,16 +559,16 @@ private class TicketLiveProfileAdapter(
 
     private fun authoritySnapshot(): TicketAuthoritySnapshot =
         TicketAuthoritySnapshot(
-            attempts = application.queryLong("SELECT COUNT(*) FROM ticket_purchase_attempts"),
+            attempts = application.purchaseAttemptCount(),
             effects = effectCount(),
             receipts = receiptCount(),
         )
 
     private fun effectCount(): Long =
-        application.queryLong("SELECT COUNT(*) FROM ticket_effect_operations")
+        application.effectOperationCount()
 
     private fun receiptCount(): Long =
-        application.queryLong("SELECT COUNT(*) FROM ticket_effect_receipts")
+        application.effectReceiptCount()
 
     private fun awaitFailure(block: () -> Unit) {
         TicketHighContentionAwait.failure(

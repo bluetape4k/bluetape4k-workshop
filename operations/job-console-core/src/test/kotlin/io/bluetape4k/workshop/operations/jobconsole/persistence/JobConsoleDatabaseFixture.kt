@@ -3,6 +3,13 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.javatime.timestamp
 import java.sql.DriverManager
 import java.util.*
 
@@ -10,6 +17,7 @@ internal class JobConsoleDatabaseFixture: AutoCloseable {
 
     private val schema = "job_console_${UUID.randomUUID().toString().replace("-", "")}"
     val dataSource: HikariDataSource
+    private lateinit var database: Database
 
     init {
         adminConnection().use { connection ->
@@ -25,6 +33,7 @@ internal class JobConsoleDatabaseFixture: AutoCloseable {
                     maximumPoolSize = 8
                 },
             )
+        database = Database.connect(dataSource)
     }
 
     fun migrate(): JobMigrationResult =
@@ -38,24 +47,19 @@ internal class JobConsoleDatabaseFixture: AutoCloseable {
             advisoryLockKey = 520001L,
         ).migrate().last()
 
-    fun count(table: String): Long =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery("SELECT count(*) FROM $table").use { result ->
-                    result.next()
-                    result.getLong(1)
-                }
-            }
-        }
+    fun count(table: String): Long = transaction(database) { tableFor(table).selectAll().count() }
 
-    fun countWhere(table: String, predicate: String): Long = countQuery("SELECT count(*) FROM $table WHERE $predicate")
+    fun countHistoryToState(state: String): Long = transaction(database) {
+        JobHistoryTable.selectAll().where { JobHistoryTable.toState eq state }.count()
+    }
 
-    private fun countQuery(sql: String): Long =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result -> result.next(); result.getLong(1) }
-            }
-        }
+    fun countRequestsForTenant(tenantId: String): Long = transaction(database) {
+        JobRequestTable.selectAll().where { JobRequestTable.tenantId eq tenantId }.count()
+    }
+
+    fun countRequestsByResponseStatus(status: Int): Long = transaction(database) {
+        JobRequestTable.selectAll().where { JobRequestTable.responseStatus eq status }.count()
+    }
 
     fun execute(sql: String) {
         dataSource.connection.use { connection ->
@@ -83,6 +87,9 @@ internal class JobConsoleDatabaseFixture: AutoCloseable {
         }
 
     override fun close() {
+        if (::database.isInitialized) {
+            TransactionManager.closeAndUnregister(database)
+        }
         dataSource.close()
         adminConnection().use { connection ->
             connection.createStatement().use { statement -> statement.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
@@ -99,4 +106,25 @@ internal class JobConsoleDatabaseFixture: AutoCloseable {
     companion object {
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
     }
+
+    private fun tableFor(name: String): Table = when (name) {
+        "job_schema_history" -> JobSchemaHistoryTable
+        "job_requests" -> JobRequestTable
+        "job_request_waiters" -> JobRequestWaiterTable
+        "jobs" -> JobTable
+        "job_checkpoints" -> JobCheckpointTable
+        "job_attempts" -> JobAttemptTable
+        "job_outbox" -> JobOutboxTable
+        "job_history" -> JobHistoryTable
+        "job_duration_samples" -> JobDurationSampleTable
+        else -> error("Unsupported job console fixture table[$name]")
+    }
+}
+
+private object JobSchemaHistoryTable: Table("job_schema_history") {
+    val version = varchar("version", 64)
+    val checksum = char("checksum", 64)
+    val appliedAt = timestamp("applied_at")
+
+    override val primaryKey = PrimaryKey(version)
 }

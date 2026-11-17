@@ -6,17 +6,27 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherCompatibilityTestSupport
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherMigrationResult
+import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucher.persistence.AuditRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.CampaignRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.CampaignRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.ClaimRepository
+import io.bluetape4k.workshop.commerce.voucher.persistence.ClaimTable
+import io.bluetape4k.workshop.commerce.voucher.persistence.AuditTable
+import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxTable
+import io.bluetape4k.workshop.commerce.voucher.persistence.InboxStatus
 import io.bluetape4k.workshop.commerce.voucher.persistence.ReviewRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeKeyRing
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.junit.jupiter.api.AfterEach
@@ -140,6 +150,45 @@ internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSuppo
     protected fun campaignSnapshot(campaignId: UUID = CAMPAIGN_ID): CampaignRecord =
         jdbc.foregroundTransaction {
             campaigns.findPublic(TENANT_ID, campaignId).shouldNotBeNull()
+        }
+
+    protected fun contributingClaimCount(campaignId: UUID): Long =
+        jdbc.foregroundTransaction {
+            ClaimTable
+                .selectAll()
+                .where {
+                    (ClaimTable.tenantId eq TENANT_ID) and
+                            (ClaimTable.campaignId eq campaignId) and
+                            (ClaimTable.capacityReserved eq true) and
+                            (ClaimTable.state inList listOf(ClaimState.ALLOCATED, ClaimState.REVIEW_REQUIRED, ClaimState.REDEEMED))
+                }
+                .count()
+        }
+
+    protected fun totalClaimCount(campaignId: UUID): Long =
+        jdbc.foregroundTransaction {
+            ClaimTable.selectAll().where {
+                (ClaimTable.tenantId eq TENANT_ID) and (ClaimTable.campaignId eq campaignId)
+            }.count()
+        }
+
+    protected fun auditCount(): Long =
+        jdbc.foregroundTransaction { AuditTable.selectAll().count() }
+
+    protected fun eventInboxCount(status: InboxStatus): Long =
+        jdbc.foregroundTransaction {
+            EventInboxTable.selectAll().where { EventInboxTable.status eq status }.count()
+        }
+
+    protected fun distinctEventInboxCount(status: InboxStatus): Long =
+        jdbc.foregroundTransaction {
+            EventInboxTable
+                .select(EventInboxTable.eventId)
+                .where { EventInboxTable.status eq status }
+                .map { it[EventInboxTable.eventId] }
+                .distinct()
+                .count()
+                .toLong()
         }
 
 }

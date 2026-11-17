@@ -144,11 +144,7 @@ class JobRepository(
 
     /** 애플리케이션 테이블에 의존하지 않는 connection 생존성 확인입니다. */
     fun databaseReady(): Boolean = runCatching {
-        jdbc.transaction { connection ->
-            connection.prepareStatement("SELECT 1").use { statement ->
-                statement.executeQuery().use { result -> result.next() && result.getInt(1) == 1 }
-            }
-        }
+        jdbc.exposedTransaction { select(CurrentTimestamp).singleOrNull() != null }
     }.getOrDefault(false)
 
     fun submit(
@@ -762,13 +758,10 @@ class JobRepository(
                     )
                 }
             }
-        connection.prepareStatement(
-            "INSERT INTO job_attempts(job_id, attempt, lease_token) VALUES (?, ?, ?)",
-        ).use { statement ->
-            statement.setObject(1, candidate.jobId)
-            statement.setInt(2, lease.attempt)
-            statement.setObject(3, token)
-            statement.executeUpdate()
+        JobAttemptTable.insert {
+            it[jobId] = candidate.jobId
+            it[attempt] = lease.attempt
+            it[leaseToken] = token
         }
         appendTransition(connection, candidate.jobId, expectedState, JobState.RUNNING, "claimed", lease.revision)
         return ClaimedJob(

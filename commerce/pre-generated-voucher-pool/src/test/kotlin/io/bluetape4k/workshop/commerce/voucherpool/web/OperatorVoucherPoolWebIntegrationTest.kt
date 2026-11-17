@@ -5,7 +5,6 @@ package io.bluetape4k.workshop.commerce.voucherpool.web
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
-import io.bluetape4k.jdbc.sql.singleInt
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
@@ -28,12 +27,19 @@ import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigrationRu
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolWorkerClaimTable
 import io.bluetape4k.workshop.commerce.voucherpool.worker.VoucherPoolWorkers
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerKind
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerRunRequest
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerRunState
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
@@ -889,25 +895,24 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
-    private fun workerClaimCount(scopeId: UUID, kind: String = "BATCH_REVOKE"): Int =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """
-                    SELECT count(*) 
-                      FROM voucher_pool_worker_claims 
-                     WHERE tenant_id=? 
-                       AND worker_type=? 
-                    AND scope_id=?
-                    """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, TENANT)
-                statement.setString(2, kind)
-                statement.setObject(3, scopeId)
-                statement.executeQuery().use { result ->
-                    result.singleInt()
-                }
+    private fun workerClaimCount(scopeId: UUID, kind: String = "BATCH_REVOKE"): Int {
+        val database = Database.connect(dataSource)
+        return try {
+            transaction(database) {
+                VoucherPoolWorkerClaimTable
+                    .selectAll()
+                    .where {
+                        (VoucherPoolWorkerClaimTable.tenantId eq TENANT) and
+                                (VoucherPoolWorkerClaimTable.workerType eq kind) and
+                                (VoucherPoolWorkerClaimTable.scopeId eq scopeId)
+                    }
+                    .count()
+                    .toInt()
             }
+        } finally {
+            TransactionManager.closeAndUnregister(database)
         }
+    }
 
     private fun digest(seed: Int): DigestValue =
         DigestValue(ByteArray(32) { index -> (seed + index).toByte() })

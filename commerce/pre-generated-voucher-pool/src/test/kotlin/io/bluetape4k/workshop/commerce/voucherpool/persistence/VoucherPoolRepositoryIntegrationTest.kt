@@ -12,8 +12,6 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.concurrent.await
 import io.bluetape4k.concurrent.get
 import io.bluetape4k.jackson3.Jackson
-import io.bluetape4k.jdbc.sql.singleInt
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.database.getHikariDataSource
@@ -27,6 +25,12 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.core.io.ClassPathResource
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import tools.jackson.databind.JsonNode
 import java.nio.file.Files
 import java.nio.file.Path
@@ -55,6 +59,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
     private val dataSource = postgres.getHikariDataSource {
         schema = SCHEMA
     }
+    private val exposedDatabase = Database.connect(dataSource)
 
     private lateinit var repository: JdbcVoucherPoolRepository
 
@@ -76,6 +81,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
 
     @AfterAll
     fun afterAll() {
+        TransactionManager.closeAndUnregister(exposedDatabase)
         dataSource.close()
     }
 
@@ -679,13 +685,20 @@ internal class VoucherPoolRepositoryIntegrationTest {
                     ),
                 )
             }
-            queryLong(
-                conn,
-                "SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'"
-            ) shouldBeEqualTo 1L
+            withExistingJdbcTransaction(conn) {
+                VoucherPoolAuditTable
+                    .selectAll()
+                    .where { VoucherPoolAuditTable.campaignId eq campaign }
+                    .count()
+            } shouldBeEqualTo 1L
             conn.rollback()
         }
-        queryLong("SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'") shouldBeEqualTo 0L
+        transaction(exposedDatabase) {
+            VoucherPoolAuditTable
+                .selectAll()
+                .where { VoucherPoolAuditTable.campaignId eq campaign }
+                .count()
+        } shouldBeEqualTo 0L
     }
 
     @Test
@@ -890,22 +903,10 @@ internal class VoucherPoolRepositoryIntegrationTest {
         connection
             .createStatement().use { stmt ->
                 stmt.executeQuery("SELECT pg_backend_pid()").use {
-                    it.singleInt()
+                    check(it.next())
+                    it.getInt(1)
                 }
             }
-
-    private fun queryLong(connection: java.sql.Connection, sql: String): Long =
-        connection
-            .createStatement().use { stmt ->
-                stmt.executeQuery(sql).use {
-                    it.singleLong()
-                }
-            }
-
-    private fun queryLong(sql: String): Long =
-        dataSource.connection.use {
-            queryLong(it, sql)
-        }
 
     private fun reservationInsert(
         reservationId: UUID,

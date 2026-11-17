@@ -8,19 +8,21 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.seconds
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.InboxStatus
+import io.bluetape4k.workshop.commerce.voucher.persistence.AuditTable
 import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucher.reconciliation.VoucherInboxAppliedEvent
 import io.bluetape4k.workshop.commerce.voucher.reconciliation.VoucherReconciliationService
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.getBean
 import org.springframework.boot.WebApplicationType
@@ -30,7 +32,6 @@ import org.springframework.modulith.events.EventPublication.Status
 import org.springframework.modulith.events.core.PublicationTargetIdentifier
 import org.springframework.modulith.events.core.TargetEventPublication
 import java.io.Serializable
-import java.sql.DriverManager
 import java.time.Instant
 import java.util.*
 
@@ -70,7 +71,7 @@ internal class VoucherContextRestartIntegrationTest {
 
             check(result.processed >= 1)
             readInbox(restarted, tenant, eventId).status shouldBeEqualTo InboxStatus.APPLIED
-            queryAuditCount(tenant) shouldBeEqualTo 1L
+            queryAuditCount(restarted, tenant) shouldBeEqualTo 1L
 
             await atMost 5.seconds() untilAsserted {
                 publications.findCompletedPublications().any { publication ->
@@ -134,20 +135,12 @@ internal class VoucherContextRestartIntegrationTest {
                 "--workshop.voucher.redis.enabled=false",
             )
 
-    private fun queryAuditCount(tenant: String): Long =
-        DriverManager.getConnection(
-            applicationJdbcUrl,
-            postgres.username!!,
-            postgres.password!!,
-        ).use { conn ->
-            val sql = "SELECT count(*) FROM voucher_audits WHERE tenant_id = ?"
-            conn.prepareStatement(sql).use { statement ->
-                statement.setString(1, tenant)
-                statement.executeQuery().use { result ->
-                    result.singleLong()
-                }
-            }
+    private fun queryAuditCount(context: ConfigurableApplicationContext, tenant: String): Long {
+        val jdbc = context.getBean<VoucherJdbcExecutor>()
+        return jdbc.foregroundTransaction {
+            AuditTable.selectAll().where { AuditTable.tenantId eq tenant }.count()
         }
+    }
 
     private data class RestartPublication(val eventId: String): Serializable
 }

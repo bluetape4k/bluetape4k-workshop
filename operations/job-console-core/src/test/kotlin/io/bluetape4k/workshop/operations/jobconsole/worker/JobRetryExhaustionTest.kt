@@ -42,7 +42,7 @@ class JobRetryExhaustionTest {
             }
 
             repository.load(submitted.jobId)?.state shouldBeEqualTo JobState.DEAD_LETTERED
-            fixture.countWhere("job_history", "to_state = 'dead_lettered'") shouldBeEqualTo 1L
+            fixture.countHistoryToState("dead_lettered") shouldBeEqualTo 1L
         }
     }
 }

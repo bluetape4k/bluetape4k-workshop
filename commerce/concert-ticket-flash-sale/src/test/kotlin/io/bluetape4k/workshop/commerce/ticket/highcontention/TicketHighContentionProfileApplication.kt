@@ -4,8 +4,6 @@ import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.requirePositiveDuration
-import io.bluetape4k.jdbc.sql.singleLong
-import io.bluetape4k.jdbc.sql.singleString
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireZeroOrPositiveNumber
@@ -26,6 +24,11 @@ import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyFingerprint
 import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyScope
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.FakePaymentProvider
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectOperations
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectReceipts
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketInventories
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketOrders
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPurchaseAttempts
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.AuthorizationRequested
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.StartPurchase
@@ -50,6 +53,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.core.io.ClassPathResource
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.sql.DriverManager
 import java.time.Clock
 import java.time.Duration
@@ -187,33 +194,59 @@ internal class TicketHighContentionProfileApplication private constructor(
         }
     }
 
-    fun queryLong(sql: String): Long =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result ->
-                    result.singleLong()
-                }
+    fun committedInventoryQuantity(saleId: UUID): Long = jdbc.transaction {
+        TicketInventories
+            .select(TicketInventories.heldQuantity, TicketInventories.soldQuantity)
+            .where { TicketInventories.saleId eq saleId }
+            .single()
+            .let { row ->
+                (row[TicketInventories.heldQuantity] + row[TicketInventories.soldQuantity]).toLong()
             }
-        }
+    }
 
-    fun queryString(sql: String): String =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result ->
-                    result.singleString()!!
-                }
-            }
-        }
+    fun purchaseAttemptState(attemptId: UUID): String = jdbc.transaction {
+        TicketPurchaseAttempts
+            .select(TicketPurchaseAttempts.state)
+            .where { TicketPurchaseAttempts.id eq attemptId }
+            .single()[TicketPurchaseAttempts.state]
+    }
 
-    fun queryUuid(sql: String): UUID =
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result ->
-                    check(result.next())
-                    result.getObject(1, UUID::class.java)
-                }
+    fun issueEffectOperationId(attemptId: UUID): UUID = jdbc.transaction {
+        val orderId = TicketOrders
+            .select(TicketOrders.id)
+            .where { TicketOrders.attemptId eq attemptId }
+            .single()[TicketOrders.id].value
+        TicketEffectOperations
+            .select(TicketEffectOperations.operationId)
+            .where {
+                (TicketEffectOperations.effectKind eq "issue") and
+                        (TicketEffectOperations.orderId eq orderId)
             }
-        }
+            .single()[TicketEffectOperations.operationId]
+    }
+
+    fun effectReceiptCount(operationId: UUID): Long = jdbc.transaction {
+        TicketEffectReceipts
+            .selectAll()
+            .where { TicketEffectReceipts.operationId eq operationId }
+            .count()
+    }
+
+    fun purchaseAttemptCount(): Long = jdbc.transaction { TicketPurchaseAttempts.selectAll().count() }
+
+    fun effectOperationCount(): Long = jdbc.transaction { TicketEffectOperations.selectAll().count() }
+
+    fun effectReceiptCount(): Long = jdbc.transaction { TicketEffectReceipts.selectAll().count() }
+
+    fun duplicateEffectReceiptCount(): Long = jdbc.transaction {
+        TicketEffectReceipts
+            .select(TicketEffectReceipts.operationId)
+            .map { it[TicketEffectReceipts.operationId] }
+            .groupingBy { it }
+            .eachCount()
+            .count { (_, count) -> count > 1 }
+            .toLong()
+    }
 
     fun restart() {
         applicationContext.close()
