@@ -107,7 +107,9 @@ repository이므로 ABI/backward compatibility shim은 추가하지 않는다.
 - [x] 전체 `detekt`를 실행해 저장소 baseline 위반을 확인했다. pre-generated
   voucher pool 및 usage metering 관련 기존 규칙 위반이 보고됐고, 이번
   fixture 전환으로 추가된 신규 위반은 확인되지 않았다.
-- [ ] workflow receipt/mutation-check를 갱신하고 최종 diff를 검토한다.
+- [x] workflow receipt/mutation-check를 갱신하고 최종 diff를 검토했다.
+  mutation-check sequence 24, completion sequence 25, receipt checksum
+  `f50b8864592634a32b134a123ef500eae4b52e77ea6d1eb639bd14bcc9e337f1`.
 - [x] Lore commit으로 branch에 기록했다. PR 생성/merge는 별도 승인 단계로
   남긴다.
 

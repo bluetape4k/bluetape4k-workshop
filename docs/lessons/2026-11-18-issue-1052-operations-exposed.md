@@ -78,5 +78,6 @@ Exposed로 단일화”가 이번 변경의 완료 조건이다.
 pre-generated-voucher-pool의 `RuntimeContractTest`, `VoucherBatchIngestIntegrationTest`,
 `VoucherPoolKeyRotationIntegrationTest`, `VoucherPoolIdempotencyIntegrationTest` 및
 `OperatorVoucherPoolHttpCommandExecutor`의 line/size 규칙이며, 이번 Fixture 전환으로
-추가된 새 detekt 위반은 확인되지 않았다. 최종 workflow receipt/mutation-check는
-커밋 직전 fresh 상태로 갱신한다.
+추가된 새 detekt 위반은 확인되지 않았다. workflow receipt는 mutation-check
+sequence 24와 completion sequence 25로 갱신했고, 최종 receipt checksum은
+`f50b8864592634a32b134a123ef500eae4b52e77ea6d1eb639bd14bcc9e337f1`이다.
