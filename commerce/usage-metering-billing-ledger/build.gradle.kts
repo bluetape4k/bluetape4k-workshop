@@ -128,8 +128,15 @@ fun Test.verifyNonEmptyXmlResults() {
     }
 }
 
+fun Test.useStableCurrencyLocale() {
+    // CI's default `en` locale has no country and cannot initialize Moneta's default currency.
+    systemProperty("user.language", "en")
+    systemProperty("user.country", "US")
+}
+
 tasks.test {
     setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    useStableCurrencyLocale()
     useJUnitPlatform {
         excludeTags("integration", "stress")
     }
@@ -144,6 +151,7 @@ tasks.register<Test>("integrationTest") {
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     setJvmArgs((tasks.test.get().jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    useStableCurrencyLocale()
     useJUnitPlatform { includeTags("integration") }
     failOnZeroTests()
     verifyNonEmptyXmlResults()
@@ -157,6 +165,7 @@ tasks.register<Test>("stressTest") {
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     setJvmArgs((tasks.test.get().jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    useStableCurrencyLocale()
     useJUnitPlatform { includeTags("stress") }
     failOnZeroTests()
     verifyNonEmptyXmlResults()
