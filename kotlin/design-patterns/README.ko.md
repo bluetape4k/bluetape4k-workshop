@@ -26,3 +26,9 @@ source package별 예제 모음이며, 각 package에는 pattern interface, conc
 3. 이 예제는 framework infrastructure가 아니라 pattern mechanics를 보여주는 Kotlin sketch로 읽으면 됩니다.
 
 예제는 의도적으로 작게 유지되어 pattern 구조만 눈에 들어오도록 했습니다.
+
+## 검증
+
+`./gradlew :kotlin-design-patterns:test`를 실행합니다. `AbstractFactoryTest`는 각 factory가 일관된
+객체 family를 만드는지 확인하고, builder test는 필수값과 기본값을, lazy-loading test는 지연 생성을
+검증합니다. `SingletonTest`는 실행 환경별 인스턴스 동일성을 확인합니다.

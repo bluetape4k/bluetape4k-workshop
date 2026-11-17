@@ -107,7 +107,7 @@ fun reactorResourceFactory(): ReactorResourceFactory = ReactorResourceFactory().
 ## 실행
 
 ```bash
-./gradlew :webflux-coroutines:bootRun
+./gradlew :spring-boot-webflux-coroutines:bootRun
 
 # VT Dispatcher endpoints
 curl http://localhost:8080/controller/vt/suspend
@@ -116,6 +116,12 @@ curl http://localhost:8080/controller/vt/concurrent-flow
 # Functional router endpoint
 curl http://localhost:8080/handler/banners
 ```
+
+## 검증
+
+`./gradlew :spring-boot-webflux-coroutines:test`를 실행합니다. `DefaultCoroutineControllerTest`는
+suspend, deferred, 순차·동시 Flow endpoint를 확인하고, `CoroutineHandlerTest`는 functional router
+경로를 검증합니다. `VTCoroutineControllerTest`는 virtual-thread dispatcher endpoint를 다룹니다.
 
 ## 참고
 

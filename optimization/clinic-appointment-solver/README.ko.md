@@ -4,6 +4,24 @@
 
 이 Spring Boot 참조 애플리케이션은 `ai.timefold.solver:timefold-solver-core`를 애플리케이션 내부에 임베드해 synthetic clinic appointment 일정을 최적화합니다. provider, room, equipment, 운영 시간, 요청 slot과 Timefold가 고정하는 confirmed appointment를 planning model로 다룹니다.
 
+## 이 예제가 필요한 이유
+
+Clinic scheduling은 resource allocation 문제입니다. 요청한 slot은 자격 있는
+provider, room, equipment가 같은 시간에 모두 가능할 때만 유효합니다. 이
+예제는 patient data나 외부 planning platform을 도입하기 전에 이런 업무 규칙이
+어떻게 충돌하는지 확인하게 합니다.
+
+Solver는 결정론적인 proposal과 score를 반환하며 application이 appointment를
+확정하거나 booking을 database에 쓰지 않습니다. 같은 hard/soft constraint를
+반복해서 비교할 수 있도록 synthetic fixture, 고정 termination, stable
+difficulty comparator를 사용합니다. PHI, EHR, waitlist, expiry, authentication,
+Timefold Platform 연동은 명시적인 후속 경계입니다.
+
+**실행과 검증**의 `test` 명령이 test-backed 증거입니다. `ConstraintVerifier`가
+Docker나 외부 credential 없이 각 hard/soft rule을 확인하며, HTTP `bootRun`은
+읽기 전용 proposal을 살펴보는 수동 경로이지 production scheduling 주장이
+아닙니다.
+
 ## 경계
 
 - `demo` profile은 deterministic in-memory fixture로 로컬에서 실행됩니다. Timefold Platform, tenant/API key, webhook을 호출하지 않습니다.

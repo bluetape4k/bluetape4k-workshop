@@ -46,6 +46,12 @@ http :8082/swagger-ui.html
 http :8082/actuator
 ```
 
+## Verification
+
+Run `./gradlew :orders:test`. `OrderControllerTest` and `ProductControllerTest` check the sample HTTP
+responses; `RedirectWebFilterTest` covers the landing-page rewrite, and the controller/model tests
+cover validation behavior. These tests exercise the in-memory workshop contract, not persistence.
+
 ## bluetape4k Usage
 
 | Library | Usage |

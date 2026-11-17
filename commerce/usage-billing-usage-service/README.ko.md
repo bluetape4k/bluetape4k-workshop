@@ -4,6 +4,24 @@
 
 `usage-billing-usage-service`는 Meter 가격 근거가 로컬에 도착한 뒤 usage fact를 접수합니다. source event identity와 승인된 가격 provenance를 durable 하게 저장한 후 `usage.events.v1`에 `UsageAccepted`를 발행합니다.
 
+## 이 서비스가 필요한 이유
+
+Usage event는 나중에 source identity와 접수 당시 사용한 가격 근거를 복원할 수
+있을 때만 청구 가능한 업무 fact가 됩니다. 이 서비스는 Meter 근거를 로컬에
+받아 두고, 알 수 없는 가격을 추측하지 않고 거부하며, Kafka에 결과를 전달하기
+전에 적용한 provenance를 저장합니다.
+
+서비스는 로컬 PostgreSQL의 가격 근거와 usage 경계를 소유하며 Meter table을
+동기 조회하지 않고 HTTP command 표면도 제공하지 않습니다. local inbox는 가격
+event를 중복 제거하고 usage fact와 outbox row를 함께 commit합니다. 이 분리를
+통해 at-least-once 전달과 process 중단을 재생 가능한 상태로 다루며, usage가
+두 번 청구되거나 가격 근거가 사라지는 상황을 막습니다.
+
+**검증 실행**의 `test`와 `integrationTest` 명령이 test-backed 증거입니다.
+decoder·envelope·idempotency·publisher·repository와 PostgreSQL uniqueness,
+로컬 가격 근거, usage/outbox 원자 쓰기, replay를 확인합니다. Kafka delivery가
+exactly once라고 주장하는 검증은 아닙니다.
+
 ![Usage billing 서비스 경계](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)

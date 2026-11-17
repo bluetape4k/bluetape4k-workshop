@@ -1,6 +1,27 @@
 # Warehouse Allocation
 
-`optimization-warehouse-allocation` is a Java 25/Spring Boot reference application for deterministic warehouse allocation and pick-wave proposals. It uses synthetic orders and stock snapshots. PostgreSQL is the final authority for approval-time reservations; the planner only returns a proposal.
+[한국어](README.ko.md) | English
+
+`optimization-warehouse-allocation` is a Java 25/Spring Boot reference application for deterministic warehouse allocation and pick-wave proposals. It uses synthetic orders and `SkuStockSnapshot` stock records. PostgreSQL is the final authority for approval-time reservations; the planner only returns a proposal.
+
+## Why this example exists
+
+Warehouse allocation has a costly race: a planner can find a feasible pick wave
+while another operation changes the stock or a cutoff. This example follows the
+business rule that a plan may propose, but only an approval-time PostgreSQL
+reservation can commit scarce stock.
+
+The deterministic planner consumes bounded synthetic snapshots and returns
+reasoned proposals; revisions, idempotency, inbox/outbox records, and
+compare-and-set updates keep replan and callback behavior inspectable. The
+redacted console and local `FAKE` seam are workshop boundaries, so WMS,
+robotics, carrier APIs, automatic commits, Kafka, and Timefold credentials are
+not implied by the example.
+
+The `cleanTest`/`test` command and optimization smoke command in
+**Verification** are the test-backed proof. They exercise the Exposed adapter,
+PostgreSQL reservation authority, canonical payload limits, and CAS boundaries;
+recorded outbox events are fixture evidence, not production fulfillment.
 
 ## Scope
 

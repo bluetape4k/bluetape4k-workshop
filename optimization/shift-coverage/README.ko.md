@@ -1,6 +1,25 @@
 # Shift Coverage
 
-이 Spring Boot 참조 애플리케이션은 synthetic multi-site worker·shift coverage와 사람이 확인하는 shift swap을 보여 줍니다. planner는 immutable canonical snapshot만 읽어 deterministic proposal을 반환하며, assignment projection을 변경하는 경로는 manager approval과 swap acceptance뿐입니다.
+[English](README.md) | 한국어
+
+이 Spring Boot 참조 애플리케이션은 synthetic multi-site worker·shift coverage와 사람이 확인하는 shift swap을 보여 줍니다. planner는 worker, shift, assignment를 담은 불변 `ShiftCoverageSnapshot`을 읽고 결정론적 제안을 반환합니다. assignment projection을 변경하는 경로는 manager approval과 swap acceptance뿐입니다.
+
+## 이 예제가 필요한 이유
+
+Coverage planning은 score만 계산하는 일이 아닙니다. overlap, skill, rest,
+started shift, manager가 확인한 swap이 모두 실제 배정 가능 여부를 결정합니다.
+이 예제는 proposal은 결정론적으로 만들되 최종 assignment 변경은 명시적인
+사람의 동작에 맡기는 방식을 보여 줍니다.
+
+불변 coverage 입력 기준 데이터는 CPU planning과 approval 시점 상태를 분리합니다. demo fake,
+bounded admission path, local-time validation, 선택적인 PostgreSQL CAS profile로
+실패와 persistence 한계를 드러내며 autonomous reassignment나 live Timefold
+연동을 주장하지 않습니다.
+
+**실행과 검증**의 `test` 명령이 hard rule, callback canonicalization,
+idempotency, profile 경계를 확인하는 test-backed 검증입니다. console과
+`bootRun`은 redacted proposal을 살펴보기 위한 경로이며 production 규모의
+workforce 품질을 증명하지 않습니다.
 
 ## 경계
 

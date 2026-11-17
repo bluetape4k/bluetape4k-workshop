@@ -5,6 +5,27 @@
 `usage-billing-meter-service` is the price authority in the usage-billing microservice reference. It records immutable price versions and publishes the
 `PriceActivated` integration event without sharing a database with Usage, Billing, Invoice, or Query.
 
+## Why this service exists
+
+Usage billing needs one answer to a deceptively simple business question:
+which price was active when a tenant's usage was accepted? A later charge must
+not depend on a live read from the Meter database, so this service makes the
+price history explicit and publishes the evidence that downstream services can
+retain locally.
+
+The boundary is intentionally narrow. PostgreSQL stores immutable price
+versions and the command receipt; a local outbox publishes the event. There is
+no shared database, HTTP controller, cross-service transaction, or claim that a
+Kafka send and the local status update are one atomic operation. The
+idempotency receipt and fenced outbox are the design choice that makes a retry
+safe after a process crash.
+
+The `test` and `integrationTest` commands in **Run the evidence** are the
+test-backed proof: the first checks command, envelope, idempotency, publisher,
+and repository contracts, while the second checks PostgreSQL uniqueness and
+atomic local effects. They do not prove broker availability or production
+pricing policy.
+
 ![Usage billing service boundaries](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)

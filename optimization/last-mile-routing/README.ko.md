@@ -4,6 +4,23 @@
 
 이 Spring Boot 참조 애플리케이션은 고정 travel matrix를 사용하는 synthetic 픽업·배송 라우팅을 보여 줍니다. 작업, route proposal, carrier version, callback, 확정 정류장의 권위 상태는 PostgreSQL에 저장합니다. 기본 deterministic provider는 오프라인·provider-neutral이며 Timefold, OSRM, 지도 tile, GPS, 운송사 API에 연결하지 않습니다.
 
+## 이 예제가 필요한 이유
+
+Last-mile planning에는 pickup 선행, capacity, time window, driver 진행 상태를
+지켜야 하지만 travel data나 carrier callback이 늦을 수 있다는 운영 문제가
+있습니다. 이 예제는 synthetic matrix와 approval 시점 version 검사를 사용해
+그 긴장을 관측 가능한 흐름으로 만듭니다.
+
+해결 방향은 PostgreSQL을 상태 기준으로 유지하고 provider를 정규화된
+`RoutingProvider` 뒤에 두는 것입니다. canonical callback byte, inbox/outbox
+상태, ETag, 명시적인 stale conflict를 선택해 replay와 operator 진단을
+안전하게 만들며, live GPS·geocoding·traffic·carrier credential은 범위 밖에
+둡니다.
+
+**검증**의 `cleanTest`, `test`, `build`, optimization smoke 명령이 이 제약의
+test-backed 증거입니다. production route 품질이나 live provider integration을
+측정하거나 증명하지는 않습니다.
+
 ## 범위와 경계
 
 - 픽업 선행, 차량 capacity, time window, required skill, started-stop pin을 hard constraint로 적용합니다.

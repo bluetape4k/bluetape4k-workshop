@@ -9,6 +9,25 @@ This example demonstrates a production-shaped profile image flow:
 3. publish a small blurred JPEG while moderation is pending;
 4. approve the upload into a public profile image, or reject/fail it back to the default image.
 
+## Why this example exists
+
+A profile image is both a user-facing asset and a safety decision. The product
+needs something useful to display while moderation is pending, must keep the
+original private, and must return to a safe default when moderation or storage
+fails. This example makes those states explicit instead of treating moderation
+as an asynchronous boolean beside an upload row.
+
+The design separates private source storage, privacy-safe derivatives, a
+deterministic moderation adapter, and the public URL state machine. The local
+moderator and filename markers are demo-only; cloud moderation, authentication,
+retention, rate limiting, and production object policy remain integration
+boundaries. The tests below therefore verify state transitions and privacy
+guards, not the quality of an external moderation model.
+
+The module test command is the test-backed verification for this story. It
+covers pending/approved/rejected/failed/no-image states, stale completion,
+private URL denial, cleanup, metadata redaction, payload safety, and metrics.
+
 ![Profile image moderation architecture](../../docs/images/readme-diagrams/profile-image-moderation-readme-architecture-01.png)
 
 ![Profile image moderation sequence](../../docs/images/readme-diagrams/profile-image-moderation-readme-sequence-01.png)

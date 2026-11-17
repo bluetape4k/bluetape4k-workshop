@@ -9,6 +9,25 @@
 3. moderation이 끝나기 전에는 작은 blurred JPEG를 임시로 공개합니다.
 4. 승인되면 공개 프로필 이미지로 전환하고, 반려되거나 실패하면 기본 이미지로 되돌립니다.
 
+## 이 예제가 필요한 이유
+
+Profile image는 사용자에게 보이는 asset이면서 safety decision의 대상입니다.
+제품은 moderation이 끝날 때까지 표시할 결과가 필요하고, 원본은 private으로
+보관하며, moderation이나 storage가 실패하면 안전한 기본 이미지로 돌아가야
+합니다. 이 예제는 moderation을 upload row 옆의 비동기 boolean으로 취급하지
+않고 상태 전이로 드러냅니다.
+
+설계는 private source storage, privacy-safe derivative, 결정적인 moderation
+adapter, public URL state machine을 분리합니다. local moderator와 filename
+marker는 데모 전용이며 cloud moderation, authentication, retention, rate
+limiting, production object policy는 integration 경계로 남깁니다. 따라서
+아래 테스트는 외부 moderation model의 품질이 아니라 상태 전이와 privacy
+guard를 검증합니다.
+
+모듈 test 명령이 이 업무 흐름의 test-backed 검증입니다. pending/approved/
+rejected/failed/no-image 상태, stale completion, private URL 거부, cleanup,
+metadata redaction, payload 안전성, metrics를 확인합니다.
+
 ![Profile image moderation architecture](../../docs/images/readme-diagrams/profile-image-moderation-readme-architecture-01.png)
 
 ![Profile image moderation sequence](../../docs/images/readme-diagrams/profile-image-moderation-readme-sequence-01.png)
@@ -24,7 +43,7 @@
 | Metrics | 낮은 cardinality의 Micrometer counter/timer | `ProfileImageMetrics` |
 | ID 생성 | Base58 upload id | `ProfileImageService` |
 | Privacy derivative | strict metadata/GPS 제거, orientation normalization, redaction report | `ProfileImageProcessor`, `PrivacyDerivativePipeline` |
-| Privacy payload 영속화 | defensive derivative bytes와 bounded report snapshot을 stable JSON envelope로 보존 | `ProcessedProfileImage`, `PrivacyDerivativeJackson` |
+| Privacy payload 영속화 | defensive derivative bytes와 bounded report 기준 정보를 stable JSON envelope로 보존 | `ProcessedProfileImage`, `PrivacyDerivativeJackson` |
 
 ## API
 
@@ -68,9 +87,9 @@ raw metadata나 image bytes는 포함하지 않습니다. metadata reader failur
 moderation state machine은 변경하지 않습니다.
 
 `ProcessedProfileImage`는 runtime report를 transient로 유지하고, 재시작 또는 messaging
-경계에 사용할 `PrivacyDerivativePayload` snapshot을 저장합니다. 각 payload에는 derivative
+경계에 사용할 `PrivacyDerivativePayload` 기준 정보를 저장합니다. 각 payload에는 derivative
 bytes의 defensive copy와 생성된 upload id를 opaque `sourceId`로 기록한 bounded report
-snapshot이 들어갑니다. `PrivacyDerivativeJackson.encodePayload`와 `decodePayload`는 stable
+기준 정보가 들어갑니다. `PrivacyDerivativeJackson.encodePayload`와 `decodePayload`는 stable
 `schemaVersion`/`kind` envelope 및 stable codec reason code를 사용합니다. 이 예제의 영속화
 경계는 byte-array API이며, stream helper는 호출자가 소유한 stream을 닫지 않으므로 호출자가
 직접 닫아야 합니다.

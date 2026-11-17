@@ -4,6 +4,24 @@
 
 This Spring Boot reference application demonstrates synthetic pickup and delivery routing with a fixed travel matrix. PostgreSQL remains authoritative for jobs, route proposals, carrier versions, callbacks, and committed stops. The default deterministic provider is offline and provider-neutral; it does not contact Timefold, OSRM, a map tile service, GPS, or a carrier API.
 
+## Why this example exists
+
+Last-mile planning has a concrete operational tension: pickup precedence,
+capacity, time windows, and driver progress must be respected while travel data
+or a carrier callback may be late. This example makes that tension observable
+with a synthetic matrix and a proposal that must still pass approval-time
+version checks.
+
+The solution keeps PostgreSQL as the state authority and puts the provider
+behind a normalized `RoutingProvider`. Canonical callback bytes, inbox/outbox
+state, ETags, and explicit stale conflicts are design choices that make replay
+and operator diagnosis safe; live GPS, geocoding, traffic, and carrier
+credentials are outside the boundary.
+
+The `cleanTest`, `test`, `build`, and optimization smoke commands in
+**Verification** provide test-backed evidence for these constraints. They do
+not measure production route quality or prove a live provider integration.
+
 ## Scope and boundary
 
 - Pickup precedes delivery, vehicle capacity, time windows, required skills, and started-stop pins are hard constraints.

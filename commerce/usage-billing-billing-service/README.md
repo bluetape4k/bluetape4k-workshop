@@ -4,6 +4,25 @@
 
 `usage-billing-billing-service` owns replicated price evidence and immutable charge rating. It consumes Meter and Usage events, calculates the charge in its own PostgreSQL transaction, and publishes `ChargeRated` on `billing.events.v1`.
 
+## Why this service exists
+
+Billing must rate a usage fact from the price that was accepted for that
+tenant, even when Meter or Usage is unavailable at the moment the event is
+delivered. This service makes that business requirement concrete by keeping a
+local copy of price evidence and producing an immutable charge or correction.
+
+Its boundary is a service-local PostgreSQL transaction plus an outbox. It does
+not read another service's tables, expose an HTTP controller, or rewrite a
+previous charge. Inbox ordering, digest quarantine, and aggregate-version
+deferral are the design choices that distinguish a recoverable late event from
+a silently misrated financial fact.
+
+The `test` and `integrationTest` commands in **Run the evidence** connect the
+story to executable proof: they cover price-evidence uniqueness, inbox
+ordering, atomic charge/outbox writes, digest conflicts, and fenced publisher
+completion. They do not establish a shared-database transaction or a broker
+exactly-once guarantee.
+
 ![Usage billing service boundaries](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)

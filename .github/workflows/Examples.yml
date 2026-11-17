@@ -6,6 +6,8 @@ on:
   push:
     branches: [ develop, main ]
     paths:
+      - 'README*.md'
+      - '**/README*.md'
       - 'commerce/**'
       - 'operations/**'
       - 'optimization/**'
@@ -68,12 +70,15 @@ on:
       - 'settings.gradle.kts'
       - 'docs/images/readme-diagrams/**'
       - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/validate-readme-contract.mjs'
       - 'scripts/validate-high-contention-readme.mjs'
       - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
   # Stacked child PRs may target a non-default base; paths still bound the workload.
   pull_request:
     paths:
+      - 'README*.md'
+      - '**/README*.md'
       - 'commerce/**'
       - 'operations/**'
       - 'optimization/**'
@@ -136,6 +141,7 @@ on:
       - 'settings.gradle.kts'
       - 'docs/images/readme-diagrams/**'
       - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/validate-readme-contract.mjs'
       - 'scripts/validate-high-contention-readme.mjs'
       - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
@@ -207,6 +213,9 @@ jobs:
                   ;;
                 scripts/validate-readme-diagram-qa.mjs)
                   diagram=true
+                  ;;
+                scripts/validate-readme-contract.mjs)
+                  examples=true
                   ;;
                 scripts/validate-high-contention-readme.mjs)
                   high_contention=true
@@ -497,6 +506,9 @@ jobs:
       needs.changes.outputs.gradle == 'true')
     steps:
       - uses: actions/checkout@v7.0.1
+
+      - name: Validate module README contracts
+        run: node scripts/validate-readme-contract.mjs
 
       - name: Validate tenant scheduler README parity
         run: node scripts/validate-readme-parity.mjs leader/tenant-scheduler

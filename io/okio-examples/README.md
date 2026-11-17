@@ -297,6 +297,12 @@ sink.writeUtf8("East Sea and Baekdu Mountain").flush()
 - Socket closed during reading/writing → Coroutine can be canceled with `IOException`
 - Control maximum latency with `Timeout` settings
 
+## Verification
+
+Run `./gradlew :okio-examples:test`. The module tests include `OkioTest` for stream operations and
+`BufferedSuspendedSinkTest`, `SuspendedPipeTest`, and `SuspendedSocketTest` for coroutine adapters.
+They exercise the documented APIs and do not measure performance.
+
 ---
 
 ## reference

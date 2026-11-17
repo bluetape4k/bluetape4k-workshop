@@ -296,6 +296,12 @@ sink.writeUtf8("East Sea and Baekdu Mountain").flush()
 - 읽기/쓰기 중 socket이 닫히면 코루틴은 `IOException`으로 취소될 수 있습니다.
 - `Timeout` 설정으로 최대 지연 시간을 제어합니다.
 
+## 검증
+
+`./gradlew :okio-examples:test`를 실행합니다. 모듈 테스트에는 stream 동작을 확인하는 `OkioTest`와
+coroutine adapter를 확인하는 `BufferedSuspendedSinkTest`, `SuspendedPipeTest`, `SuspendedSocketTest`가
+있습니다. 문서의 API를 실행하며 성능은 측정하지 않습니다.
+
 ---
 
 ## 참고 자료

@@ -4,6 +4,24 @@
 
 `usage-billing-meter-service`는 usage-billing 마이크로서비스 예제의 가격 권위입니다. 불변 가격 버전을 기록하고 `PriceActivated` integration event를 발행하며, Usage·Billing·Invoice·Query의 데이터베이스를 공유하지 않습니다.
 
+## 이 서비스가 필요한 이유
+
+Usage billing에는 단순해 보이지만 중요한 업무 질문이 있습니다. tenant의
+usage가 접수된 순간 어떤 가격이 적용되었는가입니다. 이후 charge가 Meter
+database를 실시간 조회하지 않아도 되도록 이 서비스는 가격 이력을 명시하고,
+downstream 서비스가 로컬에 보관할 수 있는 근거를 발행합니다.
+
+경계는 의도적으로 좁습니다. PostgreSQL은 불변 가격 version과 command
+receipt를 저장하고, local outbox가 event를 발행합니다. shared database,
+HTTP controller, 서비스 간 transaction은 없으며 Kafka 전송과 로컬 상태 갱신이
+하나의 원자 연산이라고 주장하지 않습니다. process가 중단된 뒤에도 retry가
+안전하도록 idempotency receipt와 lease를 확인하는 outbox를 선택했습니다.
+
+**검증 실행**의 `test`와 `integrationTest` 명령이 test-backed 증거입니다.
+첫 명령은 command·envelope·idempotency·publisher·repository 계약을 확인하고,
+두 번째 명령은 PostgreSQL uniqueness와 로컬 효과의 원자성을 확인합니다.
+broker 가용성이나 production 가격 정책까지 증명하지는 않습니다.
+
 ![Usage billing 서비스 경계](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)

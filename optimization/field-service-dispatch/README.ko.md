@@ -4,6 +4,25 @@
 
 이 Spring Boot reference application은 synthetic 데이터만 사용하는 Field Service dispatcher 예제입니다. 방문, worker, planning proposal, 확정 route를 PostgreSQL에 저장하고 deterministic fixture에서 planning 결과를 만듭니다. 기본 실행 경로는 Timefold, 지도 provider, 그 밖의 외부 서비스에 연결하지 않습니다.
 
+## 이 예제가 필요한 이유
+
+Field service 업무는 방문 목록을 어떤 worker가 어떤 skill로 어느 time window
+안에 수행할지에 대한 약속으로 바꿉니다. 계산이 끝난 뒤 dispatch 전에 plan이
+오래될 수 있으므로 이 예제는 route를 제안한 뒤 현재 version을 다시 확인하고
+승인·확정하는 두 단계 업무 결정을 보여 줍니다.
+
+Planner는 deterministic synthetic 입력을 사용하고 PostgreSQL은 visit,
+proposal, 확정 route를 소유합니다. approval과 worker-route confirmation이
+상태 변경을 검사하며, redacted console·loopback guard·local callback fixture는
+workshop 경계입니다. production identity, map 품질, live Timefold 연동의
+증거로 해석하지 않으며 stale proposal이 조용히 commit되지 않도록 provider
+경계를 분리합니다.
+
+**검증**의 focused `cleanTest`/`test` 명령과
+`scripts/smoke-validate.sh optimization`이 test-backed 증거입니다. 이 문서의
+constraint, persistence, callback, replay 계약을 확인하며 live route 품질을
+주장하지 않습니다.
+
 ## 범위와 경계
 
 - synthetic 방문은 visit type, required skill, time window, service duration, priority, synthetic coordinate만 가집니다.

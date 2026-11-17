@@ -6,6 +6,23 @@
 소유합니다. Meter와 Usage event를 소비하고 자체 PostgreSQL transaction에서
 금액을 계산한 뒤 `billing.events.v1`에 `ChargeRated`를 발행합니다.
 
+## 이 서비스가 필요한 이유
+
+Billing은 event가 도착하는 순간 Meter나 Usage를 사용할 수 없더라도 해당
+tenant가 usage를 접수할 때 사용한 가격으로 산정해야 합니다. 이 서비스는
+가격 근거를 로컬에 복제하고 불변 charge 또는 correction을 만드는 방식으로
+그 업무 요구를 구체화합니다.
+
+경계는 서비스 로컬 PostgreSQL transaction과 outbox입니다. 다른 서비스의
+table을 읽거나 HTTP controller를 제공하지 않으며 이전 charge를 다시 쓰지도
+않습니다. inbox 순서 확인, digest quarantine, aggregate-version 지연 처리는
+늦게 도착한 event와 잘못 산정된 financial fact를 구분하기 위한 설계입니다.
+
+**검증 실행**의 `test`와 `integrationTest` 명령이 이 흐름의 실행 가능한
+증거입니다. 가격 근거 uniqueness, inbox 순서, charge/outbox 원자 쓰기, digest
+충돌, publisher fencing을 확인하며 shared database transaction이나 broker
+exactly-once를 증명하지는 않습니다.
+
 ![Usage billing 서비스 경계](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)

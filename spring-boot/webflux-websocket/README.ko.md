@@ -69,9 +69,15 @@ override fun handle(session: WebSocketSession): Mono<Void> {
 ## 실행 방법
 
 ```bash
-./gradlew :webflux-websocket:bootRun
+./gradlew :spring-boot-webflux-websocket:bootRun
 # WebSocket endpoint: ws://localhost:8080/event-emitter
 ```
+
+## 검증 범위
+
+`./gradlew :spring-boot-webflux-websocket:test`를 실행합니다. `WebsocketApplicationTest`는 `/quotes`와
+`/quotes/50`이 양수 가격을 담은 NDJSON을 반환하는지 확인합니다. 이 테스트는 WebSocket session을
+열거나 `/event-emitter` 전송 경로를 검증하지 않습니다.
 
 ## 참고
 

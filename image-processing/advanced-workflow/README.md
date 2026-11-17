@@ -2,6 +2,26 @@
 
 [한국어](README.ko.md) | English
 
+## Why this example exists
+
+An image upload is not just a multipart write: the service must reject unsafe
+input, avoid processing the same asset twice, create delivery-sized variants,
+and leave storage and job history consistent when native processing fails. This
+example makes that product workflow runnable for a team choosing between local
+storage and an S3/CDN deployment.
+
+The solution is a small, checksum-aware saga. Validation and pixel limits stop
+expensive native work early; `ImageStorage` hides the backend; and the
+workflow records job/event state while cleaning up partial uploads. The demo
+returns unsigned public URLs and uses bounded local concurrency, so private
+content, production IAM, CDN policy, and unbounded throughput remain outside
+the boundary.
+
+The `test` commands in **Tests** are the verification path: the default run
+checks deterministic workflow behavior and the opt-in run checks native VIPS
+integration when Java 25 and libvips are available. Those tests prove the
+documented contract, not the policy or availability of a production bucket.
+
 ## Overview
 
 **image-processing-advanced-workflow** is a Spring Boot 4 upload workflow that validates an image,
