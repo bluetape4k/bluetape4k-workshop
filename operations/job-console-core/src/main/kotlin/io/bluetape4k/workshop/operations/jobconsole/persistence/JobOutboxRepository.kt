@@ -4,6 +4,13 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.operations.jobconsole.api.JobEvent
 import io.bluetape4k.workshop.operations.jobconsole.api.JobEventType
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.min
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.select
 import java.sql.Connection
 import java.time.Duration
 import java.time.Instant
@@ -18,10 +25,15 @@ data class OutboxClaim(
 class JobOutboxRepository(
     private val dataSource: DataSource,
 ) {
+    private val jdbc = JobJdbcExecutor(dataSource)
     companion object: KLogging() {
         const val MAX_BATCH_SIZE: Int = 100
     }
 
+    /**
+     * PostgreSQL 전용 claim 제어는 SQL로 유지합니다. `FOR UPDATE SKIP LOCKED`, UUID 배열,
+     * database clock 기반 interval은 이식 가능한 Exposed DSL 연산이 아닙니다.
+     */
     fun claim(batchSize: Int, claimDuration: Duration): OutboxClaim = inTransaction { connection ->
         require(!claimDuration.isNegative && !claimDuration.isZero) { "claimDuration must be positive" }
         val boundedSize = batchSize.coerceIn(1, MAX_BATCH_SIZE)
@@ -71,61 +83,55 @@ class JobOutboxRepository(
         OutboxClaim(token, events)
     }
 
-    fun markPublished(token: UUID, eventId: UUID): Boolean = inTransaction { connection ->
+    fun markPublished(token: UUID, eventId: UUID): Boolean = jdbc.exposedTransaction {
         val updated =
-            connection.prepareStatement(
-                """
-                    UPDATE job_outbox
-                    SET published_at = CURRENT_TIMESTAMP, claim_token = NULL, claim_expires_at = NULL
-                    WHERE event_id = ? AND claim_token = ? AND published_at IS NULL
-                    """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, eventId)
-                statement.setObject(2, token)
-                statement.executeUpdate()
+            JobOutboxTable.update(
+                where = {
+                    (JobOutboxTable.eventId eq eventId) and
+                        (JobOutboxTable.claimToken eq token) and
+                        JobOutboxTable.publishedAt.isNull()
+                },
+            ) { statement ->
+                statement[JobOutboxTable.publishedAt] = CurrentTimestamp
+                statement[JobOutboxTable.claimToken] = null
+                statement[JobOutboxTable.claimExpiresAt] = null
             }
-        updated == 1 || isPublished(connection, eventId)
+        updated == 1 || isPublished(eventId)
     }
 
     fun release(token: UUID, eventId: UUID) {
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                "UPDATE job_outbox SET claim_token = NULL, claim_expires_at = NULL WHERE event_id = ? AND claim_token = ? AND published_at IS NULL",
-            ).use { statement ->
-                statement.setObject(1, eventId)
-                statement.setObject(2, token)
-                statement.executeUpdate()
+        jdbc.exposedTransaction {
+            JobOutboxTable.update(
+                where = {
+                    (JobOutboxTable.eventId eq eventId) and
+                        (JobOutboxTable.claimToken eq token) and
+                        JobOutboxTable.publishedAt.isNull()
+                },
+            ) { statement ->
+                statement[JobOutboxTable.claimToken] = null
+                statement[JobOutboxTable.claimExpiresAt] = null
             }
         }
     }
 
     fun oldestUnpublishedAge(now: Instant): Duration? =
-        dataSource.connection.use { connection ->
-            connection.prepareStatement("SELECT MIN(occurred_at) FROM job_outbox WHERE published_at IS NULL")
-                .use { statement ->
-                    statement.executeQuery().use { result ->
-                        result.next()
-                        result.getTimestamp(1)?.toInstant()
-                            ?.let { Duration.between(it, now).coerceAtLeast(Duration.ZERO) }
-                    }
-                }
+        jdbc.exposedTransaction {
+            val oldest = JobOutboxTable.occurredAt.min()
+            JobOutboxTable
+                .select(oldest)
+                .where { JobOutboxTable.publishedAt.isNull() }
+                .singleOrNull()
+                ?.get(oldest)
+                ?.let { Duration.between(it, now).coerceAtLeast(Duration.ZERO) }
         }
 
-    private fun isPublished(connection: Connection, eventId: UUID): Boolean =
-        connection.prepareStatement("SELECT published_at IS NOT NULL FROM job_outbox WHERE event_id = ?")
-            .use { statement ->
-                statement.setObject(1, eventId)
-                statement.executeQuery().use { result -> result.next() && result.getBoolean(1) }
-            }
+    /** `markPublished`가 연 Exposed transaction 안에서 호출해야 합니다. */
+    private fun isPublished(eventId: UUID): Boolean =
+        JobOutboxTable
+            .select(JobOutboxTable.publishedAt)
+            .where { JobOutboxTable.eventId eq eventId }
+            .singleOrNull()
+            ?.get(JobOutboxTable.publishedAt) != null
 
-    private inline fun <T> inTransaction(block: (Connection) -> T): T =
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            try {
-                block(connection).also { connection.commit() }
-            } catch (failure: Throwable) {
-                runCatching { connection.rollback() }
-                throw failure
-            }
-        }
+    private fun <T> inTransaction(block: (Connection) -> T): T = jdbc.transaction(block)
 }
