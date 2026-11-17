@@ -74,7 +74,8 @@ class MeteringEndToEndIntegrationTest {
     fun close(): Unit = fixture.close()
 
     @Test
-    fun `usage becomes an immutable invoice and late usage becomes a linked adjustment`() {
+    @Suppress("LongMethod")
+    fun `invoice and adjustment`() {
         fixture.resetAndSeed()
         val tenant = TenantId("tenant-a")
         val meter = MeterCode("api_calls")

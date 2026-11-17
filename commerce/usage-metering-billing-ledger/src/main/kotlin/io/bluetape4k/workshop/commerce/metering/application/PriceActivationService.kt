@@ -65,7 +65,8 @@ class PriceActivationService(
         val previous = timeline.lastOrNull { it.effectiveTo == null }
         if (previous != null) {
             check(effectiveFrom > previous.effectiveFrom) {
-                "effectiveFrom must be less than previous. effectiveFrom=$effectiveFrom, previous.effectiveTo=$previous.effectiveTo"
+                "effectiveFrom must be less than previous. " +
+                    "effectiveFrom=$effectiveFrom, previous.effectiveTo=$previous.effectiveTo"
             }
             previous.effectiveTo = effectiveFrom
         }
@@ -85,10 +86,14 @@ class PriceActivationService(
     @Transactional
     fun repairGap(command: PriceGapRepair): PriceVersion {
         require(command.effectiveTo > command.effectiveFrom) {
-            "effectiveTo must be greater than effectiveFrom. effectiveTo=${command.effectiveTo}, effectiveFrom=$effectiveFrom"
+            "effectiveTo must be greater than effectiveFrom. " +
+                "effectiveTo=${command.effectiveTo}, effectiveFrom=${command.effectiveFrom}"
         }
         val meter = meters.find(command.tenantId.value, command.meterCode.value)
-            .requireNotNull { "meter not found. tenantId=${command.tenantId.value}, meterCode=${command.meterCode.value}" }
+            .requireNotNull {
+                "meter not found. tenantId=${command.tenantId.value}, " +
+                    "meterCode=${command.meterCode.value}"
+            }
 
         val schedule = schedules.getOrCreate(
             id = Uuid.V7.nextId(),
@@ -99,7 +104,8 @@ class PriceActivationService(
         )
         val timeline = prices.timeline(schedule.id.value)
         timeline.none { version ->
-            version.effectiveFrom < command.effectiveTo && version.effectiveTo?.let { it > command.effectiveFrom } != false
+            version.effectiveFrom < command.effectiveTo &&
+                version.effectiveTo?.let { it > command.effectiveFrom } != false
         }.checkBeTrue { "prices window must be overlap" }
 
         val price = PriceVersionEntity.new(Uuid.V7.nextId()) {

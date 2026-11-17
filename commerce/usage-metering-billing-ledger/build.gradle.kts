@@ -128,8 +128,15 @@ fun Test.verifyNonEmptyXmlResults() {
     }
 }
 
+fun Test.useStableCurrencyLocale() {
+    // CI의 기본 `en` 로케일은 국가가 없어 Moneta 기본 통화를 초기화할 수 없다.
+    systemProperty("user.language", "en")
+    systemProperty("user.country", "US")
+}
+
 tasks.test {
     setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    useStableCurrencyLocale()
     useJUnitPlatform {
         excludeTags("integration", "stress")
     }
@@ -144,6 +151,7 @@ tasks.register<Test>("integrationTest") {
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     setJvmArgs((tasks.test.get().jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    useStableCurrencyLocale()
     useJUnitPlatform { includeTags("integration") }
     failOnZeroTests()
     verifyNonEmptyXmlResults()
@@ -157,6 +165,7 @@ tasks.register<Test>("stressTest") {
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     setJvmArgs((tasks.test.get().jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    useStableCurrencyLocale()
     useJUnitPlatform { includeTags("stress") }
     failOnZeroTests()
     verifyNonEmptyXmlResults()

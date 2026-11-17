@@ -16,6 +16,19 @@ The module uses Kotlin, JetBrains Exposed JDBC, `bluetape4k-exposed-jdbc`, and P
 
 This separates restartable mutable workflow state from immutable financial facts without requiring two correctness stores.
 
+## Money primitive
+
+`domain/PricingModels.kt` uses the Moneta `Money` implementation through
+`bluetape4k-money` for currency lookup, arithmetic, and amount construction.
+The module keeps its domain policy explicit: amounts are non-negative and are
+rounded with `HALF_UP` before a charge is posted. The billing ledger retains
+its existing six-decimal scalar precision (`decimal(19, 6)`); the production
+close, late-debit, and reconciliation paths all share `chargeAmount`, which
+constructs the Moneta value and then applies that ledger scale. Persistence and
+HTTP contracts continue to use the existing scalar `BigDecimal` amount plus ISO
+currency code, so the Moneta implementation does not leak across those
+boundaries.
+
 ## State model
 
 The billing period defines the accounting boundary. The close run is the restartable worker that processes that boundary.

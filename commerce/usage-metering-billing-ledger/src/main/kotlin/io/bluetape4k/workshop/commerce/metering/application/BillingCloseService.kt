@@ -5,6 +5,7 @@ import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
+import io.bluetape4k.workshop.commerce.metering.domain.chargeAmount
 import io.bluetape4k.workshop.commerce.metering.domain.CloseRunState
 import io.bluetape4k.workshop.commerce.metering.domain.LedgerEntryType
 import io.bluetape4k.workshop.commerce.metering.persistence.BillingPeriodRepository
@@ -22,11 +23,8 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.Clock
 import java.util.*
-
-private const val MONEY_SCALE = 6
 
 data class CloseBatchResult(
     val runId: UUID,
@@ -155,10 +153,8 @@ class BillingCloseService(
         usage: UsageEventEntity,
         price: PriceVersionEntity,
     ) {
-        val amount: BigDecimal = usage.quantity
-            .multiply(price.unitPrice)
-            .setScale(MONEY_SCALE, RoundingMode.HALF_UP)
-        
+        val amount: BigDecimal = chargeAmount(usage.quantity, price.unitPrice, currency)
+
         LedgerEntries.insertIgnore {
             it[id] = Uuid.V7.nextId()
             it[LedgerEntries.tenantId] = tenantId
