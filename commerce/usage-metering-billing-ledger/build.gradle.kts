@@ -129,7 +129,7 @@ fun Test.verifyNonEmptyXmlResults() {
 }
 
 fun Test.useStableCurrencyLocale() {
-    // CI's default `en` locale has no country and cannot initialize Moneta's default currency.
+    // CI의 기본 `en` 로케일은 국가가 없어 Moneta 기본 통화를 초기화할 수 없다.
     systemProperty("user.language", "en")
     systemProperty("user.country", "US")
 }
