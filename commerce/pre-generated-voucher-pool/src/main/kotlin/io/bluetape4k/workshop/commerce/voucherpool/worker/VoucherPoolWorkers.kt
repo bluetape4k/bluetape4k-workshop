@@ -1,12 +1,12 @@
-@file:Suppress("LongMethod", "MagicNumber", "MaxLineLength", "TooManyFunctions", "SqlResolve")
+@file:Suppress("LargeClass", "LongMethod", "MagicNumber", "MaxLineLength", "TooManyFunctions", "SqlResolve")
 
 package io.bluetape4k.workshop.commerce.voucherpool.worker
 
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
+import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.ExpectedReservation
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.ExpectedUserLimit
@@ -15,10 +15,31 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditR
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcTimeoutException
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAllocationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBatchTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCampaignTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolEntryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolDepthTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReservationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolUserLimitTable
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.notInList
+import org.jetbrains.exposed.v1.core.plus
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.WorkerCandidate
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.Connection
-import java.sql.ResultSet
 import java.time.Instant
 import java.util.*
 
@@ -183,13 +204,13 @@ internal class JdbcVoucherPoolWorkers(
 
     override fun completeCampaignRevocation(tenantId: String, campaignId: UUID): Boolean =
         executor.workerTransaction {
-            completeCampaignRevocationInTransaction(currentConnection(), tenantId, campaignId)
+            completeCampaignRevocationInTransaction(tenantId, campaignId)
         }
 
     private fun runCampaignRevoke(claim: WorkerClaim, limit: Int): WorkerChunkOutcome = executor.workerTransaction {
         val connection = currentConnection()
         claims.requireCurrentInTransaction(connection, claim)
-        val campaign = lockCampaignScope(connection, claim.tenantId, claim.scopeId)
+        val campaign = lockCampaignScope(claim.tenantId, claim.scopeId)
         check(campaign.state in setOf(CampaignState.REVOKING, CampaignState.REVOKED))
 
         if (campaign.state == CampaignState.REVOKED) {
@@ -197,18 +218,17 @@ internal class JdbcVoucherPoolWorkers(
             return@workerTransaction WorkerChunkOutcome(null, 0, 0, completed = true)
         }
         val inserted = claims.ensureBatchRevokeClaimsForCampaignInTransaction(
-            connection = connection,
             tenantId = claim.tenantId,
             campaignId = claim.scopeId,
             limit = limit,
         )
         val renewed = claims.checkpointInTransaction(connection, claim, claim.cursor + inserted)
-        val more = claims.hasUnscheduledBatchRevokesInTransaction(connection, claim.tenantId, claim.scopeId)
+        val more = claims.hasUnscheduledBatchRevokesInTransaction(claim.tenantId, claim.scopeId)
 
         if (more) {
             WorkerChunkOutcome(renewed, inserted, inserted, completed = false)
         } else {
-            completeCampaignRevocationInTransaction(connection, claim.tenantId, claim.scopeId)
+            completeCampaignRevocationInTransaction(claim.tenantId, claim.scopeId)
             claims.completeInTransaction(connection, renewed)
             WorkerChunkOutcome(null, inserted, inserted, completed = true)
         }
@@ -217,11 +237,11 @@ internal class JdbcVoucherPoolWorkers(
     private fun runReconciliation(claim: WorkerClaim, limit: Int): WorkerChunkOutcome = executor.workerTransaction {
         val connection = currentConnection()
         claims.requireCurrentInTransaction(connection, claim)
-        val scope = lockBatchScope(connection, claim)
-        var effects = reconcilePoolDepth(connection, claim)
-        val users = lockUserLimitPage(connection, claim, scope.campaignId, limit)
+        val scope = lockBatchScope(claim)
+        var effects = reconcilePoolDepth(claim)
+        val users = lockUserLimitPage(claim, scope.campaignId, limit)
         users.forEach { user ->
-            if (reconcileUserLimit(connection, claim, scope.campaignId, user)) {
+            if (reconcileUserLimit(claim, scope.campaignId, user)) {
                 effects++
             }
         }
@@ -266,7 +286,7 @@ internal class JdbcVoucherPoolWorkers(
         return executor.workerTransaction {
             val connection = currentConnection()
             claims.requireCurrentInTransaction(connection, claim)
-            val scope = lockBatchScope(connection, claim)
+            val scope = lockBatchScope(claim)
             if (scope.batchState != transition && scope.batchState != terminal) {
                 if (transition == BatchState.EXPIRING) {
                     check(scope.expiresAt != null && scope.expiresAt <= transactionTime(connection)) {
@@ -286,7 +306,7 @@ internal class JdbcVoucherPoolWorkers(
                     else                -> false
                 }
                 check(allowed) { "batch cannot enter ${transition.name} from ${scope.batchState.name}" }
-                updateBatchState(connection, claim, scope.batchRevision, transition)
+                updateBatchState(claim, scope.batchRevision, transition)
             }
             claims.checkpointInTransaction(connection, claim, claim.cursor)
         }
@@ -296,55 +316,122 @@ internal class JdbcVoucherPoolWorkers(
         executor.workerTransaction {
             val connection = currentConnection()
             claims.requireCurrentInTransaction(connection, claim)
-            val afterCursor = queryCandidates(connection, claim, claim.cursor, limit)
-            if (afterCursor.isNotEmpty() || claim.cursor == 0L) afterCursor else queryCandidates(
-                connection,
-                claim,
-                0L,
-                limit
-            )
+            val afterCursor = queryCandidates(claim, claim.cursor, limit)
+            if (afterCursor.isNotEmpty() || claim.cursor == 0L) afterCursor else queryCandidates(claim, 0L, limit)
         }
 
     private fun queryCandidates(
-        connection: Connection,
         claim: WorkerClaim,
         cursor: Long,
         limit: Int,
     ): List<WorkerEntryCandidate> {
+        val statePredicate = when (claim.kind) {
+            WorkerKind.RESERVATION_EXPIRY ->
+                (VoucherPoolEntryTable.state eq EntryState.RESERVED) and
+                        (VoucherPoolEntryTable.reservationExpiresAt lessEq CurrentTimestamp)
 
-        val predicate = when (claim.kind) {
-            WorkerKind.RESERVATION_EXPIRY -> "e.state='RESERVED' AND e.reservation_expires_at<=transaction_timestamp()"
-            WorkerKind.ALLOCATION_EXPIRY  -> "e.state='ALLOCATED' AND e.allocation_expires_at<=transaction_timestamp()"
-            WorkerKind.BATCH_REVOKE, WorkerKind.BATCH_EXPIRY -> "e.state IN ('AVAILABLE','RESERVED','ALLOCATED')"
-            else                          -> return emptyList()
+            WorkerKind.ALLOCATION_EXPIRY ->
+                (VoucherPoolEntryTable.state eq EntryState.ALLOCATED) and
+                        (VoucherPoolEntryTable.allocationExpiresAt lessEq CurrentTimestamp)
+
+            WorkerKind.BATCH_REVOKE, WorkerKind.BATCH_EXPIRY ->
+                VoucherPoolEntryTable.state inList listOf(
+                    EntryState.AVAILABLE,
+                    EntryState.RESERVED,
+                    EntryState.ALLOCATED,
+                )
+
+            else -> return emptyList()
         }
-        return connection.prepareStatement(
-            """SELECT e.source_ordinal,e.tenant_id,e.campaign_id,e.batch_id,e.entry_id,e.revision AS entry_revision,
-                       c.revision AS campaign_revision,b.revision AS batch_revision,
-                       r.reservation_id,r.revision AS reservation_revision,
-                       u.user_digest,u.revision AS user_limit_revision
-                FROM voucher_pool_entries e
-                JOIN voucher_pool_campaigns c ON c.tenant_id=e.tenant_id AND c.campaign_id=e.campaign_id
-                JOIN voucher_pool_batches b ON b.tenant_id=e.tenant_id AND b.batch_id=e.batch_id
-                LEFT JOIN voucher_pool_reservations r ON r.tenant_id=e.tenant_id AND r.reservation_id=e.reservation_id
-                LEFT JOIN voucher_pool_user_limits u ON u.tenant_id=e.tenant_id AND u.campaign_id=e.campaign_id
-                                                     AND u.user_digest=e.user_digest
-                WHERE e.tenant_id=? AND e.batch_id=? AND e.source_ordinal>=? AND $predicate
-                ORDER BY e.source_ordinal,e.entry_id LIMIT ?""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, claim.tenantId)
-            statement.setObject(2, claim.scopeId)
-            statement.setLong(3, cursor)
-            statement.setInt(4, limit)
-
-            statement.executeQuery().use { result ->
-                buildList {
-                    while (result.next()) {
-                        add(result.workerEntryCandidate())
-                    }
-                }
+        val joined = VoucherPoolEntryTable
+            .innerJoin(
+                VoucherPoolCampaignTable,
+                { VoucherPoolEntryTable.tenantId },
+                { VoucherPoolCampaignTable.tenantId },
+                additionalConstraint = { VoucherPoolEntryTable.campaignId eq VoucherPoolCampaignTable.campaignId },
+            )
+            .innerJoin(
+                VoucherPoolBatchTable,
+                { VoucherPoolEntryTable.tenantId },
+                { VoucherPoolBatchTable.tenantId },
+                additionalConstraint = {
+                    (VoucherPoolEntryTable.batchId eq VoucherPoolBatchTable.batchId) and
+                            (VoucherPoolEntryTable.campaignId eq VoucherPoolBatchTable.campaignId)
+                },
+            )
+        return joined
+            .select(
+                VoucherPoolEntryTable.sourceOrdinal,
+                VoucherPoolEntryTable.tenantId,
+                VoucherPoolEntryTable.campaignId,
+                VoucherPoolEntryTable.batchId,
+                VoucherPoolEntryTable.entryId,
+                VoucherPoolEntryTable.revision,
+                VoucherPoolEntryTable.reservationId,
+                VoucherPoolEntryTable.userDigest,
+                VoucherPoolCampaignTable.revision,
+                VoucherPoolBatchTable.revision,
+            )
+            .where {
+                (VoucherPoolEntryTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolEntryTable.batchId eq claim.scopeId) and
+                        (VoucherPoolEntryTable.sourceOrdinal greaterEq cursor) and
+                        statePredicate
             }
-        }
+            .orderBy(
+                VoucherPoolEntryTable.sourceOrdinal to SortOrder.ASC,
+                VoucherPoolEntryTable.entryId to SortOrder.ASC,
+            )
+            .limit(limit)
+            .map { row ->
+                val reservationId = row[VoucherPoolEntryTable.reservationId]
+                val userDigest = row[VoucherPoolEntryTable.userDigest]
+                val reservationRevision = reservationId?.let { id ->
+                    VoucherPoolReservationTable
+                        .select(VoucherPoolReservationTable.revision)
+                        .where {
+                            (VoucherPoolReservationTable.tenantId eq claim.tenantId) and
+                                    (VoucherPoolReservationTable.reservationId eq id)
+                        }
+                        .singleOrNull()
+                        ?.get(VoucherPoolReservationTable.revision)
+                } ?: 0L
+                val userLimitRevision = userDigest?.let { digest ->
+                    VoucherPoolUserLimitTable
+                        .select(VoucherPoolUserLimitTable.revision)
+                        .where {
+                            (VoucherPoolUserLimitTable.tenantId eq claim.tenantId) and
+                                    (VoucherPoolUserLimitTable.campaignId eq row[VoucherPoolEntryTable.campaignId]) and
+                                    (VoucherPoolUserLimitTable.userDigest eq digest)
+                        }
+                        .singleOrNull()
+                        ?.get(VoucherPoolUserLimitTable.revision)
+                } ?: 0L
+                WorkerEntryCandidate(
+                    authority = WorkerCandidate(
+                        tenantId = row[VoucherPoolEntryTable.tenantId],
+                        campaignId = row[VoucherPoolEntryTable.campaignId],
+                        batchId = row[VoucherPoolEntryTable.batchId],
+                        entryId = row[VoucherPoolEntryTable.entryId],
+                        expectedCampaignRevision = row[VoucherPoolCampaignTable.revision],
+                        expectedBatchRevision = row[VoucherPoolBatchTable.revision],
+                        expectedEntryRevision = row[VoucherPoolEntryTable.revision],
+                        userLimits = if (userDigest == null) emptyList() else listOf(
+                            ExpectedUserLimit(
+                                userDigest = DigestValue.of(userDigest),
+                                expectedRevision = userLimitRevision,
+                            ),
+                        ),
+                        reservations = if (reservationId == null) emptyList() else listOf(
+                            ExpectedReservation(
+                                reservationId = reservationId,
+                                expectedRevision = reservationRevision,
+                            ),
+                        ),
+                    ),
+                    cursorAfter = row[VoucherPoolEntryTable.sourceOrdinal] + 1,
+                )
+            }
     }
 
     private fun apply(
@@ -369,14 +456,14 @@ internal class JdbcVoucherPoolWorkers(
             val connection = currentConnection()
             claims.requireCurrentInTransaction(connection, claim)
             if (claim.kind in setOf(WorkerKind.BATCH_REVOKE, WorkerKind.BATCH_EXPIRY)) {
-                val scope = lockBatchScope(connection, claim)
-                val remaining = activeEntryCount(connection, claim)
-                if (remaining != 0L || !poolDepthMatches(connection, claim)) {
+                val scope = lockBatchScope(claim)
+                val remaining = activeEntryCount(claim)
+                if (remaining != 0L || !poolDepthMatches(claim)) {
                     return@workerTransaction WorkerChunkOutcome(claim, 0, 0, completed = false)
                 }
                 val terminal = if (claim.kind == WorkerKind.BATCH_REVOKE) BatchState.REVOKED else BatchState.EXPIRED
                 if (scope.batchState != terminal) {
-                    updateBatchState(connection, claim, scope.batchRevision, terminal)
+                    updateBatchState(claim, scope.batchRevision, terminal)
                     repository.appendAudit(
                         VoucherPoolAuditRecord(
                             claim.tenantId,
@@ -391,7 +478,7 @@ internal class JdbcVoucherPoolWorkers(
                     )
                 }
                 if (claim.kind == WorkerKind.BATCH_REVOKE) {
-                    completeCampaignRevocationInTransaction(connection, claim.tenantId, scope.campaignId)
+                    completeCampaignRevocationInTransaction(claim.tenantId, scope.campaignId)
                 }
             }
             claims.completeInTransaction(connection, claim)
@@ -399,265 +486,266 @@ internal class JdbcVoucherPoolWorkers(
         }
 
     private fun completeCampaignRevocationInTransaction(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
     ): Boolean {
-        val campaign = lockCampaignScope(connection, tenantId, campaignId)
+        val campaign = lockCampaignScope(tenantId, campaignId)
         return when {
             campaign.state == CampaignState.REVOKED  -> true
             campaign.state != CampaignState.REVOKING -> false
-            campaignRevocationRemaining(connection, tenantId, campaignId) != 0L -> false
+            campaignRevocationRemaining(tenantId, campaignId) != 0L -> false
             else                                     -> {
-                updateCampaignState(connection, tenantId, campaignId, campaign.revision, CampaignState.REVOKED)
+                updateCampaignState(tenantId, campaignId, campaign.revision, CampaignState.REVOKED)
                 appendCampaignAudit(tenantId, campaignId, campaign, CampaignState.REVOKED)
                 true
             }
         }
     }
 
-    private fun campaignRevocationRemaining(connection: Connection, tenantId: String, campaignId: UUID): Long =
-        connection.prepareStatement(
-            """SELECT count(*) FROM voucher_pool_batches
-                WHERE tenant_id=? AND campaign_id=? AND state NOT IN ('REVOKED','EXPIRED')""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, campaignId)
-            statement.executeQuery().use { result ->
-                result.singleLong()
+    private fun campaignRevocationRemaining(tenantId: String, campaignId: UUID): Long =
+        VoucherPoolBatchTable
+            .selectAll()
+            .where {
+                (VoucherPoolBatchTable.tenantId eq tenantId) and
+                        (VoucherPoolBatchTable.campaignId eq campaignId) and
+                        (VoucherPoolBatchTable.state notInList listOf(BatchState.REVOKED, BatchState.EXPIRED))
             }
-        }
+            .count()
 
-    private fun lockBatchScope(connection: Connection, claim: WorkerClaim): LockedBatchScope {
-        val campaignId = connection.prepareStatement(
-            "SELECT campaign_id FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
-        ).use { statement ->
-            statement.setString(1, claim.tenantId)
-            statement.setObject(2, claim.scopeId)
-
-            statement.executeQuery().use { result ->
-                check(result.next())
-                result.getObject(1, UUID::class.java)
+    private fun lockBatchScope(claim: WorkerClaim): LockedBatchScope {
+        val campaignId = VoucherPoolBatchTable
+            .select(VoucherPoolBatchTable.campaignId)
+            .where {
+                (VoucherPoolBatchTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolBatchTable.batchId eq claim.scopeId)
             }
-        }
-        connection.prepareStatement(
-            "SELECT campaign_id FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=? FOR UPDATE",
-        ).use { statement ->
-            statement.setString(1, claim.tenantId)
-            statement.setObject(2, campaignId)
-
-            statement.executeQuery().use { result -> check(result.next()) }
-        }
-        return connection.prepareStatement(
-            "SELECT state,revision,policy_version,expires_at FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=? FOR UPDATE",
-        ).use { statement ->
-            statement.setString(1, claim.tenantId)
-            statement.setObject(2, claim.scopeId)
-            statement.executeQuery().use { result ->
-                check(result.next())
-
-                LockedBatchScope(
-                    campaignId = campaignId,
-                    batchState = BatchState.valueOf(result.getString(1)),
-                    batchRevision = result.getLong(2),
-                    policyVersion = result.getLong(3),
-                    expiresAt = result.getTimestamp(4)?.toInstant(),
-                )
+            .single()
+            .get(VoucherPoolBatchTable.campaignId)
+        VoucherPoolCampaignTable
+            .select(VoucherPoolCampaignTable.campaignId)
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolCampaignTable.campaignId eq campaignId)
             }
-        }
+            .forUpdate()
+            .single()
+        val batch = VoucherPoolBatchTable
+            .selectAll()
+            .where {
+                (VoucherPoolBatchTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolBatchTable.batchId eq claim.scopeId)
+            }
+            .forUpdate()
+            .single()
+        return LockedBatchScope(
+            campaignId = campaignId,
+            batchState = batch[VoucherPoolBatchTable.state],
+            batchRevision = batch[VoucherPoolBatchTable.revision],
+            policyVersion = batch[VoucherPoolBatchTable.policyVersion],
+            expiresAt = batch[VoucherPoolBatchTable.expiresAt],
+        )
     }
 
     private fun updateBatchState(
-        connection: Connection,
         claim: WorkerClaim,
         expectedRevision: Long,
         state: BatchState,
     ) {
-        connection.prepareStatement(
-            "UPDATE voucher_pool_batches SET state=?,revision=revision+1 WHERE tenant_id=? AND batch_id=? AND revision=?",
-        ).use { statement ->
-            statement.setString(1, state.name)
-            statement.setString(2, claim.tenantId)
-            statement.setObject(3, claim.scopeId)
-            statement.setLong(4, expectedRevision)
-
-            check(statement.executeUpdate() == 1)
+        val updated = VoucherPoolBatchTable.update({
+            (VoucherPoolBatchTable.tenantId eq claim.tenantId) and
+                    (VoucherPoolBatchTable.batchId eq claim.scopeId) and
+                    (VoucherPoolBatchTable.revision eq expectedRevision)
+        }) {
+            it[VoucherPoolBatchTable.state] = state
+            it[VoucherPoolBatchTable.revision] = VoucherPoolBatchTable.revision + 1
         }
+        check(updated == 1)
     }
 
-    private fun activeEntryCount(connection: Connection, claim: WorkerClaim): Long = connection.prepareStatement(
-        "SELECT count(*) FROM voucher_pool_entries WHERE tenant_id=? AND batch_id=? AND state IN ('AVAILABLE','RESERVED','ALLOCATED')",
-    ).use { statement ->
-        statement.setString(1, claim.tenantId)
-        statement.setObject(2, claim.scopeId)
-        statement.executeQuery().use { result ->
-            result.singleLong()
-        }
+    private fun activeEntryCount(claim: WorkerClaim): Long =
+        VoucherPoolEntryTable
+            .selectAll()
+            .where {
+                (VoucherPoolEntryTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolEntryTable.batchId eq claim.scopeId) and
+                        (VoucherPoolEntryTable.state inList listOf(EntryState.AVAILABLE, EntryState.RESERVED, EntryState.ALLOCATED))
+            }
+            .count()
+
+    private fun poolDepthMatches(claim: WorkerClaim): Boolean {
+        val actualCount = VoucherPoolEntryTable.entryId.count()
+        val actual = VoucherPoolEntryTable
+            .select(VoucherPoolEntryTable.state, actualCount)
+            .where {
+                (VoucherPoolEntryTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolEntryTable.batchId eq claim.scopeId)
+            }
+            .groupBy(VoucherPoolEntryTable.state)
+            .associate { row -> row[VoucherPoolEntryTable.state] to row[actualCount] }
+        val stored = VoucherPoolDepthTable
+            .select(VoucherPoolDepthTable.state, VoucherPoolDepthTable.entryCount)
+            .where {
+                (VoucherPoolDepthTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolDepthTable.batchId eq claim.scopeId) and
+                        (VoucherPoolDepthTable.entryCount neq 0L)
+            }
+            .associate { row -> row[VoucherPoolDepthTable.state] to row[VoucherPoolDepthTable.entryCount] }
+        return actual == stored
     }
 
-    private fun poolDepthMatches(connection: Connection, claim: WorkerClaim): Boolean = connection.prepareStatement(
-        """SELECT NOT EXISTS (
-              SELECT state,count(*) AS actual FROM voucher_pool_entries WHERE tenant_id=? AND batch_id=? GROUP BY state
-              EXCEPT
-              SELECT state,entry_count FROM voucher_pool_pool_depth WHERE tenant_id=? AND batch_id=? AND entry_count<>0
-            ) AND NOT EXISTS (
-              SELECT state,entry_count FROM voucher_pool_pool_depth WHERE tenant_id=? AND batch_id=? AND entry_count<>0
-              EXCEPT
-              SELECT state,count(*) FROM voucher_pool_entries WHERE tenant_id=? AND batch_id=? GROUP BY state
-            )""".trimIndent(),
-    ).use { statement ->
-        repeat(4) { index ->
-            statement.setString(index * 2 + 1, claim.tenantId)
-            statement.setObject(index * 2 + 2, claim.scopeId)
-        }
-        statement.executeQuery().use { result ->
-            result.next()
-            result.getBoolean(1)
-        }
-    }
+    private fun reconcilePoolDepth(claim: WorkerClaim): Int {
+        val depthRows = VoucherPoolDepthTable
+            .select(
+                VoucherPoolDepthTable.state,
+                VoucherPoolDepthTable.entryCount,
+                VoucherPoolDepthTable.revision,
+            )
+            .where {
+                (VoucherPoolDepthTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolDepthTable.batchId eq claim.scopeId)
+            }
+            .orderBy(VoucherPoolDepthTable.state to SortOrder.ASC)
+            .forUpdate()
 
-    private fun reconcilePoolDepth(connection: Connection, claim: WorkerClaim): Int = connection.prepareStatement(
-        """SELECT d.state,d.entry_count,d.revision,
-                  (SELECT count(*) FROM voucher_pool_entries e
-                   WHERE e.tenant_id=d.tenant_id AND e.batch_id=d.batch_id AND e.state=d.state) AS actual
-            FROM voucher_pool_pool_depth d
-            WHERE d.tenant_id=? AND d.batch_id=? ORDER BY d.state FOR UPDATE OF d""".trimIndent(),
-    ).use { statement ->
-        statement.setString(1, claim.tenantId)
-        statement.setObject(2, claim.scopeId)
-        statement.executeQuery().use { result ->
-            buildList {
-                while (result.next()) {
-                    val depthProjection = DepthProjection(
-                        state = result.getString(1),
-                        stored = result.getLong(2),
-                        revision = result.getLong(3),
-                        actual = result.getLong(4)
-                    )
-                    add(depthProjection)
+        return depthRows.count { row ->
+            val state = row[VoucherPoolDepthTable.state]
+            val actual = VoucherPoolEntryTable
+                .selectAll()
+                .where {
+                    (VoucherPoolEntryTable.tenantId eq claim.tenantId) and
+                            (VoucherPoolEntryTable.batchId eq claim.scopeId) and
+                            (VoucherPoolEntryTable.state eq state)
                 }
-            }
-        }.count { depth ->
-            if (depth.stored == depth.actual) return@count false
-            connection.prepareStatement(
-                """UPDATE voucher_pool_pool_depth SET entry_count=?,revision=revision+1
-                    WHERE tenant_id=? AND batch_id=? AND state=? AND revision=?""".trimIndent(),
-            ).use { update ->
-                update.setLong(1, depth.actual)
-                update.setString(2, claim.tenantId)
-                update.setObject(3, claim.scopeId)
-                update.setString(4, depth.state)
-                update.setLong(5, depth.revision)
+                .count()
+            if (row[VoucherPoolDepthTable.entryCount] == actual) return@count false
 
-                check(update.executeUpdate() == 1)
+            val updated = VoucherPoolDepthTable.update({
+                (VoucherPoolDepthTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolDepthTable.batchId eq claim.scopeId) and
+                        (VoucherPoolDepthTable.state eq state) and
+                        (VoucherPoolDepthTable.revision eq row[VoucherPoolDepthTable.revision])
+            }) {
+                it[VoucherPoolDepthTable.entryCount] = actual
+                it[VoucherPoolDepthTable.revision] = VoucherPoolDepthTable.revision + 1
             }
+            check(updated == 1)
             true
         }
     }
 
     private fun lockUserLimitPage(
-        connection: Connection,
         claim: WorkerClaim,
         campaignId: UUID,
         limit: Int,
     ): List<UserLimitProjection> =
-        connection.prepareStatement(
-            """SELECT u.user_digest,u.active_reservations,u.active_allocations,u.lifetime_consumed,u.revision,
-                  (SELECT count(*) FROM voucher_pool_reservations r
-                   WHERE r.tenant_id=u.tenant_id AND r.campaign_id=u.campaign_id
-                     AND r.user_digest=u.user_digest AND r.state='ACTIVE') AS actual_reservations,
-                  (SELECT count(*) FROM voucher_pool_entries e
-                   WHERE e.tenant_id=u.tenant_id AND e.campaign_id=u.campaign_id
-                     AND e.user_digest=u.user_digest AND e.state='ALLOCATED') AS actual_allocations,
-                  (SELECT count(*) FROM voucher_pool_allocations a
-                   WHERE a.tenant_id=u.tenant_id AND a.campaign_id=u.campaign_id
-                     AND a.user_digest=u.user_digest AND a.replacement_ordinal=0) AS actual_lifetime
-            FROM voucher_pool_user_limits u
-            WHERE u.tenant_id=? AND u.campaign_id=?
-            ORDER BY encode(u.user_digest,'hex') OFFSET ? LIMIT ? FOR UPDATE OF u""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, claim.tenantId)
-            statement.setObject(2, campaignId)
-            statement.setLong(3, claim.cursor)
-            statement.setInt(4, limit)
-            statement.executeQuery().use { result ->
-                buildList {
-                    while (result.next()) {
-                        val limitProjection = UserLimitProjection(
-                            digest = result.getBytes(1),
-                            storedReservations = result.getInt(2),
-                            storedAllocations = result.getInt(3),
-                            storedLifetime = result.getInt(4),
-                            revision = result.getLong(5),
-                            actualReservations = result.getInt(6),
-                            actualAllocations = result.getInt(7),
-                            actualLifetime = result.getInt(8),
-                        )
-                        add(limitProjection)
-                    }
-                }
+        VoucherPoolUserLimitTable
+            .selectAll()
+            .where {
+                (VoucherPoolUserLimitTable.tenantId eq claim.tenantId) and
+                        (VoucherPoolUserLimitTable.campaignId eq campaignId)
             }
-        }
+            .orderBy(VoucherPoolUserLimitTable.userDigest to SortOrder.ASC)
+            .offset(claim.cursor)
+            .limit(limit)
+            .forUpdate()
+            .map { row ->
+                val digest = row[VoucherPoolUserLimitTable.userDigest]
+                UserLimitProjection(
+                    digest = digest,
+                    storedReservations = row[VoucherPoolUserLimitTable.activeReservations],
+                    storedAllocations = row[VoucherPoolUserLimitTable.activeAllocations],
+                    storedLifetime = row[VoucherPoolUserLimitTable.lifetimeConsumed],
+                    revision = row[VoucherPoolUserLimitTable.revision],
+                    actualReservations = VoucherPoolReservationTable
+                        .selectAll()
+                        .where {
+                            (VoucherPoolReservationTable.tenantId eq claim.tenantId) and
+                                    (VoucherPoolReservationTable.campaignId eq campaignId) and
+                                    (VoucherPoolReservationTable.userDigest eq digest) and
+                                    (VoucherPoolReservationTable.state eq ReservationState.ACTIVE)
+                        }
+                        .count()
+                        .toInt(),
+                    actualAllocations = VoucherPoolEntryTable
+                        .selectAll()
+                        .where {
+                            (VoucherPoolEntryTable.tenantId eq claim.tenantId) and
+                                    (VoucherPoolEntryTable.campaignId eq campaignId) and
+                                    (VoucherPoolEntryTable.userDigest eq digest) and
+                                    (VoucherPoolEntryTable.state eq EntryState.ALLOCATED)
+                        }
+                        .count()
+                        .toInt(),
+                    actualLifetime = VoucherPoolAllocationTable
+                        .selectAll()
+                        .where {
+                            (VoucherPoolAllocationTable.tenantId eq claim.tenantId) and
+                                    (VoucherPoolAllocationTable.campaignId eq campaignId) and
+                                    (VoucherPoolAllocationTable.userDigest eq digest) and
+                                    (VoucherPoolAllocationTable.replacementOrdinal eq 0)
+                        }
+                        .count()
+                        .toInt(),
+                )
+            }
 
     private fun reconcileUserLimit(
-        connection: Connection,
         claim: WorkerClaim,
         campaignId: UUID,
         user: UserLimitProjection,
     ): Boolean {
         if (user.matches()) return false
-        connection.prepareStatement(
-            """UPDATE voucher_pool_user_limits
-                SET active_reservations=?,active_allocations=?,lifetime_consumed=?,revision=revision+1
-                WHERE tenant_id=? AND campaign_id=? AND user_digest=? AND revision=?""".trimIndent(),
-        ).use { statement ->
-            statement.setInt(1, user.actualReservations)
-            statement.setInt(2, user.actualAllocations)
-            statement.setInt(3, user.actualLifetime)
-            statement.setString(4, claim.tenantId)
-            statement.setObject(5, campaignId)
-            statement.setBytes(6, user.digest)
-            statement.setLong(7, user.revision)
-            check(statement.executeUpdate() == 1)
+        val updated = VoucherPoolUserLimitTable.update({
+            (VoucherPoolUserLimitTable.tenantId eq claim.tenantId) and
+                    (VoucherPoolUserLimitTable.campaignId eq campaignId) and
+                    (VoucherPoolUserLimitTable.userDigest eq user.digest) and
+                    (VoucherPoolUserLimitTable.revision eq user.revision)
+        }) {
+            it[VoucherPoolUserLimitTable.activeReservations] = user.actualReservations
+            it[VoucherPoolUserLimitTable.activeAllocations] = user.actualAllocations
+            it[VoucherPoolUserLimitTable.lifetimeConsumed] = user.actualLifetime
+            it[VoucherPoolUserLimitTable.revision] = VoucherPoolUserLimitTable.revision + 1
         }
+        check(updated == 1)
         return true
     }
 
-    private fun lockCampaignScope(connection: Connection, tenantId: String, campaignId: UUID): LockedCampaignScope =
-        connection.prepareStatement(
-            """SELECT state,revision,policy_version FROM voucher_pool_campaigns
-                WHERE tenant_id=? AND campaign_id=? FOR UPDATE""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, campaignId)
-            statement.executeQuery().use { result ->
-                check(result.next())
+    private fun lockCampaignScope(tenantId: String, campaignId: UUID): LockedCampaignScope =
+        VoucherPoolCampaignTable
+            .select(
+                VoucherPoolCampaignTable.state,
+                VoucherPoolCampaignTable.revision,
+                VoucherPoolCampaignTable.policyVersion,
+            )
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                        (VoucherPoolCampaignTable.campaignId eq campaignId)
+            }
+            .forUpdate()
+            .single()
+            .let { row ->
                 LockedCampaignScope(
-                    state = CampaignState.valueOf(result.getString(1)),
-                    revision = result.getLong(2),
-                    policyVersion = result.getLong(3)
+                    state = row[VoucherPoolCampaignTable.state],
+                    revision = row[VoucherPoolCampaignTable.revision],
+                    policyVersion = row[VoucherPoolCampaignTable.policyVersion],
                 )
             }
-        }
 
     private fun updateCampaignState(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         expectedRevision: Long,
         state: CampaignState,
     ) {
-        connection.prepareStatement(
-            """UPDATE voucher_pool_campaigns SET state=?,revision=revision+1
-                WHERE tenant_id=? AND campaign_id=? AND revision=?""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, state.name)
-            statement.setString(2, tenantId)
-            statement.setObject(3, campaignId)
-            statement.setLong(4, expectedRevision)
-
-            check(statement.executeUpdate() == 1)
+        val updated = VoucherPoolCampaignTable.update({
+            (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                    (VoucherPoolCampaignTable.campaignId eq campaignId) and
+                    (VoucherPoolCampaignTable.revision eq expectedRevision)
+        }) {
+            it[VoucherPoolCampaignTable.state] = state
+            it[VoucherPoolCampaignTable.revision] = VoucherPoolCampaignTable.revision + 1
         }
+        check(updated == 1)
     }
 
     private fun appendCampaignAudit(
@@ -680,36 +768,6 @@ internal class JdbcVoucherPoolWorkers(
         )
     }
 
-    private fun ResultSet.workerEntryCandidate(): WorkerEntryCandidate {
-        val reservationId = getObject("reservation_id", UUID::class.java)
-        val userDigest = getBytes("user_digest")
-        val authority = WorkerCandidate(
-            tenantId = getString("tenant_id"),
-            campaignId = getObject("campaign_id", UUID::class.java),
-            batchId = getObject("batch_id", UUID::class.java),
-            entryId = getObject("entry_id", UUID::class.java),
-            expectedCampaignRevision = getLong("campaign_revision"),
-            expectedBatchRevision = getLong("batch_revision"),
-            expectedEntryRevision = getLong("entry_revision"),
-            userLimits = if (userDigest == null) emptyList() else listOf(
-                ExpectedUserLimit(
-                    userDigest = DigestValue.of(userDigest),
-                    expectedRevision = getLong("user_limit_revision")
-                )
-            ),
-            reservations = if (reservationId == null) emptyList() else listOf(
-                ExpectedReservation(
-                    reservationId = reservationId,
-                    expectedRevision = getLong("reservation_revision")
-                )
-            ),
-        )
-        return WorkerEntryCandidate(
-            authority = authority,
-            cursorAfter = getLong("source_ordinal") + 1
-        )
-    }
-
     private fun maximumLimit(kind: WorkerKind): Int =
         if (kind in setOf(WorkerKind.RECONCILIATION, WorkerKind.CAMPAIGN_REVOKE)) 50 else 100
 
@@ -718,6 +776,7 @@ internal class JdbcVoucherPoolWorkers(
             ?.connection
             ?.connection as? Connection ?: error("voucher pool worker repository requires an active JDBC transaction")
 
+    /** worker entry transition과 같은 PostgreSQL transaction snapshot을 사용해야 하므로 raw timestamp 조회를 유지합니다. */
     private fun transactionTime(connection: Connection): Instant =
         connection.createStatement().use { statement ->
             statement.executeQuery("SELECT transaction_timestamp()").use { result ->
@@ -754,13 +813,6 @@ private data class LockedCampaignScope(
     val state: CampaignState,
     val revision: Long,
     val policyVersion: Long,
-)
-
-private data class DepthProjection(
-    val state: String,
-    val stored: Long,
-    val revision: Long,
-    val actual: Long,
 )
 
 private data class UserLimitProjection(

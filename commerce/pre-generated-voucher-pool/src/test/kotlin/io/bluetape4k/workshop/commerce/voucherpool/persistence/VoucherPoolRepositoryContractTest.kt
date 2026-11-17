@@ -97,6 +97,66 @@ internal class VoucherPoolRepositoryContractTest {
         querySource shouldContain "transaction snapshot"
     }
 
+    @Test
+    fun `consumer command and worker paths use Exposed for generic persistence`() {
+        val idempotencySource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/idempotency/VoucherPoolIdempotencyRepository.kt",
+        )
+        val workerSource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/worker/VoucherPoolWorkerRepository.kt",
+        )
+        val reconciliationSource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/application/" +
+                    "VoucherPoolReconciliationCommandService.kt",
+        )
+        val workersSource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/worker/VoucherPoolWorkers.kt",
+        )
+        val streamSource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/web/VoucherPoolEventStream.kt",
+        )
+        val revocationSource = sourceFile(
+            "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucherpool/application/VoucherPoolRevocationService.kt",
+        )
+        val compatibilitySource = sourceFile(
+            "commerce/promotion-voucher-campaign/src/main/kotlin/" +
+                    "io/bluetape4k/workshop/commerce/voucher/VoucherCompatibilityCli.kt",
+        )
+
+        idempotencySource shouldContain "VoucherPoolHttpIdempotencyTable.update"
+        idempotencySource shouldContain "VoucherPoolCommandTombstoneTable.insertIgnore"
+        idempotencySource shouldContain "VoucherPoolCommandTombstoneTable.keyVersion"
+        workerSource shouldContain "VoucherPoolWorkerClaimTable"
+        workerSource shouldContain ".selectAll()"
+        workerSource shouldContain "VoucherPoolWorkerClaimTable.insertIgnore"
+        workerSource shouldContain "VoucherPoolWorkerClaimTable.update"
+        workersSource shouldContain "VoucherPoolEntryTable"
+        workersSource shouldContain ".innerJoin("
+        workersSource shouldContain "VoucherPoolDepthTable.update"
+        workersSource shouldContain "transaction_timestamp()"
+        streamSource shouldContain "VoucherPoolCampaignTable"
+        streamSource shouldContain ".selectAll()"
+        streamSource shouldContain "WITH owner_scope"
+        revocationSource shouldContain "VoucherPoolRevokePreviewGrantTable.insert"
+        revocationSource shouldContain "VoucherPoolRevokePreviewGrantTable.update"
+        revocationSource shouldNotContain "prepareStatement("
+        reconciliationSource shouldContain "VoucherPoolBatchTable"
+        reconciliationSource shouldContain ".select("
+        compatibilitySource shouldContain "CampaignTable.insertIgnore"
+        compatibilitySource shouldContain "CampaignTable.selectAll"
+
+        // transaction snapshot, row lock, JSONB cast, bounded CTE는 계약상 raw SQL로 유지합니다.
+        idempotencySource shouldContain "FOR UPDATE OF i,t SKIP LOCKED"
+        workerSource shouldContain "transaction_timestamp()"
+        reconciliationSource shouldContain "transaction_timestamp()"
+    }
+
     private fun section(source: String, start: String, end: String): String {
         val startIndex = source.indexOf(start).also { check(it >= 0) { "missing source marker: $start" } }
         val endIndex = source.indexOf(end, startIndex + start.length)

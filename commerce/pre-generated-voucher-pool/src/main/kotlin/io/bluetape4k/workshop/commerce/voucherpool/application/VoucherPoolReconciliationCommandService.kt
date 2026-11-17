@@ -13,10 +13,14 @@ import io.bluetape4k.workshop.commerce.voucherpool.idempotency.VoucherPoolFinger
 import io.bluetape4k.workshop.commerce.voucherpool.idempotency.VoucherPoolIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBatchTable
 import io.bluetape4k.workshop.commerce.voucherpool.worker.JdbcVoucherPoolWorkerRepository
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerClaimSnapshot
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerKind
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
 import java.io.Serializable
 import java.sql.Connection
 import java.sql.ResultSet
@@ -113,14 +117,14 @@ internal class JdbcVoucherPoolReconciliationCommandService(
             val connection = currentConnection()
             idempotency.lockOwnerForExecution(owner)
 
-            val campaignId = resolveCampaignId(connection, command.tenantId, command.batchId)
+            val campaignId = resolveCampaignId(command.tenantId, command.batchId)
                 ?: fail(ReconciliationCommandFailure.SCOPE_NOT_FOUND)
 
             repository.lockCampaignForShare(command.tenantId, campaignId)
             repository.lockBatchForUpdate(command.tenantId, command.batchId)
                 ?: fail(ReconciliationCommandFailure.SCOPE_NOT_FOUND)
 
-            val scheduled = claims.scheduleReconciliationInTransaction(connection, command.tenantId, command.batchId)
+            val scheduled = claims.scheduleReconciliationInTransaction(command.tenantId, command.batchId)
             if (!scheduled) fail(ReconciliationCommandFailure.COMMAND_IN_PROGRESS)
 
             val snapshot = checkNotNull(selectProgress(connection, command.tenantId, command.batchId, forUpdate = true))
@@ -152,16 +156,15 @@ internal class JdbcVoucherPoolReconciliationCommandService(
         }
     }
 
-    private fun resolveCampaignId(connection: Connection, tenantId: String, batchId: UUID): UUID? =
-        connection.prepareStatement(
-            "SELECT campaign_id FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, batchId)
-            statement.executeQuery().use { result ->
-                if (result.next()) result.getObject(1, UUID::class.java) else null
+    private fun resolveCampaignId(tenantId: String, batchId: UUID): UUID? =
+        VoucherPoolBatchTable
+            .select(VoucherPoolBatchTable.campaignId)
+            .where {
+                (VoucherPoolBatchTable.tenantId eq tenantId) and
+                        (VoucherPoolBatchTable.batchId eq batchId)
             }
-        }
+            .singleOrNull()
+            ?.get(VoucherPoolBatchTable.campaignId)
 
     private fun selectProgress(
         connection: Connection,
@@ -169,6 +172,7 @@ internal class JdbcVoucherPoolReconciliationCommandService(
         batchId: UUID,
         forUpdate: Boolean,
     ): ReconciliationProgressSnapshot? =
+        // claim 전체 projection과 transaction snapshot 시각을 함께 읽고 선택적으로 row lock을 유지해야 합니다.
         connection.prepareStatement(
             "SELECT *,transaction_timestamp() AS observed_at FROM voucher_pool_worker_claims " +
                     "WHERE tenant_id=? AND worker_type='RECONCILIATION' AND scope_id=?" + if (forUpdate) " FOR UPDATE" else "",

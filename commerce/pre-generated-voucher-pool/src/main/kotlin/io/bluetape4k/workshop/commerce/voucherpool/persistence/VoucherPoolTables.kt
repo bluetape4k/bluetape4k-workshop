@@ -157,6 +157,22 @@ internal object VoucherPoolCommandTombstoneTable: Table("voucher_pool_command_to
     override val primaryKey = PrimaryKey(tenantId, operation, scopedKeyDigest)
 }
 
+internal object VoucherPoolRevokePreviewGrantTable: Table("voucher_pool_revoke_preview_grants") {
+    val tenantId = varchar("tenant_id", 64)
+    val grantId = javaUUID("grant_id")
+    val aggregateType = varchar("aggregate_type", 16)
+    val aggregateId = javaUUID("aggregate_id")
+    val aggregateRevision = long("aggregate_revision")
+    val impactDigest = binary("impact_digest")
+    val affectedCount = long("affected_count")
+    val signatureKeyVersion = integer("signature_key_version")
+    val signatureDigest = binary("signature_digest")
+    val expiresAt = timestamp("expires_at")
+    val consumedAt = timestamp("consumed_at").nullable()
+    val createdAt = timestamp("created_at")
+    override val primaryKey = PrimaryKey(tenantId, grantId)
+}
+
 internal object VoucherPoolAuditTable: Table("voucher_pool_audits") {
     val id = long("id").autoIncrement()
     val tenantId = varchar("tenant_id", 64)
@@ -247,6 +263,7 @@ internal val voucherPoolAuthorityTables = arrayOf(
     VoucherPoolCodeDedupTable,
     VoucherPoolHttpIdempotencyTable,
     VoucherPoolCommandTombstoneTable,
+    VoucherPoolRevokePreviewGrantTable,
     VoucherPoolAuditTable,
     VoucherPoolReconciliationInboxTable,
     VoucherPoolQuarantineTable,

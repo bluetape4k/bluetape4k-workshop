@@ -3,7 +3,6 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.concurrent.get
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -13,9 +12,21 @@ import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolProperties
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolSseProperties
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolStreamShutdown
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBatchTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCampaignTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolDepthTable
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import jakarta.annotation.PreDestroy
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.max
+import org.jetbrains.exposed.v1.core.sum
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import java.io.IOException
@@ -280,6 +291,7 @@ internal class PostgresVoucherPoolEventSource(
         scopes: List<CustomerCampaignDigest>,
     ): List<VoucherPoolStreamResource> {
         if (scopes.isEmpty()) return emptyList()
+        // 고객 reservation/allocation을 하나의 bounded UNION으로 합치고 digest scope를 bytea로 바인딩해야 합니다.
         val sql = """
             WITH owner_scope(campaign_id,user_digest) AS (${customerScopeValues(scopes)})
                 SELECT resource_type,resource_id,campaign_id,batch_id,state,revision,expires_at
@@ -328,37 +340,29 @@ internal class PostgresVoucherPoolEventSource(
     }
 
     private fun readOperatorCampaigns(tenantId: String, campaignId: UUID?): List<VoucherPoolStreamResource> {
-        val predicate = if (campaignId == null) "tenant_id=?" else "tenant_id=? AND campaign_id=?"
-        return currentConnection().prepareStatement(
-            """SELECT campaign_id,state,revision,ends_at FROM voucher_pool_campaigns
-                WHERE $predicate ORDER BY campaign_id LIMIT ?""".trimIndent(),
-        ).use { statement ->
-            var index = 1
-            statement.setString(index++, tenantId)
-            campaignId?.let { statement.setObject(index++, it) }
-            statement.setInt(index, config.maxPollRows)
-
-            statement.executeQuery().use { result ->
-                buildList {
-                    while (result.next()) {
-                        val id = result.getObject("campaign_id", UUID::class.java)
-                        val state = result.getString("state")
-                        add(
-                            VoucherPoolStreamResource(
-                                resourceType = "CAMPAIGN",
-                                resourceId = id,
-                                campaignId = id,
-                                batchId = null,
-                                state = state,
-                                revision = result.getLong("revision"),
-                                expiresAt = result.getTimestamp("ends_at").toInstant(),
-                                nextAction = campaignNextAction(state),
-                            ),
-                        )
-                    }
-                }
+        val campaignPredicate = campaignId?.let { VoucherPoolCampaignTable.campaignId eq it }
+            ?: org.jetbrains.exposed.v1.core.Op.TRUE
+        return VoucherPoolCampaignTable
+            .selectAll()
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq tenantId) and campaignPredicate
             }
-        }
+            .orderBy(VoucherPoolCampaignTable.campaignId)
+            .limit(config.maxPollRows)
+            .map { row ->
+                val id = row[VoucherPoolCampaignTable.campaignId]
+                val state = row[VoucherPoolCampaignTable.state].name
+                VoucherPoolStreamResource(
+                    resourceType = "CAMPAIGN",
+                    resourceId = id,
+                    campaignId = id,
+                    batchId = null,
+                    state = state,
+                    revision = row[VoucherPoolCampaignTable.revision],
+                    expiresAt = row[VoucherPoolCampaignTable.endsAt],
+                    nextAction = campaignNextAction(state),
+                )
+            }
     }
 
     private fun readOperatorBatches(
@@ -366,78 +370,72 @@ internal class PostgresVoucherPoolEventSource(
         campaignId: UUID?,
         batchId: UUID?,
     ): List<VoucherPoolStreamResource> {
-        val clauses = mutableListOf("tenant_id=?")
-        if (campaignId != null) clauses += "campaign_id=?"
-        if (batchId != null) clauses += "batch_id=?"
-
-        return currentConnection().prepareStatement(
-            """SELECT batch_id,campaign_id,state,revision,expires_at FROM voucher_pool_batches
-                WHERE ${clauses.joinToString(" AND ")} ORDER BY batch_id LIMIT ?""".trimIndent(),
-        ).use { statement ->
-            var index = 1
-            statement.setString(index++, tenantId)
-            campaignId?.let { statement.setObject(index++, it) }
-            batchId?.let { statement.setObject(index++, it) }
-            statement.setInt(index, config.maxPollRows)
-            statement.executeQuery().use { result ->
-                buildList {
-                    while (result.next()) {
-                        val state = result.getString("state")
-                        add(
-                            VoucherPoolStreamResource(
-                                resourceType = "BATCH",
-                                resourceId = result.getObject("batch_id", UUID::class.java),
-                                campaignId = result.getObject("campaign_id", UUID::class.java),
-                                batchId = result.getObject("batch_id", UUID::class.java),
-                                state = state,
-                                revision = result.getLong("revision"),
-                                expiresAt = result.getTimestamp("expires_at")?.toInstant(),
-                                nextAction = batchNextAction(state),
-                            ),
-                        )
-                    }
-                }
+        val campaignPredicate = campaignId?.let { VoucherPoolBatchTable.campaignId eq it }
+            ?: org.jetbrains.exposed.v1.core.Op.TRUE
+        val batchPredicate = batchId?.let { VoucherPoolBatchTable.batchId eq it }
+            ?: org.jetbrains.exposed.v1.core.Op.TRUE
+        return VoucherPoolBatchTable
+            .selectAll()
+            .where {
+                (VoucherPoolBatchTable.tenantId eq tenantId) and campaignPredicate and batchPredicate
             }
-        }
+            .orderBy(VoucherPoolBatchTable.batchId)
+            .limit(config.maxPollRows)
+            .map { row ->
+                val state = row[VoucherPoolBatchTable.state].name
+                val id = row[VoucherPoolBatchTable.batchId]
+                VoucherPoolStreamResource(
+                    resourceType = "BATCH",
+                    resourceId = id,
+                    campaignId = row[VoucherPoolBatchTable.campaignId],
+                    batchId = id,
+                    state = state,
+                    revision = row[VoucherPoolBatchTable.revision],
+                    expiresAt = row[VoucherPoolBatchTable.expiresAt],
+                    nextAction = batchNextAction(state),
+                )
+            }
     }
 
     private fun readOperatorCounts(tenantId: String, campaignId: UUID?, batchId: UUID?): Map<String, Long> {
-        val clauses = mutableListOf("d.tenant_id=?")
-        if (campaignId != null) clauses += "b.campaign_id=?"
-        if (batchId != null) clauses += "d.batch_id=?"
-        return currentConnection().prepareStatement(
-            """SELECT d.state,sum(d.entry_count) FROM voucher_pool_pool_depth d
-                JOIN voucher_pool_batches b ON b.tenant_id=d.tenant_id AND b.batch_id=d.batch_id
-                WHERE ${clauses.joinToString(" AND ")} GROUP BY d.state""".trimIndent(),
-        ).use { statement ->
-            var index = 1
-            statement.setString(index++, tenantId)
-            campaignId?.let { statement.setObject(index++, it) }
-            batchId?.let { statement.setObject(index, it) }
-            statement.executeQuery().use { result ->
-                buildMap {
-                    while (result.next()) {
-                        put(result.getString(1), result.getLong(2))
-                    }
+        val eligibleBatchIds = campaignId?.let { id ->
+            VoucherPoolBatchTable
+                .select(VoucherPoolBatchTable.batchId)
+                .where {
+                    (VoucherPoolBatchTable.tenantId eq tenantId) and
+                            (VoucherPoolBatchTable.campaignId eq id)
                 }
-            }
+                .map { it[VoucherPoolBatchTable.batchId] }
         }
+        if (eligibleBatchIds != null && eligibleBatchIds.isEmpty()) return emptyMap()
+
+        val depth = VoucherPoolDepthTable.entryCount.sum()
+        val batchPredicate = batchId?.let { VoucherPoolDepthTable.batchId eq it }
+            ?: org.jetbrains.exposed.v1.core.Op.TRUE
+        val eligiblePredicate = eligibleBatchIds?.let { VoucherPoolDepthTable.batchId inList it }
+            ?: org.jetbrains.exposed.v1.core.Op.TRUE
+        return VoucherPoolDepthTable
+            .select(VoucherPoolDepthTable.state, depth)
+            .where {
+                (VoucherPoolDepthTable.tenantId eq tenantId) and batchPredicate and eligiblePredicate
+            }
+            .groupBy(VoucherPoolDepthTable.state)
+            .associate { row -> row[VoucherPoolDepthTable.state].name to (row[depth] ?: 0L) }
     }
 
     private fun resolveOperatorScope(scope: OperatorStreamScope): ResolvedOperatorScope =
         scope.batchId?.let { resolveBatchScope(scope, it) } ?: resolveCampaignScope(scope)
 
     private fun resolveBatchScope(scope: OperatorStreamScope, batchId: UUID): ResolvedOperatorScope {
-        val actualCampaign = currentConnection().prepareStatement(
-            "SELECT campaign_id FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
-        ).use { statement ->
-            statement.setString(1, scope.tenantId)
-            statement.setObject(2, batchId)
-            statement.executeQuery().use { result ->
-                if (result.next()) result.getObject(1, UUID::class.java)
-                else null
+        val actualCampaign = VoucherPoolBatchTable
+            .select(VoucherPoolBatchTable.campaignId)
+            .where {
+                (VoucherPoolBatchTable.tenantId eq scope.tenantId) and
+                        (VoucherPoolBatchTable.batchId eq batchId)
             }
-        } ?: throw resourceNotFound()
+            .singleOrNull()
+            ?.get(VoucherPoolBatchTable.campaignId)
+            ?: throw resourceNotFound()
 
         if (scope.campaignId != null && scope.campaignId != actualCampaign) throw resourceNotFound()
         return ResolvedOperatorScope(actualCampaign, batchId)
@@ -451,13 +449,14 @@ internal class PostgresVoucherPoolEventSource(
     }
 
     private fun campaignExists(tenantId: String, campaignId: UUID): Boolean =
-        currentConnection().prepareStatement(
-            "SELECT 1 FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, campaignId)
-            statement.executeQuery().use(ResultSet::next)
-        }
+        VoucherPoolCampaignTable
+            .select(VoucherPoolCampaignTable.campaignId)
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                        (VoucherPoolCampaignTable.campaignId eq campaignId)
+            }
+            .limit(1)
+            .any()
 
     private fun boundedAudits(scope: VoucherPoolStreamScope, afterId: Long): List<VoucherPoolAuditEnvelope> {
         val candidates = when (scope) {
@@ -493,6 +492,7 @@ internal class PostgresVoucherPoolEventSource(
         limit: Int,
         descending: Boolean = false,
     ): List<VoucherPoolAuditEnvelope> {
+        // aggregate 종류별 batch/entry/reservation/allocation EXISTS와 방향성 cursor를 한 SQL로 유지합니다.
         val resolved = resolveOperatorScope(scope)
         val clauses = mutableListOf("a.tenant_id=?")
         if (resolved.batchId != null) {
@@ -532,6 +532,7 @@ internal class PostgresVoucherPoolEventSource(
         descending: Boolean = false,
     ): List<VoucherPoolAuditEnvelope> {
         if (scopes.isEmpty()) return emptyList()
+        // owner_scope CTE와 customer digest visibility를 audit cursor와 함께 평가해야 합니다.
         val after = if (afterId >= 0) "AND a.id>?" else ""
         val order = if (descending) "DESC" else "ASC"
         val sql = auditSelect(
@@ -560,6 +561,7 @@ internal class PostgresVoucherPoolEventSource(
         afterId: Long,
     ): CustomerAuditScan {
         if (scopes.isEmpty()) return CustomerAuditScan(emptyList(), tenantAuditHighWatermark(tenantId))
+        // bounded raw_audits CTE로 스캔 cursor와 visible 필터를 분리해 누락 없는 재개를 보장합니다.
         val sql = """
             WITH owner_scope(campaign_id,user_digest) AS (${customerScopeValues(scopes)}), raw_audits AS (
                     SELECT a.* FROM voucher_pool_audits a
@@ -633,38 +635,33 @@ internal class PostgresVoucherPoolEventSource(
         }
 
     private fun auditExists(id: Long): Boolean =
-        currentConnection()
-            .prepareStatement("SELECT 1 FROM voucher_pool_audits WHERE id=?")
-            .use { statement ->
-                statement.setLong(1, id)
-                statement.executeQuery().use(ResultSet::next)
-            }
+        VoucherPoolAuditTable
+            .select(VoucherPoolAuditTable.id)
+            .where { VoucherPoolAuditTable.id eq id }
+            .limit(1)
+            .any()
 
-    private fun tenantAuditHighWatermark(tenantId: String): Long =
-        currentConnection()
-            .prepareStatement("SELECT COALESCE(max(id),0) FROM voucher_pool_audits WHERE tenant_id=?")
-            .use { statement ->
-                statement.setString(1, tenantId)
-                statement.executeQuery().use { result ->
-                    result.singleLong()
-                }
-            }
+    private fun tenantAuditHighWatermark(tenantId: String): Long {
+        val maximum = VoucherPoolAuditTable.id.max()
+        return VoucherPoolAuditTable
+            .select(maximum)
+            .where { VoucherPoolAuditTable.tenantId eq tenantId }
+            .singleOrNull()
+            ?.get(maximum)
+            ?: 0L
+    }
 
     private fun <T> withCustomerDigests(scope: CustomerStreamScope, block: (List<CustomerCampaignDigest>) -> T): T {
-        val campaigns = currentConnection()
-            .prepareStatement(
-                """SELECT campaign_id,user_identity_key_version FROM voucher_pool_campaigns
-                WHERE tenant_id=? ORDER BY campaign_id LIMIT ?""".trimIndent(),
-            ).use { statement ->
-                statement.setString(1, scope.tenantId)
-                statement.setInt(2, config.maxCustomerCampaigns + 1)
-                statement.executeQuery().use { result ->
-                    buildList {
-                        while (result.next()) {
-                            add(result.getObject(1, UUID::class.java) to result.getInt(2))
-                        }
-                    }
-                }
+        val campaigns = VoucherPoolCampaignTable
+            .select(
+                VoucherPoolCampaignTable.campaignId,
+                VoucherPoolCampaignTable.userIdentityKeyVersion,
+            )
+            .where { VoucherPoolCampaignTable.tenantId eq scope.tenantId }
+            .orderBy(VoucherPoolCampaignTable.campaignId)
+            .limit(config.maxCustomerCampaigns + 1)
+            .map {
+                it[VoucherPoolCampaignTable.campaignId] to it[VoucherPoolCampaignTable.userIdentityKeyVersion]
             }
         if (campaigns.size > config.maxCustomerCampaigns) {
             throw VoucherPoolApiException(
@@ -1117,6 +1114,7 @@ private fun VoucherPoolSnapshotResponse.fallbackCursor(): VoucherPoolEventCursor
     VoucherPoolEventCursor(maximumRevision(), 0)
 
 private fun Connection.observedAt(): Instant = createStatement().use { statement ->
+    // SSE snapshot 응답의 observedAt은 PostgreSQL transaction timestamp와 일치해야 합니다.
     statement.executeQuery("SELECT transaction_timestamp()").use { result ->
         result.next()
         result.getTimestamp(1).toInstant()

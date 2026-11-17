@@ -2,13 +2,21 @@
 
 package io.bluetape4k.workshop.commerce.voucher
 
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherMigration
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherMigrationRunner
+import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
+import io.bluetape4k.workshop.commerce.voucher.persistence.CampaignTable
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.core.io.ClassPathResource
 import org.springframework.jdbc.datasource.DriverManagerDataSource
+import java.time.Instant
+import java.util.UUID
 
 /** migration compatibility verification task에서만 사용하는 격리된 packaged-artifact entry point입니다. */
 internal object VoucherCompatibilityCli: KLogging() {
@@ -36,26 +44,27 @@ internal object VoucherCompatibilityCli: KLogging() {
             advisoryLockKey = 534001L,
         ).migrate()
 
-        dataSource.connection.use { conn ->
-            conn.prepareStatement(
-                """
-                INSERT INTO voucher_campaigns (
-                    tenant_id, campaign_id, state, starts_at, ends_at, capacity, allocated_count,
-                    per_user_limit, redemption_ttl_seconds, policy_version, revision
-                ) VALUES (?, ?::uuid, 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '1 minute',
-                    CURRENT_TIMESTAMP + INTERVAL '1 hour', 10, 0, 1, 3600, 1, 0)
-                ON CONFLICT (tenant_id, campaign_id) DO NOTHING
-                """.trimIndent(),
-            ).use { stmt ->
-                stmt.setString(1, values.getValue("voucher-tenant"))
-                stmt.setString(2, "018f1f2e-3d4c-7b6a-8f90-1234567890ab")
-                stmt.executeUpdate()
-            }
-            conn.createStatement().use { stmt ->
-                stmt.executeQuery("SELECT count(*) FROM voucher_campaigns").use { result ->
-                    check(result.singleLong() >= 2L) { "compatibility rows are missing" }
+        val database = Database.connect(dataSource)
+        try {
+            transaction(database) {
+                val now = Instant.now()
+                CampaignTable.insertIgnore {
+                    it[CampaignTable.tenantId] = values.getValue("voucher-tenant")
+                    it[CampaignTable.campaignId] = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
+                    it[CampaignTable.state] = CampaignState.ACTIVE
+                    it[CampaignTable.startsAt] = now.minusSeconds(60)
+                    it[CampaignTable.endsAt] = now.plusSeconds(3600)
+                    it[CampaignTable.capacity] = 10
+                    it[CampaignTable.allocatedCount] = 0
+                    it[CampaignTable.perUserLimit] = 1
+                    it[CampaignTable.redemptionTtlSeconds] = 3600
+                    it[CampaignTable.policyVersion] = 1
+                    it[CampaignTable.revision] = 0
                 }
+                check(CampaignTable.selectAll().count() >= 2L) { "compatibility rows are missing" }
             }
+        } finally {
+            TransactionManager.closeAndUnregister(database)
         }
         log.info { "voucher_compatibility_current_completed" }
     }
