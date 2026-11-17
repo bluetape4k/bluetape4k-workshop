@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.meter.domain
 
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
@@ -26,7 +26,7 @@ data class ActivatePriceCommand(
 
     fun fingerprint(): String = digestOf("$tenantId|$meterCode|$currency|$unitPrice|$effectiveAt")
 
-    private fun digestOf(value: String): String = TinkDigesters.SHA256.digestHex(value)
+    private fun digestOf(value: String): String = PayloadDigest.of(value)
 
     private companion object {
         private const val serialVersionUID: Long = 1L

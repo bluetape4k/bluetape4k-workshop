@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.messaging
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
@@ -47,7 +47,7 @@ class QueryInboundEventDecoder {
         val payload = envelope.requiredText("payload", eventId, tenantId, eventType)
         val payloadDigest = envelope.requiredText("payloadDigest", eventId, tenantId, eventType)
 
-        if (!TinkDigesters.SHA256.matchesHex(payload, payloadDigest)) {
+        if (!PayloadDigest.matches(payload, payloadDigest)) {
             fail(eventId, tenantId, eventType, "invalid_payload_digest")
         }
 

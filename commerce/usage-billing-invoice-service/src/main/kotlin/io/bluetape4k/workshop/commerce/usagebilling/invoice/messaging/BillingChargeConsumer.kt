@@ -4,7 +4,7 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.application.InvoiceInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
 import org.springframework.kafka.annotation.KafkaListener
@@ -32,7 +32,7 @@ class BillingChargeDecoder {
         val payload = envelope.requiredText("payload")
         val digest = envelope.requiredText("payloadDigest")
         val eventId = UUID.fromString(envelope.requiredText("eventId"))
-        if (!TinkDigesters.SHA256.matchesHex(payload, digest)) throw InvalidBillingChargeEnvelope(eventId)
+        if (!PayloadDigest.matches(payload, digest)) throw InvalidBillingChargeEnvelope(eventId)
         val body = Jackson.defaultJsonMapper.readTree(payload)
 
         return InvoiceInboxEvent(

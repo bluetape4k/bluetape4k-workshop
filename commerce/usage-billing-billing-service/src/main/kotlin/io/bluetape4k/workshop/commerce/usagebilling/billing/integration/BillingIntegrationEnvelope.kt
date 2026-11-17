@@ -6,7 +6,8 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.workshop.commerce.shared.integration.AggregatePartitionKey
+import io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest
 import java.io.Serializable
 import java.time.Instant
 import java.util.*
@@ -30,10 +31,10 @@ class BillingIntegrationEnvelope private constructor(
         payload.requireNotBlank("payload")
     }
 
-    fun partitionKey(): String = "$tenantId|$aggregateType|$aggregateId"
+    fun partitionKey(): String = AggregatePartitionKey.of(tenantId, aggregateType, aggregateId)
 
     fun hasValidPayloadDigest(): Boolean =
-        TinkDigesters.SHA256.matchesHex(payload, payloadDigest)
+        PayloadDigest.matches(payload, payloadDigest)
 
     fun wirePayload(): String =
         Jackson.defaultJsonMapper
@@ -84,7 +85,7 @@ class BillingIntegrationEnvelope private constructor(
             )
 
         private fun digestOf(payload: String): String =
-            TinkDigesters.SHA256.digestHex(payload)
+            PayloadDigest.of(payload)
     }
 }
 

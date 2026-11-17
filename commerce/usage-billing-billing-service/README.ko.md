@@ -54,12 +54,13 @@ local transaction은 inbox 결정, 불변 charge, outbox row를 함께 append합
 
 ## Payload digest contract
 
-Production 코드는 SHA-256 digest 생성에 `TinkDigesters.SHA256.digestHex`를,
-검증에 `matchesHex`를 사용합니다. Wire 값은 UTF-8 payload의 lowercase 64자
-hex encoding을 그대로 유지하므로 schema나 database migration이 필요하지
-않습니다. 이 digest는 우발 손상과 contract drift를 탐지하는 비인증
-checksum입니다. 적대적 변조가 threat model에 포함되면 MAC 또는 signature를
-사용해야 합니다. Test는 production 호출을 그대로 반복하지 않도록 독립적인
+Production 코드는
+`io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest`에
+SHA-256 생성과 canonical 검증을 위임합니다. shared 계약은 UTF-8
+payload의 lowercase 64자 hex 표현을 유지하므로 schema나 database
+migration이 필요하지 않습니다. 이 값은 우발 손상과 contract drift를
+탐지하는 비인증 checksum이며 적대적 변조에는 MAC 또는 signature가
+필요합니다. Test는 production 호출을 그대로 반복하지 않도록 독립적인
 JDK SHA-256 oracle을 유지합니다.
 
 ## 검증 실행

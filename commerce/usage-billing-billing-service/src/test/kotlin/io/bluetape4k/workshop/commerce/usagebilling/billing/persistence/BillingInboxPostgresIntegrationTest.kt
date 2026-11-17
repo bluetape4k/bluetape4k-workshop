@@ -124,8 +124,9 @@ class BillingInboxPostgresIntegrationTest {
 
         pricingEvidence.record(event) shouldBeEqualTo BillingPriceEvidenceOutcome.APPLIED
         pricingEvidence.record(event) shouldBeEqualTo BillingPriceEvidenceOutcome.DUPLICATE
-        pricingEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo BillingPriceEvidenceOutcome.QUARANTINED
-        
+        pricingEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo
+            BillingPriceEvidenceOutcome.QUARANTINED
+
         transaction { priceEvidenceInbox.findAll().count() } shouldBeEqualTo 1
     }
 

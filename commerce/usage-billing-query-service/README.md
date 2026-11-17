@@ -57,10 +57,10 @@ and [`QueryControllers`](src/main/kotlin/io/bluetape4k/workshop/commerce/usagebi
 
 ## Payload digest contract
 
-Production code generates SHA-256 digests with
-`TinkDigesters.SHA256.digestHex` and verifies them with `matchesHex`. The
-wire value remains the lowercase 64-character hex encoding of the UTF-8 payload;
-this change requires no schema or database migration. This digest detects
+Production code delegates SHA-256 generation and canonical verification to
+`io.bluetape4k.workshop.commerce.shared.integration.PayloadDigest`. The shared
+contract preserves the lowercase 64-character hex encoding of the UTF-8
+payload, so no schema or database migration is required. This checksum detects
 accidental corruption and contract drift, but is not authentication. Use a MAC
 or signature when hostile tampering is in scope. Tests deliberately retain an
 independent JDK SHA-256 oracle instead of reproducing the production call.

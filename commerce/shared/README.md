@@ -20,6 +20,22 @@ Consumer compatibility tests should declare:
 testImplementation(project(":commerce-shared"))
 ```
 
+## Integration contracts
+
+`PayloadDigest` owns the usage-billing payload checksum contract. It delegates
+to `TinkDigesters.SHA256` and preserves the lowercase 64-character hexadecimal
+encoding of the UTF-8 payload. `AggregatePartitionKey` owns the deterministic
+`tenantId|aggregateType|aggregateId` key shared by Kafka partitioning and local
+outbox/inbox boundaries.
+
+These helpers are stateless and do not own a schema, database, or transport.
+The checksum detects accidental corruption and contract drift; it is not
+authentication. Use a MAC or signature when hostile tampering is in scope.
+
+Usage-billing services should depend on this module instead of calling the
+provider directly, while their independent JDK SHA-256 test oracles remain
+local to verify the shared contract.
+
 ## Build and test
 
 ```bash

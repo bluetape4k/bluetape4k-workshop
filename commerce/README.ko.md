@@ -20,13 +20,13 @@ PostgreSQL 권위를 소유하고 Kafka topic으로 서비스 경계를 넘습�
 |------|------|--------|
 | [`order-lifecycle-fulfillment`](order-lifecycle-fulfillment/) | 독립적인 주문, 결제, 재고, 배송, 환불 생명주기 | PostgreSQL (Testcontainers) |
 | [`reservation-control-plane`](reservation-control-plane/) | PostgreSQL이 권위를 갖는 예약, 멱등 재시도, waitlist offer, expiry | PostgreSQL + Redis (Testcontainers) |
-| [`shared`](shared/) | 바우처 캠페인 호환성 계약과 예제 간 공용 fixture | 없음 |
-| [`event-sourced-promotion-voucher-campaign`](event-sourced-promotion-voucher-campaign/) | Append-only campaign/claim stream, snapshot, lease 기반 projection, fencing rebuild, position-aware HTTP/SSE | PostgreSQL (Testcontainers) |
+| [`shared`](shared/) | 바우처 호환성, payload digest·aggregate partition-key 계약과 예제 간 공용 fixture | 없음 |
+| [`event-sourced-promotion-voucher-campaign`](event-sourced-promotion-voucher-campaign/) | Append-only campaign/claim stream, 기준 데이터, lease 기반 projection, fencing rebuild, position-aware HTTP/SSE | PostgreSQL (Testcontainers) |
 | [`promotion-voucher-campaign`](promotion-voucher-campaign/) | 캠페인 수량, 바우처 할당/사용, review, SSE, reconciliation | PostgreSQL + Redis (Testcontainers) |
 | [`pre-generated-voucher-pool`](pre-generated-voucher-pool/) | PostgreSQL이 권위를 갖는 사전 생성 바우처 예약, 일회 reveal/교체, revoke와 reconciliation | PostgreSQL + Redis (Testcontainers) |
 | [`concert-ticket-flash-sale`](concert-ticket-flash-sale/) | 대기실 admission, USER/IP 구매 guard, 결제/환불 복구, 티켓 상태 기반 restock | PostgreSQL + Redis (Testcontainers) |
 | [`usage-metering-billing-ledger`](usage-metering-billing-ledger/) | 멱등 usage, 시간 버전 가격, 재시작 가능한 close, 불변 ledger/invoice | PostgreSQL (Testcontainers) |
-| [`usage-metering-billing-event-sourcing`](usage-metering-billing-event-sourcing/) | Event append/replay/upcast, snapshot, fenced projection rebuild, correction/reconciliation | PostgreSQL (Testcontainers) |
+| [`usage-metering-billing-event-sourcing`](usage-metering-billing-event-sourcing/) | Event append/replay/upcast, 기준 데이터, fenced projection rebuild, correction/reconciliation | PostgreSQL (Testcontainers) |
 | [`usage-billing-microservices`](usage-billing-microservices-composition-tests/) | local outbox/inbox와 명시적 Kafka delivery boundary를 가진 독립 Spring Boot 서비스 5개 | PostgreSQL + Kafka (Testcontainers) |
 | [`usage-billing-meter-service`](usage-billing-meter-service/) | 불변 가격 버전, 멱등 활성화, `meter.events.v1` 발행 | PostgreSQL + Kafka |
 | [`usage-billing-usage-service`](usage-billing-usage-service/) | 가격 근거 inbox, 멱등 사용량 접수, `usage.events.v1` 발행 | PostgreSQL + Kafka |
