@@ -246,6 +246,7 @@ internal class PostgresVoucherPoolKeyReferenceSource(
                 liveRows = buildSet {
                     addAll(queryStrings(VoucherPoolEntryTable.kekVersion) { VoucherPoolEntryTable.select(VoucherPoolEntryTable.kekVersion).where { VoucherPoolEntryTable.kekVersion.isNotNull() } })
                     addAll(queryNullableInts(VoucherPoolEntryTable.verificationKeyVersion) { VoucherPoolEntryTable.select(VoucherPoolEntryTable.verificationKeyVersion).where { VoucherPoolEntryTable.verificationKeyVersion.isNotNull() } })
+                    addAll(queryInts(VoucherPoolCampaignTable.userIdentityKeyVersion) { VoucherPoolCampaignTable.select(VoucherPoolCampaignTable.userIdentityKeyVersion) })
                     addAll(queryInts(VoucherPoolRevokePreviewGrantTable.signatureKeyVersion) { VoucherPoolRevokePreviewGrantTable.select(VoucherPoolRevokePreviewGrantTable.signatureKeyVersion) })
                 },
                 commandTombstones = queryInts(VoucherPoolCommandTombstoneTable.keyVersion) { VoucherPoolCommandTombstoneTable.select(VoucherPoolCommandTombstoneTable.keyVersion) },

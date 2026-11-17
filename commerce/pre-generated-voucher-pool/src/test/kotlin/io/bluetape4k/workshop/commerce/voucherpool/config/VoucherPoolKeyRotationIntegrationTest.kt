@@ -54,6 +54,7 @@ internal class VoucherPoolKeyRotationIntegrationTest {
 
         policy.canRetire("unused").shouldBeTrue()
         policy.canRetire("kek-v1").shouldBeFalse()
+        policy.canRetire("12").shouldBeFalse()
     }
 
     private fun seedReferences() {

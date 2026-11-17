@@ -175,6 +175,8 @@ internal class VoucherPoolRepositoryContractTest {
         section(migrationSource, "internal class VoucherPoolReferencedKeyPreflight", "/** migration과 live")
             .also {
                 it shouldContain "VoucherPoolEntryTable"
+                it shouldContain "VoucherPoolCampaignTable"
+                it shouldContain "userIdentityKeyVersion"
                 it shouldContain "VoucherPoolCommandTombstoneTable"
                 it shouldContain ".select("
                 it shouldNotContain "prepareStatement(\"SELECT DISTINCT"
@@ -186,6 +188,8 @@ internal class VoucherPoolRepositoryContractTest {
         )
             .also {
                 it shouldContain "VoucherPoolEntryTable"
+                it shouldContain "VoucherPoolCampaignTable"
+                it shouldContain "userIdentityKeyVersion"
                 it shouldContain "VoucherPoolCommandTombstoneTable"
                 it shouldContain ".select("
                 it shouldContain "BACKUP_INVENTORY_SQL"
