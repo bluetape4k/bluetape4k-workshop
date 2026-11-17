@@ -9,13 +9,25 @@ import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAllocationTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBatchTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCampaignTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolEntryTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolReservationTable
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.Serializable
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.Timestamp
 import java.time.Instant
 import java.util.*
 
@@ -247,133 +259,248 @@ internal interface VoucherPoolQueryStore {
 }
 
 internal class JdbcVoucherPoolQueryStore: VoucherPoolQueryStore {
-
-    private companion object: KLogging() {
-        val RESOURCE_LOOKUPS = setOf(
-            "voucher_pool_reservations" to "reservation_id",
-            "voucher_pool_allocations" to "allocation_id",
-        )
-    }
+    private companion object: KLogging()
 
     override fun findUserIdentityKeyVersion(tenantId: String, campaignId: UUID): Int? =
-        currentConnection().prepareStatement(
-            "SELECT user_identity_key_version FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, campaignId)
-            statement.executeQuery().use { result ->
-                if (result.next()) result.getInt(1) else null
+        VoucherPoolCampaignTable
+            .select(VoucherPoolCampaignTable.userIdentityKeyVersion)
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                        (VoucherPoolCampaignTable.campaignId eq campaignId)
             }
-        }
+            .singleOrNull()
+            ?.get(VoucherPoolCampaignTable.userIdentityKeyVersion)
 
     override fun scopeExists(tenantId: String, campaignId: UUID?, batchId: UUID?): Boolean {
         if (campaignId == null && batchId == null) return true
-        val (sql, id) = when {
+        return when {
             campaignId != null && batchId != null ->
-                "SELECT 1 FROM voucher_pool_batches WHERE tenant_id=? AND campaign_id=? AND batch_id=?" to null
-            campaignId != null                    ->
-                "SELECT 1 FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?" to campaignId
-            else                                  ->
-                "SELECT 1 FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?" to checkNotNull(batchId)
-        }
-
-        return currentConnection().prepareStatement(sql).use { statement ->
-            statement.setString(1, tenantId)
-            if (campaignId != null && batchId != null) {
-                statement.setObject(2, campaignId)
-                statement.setObject(3, batchId)
-            } else {
-                statement.setObject(2, id)
-            }
-
-            statement.executeQuery().use(ResultSet::next)
+                VoucherPoolBatchTable
+                    .select(VoucherPoolBatchTable.batchId)
+                    .where {
+                        (VoucherPoolBatchTable.tenantId eq tenantId) and
+                                (VoucherPoolBatchTable.campaignId eq campaignId) and
+                                (VoucherPoolBatchTable.batchId eq batchId)
+                    }
+                    .limit(1)
+                    .singleOrNull() != null
+            campaignId != null ->
+                VoucherPoolCampaignTable
+                    .select(VoucherPoolCampaignTable.campaignId)
+                    .where {
+                        (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                                (VoucherPoolCampaignTable.campaignId eq campaignId)
+                    }
+                    .limit(1)
+                    .singleOrNull() != null
+            else ->
+                VoucherPoolBatchTable
+                    .select(VoucherPoolBatchTable.batchId)
+                    .where {
+                        (VoucherPoolBatchTable.tenantId eq tenantId) and
+                                (VoucherPoolBatchTable.batchId eq checkNotNull(batchId))
+                    }
+                    .limit(1)
+                    .singleOrNull() != null
         }
     }
 
     override fun resolveReservationCampaign(tenantId: String, reservationId: UUID): UUID? =
-        resolveCampaign(
-            table = "voucher_pool_reservations",
-            idColumn = "reservation_id",
-            tenantId = tenantId,
-            resourceId = reservationId
-        )
+        VoucherPoolReservationTable
+            .select(VoucherPoolReservationTable.campaignId)
+            .where {
+                (VoucherPoolReservationTable.tenantId eq tenantId) and
+                        (VoucherPoolReservationTable.reservationId eq reservationId)
+            }
+            .singleOrNull()
+            ?.get(VoucherPoolReservationTable.campaignId)
 
     override fun findOwnedReservation(
         tenantId: String,
         reservationId: UUID,
         ownerDigest: ByteArray,
-    ): ReservationReadModel? =
-        currentConnection().prepareStatement(
-            """SELECT reservation_id,campaign_id,batch_id,entry_id,state,reservation_expires_at,
-                  entitlement_root_id,replacement_ordinal,policy_version,revision,transaction_timestamp()
-            FROM voucher_pool_reservations
-            WHERE tenant_id=? AND reservation_id=? AND user_digest=?""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, reservationId)
-            statement.setBytes(3, ownerDigest)
-
-            statement.executeQuery().use { result ->
-                if (result.next()) result.reservationReadModel() else null
+    ): ReservationReadModel? {
+        val observedAt = currentConnection().observedAt()
+        return VoucherPoolReservationTable
+            .select(
+                VoucherPoolReservationTable.reservationId,
+                VoucherPoolReservationTable.campaignId,
+                VoucherPoolReservationTable.batchId,
+                VoucherPoolReservationTable.entryId,
+                VoucherPoolReservationTable.state,
+                VoucherPoolReservationTable.expiresAt,
+                VoucherPoolReservationTable.entitlementRootId,
+                VoucherPoolReservationTable.replacementOrdinal,
+                VoucherPoolReservationTable.policyVersion,
+                VoucherPoolReservationTable.revision,
+            )
+            .where {
+                (VoucherPoolReservationTable.tenantId eq tenantId) and
+                        (VoucherPoolReservationTable.reservationId eq reservationId) and
+                        (VoucherPoolReservationTable.userDigest eq ownerDigest)
             }
-        }
+            .singleOrNull()
+            ?.let { row ->
+                ReservationReadModel(
+                    reservationId = row[VoucherPoolReservationTable.reservationId],
+                    campaignId = row[VoucherPoolReservationTable.campaignId],
+                    batchId = row[VoucherPoolReservationTable.batchId],
+                    entryId = row[VoucherPoolReservationTable.entryId],
+                    state = row[VoucherPoolReservationTable.state],
+                    expiresAt = row[VoucherPoolReservationTable.expiresAt],
+                    entitlementRootId = row[VoucherPoolReservationTable.entitlementRootId],
+                    replacementOrdinal = row[VoucherPoolReservationTable.replacementOrdinal],
+                    policyVersion = row[VoucherPoolReservationTable.policyVersion],
+                    revision = row[VoucherPoolReservationTable.revision],
+                    observedAt = observedAt,
+                )
+            }
+    }
 
     override fun resolveAllocationCampaign(tenantId: String, allocationId: UUID): UUID? =
-        resolveCampaign(
-            table = "voucher_pool_allocations",
-            idColumn = "allocation_id",
-            tenantId = tenantId,
-            resourceId = allocationId
-        )
+        VoucherPoolAllocationTable
+            .select(VoucherPoolAllocationTable.campaignId)
+            .where {
+                (VoucherPoolAllocationTable.tenantId eq tenantId) and
+                        (VoucherPoolAllocationTable.allocationId eq allocationId)
+            }
+            .singleOrNull()
+            ?.get(VoucherPoolAllocationTable.campaignId)
 
     override fun findOwnedAllocation(
         tenantId: String,
         allocationId: UUID,
         ownerDigest: ByteArray,
-    ): AllocationReadModel? =
-        currentConnection().prepareStatement(
-            """SELECT a.allocation_id,a.reservation_id,a.campaign_id,a.batch_id,a.entry_id,e.state,
-                  a.allocation_expires_at,a.entitlement_root_id,a.replacement_ordinal,a.policy_version,
-                  a.revision,transaction_timestamp()
-            FROM voucher_pool_allocations a
-            JOIN voucher_pool_entries e
-              ON e.tenant_id=a.tenant_id AND e.entry_id=a.entry_id
-            WHERE a.tenant_id=? AND a.allocation_id=? AND a.user_digest=?""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, allocationId)
-            statement.setBytes(3, ownerDigest)
-
-            statement.executeQuery().use { result ->
-                if (result.next()) result.allocationReadModel() else null
+    ): AllocationReadModel? {
+        val observedAt = currentConnection().observedAt()
+        val joined = VoucherPoolAllocationTable.innerJoin(
+            VoucherPoolEntryTable,
+            { VoucherPoolAllocationTable.tenantId },
+            { VoucherPoolEntryTable.tenantId },
+            additionalConstraint = { VoucherPoolAllocationTable.entryId eq VoucherPoolEntryTable.entryId },
+        )
+        return joined
+            .select(
+                VoucherPoolAllocationTable.allocationId,
+                VoucherPoolAllocationTable.reservationId,
+                VoucherPoolAllocationTable.campaignId,
+                VoucherPoolAllocationTable.batchId,
+                VoucherPoolAllocationTable.entryId,
+                VoucherPoolEntryTable.state,
+                VoucherPoolAllocationTable.allocationExpiresAt,
+                VoucherPoolAllocationTable.entitlementRootId,
+                VoucherPoolAllocationTable.replacementOrdinal,
+                VoucherPoolAllocationTable.policyVersion,
+                VoucherPoolAllocationTable.revision,
+            )
+            .where {
+                (VoucherPoolAllocationTable.tenantId eq tenantId) and
+                        (VoucherPoolAllocationTable.allocationId eq allocationId) and
+                        (VoucherPoolAllocationTable.userDigest eq ownerDigest)
             }
-        }
-
-    override fun findBatch(tenantId: String, batchId: UUID): BatchReadModel? =
-        currentConnection().prepareStatement(
-            """SELECT batch_id,campaign_id,state,source_kind,activates_at,expires_at,next_source_ordinal,
-                      expected_count,accepted_count,rejected_count,last_failure_code,revision,transaction_timestamp()
-                FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?""",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, batchId)
-            statement.executeQuery().use { result -> if (result.next()) result.batchReadModel() else null }
-        }
-
-    override fun findCampaign(tenantId: String, campaignId: UUID): CampaignReadModel? =
-        currentConnection().prepareStatement(
-            """SELECT campaign_id,state,starts_at,ends_at,per_user_limit,reservation_ttl_seconds,
-                      allocation_ttl_seconds,replacement_allowance,policy_version,revision,transaction_timestamp()
-                FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, campaignId)
-
-            statement.executeQuery().use { result ->
-                if (result.next()) result.campaignReadModel() else null
+            .singleOrNull()
+            ?.let { row ->
+                AllocationReadModel(
+                    allocationId = row[VoucherPoolAllocationTable.allocationId],
+                    reservationId = row[VoucherPoolAllocationTable.reservationId],
+                    campaignId = row[VoucherPoolAllocationTable.campaignId],
+                    batchId = row[VoucherPoolAllocationTable.batchId],
+                    entryId = row[VoucherPoolAllocationTable.entryId],
+                    state = row[VoucherPoolEntryTable.state],
+                    expiresAt = row[VoucherPoolAllocationTable.allocationExpiresAt],
+                    entitlementRootId = row[VoucherPoolAllocationTable.entitlementRootId],
+                    replacementOrdinal = row[VoucherPoolAllocationTable.replacementOrdinal],
+                    policyVersion = row[VoucherPoolAllocationTable.policyVersion],
+                    revision = row[VoucherPoolAllocationTable.revision],
+                    observedAt = observedAt,
+                )
             }
-        }
+    }
 
+    override fun findBatch(tenantId: String, batchId: UUID): BatchReadModel? {
+        val observedAt = currentConnection().observedAt()
+        return VoucherPoolBatchTable
+            .select(
+                VoucherPoolBatchTable.batchId,
+                VoucherPoolBatchTable.campaignId,
+                VoucherPoolBatchTable.state,
+                VoucherPoolBatchTable.sourceKind,
+                VoucherPoolBatchTable.activatesAt,
+                VoucherPoolBatchTable.expiresAt,
+                VoucherPoolBatchTable.nextSourceOrdinal,
+                VoucherPoolBatchTable.expectedCount,
+                VoucherPoolBatchTable.acceptedCount,
+                VoucherPoolBatchTable.rejectedCount,
+                VoucherPoolBatchTable.lastFailureCode,
+                VoucherPoolBatchTable.revision,
+            )
+            .where {
+                (VoucherPoolBatchTable.tenantId eq tenantId) and
+                        (VoucherPoolBatchTable.batchId eq batchId)
+            }
+            .singleOrNull()
+            ?.let { row ->
+                val state = row[VoucherPoolBatchTable.state]
+                BatchReadModel(
+                    batchId = row[VoucherPoolBatchTable.batchId],
+                    campaignId = row[VoucherPoolBatchTable.campaignId],
+                    state = state,
+                    sourceKind = row[VoucherPoolBatchTable.sourceKind],
+                    activatesAt = row[VoucherPoolBatchTable.activatesAt],
+                    expiresAt = row[VoucherPoolBatchTable.expiresAt],
+                    nextSourceOrdinal = row[VoucherPoolBatchTable.nextSourceOrdinal],
+                    expectedCount = row[VoucherPoolBatchTable.expectedCount],
+                    acceptedCount = row[VoucherPoolBatchTable.acceptedCount],
+                    rejectedCount = row[VoucherPoolBatchTable.rejectedCount],
+                    lastFailureCode = row[VoucherPoolBatchTable.lastFailureCode],
+                    revision = row[VoucherPoolBatchTable.revision],
+                    nextAction = state.nextAction(),
+                    observedAt = observedAt,
+                )
+            }
+    }
+
+    override fun findCampaign(tenantId: String, campaignId: UUID): CampaignReadModel? {
+        val observedAt = currentConnection().observedAt()
+        return VoucherPoolCampaignTable
+            .select(
+                VoucherPoolCampaignTable.campaignId,
+                VoucherPoolCampaignTable.state,
+                VoucherPoolCampaignTable.startsAt,
+                VoucherPoolCampaignTable.endsAt,
+                VoucherPoolCampaignTable.perUserLimit,
+                VoucherPoolCampaignTable.reservationTtlSeconds,
+                VoucherPoolCampaignTable.allocationTtlSeconds,
+                VoucherPoolCampaignTable.replacementAllowance,
+                VoucherPoolCampaignTable.policyVersion,
+                VoucherPoolCampaignTable.revision,
+            )
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                        (VoucherPoolCampaignTable.campaignId eq campaignId)
+            }
+            .singleOrNull()
+            ?.let { row ->
+                CampaignReadModel(
+                    campaignId = row[VoucherPoolCampaignTable.campaignId],
+                    state = row[VoucherPoolCampaignTable.state],
+                    startsAt = row[VoucherPoolCampaignTable.startsAt],
+                    endsAt = row[VoucherPoolCampaignTable.endsAt],
+                    perUserLimit = row[VoucherPoolCampaignTable.perUserLimit],
+                    reservationTtlSeconds = row[VoucherPoolCampaignTable.reservationTtlSeconds],
+                    allocationTtlSeconds = row[VoucherPoolCampaignTable.allocationTtlSeconds],
+                    replacementAllowance = row[VoucherPoolCampaignTable.replacementAllowance],
+                    policyVersion = row[VoucherPoolCampaignTable.policyVersion],
+                    revision = row[VoucherPoolCampaignTable.revision],
+                    observedAt = observedAt,
+                )
+            }
+    }
+
+    /**
+     * pool-depth는 scoped CTE, FILTER aggregate, expiry derivation, transaction snapshot을 한 statement로 묶습니다.
+     * 이 PostgreSQL 전용 read-model 계산은 Exposed DSL로 분해하면 snapshot 경계가 달라지므로 raw로 보존합니다.
+     */
     @Suppress("LongMethod", "NestedBlockDepth") // Keep the one-statement MVCC snapshot and its parser adjacent.
     override fun readPoolDepth(tenantId: String, campaignId: UUID?, batchId: UUID?): PoolDepthReadModel {
         val connection = currentConnection()
@@ -449,27 +576,49 @@ internal class JdbcVoucherPoolQueryStore: VoucherPoolQueryStore {
         cursor: StuckReservationCursor?,
         limit: Int,
     ): StuckReservationPage {
-        val connection = currentConnection()
-        val observedAt = connection.observedAt()
-        val clauses = mutableListOf("tenant_id=?", "state='ACTIVE'", "reservation_expires_at<=?")
-        if (campaignId != null) clauses += "campaign_id=?"
-        if (cursor != null) clauses += "(reservation_expires_at,reservation_id)>(?,?)"
-        val sql = """SELECT reservation_id,campaign_id,batch_id,entry_id,state,reservation_expires_at,revision
-                FROM voucher_pool_reservations
-                WHERE ${clauses.joinToString(" AND ")}
-                ORDER BY reservation_expires_at,reservation_id
-                LIMIT ?""".trimIndent()
-
-        val rows = connection.prepareStatement(sql).use { statement ->
-            statement.bindStuckQuery(tenantId, campaignId, cursor, observedAt, limit + 1)
-            statement.executeQuery().use { result ->
-                buildList {
-                    while (result.next()) {
-                        add(result.stuckReservationReadModel())
-                    }
+        val observedAt = currentConnection().observedAt()
+        val rows = VoucherPoolReservationTable
+            .select(
+                VoucherPoolReservationTable.reservationId,
+                VoucherPoolReservationTable.campaignId,
+                VoucherPoolReservationTable.batchId,
+                VoucherPoolReservationTable.entryId,
+                VoucherPoolReservationTable.state,
+                VoucherPoolReservationTable.expiresAt,
+                VoucherPoolReservationTable.revision,
+            )
+            .where {
+                var predicate =
+                    (VoucherPoolReservationTable.tenantId eq tenantId) and
+                            (VoucherPoolReservationTable.state eq ReservationState.ACTIVE) and
+                            (VoucherPoolReservationTable.expiresAt lessEq observedAt)
+                campaignId?.let {
+                    predicate = predicate and (VoucherPoolReservationTable.campaignId eq it)
                 }
+                cursor?.let {
+                    predicate = predicate and
+                            ((VoucherPoolReservationTable.expiresAt greater it.expiresAt) or
+                                    ((VoucherPoolReservationTable.expiresAt eq it.expiresAt) and
+                                            (VoucherPoolReservationTable.reservationId greater it.reservationId)))
+                }
+                predicate
             }
-        }
+            .orderBy(
+                VoucherPoolReservationTable.expiresAt to SortOrder.ASC,
+                VoucherPoolReservationTable.reservationId to SortOrder.ASC,
+            )
+            .limit(limit + 1)
+            .map { row ->
+                StuckReservationReadModel(
+                    reservationId = row[VoucherPoolReservationTable.reservationId],
+                    campaignId = row[VoucherPoolReservationTable.campaignId],
+                    batchId = row[VoucherPoolReservationTable.batchId],
+                    entryId = row[VoucherPoolReservationTable.entryId],
+                    state = row[VoucherPoolReservationTable.state],
+                    expiresAt = row[VoucherPoolReservationTable.expiresAt],
+                    revision = row[VoucherPoolReservationTable.revision],
+                )
+            }
         val items = rows.take(limit)
         val nextCursor = if (rows.size > limit) {
             items.last().let { StuckReservationCursor(it.expiresAt, it.reservationId) }
@@ -477,21 +626,6 @@ internal class JdbcVoucherPoolQueryStore: VoucherPoolQueryStore {
             null
         }
         return StuckReservationPage(items, nextCursor, observedAt)
-    }
-
-    private fun resolveCampaign(table: String, idColumn: String, tenantId: String, resourceId: UUID): UUID? {
-        require(table to idColumn in RESOURCE_LOOKUPS)
-
-        return currentConnection().prepareStatement(
-            "SELECT campaign_id FROM $table WHERE tenant_id=? AND $idColumn=?",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, resourceId)
-
-            statement.executeQuery().use { result ->
-                if (result.next()) result.getObject(1, UUID::class.java) else null
-            }
-        }
     }
 
     private fun currentConnection(): Connection = TransactionManager.currentOrNull()
@@ -507,6 +641,7 @@ private fun PreparedStatement.bindScope(tenantId: String, campaignId: UUID?, bat
     batchId?.let { setObject(index++, it) }
 }
 
+/** PostgreSQL transaction snapshot을 모든 DSL 조회의 observedAt 기준으로 고정합니다. */
 private fun Connection.observedAt(): Instant =
     prepareStatement("SELECT transaction_timestamp()").use { statement ->
         statement.executeQuery().use { result ->
@@ -514,102 +649,6 @@ private fun Connection.observedAt(): Instant =
             result.getTimestamp(1).toInstant()
         }
     }
-
-private fun PreparedStatement.bindStuckQuery(
-    tenantId: String,
-    campaignId: UUID?,
-    cursor: StuckReservationCursor?,
-    observedAt: Instant,
-    limit: Int,
-) {
-    var index = 1
-    setString(index++, tenantId)
-    setTimestamp(index++, Timestamp.from(observedAt))
-    campaignId?.let { setObject(index++, it) }
-    cursor?.let {
-        setTimestamp(index++, Timestamp.from(it.expiresAt))
-        setObject(index++, it.reservationId)
-    }
-    setInt(index, limit)
-}
-
-private fun ResultSet.reservationReadModel(): ReservationReadModel =
-    ReservationReadModel(
-        reservationId = getObject(1, UUID::class.java),
-        campaignId = getObject(2, UUID::class.java),
-        batchId = getObject(3, UUID::class.java),
-        entryId = getObject(4, UUID::class.java),
-        state = ReservationState.valueOf(getString(5)),
-        expiresAt = getTimestamp(6).toInstant(),
-        entitlementRootId = getObject(7, UUID::class.java),
-        replacementOrdinal = getInt(8),
-        policyVersion = getLong(9),
-        revision = getLong(10),
-        observedAt = getTimestamp(11).toInstant(),
-    )
-
-private fun ResultSet.allocationReadModel(): AllocationReadModel =
-    AllocationReadModel(
-        allocationId = getObject(1, UUID::class.java),
-        reservationId = getObject(2, UUID::class.java),
-        campaignId = getObject(3, UUID::class.java),
-        batchId = getObject(4, UUID::class.java),
-        entryId = getObject(5, UUID::class.java),
-        state = EntryState.valueOf(getString(6)),
-        expiresAt = getTimestamp(7).toInstant(),
-        entitlementRootId = getObject(8, UUID::class.java),
-        replacementOrdinal = getInt(9),
-        policyVersion = getLong(10),
-        revision = getLong(11),
-        observedAt = getTimestamp(12).toInstant(),
-    )
-
-private fun ResultSet.batchReadModel(): BatchReadModel {
-    val state = BatchState.valueOf(getString(3))
-
-    return BatchReadModel(
-        batchId = getObject(1, UUID::class.java),
-        campaignId = getObject(2, UUID::class.java),
-        state = state,
-        sourceKind = getString(4),
-        activatesAt = getTimestamp(5).toInstant(),
-        expiresAt = getTimestamp(6)?.toInstant(),
-        nextSourceOrdinal = getLong(7),
-        expectedCount = getLong(8),
-        acceptedCount = getLong(9),
-        rejectedCount = getLong(10),
-        lastFailureCode = getString(11),
-        revision = getLong(12),
-        nextAction = state.nextAction(),
-        observedAt = getTimestamp(13).toInstant(),
-    )
-}
-
-private fun ResultSet.campaignReadModel(): CampaignReadModel =
-    CampaignReadModel(
-        campaignId = getObject(1, UUID::class.java),
-        state = CampaignState.valueOf(getString(2)),
-        startsAt = getTimestamp(3).toInstant(),
-        endsAt = getTimestamp(4).toInstant(),
-        perUserLimit = getInt(5),
-        reservationTtlSeconds = getLong(6),
-        allocationTtlSeconds = getLong(7),
-        replacementAllowance = getInt(8),
-        policyVersion = getLong(9),
-        revision = getLong(10),
-        observedAt = getTimestamp(11).toInstant(),
-    )
-
-private fun ResultSet.stuckReservationReadModel(): StuckReservationReadModel =
-    StuckReservationReadModel(
-        reservationId = getObject(1, UUID::class.java),
-        campaignId = getObject(2, UUID::class.java),
-        batchId = getObject(3, UUID::class.java),
-        entryId = getObject(4, UUID::class.java),
-        state = ReservationState.valueOf(getString(5)),
-        expiresAt = getTimestamp(6).toInstant(),
-        revision = getLong(7),
-    )
 
 private fun BatchState.nextAction(): String =
     when (this) {

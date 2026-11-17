@@ -20,6 +20,7 @@ internal object VoucherPoolCampaignTable: Table("voucher_pool_campaigns") {
     val reservationTtlSeconds = long("reservation_ttl_seconds")
     val allocationTtlSeconds = long("allocation_ttl_seconds")
     val replacementAllowance = integer("replacement_allowance")
+    val userIdentityKeyVersion = integer("user_identity_key_version")
     val policyVersion = long("policy_version")
     val revision = long("revision")
     val createdAt = timestamp("created_at")

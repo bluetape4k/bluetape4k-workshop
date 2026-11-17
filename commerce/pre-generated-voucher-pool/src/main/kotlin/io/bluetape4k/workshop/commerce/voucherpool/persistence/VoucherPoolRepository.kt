@@ -14,21 +14,31 @@ import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Sum
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.max
+import org.jetbrains.exposed.v1.core.min
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.update
 import java.security.MessageDigest
@@ -181,7 +191,15 @@ internal interface VoucherPoolRepository {
  * transaction-bound PostgreSQL authority repository입니다.
  *
  * bluetape4k [io.bluetape4k.exposed.jdbc.repository.JdbcRepository]처럼 caller가 active Exposed transaction을 제공합니다.
- * raw JDBC는 Exposed DSL이 직접 표현할 수 없는 PostgreSQL row-lock syntax로 제한합니다.
+ * campaign/batch/user-limit의 일반 CRUD·CAS와 tenant-scoped 조회는 Exposed table/DSL을 사용합니다.
+ * raw JDBC 잔여 경계는 다음 PostgreSQL 전용 경로뿐입니다.
+ *
+ * - [transactionTime]과 crypto/query의 observed time: `transaction_timestamp()` snapshot
+ * - campaign/batch share lock: `FOR SHARE`와 canonical lock ordering
+ * - available candidate: `ANY(uuid[])`와 `FOR UPDATE OF ... SKIP LOCKED`
+ * - reservation/allocation terminal transition과 prepared-entry bulk write: server timestamp와
+ *   entry·reservation·user-limit·depth의 고정 갱신 순서
+ * - crypto lock과 pool-depth projection: `FOR UPDATE OF`, `ON CONFLICT` arithmetic, 음수 방지 검증
  */
 @Suppress("LargeClass")
 internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
@@ -206,6 +224,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             ?: error("voucher pool repository requires an active JDBC transaction")
 
 
+    /** PostgreSQL transaction snapshot을 authority 시간으로 사용하므로 DSL로 대체하지 않습니다. */
     override fun transactionTime(): Instant =
         connection.prepareStatement("SELECT transaction_timestamp()").use { statement ->
             statement.executeQuery().use { result ->
@@ -215,27 +234,19 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
 
     override fun createCampaign(campaign: CampaignRecord): CampaignRecord {
-        val sql = """
-            INSERT INTO voucher_pool_campaigns
-                (tenant_id,campaign_id,state,starts_at,ends_at,per_user_limit,reservation_ttl_seconds,
-                 allocation_ttl_seconds,replacement_allowance,user_identity_key_version,policy_version,revision)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-            """.trimIndent()
-        connection.prepareStatement(sql).use { stmt ->
-            stmt.setString(1, campaign.tenantId)
-            stmt.setObject(2, campaign.campaignId)
-            stmt.setString(3, campaign.state.name)
-            stmt.setTimestamp(4, Timestamp.from(campaign.startsAt))
-            stmt.setTimestamp(5, Timestamp.from(campaign.endsAt))
-            stmt.setInt(6, campaign.perUserLimit)
-            stmt.setLong(7, campaign.reservationTtlSeconds)
-            stmt.setLong(8, campaign.allocationTtlSeconds)
-            stmt.setInt(9, campaign.replacementAllowance)
-            stmt.setInt(10, campaign.userIdentityKeyVersion)
-            stmt.setLong(11, campaign.policyVersion)
-            stmt.setLong(12, campaign.revision)
-
-            stmt.executeUpdate()
+        VoucherPoolCampaignTable.insert {
+            it[VoucherPoolCampaignTable.tenantId] = campaign.tenantId
+            it[VoucherPoolCampaignTable.campaignId] = campaign.campaignId
+            it[VoucherPoolCampaignTable.state] = campaign.state
+            it[VoucherPoolCampaignTable.startsAt] = campaign.startsAt
+            it[VoucherPoolCampaignTable.endsAt] = campaign.endsAt
+            it[VoucherPoolCampaignTable.perUserLimit] = campaign.perUserLimit
+            it[VoucherPoolCampaignTable.reservationTtlSeconds] = campaign.reservationTtlSeconds
+            it[VoucherPoolCampaignTable.allocationTtlSeconds] = campaign.allocationTtlSeconds
+            it[VoucherPoolCampaignTable.replacementAllowance] = campaign.replacementAllowance
+            it[VoucherPoolCampaignTable.userIdentityKeyVersion] = campaign.userIdentityKeyVersion
+            it[VoucherPoolCampaignTable.policyVersion] = campaign.policyVersion
+            it[VoucherPoolCampaignTable.revision] = campaign.revision
         }
         return lockCampaignForUpdate(campaign.tenantId, campaign.campaignId).checkNotNull { "lock campaign for update" }
     }
@@ -243,109 +254,84 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
     override fun lockCampaignForUpdate(
         tenantId: String,
         campaignId: UUID,
-    ): CampaignRecord? = connection.prepareStatement(
-        "SELECT * FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=? FOR UPDATE",
-    ).use { stmt ->
-        stmt.setString(1, tenantId)
-        stmt.setObject(2, campaignId)
-        stmt.executeQuery().use { result ->
-            if (result.next()) result.campaignRecord() else null
+    ): CampaignRecord? = VoucherPoolCampaignTable
+        .selectAll()
+        .where {
+            (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                    (VoucherPoolCampaignTable.campaignId eq campaignId)
         }
-    }
+        .forUpdate()
+        .singleOrNull()
+        ?.campaignRecord()
 
     override fun userIdentityKeyVersion(tenantId: String, campaignId: UUID): Int? =
-        connection.prepareStatement(
-            "SELECT user_identity_key_version FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
-        ).use { stmt ->
-            stmt.setString(1, tenantId)
-            stmt.setObject(2, campaignId)
-            stmt.executeQuery().use { result ->
-                if (result.next()) result.getInt(1) else null
+        VoucherPoolCampaignTable
+            .select(VoucherPoolCampaignTable.userIdentityKeyVersion)
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq tenantId) and
+                        (VoucherPoolCampaignTable.campaignId eq campaignId)
             }
-        }
+            .singleOrNull()
+            ?.get(VoucherPoolCampaignTable.userIdentityKeyVersion)
 
     override fun updateCampaign(
         campaign: CampaignRecord,
         expectedRevision: Long,
     ): CampaignRecord {
-        val sql = """
-            UPDATE voucher_pool_campaigns
-               SET state=?,
-                   starts_at=?,
-                   ends_at=?,
-                   per_user_limit=?,
-                   reservation_ttl_seconds=?,
-                   allocation_ttl_seconds=?,
-                   replacement_allowance=?,
-                   policy_version=?,
-                   revision=revision+1,
-                   updated_at=statement_timestamp()
-             WHERE tenant_id=? 
-               AND campaign_id=? 
-               AND revision=?
-             """.trimIndent()
-
-        val updated = connection.prepareStatement(sql).use { stmt ->
-            stmt.setString(1, campaign.state.name)
-            stmt.setTimestamp(2, Timestamp.from(campaign.startsAt))
-            stmt.setTimestamp(3, Timestamp.from(campaign.endsAt))
-            stmt.setInt(4, campaign.perUserLimit)
-            stmt.setLong(5, campaign.reservationTtlSeconds)
-            stmt.setLong(6, campaign.allocationTtlSeconds)
-            stmt.setInt(7, campaign.replacementAllowance)
-            stmt.setLong(8, campaign.policyVersion)
-            stmt.setString(9, campaign.tenantId)
-            stmt.setObject(10, campaign.campaignId)
-            stmt.setLong(11, expectedRevision)
-            stmt.executeUpdate()
+        val updated = VoucherPoolCampaignTable.update({
+            (VoucherPoolCampaignTable.tenantId eq campaign.tenantId) and
+                    (VoucherPoolCampaignTable.campaignId eq campaign.campaignId) and
+                    (VoucherPoolCampaignTable.revision eq expectedRevision)
+        }) {
+            it[VoucherPoolCampaignTable.state] = campaign.state
+            it[VoucherPoolCampaignTable.startsAt] = campaign.startsAt
+            it[VoucherPoolCampaignTable.endsAt] = campaign.endsAt
+            it[VoucherPoolCampaignTable.perUserLimit] = campaign.perUserLimit
+            it[VoucherPoolCampaignTable.reservationTtlSeconds] = campaign.reservationTtlSeconds
+            it[VoucherPoolCampaignTable.allocationTtlSeconds] = campaign.allocationTtlSeconds
+            it[VoucherPoolCampaignTable.replacementAllowance] = campaign.replacementAllowance
+            it[VoucherPoolCampaignTable.policyVersion] = campaign.policyVersion
+            it[VoucherPoolCampaignTable.revision] = VoucherPoolCampaignTable.revision + 1
+            it[VoucherPoolCampaignTable.updatedAt] = CurrentTimestamp
         }
         check(updated == 1) { "campaign update lost its revision" }
         return lockCampaignForUpdate(campaign.tenantId, campaign.campaignId).checkNotNull { "lock campaign for update" }
     }
 
     override fun createBatch(batch: BatchRecord): BatchRecord {
-        val sql = """
-            INSERT INTO voucher_pool_batches
-                (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
-                 policy_version,activates_at,expires_at,next_source_ordinal,expected_count,accepted_count,
-                 rejected_count,checkpoint_digest,last_failure_code,revision)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """.trimIndent()
-
-        connection.prepareStatement(sql).use { stmt ->
-            stmt.setString(1, batch.tenantId)
-            stmt.setObject(2, batch.batchId)
-            stmt.setObject(3, batch.campaignId)
-            stmt.setString(4, batch.state.name)
-            stmt.setString(5, batch.sourceKind)
-            stmt.setBytes(6, batch.provenanceDigest.copyBytes())
-            stmt.setBytes(7, batch.requestFingerprint.copyBytes())
-            stmt.setLong(8, batch.policyVersion)
-            stmt.setTimestamp(9, Timestamp.from(batch.activatesAt))
-            stmt.setTimestamp(10, batch.expiresAt?.let(Timestamp::from))
-            stmt.setLong(11, batch.nextSourceOrdinal)
-            stmt.setLong(12, batch.expectedCount)
-            stmt.setLong(13, batch.acceptedCount)
-            stmt.setLong(14, batch.rejectedCount)
-            stmt.setBytes(15, batch.checkpointDigest?.copyBytes())
-            stmt.setString(16, batch.lastFailureCode)
-            stmt.setLong(17, batch.revision)
-            stmt.executeUpdate()
+        VoucherPoolBatchTable.insert {
+            it[VoucherPoolBatchTable.tenantId] = batch.tenantId
+            it[VoucherPoolBatchTable.batchId] = batch.batchId
+            it[VoucherPoolBatchTable.campaignId] = batch.campaignId
+            it[VoucherPoolBatchTable.state] = batch.state
+            it[VoucherPoolBatchTable.sourceKind] = batch.sourceKind
+            it[VoucherPoolBatchTable.provenanceDigest] = batch.provenanceDigest.copyBytes()
+            it[VoucherPoolBatchTable.requestFingerprint] = batch.requestFingerprint.copyBytes()
+            it[VoucherPoolBatchTable.policyVersion] = batch.policyVersion
+            it[VoucherPoolBatchTable.activatesAt] = batch.activatesAt
+            it[VoucherPoolBatchTable.expiresAt] = batch.expiresAt
+            it[VoucherPoolBatchTable.nextSourceOrdinal] = batch.nextSourceOrdinal
+            it[VoucherPoolBatchTable.expectedCount] = batch.expectedCount
+            it[VoucherPoolBatchTable.acceptedCount] = batch.acceptedCount
+            it[VoucherPoolBatchTable.rejectedCount] = batch.rejectedCount
+            it[VoucherPoolBatchTable.checkpointDigest] = batch.checkpointDigest?.copyBytes()
+            it[VoucherPoolBatchTable.lastFailureCode] = batch.lastFailureCode
+            it[VoucherPoolBatchTable.revision] = batch.revision
         }
         return lockBatchForUpdate(batch.tenantId, batch.batchId)
             .checkNotNull { "lock batch does not exist. tenantId=${batch.tenantId}, batchId=${batch.batchId}" }
     }
 
     override fun lockBatchForUpdate(tenantId: String, batchId: UUID): BatchRecord? =
-        connection.prepareStatement(
-            "SELECT * FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=? FOR UPDATE",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, batchId)
-            statement.executeQuery().use { result ->
-                if (result.next()) result.batchRecord() else null
+        VoucherPoolBatchTable
+            .selectAll()
+            .where {
+                (VoucherPoolBatchTable.tenantId eq tenantId) and
+                        (VoucherPoolBatchTable.batchId eq batchId)
             }
-        }
+            .forUpdate()
+            .singleOrNull()
+            ?.batchRecord()
 
     override fun insertPreparedEntries(entries: List<PreparedVoucherEntryRecord>) {
         entries.forEach { entry ->
@@ -407,28 +393,24 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         batchId: UUID,
         firstOrdinal: Long,
         count: Int,
-    ): List<CommittedOrdinalDigest> = connection.prepareStatement(
-        """SELECT source_ordinal,stable_dedup_digest FROM voucher_pool_entries
-            WHERE tenant_id=? AND batch_id=? AND source_ordinal>=? AND source_ordinal<?
-            ORDER BY source_ordinal""".trimIndent(),
-    ).use { statement ->
-        statement.setString(1, tenantId)
-        statement.setObject(2, batchId)
-        statement.setLong(3, firstOrdinal)
-        statement.setLong(4, firstOrdinal + count)
-        statement.executeQuery().use { result ->
-            buildList {
-                while (result.next()) {
-                    add(
-                        CommittedOrdinalDigest(
-                            sourceOrdinal = result.getLong(1),
-                            stableDedupDigest = DigestValue(result.getBytes(2))
-                        )
-                    )
-                }
-            }
+    ): List<CommittedOrdinalDigest> = VoucherPoolEntryTable
+        .select(
+            VoucherPoolEntryTable.sourceOrdinal,
+            VoucherPoolEntryTable.stableDedupDigest,
+        )
+        .where {
+            (VoucherPoolEntryTable.tenantId eq tenantId) and
+                    (VoucherPoolEntryTable.batchId eq batchId) and
+                    (VoucherPoolEntryTable.sourceOrdinal greaterEq firstOrdinal) and
+                    (VoucherPoolEntryTable.sourceOrdinal less firstOrdinal + count)
         }
-    }
+        .orderBy(VoucherPoolEntryTable.sourceOrdinal to SortOrder.ASC)
+        .map {
+            CommittedOrdinalDigest(
+                sourceOrdinal = it[VoucherPoolEntryTable.sourceOrdinal],
+                stableDedupDigest = DigestValue.of(it[VoucherPoolEntryTable.stableDedupDigest]),
+            )
+        }
 
     override fun updateBatchCheckpoint(
         batch: BatchRecord,
@@ -439,22 +421,19 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         state: BatchState,
         lastFailureCode: String?,
     ): BatchRecord {
-        val updated = connection.prepareStatement(
-            """UPDATE voucher_pool_batches
-                SET next_source_ordinal=?,accepted_count=?,rejected_count=?,checkpoint_digest=?,state=?,
-                    last_failure_code=?,revision=revision+1,updated_at=statement_timestamp()
-                WHERE tenant_id=? AND batch_id=? AND revision=?""".trimIndent(),
-        ).use { statement ->
-            statement.setLong(1, nextSourceOrdinal)
-            statement.setLong(2, acceptedCount)
-            statement.setLong(3, rejectedCount)
-            statement.setBytes(4, checkpointDigest.copyBytes())
-            statement.setString(5, state.name)
-            statement.setString(6, lastFailureCode)
-            statement.setString(7, batch.tenantId)
-            statement.setObject(8, batch.batchId)
-            statement.setLong(9, batch.revision)
-            statement.executeUpdate()
+        val updated = VoucherPoolBatchTable.update({
+            (VoucherPoolBatchTable.tenantId eq batch.tenantId) and
+                    (VoucherPoolBatchTable.batchId eq batch.batchId) and
+                    (VoucherPoolBatchTable.revision eq batch.revision)
+        }) {
+            it[VoucherPoolBatchTable.nextSourceOrdinal] = nextSourceOrdinal
+            it[VoucherPoolBatchTable.acceptedCount] = acceptedCount
+            it[VoucherPoolBatchTable.rejectedCount] = rejectedCount
+            it[VoucherPoolBatchTable.checkpointDigest] = checkpointDigest.copyBytes()
+            it[VoucherPoolBatchTable.state] = state
+            it[VoucherPoolBatchTable.lastFailureCode] = lastFailureCode
+            it[VoucherPoolBatchTable.revision] = VoucherPoolBatchTable.revision + 1
+            it[VoucherPoolBatchTable.updatedAt] = CurrentTimestamp
         }
         check(updated == 1) { "batch checkpoint lost its revision" }
         return lockBatchForUpdate(batch.tenantId, batch.batchId)
@@ -466,19 +445,18 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         rejectedCount: Long,
         failureCode: String,
     ): BatchRecord {
-        val updated = connection.prepareStatement(
-            """UPDATE voucher_pool_batches
-                SET next_source_ordinal=?,rejected_count=?,state='FAILED_TERMINAL',last_failure_code=?,
-                    revision=revision+1,updated_at=statement_timestamp()
-                WHERE tenant_id=? AND batch_id=? AND revision=? AND state='STAGING'""".trimIndent(),
-        ).use { statement ->
-            statement.setLong(1, batch.nextSourceOrdinal + rejectedCount)
-            statement.setLong(2, batch.rejectedCount + rejectedCount)
-            statement.setString(3, failureCode)
-            statement.setString(4, batch.tenantId)
-            statement.setObject(5, batch.batchId)
-            statement.setLong(6, batch.revision)
-            statement.executeUpdate()
+        val updated = VoucherPoolBatchTable.update({
+            (VoucherPoolBatchTable.tenantId eq batch.tenantId) and
+                    (VoucherPoolBatchTable.batchId eq batch.batchId) and
+                    (VoucherPoolBatchTable.revision eq batch.revision) and
+                    (VoucherPoolBatchTable.state eq BatchState.STAGING)
+        }) {
+            it[VoucherPoolBatchTable.nextSourceOrdinal] = batch.nextSourceOrdinal + rejectedCount
+            it[VoucherPoolBatchTable.rejectedCount] = batch.rejectedCount + rejectedCount
+            it[VoucherPoolBatchTable.state] = BatchState.FAILED_TERMINAL
+            it[VoucherPoolBatchTable.lastFailureCode] = failureCode
+            it[VoucherPoolBatchTable.revision] = VoucherPoolBatchTable.revision + 1
+            it[VoucherPoolBatchTable.updatedAt] = CurrentTimestamp
         }
         check(updated == 1) { "batch terminal failure lost its revision" }
         return lockBatchForUpdate(batch.tenantId, batch.batchId)
@@ -488,31 +466,34 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
     override fun batchOrdinalCoverage(
         tenantId: String,
         batchId: UUID,
-    ): BatchOrdinalCoverage = connection.prepareStatement(
-        """SELECT count(*),min(source_ordinal),max(source_ordinal) FROM voucher_pool_entries
-            WHERE tenant_id=? AND batch_id=?""".trimIndent(),
-    ).use { statement ->
-        statement.setString(1, tenantId)
-        statement.setObject(2, batchId)
-        statement.executeQuery().use { result ->
-            check(result.next())
-            BatchOrdinalCoverage(
-                result.getLong(1),
-                result.getLong(2).takeUnless { result.wasNull() },
-                result.getLong(3).takeUnless { result.wasNull() },
-            )
-        }
+    ): BatchOrdinalCoverage {
+        val entryCount = VoucherPoolEntryTable.entryId.count()
+        val minimumOrdinal = VoucherPoolEntryTable.sourceOrdinal.min()
+        val maximumOrdinal = VoucherPoolEntryTable.sourceOrdinal.max()
+        val row = VoucherPoolEntryTable
+            .select(entryCount, minimumOrdinal, maximumOrdinal)
+            .where {
+                (VoucherPoolEntryTable.tenantId eq tenantId) and
+                        (VoucherPoolEntryTable.batchId eq batchId)
+            }
+            .single()
+        return BatchOrdinalCoverage(
+            entryCount = row[entryCount],
+            minimumOrdinal = row[minimumOrdinal],
+            maximumOrdinal = row[maximumOrdinal],
+        )
     }
 
     override fun activateBatch(batch: BatchRecord): BatchRecord {
-        val updated = connection.prepareStatement(
-            """UPDATE voucher_pool_batches SET state='ACTIVE',revision=revision+1,updated_at=statement_timestamp()
-                WHERE tenant_id=? AND batch_id=? AND revision=? AND state='STAGING'""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, batch.tenantId)
-            statement.setObject(2, batch.batchId)
-            statement.setLong(3, batch.revision)
-            statement.executeUpdate()
+        val updated = VoucherPoolBatchTable.update({
+            (VoucherPoolBatchTable.tenantId eq batch.tenantId) and
+                    (VoucherPoolBatchTable.batchId eq batch.batchId) and
+                    (VoucherPoolBatchTable.revision eq batch.revision) and
+                    (VoucherPoolBatchTable.state eq BatchState.STAGING)
+        }) {
+            it[VoucherPoolBatchTable.state] = BatchState.ACTIVE
+            it[VoucherPoolBatchTable.revision] = VoucherPoolBatchTable.revision + 1
+            it[VoucherPoolBatchTable.updatedAt] = CurrentTimestamp
         }
         check(updated == 1) { "batch activation lost its revision" }
         return lockBatchForUpdate(batch.tenantId, batch.batchId)
@@ -520,15 +501,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
     }
 
     override fun updateBatchState(batch: BatchRecord, state: BatchState): BatchRecord {
-        val updated = connection.prepareStatement(
-            """UPDATE voucher_pool_batches SET state=?,revision=revision+1,updated_at=statement_timestamp()
-                WHERE tenant_id=? AND batch_id=? AND revision=?""",
-        ).use { statement ->
-            statement.setString(1, state.name)
-            statement.setString(2, batch.tenantId)
-            statement.setObject(3, batch.batchId)
-            statement.setLong(4, batch.revision)
-            statement.executeUpdate()
+        val updated = VoucherPoolBatchTable.update({
+            (VoucherPoolBatchTable.tenantId eq batch.tenantId) and
+                    (VoucherPoolBatchTable.batchId eq batch.batchId) and
+                    (VoucherPoolBatchTable.revision eq batch.revision)
+        }) {
+            it[VoucherPoolBatchTable.state] = state
+            it[VoucherPoolBatchTable.revision] = VoucherPoolBatchTable.revision + 1
+            it[VoucherPoolBatchTable.updatedAt] = CurrentTimestamp
         }
         check(updated == 1) { "batch state update lost its revision" }
         return lockBatchForUpdate(batch.tenantId, batch.batchId)
@@ -539,6 +519,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         lockCampaignForShareOrNull(connection, tenantId, campaignId)
             .checkNotNull { "campaign campaign campaign does not exist. tenantId=$tenantId, campaignId=$campaignId" }
 
+    /** Exposed DSL에 동등한 PostgreSQL `FOR SHARE` 표현이 없어 공유 row lock은 raw로 보존합니다. */
     private fun lockCampaignForShareOrNull(
         connection: Connection,
         tenantId: String,
@@ -556,6 +537,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
 
     override fun lockBatchForShare(tenantId: String, batchId: UUID): BatchRecord =
+        // `FOR SHARE`는 campaign/batch guard의 canonical lock ordering을 보존하기 위한 PostgreSQL 경계입니다.
         connection.prepareStatement(
             "SELECT * FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=? FOR SHARE",
         ).use { statement ->
@@ -581,27 +563,17 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             it[lifetimeConsumed] = 0
             it[revision] = 0
         }
-        return connection.prepareStatement(
-            "SELECT * FROM voucher_pool_user_limits WHERE tenant_id=? AND campaign_id=? AND user_digest=? FOR UPDATE",
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, campaignId)
-            statement.setBytes(3, userDigest)
-
-            statement.executeQuery().use { result ->
-                if (result.next()) {
-                    UserLimitRecord(
-                        tenantId = tenantId,
-                        campaignId = campaignId,
-                        userDigest = DigestValue.of(result.getBytes("user_digest")),
-                        activeReservations = result.getInt("active_reservations"),
-                        activeAllocations = result.getInt("active_allocations"),
-                        lifetimeConsumed = result.getInt("lifetime_consumed"),
-                        revision = result.getLong("revision"),
-                    )
-                } else error("user_digest does not exist. tenantId=$tenantId, campaignId=$campaignId")
+        return VoucherPoolUserLimitTable
+            .selectAll()
+            .where {
+                (VoucherPoolUserLimitTable.tenantId eq tenantId) and
+                        (VoucherPoolUserLimitTable.campaignId eq campaignId) and
+                        (VoucherPoolUserLimitTable.userDigest eq userDigest)
             }
-        }
+            .forUpdate()
+            .singleOrNull()
+            ?.userLimitRecord()
+            ?: error("user_digest does not exist. tenantId=$tenantId, campaignId=$campaignId")
     }
 
     override fun selectAvailableEntrySkipLocked(
@@ -611,6 +583,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
     ): EntryRecord? {
         if (lockedBatchIds.isEmpty()) return null
 
+        // `ANY(uuid[])`와 `FOR UPDATE OF ... SKIP LOCKED`는 bounded worker 경쟁을 위한 PostgreSQL 전용 경로입니다.
         return connection.prepareStatement(
             """SELECT e.* FROM voucher_pool_entries e JOIN voucher_pool_batches b
               ON b.tenant_id=e.tenant_id AND b.batch_id=e.batch_id AND b.campaign_id=e.campaign_id
@@ -647,21 +620,30 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         lockedBatchIds: List<UUID>,
     ): Boolean {
         if (lockedBatchIds.isEmpty()) return false
-        return connection.prepareStatement(
-            """SELECT EXISTS(SELECT 1 FROM voucher_pool_entries e JOIN voucher_pool_batches b
-                  ON b.tenant_id=e.tenant_id AND b.batch_id=e.batch_id AND b.campaign_id=e.campaign_id
-                WHERE e.tenant_id=? AND e.campaign_id=? AND e.state='AVAILABLE' AND e.quarantined_at IS NULL
-                  AND b.state='ACTIVE' AND b.activates_at<=transaction_timestamp()
-                  AND (b.expires_at IS NULL OR b.expires_at>transaction_timestamp())
-                  AND b.batch_id=ANY(?))""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId); statement.setObject(2, campaignId)
-            statement.setArray(3, connection.createArrayOf("uuid", lockedBatchIds.toTypedArray()))
-            statement.executeQuery().use { result ->
-                result.next()
-                result.getBoolean(1)
+        val joined = VoucherPoolEntryTable.innerJoin(
+            VoucherPoolBatchTable,
+            { VoucherPoolEntryTable.tenantId },
+            { VoucherPoolBatchTable.tenantId },
+            additionalConstraint = {
+                (VoucherPoolEntryTable.batchId eq VoucherPoolBatchTable.batchId) and
+                        (VoucherPoolEntryTable.campaignId eq VoucherPoolBatchTable.campaignId)
+            },
+        )
+        return joined
+            .select(VoucherPoolEntryTable.entryId)
+            .where {
+                (VoucherPoolEntryTable.tenantId eq tenantId) and
+                        (VoucherPoolEntryTable.campaignId eq campaignId) and
+                        (VoucherPoolEntryTable.state eq EntryState.AVAILABLE) and
+                        VoucherPoolEntryTable.quarantinedAt.isNull() and
+                        (VoucherPoolBatchTable.state eq BatchState.ACTIVE) and
+                        (VoucherPoolBatchTable.activatesAt lessEq CurrentTimestamp) and
+                        (VoucherPoolBatchTable.expiresAt.isNull() or
+                                (VoucherPoolBatchTable.expiresAt greater CurrentTimestamp)) and
+                        (VoucherPoolBatchTable.batchId inList lockedBatchIds)
             }
-        }
+            .limit(1)
+            .singleOrNull() != null
     }
 
     override fun createReservation(
@@ -669,6 +651,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         entry: EntryRecord,
         userLimit: UserLimitRecord,
     ): ReservationRecord {
+        // entry·reservation·user-limit·depth를 canonical 순서로 묶고 transaction_timestamp()를 공유해야 하므로 raw를 유지합니다.
         connection.prepareStatement(
             """UPDATE voucher_pool_entries SET state='RESERVED',reservation_id=?,user_digest=?,reserved_at=transaction_timestamp(),
                   reservation_expires_at=?,revision=revision+1 WHERE tenant_id=? AND entry_id=? AND revision=? AND state='AVAILABLE'""".trimIndent(),
@@ -696,6 +679,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         reservationId: UUID,
         userDigest: ByteArray,
     ): LockedReservationChain? {
+        // customer chain은 FOR SHARE와 후속 row lock의 canonical ordering을 유지해야 하므로 raw lock helpers를 사용합니다.
         val hint = findReservation(connection, tenantId, reservationId) ?: return null
 
         if (!MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
@@ -746,6 +730,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         verificationDigest: ByteArray,
         verificationKeyVersion: Int,
     ): LockedAllocationChain {
+        // allocation은 reservation·entry·depth·user-limit을 한 transaction 순서로 갱신하며 DB transaction time을 사용합니다.
         check(chain.reservation.state == "ACTIVE" && chain.entry.state == EntryState.RESERVED)
         connection.prepareStatement(
             """INSERT INTO voucher_pool_allocations
@@ -831,6 +816,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         allocationId: UUID,
         userDigest: ByteArray,
     ): LockedReplacementChain? {
+        // replacement candidate는 SKIP LOCKED와 depth lock ordering을 함께 요구하므로 raw PostgreSQL 경계를 유지합니다.
         val hint = findAllocation(connection, tenantId, allocationId) ?: return null
         if (!MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
         val campaign = lockCampaignForShare(tenantId, hint.campaignId)
@@ -1280,6 +1266,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         from: EntryState,
         to: EntryState,
     ) {
+        // depth projection은 두 state row를 순서대로 잠그고 음수 방지를 원자적으로 검증해야 합니다.
         val locked = connection
             .prepareStatement(
                 """SELECT state FROM voucher_pool_pool_depth
@@ -1411,17 +1398,16 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
     }
 
     private fun lockCampaignForUpdate(candidate: WorkerCandidate): CampaignRecord? =
-        connection.prepareStatement(
-            """SELECT * FROM voucher_pool_campaigns
-                WHERE tenant_id=? AND campaign_id=? AND revision=? FOR UPDATE""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, candidate.tenantId)
-            statement.setObject(2, candidate.campaignId)
-            statement.setLong(3, candidate.expectedCampaignRevision)
-            statement.executeQuery().use { result ->
-                if (result.next()) result.campaignRecord() else null
+        VoucherPoolCampaignTable
+            .selectAll()
+            .where {
+                (VoucherPoolCampaignTable.tenantId eq candidate.tenantId) and
+                        (VoucherPoolCampaignTable.campaignId eq candidate.campaignId) and
+                        (VoucherPoolCampaignTable.revision eq candidate.expectedCampaignRevision)
             }
-        }
+            .forUpdate()
+            .singleOrNull()
+            ?.campaignRecord()
 
     private fun eligibleBatchIds(tenantId: String, campaignId: UUID): List<UUID> =
         VoucherPoolBatchTable
@@ -1441,20 +1427,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
 
     private fun campaignBatchIds(connection: Connection, tenantId: String, campaignId: UUID): List<UUID> =
-        connection.prepareStatement(
-            """SELECT batch_id FROM voucher_pool_batches
-                WHERE tenant_id=? AND campaign_id=? ORDER BY batch_id""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, tenantId)
-            statement.setObject(2, campaignId)
-            statement.executeQuery().use { result ->
-                buildList {
-                    while (result.next()) {
-                        add(result.getObject(1, UUID::class.java))
-                    }
-                }
+        VoucherPoolBatchTable
+            .select(VoucherPoolBatchTable.batchId)
+            .where {
+                (VoucherPoolBatchTable.tenantId eq tenantId) and
+                        (VoucherPoolBatchTable.campaignId eq campaignId)
             }
-        }
+            .orderBy(VoucherPoolBatchTable.batchId to SortOrder.ASC)
+            .map { it[VoucherPoolBatchTable.batchId] }
 
     private fun lockEligibleBatchForShare(
         connection: Connection,
@@ -1476,18 +1456,17 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
 
     private fun lockBatchForUpdate(candidate: WorkerCandidate): BatchRecord? =
-        connection.prepareStatement(
-            """SELECT * FROM voucher_pool_batches
-                WHERE tenant_id=? AND batch_id=? AND campaign_id=? AND revision=? FOR UPDATE""".trimIndent(),
-        ).use { statement ->
-            statement.setString(1, candidate.tenantId)
-            statement.setObject(2, candidate.batchId)
-            statement.setObject(3, candidate.campaignId)
-            statement.setLong(4, candidate.expectedBatchRevision)
-            statement.executeQuery().use { result ->
-                if (result.next()) result.batchRecord() else null
+        VoucherPoolBatchTable
+            .selectAll()
+            .where {
+                (VoucherPoolBatchTable.tenantId eq candidate.tenantId) and
+                        (VoucherPoolBatchTable.batchId eq candidate.batchId) and
+                        (VoucherPoolBatchTable.campaignId eq candidate.campaignId) and
+                        (VoucherPoolBatchTable.revision eq candidate.expectedBatchRevision)
             }
-        }
+            .forUpdate()
+            .singleOrNull()
+            ?.batchRecord()
 
     private fun lockExistingUserLimit(
         connection: Connection,
@@ -1732,6 +1711,58 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             check(statement.executeUpdate() == 1) { "user limit transition lost its revision" }
         }
     }
+
+    private fun ResultRow.campaignRecord(): CampaignRecord =
+        CampaignRecord(
+            tenantId = this[VoucherPoolCampaignTable.tenantId],
+            campaignId = this[VoucherPoolCampaignTable.campaignId],
+            state = this[VoucherPoolCampaignTable.state],
+            policyVersion = this[VoucherPoolCampaignTable.policyVersion],
+            startsAt = this[VoucherPoolCampaignTable.startsAt],
+            endsAt = this[VoucherPoolCampaignTable.endsAt],
+            perUserLimit = this[VoucherPoolCampaignTable.perUserLimit],
+            reservationTtlSeconds = this[VoucherPoolCampaignTable.reservationTtlSeconds],
+            allocationTtlSeconds = this[VoucherPoolCampaignTable.allocationTtlSeconds],
+            replacementAllowance = this[VoucherPoolCampaignTable.replacementAllowance],
+            userIdentityKeyVersion = this[VoucherPoolCampaignTable.userIdentityKeyVersion],
+            revision = this[VoucherPoolCampaignTable.revision],
+            createdAt = this[VoucherPoolCampaignTable.createdAt],
+            updatedAt = this[VoucherPoolCampaignTable.updatedAt],
+        )
+
+    private fun ResultRow.batchRecord(): BatchRecord =
+        BatchRecord(
+            tenantId = this[VoucherPoolBatchTable.tenantId],
+            batchId = this[VoucherPoolBatchTable.batchId],
+            campaignId = this[VoucherPoolBatchTable.campaignId],
+            state = this[VoucherPoolBatchTable.state],
+            sourceKind = this[VoucherPoolBatchTable.sourceKind],
+            provenanceDigest = DigestValue.of(this[VoucherPoolBatchTable.provenanceDigest]),
+            requestFingerprint = DigestValue.of(this[VoucherPoolBatchTable.requestFingerprint]),
+            policyVersion = this[VoucherPoolBatchTable.policyVersion],
+            activatesAt = this[VoucherPoolBatchTable.activatesAt],
+            expiresAt = this[VoucherPoolBatchTable.expiresAt],
+            nextSourceOrdinal = this[VoucherPoolBatchTable.nextSourceOrdinal],
+            expectedCount = this[VoucherPoolBatchTable.expectedCount],
+            acceptedCount = this[VoucherPoolBatchTable.acceptedCount],
+            rejectedCount = this[VoucherPoolBatchTable.rejectedCount],
+            checkpointDigest = this[VoucherPoolBatchTable.checkpointDigest]?.let(DigestValue::of),
+            lastFailureCode = this[VoucherPoolBatchTable.lastFailureCode],
+            revision = this[VoucherPoolBatchTable.revision],
+            createdAt = this[VoucherPoolBatchTable.createdAt],
+            updatedAt = this[VoucherPoolBatchTable.updatedAt],
+        )
+
+    private fun ResultRow.userLimitRecord(): UserLimitRecord =
+        UserLimitRecord(
+            tenantId = this[VoucherPoolUserLimitTable.tenantId],
+            campaignId = this[VoucherPoolUserLimitTable.campaignId],
+            userDigest = DigestValue.of(this[VoucherPoolUserLimitTable.userDigest]),
+            activeReservations = this[VoucherPoolUserLimitTable.activeReservations],
+            activeAllocations = this[VoucherPoolUserLimitTable.activeAllocations],
+            lifetimeConsumed = this[VoucherPoolUserLimitTable.lifetimeConsumed],
+            revision = this[VoucherPoolUserLimitTable.revision],
+        )
 
     private fun ResultSet.campaignRecord(): CampaignRecord =
         CampaignRecord(
