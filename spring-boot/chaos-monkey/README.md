@@ -8,7 +8,7 @@ This module runs a small Student CRUD API with Chaos Monkey for Spring Boot enab
 
 ![Chaos Monkey architecture](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-architecture-01.png)
 
-The application enables the `chaos-monkey` profile in `application.properties`. Watchers are enabled for controller, REST controller, service, and repository beans. The student data path is intentionally simple: `StudentController` → `StudentService` → `StudentJdbcRepository` → H2 `student` table.
+The application enables the `chaos-monkey` profile in `application.properties`. Watchers are enabled for controller, REST controller, service, and repository beans. The student data path is intentionally simple: `StudentController` → `StudentService` → `StudentJdbcRepository` (Exposed DSL) → H2 `student` table. The repository uses the Spring-managed `DataSource` through an Exposed `Database` transaction.
 
 ## Assault Flow
 
@@ -49,7 +49,7 @@ management.endpoints.web.exposure.include=*
 ## Run
 
 ```bash
-./gradlew :spring-boot:chaos-monkey:bootRun
+./gradlew :spring-boot-chaos-monkey:bootRun
 curl http://localhost:8080/students
 curl http://localhost:8080/actuator/chaosmonkey
 ```
@@ -57,7 +57,7 @@ curl http://localhost:8080/actuator/chaosmonkey
 Run the focused controller tests:
 
 ```bash
-./gradlew :spring-boot:chaos-monkey:test
+./gradlew :spring-boot-chaos-monkey:test
 ```
 
 ## References

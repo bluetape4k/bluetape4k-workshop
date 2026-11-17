@@ -14,6 +14,8 @@ configurations {
 
 dependencies {
     implementation(libs.bluetape4k.core)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.spring.boot4.core)
 
