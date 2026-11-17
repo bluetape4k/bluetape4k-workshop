@@ -122,7 +122,9 @@ class ReconciliationService(
         finding.findingType.requireEquals(ReconciliationFindingType.UNLEDGERED_USAGE_AFTER_CUTOFF.name) {
             "findType must be UNLEDGERED_USAGE_AFTER_CUTOFF"
         }
-        finding.expectedDigest.requireEquals(expectedDigest) { "finding.expectedDigest must be equal to expectedDigest" }
+        finding.expectedDigest.requireEquals(expectedDigest) {
+            "finding.expectedDigest must be equal to expectedDigest"
+        }
 
         val usageId = UUID.fromString(finding.resourceId)
         val usage = UsageEventEntity.findById(usageId)
@@ -203,7 +205,10 @@ class ReconciliationService(
                     .any()
                 if (hasLedger) return@mapNotNullTo null
 
-                val type = if (usage.receivedAt > servicePeriod.cutoffReceivedAt!!) {
+                val cutoffReceivedAt = checkNotNull(servicePeriod.cutoffReceivedAt) {
+                    "service period cutoffReceivedAt must be present"
+                }
+                val type = if (usage.receivedAt > cutoffReceivedAt) {
                     ReconciliationFindingType.UNLEDGERED_USAGE_AFTER_CUTOFF
                 } else {
                     ReconciliationFindingType.UNLEDGERED_USAGE

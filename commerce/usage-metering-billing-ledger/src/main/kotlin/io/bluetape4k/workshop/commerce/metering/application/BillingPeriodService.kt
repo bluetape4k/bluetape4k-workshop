@@ -51,7 +51,10 @@ class BillingPeriodService(
             .single()
 
         periods.overlapping(calendar.id.value, startsAt, endsAt)
-            .checkBeFalse { "period.overlapping must be false. calendarId=${calendar.id}, startsAt=$startsAt endsAt=$endsAt" }
+            .checkBeFalse {
+                "period.overlapping must be false. calendarId=${calendar.id}, " +
+                    "startsAt=$startsAt endsAt=$endsAt"
+            }
 
         return BillingPeriodEntity.new(Uuid.V7.nextId()) {
             this.tenantId = tenantId.value
