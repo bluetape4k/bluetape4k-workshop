@@ -7,6 +7,25 @@ This Spring Boot example consumes the `bluetape4k-images` barcode API through th
 versionless in the catalog. The application code stays provider-neutral and wires the ZXing
 implementation only at the configuration boundary.
 
+## Why this example exists
+
+Barcode extraction sits on an untrusted upload boundary: a client wants a quick
+scan result, while the decoder must not receive an oversized or malformed image
+before the service can reject it. This example shows the business-shaped API
+contract for that small but common ingestion step without coupling the
+application service to ZXing.
+
+The design keeps provider choice at configuration and puts bounded metadata and
+pixel checks before the decoder, with the strict Bluetape helper as the final
+defense. The deterministic fixture routes make success, no-result, malformed
+input, and HTTP `413` behavior inspectable; they are not a production upload,
+virus-scanning, or moderation policy.
+
+`BarcodeExtractionServiceTest` and `BarcodeApiApplicationTest`, run by the
+`test` command below, are the test-backed verification for this boundary. They
+cover formats, limits, malformed input, provider failure, cancellation, and the
+HTTP contract rather than claiming scanner accuracy for every camera or label.
+
 ## What it demonstrates
 
 - `ImmutableImage.extractBarcodes(reader)` with `BarcodeReader` and `BarcodeResult`.

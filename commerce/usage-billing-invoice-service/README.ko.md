@@ -7,6 +7,23 @@ materialize합니다. `billing.events.v1`을 소비하고 `ChargeRated` 또는
 `AdjustmentPosted`마다 line을 append한 뒤, 기존 line을 수정하지 않고 invoice
 event를 발행합니다.
 
+## 이 서비스가 필요한 이유
+
+Invoice는 고객에게 보이는 financial record이므로 correction이 무엇을
+바꾸었는지 설명하면서 이미 발행한 charge는 지워서는 안 됩니다. 이 서비스는
+Billing fact를 append-only invoice line으로 만들고 source event ID와 correction
+관계를 남겨 나중에 reconciliation할 수 있게 합니다.
+
+서비스는 로컬 inbox, journal, outbox만 소유합니다. Billing table을 공유하거나
+이전 line을 변경하지 않으며, 중복 전달을 새로운 financial effect로 취급하지
+않습니다. 로컬 deduplication과 append-only 쓰기를 선택한 이유는 replay를
+안전하게 만들고 operator가 correction chain을 따라갈 수 있게 하기 위해서입니다.
+
+**검증 실행**의 `test`와 `integrationTest` 명령이 test-backed 검증입니다.
+inbox uniqueness, append-only 동작, correction materialization, 원자적인
+outbox 쓰기와 publisher fencing을 확인하며, tax·accounting·외부 문서 전달
+준수까지 증명하지는 않습니다.
+
 ![Usage billing 서비스 경계](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)

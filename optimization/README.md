@@ -4,6 +4,28 @@
 
 The `optimization/` group contains application-owned planning and optimization examples. Every module in this group uses the Java 25 toolchain so blocking provider HTTP calls and JDBC work can run with the Bluetape JDK 25 virtual-thread runtime.
 
+## Why this group exists
+
+Planning output is useful only when it can survive the gap between “a solver
+found a proposal” and “the business approved a change.” A clinic slot, worker
+route, delivery stop, or warehouse unit may become stale while a plan is being
+calculated, so these examples treat optimization as a bounded suggestion rather
+than an automatic commit.
+
+The shared direction is application ownership: planners consume synthetic or
+normalized inputs, return deterministic proposals and reason codes, and leave
+approval-time state changes to PostgreSQL compare-and-set or an explicit human
+step. Provider HTTP, callback replay, inbox/outbox delivery, redacted read
+models, and loopback demo guards are shown where the module needs them; live
+credentials, production maps, PHI, and autonomous fulfillment stay outside the
+documented boundary.
+
+Each module README names its business scenario, limits, and verification
+command. `scripts/smoke-validate.sh optimization` is the group-level
+test-backed check; the focused Gradle suites below each module prove the local
+constraints and persistence contracts, not real-world route quality or solver
+optimality.
+
 | Module                                                    | Purpose                                                                                                                                                                                  | Infrastructure                                     |
 |-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
 | [`planning-contracts`](planning-contracts/)               | Provider-neutral planning submission, PostgreSQL inbox/outbox convergence, callback idempotency, and final aggregate-version revalidation                                                | PostgreSQL + WireMock (Testcontainers)             |

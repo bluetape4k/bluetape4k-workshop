@@ -7,6 +7,25 @@ reference. It consumes all four public Kafka topics, builds a local projection,
 and exposes tenant summaries plus operator recovery diagnostics. It never owns
 a financial command or rewrites an original event.
 
+## Why this service exists
+
+Operators and tenants need a coherent view of usage, charges, and invoice
+progress even though those facts arrive from separate services. This service
+exists to answer that read-side question without turning a dashboard into a
+hidden financial command path or a synchronous dependency on every producer.
+
+Its local PostgreSQL projection is the read boundary; the source envelopes and
+financial decisions remain elsewhere. Durable inbox decisions, checkpoints,
+quarantine, and auditable redrive records are used because a poison event must
+not stop unrelated facts, and recovery must not edit the original event. Tenant
+authorization is enforced at the read endpoint, not inferred from projection
+contents.
+
+The `test` and `integrationTest` commands in **Run the evidence** are the
+test-backed proof. They cover decoder compatibility, deduplication, metrics,
+security, recovery audit, projection/checkpoint durability, and quarantine
+persistence. They do not turn the projection into a financial source of truth.
+
 ![Usage billing service boundaries](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)

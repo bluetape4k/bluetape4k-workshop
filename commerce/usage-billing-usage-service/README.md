@@ -6,6 +6,24 @@
 has arrived locally. It makes the source event identity and accepted price
 provenance durable before publishing `UsageAccepted` on `usage.events.v1`.
 
+## Why this service exists
+
+A usage event is a billable business fact only when its source identity and the
+price evidence used to accept it can be reconstructed later. This service
+receives Meter evidence locally, rejects an unknown price instead of guessing,
+and records the accepted provenance before asking Kafka to deliver the result.
+
+The service owns a local PostgreSQL evidence and usage boundary; it never reads
+Meter's tables synchronously and has no HTTP command surface. A local inbox
+deduplicates price events, while the usage fact and outbox row commit together.
+That split is deliberate: at-least-once delivery and process crashes become
+replayable states rather than a second usage charge or an untraceable price.
+
+The `test` and `integrationTest` commands in **Run the evidence** are the
+test-backed proof. They cover decoder, envelope, idempotency, publisher,
+repository, PostgreSQL uniqueness, local price evidence, atomic usage/outbox
+writes, and replay; they do not claim that Kafka delivery is exactly once.
+
 ![Usage billing service boundaries](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)

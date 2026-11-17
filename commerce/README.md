@@ -6,6 +6,27 @@ This group contains end-to-end commerce workflows whose correctness depends on
 multiple independently versioned aggregates, durable application events, and
 operator-visible recovery paths.
 
+## Why these examples exist
+
+Commerce failures rarely belong to one CRUD write: an order can reserve stock
+while payment is still unknown, a voucher can be retried after a lost response,
+and usage can arrive after the price that should rate it. These modules turn
+those business stories into runnable examples where the failure boundary is
+visible instead of hidden in a happy-path controller.
+
+The design keeps the correctness authority separate from throughput helpers.
+PostgreSQL owns state transitions in the state-machine, ledger, and event-sourced
+examples; Redis, workers, SSE, and Kafka delivery remain advisory or retriable
+at their documented boundary. Idempotency keys, immutable facts, inbox/outbox
+records, and operator recovery are used because a retry must be inspectable and
+safe, not because the examples claim end-to-end exactly-once execution.
+
+The module table below is the selection guide: choose the smallest workflow
+that matches the business failure you want to study. The module test commands
+and `scripts/smoke-validate.sh commerce` in **Run** provide the test-backed
+verification path; they prove the listed contracts and failure cases, not
+production load, credentials, or external-provider availability.
+
 The usage-billing service boundaries are summarized below. Each service owns a
 local PostgreSQL authority and crosses service boundaries through Kafka topics;
 the diagram is a source-backed ownership view, not a throughput chart.

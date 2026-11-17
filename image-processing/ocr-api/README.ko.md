@@ -2,6 +2,24 @@
 
 [English](README.md) | 한국어
 
+## 이 예제가 필요한 이유
+
+OCR을 단순히 engine을 한 번 호출하는 일로 보면 안 됩니다. 업로드 service는
+text를 반환하기 전에 byte, decoded pixel, TIFF page, 결과 크기, native engine
+가용성을 제한해야 합니다. 이 예제는 기본적인 “engine unavailable” 경로와
+선택적인 native 경로에 같은 application response 계약을 제공합니다.
+
+해결 방향은 validation, capability 확인, response mapping을 분리하는 것입니다.
+plain engine은 plain text만 반환하고, structured engine은 실제로 제공하는
+detail만 노출하며, TIFF page는 명시된 budget 안에서 입력 순서대로 처리합니다.
+native Tesseract, persistence, authentication, PII 보존, production upload
+hardening은 이 workshop의 경계 밖에 있습니다.
+
+**테스트**에 적힌 smoke·fake-engine·native-option 테스트가 test-backed
+검증입니다. sanitized error, fallback 의미, structured response mapping,
+budget 적용을 증명하며, 로컬 native 실행은 설치된 Tesseract language pack에
+의존합니다.
+
 ## 개요
 
 **image-processing-ocr-api**는 `bluetape4k-images-ocr`를 Spring Boot 4

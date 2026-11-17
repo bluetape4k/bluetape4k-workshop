@@ -4,6 +4,23 @@
 
 This Spring Boot reference application demonstrates synthetic multi-site worker and shift coverage with a human-confirmed shift swap. The planner reads an immutable `ShiftCoverageSnapshot` of workers, shifts, and assignments and returns a deterministic proposal; only manager approval and swap acceptance can change the assignment projection.
 
+## Why this example exists
+
+Coverage planning is a staffing decision, not merely a score: overlap, skills,
+rest, started shifts, and a manager's confirmed swap all affect who may be
+assigned. This example shows how to keep the proposal deterministic while
+leaving the final assignment change to an explicit human action.
+
+The immutable snapshot separates CPU planning from approval-time state. The
+demo fake, bounded admission path, local-time validation, and optional
+PostgreSQL CAS profile make the failure and persistence limits visible; there
+is no autonomous reassignment or claim of a live Timefold integration.
+
+The `test` command in **Run and verify** is the test-backed verification for
+hard rules, callback canonicalization, idempotency, and the documented profile
+boundaries. The console and `bootRun` commands are for inspecting the redacted
+proposal, not for proving workforce quality at production scale.
+
 ## Boundary
 
 - The default `demo` profile binds to loopback and uses the deterministic fake adapter. It does not contact Timefold, store provider credentials, or perform autonomous reassignment.

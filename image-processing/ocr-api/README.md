@@ -2,6 +2,25 @@
 
 [한국어](README.ko.md) | English
 
+## Why this example exists
+
+OCR is often introduced as a single engine call, but an upload service must
+bound bytes, decoded pixels, TIFF pages, result size, and native-engine
+availability before it returns text. This example gives an application team a
+stable response contract for both the normal “engine unavailable” path and an
+optional native path.
+
+The solution separates validation, capability detection, and response mapping.
+Plain engines return plain text, structured engines expose only the detail they
+actually provide, and TIFF pages are processed in order under explicit budgets.
+Native Tesseract, persistence, authentication, PII retention, and production
+upload hardening remain outside this workshop boundary.
+
+The smoke, fake-engine, and native-option tests documented in **Tests** are the
+test-backed verification. They prove sanitized errors, fallback semantics,
+structured response mapping, and budget enforcement; a local native run still
+depends on the installed Tesseract language packs.
+
 ## Overview
 
 **image-processing-ocr-api** is a Spring Boot 4 multipart API example for

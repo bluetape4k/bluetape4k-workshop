@@ -7,6 +7,25 @@ public Kafka topic을 모두 소비해 로컬 projection을 만들고 tenant sum
 operator 복구 진단을 제공합니다. 금융 command를 소유하지 않으며 원본 event를
 다시 쓰지 않습니다.
 
+## 이 서비스가 필요한 이유
+
+Tenant와 operator는 서로 다른 서비스에서 도착하는 usage, charge, invoice
+진행 상태를 하나의 조회 화면에서 확인해야 합니다. 이 서비스는 모든 producer에
+동기 의존하는 숨은 financial command 경로를 만들지 않고 그 조회 요구를
+해결하기 위해 존재합니다.
+
+로컬 PostgreSQL projection은 조회 경계이고, source envelope와 financial
+decision은 다른 서비스가 계속 소유합니다. durable inbox 결정, checkpoint,
+quarantine, 감사 가능한 redrive 기록을 두는 이유는 poison event가 무관한
+fact의 처리를 막지 않게 하고, 복구 과정에서 원본 event를 변경하지 않게 하기
+위해서입니다. Tenant authorization은 projection 내용으로 추론하지 않고 조회
+endpoint에서 검사합니다.
+
+**검증 실행**의 `test`와 `integrationTest` 명령이 test-backed 증거입니다.
+decoder 호환성, deduplication, metrics, security, recovery audit와
+projection/checkpoint durability, quarantine persistence를 확인합니다. 이
+projection을 financial source of truth로 바꾸는 검증은 아닙니다.
+
 ![Usage billing 서비스 경계](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)

@@ -4,6 +4,24 @@
 
 `optimization-warehouse-allocation`은 결정론적 warehouse allocation과 pick-wave 제안을 보여 주는 Java 25/Spring Boot reference application입니다. synthetic order와 `SkuStockSnapshot` 재고 기록을 사용하며, 승인 시 reservation의 최종 권위는 PostgreSQL에 있습니다. planner는 제안만 반환합니다.
 
+## 이 예제가 필요한 이유
+
+Warehouse allocation에는 planner가 feasible한 pick wave를 찾은 뒤 다른 작업이
+재고나 cutoff를 바꾸는 비싼 race가 있습니다. 이 예제는 plan은 제안만 하고,
+부족한 stock의 commit은 approval 시점 PostgreSQL reservation만 수행한다는
+업무 규칙을 따릅니다.
+
+결정론적 planner는 bounded synthetic 재고 기준 데이터를 읽고 근거가 있는 proposal을
+반환합니다. revision, idempotency, inbox/outbox 기록, compare-and-set 갱신은
+replan과 callback 동작을 관측 가능하게 합니다. redacted console과 local
+`FAKE` seam은 workshop 경계이므로 WMS, robotics, carrier API, 자동 commit,
+Kafka, Timefold credential을 지원한다고 해석하지 않습니다.
+
+**검증**의 `cleanTest`/`test`와 optimization smoke 명령이 test-backed
+증거입니다. Exposed adapter, PostgreSQL reservation 기준, canonical payload
+limit, CAS 경계를 확인하며 기록된 outbox event는 production fulfillment의
+증거가 아닙니다.
+
 ## 범위
 
 - order line, warehouse/SKU stock, pick wave, carrier cutoff, shipping rule, picker capacity, committed allocation pin을 모델링합니다.

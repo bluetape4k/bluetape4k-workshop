@@ -4,6 +4,25 @@
 
 This repository-internal module contains compatibility contracts and fixtures shared by commerce examples. It is intentionally not a production service, persistence, adapter, or migration module.
 
+## Why this module exists
+
+The voucher and usage-billing examples need to agree on event identity, replay
+inputs, partition keys, and payload digests while still owning their own
+application behavior. Duplicating those rules in each example would make a
+producer and consumer appear compatible while their edge cases drift.
+
+This module therefore supplies the smallest provider-neutral contracts and
+fixtures that can be checked from both sides. It has no database, schema,
+transport, or state-transition authority; the examples remain responsible for
+their own persistence and delivery boundaries. The stateless helpers and
+independent test oracles are deliberate design choices: they make contract
+drift visible without turning a test fixture into a hidden shared runtime.
+
+The `:commerce-shared:test` and `:commerce-shared:build` commands below are the
+test-backed verification for this boundary. They prove the shared contract and
+fixture behavior without external infrastructure; they do not prove the
+durability or delivery behavior of any consuming service.
+
 ## Provided contract
 
 `VoucherCampaignBlackBoxContract` describes backend-neutral request, normalized-result, replay, allocation, and lifecycle scenarios consumed by the normalized-state and event-sourced voucher campaign examples.

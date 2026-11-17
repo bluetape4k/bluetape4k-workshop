@@ -4,6 +4,26 @@
 
 This Spring Boot reference application demonstrates an application-owned boundary for asynchronous optimization providers. A planning result is a proposal, not a final business decision: the application re-reads the owning aggregate version from PostgreSQL before returning a command candidate.
 
+## Why this example exists
+
+An external optimizer can return a good plan after the business aggregate has
+already changed. This example addresses that ordinary asynchronous planning
+problem: accept a request durably, deliver it through a bounded worker, and
+re-check the aggregate before a proposal becomes a command candidate.
+
+The design keeps provider-specific HTTP and callback behavior behind a
+normalized contract. PostgreSQL owns request, inbox, outbox, lease, and audit
+state; the deterministic fake makes the flow runnable without credentials, and
+stale or mismatched callbacks remain audit evidence instead of overwriting an
+accepted state. The endpoint is a workshop inspection surface, not a public
+operator API.
+
+The `cleanTest`/`test` command in **Verify** is the test-backed proof. It covers
+runtime selection, repository and concurrency convergence, rollback, callback
+security, bounded HTTP/no-retry behavior, redacted responses, and final version
+checks; WireMock supplies deterministic provider tests rather than live service
+quality evidence.
+
 ## Contract
 
 1. `POST /api/planning/requests` stores the request and one outbox row in the same transaction.

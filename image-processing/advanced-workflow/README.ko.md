@@ -2,6 +2,25 @@
 
 [English](README.md) | 한국어
 
+## 이 예제가 필요한 이유
+
+이미지 업로드는 multipart를 저장하는 일로 끝나지 않습니다. 안전하지 않은
+입력을 거부하고, 같은 asset을 중복 처리하지 않고, 전달에 맞는 파생 이미지를
+만들며, native 처리 실패 때 storage와 job 이력을 일관되게 남겨야 합니다.
+이 예제는 local storage와 S3/CDN 배포 중 어떤 경계를 선택할지 확인할 수 있는
+실행 가능한 업로드 workflow를 제공합니다.
+
+해결 방향은 checksum을 사용하는 작은 saga입니다. validation과 pixel limit으로
+비싼 native 작업을 조기에 차단하고, `ImageStorage`로 backend를 감추며,
+partial upload를 정리하면서 job/event 상태를 기록합니다. 데모는 unsigned
+public URL과 제한된 local concurrency를 사용하므로 private content, production
+IAM, CDN policy, 무제한 처리량은 범위에 포함하지 않습니다.
+
+**테스트**의 `test` 명령이 검증 경로입니다. 기본 실행은 결정적인 workflow
+동작을 확인하고, opt-in 실행은 Java 25와 libvips가 있을 때 native VIPS
+integration을 확인합니다. 이 테스트는 문서화된 계약을 증명하며 production
+bucket의 정책이나 가용성까지 증명하지는 않습니다.
+
 ## 개요
 
 **image-processing-advanced-workflow**는 이미지를 검증하고, checksum으로 중복을 판별하고,

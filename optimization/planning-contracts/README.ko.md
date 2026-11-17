@@ -4,6 +4,24 @@
 
 이 Spring Boot 예제는 비동기 optimization provider를 애플리케이션 경계 안에 두는 방법을 보여줍니다. Planning 결과는 제안일 뿐 최종 업무 결정이 아닙니다. 애플리케이션은 command candidate를 반환하기 직전에 PostgreSQL에서 aggregate version을 다시 읽습니다.
 
+## 이 예제가 필요한 이유
+
+External optimizer가 좋은 plan을 반환해도 그 사이 업무 aggregate가 이미
+변경되었을 수 있습니다. 이 예제는 request를 durable하게 접수하고, bounded
+worker로 전달하며, proposal을 command candidate로 반환하기 직전에 aggregate
+version을 다시 확인하는 비동기 planning 문제를 다룹니다.
+
+Provider별 HTTP와 callback 동작은 normalized contract 뒤에 둡니다. PostgreSQL은
+request, inbox, outbox, lease, audit 상태를 소유하고 deterministic fake는
+credential 없이 흐름을 실행하게 합니다. stale 또는 mismatch callback은
+accepted state를 덮어쓰지 않고 audit 증거로 남습니다. endpoint는 workshop
+inspection 표면이지 public operator API가 아닙니다.
+
+**검증**의 `cleanTest`/`test` 명령이 test-backed 증거입니다. runtime 선택,
+repository와 concurrency 수렴, rollback, callback security, bounded HTTP/no-retry,
+redacted response, 최종 version 검사를 확인하며 WireMock은 live service 품질이
+아닌 결정적인 provider test를 제공합니다.
+
 ## 계약
 
 1. `POST /api/planning/requests`는 request와 outbox row를 같은 트랜잭션에 저장합니다.

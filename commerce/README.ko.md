@@ -6,6 +6,28 @@
 event, 운영자가 확인할 수 있는 복구 경계가 함께 필요한 end-to-end commerce
 workflow를 다룹니다.
 
+## 이 예제들이 필요한 이유
+
+Commerce 장애는 하나의 CRUD 쓰기로 끝나지 않습니다. 주문은 결제 결과를
+알 수 없는 상태에서 재고를 예약할 수 있고, 응답이 유실된 뒤 바우처 사용
+요청이 재시도될 수 있으며, 적용 가격이 도착하기 전에 usage가 들어올 수
+있습니다. 이 모듈들은 이런 업무 시나리오를 실행 가능한 예제로 만들고,
+정상 경로 뒤에 숨은 실패 경계를 드러냅니다.
+
+설계는 정확성의 기준 데이터와 처리량을 높이는 보조 수단을 분리합니다.
+state machine, ledger, event-sourcing 예제에서는 PostgreSQL이 상태 전이의
+기준 데이터이고, Redis·worker·SSE·Kafka 전달은 문서에 명시한 범위에서
+보조 또는 재시도 가능한 경로입니다. 재시도 후에도 결과를 추적하고 안전하게
+복구할 수 있도록 idempotency key, 불변 fact, inbox/outbox 기록, operator
+복구 경계를 사용합니다. 이 예제들이 end-to-end exactly-once를 주장한다는
+뜻은 아닙니다.
+
+아래 모듈 표는 학습할 업무 장애에 맞는 가장 작은 workflow를 고르는
+기준입니다. **실행**에 있는 모듈별 test 명령과
+`scripts/smoke-validate.sh commerce`가 test-backed 검증 경로를 제공합니다.
+이 검증은 적은 계약과 장애 시나리오를 확인하며 production 부하, credential,
+외부 provider 가용성까지 증명하지는 않습니다.
+
 usage-billing 서비스 경계는 아래 그림과 같습니다. 각 서비스는 로컬
 PostgreSQL 권위를 소유하고 Kafka topic으로 서비스 경계를 넘습니다. 이 그림은
 처리량 chart가 아니라 소스 코드에 근거한 소유권 구조를 보여 줍니다.

@@ -7,6 +7,24 @@ Billing events. It consumes `billing.events.v1`, appends a line for each
 `ChargeRated` or `AdjustmentPosted` event, and publishes an invoice event without
 editing an earlier line.
 
+## Why this service exists
+
+An invoice is a customer-facing financial record, so a correction must explain
+what changed without erasing the charge that was previously issued. This
+service turns Billing facts into append-only invoice lines and keeps the source
+event ID and correction relationship visible for later reconciliation.
+
+The service owns only its local inbox, journal, and outbox. It does not share
+Billing tables, mutate an earlier line, or treat duplicate delivery as a new
+financial effect. Local deduplication plus append-only writes are the design
+choice because replay should be safe and an operator should be able to follow
+the correction chain.
+
+The `test` and `integrationTest` commands in **Run the evidence** provide the
+test-backed verification: they cover inbox uniqueness, append-only behavior,
+correction materialization, atomic outbox writes, and publisher fencing. They
+do not prove tax, accounting, or external document-delivery compliance.
+
 ![Usage billing service boundaries](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)

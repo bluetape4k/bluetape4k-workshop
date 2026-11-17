@@ -4,6 +4,25 @@
 
 This Spring Boot reference application demonstrates a synthetic-only Field Service dispatcher. It keeps visits, workers, planning proposals, and committed routes in PostgreSQL while a deterministic fixture supplies the planning result. The default path does not contact Timefold, a map provider, or any other external service.
 
+## Why this example exists
+
+Field service work turns a list of visits into a promise about who will arrive,
+with which skill, and inside which time window. A plan can become stale between
+calculation and dispatch, so this example shows the business decision in two
+steps: propose a route, then approve and confirm it against current versions.
+
+The planner is deterministic and synthetic; PostgreSQL owns visits, proposals,
+and committed routes, while approval and worker-route confirmation perform the
+state-changing checks. The redacted console, loopback guard, and local callback
+fixtures are workshop boundaries, not production identity, map quality, or
+Timefold evidence. The design keeps a provider seam without allowing a stale
+proposal to commit silently.
+
+The focused `cleanTest`/`test` command and `scripts/smoke-validate.sh
+optimization` in **Verification** are the test-backed proof. They cover the
+constraint, persistence, callback, and replay contracts documented here; they
+do not claim live route quality.
+
 ## Scope and boundary
 
 - Synthetic visits contain only a visit type, required skill, time window, service duration, priority, and synthetic coordinates.

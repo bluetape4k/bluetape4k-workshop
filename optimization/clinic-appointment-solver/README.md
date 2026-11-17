@@ -5,6 +5,25 @@
 This Spring Boot reference application embeds `ai.timefold.solver:timefold-solver-core`
 to optimize a synthetic clinic appointment schedule. It models providers, rooms, equipment, operating windows, requested slots, and confirmed appointments pinned by Timefold.
 
+## Why this example exists
+
+Clinic scheduling is a resource-allocation problem: a requested slot is useful
+only when a qualified provider, room, and equipment can all be available at the
+same time. This example lets a team inspect how those business rules compete
+before introducing patient data or an external planning platform.
+
+The Solver returns a deterministic proposal and score; the application does
+not confirm an appointment or write a booking. Synthetic fixtures, fixed
+termination, and a stable difficulty comparator are deliberate design choices
+so a reader can compare the same hard/soft constraints repeatedly. PHI, EHR,
+waitlists, expiry, authentication, and Timefold Platform integration remain
+explicit follow-up boundaries.
+
+The `test` command in **Run and verify** is the test-backed proof. Its
+`ConstraintVerifier` cases exercise each hard and soft rule without Docker or
+external credentials; the HTTP `bootRun` path is a manual inspection of the
+read-only proposal, not a production scheduling claim.
+
 ## Boundary
 
 - The `demo` profile runs locally with a deterministic in-memory fixture. It does not contact Timefold Platform, require a tenant/API key, or send a webhook.
