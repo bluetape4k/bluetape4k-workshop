@@ -30,6 +30,11 @@ internal class VoucherPoolFixtureExposedArchitectureTest {
         Files.readString(files.first()).shouldContain("VoucherPoolEntryTable")
         Files.readString(files[1]).shouldContain("VoucherPoolBatchTable")
         Files.readString(files[2]).shouldContain("VoucherPoolHttpIdempotencyTable")
+
+        val queryPlanSource = Files.readString(files[4])
+        queryPlanSource.shouldContain(".explain(analyze = true")
+        queryPlanSource.shouldNotContain("explain(repository.workerCandidatePlanSql")
+        queryPlanSource.shouldNotContain("explain(repository.poolDepthPlanSql")
     }
 
     private fun locateTestSourceRoot(): Path {

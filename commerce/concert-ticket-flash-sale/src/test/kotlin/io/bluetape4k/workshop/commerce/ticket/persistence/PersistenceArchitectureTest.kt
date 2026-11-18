@@ -61,6 +61,20 @@ internal class PersistenceArchitectureTest {
     }
 
     @Test
+    fun `query plans use the Exposed explain wrapper`() {
+        val repositories = listOf(
+            "io/bluetape4k/workshop/commerce/ticket/persistence/TicketRepositories.kt",
+        ).map { locateSourceRoot().resolve(it) }
+
+        repositories.forEach { file ->
+            val source = Files.readString(file)
+            source.shouldNotContain(".exec(stmt = \"EXPLAIN")
+            source.shouldNotContain(".exec(\"EXPLAIN")
+            source.shouldContain(".explain {")
+        }
+    }
+
+    @Test
     fun `shared authority fixture seeds through Exposed`() {
         val fixture = Files.readString(
             locateTestSourceRoot().resolve(

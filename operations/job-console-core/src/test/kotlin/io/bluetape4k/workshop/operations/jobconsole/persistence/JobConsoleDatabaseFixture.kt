@@ -3,9 +3,16 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementBuilder
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.explain
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -86,6 +93,20 @@ internal class JobConsoleDatabaseFixture: AutoCloseable {
             }
         }
 
+    fun explainPlan(
+        analyze: Boolean = false,
+        options: String? = null,
+        disableSeqScan: Boolean = true,
+        query: StatementBuilder.() -> Statement<*>,
+    ): List<String> = transaction(database) {
+        if (disableSeqScan) exec("SET LOCAL enable_seqscan = off")
+        explain(analyze = analyze, options = options, body = query)
+            .toList()
+            .map { it.toString() }
+    }
+
+    fun rawSelect(sql: String): Statement<*> = RawSelectStatement(sql)
+
     override fun close() {
         if (::database.isInitialized) {
             TransactionManager.closeAndUnregister(database)
@@ -119,6 +140,14 @@ internal class JobConsoleDatabaseFixture: AutoCloseable {
         "job_duration_samples" -> JobDurationSampleTable
         else -> error("Unsupported job console fixture table[$name]")
     }
+}
+
+private class RawSelectStatement(
+    private val sql: String,
+): Statement<ResultApi>(StatementType.SELECT, emptyList()) {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = sql
+
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = emptyList()
 }
 
 private object JobSchemaHistoryTable: Table("job_schema_history") {

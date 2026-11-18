@@ -15,6 +15,12 @@ class JobExposedArchitectureTest {
         val outbox = source("JobOutboxRepository.kt")
         val idempotency = source("JobSubmissionIdempotencyRepository.kt")
         val fixture = testFixtureSource("JobConsoleDatabaseFixture.kt")
+        val queuePlan = workspaceSource(
+            "operations/job-console-core/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/queue/QueueQueryPlanTest.kt",
+        )
+        val idempotencyPlan = workspaceSource(
+            "operations/job-console-core/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/persistence/JobSubmissionIdempotencyQueryPlanTest.kt",
+        )
         val authorityQueries = testFixtureSource("JobConsoleAuthorityQueries.kt")
         val adapterProfiles = listOf(
             workspaceSource(
@@ -53,6 +59,11 @@ class JobExposedArchitectureTest {
         fixture.contains("countWhere").shouldBeFalse()
         fixture.contains("countQuery").shouldBeFalse()
         fixture.contains("SELECT count(*) FROM").shouldBeFalse()
+        fixture.contains("fun explainPlan(").shouldBeTrue()
+        listOf(queuePlan, idempotencyPlan).forEach { planSource ->
+            planSource.contains("fixture.explainPlan").shouldBeTrue()
+            planSource.contains("EXPLAIN ").shouldBeFalse()
+        }
         authorityQueries.contains("JobTable.selectAll().count()").shouldBeTrue()
         authorityQueries.contains("connection.createStatement").shouldBeFalse()
         authorityQueries.contains("SELECT count(*)").shouldBeFalse()
