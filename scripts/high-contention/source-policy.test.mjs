@@ -142,7 +142,7 @@ test("local high-contention contract disables Ryuk without replacing the Docker 
 test("Nightly metadata build serializes the shared GraalVM repository", async () => {
     const nightly = await readFile(".github/workflows/nightly.yml", "utf8");
     const buildCommand = nightly.match(
-        /run: \.\/gradlew assemble[\s\S]*?--continue/u,
+        /run:\s*(?:>-?\s*)?\.\/gradlew assemble[\s\S]*?--continue/u,
     )?.[0];
 
     assert.ok(buildCommand, "Nightly compile command must remain discoverable");

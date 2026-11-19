@@ -1,16 +1,14 @@
 package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JobJdbcExecutor
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobHistoryTable
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobOutboxTable
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.neq
-import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -74,14 +72,8 @@ object JobConsoleAuthorityQueries {
         JobTable.selectAll().where { JobTable.queueVersion neq JobTable.version }.count()
     }
 
-    private fun <T> inTransaction(dataSource: DataSource, block: () -> T): T {
-        val database = Database.connect(dataSource)
-        return try {
-            transaction(database) { block() }
-        } finally {
-            TransactionManager.closeAndUnregister(database)
-        }
-    }
+    private fun <T> inTransaction(dataSource: DataSource, block: () -> T): T =
+        JobJdbcExecutor(dataSource).use { jdbc -> jdbc.exposedTransaction { block() } }
 
     private data class OutboxLogicalEvent(
         val jobId: UUID,
