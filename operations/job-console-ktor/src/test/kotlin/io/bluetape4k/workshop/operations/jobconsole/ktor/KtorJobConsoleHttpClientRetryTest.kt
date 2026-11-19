@@ -132,14 +132,22 @@ class KtorJobConsoleHttpClientRetryTest {
             }
         }
 
+        worker.isDaemon = true
         worker.start()
-        firstRequest.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        worker.interrupt()
-        worker.join(2_000)
+        try {
+            firstRequest.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            worker.interrupt()
+            worker.join(2_000)
 
-        worker.isAlive shouldBeEqualTo false
-        failure.get().shouldBeInstanceOf<InterruptedException>()
-        calls.get() shouldBeEqualTo 1
+            worker.isAlive shouldBeEqualTo false
+            failure.get().shouldBeInstanceOf<InterruptedException>()
+            calls.get() shouldBeEqualTo 1
+        } finally {
+            if (worker.isAlive) {
+                worker.interrupt()
+                worker.join(2_000)
+            }
+        }
     }
 
     private fun response(
