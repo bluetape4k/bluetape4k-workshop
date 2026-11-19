@@ -105,7 +105,9 @@ tasks.test {
         "highContentionContractRoot",
         rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
     )
-    useJUnitPlatform { excludeTags("integration", "process-probe", "high-contention") }
+    useJUnitPlatform {
+        excludeTags("integration", "process-probe", "high-contention", "performance")
+    }
 }
 
 val integrationTest = tasks.register<Test>("integrationTest") {
@@ -118,6 +120,19 @@ val integrationTest = tasks.register<Test>("integrationTest") {
         includeTags("integration")
         excludeTags("high-contention")
     }
+    shouldRunAfter(tasks.test)
+}
+
+val performanceObservation = tasks.register<Test>("performanceObservation") {
+    description = "Runs opt-in PostgreSQL authority-query performance observations."
+    group = "verification"
+    useJobConsoleTestRuntime()
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJUnitPlatform { includeTags("performance") }
+    maxParallelForks = 1
+    forkEvery = 1
+    outputs.upToDateWhen { false }
     shouldRunAfter(tasks.test)
 }
 

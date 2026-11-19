@@ -85,6 +85,21 @@ REFERENCE_RUN_ID=developer-reference-001
 `build/reports/high-contention/<run-id>/` 아래에 기록됩니다. 명령마다 새 run
 ID를 사용해야 하며 local-reference 실행에는 clean worktree도 필요합니다.
 
+P3 authority-query 비용은 별도 opt-in 관찰로 확인할 수 있습니다.
+
+```bash
+./gradlew :operations-job-console-core:performanceObservation \
+  --no-configuration-cache --max-workers=1
+```
+
+이 probe는 PostgreSQL fixture에 512/2,048/5,000행을 만들고
+`duplicateOutboxLogicalEventCount`와 `burstQueueViolationCount`의 warm-up 후
+median/p95 및 정합성 결과를
+`operations/job-console-core/build/reports/job-console-authority-queries/`
+`p3-observation.json`에 run ID와 실행 환경 메타데이터와 함께 기록합니다.
+이는 개발 환경의 query-observation이며 운영 용량이나 프레임워크 순위를
+주장하지 않습니다.
+
 Lease, fencing, checkpoint, deduplication, 종료 상태의 권위는 PostgreSQL이
 계속 가집니다. Toxiproxy는 기존 connection과 새 connection을 포함한 Redis
 경로의 단절·복구에만 사용하며 PostgreSQL 권위나 database failover를

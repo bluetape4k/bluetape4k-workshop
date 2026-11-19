@@ -85,6 +85,21 @@ frameworks and does not establish production capacity. Canonical reports are
 written under `build/reports/high-contention/<run-id>/`. Use a new run ID for
 every command; local-reference execution also requires a clean worktree.
 
+P3 authority-query cost can be observed with the opt-in probe:
+
+```bash
+./gradlew :operations-job-console-core:performanceObservation \
+  --no-configuration-cache --max-workers=1
+```
+
+The probe seeds 512, 2,048, and 5,000 rows in a PostgreSQL fixture, then records
+warm-up-adjusted median/p95 timings and correctness results for
+`duplicateOutboxLogicalEventCount` and `burstQueueViolationCount` in
+`operations/job-console-core/build/reports/job-console-authority-queries/`
+`p3-observation.json`, together with a run ID and runtime metadata. This is a
+developer-environment query observation, not a production-capacity or framework
+ranking claim.
+
 PostgreSQL remains the authority for leases, fencing, checkpoints, deduplication,
 and terminal state. Toxiproxy is limited to cutting and restoring the Redis path,
 including old and newly opened connections; it does not simulate PostgreSQL
