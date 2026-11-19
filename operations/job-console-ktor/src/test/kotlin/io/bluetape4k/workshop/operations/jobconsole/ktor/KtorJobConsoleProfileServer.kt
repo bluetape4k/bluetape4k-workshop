@@ -48,7 +48,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -862,7 +861,9 @@ internal class KtorJobConsoleHttpClient(
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
     private val sendRequest: ((HttpRequest) -> HttpResponse<String>)? = null,
-    private val delay: (Duration) -> Unit = { duration -> LockSupport.parkNanos(duration.toNanos()) },
+    private val delay: (Duration) -> Unit = { duration ->
+        TimeUnit.NANOSECONDS.sleep(duration.toNanos())
+    },
 ) {
     private val retryAccumulator = KtorJobConsoleRetryAccumulator()
 
