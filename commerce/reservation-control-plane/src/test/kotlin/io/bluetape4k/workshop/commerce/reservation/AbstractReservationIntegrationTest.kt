@@ -38,6 +38,7 @@ internal abstract class AbstractReservationIntegrationTest {
             registry.add("spring.datasource.url") { postgres.jdbcUrl }
             registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
             registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
+            registry.add("reservation.sweeper.initial-delay") { "PT24H" }
         }
     }
 

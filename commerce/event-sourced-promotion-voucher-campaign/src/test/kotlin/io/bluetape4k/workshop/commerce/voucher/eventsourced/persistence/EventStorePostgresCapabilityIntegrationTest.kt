@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.javatimes.seconds
@@ -114,7 +115,12 @@ internal class EventStorePostgresCapabilityIntegrationTest {
             log.debug { "plan: $plan" }
             plan shouldContain "Index Scan"
             plan shouldContain indexName
+            connection.isClosed.shouldBeFalse()
+            connection.autoCommit.shouldBeFalse()
             connection.rollback()
+            withExistingJdbcTransaction(connection) {
+                EventLog.selectAll().count()
+            } shouldBeEqualTo 0L
         }
     }
 

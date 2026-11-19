@@ -33,6 +33,10 @@ lock/timeout 주입, PostgreSQL advisory lock과 statement-clock 제어는 SQL �
   반복 실행에서 manager가 누적되지 않도록 수명주기를 명시했다.
 - 각 대상 모듈에 범용 `query*`/`single*`/`scalar` helper 재도입을 막는 source
   architecture test를 추가했다.
+- reservation integration fixture는 테스트 중 expiry scheduler의 첫 실행을
+  지연해 Exposed schema drop/create와 scheduler 조회가 경합하지 않도록 했고,
+  event-store의 existing JDBC transaction helper는 caller connection이 열린
+  상태와 caller rollback 권한을 유지하는지 통합 테스트로 고정했다.
 
 ## 보존한 경계
 
@@ -47,9 +51,11 @@ lock/timeout 주입, PostgreSQL advisory lock과 statement-clock 제어는 SQL �
 | operations의 lease/`SKIP LOCKED`/CTE/ctid/advisory lock | row-lock 순서·statement 읽기 시점·maintenance semantics 보존 |
 | pre-generated performance/lock telemetry와 schema-health probe | 성능·세션·migration 관측 자체가 검증 대상 |
 
-독립 diff review에서 확인된 두 P2도 반영했다. authority helper와 변경된 fixture의
+독립 diff review에서 확인된 P2도 반영했다. authority helper와 변경된 fixture의
 Exposed manager teardown을 추가했고, ticket effect claim 만료 주입은 JVM `Instant`가
 아닌 `CURRENT_TIMESTAMP - INTERVAL '1 second'`로 복원해 DB clock 권위를 유지했다.
+reservation fixture의 scheduler 지연과 existing JDBC transaction의 connection/rollback
+회귀 검증도 추가해 DDL 경합과 caller-owned lifecycle 가정을 실행 시점에 확인한다.
 duplicate outbox와 burst sequence 관측의 JVM 집계는 bounded high-contention
 fixture 전용 P3 성능 주의사항으로 남겼으며, 대상 시나리오의 정합성 테스트는 통과했다.
 
