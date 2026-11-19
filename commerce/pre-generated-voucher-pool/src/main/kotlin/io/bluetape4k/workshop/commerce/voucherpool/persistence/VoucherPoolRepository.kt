@@ -205,18 +205,7 @@ internal interface VoucherPoolRepository {
 @Suppress("LargeClass")
 internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
 
-    internal companion object: KLogging() {
-        val ALLOCATION_CANDIDATE_SQL =
-            """
-            SELECT * FROM voucher_pool_entries
-             WHERE tenant_id=? AND batch_id=? 
-               AND state='AVAILABLE' 
-               AND quarantined_at IS NULL
-             ORDER BY source_ordinal, entry_id 
-             LIMIT 1 
-               FOR UPDATE SKIP LOCKED
-             """.trimIndent()
-    }
+    internal companion object: KLogging()
 
     private val connection: Connection
         get() = TransactionManager.currentOrNull()
@@ -1226,11 +1215,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return query.associate { it[VoucherPoolDepthTable.state] to it[depth].checkNotNull("depth") }
     }
 
-    internal fun workerCandidatePlanSql(tenantId: String, batchId: UUID, limit: Int): String =
-        workerEntryQuery(tenantId, batchId, limit).prepareSQL(TransactionManager.current(), false)
+    internal fun workerCandidatePlanQuery(tenantId: String, batchId: UUID, limit: Int): Query =
+        workerEntryQuery(tenantId, batchId, limit)
 
-    internal fun poolDepthPlanSql(tenantId: String, batchId: UUID): String =
-        poolDepthQuery(tenantId, batchId).first.prepareSQL(TransactionManager.current(), false)
+    internal fun poolDepthPlanQuery(tenantId: String, batchId: UUID): Query =
+        poolDepthQuery(tenantId, batchId).first
 
     private fun workerEntryQuery(tenantId: String, batchId: UUID, limit: Int) =
         VoucherPoolEntryTable

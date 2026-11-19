@@ -25,16 +25,14 @@ internal class TicketEndToEndIntegrationTest : AbstractTicketIntegrationTest() {
             PaymentWorker(fixture.executor, fixture.service, payments)
                 .run(command.authorizationOperationId)
 
-            val effectId = fixture.queryUuid("SELECT operation_id FROM ticket_effect_operations WHERE effect_kind = 'issue'")
+            val effectId = fixture.issueEffectOperationId()
 
             TicketEffectWorker(fixture.executor, fixture.service, FakeTicketProvider())
                 .run(effectId)
 
-            fixture
-                .queryString("SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '${command.attemptId}'")
-                .shouldBeEqualTo("approved")
+            fixture.purchaseAttemptState(command.attemptId).shouldBeEqualTo("approved")
 
-            fixture.queryString("SELECT state FROM ticket_tickets").shouldBeEqualTo("issued")
+            fixture.ticketState().shouldBeEqualTo("issued")
             payments.authorizationCount(command.authorizationOperationId) shouldBeEqualTo 0
 
             fixture.assertInventoryInvariant()

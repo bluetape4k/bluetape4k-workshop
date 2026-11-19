@@ -2,6 +2,12 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.jdbc.select
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -19,23 +25,26 @@ class JobSubmissionIdempotencyQueryPlanTest {
             fixture.execute("ANALYZE job_requests")
             fixture.execute("ANALYZE job_request_waiters")
 
-            val admissionPlan =
-                fixture.queryLinesWithoutPlannerOverride(
+            val admissionPlan = fixture.explainPlan(
+                options = "FORMAT JSON, COSTS OFF",
+                disableSeqScan = false,
+            ) {
+                JobRequestWaiterTable
+                    .select(JobRequestWaiterTable.waiterToken.count())
+                    .where {
+                        (JobRequestWaiterTable.tenantId eq "tenant-admission-07") and
+                            (JobRequestWaiterTable.submitterHash eq "a".repeat(64)) and
+                            (JobRequestWaiterTable.keyHash eq "b".repeat(64)) and
+                            (JobRequestWaiterTable.generation eq 1L) and
+                            (JobRequestWaiterTable.expiresAt greater CurrentTimestamp)
+                    }
+            }.joinToString("\n")
+            val retentionPlan = fixture.explainPlan(
+                options = "FORMAT JSON, COSTS OFF",
+                disableSeqScan = false,
+            ) {
+                fixture.rawSelect(
                     """
-                    EXPLAIN (FORMAT JSON, COSTS OFF)
-                    SELECT count(*)
-                    FROM job_request_waiters
-                    WHERE tenant_id = 'tenant-admission-07'
-                      AND submitter_hash = repeat('a', 64)
-                      AND key_hash = repeat('b', 64)
-                      AND generation = 1
-                      AND expires_at > CURRENT_TIMESTAMP
-                    """.trimIndent(),
-                ).joinToString("\n")
-            val retentionPlan =
-                fixture.queryLinesWithoutPlannerOverride(
-                    """
-                    EXPLAIN (FORMAT JSON, COSTS OFF)
                     SELECT ctid
                     FROM job_requests
                     WHERE state = 'TERMINAL'
@@ -43,11 +52,14 @@ class JobSubmissionIdempotencyQueryPlanTest {
                     ORDER BY updated_at
                     LIMIT 100
                     """.trimIndent(),
-                ).joinToString("\n")
-            val abandonmentPlan =
-                fixture.queryLinesWithoutPlannerOverride(
+                )
+            }.joinToString("\n")
+            val abandonmentPlan = fixture.explainPlan(
+                options = "FORMAT JSON, COSTS OFF",
+                disableSeqScan = false,
+            ) {
+                fixture.rawSelect(
                     """
-                    EXPLAIN (FORMAT JSON, COSTS OFF)
                     SELECT ctid
                     FROM job_requests
                     WHERE state = 'ABANDONED'
@@ -55,7 +67,8 @@ class JobSubmissionIdempotencyQueryPlanTest {
                     ORDER BY updated_at
                     LIMIT 100
                     """.trimIndent(),
-                ).joinToString("\n")
+                )
+            }.joinToString("\n")
 
             admissionPlan.contains("ix_job_request_waiters_admission") shouldBeEqualTo true
             retentionPlan.contains("ix_job_requests_terminal_retention") shouldBeEqualTo true

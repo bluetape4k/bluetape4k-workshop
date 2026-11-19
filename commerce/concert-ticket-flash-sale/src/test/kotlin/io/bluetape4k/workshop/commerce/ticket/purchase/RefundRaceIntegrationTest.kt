@@ -32,16 +32,12 @@ internal class RefundRaceIntegrationTest {
             }
             PaymentWorker(fixture.executor, fixture.service, paymentProvider).run(command.authorizationOperationId)
 
-            fixture.queryString("SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '${command.attemptId}'")
-                .shouldBeEqualTo("refund_pending")
-            fixture.queryInt("SELECT sold_quantity FROM ticket_inventory WHERE sale_id = '${fixture.saleId}' AND grade = 'GENERAL'")
-                .shouldBeEqualTo(1)
-            fixture.queryInt("SELECT COUNT(*) FROM ticket_tickets").shouldBeEqualTo(0)
-            fixture.queryInt("SELECT COUNT(*) FROM ticket_effect_operations").shouldBeEqualTo(0)
+            fixture.purchaseAttemptState(command.attemptId).shouldBeEqualTo("refund_pending")
+            fixture.inventorySold().shouldBeEqualTo(1)
+            fixture.ticketCount().shouldBeEqualTo(0)
+            fixture.effectOperationCount().shouldBeEqualTo(0)
 
-            val refundOperationId = fixture.queryUuid(
-                "SELECT refund_operation_id FROM ticket_orders WHERE attempt_id = '${command.attemptId}'",
-            )
+            val refundOperationId = fixture.refundOperationId(command.attemptId)
             val refundProvider = FakeRefundProvider().apply { succeed(refundOperationId) }
             val refunds = RefundService(fixture.executor, refundProvider)
 
@@ -50,14 +46,10 @@ internal class RefundRaceIntegrationTest {
 
             refundProvider.refundCount(refundOperationId) shouldBeEqualTo 1
 
-            fixture.queryString("SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '${command.attemptId}'")
-                .shouldBeEqualTo("refunded")
-            fixture.queryInt("SELECT sold_quantity FROM ticket_inventory WHERE sale_id = '${fixture.saleId}' AND grade = 'GENERAL'")
-                .shouldBeEqualTo(0)
-            fixture.queryInt("SELECT COUNT(*) FROM ticket_active_identity_guards WHERE active_attempt_id = '${command.attemptId}'")
-                .shouldBeEqualTo(0)
-            fixture.queryInt("SELECT COUNT(*) FROM ticket_effect_receipts WHERE operation_id = '$refundOperationId'")
-                .shouldBeEqualTo(1)
+            fixture.purchaseAttemptState(command.attemptId).shouldBeEqualTo("refunded")
+            fixture.inventorySold().shouldBeEqualTo(0)
+            fixture.activeIdentityGuardCount(command.attemptId).shouldBeEqualTo(0)
+            fixture.effectReceiptCount(refundOperationId).shouldBeEqualTo(1)
         }
     }
 }

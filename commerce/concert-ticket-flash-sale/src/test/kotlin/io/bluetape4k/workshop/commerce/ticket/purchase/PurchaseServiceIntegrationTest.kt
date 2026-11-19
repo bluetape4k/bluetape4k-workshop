@@ -8,8 +8,6 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.seconds
-import io.bluetape4k.jdbc.sql.singleInt
-import io.bluetape4k.jdbc.sql.singleString
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
@@ -20,7 +18,17 @@ import io.bluetape4k.workshop.commerce.ticket.idempotency.HttpIdempotencyReposit
 import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyDecision
 import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyFingerprint
 import io.bluetape4k.workshop.commerce.ticket.idempotency.IdempotencyScope
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketActiveIdentityGuards
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketAdmissionGrants
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketDatabaseFixture
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectOperations
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectReceipts
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketHttpIdempotencies
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketInventories
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketOrders
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPaymentOperations
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPurchaseAttempts
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketTickets
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.AuthorizationRequested
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.CancelPurchase
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.StartPurchase
@@ -30,6 +38,10 @@ import io.bluetape4k.workshop.commerce.ticket.salecontrol.api.SalePolicySnapshot
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.internal.SaleNotStarted
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.internal.SaleService
 import org.junit.jupiter.api.Test
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -136,6 +148,12 @@ internal data class DurableState(
     }
 }
 
+internal data class InventoryQuantities(
+    val total: Int,
+    val held: Int,
+    val sold: Int,
+)
+
 @Suppress("SqlResolve", "SqlSourceToSinkFlow")
 internal class PurchaseFixture(
     val inventory: Int = 2,
@@ -216,69 +234,149 @@ internal class PurchaseFixture(
         )
     }
 
-    fun durableState(attemptId: UUID): DurableState =
-        database.dataSource.connection.use { connection ->
-            connection.prepareStatement(
-                """
-                SELECT
-                  (SELECT COUNT(*) FROM ticket_purchase_attempts WHERE attempt_id = ?) AS attempts,
-                  (SELECT COUNT(*) FROM ticket_active_identity_guards WHERE active_attempt_id = ?) AS guards,
-                  (SELECT held_quantity FROM ticket_inventory WHERE sale_id = ? AND grade = 'GENERAL') AS held,
-                  (SELECT COUNT(*) FROM ticket_admission_grants WHERE consumed_attempt_id = ?) AS consumed_grants,
-                  (SELECT COUNT(*) FROM ticket_http_idempotency WHERE attempt_id = ?) AS bound_idempotency
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, attemptId)
-                statement.setObject(2, attemptId)
-                statement.setObject(3, saleId)
-                statement.setObject(4, attemptId)
-                statement.setObject(5, attemptId)
-
-                statement.executeQuery().use { result ->
-                    result.next().shouldBeTrue()
-                    DurableState(
-                        attempts = result.getInt("attempts"),
-                        guards = result.getInt("guards"),
-                        held = result.getInt("held"),
-                        consumedGrants = result.getInt("consumed_grants"),
-                        boundIdempotency = result.getInt("bound_idempotency"),
-                    )
-                }
-            }
-        }
+    fun durableState(attemptId: UUID): DurableState = executor.transaction {
+        DurableState(
+            attempts = TicketPurchaseAttempts.selectAll()
+                .where { TicketPurchaseAttempts.id eq attemptId }
+                .count()
+                .toInt(),
+            guards = TicketActiveIdentityGuards.selectAll()
+                .where { TicketActiveIdentityGuards.activeAttemptId eq attemptId }
+                .count()
+                .toInt(),
+            held = inventoryQuantitiesInCurrentTransaction().held,
+            consumedGrants = TicketAdmissionGrants.selectAll()
+                .where { TicketAdmissionGrants.consumedAttemptId eq attemptId }
+                .count()
+                .toInt(),
+            boundIdempotency = TicketHttpIdempotencies.selectAll()
+                .where { TicketHttpIdempotencies.attemptId eq attemptId }
+                .count()
+                .toInt(),
+        )
+    }
 
     fun execute(sql: String) = database.execute(sql)
 
-    fun queryInt(sql: String): Int =
-        database.dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                log.debug { "Query Int: $sql" }
-                statement.executeQuery(sql).use { result ->
-                    result.singleInt()
-                }
-            }
-        }
+    fun inventoryQuantities(): InventoryQuantities = executor.transaction {
+        inventoryQuantitiesInCurrentTransaction()
+    }
 
-    fun queryString(sql: String): String =
-        database.dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                log.debug { "Query String: $sql" }
-                statement.executeQuery(sql).use { result ->
-                    result.singleString()!!
-                }
+    private fun inventoryQuantitiesInCurrentTransaction(): InventoryQuantities {
+        val row = TicketInventories
+            .select(
+                TicketInventories.totalQuantity,
+                TicketInventories.heldQuantity,
+                TicketInventories.soldQuantity,
+            )
+            .where {
+                (TicketInventories.saleId eq this@PurchaseFixture.saleId) and
+                        (TicketInventories.grade eq "GENERAL")
             }
-        }
+            .single()
+        return InventoryQuantities(
+            total = row[TicketInventories.totalQuantity],
+            held = row[TicketInventories.heldQuantity],
+            sold = row[TicketInventories.soldQuantity],
+        )
+    }
 
-    fun queryUuid(sql: String): UUID =
-        database.dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                log.debug { "Execute UUID: $sql" }
-                statement.executeQuery(sql).use { result ->
-                    result.next().shouldBeTrue()
-                    result.getObject(1, UUID::class.java)
-                }
+    fun inventoryHeld(): Int = inventoryQuantities().held
+
+    fun inventorySold(): Int = inventoryQuantities().sold
+
+    fun purchaseAttemptState(attemptId: UUID): String = executor.transaction {
+        TicketPurchaseAttempts
+            .select(TicketPurchaseAttempts.state)
+            .where { TicketPurchaseAttempts.id eq attemptId }
+            .single()[TicketPurchaseAttempts.state]
+    }
+
+    fun ticketState(): String = executor.transaction {
+        TicketTickets.select(TicketTickets.state).single()[TicketTickets.state]
+    }
+
+    fun ticketDisposition(): String = executor.transaction {
+        TicketOrders.select(TicketOrders.ticketDisposition).single()[TicketOrders.ticketDisposition]
+    }
+
+    fun issueEffectOperationId(): UUID = executor.transaction {
+        TicketEffectOperations
+            .select(TicketEffectOperations.operationId)
+            .where { TicketEffectOperations.effectKind eq "issue" }
+            .single()[TicketEffectOperations.operationId]
+    }
+
+    fun refundOperationId(attemptId: UUID): UUID = executor.transaction {
+        checkNotNull(
+            TicketOrders
+                .select(TicketOrders.refundOperationId)
+                .where { TicketOrders.attemptId eq attemptId }
+                .single()[TicketOrders.refundOperationId],
+        )
+    }
+
+    fun effectReceiptCount(operationId: UUID): Int = executor.transaction {
+        TicketEffectReceipts
+            .selectAll()
+            .where { TicketEffectReceipts.operationId eq operationId }
+            .count()
+            .toInt()
+    }
+
+    fun ticketCount(): Int = executor.transaction { TicketTickets.selectAll().count().toInt() }
+
+    fun effectOperationCount(): Int = executor.transaction { TicketEffectOperations.selectAll().count().toInt() }
+
+    fun orderCount(attemptId: UUID): Int = executor.transaction {
+        TicketOrders.selectAll().where { TicketOrders.attemptId eq attemptId }.count().toInt()
+    }
+
+    fun identityGuardCount(kind: String, subjectId: UUID): Int = executor.transaction {
+        TicketActiveIdentityGuards
+            .selectAll()
+            .where {
+                (TicketActiveIdentityGuards.saleId eq this@PurchaseFixture.saleId) and
+                        (TicketActiveIdentityGuards.identityKind eq kind) and
+                        (TicketActiveIdentityGuards.identitySubjectId eq subjectId)
             }
-        }
+            .count()
+            .toInt()
+    }
+
+    fun activeIdentityGuardCount(attemptId: UUID): Int = executor.transaction {
+        TicketActiveIdentityGuards
+            .selectAll()
+            .where { TicketActiveIdentityGuards.activeAttemptId eq attemptId }
+            .count()
+            .toInt()
+    }
+
+    fun duplicatePaymentOperationCount(): Int = executor.transaction {
+        TicketPaymentOperations
+            .select(TicketPaymentOperations.operationId)
+            .map { it[TicketPaymentOperations.operationId] }
+            .groupingBy { it }
+            .eachCount()
+            .count { (_, count) -> count > 1 }
+    }
+
+    fun duplicateEffectReceiptCount(): Int = executor.transaction {
+        TicketEffectReceipts
+            .select(TicketEffectReceipts.operationId)
+            .map { it[TicketEffectReceipts.operationId] }
+            .groupingBy { it }
+            .eachCount()
+            .count { (_, count) -> count > 1 }
+    }
+
+    fun expireEffectClaim(operationId: UUID) {
+        // 만료 주입은 애플리케이션 clock이 아니라 PostgreSQL statement clock을 검증한다.
+        execute(
+            "UPDATE ticket_effect_operations SET claim_until = CURRENT_TIMESTAMP - INTERVAL '1 second' " +
+                    "WHERE operation_id = '$operationId'",
+        )
+    }
 
     override fun close() {
         database.close()

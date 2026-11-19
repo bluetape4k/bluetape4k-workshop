@@ -34,9 +34,7 @@ internal class TicketContextRestartIntegrationTest: AbstractTicketIntegrationTes
                 .run(command.authorizationOperationId)
 
             provider.authorizationCount(command.authorizationOperationId) shouldBeEqualTo 1
-            fixture
-                .queryString("SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '${command.attemptId}'")
-                .shouldBeEqualTo("approved")
+            fixture.purchaseAttemptState(command.attemptId).shouldBeEqualTo("approved")
 
             fixture.assertInventoryInvariant()
         }

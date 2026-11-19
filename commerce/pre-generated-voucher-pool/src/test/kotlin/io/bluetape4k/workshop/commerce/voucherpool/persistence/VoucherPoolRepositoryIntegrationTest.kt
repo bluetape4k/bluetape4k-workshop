@@ -12,8 +12,6 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.concurrent.await
 import io.bluetape4k.concurrent.get
 import io.bluetape4k.jackson3.Jackson
-import io.bluetape4k.jdbc.sql.singleInt
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.database.getHikariDataSource
@@ -27,6 +25,17 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.core.io.ClassPathResource
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.explain
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import tools.jackson.databind.JsonNode
 import java.nio.file.Files
 import java.nio.file.Path
@@ -55,6 +64,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
     private val dataSource = postgres.getHikariDataSource {
         schema = SCHEMA
     }
+    private val exposedDatabase = Database.connect(dataSource)
 
     private lateinit var repository: JdbcVoucherPoolRepository
 
@@ -76,6 +86,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
 
     @AfterAll
     fun afterAll() {
+        TransactionManager.closeAndUnregister(exposedDatabase)
         dataSource.close()
     }
 
@@ -679,13 +690,20 @@ internal class VoucherPoolRepositoryIntegrationTest {
                     ),
                 )
             }
-            queryLong(
-                conn,
-                "SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'"
-            ) shouldBeEqualTo 1L
+            withExistingJdbcTransaction(conn) {
+                VoucherPoolAuditTable
+                    .selectAll()
+                    .where { VoucherPoolAuditTable.campaignId eq campaign }
+                    .count()
+            } shouldBeEqualTo 1L
             conn.rollback()
         }
-        queryLong("SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'") shouldBeEqualTo 0L
+        transaction(exposedDatabase) {
+            VoucherPoolAuditTable
+                .selectAll()
+                .where { VoucherPoolAuditTable.campaignId eq campaign }
+                .count()
+        } shouldBeEqualTo 0L
     }
 
     @Test
@@ -693,23 +711,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         val batch = createBatch(TENANT, campaign)
         loadRepresentativePlanFixture(campaign, batch)
-        val plans = mapOf(
-            "allocation-candidate" to explain(JdbcVoucherPoolRepository.ALLOCATION_CANDIDATE_SQL) {
-                it.setString(1, TENANT); it.setObject(2, batch)
-            },
-            "worker-candidate" to dataSource.connection.use { connection ->
-                connection.autoCommit = false
-                withExistingJdbcTransaction(connection) {
-                    explain(repository.workerCandidatePlanSql(TENANT, batch, 100)) {}
-                }
-            },
-            "pool-depth" to dataSource.connection.use { connection ->
-                connection.autoCommit = false
-                withExistingJdbcTransaction(connection) {
-                    explain(repository.poolDepthPlanSql(TENANT, batch)) {}
-                }
-            },
-        )
+        val plans = representativePlans(batch)
         val directory = Path.of("build/reports/voucher-pool/query-plans")
         Files.createDirectories(directory)
         val ceilings = mapOf(
@@ -743,6 +745,34 @@ internal class VoucherPoolRepositoryIntegrationTest {
                 )
             } shouldBeAtMost blockCeiling
         }
+    }
+
+    private fun representativePlans(batchId: UUID): Map<String, String> = mapOf(
+        "allocation-candidate" to allocationCandidatePlan(batchId),
+        "worker-candidate" to workerCandidatePlan(batchId),
+        "pool-depth" to poolDepthPlan(batchId),
+    )
+
+    private fun allocationCandidatePlan(batchId: UUID): String = transaction(exposedDatabase) {
+        TransactionManager.current()
+            .explain(analyze = true, options = "BUFFERS, FORMAT JSON") { allocationCandidatePlanQuery(batchId) }
+            .toList()
+            .single()
+            .toString()
+            .substringAfter('=')
+    }
+
+    private fun workerCandidatePlan(batchId: UUID): String = explainWithExistingConnection {
+        repository.workerCandidatePlanQuery(TENANT, batchId, 100)
+    }
+
+    private fun poolDepthPlan(batchId: UUID): String = explainWithExistingConnection {
+        repository.poolDepthPlanQuery(TENANT, batchId)
+    }
+
+    private fun explainWithExistingConnection(query: () -> Query): String = dataSource.connection.use { connection ->
+        connection.autoCommit = false
+        withExistingJdbcTransaction(connection) { explain(query()) }
     }
 
     private fun loadRepresentativePlanFixture(campaign: UUID, batch: UUID) {
@@ -890,22 +920,10 @@ internal class VoucherPoolRepositoryIntegrationTest {
         connection
             .createStatement().use { stmt ->
                 stmt.executeQuery("SELECT pg_backend_pid()").use {
-                    it.singleInt()
+                    check(it.next())
+                    it.getInt(1)
                 }
             }
-
-    private fun queryLong(connection: java.sql.Connection, sql: String): Long =
-        connection
-            .createStatement().use { stmt ->
-                stmt.executeQuery(sql).use {
-                    it.singleLong()
-                }
-            }
-
-    private fun queryLong(sql: String): Long =
-        dataSource.connection.use {
-            queryLong(it, sql)
-        }
 
     private fun reservationInsert(
         reservationId: UUID,
@@ -962,14 +980,31 @@ internal class VoucherPoolRepositoryIntegrationTest {
             }
         }
 
-    private fun explain(sql: String, bind: (java.sql.PreparedStatement) -> Unit): String =
-        dataSource.connection.use { connection ->
-            connection.autoCommit = false
-            connection.prepareStatement("EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) $sql").use { statement ->
-                bind(statement)
-                statement.executeQuery().use { result -> result.next(); result.getString(1) }
-            }.also { connection.rollback() }
-        }
+    private fun allocationCandidatePlanQuery(batchId: UUID): Query =
+        VoucherPoolEntryTable
+            .selectAll()
+            .where {
+                (VoucherPoolEntryTable.tenantId eq TENANT) and
+                    (VoucherPoolEntryTable.batchId eq batchId) and
+                    (VoucherPoolEntryTable.state eq EntryState.AVAILABLE) and
+                    VoucherPoolEntryTable.quarantinedAt.isNull()
+            }
+            .orderBy(
+                VoucherPoolEntryTable.sourceOrdinal to SortOrder.ASC,
+                VoucherPoolEntryTable.entryId to SortOrder.ASC,
+            )
+            .limit(1)
+            .forUpdate(
+                ForUpdateOption.PostgreSQL.ForUpdate(ForUpdateOption.PostgreSQL.MODE.SKIP_LOCKED),
+            )
+
+    private fun explain(query: Query): String =
+        TransactionManager.current()
+            .explain(analyze = true, options = "BUFFERS, FORMAT JSON") { query }
+            .toList()
+            .single()
+            .toString()
+            .substringAfter('=')
 
     private infix fun Long.shouldBeAtMost(ceiling: Long) {
         require(this <= ceiling) { "plan metric $this exceeded ceiling $ceiling" }

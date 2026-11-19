@@ -245,15 +245,7 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
     }
 
     private fun contributingClaims(campaignId: java.util.UUID): Long =
-        queryLong(
-            """
-            SELECT count(*)
-              FROM voucher_claims
-             WHERE campaign_id = '$campaignId'
-               AND capacity_reserved = true
-               AND state IN ('ALLOCATED', 'REVIEW_REQUIRED', 'REDEEMED')
-            """.trimIndent(),
-        )
+        contributingClaimCount(campaignId)
 
     private fun hikariDataSource(applicationName: String): HikariDataSource =
         HikariDataSource(

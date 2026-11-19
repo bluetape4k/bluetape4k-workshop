@@ -16,6 +16,7 @@ import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentio
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionJournal
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionProfile
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleAuthorityBaseline
+import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleAuthorityQueries
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleDockerResources
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleLiveProfileAdapter
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleProxiedTopology
@@ -676,64 +677,22 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         )
 
     private fun authorityBaseline(): JobConsoleAuthorityBaseline =
-        application.dataSource.connection.use { connection ->
-            JobConsoleAuthorityBaseline(
-                jobs = connection.countRows("jobs"),
-                effects = connection.countRows("job_history"),
-                receipts = connection.countRows("job_outbox"),
-            )
-        }
+        JobConsoleAuthorityQueries.baseline(application.dataSource)
 
     private fun authorityBaseline(jobId: UUID): JobConsoleAuthorityBaseline =
-        application.dataSource.connection.use { connection ->
-            JobConsoleAuthorityBaseline(
-                jobs = connection.countRows("jobs", jobId),
-                effects = connection.countRows("job_history", jobId),
-                receipts = connection.countRows("job_outbox", jobId),
-            )
-        }
+        JobConsoleAuthorityQueries.baseline(application.dataSource, jobId)
 
     private fun duplicateOutboxLogicalEventCount(): Long =
-        scalarCount(
-            """
-            SELECT count(*)
-            FROM (
-                SELECT job_id, event_type, resource_version
-                FROM job_outbox
-                GROUP BY job_id, event_type, resource_version
-                HAVING count(*) > 1
-            ) duplicates
-            """.trimIndent(),
-        )
+        JobConsoleAuthorityQueries.duplicateOutboxLogicalEventCount(application.dataSource)
 
     private fun burstQueueViolationCount(): Long =
-        scalarCount(
-            """
-            SELECT count(*)
-            FROM (
-                SELECT enqueue_sequence,
-                       row_number() OVER (PARTITION BY tenant_id ORDER BY enqueue_sequence) expected_sequence
-                FROM jobs
-            ) ordered_jobs
-            WHERE enqueue_sequence <> expected_sequence
-            """.trimIndent(),
-        )
+        JobConsoleAuthorityQueries.burstQueueViolationCount(application.dataSource)
 
     private fun activeJobCount(): Long =
-        scalarCount("SELECT count(*) FROM jobs WHERE state IN ('running', 'cancel_requested')")
+        JobConsoleAuthorityQueries.activeJobCount(application.dataSource)
 
     private fun queueVersionDivergenceCount(): Long =
-        scalarCount("SELECT count(*) FROM jobs WHERE queue_version <> version")
-
-    private fun scalarCount(sql: String): Long =
-        application.dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result ->
-                    check(result.next())
-                    result.getLong(1)
-                }
-            }
-        }
+        JobConsoleAuthorityQueries.queueVersionDivergenceCount(application.dataSource)
 
     private fun scenarioFor(
         token: ScheduleToken,
@@ -1062,22 +1021,6 @@ internal class KtorJobConsoleHttpClient(
     }
 }
 
-private fun java.sql.Connection.countRows(table: String): Long =
-    createStatement().use { statement ->
-        statement.executeQuery("SELECT count(*) FROM $table").use { result ->
-            check(result.next())
-            result.getLong(1)
-        }
-    }
-
-private fun java.sql.Connection.countRows(table: String, jobId: UUID): Long =
-    prepareStatement("SELECT count(*) FROM $table WHERE job_id = ?").use { statement ->
-        statement.setObject(1, jobId)
-        statement.executeQuery().use { result ->
-            check(result.next())
-            result.getLong(1)
-        }
-    }
 
 private inline fun fails(action: () -> Unit): Boolean =
     try {

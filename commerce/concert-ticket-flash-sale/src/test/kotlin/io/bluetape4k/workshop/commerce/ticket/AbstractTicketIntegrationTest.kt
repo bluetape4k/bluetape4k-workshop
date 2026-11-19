@@ -10,21 +10,15 @@ internal abstract class AbstractTicketIntegrationTest {
     companion object: KLogging()
 
     protected fun PurchaseFixture.assertInventoryInvariant() {
-        val total = queryInt("SELECT total_quantity FROM ticket_inventory WHERE sale_id = '$saleId' AND grade = 'GENERAL'")
-        val held = queryInt("SELECT held_quantity FROM ticket_inventory WHERE sale_id = '$saleId' AND grade = 'GENERAL'")
-        val sold = queryInt("SELECT sold_quantity FROM ticket_inventory WHERE sale_id = '$saleId' AND grade = 'GENERAL'")
+        val inventory = inventoryQuantities()
 
-        held shouldBeGreaterOrEqualTo 0
-        sold shouldBeGreaterOrEqualTo 0
-        total shouldBeGreaterOrEqualTo (held + sold)
+        inventory.held shouldBeGreaterOrEqualTo 0
+        inventory.sold shouldBeGreaterOrEqualTo 0
+        inventory.total shouldBeGreaterOrEqualTo (inventory.held + inventory.sold)
     }
 
     protected fun PurchaseFixture.assertNoDuplicateEffects() {
-        queryInt(
-            "SELECT COUNT(*) FROM (SELECT operation_id FROM ticket_payment_operations GROUP BY operation_id HAVING COUNT(*) > 1) d",
-        ) shouldBeEqualTo 0
-        queryInt(
-            "SELECT COUNT(*) FROM (SELECT operation_id FROM ticket_effect_receipts GROUP BY operation_id HAVING COUNT(*) > 1) d",
-        ) shouldBeEqualTo 0
+        duplicatePaymentOperationCount() shouldBeEqualTo 0
+        duplicateEffectReceiptCount() shouldBeEqualTo 0
     }
 }

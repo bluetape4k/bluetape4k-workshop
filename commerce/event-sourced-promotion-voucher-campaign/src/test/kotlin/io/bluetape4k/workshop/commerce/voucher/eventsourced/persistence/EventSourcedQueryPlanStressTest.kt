@@ -11,6 +11,8 @@ import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.explain
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
@@ -79,6 +81,7 @@ internal class EventSourcedQueryPlanStressTest {
     @Test
     fun `seeded authority queries retain bounded index plans`() {
         postgresDatabase.dataSource.connection.use { connection ->
+            connection.autoCommit = false
             queryShapes().forEach { query ->
                 log.debug { "query: $query" }
                 val evidence = connection.explain(query)
@@ -299,12 +302,11 @@ private data class QueryPlanEvidence(
 }
 
 private fun Connection.explain(query: QueryShape): QueryPlanEvidence {
-    val plan = prepareStatement("EXPLAIN (ANALYZE, BUFFERS) ${query.sql}").use { statement ->
-        statement.executeQuery().use { result ->
-            buildList {
-                while (result.next()) add(result.getString(1))
-            }.joinToString("\n")
-        }
+    val plan = withExistingJdbcTransaction(this) {
+        TransactionManager.current()
+            .explain(analyze = true, options = "BUFFERS") { rawSelect(query.sql) }
+            .toList()
+            .joinToString("\n") { it.toString().substringAfter('=') }
     }
     val sharedBuffers = SHARED_BUFFER_PATTERN
         .findAll(plan)

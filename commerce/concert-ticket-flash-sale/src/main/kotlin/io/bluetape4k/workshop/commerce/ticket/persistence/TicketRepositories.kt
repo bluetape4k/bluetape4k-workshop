@@ -6,11 +6,11 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.plus
-import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.explain
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -111,14 +111,8 @@ class TicketWaitingRoomRepository(
         return jdbc.transaction {
             transaction.exec("SET LOCAL enable_seqscan = off")
 
-            val prepared = getClaimBatchQuery(saleId).prepareSQL(this.transaction, false)
-            transaction.exec(stmt = "EXPLAIN $prepared", explicitStatementType = StatementType.SELECT) { result ->
-                buildList {
-                    while (result.next()) {
-                        add(result.getString(1))
-                    }
-                }
-            } ?: emptyList()
+            val query = getClaimBatchQuery(saleId)
+            transaction.explain { query }.toList().map { it.toString() }
         }
     }
 
@@ -169,18 +163,13 @@ class TicketPaymentOperationRepository(
     fun explainDue(): List<String> {
         return jdbc.transaction {
             transaction.exec("SET LOCAL enable_seqscan = off")
-            transaction.exec("EXPLAIN ${getPendingId()}", explicitStatementType = StatementType.SELECT) { result ->
-                buildList {
-                    while (result.next()) {
-                        add(result.getString(1))
-                    }
-                }
-            } ?: emptyList()
+            val query = getPendingQuery()
+            transaction.explain { query }.toList().map { it.toString() }
         }
     }
 
-    fun TicketJdbcTransaction.getPendingId(limit: Int = 50): String {
-        val query = TicketPaymentOperations
+    private fun TicketJdbcTransaction.getPendingQuery(limit: Int = 50): Query =
+        TicketPaymentOperations
             .select(TicketPaymentOperations.id)
             .where { TicketPaymentOperations.status eq "pending" }
             .andWhere { TicketPaymentOperations.nextReconcileAt lessEq CurrentTimestamp }
@@ -190,6 +179,6 @@ class TicketPaymentOperationRepository(
             )
             .limit(limit)
 
-        return query.prepareSQL(this.transaction, false)
-    }
+    fun TicketJdbcTransaction.getPendingId(limit: Int = 50): String =
+        getPendingQuery(limit).prepareSQL(this.transaction, false)
 }

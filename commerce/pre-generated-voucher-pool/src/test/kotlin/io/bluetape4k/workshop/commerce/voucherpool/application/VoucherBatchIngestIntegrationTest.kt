@@ -18,7 +18,6 @@ import io.bluetape4k.concurrent.await
 import io.bluetape4k.concurrent.awaitTermination
 import io.bluetape4k.concurrent.get
 import io.bluetape4k.javatimes.seconds
-import io.bluetape4k.jdbc.sql.singleLong
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8Bytes
@@ -43,6 +42,10 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcVoucherPoolRepository
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolBatchTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCampaignTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolCodeDedupTable
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolEntryTable
 import io.bluetape4k.workshop.commerce.voucherpool.security.AesGcmVoucherEnvelopeCrypto
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKey
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKeyRing
@@ -57,7 +60,12 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherEnvelopeCrypt
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKek
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKekRing
 import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -97,6 +105,7 @@ internal class VoucherBatchIngestIntegrationTest {
     private val dataSource = postgres.getHikariDataSource {
         schema = voucherSchema
     }
+    private val database = Database.connect(dataSource)
     private lateinit var digests: VoucherDigestService
     private lateinit var service: JdbcCampaignBatchCommandService
     private lateinit var crypto: VoucherEnvelopeCrypto
@@ -128,6 +137,7 @@ internal class VoucherBatchIngestIntegrationTest {
         adminConnection().use {
             it.createStatement().execute("DROP SCHEMA IF EXISTS $voucherSchema CASCADE")
         }
+        TransactionManager.closeAndUnregister(database)
         dataSource.close()
     }
 
@@ -1245,55 +1255,75 @@ internal class VoucherBatchIngestIntegrationTest {
 
     private fun codes(offset: Int, count: Int): List<String> = List(count) { "CODE-${offset + it}" }
 
-    private fun batchRow(batchId: UUID): BatchSnapshot = dataSource.connection.use { connection ->
-        @Suppress("SqlResolve")
-        connection.prepareStatement(
-            "SELECT state,next_source_ordinal,expected_count,accepted_count,rejected_count,checkpoint_digest,last_failure_code,revision,campaign_id FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
-        ).use { statement ->
-            statement.setString(1, TENANT)
-            statement.setObject(2, batchId)
-
-            statement.executeQuery().use { result ->
-                result.next()
+    private fun batchRow(batchId: UUID): BatchSnapshot = transaction(database) {
+        VoucherPoolBatchTable
+            .selectAll()
+            .where { (VoucherPoolBatchTable.tenantId eq TENANT) and (VoucherPoolBatchTable.batchId eq batchId) }
+            .single()
+            .let { row ->
                 BatchSnapshot(
                     tenantId = TENANT,
                     batchId = batchId,
-                    campaignId = result.getObject("campaign_id", UUID::class.java),
-                    state = BatchState.valueOf(result.getString("state")),
-                    nextSourceOrdinal = result.getLong("next_source_ordinal"),
-                    expectedCount = result.getLong("expected_count"),
-                    acceptedCount = result.getLong("accepted_count"),
-                    rejectedCount = result.getLong("rejected_count"),
-                    checkpointDigest = result.getBytes("checkpoint_digest")?.let(DigestValue::of),
-                    lastFailureCode = result.getString("last_failure_code"),
-                    revision = result.getLong("revision"),
+                    campaignId = row[VoucherPoolBatchTable.campaignId],
+                    state = row[VoucherPoolBatchTable.state],
+                    nextSourceOrdinal = row[VoucherPoolBatchTable.nextSourceOrdinal],
+                    expectedCount = row[VoucherPoolBatchTable.expectedCount],
+                    acceptedCount = row[VoucherPoolBatchTable.acceptedCount],
+                    rejectedCount = row[VoucherPoolBatchTable.rejectedCount],
+                    checkpointDigest = row[VoucherPoolBatchTable.checkpointDigest]?.let(DigestValue::of),
+                    lastFailureCode = row[VoucherPoolBatchTable.lastFailureCode],
+                    revision = row[VoucherPoolBatchTable.revision],
                 )
             }
+    }
+
+    private fun entryCount(batchId: UUID): Long = transaction(database) {
+        VoucherPoolEntryTable
+            .selectAll()
+            .where { (VoucherPoolEntryTable.tenantId eq TENANT) and (VoucherPoolEntryTable.batchId eq batchId) }
+            .count()
+    }
+
+    private fun dedupCount(batchId: UUID): Long = transaction(database) {
+        VoucherPoolCodeDedupTable
+            .selectAll()
+            .where { (VoucherPoolCodeDedupTable.tenantId eq TENANT) and (VoucherPoolCodeDedupTable.firstBatchId eq batchId) }
+            .count()
+    }
+
+    private fun campaignCount(campaignId: UUID): Long = transaction(database) {
+        VoucherPoolCampaignTable
+            .selectAll()
+            .where { (VoucherPoolCampaignTable.tenantId eq TENANT) and (VoucherPoolCampaignTable.campaignId eq campaignId) }
+            .count()
+    }
+
+    private fun campaignRevision(campaignId: UUID): Long = transaction(database) {
+        VoucherPoolCampaignTable
+            .selectAll()
+            .where { (VoucherPoolCampaignTable.tenantId eq TENANT) and (VoucherPoolCampaignTable.campaignId eq campaignId) }
+            .single()[VoucherPoolCampaignTable.revision]
+    }
+
+    private fun rawStorageContains(value: String): Boolean {
+        val needle = value.toByteArray(Charsets.UTF_8)
+        return transaction(database) {
+            VoucherPoolEntryTable
+                .selectAll()
+                .where { VoucherPoolEntryTable.tenantId eq TENANT }
+                .mapNotNull { it[VoucherPoolEntryTable.codeCiphertext] }
+                .any { ciphertext -> ciphertext.containsBytes(needle) }
         }
     }
 
-    private fun entryCount(batchId: UUID): Long = scalar(
-        "SELECT count(*) FROM voucher_pool_entries WHERE tenant_id='$TENANT' AND batch_id='$batchId'",
-    )
-
-    private fun dedupCount(batchId: UUID): Long = scalar(
-        "SELECT count(*) FROM voucher_pool_code_dedup WHERE tenant_id='$TENANT' AND first_batch_id='$batchId'",
-    )
-
-    private fun campaignCount(campaignId: UUID): Long = scalar(
-        "SELECT count(*) FROM voucher_pool_campaigns WHERE tenant_id='$TENANT' AND campaign_id='$campaignId'",
-    )
-
-    private fun campaignRevision(campaignId: UUID): Long = scalar(
-        "SELECT revision FROM voucher_pool_campaigns WHERE tenant_id='$TENANT' AND campaign_id='$campaignId'",
-    )
-
-    private fun rawStorageContains(value: String): Boolean = scalar(
-        "SELECT count(*) FROM voucher_pool_entries WHERE position(convert_to('$value','UTF8') in code_ciphertext)>0",
-    ) > 0
-
-    private fun scalar(sql: String): Long = dataSource.connection.use { connection ->
-        connection.createStatement().executeQuery(sql).use { it.singleLong() }
+    private fun ByteArray.containsBytes(needle: ByteArray): Boolean {
+        return when {
+            needle.isEmpty() -> true
+            size < needle.size -> false
+            else -> indices.any { start ->
+                start + needle.size <= size && needle.indices.all { offset -> this[start + offset] == needle[offset] }
+            }
+        }
     }
 
     private fun execute(sql: String) {

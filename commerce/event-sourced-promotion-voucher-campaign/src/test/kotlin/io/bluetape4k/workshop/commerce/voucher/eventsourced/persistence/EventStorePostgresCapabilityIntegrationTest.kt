@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.javatimes.seconds
@@ -18,9 +19,16 @@ import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.explain
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
@@ -31,6 +39,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.sql.Connection
 import java.time.Duration
+import java.util.UUID
 
 @Tag("integration")
 @Suppress("SqlResolve")
@@ -106,7 +115,12 @@ internal class EventStorePostgresCapabilityIntegrationTest {
             log.debug { "plan: $plan" }
             plan shouldContain "Index Scan"
             plan shouldContain indexName
+            connection.isClosed.shouldBeFalse()
+            connection.autoCommit.shouldBeFalse()
             connection.rollback()
+            withExistingJdbcTransaction(connection) {
+                EventLog.selectAll().count()
+            } shouldBeEqualTo 0L
         }
     }
 
@@ -235,30 +249,22 @@ internal class EventStorePostgresCapabilityIntegrationTest {
             }
         }
 
-    private fun Connection.streamTailPlan(): String =
-        prepareStatement(
-            """
-            EXPLAIN (FORMAT TEXT)
-            SELECT *
-            FROM voucher_event_log
-            WHERE tenant_id = ?
-              AND stream_type = ?
-              AND stream_id = ?::uuid
-              AND stream_version > ?
-            ORDER BY stream_version ASC
-            LIMIT 100
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setString(1, TENANT)
-            statement.setString(2, STREAM_TYPE)
-            statement.setString(3, STREAM_ID)
-            statement.setLong(4, 400L)
-            statement.executeQuery().use { result ->
-                buildString {
-                    while (result.next()) {
-                        appendLine(result.getString(1))
-                    }
-                }
+    private fun Connection.streamTailPlan(): String = withExistingJdbcTransaction(this) {
+        val query = EventLog
+            .selectAll()
+            .where {
+                (EventLog.tenantId eq TENANT) and
+                    (EventLog.streamType eq STREAM_TYPE) and
+                    (EventLog.streamId eq UUID.fromString(STREAM_ID)) and
+                    (EventLog.streamVersion greater 400L)
             }
-        }
+            .orderBy(EventLog.streamVersion to SortOrder.ASC)
+            .limit(100)
+
+        TransactionManager.current()
+            .explain(options = "FORMAT TEXT") { query }
+            .toList()
+            .joinToString("\n") { it.toString().substringAfter('=') }
+    }
+
 }

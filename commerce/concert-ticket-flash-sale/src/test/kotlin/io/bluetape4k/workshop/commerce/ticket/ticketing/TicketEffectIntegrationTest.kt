@@ -25,23 +25,19 @@ internal class TicketEffectIntegrationTest {
                 complete(command.authorizationOperationId, PaymentOutcome.APPROVED)
             }
             PaymentWorker(fixture.executor, fixture.service, payments).run(command.authorizationOperationId)
-            val operationId = fixture.queryUuid("SELECT operation_id FROM ticket_effect_operations WHERE effect_kind = 'issue'")
+            val operationId = fixture.issueEffectOperationId()
             val provider = FakeTicketProvider().apply { succeedButLoseResponse(operationId) }
             val worker = TicketEffectWorker(fixture.executor, fixture.service, provider)
 
             worker.run(operationId).shouldBeTrue()
-            fixture.execute(
-                "UPDATE ticket_effect_operations SET claim_until = CURRENT_TIMESTAMP - INTERVAL '1 second' " +
-                        "WHERE operation_id = '$operationId'",
-            )
+            fixture.expireEffectClaim(operationId)
             worker.run(operationId).shouldBeTrue()
             worker.run(operationId).shouldBeFalse()
 
             provider.issueCount(operationId) shouldBeEqualTo 1
-            fixture.queryString("SELECT state FROM ticket_tickets") shouldBeEqualTo "issued"
-            fixture.queryString("SELECT ticket_disposition FROM ticket_orders") shouldBeEqualTo "issued"
-            fixture.queryInt("SELECT COUNT(*) FROM ticket_effect_receipts WHERE operation_id = '$operationId'")
-                .shouldBeEqualTo(1)
+            fixture.ticketState() shouldBeEqualTo "issued"
+            fixture.ticketDisposition() shouldBeEqualTo "issued"
+            fixture.effectReceiptCount(operationId).shouldBeEqualTo(1)
         }
     }
 }

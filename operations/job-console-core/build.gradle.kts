@@ -62,6 +62,8 @@ dependencies {
     testFixturesImplementation(libs.kotlinx.coroutines.core.lib)
     testFixturesImplementation(libs.kotlinx.coroutines.test.lib)
     testFixturesImplementation(libs.hikaricp)
+    testFixturesImplementation(libs.jetbrains.exposed.core)
+    testFixturesImplementation(libs.jetbrains.exposed.jdbc)
     testFixturesImplementation(libs.awaitility.kotlin)
     testFixturesImplementation(libs.testcontainers.postgresql)
     testFixturesImplementation(libs.testcontainers.toxiproxy)

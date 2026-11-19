@@ -49,7 +49,7 @@ internal class VoucherReconciliationServiceTest: VoucherCommandTestSupport() {
 
         reconciliation.accept(event).outcome shouldBeEqualTo InboxOutcome.APPLIED
         reconciliation.accept(event).outcome shouldBeEqualTo InboxOutcome.IGNORED
-        queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 1L
+        auditCount() shouldBeEqualTo 1L
         inboxRecord(event.eventId).status shouldBeEqualTo InboxStatus.APPLIED
     }
 
@@ -65,7 +65,7 @@ internal class VoucherReconciliationServiceTest: VoucherCommandTestSupport() {
 
         reconciliation.accept(stale).outcome shouldBeEqualTo InboxOutcome.CONFLICT
         inboxRecord(stale.eventId).status shouldBeEqualTo InboxStatus.CONFLICT
-        queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 1L
+        auditCount() shouldBeEqualTo 1L
     }
 
     @Test
@@ -76,7 +76,7 @@ internal class VoucherReconciliationServiceTest: VoucherCommandTestSupport() {
 
         reconciliation.accept(conflicting).outcome shouldBeEqualTo InboxOutcome.CONFLICT
         inboxRecord(event.eventId).status shouldBeEqualTo InboxStatus.APPLIED
-        queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 1L
+        auditCount() shouldBeEqualTo 1L
     }
 
     @Test
@@ -99,9 +99,9 @@ internal class VoucherReconciliationServiceTest: VoucherCommandTestSupport() {
         }
 
         results.sumOf { it.processed } shouldBeEqualTo 75
-        queryLong("SELECT count(*) FROM campaign_event_inbox WHERE status = 'APPLIED'") shouldBeEqualTo 75L
-        queryLong("SELECT count(DISTINCT event_id) FROM campaign_event_inbox WHERE status = 'APPLIED'") shouldBeEqualTo 75L
-        queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 75L
+        eventInboxCount(InboxStatus.APPLIED) shouldBeEqualTo 75L
+        distinctEventInboxCount(InboxStatus.APPLIED) shouldBeEqualTo 75L
+        auditCount() shouldBeEqualTo 75L
     }
 
     @Test
@@ -143,7 +143,7 @@ internal class VoucherReconciliationServiceTest: VoucherCommandTestSupport() {
 
         result.deadlineReached.shouldBeTrue()
         result.processed shouldBeEqualTo 0
-        queryLong("SELECT count(*) FROM campaign_event_inbox WHERE status = 'PENDING'") shouldBeEqualTo 3L
+        eventInboxCount(InboxStatus.PENDING) shouldBeEqualTo 3L
     }
 
     @Test
@@ -159,13 +159,13 @@ internal class VoucherReconciliationServiceTest: VoucherCommandTestSupport() {
         assertFailsWith<InjectedWorkerFailure> {
             reconciliation.runBatch(50, 10.seconds())
         }
-        queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 0L
+        auditCount() shouldBeEqualTo 0L
         inboxRecord(event.eventId).status shouldBeEqualTo InboxStatus.PENDING
 
         val restarted = service(AuditingVoucherDelayedEventHandler(audits))
         restarted.runBatch(50, 10.seconds()).processed shouldBeEqualTo 1
 
-        queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 1L
+        auditCount() shouldBeEqualTo 1L
         inboxRecord(event.eventId).status shouldBeEqualTo InboxStatus.APPLIED
     }
 
@@ -180,7 +180,7 @@ internal class VoucherReconciliationServiceTest: VoucherCommandTestSupport() {
         val result = reconciliation.runBatch(50, 200.millis())
 
         result.deadlineReached.shouldBeTrue()
-        queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 0L
+        auditCount() shouldBeEqualTo 0L
         inboxRecord(event.eventId).status shouldBeEqualTo InboxStatus.PENDING
 
         service(AuditingVoucherDelayedEventHandler(audits))

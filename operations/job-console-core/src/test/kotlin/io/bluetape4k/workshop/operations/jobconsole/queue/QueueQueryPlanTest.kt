@@ -12,6 +12,11 @@ import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleServic
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobConsoleDatabaseFixture
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JobTable
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -57,9 +62,13 @@ class QueueQueryPlanTest {
             ).size shouldBeEqualTo 100
 
             fixture.execute("ANALYZE jobs")
-            val plan = fixture.queryLines(
-                "EXPLAIN SELECT job_id FROM jobs WHERE tenant_id = 'tenant-a' AND state = 'queued' ORDER BY enqueue_sequence LIMIT 25",
-            ).joinToString("\n")
+            val plan = fixture.explainPlan {
+                JobTable
+                    .select(JobTable.jobId)
+                    .where { (JobTable.tenantId eq "tenant-a") and (JobTable.state eq "queued") }
+                    .orderBy(JobTable.enqueueSequence to SortOrder.ASC)
+                    .limit(25)
+            }.joinToString("\n")
 
             log.debug { "plan=$plan" }
             (plan.contains("ix_job_tenant_queue") || plan.contains("Index Scan")).shouldBeTrue()
