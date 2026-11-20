@@ -140,7 +140,6 @@ class AppConfigDataSpringIntegrationTest {
             delayMillis = 8_000,
         ).start()
         var context: ConfigurableApplicationContext? = null
-        var requestCountBeforeClose = -1
         try {
             context = newApplication(
                 server = server,
@@ -154,7 +153,6 @@ class AppConfigDataSpringIntegrationTest {
 
             server.awaitDelayedLatest(20, TimeUnit.SECONDS).shouldBeTrue()
             (server.activeRequests.get() > 0).shouldBeTrue()
-            requestCountBeforeClose = server.requestCount.get()
             val startedAt = Instant.now()
             context.close()
             (Duration.between(startedAt, Instant.now()).toMillis() <= 6_000).shouldBeTrue()
@@ -166,10 +164,9 @@ class AppConfigDataSpringIntegrationTest {
                 server.activeRequests.get() shouldBeEqualTo 0
                 server.executorTerminated() shouldBeEqualTo true
             }
+            val requestCountAfterClose = server.requestCount.get()
             Thread.sleep(1_000)
-            if (requestCountBeforeClose >= 0) {
-                server.requestCount.get() shouldBeEqualTo requestCountBeforeClose
-            }
+            server.requestCount.get() shouldBeEqualTo requestCountAfterClose
         }
     }
 
