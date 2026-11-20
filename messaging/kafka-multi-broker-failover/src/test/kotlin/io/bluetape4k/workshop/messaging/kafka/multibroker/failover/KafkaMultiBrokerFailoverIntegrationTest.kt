@@ -25,6 +25,7 @@ import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.Kafka
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
+import org.apache.kafka.common.errors.GroupIdNotFoundException
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -387,10 +388,15 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     state.replicas.size shouldBeEqualTo KafkaFailoverTopology.REPLICATION_FACTOR.toInt()
                     state.isr.size shouldBeEqualTo KafkaFailoverTopology.REPLICATION_FACTOR.toInt()
                 }
-                val group = admin.groupState(
-                    KafkaFailoverKafkaConfiguration.GROUP_ID,
-                    scenarioDeadline.child(15.seconds)
-                )
+                val group = awaitGroup(
+                    admin,
+                    scenarioDeadline.child(15.seconds),
+                    "group did not become ready",
+                ) {
+                    it.coordinator != null &&
+                            it.assignmentCount > 0 &&
+                            it.assignedPartitions.isNotEmpty()
+                }
                 log.debug { "group=$group" }
 
                 val coordinator = group.coordinator ?: error("group coordinator unavailable")
@@ -482,7 +488,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                 val recoveredGroup = awaitGroup(
                     recoveryAdmin,
                     scenarioDeadline.child(15.seconds),
-                    coordinator
+                    "group coordinator did not recover from $coordinator",
                 ) {
                     it.coordinator != null && it.coordinator != coordinator && collector.callbackCount > beforeCallbacks
                 }
@@ -733,37 +739,38 @@ class KafkaMultiBrokerFailoverIntegrationTest {
     private fun awaitGroup(
         admin: KafkaFailoverAdmin,
         deadline: KafkaFailoverDeadline,
-        previousCoordinator: Int,
+        failureDescription: String,
         predicate: (KafkaFailoverGroupState) -> Boolean,
     ): KafkaFailoverGroupState {
         var last: KafkaFailoverGroupState? = null
         while (deadline.remainingNanos() > 0L) {
-            // 중지된 coordinator 때문에 AdminClient request 하나가 전체 deadline까지
-            // blocking될 수 있습니다. 각 observation을 제한해 survivor endpoint를
-            // 문서화된 15초 recovery window 안에서 retry하고 stale request 하나에
-            // 전체 window를 소모하지 않도록 합니다.
+            // group 등록/중지된 coordinator 때문에 AdminClient request 하나가 전체
+            // deadline까지 blocking될 수 있습니다. 각 observation을 제한해 제한된
+            // window 안에서 retry하고 오래된 request 하나에 전체 window를 소모하지
+            // 않도록 합니다.
             val state = runCatching {
                 admin.groupState(
                     KafkaFailoverKafkaConfiguration.GROUP_ID,
                     deadline.child(2.seconds),
                 )
             }.getOrElse { error ->
-                if (!error.isTransientRecoveryFailure()) throw error
+                if (!error.isTransientGroupObservationFailure()) throw error
                 null
             }
             last = state
             if (state != null && predicate(state)) return state
             Thread.sleep(minOf(200L, deadline.remainingNanos().nanos().inMillis().coerceAtLeast(1L)))
         }
-        error("group coordinator did not recover from $previousCoordinator; last=$last")
+        error("$failureDescription; last=$last")
     }
 
-    private fun Throwable.isTransientRecoveryFailure(): Boolean =
-        this is org.apache.kafka.common.errors.RetriableException ||
+    private fun Throwable.isTransientGroupObservationFailure(): Boolean =
+        this is GroupIdNotFoundException ||
+                this is org.apache.kafka.common.errors.RetriableException ||
                 this is org.apache.kafka.common.errors.DisconnectException ||
                 this is org.apache.kafka.common.errors.TimeoutException ||
                 this is java.util.concurrent.TimeoutException ||
-                cause?.isTransientRecoveryFailure() == true
+                cause?.isTransientGroupObservationFailure() == true
 
     private fun moduleDeadline(): KafkaFailoverDeadline =
         MODULE_DEADLINE ?: KafkaFailoverDeadline.fromNow(KafkaFailoverDeadline.MODULE_TIMEOUT)
