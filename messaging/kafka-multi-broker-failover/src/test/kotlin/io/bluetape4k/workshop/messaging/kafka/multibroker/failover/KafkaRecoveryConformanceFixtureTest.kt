@@ -3,16 +3,12 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.javatimes.seconds
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
 import org.junit.jupiter.api.Test
 
 class KafkaRecoveryConformanceFixtureTest {
-
-    companion object: KLogging()
 
     private val fixture = KafkaRecoveryConformanceFixture(15.seconds())
 
@@ -45,7 +41,6 @@ class KafkaRecoveryConformanceFixtureTest {
                 ),
             )
         }
-        log.debug { "error=$error" }
         error.message shouldBeEqualTo "broker failover observation has the wrong path"
     }
 }

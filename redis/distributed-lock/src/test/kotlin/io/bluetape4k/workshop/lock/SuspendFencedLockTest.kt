@@ -6,7 +6,6 @@ import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.lock.domain.DeductionResult.LockNotAcquired
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Rejected
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Success
@@ -39,10 +38,11 @@ class SuspendFencedLockTest: AbstractDistributedLockTest() {
     fun `SuspendingFencedInventoryService - 동시 코루틴 차감 시 oversell 이 발생하지 않는다`() = runSuspendIO {
         val successCount = AtomicInteger(0)
 
-        // workers(20).rounds(20): totalUnits = rounds * blockCount = 20 * 1 = 20회 시도입니다.
-        // stock=100, qty=10이면 정확히 10회 성공하고 10회는 InsufficientStock이 됩니다.
+        // 고정 workload로 CPU quota와 무관하게 40회 시도합니다.
+        // stock=100, qty=10이면 정확히 10회 성공하고 나머지는 InsufficientStock이 됩니다.
         SuspendedJobTester()
-            .rounds(Runtimex.availableProcessors * 4)
+            .workers(concurrencyWorkers)
+            .rounds(concurrencyAttempts)
             .add {
                 val result = suspendingService.deduct(inventoryId, 10, waitMs = 5000L, leaseMs = 5000L)
                 if (result is Success) successCount.incrementAndGet()

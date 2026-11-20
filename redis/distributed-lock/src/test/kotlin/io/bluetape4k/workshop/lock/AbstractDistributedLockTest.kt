@@ -34,6 +34,10 @@ abstract class AbstractDistributedLockTest {
     protected val store = InventoryStore()
     protected val fencedResources = FencedResources()
 
+    // CI 컨테이너의 CPU quota와 무관하게 재고 10개 단위를 넘겨 시도하도록 고정합니다.
+    protected val concurrencyWorkers = 20
+    protected val concurrencyAttempts = concurrencyWorkers * 2
+
     protected val unsafeService: UnsafeInventoryService by lazy { UnsafeInventoryService(store) }
     protected val lockedService: LockedInventoryService by lazy { LockedInventoryService(redisson, store) }
     protected val fencedService: FencedInventoryService by lazy {

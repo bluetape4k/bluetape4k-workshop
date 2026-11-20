@@ -7,8 +7,6 @@ import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.javatimes.inMillis
 import io.bluetape4k.javatimes.nanos
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicLong
@@ -16,8 +14,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class KafkaFailoverDeadlineTest {
-
-    companion object: KLogging()
 
     @Test
     fun `remaining time is the minimum of module scenario and phase deadlines`() {
@@ -44,7 +40,6 @@ class KafkaFailoverDeadlineTest {
             deadline.awaitBlocking("startup") { "unreachable" }
         }
 
-        log.debug { "error=$error" }
         error.message shouldContain "phase=startup"
     }
 
