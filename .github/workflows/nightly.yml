@@ -112,6 +112,9 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: true
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
       - name: Resolve mock image version from consumer BOM
         run: python3 .github/scripts/nightly-mock-images.py --allow-snapshot --expected-source-ref "$BLUETAPE4K_PROJECTS_REF"
       - name: Checkout bluetape4k projects
