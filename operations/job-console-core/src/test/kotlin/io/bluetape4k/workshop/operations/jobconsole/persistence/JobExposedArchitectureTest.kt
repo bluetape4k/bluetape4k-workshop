@@ -67,7 +67,9 @@ class JobExposedArchitectureTest {
         authorityQueries.contains("JobTable.selectAll().count()").shouldBeTrue()
         authorityQueries.contains("connection.createStatement").shouldBeFalse()
         authorityQueries.contains("SELECT count(*)").shouldBeFalse()
-        authorityQueries.contains("TransactionManager.closeAndUnregister(database)").shouldBeTrue()
+        authorityQueries.contains("JobJdbcExecutor(dataSource).use").shouldBeTrue()
+        authorityQueries.contains("Database.connect").shouldBeFalse()
+        authorityQueries.contains("TransactionManager.closeAndUnregister(database)").shouldBeFalse()
         adapterProfiles.forEach { profile ->
             profile.contains("JobConsoleAuthorityQueries").shouldBeTrue()
             profile.contains("scalarCount(").shouldBeFalse()

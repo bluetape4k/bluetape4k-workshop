@@ -861,7 +861,9 @@ internal class KtorJobConsoleHttpClient(
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
     private val sendRequest: ((HttpRequest) -> HttpResponse<String>)? = null,
-    private val delay: (Duration) -> Unit = { duration -> Thread.sleep(duration.toMillis()) },
+    private val delay: (Duration) -> Unit = { duration ->
+        TimeUnit.NANOSECONDS.sleep(duration.toNanos())
+    },
 ) {
     private val retryAccumulator = KtorJobConsoleRetryAccumulator()
 

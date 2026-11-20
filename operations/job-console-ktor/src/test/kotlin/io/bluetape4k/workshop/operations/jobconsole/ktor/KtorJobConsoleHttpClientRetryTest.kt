@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
@@ -15,7 +17,10 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.Optional
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import javax.net.ssl.SSLSession
 import kotlin.collections.ArrayDeque
 
@@ -101,6 +106,48 @@ class KtorJobConsoleHttpClientRetryTest {
         fallback.retryDelay shouldBeEqualTo 2.seconds()
         capped.retryDelay shouldBeEqualTo 30.seconds()
         delays shouldBeEqualTo listOf(2.seconds(), 30.seconds())
+    }
+
+    @Test
+    fun `default retry delay propagates interruption before another submission`() {
+        val firstRequest = CountDownLatch(1)
+        val calls = AtomicInteger()
+        val failure = AtomicReference<Throwable?>()
+        val client = KtorJobConsoleHttpClient(
+            baseUri = URI("http://localhost"),
+            sendRequest = {
+                if (calls.incrementAndGet() == 1) {
+                    firstRequest.countDown()
+                    response(429, retryAfter = "30")
+                } else {
+                    response(202)
+                }
+            },
+        )
+        val worker = Thread {
+            try {
+                client.submit(JobConsoleScenario())
+            } catch (error: Throwable) {
+                failure.set(error)
+            }
+        }
+
+        worker.isDaemon = true
+        worker.start()
+        try {
+            firstRequest.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            worker.interrupt()
+            worker.join(2_000)
+
+            worker.isAlive shouldBeEqualTo false
+            failure.get().shouldBeInstanceOf<InterruptedException>()
+            calls.get() shouldBeEqualTo 1
+        } finally {
+            if (worker.isAlive) {
+                worker.interrupt()
+                worker.join(2_000)
+            }
+        }
     }
 
     private fun response(
