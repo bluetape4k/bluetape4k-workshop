@@ -259,7 +259,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     ),
                 )
                 terminalWritten = true
-            } catch (error: Exception) {
+            } catch (error: Throwable) {
                 primaryFailure = error
                 throw error
             } finally {
