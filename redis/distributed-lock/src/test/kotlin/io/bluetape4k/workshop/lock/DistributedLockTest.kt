@@ -7,7 +7,6 @@ import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.lock.domain.DeductionResult
 import io.bluetape4k.workshop.lock.domain.DeductionResult.InsufficientStock
 import io.bluetape4k.workshop.lock.domain.DeductionResult.LockNotAcquired
@@ -38,7 +37,7 @@ class DistributedLockTest: AbstractDistributedLockTest() {
         val successCount = AtomicInteger(0)
 
         MultithreadingTester()
-            .workers(Runtimex.availableProcessors)
+            .workers(concurrencyWorkers)
             .rounds(2)
             .add {
                 val result: DeductionResult = lockedService.deduct(inventoryId, 10, waitMs = 3000L, leaseMs = 5000L)
@@ -56,7 +55,8 @@ class DistributedLockTest: AbstractDistributedLockTest() {
         val successCount = AtomicInteger(0)
 
         StructuredTaskScopeTester()
-            .rounds(Runtimex.availableProcessors * 2)
+            .workers(concurrencyWorkers)
+            .rounds(concurrencyAttempts)
             .add {
                 val result: DeductionResult = lockedService.deduct(inventoryId, 10, waitMs = 3000L, leaseMs = 5000L)
                 log.debug { "result=$result" }

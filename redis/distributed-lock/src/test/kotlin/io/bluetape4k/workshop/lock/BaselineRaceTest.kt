@@ -4,7 +4,6 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Success
 import io.bluetape4k.workshop.lock.domain.Inventory
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +30,7 @@ class BaselineRaceTest: AbstractDistributedLockTest() {
         val successCount = AtomicInteger(0)
 
         MultithreadingTester()
-            .workers(Runtimex.availableProcessors)
+            .workers(concurrencyWorkers)
             .rounds(2)
             .add {
                 val result = unsafeService.deduct(inventoryId, 10)
@@ -53,7 +52,8 @@ class BaselineRaceTest: AbstractDistributedLockTest() {
         val successCount = AtomicInteger(0)
 
         StructuredTaskScopeTester()
-            .rounds(Runtimex.availableProcessors * 2)
+            .workers(concurrencyWorkers)
+            .rounds(concurrencyAttempts)
             .add {
                 val result = unsafeService.deduct(inventoryId, 10)
                 if (result is Success) successCount.incrementAndGet()

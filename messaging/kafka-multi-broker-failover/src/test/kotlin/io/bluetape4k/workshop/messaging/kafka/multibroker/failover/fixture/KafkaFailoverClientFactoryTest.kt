@@ -6,8 +6,6 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.concurrent.completableFutureOf
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverCodec
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverEvent
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.KafkaFailoverKafkaConfiguration
@@ -17,8 +15,6 @@ import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
 class KafkaFailoverClientFactoryTest {
-
-    companion object: KLogging()
 
     @Test
     fun `factory creates explicit string clients and partition zero records`() {
@@ -103,7 +99,6 @@ class KafkaFailoverClientFactoryTest {
         )
 
         val snapshot = barrier.await(KafkaFailoverDeadline.fromNow(1.seconds))
-        log.debug { "snapshot=$snapshot" }
         snapshot.callbackCount shouldBeEqualTo 1
         snapshot.generation shouldBeEqualTo 7
         snapshot.partitions.size shouldBeEqualTo 1
@@ -156,7 +151,6 @@ class KafkaFailoverClientFactoryTest {
         val error = assertFailsWith<IllegalStateException> {
             scope.close()
         }
-        log.debug { "error=$error" }
         closed shouldBeEqualTo listOf("collector", "admin", "producer", "consumer")
         error.suppressed shouldHaveSize 1
         scope.close()

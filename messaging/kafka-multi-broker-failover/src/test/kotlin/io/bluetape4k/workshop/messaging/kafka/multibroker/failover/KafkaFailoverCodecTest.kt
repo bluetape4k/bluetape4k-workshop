@@ -3,8 +3,6 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEqualTo
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
 import java.security.MessageDigest
@@ -14,8 +12,6 @@ import java.util.*
  * Kafka value로 사용되는 strict JSON 문자열 계약을 검증합니다.
  */
 class KafkaFailoverCodecTest {
-
-    companion object: KLogging()
 
     private val codec = KafkaFailoverCodec()
     private val event = KafkaFailoverEvent(
@@ -28,7 +24,6 @@ class KafkaFailoverCodecTest {
     fun `encode uses canonical field order and decode round trips`() {
         val encoded = codec.encode(event)
 
-        log.debug { "encoded=$encoded" }
         encoded shouldBeEqualTo
                 "{\"eventId\":\"event-1\",\"sequence\":3,\"payload\":\"payload-1\",\"partitionKey\":\"failover-partition-0\"}"
         codec.decode(encoded) shouldBeEqualTo event

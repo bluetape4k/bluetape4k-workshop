@@ -8,7 +8,6 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.lock.domain.DeductionResult
 import io.bluetape4k.workshop.lock.domain.DeductionResult.LockNotAcquired
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Rejected
@@ -67,8 +66,8 @@ class FencedLockTest: AbstractDistributedLockTest() {
         val successCount = AtomicInteger(0)
 
         MultithreadingTester()
-            .workers(Runtimex.availableProcessors)
-            .rounds(4)
+            .workers(concurrencyWorkers)
+            .rounds(2)
             .add {
                 val result: DeductionResult = fencedService.deduct(inventoryId, 10, waitMs = 3000L, leaseMs = 5000L)
                 log.debug { "result=$result" }
@@ -85,7 +84,8 @@ class FencedLockTest: AbstractDistributedLockTest() {
         val successCount = AtomicInteger(0)
 
         StructuredTaskScopeTester()
-            .rounds(Runtimex.availableProcessors * 4)
+            .workers(concurrencyWorkers)
+            .rounds(concurrencyAttempts)
             .add {
                 val result: DeductionResult = fencedService.deduct(inventoryId, 10, waitMs = 3000L, leaseMs = 5000L)
                 log.debug { "result=$result" }

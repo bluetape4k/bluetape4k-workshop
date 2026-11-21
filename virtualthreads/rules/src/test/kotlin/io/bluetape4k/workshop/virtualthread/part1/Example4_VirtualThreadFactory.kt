@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.virtualthread.part1
 
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.VT
 import io.bluetape4k.junit5.coroutines.runSuspendTest
@@ -12,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import org.junit.jupiter.api.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
@@ -25,8 +28,11 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
         val factory = builder.factory()
         factory.javaClass.name shouldBeEqualTo "java.lang.ThreadBuilders\$VirtualThreadFactory"
 
+        val started = CountDownLatch(1)
+        val allowFinish = CountDownLatch(1)
         val thread = factory.newThread {
-            sleep(1000)
+            started.countDown()
+            allowFinish.await()
             log.debug { "Virtual Thread" }
         }
 
@@ -37,11 +43,14 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
         thread.state shouldBeEqualTo Thread.State.NEW
 
         thread.start()
-
-        thread.state shouldBeEqualTo Thread.State.RUNNABLE
-        thread.isAlive.shouldBeTrue()
-
-        thread.join()
+        try {
+            started.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            thread.isAlive.shouldBeTrue()
+        } finally {
+            allowFinish.countDown()
+            thread.joinWithinTimeout()
+        }
+        thread.state shouldBeEqualTo Thread.State.TERMINATED
     }
 
     @Test
@@ -77,3 +86,14 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
         executedCounter.get() shouldBeEqualTo 100_000
     }
 }
+
+private fun Thread.joinWithinTimeout() {
+    join(JOIN_TIMEOUT_MILLIS)
+    if (isAlive) {
+        interrupt()
+        join(JOIN_TIMEOUT_MILLIS)
+    }
+    isAlive.shouldBeFalse()
+}
+
+private const val JOIN_TIMEOUT_MILLIS = 1_000L

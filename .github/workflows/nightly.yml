@@ -96,7 +96,9 @@ jobs:
     name: Test (Testcontainers)
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
-    runs-on: ubuntu-latest
+    # MongoDB 8.0.28은 Linux kernel 6.19+와 비호환이므로
+    # Testcontainers 전체 작업을 지원되는 22.04 runner에서 실행합니다.
+    runs-on: ubuntu-22.04
     needs: validate-wrapper
     env:
       BLUETAPE4K_PROJECTS_REF: 'develop'
@@ -110,6 +112,9 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: true
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
       - name: Resolve mock image version from consumer BOM
         run: python3 .github/scripts/nightly-mock-images.py --allow-snapshot --expected-source-ref "$BLUETAPE4K_PROJECTS_REF"
       - name: Checkout bluetape4k projects
@@ -125,6 +130,12 @@ jobs:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
       - name: Verify consumer mock images exist locally
         run: python3 .github/scripts/nightly-mock-images.py --allow-snapshot --inspect
+      - name: Report runner image and kernel
+        run: |
+          echo "ImageOS=${ImageOS:-<unset>}"
+          echo "ImageVersion=${ImageVersion:-<unset>}"
+          cat /etc/os-release
+          uname -r
       - name: Run tests
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
