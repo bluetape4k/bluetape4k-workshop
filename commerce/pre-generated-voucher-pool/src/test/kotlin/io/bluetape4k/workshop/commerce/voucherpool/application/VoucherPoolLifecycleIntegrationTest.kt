@@ -83,10 +83,20 @@ import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherPoolLifecycleIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolLifecycleIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * harness은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val harness = LifecycleHarness("lifecycle")
 
     @BeforeAll
@@ -101,6 +111,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     fun reset() = harness.reset()
 
     @Test
+/**
+ * 이 시나리오는 "allocation retains ciphertext and verification digest until first reveal commits" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `allocation retains ciphertext and verification digest until first reveal commits`() {
         val fixture = harness.activePool("reveal", listOf("SECRET-REVEAL"))
         val reservation = harness.reservations
@@ -139,6 +155,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "allocation replay returns the committed descriptor without duplicating durable effects"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `allocation replay returns the committed descriptor without duplicating durable effects`() {
         val fixture = harness.activePool("allocation-replay", listOf("REPLAY-ALLOCATION"))
         val reservation = harness.reservations
@@ -162,6 +184,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "active reservation release recycles entry without releasing allocated entries" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `active reservation release recycles entry without releasing allocated entries`() {
         val fixture = harness.activePool("release", listOf("RELEASE-ME", "KEEP-ALLOCATED"))
         val reservation = harness.reservations
@@ -226,6 +254,11 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "allocation rejects a reservation captured under a stale campaign policy" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `allocation rejects a reservation captured under a stale campaign policy`() {
         val fixture = harness.activePool("stale-policy", listOf("STALE-POLICY"))
         val reservation = harness.reservations
@@ -244,6 +277,11 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "lost reveal response permits exactly one capacity first replacement" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `lost reveal response permits exactly one capacity first replacement`() {
         val fixture = harness.activePool("replacement", listOf("LOST-ONE", "REPLACEMENT", "UNTOUCHED"))
         val originalReservation = harness.reservations
@@ -303,6 +341,11 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "redemption verifies retained key digest and revoke converges terminally" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `redemption verifies retained key digest and revoke converges terminally`() {
         val fixture = harness.activePool("redeem", listOf("REDEEM-CODE", "REVOKE-CODE"))
         val firstReservation = harness.reservations
@@ -363,6 +406,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "redemption rejects unrevealed and quarantined allocations with typed failures" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `redemption rejects unrevealed and quarantined allocations with typed failures`() {
         val fixture = harness.activePool("redeem-guards", listOf("UNREVEALED", "QUARANTINED"))
         val unrevealedReservation = harness.reservations
@@ -418,6 +467,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "revoke after a winning redemption preserves redeemed state and records one loser audit"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `revoke after a winning redemption preserves redeemed state and records one loser audit`() {
         val fixture = harness.activePool("redeem-wins", listOf("REDEEM-WINS"))
         val reservation = harness.reservations
@@ -462,6 +517,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "locked capacity is busy while consumed capacity is exhausted and terminally replayed"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `locked capacity is busy while consumed capacity is exhausted and terminally replayed`() {
         val fixture = harness.activePool("availability", listOf("ONLY-CODE"))
         val command = harness.reserve(fixture, "busy-user", "busy-key")
@@ -484,6 +545,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reservation effect rolls back when idempotency finalize fails and same key retries" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reservation effect rolls back when idempotency finalize fails and same key retries`() {
         val fixture = harness.activePool("finalize-rollback", listOf("ROLLBACK-CODE"))
         val command = harness.reserve(fixture, "rollback-user", "rollback-key")
@@ -508,6 +575,11 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "terminal reveal failure replays its terminal descriptor without code" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `terminal reveal failure replays its terminal descriptor without code`() {
         val fixture = harness.activePool("expired-reveal", listOf("EXPIRED-REVEAL"))
         val reservation =
@@ -526,6 +598,11 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "corrupt ciphertext commits quarantine and retries with the typed failure" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `corrupt ciphertext commits quarantine and retries with the typed failure`() {
         val fixture = harness.activePool("quarantine", listOf("QUARANTINE-CODE"))
         val reservation = harness.reservations
@@ -547,6 +624,11 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "pool depth projection follows foreground lifecycle transitions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `pool depth projection follows foreground lifecycle transitions`() {
         val fixture = harness.activePool("depth", listOf("DEPTH-ONE", "DEPTH-TWO"))
         harness.poolDepth(fixture.batch.batchId, EntryState.AVAILABLE) shouldBeEqualTo 2L
@@ -582,6 +664,12 @@ internal class VoucherPoolLifecycleIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "active campaign reports the paused batch state rather than campaign inactivity" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `active campaign reports the paused batch state rather than campaign inactivity`() {
         val fixture = harness.activePool("no-eligible-batch", listOf("PAUSED-BATCH-CODE"))
         harness.pauseBatch(fixture.batch.batchId)
@@ -593,28 +681,98 @@ internal class VoucherPoolLifecycleIntegrationTest {
 }
 
 @Suppress("SqlResolve")
+/**
+ * LifecycleHarness 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class LifecycleHarness(private val suffix: String) {
 
     companion object: KLogging() {
+/**
+ * postgres은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres = PostgreSQLServer.Launcher.postgres
     }
 
+/**
+ * tenant은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val tenant = "tenant-$suffix"
+/**
+ * tenantSchema은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val tenantSchema = "voucher_${suffix}_${Base58.randomString(8).lowercase()}"
 
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val dataSource = postgres.getHikariDataSource {
         schema = tenantSchema
     }
+/**
+ * database은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val database = Database.connect(dataSource)
 
+/**
+ * digests은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var digests: VoucherDigestService
+/**
+ * commandService은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var commandService: JdbcCampaignBatchCommandService
+/**
+ * jdbcExecutor은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var jdbcExecutor: VoucherPoolJdbcExecutor
+/**
+ * voucherRepository은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var voucherRepository: VoucherPoolRepository
+/**
+ * reservations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     lateinit var reservations: JdbcReservationService
+/**
+ * allocations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     lateinit var allocations: JdbcAllocationService
+/**
+ * redemptions은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     lateinit var redemptions: JdbcRedemptionService
 
+/**
+ * migrate은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun migrate() {
         adminConnection().use { it.createStatement().execute("CREATE SCHEMA $tenantSchema") }
 
@@ -628,6 +786,11 @@ internal class LifecycleHarness(private val suffix: String) {
         rebuildServices()
     }
 
+/**
+ * cleanup은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun cleanup() {
         adminConnection().use {
             it.createStatement().execute("DROP SCHEMA IF EXISTS $tenantSchema CASCADE")
@@ -636,6 +799,11 @@ internal class LifecycleHarness(private val suffix: String) {
         dataSource.close()
     }
 
+/**
+ * reset은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun reset() {
         dataSource.connection.use { connection ->
             connection.createStatement().execute(
@@ -645,6 +813,11 @@ internal class LifecycleHarness(private val suffix: String) {
         rebuildServices()
     }
 
+/**
+ * activePool은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun activePool(name: String, codes: List<String>): LifecycleFixture {
         val campaignId = UUID.nameUUIDFromBytes("$suffix-campaign-$name".toUtf8Bytes())
         val campaign = commandService.createCampaign(
@@ -696,6 +869,11 @@ internal class LifecycleHarness(private val suffix: String) {
         return LifecycleFixture(activeCampaign, activeBatch)
     }
 
+/**
+ * reserve은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun reserve(fixture: LifecycleFixture, user: String, key: String): ReserveVoucherCommand =
         ReserveVoucherCommand(
             tenantId = tenant,
@@ -704,6 +882,11 @@ internal class LifecycleHarness(private val suffix: String) {
             idempotencyKey = this.key(key)
         )
 
+/**
+ * allocate은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun allocate(reservation: ReservationSnapshot, user: String, key: String): AllocateVoucherCommand =
         AllocateVoucherCommand(
             tenantId = tenant,
@@ -714,6 +897,11 @@ internal class LifecycleHarness(private val suffix: String) {
             idempotencyKey = this.key(key),
         )
 
+/**
+ * reveal은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun reveal(allocation: AllocationSnapshot, user: String, key: String): RevealVoucherCommand =
         RevealVoucherCommand(
             tenantId = tenant,
@@ -724,6 +912,11 @@ internal class LifecycleHarness(private val suffix: String) {
             idempotencyKey = this.key(key),
         )
 
+/**
+ * entryState은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun entryState(entryId: UUID): EntryState = transaction(database) {
         VoucherPoolEntryTable
             .selectAll()
@@ -731,6 +924,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .single()[VoucherPoolEntryTable.state]
     }
 
+/**
+ * hasVerificationDigest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun hasVerificationDigest(entryId: UUID): Boolean = transaction(database) {
         VoucherPoolEntryTable
             .selectAll()
@@ -738,6 +936,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .single()[VoucherPoolEntryTable.verificationDigest] != null
     }
 
+/**
+ * hasCiphertext은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun hasCiphertext(entryId: UUID): Boolean = transaction(database) {
         VoucherPoolEntryTable
             .selectAll()
@@ -745,6 +948,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .single()[VoucherPoolEntryTable.codeCiphertext] != null
     }
 
+/**
+ * consumedEntries은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun consumedEntries(): Long = transaction(database) {
         VoucherPoolEntryTable
             .selectAll()
@@ -752,6 +960,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .count()
     }
 
+/**
+ * lifetimeConsumed은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun lifetimeConsumed(campaignId: UUID, user: String): Int {
         val digest = digests.userIdentity(tenant, campaignId, user)
 
@@ -767,6 +980,11 @@ internal class LifecycleHarness(private val suffix: String) {
         }
     }
 
+/**
+ * userCounts은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun userCounts(campaignId: UUID, user: String): UserCounts {
         val digest = digests.userIdentity(tenant, campaignId, user)
 
@@ -789,6 +1007,11 @@ internal class LifecycleHarness(private val suffix: String) {
         }
     }
 
+/**
+ * withEntryLocked은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     inline fun withEntryLocked(block: () -> Unit) {
         dataSource.connection.use { connection ->
             connection.autoCommit = false
@@ -810,6 +1033,11 @@ internal class LifecycleHarness(private val suffix: String) {
         }
     }
 
+/**
+ * installFinalizeFailureTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun installFinalizeFailureTrigger() {
         execute(
             """CREATE FUNCTION fail_lifecycle_finalize() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -819,6 +1047,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * dropFinalizeFailureTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun dropFinalizeFailureTrigger() {
         execute(
             "DROP TRIGGER IF EXISTS fail_lifecycle_finalize ON voucher_pool_http_idempotency; " +
@@ -826,14 +1059,29 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * reservationCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun reservationCount(): Long = transaction(database) {
         VoucherPoolReservationTable.selectAll().where { VoucherPoolReservationTable.tenantId eq tenant }.count()
     }
 
+/**
+ * allocationCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun allocationCount(): Long = transaction(database) {
         VoucherPoolAllocationTable.selectAll().where { VoucherPoolAllocationTable.tenantId eq tenant }.count()
     }
 
+/**
+ * completedIdempotencyCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun completedIdempotencyCount(operation: String): Long =
         transaction(database) {
             VoucherPoolHttpIdempotencyTable
@@ -847,6 +1095,11 @@ internal class LifecycleHarness(private val suffix: String) {
                 .count()
         }
 
+/**
+ * tombstoneCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun tombstoneCount(operation: String): Long =
         transaction(database) {
             VoucherPoolCommandTombstoneTable
@@ -858,6 +1111,11 @@ internal class LifecycleHarness(private val suffix: String) {
                 .count()
         }
 
+/**
+ * installReservationGuardProbe은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun installReservationGuardProbe(parties: Int): ReservationGuardProbe =
         ReservationGuardProbe(parties).also { probe ->
             rebuildServices { repository ->
@@ -865,12 +1123,27 @@ internal class LifecycleHarness(private val suffix: String) {
             }
         }
 
+/**
+ * sharedGuardHolders은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun sharedGuardHolders(probe: ReservationGuardProbe, relation: String): Int =
         dataSource.sharedLockHolders(probe.backendPids.toSet(), relation)
 
+/**
+ * guardWaiters은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun guardWaiters(probe: ReservationGuardProbe): Int =
         dataSource.lockWaiters(probe.backendPids.toSet())
 
+/**
+ * terminalAuditCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun terminalAuditCount(allocationId: UUID): Long = transaction(database) {
         VoucherPoolAuditTable
             .selectAll()
@@ -883,6 +1156,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .count()
     }
 
+/**
+ * revokeRaceLostAuditCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun revokeRaceLostAuditCount(allocationId: UUID): Long = transaction(database) {
         VoucherPoolAuditTable
             .selectAll()
@@ -895,6 +1173,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .count()
     }
 
+/**
+ * expireAllocation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun expireAllocation(allocationId: UUID) {
         execute(
             "UPDATE voucher_pool_allocations SET allocation_expires_at=now()-interval '1 second' " +
@@ -905,6 +1188,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * expireReservation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun expireReservation(reservationId: UUID) {
         execute(
             "UPDATE voucher_pool_reservations SET reservation_expires_at=now()-interval '1 second' " +
@@ -915,6 +1203,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * reservationState은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun reservationState(reservationId: UUID): ReservationState = transaction(database) {
         VoucherPoolReservationTable
             .selectAll()
@@ -925,6 +1218,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .single()[VoucherPoolReservationTable.state]
     }
 
+/**
+ * batchState은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun batchState(batchId: UUID): BatchState = transaction(database) {
         VoucherPoolBatchTable
             .selectAll()
@@ -932,6 +1230,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .single()[VoucherPoolBatchTable.state]
     }
 
+/**
+ * expireBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun expireBatch(batchId: UUID) {
         execute(
             "UPDATE voucher_pool_batches SET expires_at=now()-interval '1 second' " +
@@ -939,6 +1242,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * campaignState은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun campaignState(campaignId: UUID): CampaignState = transaction(database) {
         VoucherPoolCampaignTable
             .selectAll()
@@ -946,6 +1254,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .single()[VoucherPoolCampaignTable.state]
     }
 
+/**
+ * setCampaignState은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun setCampaignState(campaignId: UUID, state: CampaignState) {
         execute(
             "UPDATE voucher_pool_campaigns SET state='${state.name}',revision=revision+1 " +
@@ -953,6 +1266,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * corruptPoolDepth은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun corruptPoolDepth(batchId: UUID, state: EntryState, count: Long) {
         execute(
             "UPDATE voucher_pool_pool_depth SET entry_count=$count " +
@@ -960,6 +1278,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * corruptUserCounts은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun corruptUserCounts(campaignId: UUID, user: String, reservations: Int, allocations: Int, lifetime: Int) {
         val userDigest = digests.userIdentity(tenant, campaignId, user)
         dataSource.connection.use { connection ->
@@ -979,6 +1302,11 @@ internal class LifecycleHarness(private val suffix: String) {
         }
     }
 
+/**
+ * auditCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun auditCount(aggregateType: String, aggregateId: UUID, reasonCode: String): Long = transaction(database) {
         VoucherPoolAuditTable
             .selectAll()
@@ -991,6 +1319,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .count()
     }
 
+/**
+ * reconciliationAuditCounts은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun reconciliationAuditCounts(batchId: UUID): Pair<Long, Long> = transaction(database) {
         VoucherPoolAuditTable
             .selectAll()
@@ -1006,10 +1339,25 @@ internal class LifecycleHarness(private val suffix: String) {
             }
     }
 
+/**
+ * workerExecutor은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun workerExecutor(): VoucherPoolJdbcExecutor = jdbcExecutor
 
+/**
+ * workerRepository은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun workerRepository(): VoucherPoolRepository = voucherRepository
 
+/**
+ * tamperCiphertext은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun tamperCiphertext(entryId: UUID) {
         execute(
             "UPDATE voucher_pool_entries SET code_ciphertext=decode('00','hex') " +
@@ -1017,6 +1365,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * isQuarantined은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun isQuarantined(entryId: UUID): Boolean = transaction(database) {
         VoucherPoolEntryTable
             .selectAll()
@@ -1024,6 +1377,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .single()[VoucherPoolEntryTable.quarantinedAt] != null
     }
 
+/**
+ * markQuarantined은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun markQuarantined(entryId: UUID) {
         execute(
             "UPDATE voucher_pool_entries SET quarantined_at=now() " +
@@ -1031,6 +1389,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * advanceCampaignPolicy은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun advanceCampaignPolicy(campaignId: UUID) {
         execute(
             "UPDATE voucher_pool_campaigns SET policy_version=policy_version+1," +
@@ -1039,6 +1402,11 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * poolDepth은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun poolDepth(batchId: UUID, state: EntryState): Long = transaction(database) {
         VoucherPoolDepthTable
             .selectAll()
@@ -1050,6 +1418,11 @@ internal class LifecycleHarness(private val suffix: String) {
             .singleOrNull()?.get(VoucherPoolDepthTable.entryCount) ?: 0L
     }
 
+/**
+ * pauseBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun pauseBatch(batchId: UUID) {
         execute(
             "UPDATE voucher_pool_batches SET state='PAUSED',revision=revision+1 " +
@@ -1057,18 +1430,43 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * rebuildServices은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun rebuildServices(
         repositoryTransform: (VoucherPoolRepository) -> VoucherPoolRepository = { it },
     ) {
+/**
+ * repository은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val repository = repositoryTransform(JdbcVoucherPoolRepository())
+/**
+ * executor은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val executor = VoucherPoolJdbcExecutor(
             gate = DatabasePermitGate.default(32),
             transactionManager = SpringTransactionManager(dataSource, DatabaseConfig {}, false)
         )
         voucherRepository = repository
         jdbcExecutor = executor
+/**
+ * idempotency은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val idempotency = JdbcVoucherPoolIdempotencyRepository(digests)
 
+/**
+ * crypto은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val crypto = AesGcmVoucherEnvelopeCrypto(
             kekRing = VoucherKekRing(VoucherKek("test-kek", keyBytes(11))),
             digests = digests
@@ -1101,13 +1499,33 @@ internal class LifecycleHarness(private val suffix: String) {
         )
     }
 
+/**
+ * digest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digest(value: String): DigestValue =
         DigestValue(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
 
+/**
+ * key은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun key(value: String) = "voucher-lifecycle-$suffix-$value"
 
+/**
+ * keyBytes은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun keyBytes(seed: Int) = ByteArray(32) { (seed + it).toByte() }
 
+/**
+ * digestService은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digestService(): VoucherDigestService =
         VoucherDigestService(
             stableDedupKey = DigestKey(7, keyBytes(7)),
@@ -1120,6 +1538,11 @@ internal class LifecycleHarness(private val suffix: String) {
             ),
         )
 
+/**
+ * execute은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun execute(sql: String) {
         dataSource.connection.use { connection ->
             connection.createStatement().use {
@@ -1128,6 +1551,11 @@ internal class LifecycleHarness(private val suffix: String) {
         }
     }
 
+/**
+ * adminConnection은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adminConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,
@@ -1136,22 +1564,82 @@ internal class LifecycleHarness(private val suffix: String) {
         )
 }
 
+/**
+ * LifecycleFixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class LifecycleFixture(
+/**
+ * campaign은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val campaign: CampaignSnapshot,
+/**
+ * batch은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val batch: BatchSnapshot,
 )
 
+/**
+ * UserCounts 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class UserCounts(
+/**
+ * activeReservations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val activeReservations: Int,
+/**
+ * activeAllocations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val activeAllocations: Int,
+/**
+ * lifetimeConsumed은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val lifetimeConsumed: Int,
 )
 
+/**
+ * ReservationGuardProbe 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class ReservationGuardProbe(parties: Int) {
+/**
+ * entered은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val entered = CountDownLatch(parties)
+/**
+ * release은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val release = CountDownLatch(1)
+/**
+ * backendPids은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val backendPids = ConcurrentLinkedQueue<Int>()
 
+/**
+ * enter은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun enter(connection: Connection) {
         connection.createStatement().executeQuery("SELECT pg_backend_pid()").use { result ->
             result.next()
@@ -1161,15 +1649,45 @@ internal class ReservationGuardProbe(parties: Int) {
         release.await(5.seconds).checkBeTrue { "reservation guard probe release timed out" }
     }
 
+/**
+ * awaitEntered은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun awaitEntered(): Boolean = entered.await(2.seconds)
 
+/**
+ * release은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun release() = release.countDown()
 }
 
+/**
+ * GuardProbeVoucherPoolRepository 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class GuardProbeVoucherPoolRepository(
+/**
+ * delegate은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val delegate: VoucherPoolRepository,
+/**
+ * probe은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val probe: ReservationGuardProbe,
 ): VoucherPoolRepository by delegate {
+/**
+ * lockReservationGuards은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun lockReservationGuards(
         tenantId: String,
         campaignId: UUID,

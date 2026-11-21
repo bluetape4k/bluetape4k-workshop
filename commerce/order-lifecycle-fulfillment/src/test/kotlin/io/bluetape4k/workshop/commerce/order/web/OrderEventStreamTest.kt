@@ -33,10 +33,20 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * OrderEventStreamTest 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OrderEventStreamTest {
 
     companion object: KLogging()
 
+/**
+ * queryService은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val queryService = mockk<OrderLifecycleQueryService>()
 
     @BeforeEach
@@ -45,6 +55,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "lifecycle coordination uses an explicit lock" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `lifecycle coordination uses an explicit lock`() {
         val lifecycleLock = OrderEventStream::class.java.getDeclaredField("lifecycleLock")
 
@@ -52,6 +67,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "SSE poll configuration uses the released positive-number helper" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `SSE poll configuration uses the released positive-number helper`() {
         val source = Files.readString(
             Path.of("src/main/kotlin/io/bluetape4k/workshop/commerce/order/web/OrderEventStream.kt")
@@ -60,6 +80,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "shutdown rejects an open racing with the initial snapshot" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `shutdown rejects an open racing with the initial snapshot`() {
         val snapshotStarted = CountDownLatch(1)
         val releaseSnapshot = CountDownLatch(1)
@@ -96,6 +121,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "future client cursor cannot suppress events after the current snapshot" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `future client cursor cannot suppress events after the current snapshot`() {
         every { queryService.snapshot(any()) } returns mockk(relaxed = true)
         val observedCursor = AtomicInteger(-1)
@@ -122,6 +152,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "heartbeat is emitted and timeout releases the connection slot" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `heartbeat is emitted and timeout releases the connection slot`() {
         every { queryService.snapshot(any()) } returns mockk(relaxed = true)
         every { queryService.auditAfter(any(), any()) } returns emptyList()
@@ -151,6 +186,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "client disconnect releases the connection slot" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `client disconnect releases the connection slot`() {
         every { queryService.snapshot(any()) } returns mockk(relaxed = true)
         every { queryService.auditAfter(any(), any()) } returns emptyList()
@@ -176,6 +216,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "connections for the same order share one database poller" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `connections for the same order share one database poller`() {
         every { queryService.snapshot(any()) } returns mockk(relaxed = true)
 
@@ -217,6 +262,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "shutdown cancels all blocked pollers within one bounded deadline" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `shutdown cancels all blocked pollers within one bounded deadline`() {
         val entered = CountDownLatch(3)
         every { queryService.snapshot(any()) } returns mockk(relaxed = true)
@@ -250,6 +300,11 @@ internal class OrderEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "failed initial snapshot releases the connection slot" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `failed initial snapshot releases the connection slot`() {
         every { queryService.snapshot(any()) } throws NoSuchElementException("order not found")
 

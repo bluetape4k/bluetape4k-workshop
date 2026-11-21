@@ -13,13 +13,29 @@ import java.security.MessageDigest
 import java.time.Duration
 
 @Tag("migration-compatibility")
+/**
+ * VoucherMigrationCompatibilityIntegrationTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilityTestSupport() {
 
     companion object: KLogging() {
+/**
+ * PROCESS_TIMEOUT은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val PROCESS_TIMEOUT: Duration = 30.seconds()
     }
 
     @Test
+/**
+ * 이 시나리오는 "previous current previous packaged process sequence remains read write compatible" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `previous current previous packaged process sequence remains read write compatible`() {
         val previousJar = Path.of(requiredProperty("voucher.compatibility.previous-jar"))
         val currentBootJar = Path.of(requiredProperty("voucher.compatibility.current-boot-jar"))
@@ -38,6 +54,11 @@ internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilit
         queryLong("SELECT count(*) FROM voucher_schema_history") shouldBeEqualTo 1L
     }
 
+/**
+ * runPrevious은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runPrevious(
         previousJar: Path,
         postgresqlDriver: Path,
@@ -58,6 +79,11 @@ internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilit
         )
     }
 
+/**
+ * runCurrent은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runCurrent(currentBootJar: Path) {
         runProcess(
             javaExecutable(),
@@ -71,6 +97,11 @@ internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilit
         )
     }
 
+/**
+ * runProcess은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runProcess(vararg command: String) {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
         val completed = process.waitFor(PROCESS_TIMEOUT)
@@ -85,12 +116,27 @@ internal class VoucherMigrationCompatibilityIntegrationTest: VoucherCompatibilit
         }
     }
 
+/**
+ * sha256은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sha256(path: Path): String =
         MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)).toHexString()
 
+/**
+ * requiredProperty은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun requiredProperty(name: String): String =
         System.getProperty(name).requireNotNull { "missing system property $name" }
 
+/**
+ * javaExecutable은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun javaExecutable(): String =
         Path.of(System.getProperty("java.home"), "bin", "java").toString()
 

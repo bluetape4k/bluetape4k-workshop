@@ -17,6 +17,15 @@ internal class EventSourcedSecurityConfiguration {
 
     companion object: KLogging()
 
+    /**
+     * eventSourcedSecurityFilterChain은 프로모션 바우처의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무
+     * 오류를 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param http 업무 처리에 필요한 http 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Bean
     fun eventSourcedSecurityFilterChain(http: HttpSecurity): SecurityFilterChain =
         http

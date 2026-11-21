@@ -27,6 +27,15 @@ exactly-once guarantee.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)
 
+## Business requirements and test evidence
+
+Billing must rate from retained price evidence, not from a live Meter lookup.
+An accepted usage is rated once locally, and a late correction becomes a new
+financial fact. `BillingServiceApplicationContractTest` covers the service
+contract; `BillingInboxPostgresIntegrationTest` proves inbox ordering,
+price-evidence uniqueness, atomic charge/outbox writes, digest conflicts, and
+fenced publishing. It does not prove tax policy or end-to-end exactly-once.
+
 ## Responsibility
 
 - consume `PriceActivated` and `UsageAccepted` from their public topics;

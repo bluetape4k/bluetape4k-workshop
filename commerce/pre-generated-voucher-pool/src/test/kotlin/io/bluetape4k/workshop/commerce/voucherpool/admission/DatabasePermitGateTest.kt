@@ -17,11 +17,21 @@ import java.util.concurrent.CountDownLatch
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * DatabasePermitGateTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class DatabasePermitGateTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "foreground timeout releases only the waiting acquisition" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `foreground timeout releases only the waiting acquisition`() {
         val gate = gate()
         val holderEntered = CountDownLatch(1)
@@ -58,6 +68,11 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "default lane budgets fit Hikari and nested acquisition fails immediately" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `default lane budgets fit Hikari and nested acquisition fails immediately`() {
 
         val gate = DatabasePermitGate.default(hikariMaximumPoolSize = 16)
@@ -90,6 +105,11 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "permit snapshot reports observed wait instead of configured deadline" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `permit snapshot reports observed wait instead of configured deadline`() {
         val gate = gate()
 
@@ -102,6 +122,11 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "invalid lane configuration is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `invalid lane configuration is rejected`() {
         assertFailsWith<IllegalArgumentException> {
             DatabasePermitGate(
@@ -132,6 +157,11 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "active transaction is rejected before permit acquisition" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `active transaction is rejected before permit acquisition`() {
         val gate = gate()
 
@@ -154,6 +184,11 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "exception releases the acquired lane without changing another lane" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `exception releases the acquired lane without changing another lane`() {
         val gate = gate()
 
@@ -168,6 +203,11 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "interruption preserves the holder and restores interrupt status" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `interruption preserves the holder and restores interrupt status`() {
         val gate = gate(workerWaitSeconds = 5)
         val holderEntered = CountDownLatch(1)
@@ -204,6 +244,11 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cancellation after acquisition releases only the acquired lane" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cancellation after acquisition releases only the acquired lane`() {
         val gate = gate()
         val foregroundEntered = CountDownLatch(1)
@@ -239,6 +284,11 @@ internal class DatabasePermitGateTest {
         gate.snapshot().foregroundInUse shouldBeEqualTo 0
     }
 
+/**
+ * gate은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun gate(workerWaitSeconds: Int = 1): DatabasePermitGate =
         DatabasePermitGate(
             hikariMaximumPoolSize = 4,

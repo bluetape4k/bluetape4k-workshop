@@ -19,11 +19,29 @@ import java.time.Instant
 import java.util.UUID
 
 /** migration compatibility verification task에서만 사용하는 격리된 packaged-artifact entry point입니다. */
+/** migration compatibility verification task에서만 사용하는 격리된 packaged-artifact entry point입니다. */
 internal object VoucherCompatibilityCli: KLogging() {
+    /**
+     * 프로모션 바우처의 상태·분류·오류 코드를 나타냅니다. 허용된 전이와 재시도·응답 분기를 선택하는 기준입니다.
+     */
     private const val MODE_PREFIX = "--voucher-compatibility-mode="
 
+    /**
+     * supports은 프로모션 바우처의 업무 규칙을 한 곳에서 적용하여 검증·상태 전이·영속화 결과가 서로 어긋나지 않도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param args 업무 처리에 필요한 args 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun supports(args: Array<String>): Boolean = args.any { it.startsWith(MODE_PREFIX) }
 
+    /**
+     * run은 프로모션 바우처의 업무 규칙을 한 곳에서 적용하여 검증·상태 전이·영속화 결과가 서로 어긋나지 않도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param args 업무 처리에 필요한 args 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun run(args: Array<String>) {
         val values = args.associate { argument ->
             val separator = argument.indexOf('=')

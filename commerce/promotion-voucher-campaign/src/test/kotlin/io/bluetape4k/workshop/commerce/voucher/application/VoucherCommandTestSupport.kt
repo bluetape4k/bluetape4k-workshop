@@ -39,29 +39,119 @@ import java.time.ZoneOffset
 import java.util.*
 import javax.sql.DataSource
 
+/**
+ * VoucherCommandTestSupport 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSupport() {
 
     protected companion object: KLogging() {
+/**
+ * TENANT_ID은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TENANT_ID = "tenant-a"
+/**
+ * CAMPAIGN_ID은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val CAMPAIGN_ID: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
+/**
+ * NOW은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val NOW: Instant = Instant.parse("2026-07-19T10:00:00Z")
     }
 
+/**
+ * exposedDatabases은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val exposedDatabases = mutableListOf<Database>()
+/**
+ * previousDefaultDatabase은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var previousDefaultDatabase: Database? = null
 
+/**
+ * gate은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var gate: DatabasePermitGate
+/**
+ * jdbc은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var jdbc: VoucherJdbcExecutor
+/**
+ * campaigns은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var campaigns: CampaignRepository
+/**
+ * claims은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var claims: ClaimRepository
+/**
+ * reviews은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var reviews: ReviewRepository
+/**
+ * audits은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var audits: AuditRepository
+/**
+ * codes은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var codes: VoucherCodeService
+/**
+ * campaignCommands은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var campaignCommands: CampaignCommandService
+/**
+ * allocation은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var allocation: AllocationService
+/**
+ * claimCommands은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var claimCommands: ClaimCommandService
+/**
+ * reviewCommands은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected lateinit var reviewCommands: ReviewCommandService
 
+/**
+ * clock은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     protected val clock: Clock = Clock.fixed(NOW, ZoneOffset.UTC)
 
     @BeforeEach
@@ -84,6 +174,11 @@ internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSuppo
         previousDefaultDatabase = null
     }
 
+/**
+ * configureCommandRuntime은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun configureCommandRuntime(
         foregroundPermits: Int = 12,
         workerPermits: Int = 1,
@@ -98,6 +193,11 @@ internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSuppo
             sseMaintenancePermits = 3,
             acquireTimeout = acquireTimeout,
         )
+/**
+ * transactionManager은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val transactionManager = SpringTransactionManager(runtimeDataSource, DatabaseConfig {}, false)
         exposedDatabases += TransactionTemplate(transactionManager).execute {
             TransactionManager.current().db
@@ -122,6 +222,11 @@ internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSuppo
         reviewCommands = ReviewCommandService(jdbc, campaigns, claims, reviews, audits, codes, serviceClock)
     }
 
+/**
+ * createCampaign은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun createCampaign(
         capacity: Int = 10,
         perUserLimit: Int = 1,
@@ -147,11 +252,21 @@ internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSuppo
             )
         }
 
+/**
+ * campaignSnapshot은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun campaignSnapshot(campaignId: UUID = CAMPAIGN_ID): CampaignRecord =
         jdbc.foregroundTransaction {
             campaigns.findPublic(TENANT_ID, campaignId).shouldNotBeNull()
         }
 
+/**
+ * contributingClaimCount은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun contributingClaimCount(campaignId: UUID): Long =
         jdbc.foregroundTransaction {
             ClaimTable
@@ -165,6 +280,11 @@ internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSuppo
                 .count()
         }
 
+/**
+ * totalClaimCount은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun totalClaimCount(campaignId: UUID): Long =
         jdbc.foregroundTransaction {
             ClaimTable.selectAll().where {
@@ -172,14 +292,29 @@ internal abstract class VoucherCommandTestSupport: VoucherCompatibilityTestSuppo
             }.count()
         }
 
+/**
+ * auditCount은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun auditCount(): Long =
         jdbc.foregroundTransaction { AuditTable.selectAll().count() }
 
+/**
+ * eventInboxCount은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun eventInboxCount(status: InboxStatus): Long =
         jdbc.foregroundTransaction {
             EventInboxTable.selectAll().where { EventInboxTable.status eq status }.count()
         }
 
+/**
+ * distinctEventInboxCount은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     protected fun distinctEventInboxCount(status: InboxStatus): Long =
         jdbc.foregroundTransaction {
             EventInboxTable

@@ -20,17 +20,57 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*
 
+/**
+ * VoucherPoolQueryServiceTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolQueryServiceTest {
 
     private companion object: KLogging() {
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TENANT = "tenant-query"
+/**
+ * PRINCIPAL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PRINCIPAL = "principal-query"
+/**
+ * OBSERVED_AT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val OBSERVED_AT: Instant = Instant.parse("2026-07-21T00:00:00Z")
     }
 
+/**
+ * executor은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val executor = mockk<VoucherPoolJdbcExecutor>()
+/**
+ * store은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val store = mockk<VoucherPoolQueryStore>()
+/**
+ * digests은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val digests = testDigests()
+/**
+ * service은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val service = JdbcVoucherPoolQueryService(executor, store, digests)
 
     @BeforeEach
@@ -39,6 +79,12 @@ internal class VoucherPoolQueryServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "customer reservation uses foreground lane and final owner digest predicate" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `customer reservation uses foreground lane and final owner digest predicate`() {
         val reservationId = UUID.randomUUID()
         val campaignId = UUID.randomUUID()
@@ -68,6 +114,11 @@ internal class VoucherPoolQueryServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "missing or wrong owner reservation stays indistinguishable" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `missing or wrong owner reservation stays indistinguishable`() {
         val reservationId = UUID.randomUUID()
         val campaignId = UUID.randomUUID()
@@ -90,6 +141,11 @@ internal class VoucherPoolQueryServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator reads use operator lane and bounded stuck page" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator reads use operator lane and bounded stuck page`() {
         val batchId = UUID.randomUUID()
         val campaignId = UUID.randomUUID()
@@ -110,6 +166,11 @@ internal class VoucherPoolQueryServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator scoped reads hide missing resources" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator scoped reads hide missing resources`() {
         val campaignId = UUID.randomUUID()
         val batchId = UUID.randomUUID()
@@ -126,6 +187,11 @@ internal class VoucherPoolQueryServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "stuck reservation page size is bounded before opening a transaction" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stuck reservation page size is bounded before opening a transaction`() {
         assertFailsWith<IllegalArgumentException> {
             service.stuckReservations(TENANT, null, null, 0)
@@ -137,6 +203,11 @@ internal class VoucherPoolQueryServiceTest {
         verify(exactly = 0) { executor.operatorTransaction<Any?>(any()) }
     }
 
+/**
+ * foregroundTransactionsExecuteInline은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun foregroundTransactionsExecuteInline() {
         every {
             executor.foregroundTransaction<ReservationReadModel?>(any())
@@ -145,10 +216,20 @@ internal class VoucherPoolQueryServiceTest {
         }
     }
 
+/**
+ * operatorTransactionsExecuteInline은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun operatorTransactionsExecuteInline() {
         every { executor.operatorTransaction<Any?>(any()) } answers { firstArg<() -> Any?>().invoke() }
     }
 
+/**
+ * reservation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun reservation(reservationId: UUID, campaignId: UUID): ReservationReadModel =
         ReservationReadModel(
             reservationId = reservationId,
@@ -164,6 +245,11 @@ internal class VoucherPoolQueryServiceTest {
             observedAt = OBSERVED_AT,
         )
 
+/**
+ * testDigests은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun testDigests(): VoucherDigestService =
         VoucherDigestService(
             stableDedupKey = DigestKey.of(1, material(1)),
@@ -174,11 +260,21 @@ internal class VoucherPoolQueryServiceTest {
                 DigestPurpose.REDIS_SIGNAL,
                 DigestPurpose.AUDIT,
             ).associateWith { purpose ->
+/**
+ * seed은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val seed = 10 + purpose.ordinal
                 DigestKeyRing(DigestKey(seed, material(seed)))
             },
         )
 
+/**
+ * material은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun material(seed: Int): ByteArray =
         ByteArray(32) { index -> (seed + index).toByte() }
 }

@@ -8,6 +8,29 @@
 
 이 모듈은 Java 25 virtual thread, 16개로 고정한 Hikari pool, foreground 11개, worker 1개, SSE 3개로 나눈 database permit을 사용합니다. 바우처 평문은 import 요청과 최초로 commit된 reveal 응답에만 나타납니다. Snapshot, metric, diagnostic, audit row, application log에는 바우처 material을 남기지 않습니다.
 
+## 업무 요구사항과 설계 결정
+
+이 모듈은 고객이 claim하기 전에 voucher code를 구매하거나 생성해 두는
+운영적으로 까다로운 상황을 모델링합니다. pool은 bounded한 단위로 import할
+수 있어야 하고, 여러 allocator가 동시에 접근해도 안전해야 하며, 일회 reveal
+응답이 유실되어도 복구할 수 있어야 합니다. 원 설계 문서는
+`docs/superpowers/specs/2026-07-20-issue-537-pre-generated-voucher-pool-design.md`입니다.
+
+| 요구사항 | 설계 결정 | 실제 운영에서 중요한 이유 |
+|---|---|---|
+| 하나의 entry를 두 번 allocation하지 않기 | `FOR UPDATE SKIP LOCKED`, revision/CAS, unique entitlement root로 eligible entry를 예약 | 동시 request가 campaign 전체 row를 잡지 않고 서로 다른 winner로 수렴 |
+| 큰 batch를 거대한 한 transaction 없이 import하기 | batch를 staging하고 bounded chunk로 처리하며 checkpoint를 저장 | crash 뒤 마지막 commit chunk부터 재개하며 수백만 code를 무조건 다시 읽지 않음 |
+| reveal 전후에 code를 보호하기 | persistence 전에 entry별 envelope encryption을 적용하고, commit된 일회 reveal 뒤에는 ciphertext 대신 digest/audit proof를 보존 | database dump와 diagnostic이 두 번째 code delivery channel이 되지 않음 |
+| 유실된 reveal 응답을 명시적으로 복구하기 | plaintext를 replay하지 않고 loss confirmation을 요구한 뒤 노출 entry를 revoke하고 entitlement root 아래 replacement를 최대 하나 생성 | customer support가 “아직 reveal 안 됨”과 “reveal됐지만 응답 유실”을 구분 |
+| 파생 counter를 복구 가능하게 만들기 | authoritative row에서 pool depth와 user limit를 다시 계산하는 reconciliation 수행 | counter repair가 reservation을 발명하거나 capacity를 몰래 소비하지 않음 |
+
+README walkthrough는 `VoucherBatchIngestIntegrationTest`,
+`VoucherPoolConcurrencyIntegrationTest`, `VoucherPoolIdempotencyIntegrationTest`,
+`VoucherCryptoQuarantineIntegrationTest`, `VoucherPoolExpiredReplayWebIntegrationTest`와
+연결됩니다. 이 test들은 bounded ingest, 서로 다른 concurrent winner, retry
+semantics, code quarantine, 명시적인 expired/reveal recovery를 증명합니다.
+production KMS, IAM, 외부 inventory import service를 증명하는 것은 아닙니다.
+
 ## Architecture
 
 ![사전 생성 바우처 풀 Architecture](../../docs/images/readme-diagrams/commerce-pre-generated-voucher-pool-readme-architecture-01.png)

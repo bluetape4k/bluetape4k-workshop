@@ -28,25 +28,100 @@ import java.time.Clock
 import java.time.Instant
 import java.util.*
 
+/**
+ * OrderValidationContractTest 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OrderValidationContractTest {
 
     companion object: KLogging()
 
+/**
+ * orders은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val orders = mockk<OrderRepository>(relaxed = true)
+/**
+ * payments은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val payments = mockk<PaymentAttemptRepository>(relaxed = true)
+/**
+ * lines은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val lines = mockk<OrderLineRepository>(relaxed = true)
+/**
+ * reservations은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val reservations = mockk<InventoryReservationRepository>(relaxed = true)
+/**
+ * fulfillments은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fulfillments = mockk<FulfillmentGroupRepository>(relaxed = true)
+/**
+ * fulfillmentLines은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fulfillmentLines = mockk<FulfillmentLineRepository>(relaxed = true)
+/**
+ * cancellations은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val cancellations = mockk<CancellationCaseRepository>(relaxed = true)
+/**
+ * refunds은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val refunds = mockk<RefundCaseRepository>(relaxed = true)
+/**
+ * audit은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val audit = mockk<LifecycleAuditAppender>(relaxed = true)
+/**
+ * events은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val events = mockk<ApplicationEventPublisher>(relaxed = true)
+/**
+ * failedPublications은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val failedPublications = mockk<FailedEventPublications>(relaxed = true)
+/**
+ * repository은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = HttpIdempotencyRepository()
+/**
+ * reconciliation은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val reconciliation = PublicationReconciliationService(failedPublications)
 
     @Test
+/**
+ * 이 시나리오는 "bounded caller validation uses released Bluetape helpers" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `bounded caller validation uses released Bluetape helpers`() {
         val expectedHelpers =
             listOf(
@@ -73,6 +148,11 @@ internal class OrderValidationContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "regex length security and decimal contracts stay explicit" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `regex length security and decimal contracts stay explicit`() {
         val orderCommandSource = Files.readString(
             Path.of("src/main/kotlin/io/bluetape4k/workshop/commerce/order/application/OrderCommandService.kt")
@@ -92,6 +172,11 @@ internal class OrderValidationContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "invalid bounded caller input remains IllegalArgumentException" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `invalid bounded caller input remains IllegalArgumentException`() {
         val commandService = commandService()
 
@@ -117,6 +202,11 @@ internal class OrderValidationContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "invalid reconciliation and cleanup bounds remain IllegalArgumentException" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `invalid reconciliation and cleanup bounds remain IllegalArgumentException`() {
         assertFailsWith<IllegalArgumentException> {
             reconciliation.replayFailed(0)
@@ -131,6 +221,11 @@ internal class OrderValidationContractTest {
         }
     }
 
+/**
+ * commandService은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun commandService(): OrderCommandService =
         OrderCommandService(
             orders = orders,

@@ -16,33 +16,99 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.locks.LockSupport
 
+/**
+ * JobConsoleHttpDriver 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 interface JobConsoleHttpDriver {
+/**
+ * submit은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     suspend fun submit(request: SubmitJobRequest, key: String, scope: DemoCallerScope): JobSnapshot
 
+/**
+ * snapshot은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     suspend fun snapshot(jobId: UUID, scope: DemoCallerScope): JobSnapshot
 
+/**
+ * cancel은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     suspend fun cancel(jobId: UUID, scope: DemoCallerScope): JobSnapshot
 
+/**
+ * openEvents은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     suspend fun openEvents(jobId: UUID, scope: DemoCallerScope): JobEventProbe
 }
 
+/**
+ * JobEventProbe 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 interface JobEventProbe: AutoCloseable {
+/**
+ * awaitEvent은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     suspend fun awaitEvent(timeout: Duration): JobEvent?
 }
 
+/**
+ * JobConsoleContract 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class JobConsoleContract(
+/**
+ * driver은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val driver: JobConsoleHttpDriver,
 ) {
+/**
+ * submitReplay은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     suspend fun submitReplay(scenario: JobConsoleScenario): Pair<JobSnapshot, JobSnapshot> =
         driver.submit(scenario.request, scenario.idempotencyKey, scenario.scope) to
                 driver.submit(scenario.request, scenario.idempotencyKey, scenario.scope)
 }
 
 /** Versioned black-box fixture shared by every live JVM adapter. */
+/** Versioned black-box fixture shared by every live JVM adapter. */
 class JobConsoleV1LiveContract(
+/**
+ * baseUri은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val baseUri: URI,
+/**
+ * client은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val client: HttpClient = HttpClient.newHttpClient(),
 ) {
+/**
+ * verifyOwnedWorkerLifecycle은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun verifyOwnedWorkerLifecycle(idempotencyKey: String) {
         val ui = request("GET", "/").body()
         check(ui.contains("ETA is an estimate, not an SLA"))
@@ -74,6 +140,11 @@ class JobConsoleV1LiveContract(
         awaitState(cancellableJobId, "cancelled")
     }
 
+/**
+ * verifyProblemRequestIdUsesUuidV7은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun verifyProblemRequestIdUsesUuidV7() {
         val problem = request("POST", "/v1/jobs", INVALID_SUBMIT_BODY, "invalid-key")
 
@@ -83,6 +154,11 @@ class JobConsoleV1LiveContract(
         check(UUID.fromString(requestId).version() == 7) { "requestId must use UUID v7: $requestId" }
     }
 
+/**
+ * verifyHeartbeat은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun verifyHeartbeat(jobId: String) {
         val request =
             HttpRequest.newBuilder(baseUri.resolve("/v1/jobs/$jobId/events"))
@@ -117,6 +193,11 @@ class JobConsoleV1LiveContract(
         }
     }
 
+/**
+ * awaitState은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitState(jobId: String, expected: String) {
         val deadline = System.nanoTime() + Duration.ofSeconds(5).toNanos()
         do {
@@ -130,12 +211,22 @@ class JobConsoleV1LiveContract(
         error("job $jobId did not reach $expected")
     }
 
+/**
+ * request은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun request(
         method: String,
         path: String,
         body: String? = null,
         idempotencyKey: String? = null,
     ): HttpResponse<String> {
+/**
+ * builder은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val builder =
             HttpRequest.newBuilder(baseUri.resolve(path))
                 .header("X-Demo-Tenant", "tenant-a")
@@ -148,11 +239,41 @@ class JobConsoleV1LiveContract(
     }
 
     private companion object {
+/**
+ * JOB_ID은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val JOB_ID = Regex("\\\"jobId\\\":\\\"([^\\\"]+)")
+/**
+ * REQUEST_ID은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val REQUEST_ID = Regex("\\\"requestId\\\":\\\"([^\\\"]+)")
+/**
+ * HEARTBEAT_TIMEOUT은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val HEARTBEAT_TIMEOUT: Duration = Duration.ofSeconds(5)
+/**
+ * SUBMIT_BODY은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val SUBMIT_BODY = """{"jobType":"document_export","workUnits":3,"failureMode":"none"}"""
+/**
+ * INVALID_SUBMIT_BODY은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val INVALID_SUBMIT_BODY = """{"jobType":"document_export","workUnits":0,"failureMode":"none"}"""
+/**
+ * CANCELLABLE_BODY은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val CANCELLABLE_BODY = """{"jobType":"document_export","workUnits":1000,"failureMode":"none"}"""
     }
 }

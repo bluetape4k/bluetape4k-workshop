@@ -31,9 +31,16 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
+/** bounded-wait coordinator의 owner/waiter permit, deadline, cancellation, abandon을 업무 재시도 계약으로 검증한다. */
+/** bounded-wait coordinator의 owner/waiter permit, deadline, cancellation, abandon을 업무 재시도 계약으로 검증한다. */
 class JobSubmissionIdempotencyCoordinatorTest {
 
     @Test
+/**
+ * 이 시나리오는 "owner prepares without repository connection and finalizes exactly once" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `owner prepares without repository connection and finalizes exactly once`() {
         val repository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
         val clock = VirtualClock()
@@ -54,6 +61,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "replay conflict overflow and abandoned reservations do not prepare" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `replay conflict overflow and abandoned reservations do not prepare`() {
         val command = command()
         val action = RecordingAction()
@@ -87,6 +99,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "registration deadline exceeded becomes an in-flight timeout without polling" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `registration deadline exceeded becomes an in-flight timeout without polling`() {
         val repository = FakeRepository().apply {
             reservation = Reservation.Wait(ownership, NOW)
@@ -100,6 +118,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter polls without holding a connection and backs off to the configured maximum" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter polls without holding a connection and backs off to the configured maximum`() {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
@@ -121,6 +145,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter timeout at the exact deadline removes its row" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter timeout at the exact deadline removes its row`() {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
@@ -139,6 +168,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter can register during the final statement window and replay terminal state" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter can register during the final statement window and replay terminal state`() {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
@@ -162,6 +197,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter deadline follows the reservation database clock rather than the application wall
+ * clock" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter deadline follows the reservation database clock rather than the application wall clock`() {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
@@ -179,6 +220,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter deadline includes time spent in the reserve transaction" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter deadline includes time spent in the reserve transaction`() {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
@@ -197,6 +243,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter retries after a database permit miss and passes remaining statement timeout" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter retries after a database permit miss and passes remaining statement timeout`() {
         val clock = VirtualClock()
         val waiter = RecordingWaiter(clock)
@@ -219,6 +271,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "prepare deadline abandons once and does not finalize" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `prepare deadline abandons once and does not finalize`() {
         val clock = VirtualClock()
         val repository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
@@ -234,6 +291,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "prepare hard deadline abandons a blocked action" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `prepare hard deadline abandons a blocked action`() {
         val clock = VirtualClock()
         val repository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
@@ -272,6 +334,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "prepare failure abandons while cancellation is rethrown" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `prepare failure abandons while cancellation is rethrown`() {
         val failedClock = VirtualClock()
         val failedRepository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
@@ -294,6 +361,12 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "owner prepare permit is acquired before reservation and rejects without a row" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `owner prepare permit is acquired before reservation and rejects without a row`() {
         val clock = VirtualClock()
         val repository = FakeRepository().apply { reservation = Reservation.Owner(ownership) }
@@ -330,6 +403,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter cancellation removes its database row before rethrowing" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter cancellation removes its database row before rethrowing`() {
         val clock = VirtualClock()
         val repository = FakeRepository().apply {
@@ -337,6 +415,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
             registration = WaiterRegistration.Registered(WAITER_TOKEN, ownership.generation)
         }
         val waiter = object: InterruptibleWaitStrategy {
+/**
+ * await은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun await(interval: Duration): Unit = throw CancellationException("waiter cancelled")
         }
 
@@ -347,6 +430,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "finalize cancellation is rethrown after one abandon attempt" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `finalize cancellation is rethrown after one abandon attempt`() {
         val clock = VirtualClock()
         val repository = FakeRepository().apply {
@@ -363,6 +451,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "wait jitter is deterministic and stays within the twenty percent envelope" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `wait jitter is deterministic and stays within the twenty percent envelope`() {
         val token = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
         val interval = 100.millis()
@@ -378,6 +471,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
         envelope.max() shouldBeEqualTo 120L
     }
 
+/**
+ * coordinator은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun coordinator(
         repository: FakeRepository,
         clock: VirtualClock,
@@ -396,19 +494,54 @@ class JobSubmissionIdempotencyCoordinatorTest {
             databasePermits = databasePermits,
         )
 
+/**
+ * RecordingAction 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RecordingAction(
+/**
+ * prepare은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val prepare: () -> Unit = {},
+/**
+ * commitCheck은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val commitCheck: () -> Unit = {},
     ): JobSubmissionOwnerAction {
+/**
+ * prepareCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var prepareCalls = 0
+/**
+ * commitCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var commitCalls = 0
 
+/**
+ * prepare은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun prepare(ownership: JobSubmissionOwnership): PreparedJobSubmission {
             prepareCalls += 1
             prepare()
             return PreparedJobSubmission(command().request, responseBody = "accepted".toUtf8Bytes())
         }
 
+/**
+ * commit은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun commit(
             connection: Connection,
             ownership: JobSubmissionOwnership,
@@ -420,68 +553,238 @@ class JobSubmissionIdempotencyCoordinatorTest {
         }
     }
 
+/**
+ * RecordingWaiter 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RecordingWaiter(
+/**
+ * clock은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val clock: VirtualClock,
     ): InterruptibleWaitStrategy {
+/**
+ * intervals은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val intervals = mutableListOf<Duration>()
 
+/**
+ * await은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun await(interval: Duration) {
             intervals += interval
             clock.advance(interval)
         }
     }
 
+/**
+ * VirtualClock 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class VirtualClock(
+/**
+ * instant은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private var instant: Instant = NOW,
     ): JobSubmissionClock {
+/**
+ * elapsed은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var elapsed: Duration = Duration.ZERO
             private set
 
+/**
+ * databaseNow은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun databaseNow(): Instant = instant
 
+/**
+ * monotonicNanos은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun monotonicNanos(): Long = elapsed.toNanos()
 
+/**
+ * advance은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun advance(duration: Duration) {
             instant = instant.plus(duration)
             elapsed = elapsed.plus(duration)
         }
 
+/**
+ * advanceMonotonicOnly은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun advanceMonotonicOnly(duration: Duration) {
             elapsed = elapsed.plus(duration)
         }
     }
 
+/**
+ * FakeRepository 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class FakeRepository: JobSubmissionIdempotencyRepository {
+/**
+ * reservation은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var reservation: Reservation = Reservation.Owner(ownership)
+/**
+ * registration은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var registration: WaiterRegistration = WaiterRegistration.Registered(WAITER_TOKEN, ownership.generation)
+/**
+ * pollResults은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pollResults = ArrayDeque<PollResult>()
+/**
+ * registerCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var registerCalls = 0
+/**
+ * registerTtls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val registerTtls = mutableListOf<Duration>()
+/**
+ * registerDeadlines은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val registerDeadlines = mutableListOf<Instant?>()
+/**
+ * onReserve은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var onReserve: (() -> Unit)? = null
+/**
+ * reserveCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var reserveCalls = 0
+/**
+ * pollCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var pollCalls = 0
+/**
+ * pollStatementTimeouts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pollStatementTimeouts = mutableListOf<Duration>()
+/**
+ * removeCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var removeCalls = 0
+/**
+ * finalizeCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var finalizeCalls = 0
+/**
+ * transactionCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var transactionCalls = 0
+/**
+ * transactionFailure은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var transactionFailure: Throwable? = null
+/**
+ * transactionFailureAfterCallback은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var transactionFailureAfterCallback: Throwable? = null
+/**
+ * transactionActive은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var transactionActive = false
+/**
+ * transactionCommitted은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var transactionCommitted = false
+/**
+ * abandonCalls은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var abandonCalls = 0
+/**
+ * abandonReasons은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val abandonReasons = mutableListOf<AbandonReason>()
 
+/**
+ * reserve은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun reserve(command: JobSubmissionCommand, now: Instant): Reservation {
             reserveCalls += 1
             onReserve?.invoke()
             return reservation
         }
 
+/**
+ * registerWaiter은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun registerWaiter(ownership: InFlightOwnership, now: Instant): WaiterRegistration {
             return registerWaiter(ownership, now, 2.seconds())
         }
 
+/**
+ * registerWaiter은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun registerWaiter(
             ownership: InFlightOwnership,
             now: Instant,
@@ -493,6 +796,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
             return registration
         }
 
+/**
+ * registerWaiter은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun registerWaiter(
             ownership: InFlightOwnership,
             now: Instant,
@@ -505,6 +813,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
             return registration
         }
 
+/**
+ * removeWaiter은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun removeWaiter(
             scope: DemoCallerScope,
             keyHash: String,
@@ -515,11 +828,21 @@ class JobSubmissionIdempotencyCoordinatorTest {
             return true
         }
 
+/**
+ * poll은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(scope: DemoCallerScope, keyHash: String, generation: Long, now: Instant): PollResult {
             pollCalls += 1
             return if (pollResults.isEmpty()) PollResult.StillInFlight else pollResults.removeFirst()
         }
 
+/**
+ * poll은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(
             scope: DemoCallerScope,
             keyHash: String,
@@ -531,6 +854,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
             return poll(scope, keyHash, generation, now)
         }
 
+/**
+ * withTransaction은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun <T> withTransaction(block: (Connection) -> T): T {
             transactionCalls += 1
             transactionActive = true
@@ -545,6 +873,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
             }
         }
 
+/**
+ * finalizeOwner은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun finalizeOwner(
             ownership: JobSubmissionOwnership,
             prepared: PreparedJobSubmission,
@@ -554,6 +887,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
             return snapshot
         }
 
+/**
+ * finalizeOwner은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun finalizeOwner(
             connection: Connection,
             ownership: JobSubmissionOwnership,
@@ -564,21 +902,61 @@ class JobSubmissionIdempotencyCoordinatorTest {
             return snapshot
         }
 
+/**
+ * abandon은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun abandon(ownership: JobSubmissionOwnership, reason: AbandonReason, now: Instant): Boolean {
             abandonCalls += 1
             abandonReasons += reason
             return true
         }
 
+/**
+ * cleanupExpired은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun cleanupExpired(now: Instant, batchSize: Int): CleanupReport = CleanupReport(0, 0)
     }
 
+/**
+ * ScriptedDatabaseSemaphore 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class ScriptedDatabaseSemaphore: Semaphore(1, true) {
+/**
+ * attempts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var attempts = 0
+/**
+ * failPollPermit은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var failPollPermit = true
+/**
+ * beforeRegistrationAcquire은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var beforeRegistrationAcquire: (() -> Unit)? = null
+/**
+ * beforeSuccessfulPollAcquire은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var beforeSuccessfulPollAcquire: (() -> Unit)? = null
 
+/**
+ * tryAcquire은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun tryAcquire(timeout: Long, unit: TimeUnit): Boolean {
             attempts += 1
             if (attempts == 2) beforeRegistrationAcquire?.invoke()
@@ -589,10 +967,35 @@ class JobSubmissionIdempotencyCoordinatorTest {
     }
 
     private companion object: KLogging() {
+/**
+ * NOW은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val NOW: Instant = Instant.parse("2026-07-21T00:00:00Z")
+/**
+ * OWNER_TOKEN은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val OWNER_TOKEN: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890aa")
+/**
+ * WAITER_TOKEN은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val WAITER_TOKEN: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ab")
+/**
+ * JOB_ID은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val JOB_ID: UUID = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ac")
+/**
+ * ownership은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val ownership =
             JobSubmissionOwnership(
                 scope = DemoCallerScope("tenant-a", "submitter-a"),
@@ -602,6 +1005,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
                 ownerToken = OWNER_TOKEN,
                 leaseExpiresAt = NOW + 30.seconds(),
             )
+/**
+ * snapshot은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val snapshot =
             ReplayableJobSubmission(
                 jobId = JOB_ID,
@@ -611,6 +1019,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
                 responseContentType = "application/json",
                 responseHeaders = emptyMap(),
             )
+/**
+ * FAKE_CONNECTION은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val FAKE_CONNECTION: Connection =
             Proxy.newProxyInstance(
                 Connection::class.java.classLoader,
@@ -629,6 +1042,11 @@ class JobSubmissionIdempotencyCoordinatorTest {
                 }
             } as Connection
 
+/**
+ * command은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun command(policy: JobSubmissionIdempotencyPolicy = JobSubmissionIdempotencyPolicy()): JobSubmissionCommand =
             JobSubmissionCommand(
                 scope = ownership.scope,

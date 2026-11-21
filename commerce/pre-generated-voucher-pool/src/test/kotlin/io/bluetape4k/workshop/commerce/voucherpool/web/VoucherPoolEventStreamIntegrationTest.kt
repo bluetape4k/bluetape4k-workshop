@@ -61,26 +61,76 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @TestPropertySource(properties = ["workshop.voucher-pool.sse.heartbeat-interval=100ms"])
+/**
+ * VoucherPoolEventStreamIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegrationTest() {
 
     private companion object: KLogging() {
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TENANT = "tenant-event-stream"
+/**
+ * PRINCIPAL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PRINCIPAL = "principal-event-stream"
+/**
+ * OTHER_PRINCIPAL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val OTHER_PRINCIPAL = "principal-event-stream-other"
+/**
+ * OPERATOR_SECRET은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val OPERATOR_SECRET = "test-operator-secret-0000000000000001"
+/**
+ * OPERATOR_GUARD은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val OPERATOR_GUARD = "test-voucher-pool-operator-guard"
     }
 
     @Autowired
+/**
+ * campaigns은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var campaigns: CampaignBatchCommandService
 
     @Autowired
+/**
+ * reservations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var reservations: ReservationService
 
     @Autowired
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var dataSource: DataSource
 
     @Autowired
+/**
+ * streams은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var streams: VoucherPoolEventStream
 
     @BeforeEach
@@ -99,6 +149,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "customer polling snapshot and SSE are snapshot first and owner scoped" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `customer polling snapshot and SSE are snapshot first and owner scoped`() {
         val fixture = activePool("customer")
         val owned = reservations.reserve(
@@ -143,6 +198,12 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator polling snapshot honors campaign batch relation and stream cursor scope" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator polling snapshot honors campaign batch relation and stream cursor scope`() {
         val fixture = activePool("operator")
 
@@ -172,6 +233,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "customer cursor resumes for its owner and rejects a different owner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `customer cursor resumes for its owner and rejects a different owner`() {
         val fixture = activePool("cursor")
         reservations.reserve(
@@ -206,6 +272,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "expired cursor emits authoritative snapshot then terminal reset" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expired cursor emits authoritative snapshot then terminal reset`() {
         val fixture = activePool("reset")
         reservations.reserve(
@@ -231,6 +302,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "close racing a blocked initial snapshot prevents late poller registration" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `close racing a blocked initial snapshot prevents late poller registration`() {
         val source = ClosingRaceEventSource()
         val properties = VoucherPoolProperties(
@@ -278,6 +354,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "slow consumer receives one terminal reset instead of an unbounded backlog" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `slow consumer receives one terminal reset instead of an unbounded backlog`() {
         val source = OverflowEventSource()
         val properties = VoucherPoolProperties(
@@ -312,6 +393,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "subscriber catch up closes the snapshot to shared poller registration gap" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `subscriber catch up closes the snapshot to shared poller registration gap`() {
         val source = CatchupEventSource()
         val properties = VoucherPoolProperties(
@@ -348,6 +434,12 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "shared poller advances its raw scan watermark when a page has no visible events" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `shared poller advances its raw scan watermark when a page has no visible events`() {
         val source = RawWatermarkEventSource()
         val properties = VoucherPoolProperties(
@@ -375,6 +467,12 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "shared poller emits a snapshot when authoritative state changes without an audit" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `shared poller emits a snapshot when authoritative state changes without an audit`() {
         val source = SnapshotChangeEventSource()
         val properties = VoucherPoolProperties(
@@ -397,6 +495,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * firstCustomerEvent은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun firstCustomerEvent(): List<String> {
         val request = HttpRequest.newBuilder(URI("http://127.0.0.1:$port/api/v1/events"))
             .timeout(10.seconds())
@@ -418,6 +521,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * operatorGet은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun operatorGet(
         path: String,
         accept: MediaType = MediaType.APPLICATION_JSON,
@@ -430,6 +538,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
             .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
 
+/**
+ * activePool은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activePool(name: String): EventFixture {
         val now = Instant.now()
         val campaignId = UUID.randomUUID()
@@ -482,18 +595,48 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
         return EventFixture(campaignId, batchId)
     }
 
+/**
+ * digest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digest(seed: Int): DigestValue =
         DigestValue(ByteArray(32) { index -> (seed + index).toByte() })
 
+/**
+ * EventFixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class EventFixture(val campaignId: UUID, val batchId: UUID): java.io.Serializable {
         companion object {
+/**
+ * serialVersionUID은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             private const val serialVersionUID: Long = 1L
         }
     }
 
+/**
+ * OverflowEventSource 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class OverflowEventSource: VoucherPoolEventSource {
+/**
+ * pollCount은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pollCount = AtomicInteger()
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val snapshot = VoucherPoolSnapshotResponse(
             "CUSTOMER",
             null,
@@ -507,8 +650,18 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             Instant.EPOCH,
         )
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun snapshot(scope: VoucherPoolStreamScope): VoucherPoolSnapshotResponse = snapshot
 
+/**
+ * initial은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun initial(
             scope: VoucherPoolStreamScope,
             cursor: VoucherPoolEventCursor?,
@@ -519,6 +672,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
                 resetRequired = false
             )
 
+/**
+ * poll은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(scope: VoucherPoolStreamScope, afterId: Long): VoucherPoolStreamBatch {
             pollCount.incrementAndGet()
             val events = if (afterId == 0L) {
@@ -542,8 +700,23 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * CatchupEventSource 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class CatchupEventSource: VoucherPoolEventSource {
+/**
+ * pollCount은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pollCount = AtomicInteger()
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val snapshot = VoucherPoolSnapshotResponse(
             scope = "CUSTOMER",
             campaignId = null,
@@ -556,6 +729,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             truncated = false,
             observedAt = Instant.EPOCH,
         )
+/**
+ * event은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val event = VoucherPoolAuditEnvelope(
             cursor = VoucherPoolEventCursor(1, 1),
             event = VoucherPoolAuditHttpEvent(
@@ -568,8 +746,18 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             ),
         )
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun snapshot(scope: VoucherPoolStreamScope): VoucherPoolSnapshotResponse = snapshot
 
+/**
+ * initial은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun initial(
             scope: VoucherPoolStreamScope,
             cursor: VoucherPoolEventCursor?,
@@ -580,6 +768,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
                 resetRequired = false
             )
 
+/**
+ * poll은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(scope: VoucherPoolStreamScope, afterId: Long): VoucherPoolStreamBatch {
             pollCount.incrementAndGet()
             return VoucherPoolStreamBatch(
@@ -589,9 +782,24 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * RawWatermarkEventSource 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RawWatermarkEventSource: VoucherPoolEventSource {
+/**
+ * afterIds은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val afterIds = ConcurrentLinkedQueue<Long>()
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val snapshot = VoucherPoolSnapshotResponse(
             "CUSTOMER",
             null,
@@ -605,8 +813,18 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             Instant.EPOCH,
         )
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun snapshot(scope: VoucherPoolStreamScope): VoucherPoolSnapshotResponse = snapshot
 
+/**
+ * initial은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun initial(
             scope: VoucherPoolStreamScope,
             cursor: VoucherPoolEventCursor?,
@@ -617,6 +835,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
                 resetRequired = false
             )
 
+/**
+ * poll은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(scope: VoucherPoolStreamScope, afterId: Long): VoucherPoolStreamBatch {
             afterIds += afterId
             return VoucherPoolStreamBatch(
@@ -627,12 +850,37 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * SnapshotChangeEventSource 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class SnapshotChangeEventSource: VoucherPoolEventSource {
+/**
+ * initial은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val initial = snapshot(emptyMap())
+/**
+ * changed은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val changed = snapshot(mapOf("AVAILABLE" to 1L))
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun snapshot(scope: VoucherPoolStreamScope): VoucherPoolSnapshotResponse = initial
 
+/**
+ * initial은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun initial(
             scope: VoucherPoolStreamScope,
             cursor: VoucherPoolEventCursor?,
@@ -643,6 +891,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
                 resetRequired = false
             )
 
+/**
+ * poll은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(scope: VoucherPoolStreamScope, afterId: Long): VoucherPoolStreamBatch =
             VoucherPoolStreamBatch(
                 snapshot = changed,
@@ -650,6 +903,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
                 scannedThroughId = afterId
             )
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun snapshot(counts: Map<String, Long>): VoucherPoolSnapshotResponse =
             VoucherPoolSnapshotResponse(
                 scope = "OPERATOR",
@@ -665,10 +923,30 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             )
     }
 
+/**
+ * ClosingRaceEventSource 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class ClosingRaceEventSource: VoucherPoolEventSource {
+/**
+ * initialEntered은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val initialEntered = CountDownLatch(1)
+/**
+ * releaseInitial은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val releaseInitial = CountDownLatch(1)
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val snapshot = VoucherPoolSnapshotResponse(
             scope = "CUSTOMER",
             campaignId = null,
@@ -682,8 +960,18 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             observedAt = Instant.EPOCH,
         )
 
+/**
+ * snapshot은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun snapshot(scope: VoucherPoolStreamScope): VoucherPoolSnapshotResponse = snapshot
 
+/**
+ * initial은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun initial(
             scope: VoucherPoolStreamScope,
             cursor: VoucherPoolEventCursor?,
@@ -697,6 +985,11 @@ internal class VoucherPoolEventStreamIntegrationTest: AbstractVoucherPoolIntegra
             )
         }
 
+/**
+ * poll은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(scope: VoucherPoolStreamScope, afterId: Long): VoucherPoolStreamBatch =
             VoucherPoolStreamBatch(
                 snapshot = snapshot,

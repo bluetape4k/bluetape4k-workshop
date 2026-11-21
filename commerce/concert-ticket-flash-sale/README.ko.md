@@ -6,6 +6,26 @@
 
 구조는 Spring Modulith 기반 modular monolith다. 일반 DB 작업은 JetBrains Exposed와 Bluetape4k의 정확한 `ExposedJdbcRepository` 계약을 사용한다. Direct JDBC는 versioned startup migration에만 한정한다. Redis는 `bluetape4k-lettuce`로 임시 조정을 담당하며 판매 재고나 결제 결과의 영속적 진실이 아니다.
 
+## 업무 요구사항과 테스트 증거
+
+`docs/superpowers/specs/2026-07-21-concert-ticket-flash-sale-design.md`는
+고객에게 보이는 약속에서 시작합니다. ticket은 최대 한 번만 판매되어야 하고,
+결제나 외부 ticket 호출이 모호할 때 시스템이 임의로 성공을 추측하면 안 됩니다.
+그래서 workflow를 네 책임으로 나눕니다.
+
+| 요구사항 | 권위 또는 설계 규칙 | test가 보여 주는 것 |
+|---|---|---|
+| queue로 수요를 제어하되 queue를 권위로 만들지 않기 | Redis waiting-room grant와 rate/in-flight lease는 임시이며 purchase가 PostgreSQL에서 sale policy와 inventory를 재검증 | admission과 hostile-concurrency test가 grant/Redis 유실만으로 inventory가 생기지 않음을 검증 |
+| 하나의 purchase attempt를 결정적으로 처리하기 | buyer/IP guard·idempotency digest·PostgreSQL lock ordering을 purchase 상태와 함께 commit | `PurchaseServiceIntegrationTest`, `PurchaseConcurrencyIntegrationTest`가 단일 winner와 안전한 replay를 증명 |
+| timeout을 payment 성공으로 추정하지 않기 | `APPROVED`·`DECLINED`·`UNKNOWN`을 분리하고 operation/revision으로 provider claim을 fencing | `PaymentReconciliationIntegrationTest`가 unknown·late approval·cancellation·retry를 다룸 |
+| durable ticket 판단 뒤에만 restock하기 | ticket issue/revoke effect를 deduplicate하고 `NEVER_ISSUED` 또는 `REVOKED`만 stock을 반환 | `TicketEffectIntegrationTest`, `RefundRaceIntegrationTest`가 restock/refund race를 보호 |
+| operator에 bounded recovery 제공하기 | limit을 받는 reconciliation이 redacted outcome을 기록하고 미해결 effect를 quarantine | `OperatorAccessIntegrationTest`와 web contract test가 access와 response redaction을 검증 |
+
+browser walkthrough 전에 domain transition을 먼저 읽으세요. browser는 편리한
+client일 뿐 state machine의 owner가 아닙니다. deterministic fake payment provider,
+loopback binding, local identity header는 workshop 대체물이며 실제 PSP, trusted
+proxy 운영, ticket issuer SLA를 다루지 않습니다.
+
 ![Spring Modulith architecture](../../docs/images/readme-diagrams/commerce-concert-ticket-flash-sale-architecture-01.png)
 
 ## Prerequisites and Java 25

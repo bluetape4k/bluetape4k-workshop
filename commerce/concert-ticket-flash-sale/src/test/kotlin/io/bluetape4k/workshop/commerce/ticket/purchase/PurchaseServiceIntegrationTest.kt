@@ -47,11 +47,21 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.util.*
 
+/**
+ * PurchaseServiceIntegrationTest 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class PurchaseServiceIntegrationTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "integration fixture uses a bounded Hikari pool" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `integration fixture uses a bounded Hikari pool`() {
         TicketDatabaseFixture().use { fixture ->
             fixture.dataSource.maximumPoolSize shouldBeEqualTo TicketDatabaseFixture.MAXIMUM_POOL_SIZE
@@ -59,6 +69,11 @@ internal class PurchaseServiceIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "one nanosecond before opensAt creates no purchase row or consumed grant" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `one nanosecond before opensAt creates no purchase row or consumed grant`() {
         PurchaseFixture(opensAt = NOW.plusNanos(1)).use { fixture ->
             val command = fixture.command()
@@ -71,6 +86,12 @@ internal class PurchaseServiceIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "purchase atomically consumes grant holds inventory guards identities and binds
+ * idempotency" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `purchase atomically consumes grant holds inventory guards identities and binds idempotency`() {
         PurchaseFixture().use { fixture ->
             val command = fixture.command()
@@ -88,6 +109,11 @@ internal class PurchaseServiceIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cancel before authorization releases hold and both identity guards" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cancel before authorization releases hold and both identity guards`() {
         PurchaseFixture().use { fixture ->
             val command = fixture.command()
@@ -103,6 +129,11 @@ internal class PurchaseServiceIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cancel during authorization keeps hold and guards until provider outcome" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cancel during authorization keeps hold and guards until provider outcome`() {
         PurchaseFixture().use { fixture ->
             val command = fixture.command()
@@ -121,6 +152,11 @@ internal class PurchaseServiceIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "owner query hides an attempt from another buyer" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `owner query hides an attempt from another buyer`() {
         PurchaseFixture().use { fixture ->
             val command = fixture.command()
@@ -136,38 +172,138 @@ internal class PurchaseServiceIntegrationTest {
     }
 }
 
+/**
+ * DurableState 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class DurableState(
+/**
+ * attempts은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val attempts: Int,
+/**
+ * guards은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val guards: Int,
+/**
+ * held은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val held: Int,
+/**
+ * consumedGrants은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val consumedGrants: Int,
+/**
+ * boundIdempotency은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val boundIdempotency: Int,
 ) {
     companion object {
+/**
+ * ZERO은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val ZERO = DurableState(0, 0, 0, 0, 0)
     }
 }
 
+/**
+ * InventoryQuantities 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class InventoryQuantities(
+/**
+ * total은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val total: Int,
+/**
+ * held은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val held: Int,
+/**
+ * sold은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sold: Int,
 )
 
 @Suppress("SqlResolve", "SqlSourceToSinkFlow")
+/**
+ * PurchaseFixture 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class PurchaseFixture(
+/**
+ * inventory은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val inventory: Int = 2,
+/**
+ * opensAt은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val opensAt: Instant = NOW - 1.seconds(),
 ): AutoCloseable {
 
     companion object: KLogging()
 
+/**
+ * database은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val database = TicketDatabaseFixture()
+/**
+ * executor은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val executor get() = database.executor
+/**
+ * saleId은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val saleId: UUID = Uuid.V7.nextId()
+/**
+ * sharedIp은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sharedIp: UUID = Uuid.V7.nextId()
+/**
+ * events은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val events = mutableListOf<AuthorizationRequested>()
 
+/**
+ * service은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val service = PurchaseService(
         jdbcExecutor = database.executor,
         sale = SaleService(),
@@ -189,12 +325,27 @@ internal class PurchaseFixture(
         )
     }
 
+/**
+ * command은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun command(
         buyer: UUID = Uuid.V7.nextId(),
         ip: UUID = sharedIp,
         quantity: Int = 1,
     ): StartPurchase {
+/**
+ * attemptId은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val attemptId = Uuid.V7.nextId()
+/**
+ * grantNonce은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         // grantNonce는 승인 토큰의 보안 nonce fallback이므로 영속 식별자 생성 계약에서 제외한다.
         val grantNonce = UUID.randomUUID()
         execute(
@@ -207,7 +358,17 @@ internal class PurchaseFixture(
             VALUES ('$saleId', '$grantNonce', '$buyer', 1, '${NOW.plusSeconds(60)}');
             """.trimIndent(),
         )
+/**
+ * idempotency은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val idempotency = HttpIdempotencyRepository(database.executor)
+/**
+ * owner은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val owner = idempotency.acquire(
             IdempotencyScope(
                 principalSubjectId = buyer,
@@ -234,6 +395,11 @@ internal class PurchaseFixture(
         )
     }
 
+/**
+ * durableState은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun durableState(attemptId: UUID): DurableState = executor.transaction {
         DurableState(
             attempts = TicketPurchaseAttempts.selectAll()
@@ -256,12 +422,27 @@ internal class PurchaseFixture(
         )
     }
 
+/**
+ * execute은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun execute(sql: String) = database.execute(sql)
 
+/**
+ * inventoryQuantities은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun inventoryQuantities(): InventoryQuantities = executor.transaction {
         inventoryQuantitiesInCurrentTransaction()
     }
 
+/**
+ * inventoryQuantitiesInCurrentTransaction은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun inventoryQuantitiesInCurrentTransaction(): InventoryQuantities {
         val row = TicketInventories
             .select(
@@ -281,10 +462,25 @@ internal class PurchaseFixture(
         )
     }
 
+/**
+ * inventoryHeld은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun inventoryHeld(): Int = inventoryQuantities().held
 
+/**
+ * inventorySold은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun inventorySold(): Int = inventoryQuantities().sold
 
+/**
+ * purchaseAttemptState은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun purchaseAttemptState(attemptId: UUID): String = executor.transaction {
         TicketPurchaseAttempts
             .select(TicketPurchaseAttempts.state)
@@ -292,14 +488,29 @@ internal class PurchaseFixture(
             .single()[TicketPurchaseAttempts.state]
     }
 
+/**
+ * ticketState은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun ticketState(): String = executor.transaction {
         TicketTickets.select(TicketTickets.state).single()[TicketTickets.state]
     }
 
+/**
+ * ticketDisposition은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun ticketDisposition(): String = executor.transaction {
         TicketOrders.select(TicketOrders.ticketDisposition).single()[TicketOrders.ticketDisposition]
     }
 
+/**
+ * issueEffectOperationId은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun issueEffectOperationId(): UUID = executor.transaction {
         TicketEffectOperations
             .select(TicketEffectOperations.operationId)
@@ -307,6 +518,11 @@ internal class PurchaseFixture(
             .single()[TicketEffectOperations.operationId]
     }
 
+/**
+ * refundOperationId은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun refundOperationId(attemptId: UUID): UUID = executor.transaction {
         checkNotNull(
             TicketOrders
@@ -316,6 +532,11 @@ internal class PurchaseFixture(
         )
     }
 
+/**
+ * effectReceiptCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun effectReceiptCount(operationId: UUID): Int = executor.transaction {
         TicketEffectReceipts
             .selectAll()
@@ -324,14 +545,34 @@ internal class PurchaseFixture(
             .toInt()
     }
 
+/**
+ * ticketCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun ticketCount(): Int = executor.transaction { TicketTickets.selectAll().count().toInt() }
 
+/**
+ * effectOperationCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun effectOperationCount(): Int = executor.transaction { TicketEffectOperations.selectAll().count().toInt() }
 
+/**
+ * orderCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun orderCount(attemptId: UUID): Int = executor.transaction {
         TicketOrders.selectAll().where { TicketOrders.attemptId eq attemptId }.count().toInt()
     }
 
+/**
+ * identityGuardCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun identityGuardCount(kind: String, subjectId: UUID): Int = executor.transaction {
         TicketActiveIdentityGuards
             .selectAll()
@@ -344,6 +585,11 @@ internal class PurchaseFixture(
             .toInt()
     }
 
+/**
+ * activeIdentityGuardCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun activeIdentityGuardCount(attemptId: UUID): Int = executor.transaction {
         TicketActiveIdentityGuards
             .selectAll()
@@ -352,6 +598,11 @@ internal class PurchaseFixture(
             .toInt()
     }
 
+/**
+ * duplicatePaymentOperationCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun duplicatePaymentOperationCount(): Int = executor.transaction {
         TicketPaymentOperations
             .select(TicketPaymentOperations.operationId)
@@ -361,6 +612,11 @@ internal class PurchaseFixture(
             .count { (_, count) -> count > 1 }
     }
 
+/**
+ * duplicateEffectReceiptCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun duplicateEffectReceiptCount(): Int = executor.transaction {
         TicketEffectReceipts
             .select(TicketEffectReceipts.operationId)
@@ -370,6 +626,11 @@ internal class PurchaseFixture(
             .count { (_, count) -> count > 1 }
     }
 
+/**
+ * expireEffectClaim은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun expireEffectClaim(operationId: UUID) {
         // 만료 주입은 애플리케이션 clock이 아니라 PostgreSQL statement clock을 검증한다.
         execute(
@@ -378,9 +639,19 @@ internal class PurchaseFixture(
         )
     }
 
+/**
+ * close은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun close() {
         database.close()
     }
 }
 
+/**
+ * NOW은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 internal val NOW: Instant = Instant.parse("2026-07-21T10:00:00Z")

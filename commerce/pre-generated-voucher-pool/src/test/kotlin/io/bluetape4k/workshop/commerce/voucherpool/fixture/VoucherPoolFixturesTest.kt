@@ -18,15 +18,35 @@ import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * VoucherPoolFixturesTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolFixturesTest {
 
+/**
+ * executor은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val executor = VoucherPoolJdbcExecutor(
         gate = DatabasePermitGate.default(16),
         transactionManager = mockk<PlatformTransactionManager>(relaxed = true),
     )
+/**
+ * fixtures은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixtures = VoucherPoolFixtures(executor)
 
     @Test
+/**
+ * 이 시나리오는 "catalog covers every deterministic recovery scenario" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `catalog covers every deterministic recovery scenario`() {
         fixtures.catalog().map(FixtureScenario::slug).toSet() shouldBeEqualTo
                 setOf(
@@ -42,6 +62,11 @@ internal class VoucherPoolFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "fixture signal arms only after transaction commit" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fixture signal arms only after transaction commit`() {
         inTransaction {
             fixtures.configureAfterCommit("reveal-response-loss")
@@ -61,6 +86,11 @@ internal class VoucherPoolFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "configure fixture and rollback leaves fixture state unarmed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `configure fixture and rollback leaves fixture state unarmed`() {
         inTransaction(commit = false) {
             fixtures.configureAfterCommit("reveal-response-loss")
@@ -72,6 +102,12 @@ internal class VoucherPoolFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate arm is idempotent and reconfiguration enables deterministic replay" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate arm is idempotent and reconfiguration enables deterministic replay`() {
         inTransaction {
             fixtures.configureAfterCommit("worker-takeover")
@@ -92,6 +128,11 @@ internal class VoucherPoolFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "claimed fixture is restored when transaction rolls back" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `claimed fixture is restored when transaction rolls back`() {
         inTransaction {
             fixtures.configureAfterCommit("redis-outage")
@@ -109,6 +150,11 @@ internal class VoucherPoolFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent duplicate claims have exactly one committed winner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent duplicate claims have exactly one committed winner`() {
         inTransaction {
             fixtures.configureAfterCommit("pause-allocation-race")
@@ -135,6 +181,11 @@ internal class VoucherPoolFixturesTest {
 
     @EnabledForJreRange(min = JRE.JAVA_21)
     @Test
+/**
+ * 이 시나리오는 "virtual threads duplicate claims have exactly one committed winner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `virtual threads duplicate claims have exactly one committed winner`() {
         inTransaction {
             fixtures.configureAfterCommit("pause-allocation-race")
@@ -159,6 +210,11 @@ internal class VoucherPoolFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "stale completion cannot mutate a reconfigured generation or newer claim" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stale completion cannot mutate a reconfigured generation or newer claim`() {
         inTransaction {
             fixtures.configureAfterCommit("restore-smoke")
@@ -190,6 +246,11 @@ internal class VoucherPoolFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "unsupported fixture scenarios fail closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `unsupported fixture scenarios fail closed`() {
         assertFailsWith<IllegalArgumentException> {
             fixtures.state("unknown")
@@ -202,6 +263,11 @@ internal class VoucherPoolFixturesTest {
         }
     }
 
+/**
+ * inTransaction은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun inTransaction(
         commit: Boolean = true,
         block: () -> Unit,
@@ -209,6 +275,11 @@ internal class VoucherPoolFixturesTest {
         complete(pendingTransaction(block), commit)
     }
 
+/**
+ * pendingTransaction은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun pendingTransaction(block: () -> Unit): List<TransactionSynchronization> {
         TransactionSynchronizationManager.initSynchronization()
         return try {
@@ -219,6 +290,11 @@ internal class VoucherPoolFixturesTest {
         }
     }
 
+/**
+ * complete은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun complete(
         synchronizations: List<TransactionSynchronization>,
         commit: Boolean,
@@ -226,6 +302,11 @@ internal class VoucherPoolFixturesTest {
         if (commit) {
             synchronizations.forEach(TransactionSynchronization::afterCommit)
         }
+/**
+ * status은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val status = when {
             commit -> TransactionSynchronization.STATUS_COMMITTED
             else   -> TransactionSynchronization.STATUS_ROLLED_BACK

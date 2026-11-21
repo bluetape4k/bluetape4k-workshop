@@ -33,17 +33,39 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(controllers = [ImageOcrController::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * multipart OCR API의 wire 계약을 검증합니다.
+ *
+ * 파일과 language/structuredDetail 파라미터가 service request로 전달되는지,
+ * 유효한 응답이 JSON으로 나오는지, 빈 파일·크기 초과·지원하지 않는 content
+ * type이 native 작업 전에 거부되는지를 확인합니다.
+ */
 class ImageOcrControllerTest {
 
     private companion object: KLogging()
 
     @Autowired
+/**
+ * mockMvc은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var mockMvc: MockMvc
 
     @MockkBean
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var service: ImageOcrService
 
     @MockkBean
+/**
+ * properties은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var properties: ImageOcrProperties
 
     @BeforeEach
@@ -52,6 +74,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "multipart POST returns OCR response" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `multipart POST returns OCR response`() {
         coEvery { service.recognize(any()) } returns response()
 
@@ -75,6 +102,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "structuredDetail parameter reaches service" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `structuredDetail parameter reaches service`() {
         coEvery { service.recognize(any()) } returns response()
 
@@ -95,6 +127,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "missing structuredDetail preserves plain text default" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `missing structuredDetail preserves plain text default`() {
         coEvery { service.recognize(any()) } returns response()
 
@@ -114,6 +151,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "language parameters preserve mixed repeated and comma-separated order" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `language parameters preserve mixed repeated and comma-separated order`() {
         coEvery { service.recognize(any()) } returns response(languages = listOf("eng", "kor", "jpn"))
 
@@ -140,6 +182,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "empty upload returns bad request" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `empty upload returns bad request`() {
         val asyncResult = mockMvc.perform(
             multipart("/api/images/ocr")
@@ -153,6 +200,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "non image content type returns bad request" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `non image content type returns bad request`() {
         val asyncResult = mockMvc.perform(
             multipart("/api/images/ocr")
@@ -166,6 +218,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "unsupported image subtype returns bad request" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `unsupported image subtype returns bad request`() {
         val asyncResult = mockMvc.perform(
             multipart("/api/images/ocr")
@@ -179,6 +236,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "oversized upload returns bad request before reading bytes" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `oversized upload returns bad request before reading bytes`() {
         every { properties.maxUploadBytes } returns 2
 
@@ -197,6 +259,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "service validation failure returns bad request" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `service validation failure returns bad request`() {
         coEvery { service.recognize(any()) } throws IllegalArgumentException("Undecodable image")
 
@@ -213,6 +280,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "TIFF validation failure returns sanitized reason phase and page" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `TIFF validation failure returns sanitized reason phase and page`() {
         coEvery { service.recognize(any()) } throws TiffMultiPageOcrValidationException(
             reason = TiffMultiPageOcrFailureReason.PIXELS_PER_PAGE_LIMIT_EXCEEDED,
@@ -237,6 +309,11 @@ class ImageOcrControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "TIFF processing failure returns sanitized engine reason" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `TIFF processing failure returns sanitized engine reason`() {
         coEvery { service.recognize(any()) } throws TiffMultiPageOcrException(
             reason = TiffMultiPageOcrFailureReason.ENGINE_FAILED,
@@ -259,14 +336,29 @@ class ImageOcrControllerTest {
             .andExpect(jsonPath("$.pageIndex").value(1))
     }
 
+/**
+ * imageFile은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun imageFile(
         bytes: ByteArray = byteArrayOf(1, 2, 3),
         contentType: String = "image/png",
     ): MockMultipartFile =
         MockMultipartFile("file", "sample.${if (contentType == "image/tiff") "tiff" else "png"}", contentType, bytes)
 
+/**
+ * tiffHeader은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun tiffHeader(): ByteArray = byteArrayOf('I'.code.toByte(), 'I'.code.toByte(), 0x2A, 0x00)
 
+/**
+ * response은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun response(languages: List<String> = listOf("eng")): ImageOcrResponse =
         ImageOcrResponse(
             requestId = "ocr-test-request",

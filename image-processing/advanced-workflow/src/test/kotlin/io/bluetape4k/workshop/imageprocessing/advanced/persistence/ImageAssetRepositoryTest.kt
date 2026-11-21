@@ -27,15 +27,30 @@ class ImageAssetRepositoryTest: AbstractImagePersistenceTest() {
     private companion object: KLogging()
 
     @Autowired
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val service: ImagePersistenceService = uninitialized()
 
     @Test
+/**
+ * 이 시나리오는 "findByExternalId - returns null when asset does not exist" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `findByExternalId - returns null when asset does not exist`() {
         val result = service.findAssetByExternalId(Base58.randomString(12))
         result.shouldBeNull()
     }
 
     @Test
+/**
+ * 이 시나리오는 "findByExternalId - returns asset after creation via recordJobStart" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `findByExternalId - returns asset after creation via recordJobStart`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
@@ -50,6 +65,11 @@ class ImageAssetRepositoryTest: AbstractImagePersistenceTest() {
     }
 
     @Test
+/**
+ * 이 시나리오는 "updateStatus - changes asset status to READY via recordJobSuccess" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `updateStatus - changes asset status to READY via recordJobSuccess`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)

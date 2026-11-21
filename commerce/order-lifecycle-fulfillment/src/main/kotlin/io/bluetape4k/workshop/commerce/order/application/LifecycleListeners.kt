@@ -45,17 +45,63 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
+/**
+ * PaymentEventService은 주문·fulfillment에서 사용하는 업무 객체입니다.
+ * @property payments 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property inbox 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property audit 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property events 주문·fulfillment 경계의 전달 데이터입니다. 스키마·크기·무결성을 검증한 뒤 저장하거나 발행합니다.
+ * @property clock 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ */
+
 
 @Service
 internal class PaymentEventService(
+    /**
+     * `payments`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val payments: PaymentAttemptRepository,
+    /**
+     * `inbox`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val inbox: ProviderEventInboxRepository,
+    /**
+     * `audit`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val audit: LifecycleAuditAppender,
+    /**
+     * `events`은 주문·결제·재고·배송에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+     *
+     * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+     */
     private val events: ApplicationEventPublisher,
+    /**
+     * `clock`은 주문·결제·재고·배송에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val clock: Clock,
 ) {
     companion object: KLogging()
 
+    /**
+     * `ingest`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = ingest(event = event)
+     * ```
+     * @param event 요청 경계에서 검증된 `event`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     @Transactional
     fun ingest(event: PaymentProviderEvent): ProviderEventDisposition {
         val payment = payments.findById(event.paymentAttemptId)
@@ -121,6 +167,18 @@ internal class PaymentEventService(
         return disposition
     }
 
+    /**
+     * `reconcileDelayedSuccess`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = reconcileDelayedSuccess(paymentAttemptId = UUID.randomUUID())
+     * ```
+     * @param paymentAttemptId 요청 경계에서 검증된 `paymentAttemptId`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     @Transactional
     fun reconcileDelayedSuccess(paymentAttemptId: UUID): ProviderEventDisposition {
         val payment = payments.findById(paymentAttemptId)
@@ -134,6 +192,14 @@ internal class PaymentEventService(
         return ingest(event)
     }
 
+    /**
+     * targetStatus은 주문 라이프사이클과 fulfillment의 업무 규칙을 한 곳에서 적용하여 검증·상태 전이·영속화 결과가 서로 어긋나지 않도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param current 업무 처리에 필요한 current 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param kind 업무 처리에 필요한 kind 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun targetStatus(
         current: PaymentStatus,
         kind: ProviderEventKind,
@@ -144,13 +210,47 @@ internal class PaymentEventService(
         else                                                             -> null
     }
 }
+/**
+ * OrderSubmittedListener은 주문·fulfillment에서 사용하는 업무 객체입니다.
+ * @property provider 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property paymentEvents 주문·fulfillment 경계의 전달 데이터입니다. 스키마·크기·무결성을 검증한 뒤 저장하거나 발행합니다.
+ * @property orderLifecycleExecutor 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ */
+
 
 @Component
 internal class OrderSubmittedListener(
+    /**
+     * `provider`은 주문·결제·재고·배송에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val provider: PaymentProvider,
+    /**
+     * `paymentEvents`은 주문·결제·재고·배송에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+     *
+     * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+     */
     private val paymentEvents: PaymentEventService,
+    /**
+     * `orderLifecycleExecutor`은 주문·결제·재고·배송에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     private val orderLifecycleExecutor: ExecutorService,
 ) {
+    /**
+     * `on`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = on(event = event)
+     * ```
+     * @param event 요청 경계에서 검증된 `event`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     @ApplicationModuleListener
     fun on(event: OrderSubmitted) {
         val providerEvents = orderLifecycleExecutor.submit<List<PaymentProviderEvent>> {
@@ -166,19 +266,71 @@ internal class OrderSubmittedListener(
 
     companion object: KLogging()
 }
+/**
+ * PaymentSucceededListener은 주문·fulfillment에서 사용하는 업무 객체입니다.
+ * @property orders 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property reservations 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property audit 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property events 주문·fulfillment 경계의 전달 데이터입니다. 스키마·크기·무결성을 검증한 뒤 저장하거나 발행합니다.
+ * @property clock 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property failureSwitch 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ */
+
 
 @Component
 internal class PaymentSucceededListener(
+    /**
+     * `orders`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val orders: OrderRepository,
+    /**
+     * `reservations`은 주문·결제·재고·배송에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val reservations: InventoryReservationRepository,
+    /**
+     * `audit`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val audit: LifecycleAuditAppender,
+    /**
+     * `events`은 주문·결제·재고·배송에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+     *
+     * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+     */
     private val events: ApplicationEventPublisher,
+    /**
+     * `clock`은 주문·결제·재고·배송에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val clock: Clock,
+    /**
+     * `failureSwitch`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val failureSwitch: InventoryListenerFailureSwitch,
 ) {
 
     companion object: KLogging()
 
+    /**
+     * `on`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = on(event = event)
+     * ```
+     * @param event 요청 경계에서 검증된 `event`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     @ApplicationModuleListener
     fun on(event: PaymentSucceeded) {
         if (failureSwitch.failNext(event.orderId)) {
@@ -233,33 +385,123 @@ internal class PaymentSucceededListener(
 }
 
 @Component
+/**
+ * InventoryListenerFailureSwitch은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의
+ * 규칙에 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class InventoryListenerFailureSwitch {
 
     companion object: KLogging()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     private val orderIds = ConcurrentHashMap.newKeySet<UUID>()
 
+    /**
+     * `failOnce`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = failOnce(orderId = UUID.randomUUID())
+     * ```
+     * @param orderId 요청 경계에서 검증된 `orderId`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     fun failOnce(orderId: UUID) {
         orderIds += orderId
         log.debug { "inventory_listener_failure_armed orderId=$orderId" }
     }
 
+    /**
+     * `failNext`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = failNext(orderId = UUID.randomUUID())
+     * ```
+     * @param orderId 요청 경계에서 검증된 `orderId`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     fun failNext(orderId: UUID): Boolean = orderIds.remove(orderId)
 
+    /**
+     * `clear`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = clear()
+     * ```
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     fun clear() = orderIds.clear()
 
 }
+/**
+ * InventoryCommittedListener은 주문·fulfillment에서 사용하는 업무 객체입니다.
+ * @property orders 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property lines 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property fulfillments 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property fulfillmentLines 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property audit 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ */
+
 
 @Component
 internal class InventoryCommittedListener(
+    /**
+     * `orders`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val orders: OrderRepository,
+    /**
+     * `lines`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val lines: OrderLineRepository,
+    /**
+     * `fulfillments`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val fulfillments: FulfillmentGroupRepository,
+    /**
+     * `fulfillmentLines`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val fulfillmentLines: FulfillmentLineRepository,
+    /**
+     * `audit`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val audit: LifecycleAuditAppender,
 ) {
     companion object: KLogging()
 
+    /**
+     * `on`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = on(event = event)
+     * ```
+     * @param event 요청 경계에서 검증된 `event`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     @ApplicationModuleListener
     fun on(event: InventoryCommitted) {
         if (fulfillments.findByOrderId(event.orderId).isEmpty()) {
@@ -321,14 +563,42 @@ internal class InventoryCommittedListener(
         }
     }
 }
+/**
+ * RefundRequestedListener은 주문·fulfillment에서 사용하는 업무 객체입니다.
+ * @property refunds 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property audit 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ */
+
 
 @Component
 internal class RefundRequestedListener(
+    /**
+     * `refunds`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val refunds: RefundCaseRepository,
+    /**
+     * `audit`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val audit: LifecycleAuditAppender,
 ) {
     companion object: KLogging()
 
+    /**
+     * `on`은 애플리케이션 공개 계약의 업무 진입점입니다.
+     *
+     * 입력은 인증 주체·tenant scope·idempotency key와 함께 검증하고, command라면 동일 revision에서 허용된 상태 전이만 수행합니다. 반환
+     * snapshot은 commit된 source-of-truth로 취급하며 SSE/event 알림만으로 현재 상태를 추정하지 않습니다.
+     * 예:
+     * ```kotlin
+     * val response = on(event = event)
+     * ```
+     * @param event 요청 경계에서 검증된 `event`입니다.
+     * @return 성공 시 확정된 결과를, 실패 시 호출자가 분기할 수 있는 오류 계약을 반환합니다.
+     */
     @ApplicationModuleListener
     fun on(event: RefundRequested) {
         var refund = refunds.findById(event.refundCaseId)

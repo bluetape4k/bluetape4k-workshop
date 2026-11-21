@@ -9,11 +9,21 @@ import org.junit.jupiter.api.Test
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 
+/**
+ * VoucherScenarioFixturesTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherScenarioFixturesTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "catalog covers every documented deterministic recovery scenario" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `catalog covers every documented deterministic recovery scenario`() {
         val fixtures = VoucherScenarioFixtures()
 
@@ -35,6 +45,12 @@ internal class VoucherScenarioFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "risk fixture is server owned one shot and never accepts a customer override" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `risk fixture is server owned one shot and never accepts a customer override`() {
         val fixtures = VoucherScenarioFixtures()
 
@@ -79,6 +95,11 @@ internal class VoucherScenarioFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reset clears only the selected tenant" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reset clears only the selected tenant`() {
         val fixtures = VoucherScenarioFixtures()
         fixtures.configure("allocation-review", "tenant-a", "principal")
@@ -99,6 +120,11 @@ internal class VoucherScenarioFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "client choreography scenarios never pretend to arm a server signal" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `client choreography scenarios never pretend to arm a server signal`() {
         val fixtures = VoucherScenarioFixtures()
 
@@ -118,6 +144,11 @@ internal class VoucherScenarioFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "risk fixture follows the enclosing transaction outcome" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `risk fixture follows the enclosing transaction outcome`() {
         val fixtures = VoucherScenarioFixtures()
 
@@ -161,6 +192,11 @@ internal class VoucherScenarioFixturesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "fixture reset follows the enclosing transaction outcome" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fixture reset follows the enclosing transaction outcome`() {
         val fixtures = VoucherScenarioFixtures()
         fixtures.configure("allocation-review", "tenant", "principal")

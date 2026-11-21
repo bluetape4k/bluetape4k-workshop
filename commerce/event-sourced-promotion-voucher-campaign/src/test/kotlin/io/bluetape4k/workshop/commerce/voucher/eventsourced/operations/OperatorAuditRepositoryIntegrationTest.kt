@@ -28,19 +28,64 @@ import java.time.Instant
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * OperatorAuditRepositoryIntegrationTest 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OperatorAuditRepositoryIntegrationTest {
 
     private companion object: KLogging() {
+/**
+ * postgres은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
 
+/**
+ * PROJECTION은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val PROJECTION = "voucher-lifecycle"
+/**
+ * NOW은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-23T14:00:00Z")
     }
 
+/**
+ * postgresDatabase은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
+/**
+ * database은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
+/**
+ * rebuilds은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val rebuilds = ProjectionRebuildRepository()
+/**
+ * audits은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val audits = OperatorAuditRepository()
+/**
+ * operator은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var operator: EventSourcedRebuildOperator
 
     @BeforeAll
@@ -76,6 +121,11 @@ internal class OperatorAuditRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate audit insertion rolls back its rebuild cancellation mutation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate audit insertion rolls back its rebuild cancellation mutation`() {
         val candidate = transaction(database) {
             rebuilds.initializeActive(PROJECTION, NOW)
@@ -103,6 +153,11 @@ internal class OperatorAuditRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "fenced cancellation writes applied audit with its state transition" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fenced cancellation writes applied audit with its state transition`() {
         val candidate = transaction(database) {
             rebuilds.initializeActive(PROJECTION, NOW)
@@ -123,6 +178,11 @@ internal class OperatorAuditRepositoryIntegrationTest {
         }
     }
 
+/**
+ * audit은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun audit(generation: Long): OperatorAuditEntry =
         OperatorAuditEntry(
             identity = OperatorAuditIdentity(
@@ -142,6 +202,11 @@ internal class OperatorAuditRepositoryIntegrationTest {
             result = OperatorAuditResult(OperatorAuditOutcome.APPLIED, NOW),
         )
 
+/**
+ * cancellation은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun cancellation(generation: Long): RebuildCancellationCommand =
         RebuildCancellationCommand(
             identity = OperatorAuditIdentity(

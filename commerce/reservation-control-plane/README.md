@@ -4,6 +4,29 @@
 
 This Spring Boot example implements an application-owned reservation control plane for scarce capacity. PostgreSQL is the correctness authority; Redis only reduces duplicate work, coordinates the expiry sweeper, and provides best-effort admission control.
 
+## Business requirements and design decisions
+
+The business problem is not merely “insert a reservation.” A resource has a
+finite capacity, a customer may retry after losing the response, and a hold can
+expire while another request is trying to confirm it. The design turns those
+risks into explicit requirements:
+
+| Requirement | Design rule | What a newcomer should observe |
+|---|---|---|
+| Never oversell capacity | Lock the PostgreSQL resource row, validate `revision` and `policyVersion`, then update occupancy and hold state in one transaction | Redis admission can reject work early, but it cannot create a hold or decide whether capacity exists |
+| Make a timeout safe | Store an owner-scoped request digest and response descriptor under `Idempotency-Key` | Same key and payload replays; same key with another owner/payload conflicts; an in-progress lease is retryable |
+| Give the waitlist a fair chance | Keep FIFO sequence in PostgreSQL and turn released capacity into one bounded offer | `OFFERED` means the slot is reserved for that entry; a repeated expiry sweep must not promote twice |
+| Recover abandoned work | A leader-guarded sweeper uses compare-and-set transitions and writes one durable notification delivery | Losing Redis pauses optimization/leader work, but a manual bounded sweep remains possible |
+| Keep operators safe | Force-release and sweep endpoints require operator mode/key and expose bounded results | Recovery is an audited command, not an unbounded “fix everything” button |
+
+The corresponding design specification is
+`docs/superpowers/specs/2026-07-18-issue-533-reservation-control-plane-design.md`.
+Read its authority boundary, state model, HTTP idempotency, and runbook
+sections beside `ReservationCommandService`, `WaitlistCommandService`, and
+`ReservationExpirySweeper`. The example deliberately excludes payment,
+calendar billing, and a production identity provider; those are integration
+boundaries rather than hidden assumptions.
+
 ## Scenarios
 
 1. Open `http://localhost:8080` in two browsers and try to hold the same resource revision. PostgreSQL row locking and revision checks allow only a valid transition.

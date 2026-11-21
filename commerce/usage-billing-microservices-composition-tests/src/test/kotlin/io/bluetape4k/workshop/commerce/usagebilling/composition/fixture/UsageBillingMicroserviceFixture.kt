@@ -64,24 +64,94 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.util.*
 
+/**
+ * MeterOutboxState 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 data class MeterOutboxState(
+/**
+ * status은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val status: MeterOutboxStatus,
+/**
+ * attempt은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val attempt: Int,
 )
 
+/**
+ * UsageBillingMicroserviceFixture 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class UsageBillingMicroserviceFixture(
+/**
+ * brokerPathProxy은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val brokerPathProxy: Boolean = false,
 ): AutoCloseable {
 
     private companion object: KLogging() {
+/**
+ * KAFKA_NETWORK_ALIAS은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val KAFKA_NETWORK_ALIAS = "kafka"
+/**
+ * KAFKA_PROXY_TARGET_PORT은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val KAFKA_PROXY_TARGET_PORT = 19092
+/**
+ * TOXIPROXY_LISTEN_PORT은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TOXIPROXY_LISTEN_PORT = 8666
+/**
+ * CUT_UPSTREAM은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val CUT_UPSTREAM = "cut-kafka-upstream"
+/**
+ * CUT_DOWNSTREAM은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val CUT_DOWNSTREAM = "cut-kafka-downstream"
+/**
+ * METER_TOPIC은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val METER_TOPIC = "meter.events.v1"
+/**
+ * USAGE_TOPIC은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val USAGE_TOPIC = "usage.events.v1"
+/**
+ * INVOICE_TOPIC은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val INVOICE_TOPIC = "invoice.events.v1"
+/**
+ * TOPICS은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val TOPICS = listOf(
             METER_TOPIC,
             USAGE_TOPIC,
@@ -89,18 +159,43 @@ class UsageBillingMicroserviceFixture(
             INVOICE_TOPIC,
         )
 
+/**
+ * BILLING_TOPIC은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val BILLING_TOPIC = "billing.events.v1"
 
+/**
+ * digestOf은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun digestOf(value: String): String =
             HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
     }
 
+/**
+ * brokerPathNetwork은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val brokerPathNetwork: Network by lazy { Network.newNetwork() }
+/**
+ * toxiproxy은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val toxiproxy: ToxiproxyServer by lazy {
         ToxiproxyServer(image = "ghcr.io/shopify/toxiproxy", tag = "2.5.0").apply {
             withNetwork(brokerPathNetwork)
         }
     }
+/**
+ * kafka은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val kafka by lazy {
         KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0")).apply {
             if (brokerPathProxy) {
@@ -110,19 +205,84 @@ class UsageBillingMicroserviceFixture(
         }
     }
 
+/**
+ * meterDatabase은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val meterDatabase = postgresServer()
+/**
+ * usageDatabase은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val usageDatabase = postgresServer()
+/**
+ * billingDatabase은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val billingDatabase = postgresServer()
+/**
+ * invoiceDatabase은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val invoiceDatabase = postgresServer()
+/**
+ * queryDatabase은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val queryDatabase = postgresServer()
+/**
+ * meterContext은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var meterContext: ConfigurableApplicationContext
+/**
+ * usageContext은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var usageContext: ConfigurableApplicationContext
+/**
+ * billingContext은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var billingContext: ConfigurableApplicationContext
+/**
+ * invoiceContext은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var invoiceContext: ConfigurableApplicationContext
+/**
+ * queryContext은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var queryContext: ConfigurableApplicationContext
+/**
+ * brokerPath은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var brokerPath: Proxy
+/**
+ * isBrokerPathCut은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var isBrokerPathCut: Boolean = false
 
+/**
+ * start은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun start(): UsageBillingMicroserviceFixture {
         startBrokerPathProxy()
         kafka.start()
@@ -140,16 +300,31 @@ class UsageBillingMicroserviceFixture(
         return this
     }
 
+/**
+ * blockTopic은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun blockTopic(topic: String) {
         topic.requireEquals(METER_TOPIC, "topic")
         meterContext.getBean(MeterTransportFailureSwitch::class.java).isFailing = true
     }
 
+/**
+ * unblockTopic은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun unblockTopic(topic: String) {
         topic.requireEquals(METER_TOPIC, "topic")
         meterContext.getBean(MeterTransportFailureSwitch::class.java).isFailing = false
     }
 
+/**
+ * cutBrokerPath은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun cutBrokerPath() {
         brokerPathProxy.requireEquals(true, "brokerPathProxy")
         check(!isBrokerPathCut) { "broker_path_already_cut" }
@@ -159,6 +334,11 @@ class UsageBillingMicroserviceFixture(
         isBrokerPathCut = true
     }
 
+/**
+ * restoreBrokerPath은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun restoreBrokerPath() {
         brokerPathProxy.requireEquals(true, "brokerPathProxy")
         if (!isBrokerPathCut) return
@@ -168,6 +348,11 @@ class UsageBillingMicroserviceFixture(
         isBrokerPathCut = false
     }
 
+/**
+ * activatePrice은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun activatePrice(tenantId: String, meterCode: String, amount: BigDecimal): MeterActivationResult =
         meterContext.getBean<MeterCommandService>()
             .activatePrice(
@@ -181,9 +366,19 @@ class UsageBillingMicroserviceFixture(
                 ),
             )
 
+/**
+ * publishMeterEvents은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun publishMeterEvents() =
         meterContext.getBean<MeterOutboxPublisher>().publishPending()
 
+/**
+ * acceptUsage은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun acceptUsage(
         tenantId: String,
         meterCode: String,
@@ -202,18 +397,38 @@ class UsageBillingMicroserviceFixture(
                 ),
             )
 
+/**
+ * publishUsageEvents은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun publishUsageEvents() {
         usageContext.getBean<UsageOutboxPublisher>().publishPending()
     }
 
+/**
+ * publishBillingEvents은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun publishBillingEvents() {
         billingContext.getBean<BillingOutboxPublisher>().publishPending()
     }
 
+/**
+ * publishInvoiceEvents은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun publishInvoiceEvents() {
         invoiceContext.getBean<InvoiceOutboxPublisher>().publishPending()
     }
 
+/**
+ * sendUsageEvent은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun sendUsageEvent(
         tenantId: String,
         meterCode: String,
@@ -221,7 +436,17 @@ class UsageBillingMicroserviceFixture(
         aggregateVersion: Long,
         eventId: UUID = UUID.randomUUID(),
     ) {
+/**
+ * payload은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payload = """{"meterCode":"$meterCode","currency":"USD","quantity":"1"}"""
+/**
+ * envelope은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val envelope = envelope(
             WireEvent(
                 eventId = eventId,
@@ -236,6 +461,11 @@ class UsageBillingMicroserviceFixture(
         usageKafkaTemplate().send(USAGE_TOPIC, "$tenantId|Usage|$aggregateId", envelope).get()
     }
 
+/**
+ * sendQueryEvent은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun sendQueryEvent(
         eventId: UUID,
         tenantId: String,
@@ -243,7 +473,17 @@ class UsageBillingMicroserviceFixture(
         schemaVersion: Int = 1,
         validDigest: Boolean = true,
     ) {
+/**
+ * payload은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payload = "{}"
+/**
+ * wirePayload은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val wirePayload = envelope(
             WireEvent(
                 eventId = eventId,
@@ -260,6 +500,11 @@ class UsageBillingMicroserviceFixture(
         usageKafkaTemplate().send(INVOICE_TOPIC, "$tenantId|Invoice|$eventId", wirePayload).get()
     }
 
+/**
+ * postBillingAdjustment은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun postBillingAdjustment(
         tenantId: String,
         correctionOf: UUID,
@@ -277,11 +522,21 @@ class UsageBillingMicroserviceFixture(
                 ),
             )
 
+/**
+ * restartUsageContext은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun restartUsageContext() {
         usageContext.close()
         usageContext = startContext(UsageServiceApplication::class.java, "usage", usageDatabase)
     }
 
+/**
+ * redeliverLatestUsageEvent은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun redeliverLatestUsageEvent() {
         val event = transaction(usageContext) {
             usageContext.getBean<UsageOutboxRepository>().findAll().last()
@@ -289,6 +544,11 @@ class UsageBillingMicroserviceFixture(
         usageKafkaTemplate().send(USAGE_TOPIC, event.partitionKey, event.payload).get()
     }
 
+/**
+ * outboxBacklog은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun outboxBacklog(service: String): Long {
         service.requireEquals("meter", "service")
 
@@ -300,6 +560,11 @@ class UsageBillingMicroserviceFixture(
         }
     }
 
+/**
+ * meterOutboxState은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun meterOutboxState(eventId: UUID): MeterOutboxState =
         meterTransaction {
             meterContext.getBean<MeterOutboxRepository>()
@@ -308,58 +573,113 @@ class UsageBillingMicroserviceFixture(
                 .let { MeterOutboxState(MeterOutboxStatus.valueOf(it.status), it.attempt) }
         }
 
+/**
+ * priceEvidence은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun priceEvidence(tenantId: String, meterCode: String): PriceEvidence? =
         usageTransactionNullable {
             usageContext.getBean<UsageAcceptanceJournal>()
                 .priceEvidence(tenantId, meterCode, "USD")
         }
 
+/**
+ * billingHasPriceEvidence은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun billingHasPriceEvidence(tenantId: String, meterCode: String): Boolean =
         transaction(billingContext) {
             billingContext.getBean<BillingInboxJournal>()
                 .priceEvidence(tenantId, meterCode, "USD") != null
         }
 
+/**
+ * chargeCount은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun chargeCount(): Long =
         transaction(billingContext) {
             billingContext.getBean<BillingChargeRepository>().findAll().count().toLong()
         }
 
+/**
+ * chargeAmounts은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun chargeAmounts(): List<BigDecimal> =
         transaction(billingContext) {
             billingContext.getBean<BillingChargeRepository>().findAll().map { it.amount }
         }
 
+/**
+ * latestBillingEventId은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun latestBillingEventId(): UUID =
         transaction(billingContext) {
             billingContext.getBean<BillingOutboxRepository>().findAll().last().eventId
         }
 
+/**
+ * invoiceLineCount은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun invoiceLineCount(): Long =
         transaction(invoiceContext) {
             invoiceContext.getBean<InvoiceLineRepository>().findAll().count().toLong()
         }
 
+/**
+ * invoiceLines은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun invoiceLines(): List<InvoiceLine> =
         transaction(invoiceContext) {
             invoiceContext.getBean<InvoiceJournal>().lines
         }
 
+/**
+ * queryAppliedEventCount은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun queryAppliedEventCount(): Int =
         transaction(queryContext) {
             queryContext.getBean<QueryProjectionJournal>().readModelEventIds.size
         }
 
+/**
+ * queryRecoverySnapshot은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun queryRecoverySnapshot(): QueryRecoverySnapshot =
         transaction(queryContext) {
             queryContext.getBean<QueryRecoveryService>().snapshot()
         }
 
+/**
+ * redriveQueryEvent은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun redriveQueryEvent(eventId: UUID): Boolean =
         queryContext.getBean<QueryRecoveryService>()
             .redrive(eventId = eventId, "composition-operator", "correlation-$eventId")
             .requested
 
+/**
+ * queryTenantAccessAllowed은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun queryTenantAccessAllowed(authenticationTenant: String, targetTenant: String): Boolean {
         val authentication = UsernamePasswordAuthenticationToken.authenticated(
             "composition-user",
@@ -374,6 +694,11 @@ class UsageBillingMicroserviceFixture(
         }
     }
 
+/**
+ * close은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun close() {
         if (brokerPathProxy && isBrokerPathCut) restoreBrokerPath()
         if (::queryContext.isInitialized) queryContext.close()
@@ -395,6 +720,11 @@ class UsageBillingMicroserviceFixture(
         }
     }
 
+/**
+ * createTopics은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createTopics() {
         val properties = Properties().also { it["bootstrap.servers"] = brokerBootstrapServers() }
 
@@ -406,11 +736,21 @@ class UsageBillingMicroserviceFixture(
         }
     }
 
+/**
+ * startContext은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun startContext(
         application: Class<*>,
         service: String,
         database: PostgreSQLServer,
     ): ConfigurableApplicationContext {
+/**
+ * sources은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val sources = if (service == "meter") {
             arrayOf(application, MeterCompositionTestConfiguration::class.java)
         } else {
@@ -430,6 +770,11 @@ class UsageBillingMicroserviceFixture(
         ).run()
     }
 
+/**
+ * startBrokerPathProxy은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun startBrokerPathProxy() {
         if (!brokerPathProxy) return
         toxiproxy.start()
@@ -441,23 +786,53 @@ class UsageBillingMicroserviceFixture(
         )
     }
 
+/**
+ * brokerBootstrapServers은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun brokerBootstrapServers(): String =
         if (brokerPathProxy) brokerPathBootstrapServers() else kafka.bootstrapServers
 
+/**
+ * brokerPathBootstrapServers은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun brokerPathBootstrapServers(): String {
         return "${toxiproxy.host}:${toxiproxy.getMappedPort(TOXIPROXY_LISTEN_PORT)}"
     }
 
+/**
+ * postgresServer은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun postgresServer(): PostgreSQLServer =
         PostgreSQLServer(image = "postgres", tag = "16-alpine")
 
+/**
+ * meterTransaction은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <T: Any> meterTransaction(block: () -> T): T =
         transaction(meterContext, block)
 
     @Suppress("UNCHECKED_CAST")
+/**
+ * usageKafkaTemplate은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun usageKafkaTemplate(): KafkaTemplate<String, String> =
         usageContext.getBean("usageKafkaTemplate") as KafkaTemplate<String, String>
 
+/**
+ * usageTransactionNullable은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <T> usageTransactionNullable(block: () -> T?): T? {
         var result: T? = null
         TransactionTemplate(usageContext.getBean<PlatformTransactionManager>())
@@ -467,11 +842,21 @@ class UsageBillingMicroserviceFixture(
         return result
     }
 
+/**
+ * transaction은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <T: Any> transaction(context: ConfigurableApplicationContext, block: () -> T): T =
         TransactionTemplate(context.getBean<PlatformTransactionManager>())
             .execute { block() }
             .shouldNotBeNull()
 
+/**
+ * envelope은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun envelope(event: WireEvent): String =
         Jackson.defaultJsonMapper.writeValueAsString(
             linkedMapOf(
@@ -489,15 +874,65 @@ class UsageBillingMicroserviceFixture(
             ),
         )
 
+/**
+ * WireEvent 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class WireEvent(
+/**
+ * eventId은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val eventId: UUID,
+/**
+ * eventType은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val eventType: String,
+/**
+ * tenantId은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val tenantId: String,
+/**
+ * aggregateType은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val aggregateType: String,
+/**
+ * aggregateId은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val aggregateId: String,
+/**
+ * aggregateVersion은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val aggregateVersion: Long,
+/**
+ * payload은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payload: String,
+/**
+ * schemaVersion은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val schemaVersion: Int = 1,
+/**
+ * payloadDigest은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payloadDigest: String = digestOf(payload),
     )
 }

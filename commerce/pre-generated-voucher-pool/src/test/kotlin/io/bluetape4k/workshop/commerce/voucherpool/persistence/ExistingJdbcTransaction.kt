@@ -20,6 +20,11 @@ internal inline fun <T> withExistingJdbcTransaction(
 ): T {
     check(!connection.autoCommit) { "existing JDBC transaction helper requires auto-commit to be disabled" }
 
+/**
+ * nonOwningConnection은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val nonOwningConnection = Proxy.newProxyInstance(
         Connection::class.java.classLoader,
         arrayOf(Connection::class.java),
@@ -36,6 +41,11 @@ internal inline fun <T> withExistingJdbcTransaction(
         }
     } as Connection
 
+/**
+ * database은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val database = Database.connect(getNewConnection = { nonOwningConnection })
 
     return try {

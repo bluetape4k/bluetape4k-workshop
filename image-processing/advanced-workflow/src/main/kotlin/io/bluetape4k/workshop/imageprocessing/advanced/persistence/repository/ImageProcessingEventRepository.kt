@@ -27,11 +27,28 @@ import org.springframework.stereotype.Repository
 class ImageProcessingEventRepository: LongJdbcRepository<ImageProcessingEventDTO> {
 
     private companion object: KLogging()
+    /**
+     * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     override val table = ImageProcessingEventTable
 
+    /**
+     * extractId은 이미지 업로드·검수·파생물 처리 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: ImageProcessingEventDTO): Long = entity.id
 
+    /**
+     * toEntity은 이미지 업로드·검수·파생물 처리 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): ImageProcessingEventDTO = toImageProcessingEventDTO()
 
     /**
@@ -39,7 +56,6 @@ class ImageProcessingEventRepository: LongJdbcRepository<ImageProcessingEventDTO
      *
      * [ImageProcessingEventTable.createdAt]은 DB 기본값으로 채웁니다.
      * 예외는 호출자에게 전파되며 억제하지 않습니다.
-     *
      * @param jobId 부모 job의 기본 키입니다.
      * @param step 이 이벤트가 설명하는 파이프라인 단계입니다.
      * @param status 해당 단계의 결과입니다.

@@ -51,12 +51,33 @@ import kotlin.time.Duration.Companion.seconds
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * EventSourcedIdempotencyRepositoryIntegrationTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를
+ * 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventSourcedIdempotencyRepositoryIntegrationTest {
 
     companion object: KLogging() {
+/**
+ * postgres은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
 
+/**
+ * NOW은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-23T10:00:00Z")
+/**
+ * DESCRIPTOR은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val DESCRIPTOR = TerminalDescriptor(
             outcome = ReceiptOutcome.VOUCHER_ALLOCATED,
             status = 201,
@@ -68,10 +89,35 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
         )
     }
 
+/**
+ * postgresDatabase은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
+/**
+ * repository은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = EventSourcedIdempotencyRepository()
+/**
+ * store은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var store: EventStoreRepository
+/**
+ * commands은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var commands: EventSourcedCommandService
 
     @BeforeAll
@@ -100,6 +146,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same scope and fingerprint replays one terminal descriptor" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same scope and fingerprint replays one terminal descriptor`() {
         // 준비
         val scope = scope()
@@ -122,6 +173,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same scope and changed fingerprint conflicts" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same scope and changed fingerprint conflicts`() {
         // 준비
         val scope = scope()
@@ -139,6 +195,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "expired lease permits takeover and rejects stale owner finalize" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expired lease permits takeover and rejects stale owner finalize`() {
         // 준비
         val scope = scope()
@@ -166,6 +227,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same key is isolated by principal digest" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same key is isolated by principal digest`() {
         // 준비
         val fingerprint = ReceiptDigest.sha256("canonical-request")
@@ -182,6 +248,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "event append and terminal receipt finalize roll back together" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event append and terminal receipt finalize roll back together`() {
         // 준비
         val scope = scope()
@@ -211,6 +282,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent same receipt appends one event and replays one descriptor" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent same receipt appends one event and replays one descriptor`() {
         // 준비
         val scope = scope()
@@ -247,6 +323,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
         replay.shouldBeInstanceOf<ReceiptAcquireResult.Replay>()
     }
 
+/**
+ * scope은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun scope(principal: String = "principal-a"): ReceiptScope =
         ReceiptScope(
             tenantId = TenantId("tenant-a"),
@@ -256,6 +337,11 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
             keyDigest = ReceiptDigest.sha256("idempotency-key"),
         )
 
+/**
+ * event은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun event(): EventToAppend =
         EventToAppend(
             eventId = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc099"),

@@ -20,8 +20,18 @@ import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 
+/**
+ * PersistenceArchitectureTest 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class PersistenceArchitectureTest {
     @Test
+/**
+ * 이 시나리오는 "all aggregate repositories implement bluetape ExposedJdbcRepository" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `all aggregate repositories implement bluetape ExposedJdbcRepository`() {
         val repositories = listOf(
             TicketInventoryRepository::class.java,
@@ -44,6 +54,11 @@ internal class PersistenceArchitectureTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "raw JDBC is isolated to schema migration" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `raw JDBC is isolated to schema migration`() {
         val sourceRoot = locateSourceRoot()
         val violations = Files.walk(sourceRoot).use { paths ->
@@ -61,6 +76,11 @@ internal class PersistenceArchitectureTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "query plans use the Exposed explain wrapper" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `query plans use the Exposed explain wrapper`() {
         val repositories = listOf(
             "io/bluetape4k/workshop/commerce/ticket/persistence/TicketRepositories.kt",
@@ -75,6 +95,11 @@ internal class PersistenceArchitectureTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "shared authority fixture seeds through Exposed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `shared authority fixture seeds through Exposed`() {
         val fixture = Files.readString(
             locateTestSourceRoot().resolve(
@@ -91,6 +116,11 @@ internal class PersistenceArchitectureTest {
         seedAuthority shouldNotContain "execute("
     }
 
+/**
+ * locateSourceRoot은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun locateSourceRoot(): Path {
         val current = Path.of("").toAbsolutePath()
         val moduleLocal = current.resolve("src/main/kotlin")
@@ -98,6 +128,11 @@ internal class PersistenceArchitectureTest {
         return current.resolve("commerce/concert-ticket-flash-sale/src/main/kotlin")
     }
 
+/**
+ * locateTestSourceRoot은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun locateTestSourceRoot(): Path {
         val current = Path.of("").toAbsolutePath()
         val moduleLocal = current.resolve("src/test/kotlin")
@@ -106,6 +141,11 @@ internal class PersistenceArchitectureTest {
     }
 
     companion object: KLogging() {
+/**
+ * RAW_JDBC_MARKERS은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val RAW_JDBC_MARKERS = listOf(
             ".prepareStatement(",
             ".createStatement(",

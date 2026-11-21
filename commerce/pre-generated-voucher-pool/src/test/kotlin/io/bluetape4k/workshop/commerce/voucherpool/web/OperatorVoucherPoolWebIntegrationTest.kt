@@ -57,28 +57,78 @@ import javax.sql.DataSource
 import kotlin.time.Duration.Companion.minutes
 
 @Import(OperatorVoucherPoolWebTestConfiguration::class)
+/**
+ * OperatorVoucherPoolWebIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegrationTest() {
 
     private companion object: KLogging() {
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TENANT = "tenant-operator-web"
+/**
+ * PRINCIPAL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PRINCIPAL = "principal-operator-web"
+/**
+ * OPERATOR_SECRET은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val OPERATOR_SECRET = "test-operator-secret-0000000000000001"
+/**
+ * OPERATOR_GUARD은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val OPERATOR_GUARD = "test-voucher-pool-operator-guard"
     }
 
     @Autowired
+/**
+ * campaigns은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var campaigns: CampaignBatchCommandService
 
     @Autowired
+/**
+ * reservations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var reservations: ReservationService
 
     @Autowired
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var dataSource: DataSource
 
     @Autowired
+/**
+ * objectMapper은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var objectMapper: ObjectMapper
 
     @Autowired
+/**
+ * workers은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var workers: VoucherPoolWorkers
 
     @BeforeEach
@@ -97,6 +147,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator query routes expose safe tenant scoped projections" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator query routes expose safe tenant scoped projections`() {
         val fixture = activePool("projections")
         val reservation = reservations.reserve(
@@ -138,6 +193,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator query scope mismatch and invalid cursor are closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator query scope mismatch and invalid cursor are closed`() {
         val fixture = activePool("scope")
 
@@ -166,6 +226,12 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator campaign commands enforce create and revision preconditions with safe replay"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator campaign commands enforce create and revision preconditions with safe replay`() {
         val campaignId = UUID.randomUUID()
         val now = Instant.now()
@@ -220,6 +286,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator import and generate batch commands use authoritative revisions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator import and generate batch commands use authoritative revisions`() {
         val importCampaign = activeCampaign("http-import")
         val importBatch = UUID.randomUUID()
@@ -303,6 +374,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator command precondition failures use bounded errors" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator command precondition failures use bounded errors`() {
         val campaignId = UUID.randomUUID()
         val now = Instant.now()
@@ -336,6 +412,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator campaign and batch pause resume transitions use aggregate CAS" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator campaign and batch pause resume transitions use aggregate CAS`() {
         val campaignId = activeCampaign("pause-resume-campaign")
 
@@ -381,6 +462,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "revoke preview representations redact their single use token" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `revoke preview representations redact their single use token`() {
         val token = "single-use-preview-token"
         val now = Instant.parse("2026-07-21T00:00:00Z")
@@ -424,6 +510,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "revoke preview separates mutable impact from currently eligible depth" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `revoke preview separates mutable impact from currently eligible depth`() {
         val fixture = activePool("batch-revoke-paused-depth")
 
@@ -445,6 +536,12 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator batch revoke consumes a revision bound preview once and hands off a durable
+ * claim" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator batch revoke consumes a revision bound preview once and hands off a durable claim`() {
         val fixture = activePool("batch-revoke")
         val other = activePool("batch-revoke-other")
@@ -512,6 +609,12 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator campaign revoke fans out durable claims for every revocable child batch" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator campaign revoke fans out durable claims for every revocable child batch`() {
         val campaignId = activeCampaign("campaign-revoke")
         val firstBatch = activeBatch(campaignId, "campaign-revoke-a")
@@ -564,6 +667,12 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "campaign revoke with no child batches reaches terminal state without an orphan worker"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `campaign revoke with no child batches reaches terminal state without an orphan worker`() {
         val campaignId = activeCampaign("campaign-revoke-empty")
         val previewBody = operatorPost(
@@ -596,6 +705,12 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "campaign revoke ignores historical claims for already terminal child batches" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `campaign revoke ignores historical claims for already terminal child batches`() {
         val fixture = activePool("campaign-revoke-terminal-child")
         val batchPreview = operatorPost(
@@ -655,6 +770,12 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator reconciliation accepts one durable batch scoped run with safe replay" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator reconciliation accepts one durable batch scoped run with safe replay`() {
         val fixture = activePool("reconciliation")
         val body = mapOf("batchId" to fixture.batchId)
@@ -697,6 +818,12 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator diagnostic lookup is bounded and tenant scoped by safe request id" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator diagnostic lookup is bounded and tenant scoped by safe request id`() {
         val fixture = activePool("diagnostic")
         val observed = operatorGet("/operator/api/v1/batches/${fixture.batchId}")
@@ -720,6 +847,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
             .expectStatus().isNotFound
     }
 
+/**
+ * operatorGet은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun operatorGet(path: String, tenant: String = TENANT): WebTestClient.RequestHeadersSpec<*> =
         webTestClient.get()
             .uri(path)
@@ -729,6 +861,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
             .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
             .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
 
+/**
+ * operatorPost은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun operatorPost(
         path: String,
         idempotencyKey: String,
@@ -736,6 +873,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         ifMatch: String? = null,
         body: Any = emptyMap<String, String>(),
     ): WebTestClient.ResponseSpec {
+/**
+ * request은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val request = webTestClient.post()
             .uri(path)
             .contentType(MediaType.APPLICATION_JSON)
@@ -752,6 +894,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         return request.bodyValue(body).exchange()
     }
 
+/**
+ * activeCampaign은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activeCampaign(name: String): UUID {
         val now = Instant.now()
         val campaignId = UUID.randomUUID()
@@ -778,10 +925,20 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         return campaignId
     }
 
+/**
+ * digestHex은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digestHex(seed: Int): String =
         ByteArray(32) { index -> (seed + index).toByte() }
             .joinToString("") { "%02x".format(Locale.ROOT, it) }
 
+/**
+ * activePool은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activePool(name: String): OperatorFixture {
         val now = Instant.now()
         val campaignId = UUID.randomUUID()
@@ -834,6 +991,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         return OperatorFixture(campaignId, batchId)
     }
 
+/**
+ * activeBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activeBatch(campaignId: UUID, name: String): UUID {
         val now = Instant.now()
         val batchId = UUID.randomUUID()
@@ -865,6 +1027,11 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         return batchId
     }
 
+/**
+ * expireReservation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun expireReservation(reservationId: UUID) {
         val expiresAt = Instant.now().minusSeconds(60)
         dataSource.connection.use { conn ->
@@ -895,7 +1062,17 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * workerClaimCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun workerClaimCount(scopeId: UUID, kind: String = "BATCH_REVOKE"): Int {
+/**
+ * database은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val database = Database.connect(dataSource)
         return try {
             transaction(database) {
@@ -914,19 +1091,49 @@ internal class OperatorVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * digest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digest(seed: Int): DigestValue =
         DigestValue(ByteArray(32) { index -> (seed + index).toByte() })
 
+/**
+ * OperatorFixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class OperatorFixture(
+/**
+ * campaignId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaignId: UUID,
+/**
+ * batchId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batchId: UUID,
     )
 }
 
 @TestConfiguration(proxyBeanMethods = false)
+/**
+ * OperatorVoucherPoolWebTestConfiguration 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OperatorVoucherPoolWebTestConfiguration {
     @Bean
     @Primary
+/**
+ * operatorVoucherPoolWebAdmissionGate은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun operatorVoucherPoolWebAdmissionGate(): VoucherPoolAdmissionGate =
         VoucherPoolAdmissionGate(
             backend = null,

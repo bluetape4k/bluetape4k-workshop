@@ -26,14 +26,39 @@ import java.sql.Connection
 @Tag("stress")
 @Suppress("SqlResolve")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * EventSourcedQueryPlanStressTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventSourcedQueryPlanStressTest {
 
     private companion object: KLogging() {
+/**
+ * MAX_SHARED_BUFFERS은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_SHARED_BUFFERS = 512
+/**
+ * MAX_EXECUTION_MILLIS은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_EXECUTION_MILLIS = 100.0
     }
 
+/**
+ * postgresDatabase은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
 
     @BeforeAll
@@ -79,6 +104,11 @@ internal class EventSourcedQueryPlanStressTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "seeded authority queries retain bounded index plans" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `seeded authority queries retain bounded index plans`() {
         postgresDatabase.dataSource.connection.use { connection ->
             connection.autoCommit = false
@@ -95,6 +125,11 @@ internal class EventSourcedQueryPlanStressTest {
         }
     }
 
+/**
+ * seedEventAuthority은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun seedEventAuthority(connection: Connection) {
         connection.execute(
             """
@@ -125,6 +160,11 @@ internal class EventSourcedQueryPlanStressTest {
         )
     }
 
+/**
+ * seedSnapshots은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun seedSnapshots(connection: Connection) {
         connection.execute(
             """
@@ -148,6 +188,11 @@ internal class EventSourcedQueryPlanStressTest {
         )
     }
 
+/**
+ * seedReceipts은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun seedReceipts(connection: Connection) {
         connection.execute(
             """
@@ -175,6 +220,11 @@ internal class EventSourcedQueryPlanStressTest {
         )
     }
 
+/**
+ * seedProjection은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun seedProjection(connection: Connection) {
         connection.execute(
             """
@@ -200,9 +250,19 @@ internal class EventSourcedQueryPlanStressTest {
         )
     }
 
+/**
+ * queryShapes은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun queryShapes(): List<QueryShape> =
         authorityQueryShapes() + operationalQueryShapes()
 
+/**
+ * authorityQueryShapes은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun authorityQueryShapes(): List<QueryShape> =
         listOf(
             QueryShape(
@@ -241,6 +301,11 @@ internal class EventSourcedQueryPlanStressTest {
             ),
         )
 
+/**
+ * operationalQueryShapes은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun operationalQueryShapes(): List<QueryShape> =
         listOf(
             QueryShape(
@@ -281,26 +346,81 @@ internal class EventSourcedQueryPlanStressTest {
             ),
         )
 
+/**
+ * execute은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun Connection.execute(sql: String) {
         createStatement().use { statement -> statement.execute(sql) }
     }
 }
 
+/**
+ * QueryShape 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private data class QueryShape(
+/**
+ * name은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val name: String,
+/**
+ * sql은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sql: String,
 )
 
+/**
+ * QueryPlanEvidence 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private data class QueryPlanEvidence(
+/**
+ * name은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val name: String,
+/**
+ * plan은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val plan: String,
+/**
+ * sharedBuffers은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sharedBuffers: Int,
+/**
+ * executionMillis은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val executionMillis: Double,
 ) {
+/**
+ * summary은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun summary(): String =
         "event-sourced-plan name=$name sharedBuffers=$sharedBuffers executionMillis=$executionMillis"
 }
 
+/**
+ * explain은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun Connection.explain(query: QueryShape): QueryPlanEvidence {
     val plan = withExistingJdbcTransaction(this) {
         TransactionManager.current()
@@ -321,5 +441,15 @@ private fun Connection.explain(query: QueryShape): QueryPlanEvidence {
     return QueryPlanEvidence(query.name, plan, sharedBuffers, executionMillis)
 }
 
+/**
+ * SHARED_BUFFER_PATTERN은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private val SHARED_BUFFER_PATTERN = Regex("""shared (?:hit|read)=(\d+)""")
+/**
+ * EXECUTION_TIME_PATTERN은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private val EXECUTION_TIME_PATTERN = Regex("""Execution Time: ([0-9.]+) ms""")

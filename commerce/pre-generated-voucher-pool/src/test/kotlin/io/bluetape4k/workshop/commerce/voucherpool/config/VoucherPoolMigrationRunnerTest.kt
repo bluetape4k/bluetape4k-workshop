@@ -29,14 +29,39 @@ import javax.sql.DataSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherPoolMigrationRunnerTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolMigrationRunnerTest {
 
     companion object: KLogging() {
+/**
+ * LOCK_KEY은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val LOCK_KEY = 537001L
+/**
+ * postgres은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
     }
 
+/**
+ * voucherSchema은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var voucherSchema: String
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var dataSource: HikariDataSource
 
     @BeforeEach
@@ -55,6 +80,11 @@ internal class VoucherPoolMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "production migration is complete idempotent and checksum guarded" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `production migration is complete idempotent and checksum guarded`() {
         val runner = runner()
         runner.migrate() shouldBeEqualTo VoucherPoolMigrationResult.APPLIED
@@ -78,6 +108,11 @@ internal class VoucherPoolMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "production migration exposes complete authority metadata" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `production migration exposes complete authority metadata`() {
         runner().migrate()
 
@@ -115,6 +150,11 @@ internal class VoucherPoolMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "held advisory startup lock times out without schema mutation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `held advisory startup lock times out without schema mutation`() {
         adminConnection().use { blocker ->
             blocker.autoCommit = false
@@ -134,10 +174,25 @@ internal class VoucherPoolMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "resource and connection acquisition failures remain classified" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `resource and connection acquisition failures remain classified`() {
         val unavailableResource = object: AbstractResource() {
+/**
+ * getDescription은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun getDescription(): String = "unavailable migration"
 
+/**
+ * getInputStream은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun getInputStream() = throw IOException("unavailable")
         }
         assertFailsWith<VoucherPoolMigrationException> {
@@ -157,6 +212,11 @@ internal class VoucherPoolMigrationRunnerTest {
         }.code shouldBeEqualTo VoucherPoolMigrationFailureCode.CONNECTION_UNAVAILABLE
     }
 
+/**
+ * runner은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runner(timeout: Duration = 2.seconds()) =
         VoucherPoolMigrationRunner(
             dataSource = dataSource,
@@ -165,6 +225,11 @@ internal class VoucherPoolMigrationRunnerTest {
             lockTimeout = timeout,
         )
 
+/**
+ * queryLong은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun queryLong(sql: String): Long =
         dataSource.connection.use { conn ->
             conn.createStatement().use { stmt ->
@@ -174,12 +239,22 @@ internal class VoucherPoolMigrationRunnerTest {
             }
         }
 
+/**
+ * adminConnection은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adminConnection() = DriverManager.getConnection(
         postgres.jdbcUrl,
         postgres.username ?: PostgreSQLServer.USERNAME,
         postgres.password ?: PostgreSQLServer.PASSWORD,
     )
 
+/**
+ * unavailableDataSource은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun unavailableDataSource(): DataSource = Proxy.newProxyInstance(
         DataSource::class.java.classLoader,
         arrayOf(DataSource::class.java),

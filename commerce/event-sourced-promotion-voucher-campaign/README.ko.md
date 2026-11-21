@@ -7,6 +7,29 @@ event store에 보관한다. Command는 expected stream version과 idempotency r
 사용한다. 별도 lease를 가진 projection이 public read model을 만들며, event
 authority를 교체하지 않고도 read model을 rebuild할 수 있다.
 
+## Business requirements and test evidence
+
+이벤트 소싱 변형은 특정한 업무 요구 때문에 존재합니다. campaign은 “지금
+무엇이 참인가?”뿐 아니라 “어떤 fact와 command version이 이를 만들었는가,
+history를 고치지 않고 새 read model을 다시 만들 수 있는가?”에도 답해야
+합니다. 설계 문서는
+`docs/superpowers/specs/2026-07-22-issue-538-event-sourced-promotion-voucher-campaign-design.md`입니다.
+
+| Requirement | Design direction | Failure/recovery rule |
+|---|---|---|
+| 감사 가능한 campaign/claim history 보존 | stream version·global position·schema version·checksum·bounded metadata를 가진 immutable envelope append | payload/order 변경, unknown schema, upcast 경로 누락은 fail closed |
+| concurrent command가 두 번째 fact를 만들지 않게 하기 | stream을 replay하고 expected version을 요구하며 idempotency receipt와 append를 commit | stale writer는 최신 stream 기준으로 retry하고 event를 덮어쓰지 않음 |
+| read model 변경 중에도 read를 제공하기 | captured high watermark까지 `BUILDING` generation을 만들고 fencing 후 `ACTIVE`로 전환 | poison event는 shadow generation만 실패시키며 건강한 `ACTIVE` view는 유지 |
+| recovery를 설명 가능하게 만들기 | PostgreSQL에 lease·checkpoint·poison·quarantine·operator-audit record를 저장 | stale lease owner는 checkpoint나 generation switch를 할 수 없고 rebuild는 resume 가능 |
+
+증거는 계층별로 나뉩니다. `EventStoreAppendIntegrationTest`는 append-only와
+optimistic concurrency를, `ProjectionWorkerIntegrationTest`와
+`ProjectionRebuildWorkerIntegrationTest`는 lease/checkpoint/fencing을,
+`EventSourcedCampaignHttpIntegrationTest`는 position-aware HTTP/SSE 계약을
+검증합니다. compatibility test는 normalized campaign과 public command/error
+shape를 비교합니다. 이 test들은 zero lag·production SLA·기존 #534 row의
+event stream 자동 migration을 주장하지 않습니다.
+
 ## Architecture
 
 ![이벤트 소싱 바우처 architecture](../../docs/images/readme-diagrams/event-sourced-promotion-voucher-architecture-01.png)

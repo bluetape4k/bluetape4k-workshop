@@ -19,13 +19,38 @@ import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.ObjectMapper
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * OrderLifecycleWebIntegrationTest 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OrderLifecycleWebIntegrationTest(
+/**
+ * objectMapper은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val objectMapper: ObjectMapper,
 ): AbstractOrderLifecycleIntegrationTest() {
 
     companion object: KLogging() {
+/**
+ * IDEMPOTENCY_HEADER은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val IDEMPOTENCY_HEADER = "Idempotency-Key"
+/**
+ * IDEMPOTENCY_KEY은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val IDEMPOTENCY_KEY = "order-key-0001"
+/**
+ * ORDER_JSON은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val ORDER_JSON =
             """
             {
@@ -41,6 +66,11 @@ internal class OrderLifecycleWebIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "browser console is served from the application root" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `browser console is served from the application root`() {
         val root = webTestClient
             .get()
@@ -70,6 +100,11 @@ internal class OrderLifecycleWebIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "same idempotency key replays response and conflicting payload is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same idempotency key replays response and conflicting payload is rejected`() {
         val first = submitOrder(IDEMPOTENCY_KEY, ORDER_JSON)
             .expectStatus().isCreated
@@ -106,6 +141,12 @@ internal class OrderLifecycleWebIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "browser commands reconcile delayed payment and keep cancellation separate from refund"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `browser commands reconcile delayed payment and keep cancellation separate from refund`() {
         val delayed = submitOrder(
             "delayed-key-0001",
@@ -189,6 +230,12 @@ internal class OrderLifecycleWebIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator routes reject simple cross origin form posts without the workshop guard" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator routes reject simple cross origin form posts without the workshop guard`() {
         webTestClient
             .post()
@@ -209,6 +256,12 @@ internal class OrderLifecycleWebIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "event stream starts asynchronously with snapshot first and accepts audit cursor" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event stream starts asynchronously with snapshot first and accepts audit cursor`() {
         val created = submitOrder("sse-key-0001", ORDER_JSON.replace("web-ref", "sse-ref"))
             .expectStatus().isCreated
@@ -242,6 +295,11 @@ internal class OrderLifecycleWebIntegrationTest(
         firstEvent shouldContain orderId
     }
 
+/**
+ * submitOrder은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun submitOrder(
         idempotencyKey: String,
         json: String,

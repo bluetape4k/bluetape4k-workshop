@@ -35,26 +35,66 @@ import java.util.*
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.minutes
 
+/**
+ * VoucherPoolQueryServiceIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegrationTest() {
 
     private companion object: KLogging() {
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TENANT = "tenant-query-integration"
+/**
+ * PRINCIPAL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PRINCIPAL = "principal-query-integration"
     }
 
     @Autowired
+/**
+ * queries은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var queries: VoucherPoolQueryService
 
     @Autowired
+/**
+ * campaigns은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var campaigns: CampaignBatchCommandService
 
     @Autowired
+/**
+ * reservations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var reservations: ReservationService
 
     @Autowired
+/**
+ * allocations은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var allocations: AllocationService
 
     @Autowired
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var dataSource: DataSource
 
     @BeforeEach
@@ -73,6 +113,11 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
     }
 
     @Test
+/**
+ * 이 시나리오는 "owner reads stay scoped while operator projections remain tenant bounded" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `owner reads stay scoped while operator projections remain tenant bounded`() {
         val fixture = activePool()
         val stuck = reservations.reserve(
@@ -142,6 +187,11 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
     }
 
     @Test
+/**
+ * 이 시나리오는 "stuck reservation cursor is stable when expiry timestamps tie" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stuck reservation cursor is stable when expiry timestamps tie`() {
         val fixture = activePool("cursor")
         val first = reservations.reserve(
@@ -170,10 +220,35 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
         secondPage.nextCursor.shouldBeNull()
     }
 
+/**
+ * activePool은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activePool(name: String = "primary"): QueryFixture {
+/**
+ * now은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val now = Instant.now()
+/**
+ * campaignId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaignId = UUID.randomUUID()
+/**
+ * batchId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batchId = UUID.randomUUID()
+/**
+ * created은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val created = campaigns.createCampaign(
             CreateCampaignCommand(
                 tenantId = TENANT,
@@ -195,6 +270,11 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
             ),
         ).applied()
 
+/**
+ * batch은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batch = campaigns.createImportBatch(
             CreateImportBatchCommand(
                 tenantId = TENANT,
@@ -223,6 +303,11 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
         return QueryFixture(campaignId, batchId)
     }
 
+/**
+ * expireReservation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun expireReservation(reservationId: UUID) {
         expireReservations(
             reservationIds = listOf(reservationId),
@@ -230,6 +315,11 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
         )
     }
 
+/**
+ * expireReservations은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun expireReservations(reservationIds: List<UUID>, expiresAt: Instant) {
         dataSource.connection.use { conn ->
             val updatePoolReservation = """
@@ -269,6 +359,11 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
         }
     }
 
+/**
+ * terminalizeEntry은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun terminalizeEntry(entryId: UUID, batchId: UUID) {
         dataSource.connection.use { conn ->
             val updatePoolEntries = """
@@ -315,11 +410,31 @@ internal class VoucherPoolQueryServiceIntegrationTest: AbstractVoucherPoolIntegr
         }
     }
 
+/**
+ * digest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digest(seed: Int): DigestValue =
         DigestValue(ByteArray(32) { index -> (seed + index).toByte() })
 
+/**
+ * QueryFixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class QueryFixture(
+/**
+ * campaignId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaignId: UUID,
+/**
+ * batchId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batchId: UUID,
     )
 }

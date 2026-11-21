@@ -31,6 +31,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
 
     @Autowired
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val service: ImagePersistenceService = uninitialized()
 
     // -------------------------------------------------------------------------
@@ -38,6 +43,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "recordJobStart - new asset creates NewAsset result" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `recordJobStart - new asset creates NewAsset result`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
@@ -52,6 +62,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     }
 
     @Test
+/**
+ * 이 시나리오는 "recordJobStart - duplicate checksum READY returns AlreadyReady" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `recordJobStart - duplicate checksum READY returns AlreadyReady`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
@@ -72,6 +87,12 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     }
 
     @Test
+/**
+ * 이 시나리오는 "recordJobStart - duplicate checksum PROCESSING returns ConcurrentProcessing" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `recordJobStart - duplicate checksum PROCESSING returns ConcurrentProcessing`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
@@ -89,6 +110,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     }
 
     @Test
+/**
+ * 이 시나리오는 "recordJobStart - duplicate checksum FAILED returns RecoveredFromFailed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `recordJobStart - duplicate checksum FAILED returns RecoveredFromFailed`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
@@ -118,6 +144,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "recordJobSuccess - updates asset READY and persists image objects" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `recordJobSuccess - updates asset READY and persists image objects`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
@@ -139,6 +170,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "recordJobFailure - updates asset FAILED" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `recordJobFailure - updates asset FAILED`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
@@ -161,6 +197,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "appendEvent - stores event row" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `appendEvent - stores event row`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
@@ -184,6 +225,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "findAssetByExternalId - returns null for unknown externalId" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `findAssetByExternalId - returns null for unknown externalId`() {
         service.findAssetByExternalId(Base58.randomString(12)).shouldBeNull()
     }
@@ -193,6 +239,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "findAssetHistory - returns null for unknown externalId" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `findAssetHistory - returns null for unknown externalId`() {
         service.findAssetHistory(Base58.randomString(12)).shouldBeNull()
     }
@@ -202,6 +253,11 @@ class ImagePersistenceServiceImplTest: AbstractImagePersistenceTest() {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "findAssetHistory - returns full job and event history" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `findAssetHistory - returns full job and event history`() {
         val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))

@@ -31,10 +31,25 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * VoucherEventStreamTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherEventStreamTest {
 
     private companion object: KLogging() {
+/**
+ * snapshot은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun snapshot(campaignId: UUID, revision: Long = 1): CampaignHttpResponse {
+/**
+ * now은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val now = Instant.parse("2026-07-20T00:00:00Z")
             return CampaignHttpResponse(
                 campaignId = campaignId,
@@ -50,6 +65,11 @@ internal class VoucherEventStreamTest {
             )
         }
 
+/**
+ * audit은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun audit(campaignId: UUID, revision: Long): VoucherAuditHttpEvent =
             VoucherAuditHttpEvent(
                 aggregateType = "CAMPAIGN",
@@ -62,10 +82,30 @@ internal class VoucherEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "two subscribers share one campaign poller until the last cleanup" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `two subscribers share one campaign poller until the last cleanup`() =
         withStream(FakeEventSource(), testProperties()) { stream ->
+/**
+ * campaignId은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val campaignId = Uuid.V7.nextId()
+/**
+ * first은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val first = stream.open("tenant", campaignId, null)
+/**
+ * second은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val second = stream.open("tenant", campaignId, null)
 
             stream.activePollers() shouldBeEqualTo 1
@@ -79,6 +119,11 @@ internal class VoucherEventStreamTest {
         }
 
     @Test
+/**
+ * 이 시나리오는 "overflow replaces stale queue entries with terminal authoritative reset" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `overflow replaces stale queue entries with terminal authoritative reset`() {
         val source = FakeEventSource { campaignId, afterId ->
             if (afterId < 2L) {
@@ -114,6 +159,11 @@ internal class VoucherEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "thirty third campaign is rejected and succeeds after capacity returns" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `thirty third campaign is rejected and succeeds after capacity returns`() {
         val maxCampaigns = 32
         withStream(FakeEventSource(), testProperties(maxCampaigns = maxCampaigns)) { stream ->
@@ -140,6 +190,11 @@ internal class VoucherEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "blocked write times out and invokes cleanup once" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `blocked write times out and invokes cleanup once`() {
         val properties = testProperties(writeTimeout = 25.millis())
         withStream(FakeEventSource(), properties) { stream ->
@@ -158,6 +213,11 @@ internal class VoucherEventStreamTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "idle polling backs off to cap and activity restores base interval" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `idle polling backs off to cap and activity restores base interval`() {
         val sequence = AtomicInteger()
         val releaseActivity = CountDownLatch(1)
@@ -202,6 +262,11 @@ internal class VoucherEventStreamTest {
         }
     }
 
+/**
+ * withStream은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun withStream(
         source: VoucherEventSource,
         properties: VoucherProperties,
@@ -212,6 +277,11 @@ internal class VoucherEventStreamTest {
         }
     }
 
+/**
+ * testProperties은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun testProperties(
         maxCampaigns: Int = 32,
         queueSize: Int = 32,
@@ -230,14 +300,34 @@ internal class VoucherEventStreamTest {
             ),
         )
 
+/**
+ * FakeEventSource 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class FakeEventSource(
+/**
+ * nextBatch은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val nextBatch: (UUID, Long) -> VoucherStreamBatch =
             { campaignId, _ ->
                 VoucherStreamBatch(snapshot(campaignId), emptyList())
             },
     ): VoucherEventSource {
+/**
+ * pollCount은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pollCount = AtomicInteger()
 
+/**
+ * initial은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun initial(
             tenantId: String,
             campaignId: UUID,
@@ -249,19 +339,44 @@ internal class VoucherEventStreamTest {
                 resetRequired = false
             )
 
+/**
+ * poll은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun poll(tenantId: String, campaignId: UUID, afterId: Long): VoucherStreamBatch {
             pollCount.incrementAndGet()
             return nextBatch(campaignId, afterId)
         }
     }
 
+/**
+ * BlockingOutputStream 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class BlockingOutputStream: OutputStream() {
+/**
+ * release은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val release = CountDownLatch(1)
 
+/**
+ * write은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun write(value: Int) {
             release.await(30.seconds)
         }
 
+/**
+ * write은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun write(bytes: ByteArray, offset: Int, length: Int) {
             release.await(30.seconds)
         }

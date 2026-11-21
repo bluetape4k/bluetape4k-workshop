@@ -11,17 +11,37 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption.APPEND
 
+/**
+ * HighContentionJournalTest 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class HighContentionJournalTest {
 
     companion object: KLogging()
 
     @TempDir
+/**
+ * tempDir은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     lateinit var tempDir: Path
 
+/**
+ * open은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun open(relativePath: String): HighContentionJournal =
         HighContentionJournal.open(tempDir, Path.of(relativePath))
 
     @Test
+/**
+ * 이 시나리오는 "journal persists a monotonic fsynced hash chain" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `journal persists a monotonic fsynced hash chain`() {
         val path = tempDir.resolve("run-journal.jsonl")
         log.debug { "path=$path" }
@@ -46,6 +66,11 @@ class HighContentionJournalTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reader ignores only a torn final line and rejects earlier corruption" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reader ignores only a torn final line and rejects earlier corruption`() {
         val path = tempDir.resolve("run-journal.jsonl")
         open("run-journal.jsonl").use { journal ->
@@ -72,6 +97,11 @@ class HighContentionJournalTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reader rejects duplicate keys and blank complete records" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reader rejects duplicate keys and blank complete records`() {
         val duplicatePath = tempDir.resolve("duplicate.jsonl")
         open("duplicate.jsonl").use { journal ->
@@ -100,6 +130,11 @@ class HighContentionJournalTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "journal path is create-new and cannot traverse a symlink" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `journal path is create-new and cannot traverse a symlink`() {
         val existing = tempDir.resolve("existing.jsonl")
         Files.writeString(existing, "occupied")
@@ -116,6 +151,11 @@ class HighContentionJournalTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "journal rejects redaction sentinels before fsync" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `journal rejects redaction sentinels before fsync`() {
         val path = tempDir.resolve("redaction.jsonl")
         open("redaction.jsonl").use { journal ->

@@ -6,6 +6,27 @@
 
 예제는 Java 25, Spring Boot 4, Kotlin, JetBrains Exposed JDBC, `bluetape4k-exposed-jdbc`, PostgreSQL만 사용한다. Redis, leader election, broker는 baseline correctness에 필요하지 않다. 모든 concrete repository는 Bluetape `ExposedJdbcRepository`를 구현하며 production 코드와 test fixture 모두 Exposed DAO/DSL만 사용한다.
 
+## 업무 요구사항과 테스트 증거
+
+이 baseline은 SaaS billing의 흔한 질문에 답합니다. usage, price 변경,
+retry, period close가 서로 다른 시점에 일어나도 finance가 청구 금액을
+재현하려면 어떻게 해야 할까요? 설계 문서
+`docs/superpowers/specs/2026-07-22-issue-552-usage-metering-billing-ledger-design.md`는
+normalized workflow state와 append-only financial ledger를 선택합니다.
+
+| 요구사항 | 설계 방향 | 테스트 증거와 의미 |
+|---|---|---|
+| usage에 당시 가격 적용 | `occurredAt`으로 half-open price window를 선택하고 server가 `receivedAt`을 소유 | `MeteringEndToEndIntegrationTest`가 `priceVersionId`가 ledger/invoice provenance에 남는지 검증 |
+| HTTP 중복과 producer 중복을 별도로 흡수 | command key/fingerprint receipt와 source-event unique guard를 저장 | `CommandReceiptPostgresIntegrationTest`와 repository test가 두 번째 charge 없이 replay/conflict를 증명 |
+| worker crash 중에도 period close 안전하게 처리 | `OPEN → CLOSING → FINALIZED`; bounded keyset batch와 checkpoint·ledger를 함께 commit | `BillingCloseStressTest`가 restartable close를 실행하고 validation 실패를 `FAILED_VALIDATION`으로 노출 |
+| posted money를 수정하지 않기 | 원래 fact를 가리키는 `CHARGE`·`DEBIT_ADJUSTMENT`·`CREDIT_ADJUSTMENT`를 사용 | `ReconciliationPostgresIntegrationTest`가 destructive update 대신 finding·correction provenance를 증명 |
+| invoice를 설명 가능하게 만들기 | ready close run에서만 finalize하고 각 invoice line을 정확히 하나의 ledger entry에 연결 | `MeteringHttpIntegrationTest`가 안정적인 error/status와 read boundary를 확인 |
+
+event-sourced와 microservice 변형을 보기 전에 이 예제부터 시작하는 것이
+좋습니다. 하나의 PostgreSQL authority에서 업무 invariant를 보여 주지만,
+broker delivery·tax compliance·외부 accounting integration을 보장하지는
+않습니다.
+
 ![Architecture](../../docs/images/readme-diagrams/usage-metering-billing-architecture-01.png)
 
 ## 먼저 기억할 세 가지

@@ -5,16 +5,43 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
 import org.springframework.stereotype.Component
+/**
+ * UploadImageValidator은 이미지 처리에서 사용하는 업무 객체입니다.
+ * @property properties 이미지 처리 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ */
+
 
 @Component
 class UploadImageValidator(
+    /**
+     * `properties`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val properties: ImageProcessingAdvancedProperties,
 ) {
 
+    /**
+     * validateDeclaredSize은 이미지 업로드·검수·파생물 처리 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와
+     * 부분 저장을
+     * 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param sizeBytes 한 번에 처리할 상한입니다. backpressure와 운영 자원 한도를 넘지 않도록 적용합니다.
+     */
     fun validateDeclaredSize(sizeBytes: Long) {
         sizeBytes.requireInRange(0L, properties.maxInputBytes, "sizeBytes")
     }
 
+    /**
+     * validate은 이미지 업로드·검수·파생물 처리 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와 부분 저장을 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param contentType 이미지 업로드·검수·파생물 처리 처리 대상의 위치·콘텐츠 참조입니다. 허용된 형식과 보안 정책을 먼저 확인합니다.
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun validate(contentType: String?, bytes: ByteArray): UploadOptions {
         bytes.size.requirePositiveNumber("bytes.size")
         validateDeclaredSize(bytes.size.toLong())
@@ -33,6 +60,11 @@ class UploadImageValidator(
     }
 
     companion object {
+        /**
+         * `MAGIC_BYTES`은 이미지 업로드·파생 처리에서 한도·할당·정산·처리 진척을 계산하는 업무 수치입니다.
+         *
+         * 음수·상한·단위와 반올림 규칙을 검증하고 경쟁 요청에서도 원자적으로 갱신합니다.
+         */
         private val MAGIC_BYTES: Map<String, (ByteArray) -> Boolean> = mapOf(
             "image/jpeg" to { bytes ->
                 bytes.size >= 3 &&

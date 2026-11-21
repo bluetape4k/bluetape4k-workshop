@@ -21,20 +21,68 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockMultipartFile
 
+/**
+ * 업로드 saga의 업무 경계를 검증합니다.
+ *
+ * 정상 경로가 원본과 세 가지 variant를 저장하는지, 선택적 metadata capability를
+ * object마다 한 번만 읽고 download를 호출하지 않는지, checksum 중복을 재사용하는지,
+ * processor/storage 실패와 취소 뒤 partial object 및 job 상태를 정리하는지를 확인합니다.
+ * 이 테스트가 통과해도 실제 S3 권한이나 CDN 정책까지 증명하는 것은 아닙니다.
+ */
 class ImageDerivativeWorkflowServiceTest {
 
     private companion object: KLogging()
 
+/**
+ * keyFactory은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val keyFactory = ImageKeyFactory()
 
     @Test
+/**
+ * 이 시나리오는 "workflow stores original and all configured variants" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow stores original and all configured variants`() = runSuspendIO {
+/**
+ * properties은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val properties = testProperties(maxInputBytes = 1024)
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingImageStorage()
+/**
+ * meterRegistry은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val meterRegistry = SimpleMeterRegistry()
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(properties, storage, meterRegistry)
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.processUpload(file)
         log.debug { "response: $response" }
 
@@ -51,11 +99,42 @@ class ImageDerivativeWorkflowServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "workflow reads optional metadata once per object and records opaque snapshot" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow reads optional metadata once per object and records opaque snapshot`() = runSuspendIO {
+/**
+ * properties은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val properties = testProperties(maxInputBytes = 1024)
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingMetadataImageStorage()
+/**
+ * meterRegistry은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val meterRegistry = SimpleMeterRegistry()
+/**
+ * persistence은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val persistence = StubImagePersistenceService()
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties,
             storage = MetricImageStorageWithMetadata(
@@ -66,8 +145,18 @@ class ImageDerivativeWorkflowServiceTest {
             meterRegistry = meterRegistry,
             persistenceService = persistence,
         )
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.processUpload(file)
 
         log.debug { "response: $response" }
@@ -80,10 +169,20 @@ class ImageDerivativeWorkflowServiceTest {
         meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_READ).count() shouldBeEqualTo 4.0
         meterRegistry.counter(ImageDerivativeWorkflowService.METRIC_METADATA_UNAVAILABLE).count() shouldBeEqualTo 0.0
 
+/**
+ * uploadEvent은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val uploadEvent = persistence.events.single { it.message.startsWith("S3 upload complete") }
         uploadEvent.payload["metadataCapability"] shouldBeEqualTo true
 
         @Suppress("UNCHECKED_CAST")
+/**
+ * metadata은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val metadata = uploadEvent.payload["metadata"] as List<Map<String, Any?>>
         metadata.size shouldBeEqualTo 4
         metadata.all { it["available"] == true && it["etag"] is String && it["lastModified"] == "1970-01-01T00:00:00Z" }
@@ -91,9 +190,29 @@ class ImageDerivativeWorkflowServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "workflow fails closed when metadata capability reports an error" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow fails closed when metadata capability reports an error`() = runSuspendIO {
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingMetadataImageStorage(failOnMetadataKeyPart = "/original/")
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(testProperties(), storage)
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
         assertFailsWith<Exception> {
@@ -105,7 +224,17 @@ class ImageDerivativeWorkflowServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "workflow fails closed when metadata size does not match upload" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow fails closed when metadata size does not match upload`() = runSuspendIO {
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingMetadataImageStorage(
             metadataFn = { key, upload ->
                 ImageObjectMetadata(
@@ -115,7 +244,17 @@ class ImageDerivativeWorkflowServiceTest {
                 )
             },
         )
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(testProperties(), storage)
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
         assertFailsWith<IllegalArgumentException> {
@@ -127,9 +266,29 @@ class ImageDerivativeWorkflowServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "workflow rejects invalid content type before storage" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow rejects invalid content type before storage`() = runSuspendIO {
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingImageStorage()
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(testProperties(), storage)
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "note.txt", "text/plain", "plain text".toUtf8Bytes())
 
         assertFailsWith<IllegalArgumentException> {
@@ -139,9 +298,29 @@ class ImageDerivativeWorkflowServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "workflow rejects too large input before storage" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow rejects too large input before storage`() = runSuspendIO {
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingImageStorage()
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(testProperties(maxInputBytes = 2), storage)
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
         assertFailsWith<IllegalArgumentException> {
@@ -151,9 +330,29 @@ class ImageDerivativeWorkflowServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "workflow cleans up uploaded objects after variant storage failure" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow cleans up uploaded objects after variant storage failure`() = runSuspendIO {
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingImageStorage(failOnKeyPart = "card-320")
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(testProperties(), storage)
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
         assertFailsWith<Exception> {
@@ -165,8 +364,23 @@ class ImageDerivativeWorkflowServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "workflow returns cached response when asset is already ready" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `workflow returns cached response when asset is already ready`() = runSuspendIO {
+/**
+ * existingImageId은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val existingImageId = "existing-image-id"
+/**
+ * cachedOriginal은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val cachedOriginal = ImageObjectDTO(
             id = 1L,
             imageAssetId = 1L,
@@ -179,6 +393,11 @@ class ImageDerivativeWorkflowServiceTest {
             byteSize = 4L,
             format = "image/jpeg",
         )
+/**
+ * cachedVariant은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val cachedVariant = ImageObjectDTO(
             id = 2L,
             imageAssetId = 1L,
@@ -191,13 +410,28 @@ class ImageDerivativeWorkflowServiceTest {
             byteSize = 4L,
             format = "image/webp",
         )
+/**
+ * cachedDetail은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val cachedDetail = ImageAssetDetailResponse(
             imageId = existingImageId,
             status = ImageAssetStatus.READY,
             original = cachedOriginal,
             variants = listOf(cachedVariant),
         )
+/**
+ * storage은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val storage = RecordingImageStorage()
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = testProperties(),
             storage = storage,
@@ -208,8 +442,18 @@ class ImageDerivativeWorkflowServiceTest {
                 detailResponseFn = { cachedDetail },
             ),
         )
+/**
+ * file은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", SAMPLE_JPEG_BYTES)
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.processUpload(file)
         log.debug { "response: $response" }
 
@@ -219,6 +463,11 @@ class ImageDerivativeWorkflowServiceTest {
         response.warnings shouldContain "Returned from cache — asset already processed"
     }
 
+/**
+ * service은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun service(
         properties: io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties,
         storage: io.bluetape4k.images.spring.storage.ImageStorage,

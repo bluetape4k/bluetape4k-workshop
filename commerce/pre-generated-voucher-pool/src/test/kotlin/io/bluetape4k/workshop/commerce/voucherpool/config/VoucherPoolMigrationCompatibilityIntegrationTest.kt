@@ -23,10 +23,20 @@ import java.security.MessageDigest
 @Suppress("SqlResolve")
 @Tag("migration-compatibility")
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherPoolMigrationCompatibilityIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolMigrationCompatibilityIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * schemas은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val schemas = mutableListOf<String>()
 
     @AfterEach
@@ -36,6 +46,12 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "migration supports clean and warm schema and fails closed on checksum drift" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `migration supports clean and warm schema and fails closed on checksum drift`() {
         val schema = newSchema("clean_warm")
         postgresDataSource(schema).use { dataSource ->
@@ -56,6 +72,11 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "pinned previous binary runs before and after current schema expansion" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `pinned previous binary runs before and after current schema expansion`() {
         val schema = newSchema("previous")
         postgresDataSource(schema).use { dataSource ->
@@ -101,6 +122,11 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "previous binary jar matches pinned sha256" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `previous binary jar matches pinned sha256`() {
         val binary = previousBinary()
         val expected = ClassPathResource("compatibility/previous-binary.sha256").inputStream
@@ -113,16 +139,31 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
         actual shouldBeEqualTo expected
     }
 
+/**
+ * newSchema은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun newSchema(suffix: String): String =
         "voucher_compat_${suffix}_${Base58.randomString(8).lowercase()}".also {
             VOUCHER_POOL_TASK_12_POSTGRES.createSchema(it)
             schemas += it
         }
 
+/**
+ * previousBinary은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun previousBinary(): File =
         File(checkNotNull(System.getProperty("voucherPool.previousBinary")) { "previous binary path is missing" })
             .also { check(it.isFile && it.length() > 0L) { "previous binary jar is missing" } }
 
+/**
+ * runPrevious은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runPrevious(binary: File, schema: String): String {
         val separator = if ('?' in VOUCHER_POOL_TASK_12_POSTGRES.jdbcUrl) '&' else '?'
         val jdbcUrl = "${VOUCHER_POOL_TASK_12_POSTGRES.jdbcUrl}${separator}currentSchema=$schema"
@@ -149,10 +190,20 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
         return output
     }
 
+/**
+ * javaExecutable은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun javaExecutable(): String =
         File(System.getProperty("java.home"), "bin/java").absolutePath
 }
 
+/**
+ * executeSqlScript은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun executeSqlScript(connection: java.sql.Connection, resource: ClassPathResource) {
     connection.use { conn ->
         conn.createStatement().use { statement ->

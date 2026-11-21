@@ -10,6 +10,27 @@ Java 25, Spring Boot 4, PostgreSQL, JetBrains Exposed JDBC, `bluetape4k-exposed-
 
 [아키텍처 SVG 원본](../../docs/images/readme-diagrams/usage-billing-event-sourcing-architecture-01.svg)
 
+## 업무 요구사항과 테스트 증거
+
+이 모듈은 event가 유행해서가 아니라 과거 재구성, 여러 read model, 감사 가능한
+schema 진화가 실제 업무 요구일 때 선택합니다. 원 설계 문서는
+`docs/superpowers/specs/2026-07-22-issue-553-event-sourced-usage-billing-design.md`입니다.
+
+| 요구사항 | 설계 방향 | 실패·복구 규칙 |
+|---|---|---|
+| replay를 위해 financial fact 보존 | stream version·global position·canonical payload·hash chain을 가진 event envelope append | hash 변경·upcast 누락·잘못된 metadata는 history를 건너뛰지 않고 replay를 중단 |
+| command retry와 optimistic concurrency를 안전하게 처리 | receipt를 저장하고 expected stream version에서만 append | 같은 key/fingerprint는 replay하며 stale stream writer는 다시 읽은 뒤 결정 |
+| downtime 없이 read model 교체 | shadow projection generation을 만들고 high watermark까지 따라잡은 뒤 fencing token으로 atomic switch | poison event는 shadow generation만 실패·quarantine하고 `ACTIVE`는 유지 |
+| 과거를 수정하지 않고 money 보정 | adjustment event를 append하고 ledger/invoice projection을 다시 계산 | reconciliation은 generation을 비교해 finding을 기록하며 예전 event를 수정하지 않음 |
+
+`EventStorePostgresIntegrationTest`, `CommandServicePostgresIntegrationTest`,
+`ProjectionRecoveryPostgresIntegrationTest`, `CorrectionReconciliationIntegrationTest`,
+`EventSourcingHttpIntegrationTest` 순서로 읽으세요. Unit test는 reducer·hash·upcast를,
+PostgreSQL test는 uniqueness/expected-version/CAS를, HTTP test는 position과
+consistency header를 증명합니다. `BillingEventSourcingStressTest`는 10,000 event의
+bounded close/rebuild를 실행합니다. 어느 층도 production capacity benchmark나
+projection zero lag를 보장하지는 않습니다.
+
 ## 먼저 baseline과 advanced를 고른다
 
 대부분의 팀은 먼저 [`usage-metering-billing-ledger`](../usage-metering-billing-ledger/) baseline으로 시작하는 것이 좋다. Event Sourcing은 이력을 남기는 기능 하나가 아니라 저장, schema 진화, replay, projection 장애 복구를 함께 운영하는 선택이기 때문이다.

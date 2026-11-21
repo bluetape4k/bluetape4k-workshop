@@ -35,21 +35,86 @@ import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * CorrectionReconciliationIntegrationTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class CorrectionReconciliationIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * fixture은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixture = EventStoreDatabaseFixture()
+/**
+ * eventStore은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val eventStore = EventStoreRepository()
+/**
+ * codec은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val codec = DomainEventJsonCodec()
+/**
+ * adjustments은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val adjustments = AdjustmentCommandService(eventStore, codec)
+/**
+ * generations은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val generations = ProjectionGenerationRepository()
+/**
+ * checkpoints은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val checkpoints = ProjectionCheckpointRepository()
+/**
+ * readModels은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val readModels = BillingReadModelRepository()
+/**
+ * handlers은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val handlers = ProjectionHandlers(readModels)
+/**
+ * coordinator은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val coordinator = ProjectionCoordinator(checkpoints)
+/**
+ * reconciliation은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val reconciliation = ReconciliationService(eventStore, codec, generations, readModels)
+/**
+ * now은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val now = Instant.parse("2026-07-01T00:00:00Z")
+/**
+ * query은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val query = ReconciliationQuery(
         tenantId = "tenant-a",
         projectionName = "billing",
@@ -58,6 +123,11 @@ class CorrectionReconciliationIntegrationTest {
     )
 
     @Test
+/**
+ * 이 시나리오는 "adjustment is append-only idempotent and conflicting reuse is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `adjustment is append-only idempotent and conflicting reuse is rejected`() {
         fixture.reset()
         val credit = credit("2.00")
@@ -82,6 +152,12 @@ class CorrectionReconciliationIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "projection corruption is detected and a clean generation removes the finding" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `projection corruption is detected and a clean generation removes the finding`() {
         fixture.reset()
         fixture.executor.transaction {
@@ -130,6 +206,11 @@ class CorrectionReconciliationIntegrationTest {
         fixture.executor.transaction { reconciliation.isStillCurrent(query, finding) }.shouldBeFalse()
     }
 
+/**
+ * projectGeneration은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun projectGeneration(generation: Int): ProjectionLease {
         val lease = acquire(generation)
 
@@ -150,13 +231,28 @@ class CorrectionReconciliationIntegrationTest {
         return lease
     }
 
+/**
+ * financialEvents은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun financialEvents(): List<PersistedEvent> = fixture.executor.transaction {
         listOf("usage.rated", "adjustment.posted").flatMap { type ->
+/**
+ * query은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val query = EventTypeQuery("tenant-a", type, query.startsAt, query.endsAt, limit = 100)
             eventStore.loadByType(query)
         }
     }
 
+/**
+ * acquire은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun acquire(generation: Int): ProjectionLease =
         fixture.executor.transaction {
             checkpoints.acquireLease(
@@ -169,6 +265,11 @@ class CorrectionReconciliationIntegrationTest {
         } ?: error("lease must be acquired")
 
     @Suppress("SameParameterValue")
+/**
+ * credit은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun credit(amount: String): AdjustmentPosted =
         AdjustmentPosted(
             direction = AdjustmentDirection.CREDIT,

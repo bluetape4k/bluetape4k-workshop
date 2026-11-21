@@ -6,6 +6,79 @@ The Java 25 core owns the framework-neutral job contract, PostgreSQL migration,
 FIFO queue, leases, checkpoints, terminal transitions, bounded ETA projection,
 outbox polling, cancellation signaling, and cross-adapter test fixtures.
 
+## What problem the core solves
+
+The core is the business layer behind both HTTP adapters. A customer should be
+able to submit a long-running export without holding an HTTP connection open,
+while an operator can still explain its position, progress, ETA, and final
+outcome after a worker restart. The core therefore owns facts that must survive
+processes and framework changes: the job row, enqueue order, revision, lease,
+checkpoint, history, idempotency request, and outbox record.
+
+The adapters only translate headers, JSON, HTTP status, and SSE into this
+contract. Reading the core first makes it clear why Redis and a browser event
+cannot be allowed to decide correctness.
+
+## Contract map
+
+| Business rule | Core owner | Durable evidence |
+|---|---|---|
+| duplicate submit is one request | `JobSubmissionIdempotencyCoordinator` and repository | canonical request digest + stored response snapshot |
+| one tenant follows FIFO | `JobRepository` and `QueueProjectionService` | enqueue sequence and bounded queue projection |
+| only the current worker may write | `JobLease`, lease token, and revision checks | conditional checkpoint/terminal update |
+| retry and cancel are explicit | `JobTransitions` and `JobWorkerEngine` | state history and attempt/revision |
+| notifications can be retried | `JobOutboxRepository` and `JobOutboxPoller` | stable logical event id + published marker |
+| ETA is an estimate | `EtaEstimator` | duration samples, confidence, and sample size |
+
+The core deliberately does not own authentication, a production policy engine,
+or exactly-once execution. Those boundaries belong to the application that
+embeds it.
+
+## Minimal API example
+
+The framework-neutral request and outcome can be exercised without a web server:
+
+```kotlin
+val request = SubmitJobRequest(
+    jobType = JobType.DOCUMENT_EXPORT,
+    workUnits = 3,
+    failureMode = FailureMode.RETRY_ONCE,
+)
+val first = service.submit(DemoCallerScope("tenant-a", "submitter-a"), "export-1", request)
+val replay = service.submit(DemoCallerScope("tenant-a", "submitter-a"), "export-1", request)
+
+check(first is JobSubmissionOutcome.OwnerCompleted)
+check(replay is JobSubmissionOutcome.Replayed)
+check(first.snapshot == replay.snapshot)
+```
+
+`OwnerCompleted` and `Replayed` intentionally carry the same snapshot; the
+HTTP layer adds only the `Idempotency-Replayed` header. A caller can safely save
+the first response and stop retrying, or retry the exact request after a timeout.
+
+## Test-to-contract guide
+
+The core tests are the executable version of the requirements. Read them in this
+order when learning the module:
+
+1. `JobTransitionsTest` — closed state transitions and stale revision rejection.
+2. `JobApiModelsTest` and `JobConsoleSubmissionOutcomeTest` — redacted wire
+   shape, stable problem codes, replay headers, and retry advice.
+3. `JobSubmissionIdempotencyRepositoryTest` and
+   `JobIdempotencyConcurrencyTest` — one durable request row under replay and
+   concurrent owners.
+4. `JobClaimConcurrencyTest`, `JobLeaseRecoveryTest`, and
+   `JobCancellationRaceTest` — FIFO, fencing, checkpoint, and cancel races.
+5. `JobFailureMatrixIntegrationTest` and `JobRetryExhaustionTest` — retryable,
+   non-retryable, and dead-letter outcomes.
+6. `JobOutboxRepositoryTest`, `JobEventFanoutTest`, and adapter conformance
+   fixtures — at-least-once notification without changing REST authority.
+
+Container-backed tests are intentionally sequential because they share
+PostgreSQL/Redis resources. The high-contention profile adds barriers and
+multi-worker scheduling; its report proves invariant preservation, not a
+production capacity number.
+
 ## Authority boundary
 
 PostgreSQL is authoritative. Redis cancellation publish and SSE fan-out are
@@ -104,3 +177,14 @@ PostgreSQL remains the authority for leases, fencing, checkpoints, deduplication
 and terminal state. Toxiproxy is limited to cutting and restoring the Redis path,
 including old and newly opened connections; it does not simulate PostgreSQL
 authority or database failover.
+
+## Specification traceability
+
+The full business requirements, state machine, failure matrix, adapter parity,
+and acceptance criteria are in
+[`2026-07-21-issue-520-job-operations-console-design.md`](../../docs/superpowers/specs/2026-07-21-issue-520-job-operations-console-design.md).
+The Exposed follow-up
+[`2026-11-18-issue-1052-operations-exposed-design.md`](../../docs/superpowers/specs/2026-11-18-issue-1052-operations-exposed-design.md)
+defines the boundary between ordinary typed queries and SQL that remains raw
+because SQL itself is the subject under test (migration, `EXPLAIN`, lock,
+retention, backup/restore, and compatibility probes).

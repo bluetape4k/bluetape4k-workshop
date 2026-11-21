@@ -26,25 +26,60 @@ import java.security.MessageDigest
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * TicketHighContentionArtifactException 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionArtifactException(
     message: String,
     cause: Throwable? = null,
 ) : IllegalStateException(message, cause)
 
+/**
+ * TicketHighContentionArtifactStore 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionArtifactStore private constructor(
+/**
+ * runRoot은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val runRoot: Path,
 ) {
+/**
+ * mapper은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val mapper = Jackson.createDefaultJsonMapper()
 
+/**
+ * journalPath은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     internal val journalPath: Path
         get() = runRoot.resolve(JOURNAL_FILE_NAME)
 
+/**
+ * createJournal은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun createJournal(): TicketHighContentionJournal =
         TicketHighContentionJournal.open(
             artifactRoot = runRoot,
             relativePath = Path.of(JOURNAL_FILE_NAME),
         )
 
+/**
+ * writeTerminalReport은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun writeTerminalReport(
         implementation: String,
         profileId: String,
@@ -52,17 +87,47 @@ internal class TicketHighContentionArtifactStore private constructor(
         requiredFields: Set<String>,
         forbiddenPatterns: List<String>,
     ): Path {
+/**
+ * safeImplementation은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val safeImplementation = identifier(implementation, "implementation")
+/**
+ * safeProfile은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val safeProfile = identifier(profileId, "profileId")
         requiredFields.requireNotEmpty("requiredFields")
         require(requiredFields.all(report.keys::contains)) {
             "terminal report is missing required fields"
         }
+/**
+ * bytes은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val bytes = mapper.writeValueAsBytes(report)
         verifyRedaction(bytes.toUtf8String(), forbiddenPatterns)
 
+/**
+ * target은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val target = runRoot.resolve("$safeImplementation-$safeProfile-report.json")
+/**
+ * temporary은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val temporary = runRoot.resolve(".${target.fileName}.${Base58.randomString(16)}.tmp")
+/**
+ * published은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var published = false
         try {
             FileChannel.open(temporary, CREATE_NEW, WRITE, DSYNC).use { channel ->
@@ -94,6 +159,11 @@ internal class TicketHighContentionArtifactStore private constructor(
         }
     }
 
+/**
+ * verifyContainedRegularFile은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun verifyContainedRegularFile(path: Path) {
         if (!Files.isRegularFile(path, NOFOLLOW_LINKS) || Files.isSymbolicLink(path)) {
             throw TicketHighContentionArtifactException("artifact is not a regular file")
@@ -104,7 +174,17 @@ internal class TicketHighContentionArtifactStore private constructor(
     }
 
     internal companion object {
+/**
+ * IDENTIFIER은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val IDENTIFIER = Regex("[a-z0-9][a-z0-9._-]{0,63}")
+/**
+ * REDACTION_SENTINELS은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REDACTION_SENTINELS = setOf(
             "postgresql://",
             "redis://",
@@ -113,15 +193,35 @@ internal class TicketHighContentionArtifactStore private constructor(
             "credential",
             "authorization",
         )
+/**
+ * JOURNAL_FILE_NAME은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val JOURNAL_FILE_NAME = "ticket-topology.jsonl"
 
+/**
+ * create은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun create(
             outputRoot: Path,
             runId: String,
             parentOwnedRun: Boolean = false,
         ): TicketHighContentionArtifactStore {
+/**
+ * root은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val root = outputRoot.toAbsolutePath().normalize()
             createDirectoriesWithoutLinks(root)
+/**
+ * runRoot은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val runRoot = root.resolve(identifier(runId, "runId"))
             if (parentOwnedRun) {
                 if (!Files.isDirectory(runRoot, NOFOLLOW_LINKS) || Files.isSymbolicLink(runRoot)) {
@@ -147,6 +247,11 @@ internal class TicketHighContentionArtifactStore private constructor(
             return TicketHighContentionArtifactStore(runRoot)
         }
 
+/**
+ * createDirectoriesWithoutLinks은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun createDirectoriesWithoutLinks(path: Path) {
             var current = path.root
             path.forEach { component ->
@@ -161,6 +266,11 @@ internal class TicketHighContentionArtifactStore private constructor(
             }
         }
 
+/**
+ * rejectLinks은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun rejectLinks(root: Path, descendant: Path) {
             var current = root
             root.relativize(descendant).forEach { component ->
@@ -171,15 +281,30 @@ internal class TicketHighContentionArtifactStore private constructor(
             }
         }
 
+/**
+ * identifier은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun identifier(value: String, name: String): String =
             value.requireNotBlank(name).also {
                 require(IDENTIFIER.matches(it)) { "$name must be a bounded identifier" }
             }
 
+/**
+ * verifyRedaction은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun verifyRedaction(
             evidence: String,
             forbiddenPatterns: Collection<String> = emptyList(),
         ) {
+/**
+ * normalized은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val normalized = evidence.lowercase()
             (REDACTION_SENTINELS + forbiddenPatterns.map(String::lowercase)).forEach { sentinel ->
                 require(!normalized.contains(sentinel)) {
@@ -191,60 +316,190 @@ internal class TicketHighContentionArtifactStore private constructor(
     }
 }
 
+/**
+ * TicketHighContentionJournalPayload 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class TicketHighContentionJournalPayload(
+/**
+ * event은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val event: String,
+/**
+ * fields은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val fields: Map<String, String>,
 )
 
+/**
+ * TicketHighContentionJournalRecord 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class TicketHighContentionJournalRecord(
+/**
+ * sequence은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sequence: Long,
+/**
+ * previousRecordSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val previousRecordSha256: String,
+/**
+ * payloadSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val payloadSha256: String,
+/**
+ * payload은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val payload: TicketHighContentionJournalPayload,
+/**
+ * recordSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val recordSha256: String,
 )
 
+/**
+ * TicketHighContentionJournalException 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionJournalException(
     message: String,
     cause: Throwable? = null,
 ) : IllegalStateException(message, cause)
 
+/**
+ * TicketHighContentionJournal 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionJournal private constructor(
+/**
+ * path은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val path: Path,
+/**
+ * channel은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val channel: FileChannel,
 ) : AutoCloseable {
+/**
+ * mapper은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val mapper = Jackson.createDefaultJsonMapper()
+/**
+ * lock은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val lock = ReentrantLock()
+/**
+ * nextSequence은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var nextSequence = 0L
+/**
+ * previousRecordSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var previousRecordSha256 = GENESIS_SHA256
+/**
+ * closed은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var closed = false
 
+/**
+ * append은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun append(
         event: String,
         fields: Map<String, String>,
     ): TicketHighContentionJournalRecord = lock.withLock {
         check(!closed) { "Ticket high-contention journal is closed" }
+/**
+ * payload은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payload = TicketHighContentionJournalPayload(
             event = event.requireNotBlank("event"),
             fields = fields
                 .mapKeys { (key, _) -> key.requireNotBlank("journal field name") }
                 .toSortedMap(),
         )
+/**
+ * payloadBytes은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payloadBytes = mapper.writeValueAsBytes(payload)
         verifyRedaction(payloadBytes.toUtf8String())
+/**
+ * payloadSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payloadSha256 = sha256(payloadBytes)
+/**
+ * persisted은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val persisted = PersistedTicketHighContentionJournalRecord(
             sequence = nextSequence,
             previousRecordSha256 = previousRecordSha256,
             payloadSha256 = payloadSha256,
             payload = payload,
         )
+/**
+ * recordBytes은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val recordBytes = mapper.writeValueAsBytes(persisted)
         channel.writeFully(ByteBuffer.wrap(recordBytes))
         channel.writeFully(ByteBuffer.wrap(NEWLINE))
         channel.force(true)
 
+/**
+ * recordSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val recordSha256 = sha256(recordBytes)
+/**
+ * record은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val record = TicketHighContentionJournalRecord(
             sequence = nextSequence,
             previousRecordSha256 = previousRecordSha256,
@@ -257,6 +512,11 @@ internal class TicketHighContentionJournal private constructor(
         record
     }
 
+/**
+ * close은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun close() {
         lock.withLock {
             if (closed) {
@@ -269,22 +529,57 @@ internal class TicketHighContentionJournal private constructor(
     }
 
     internal companion object {
+/**
+ * GENESIS_SHA256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val GENESIS_SHA256 =
             "0000000000000000000000000000000000000000000000000000000000000000"
 
+/**
+ * open은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun open(
             artifactRoot: Path,
             relativePath: Path,
         ): TicketHighContentionJournal {
+/**
+ * trustedRoot은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val trustedRoot = artifactRoot.toRealPath(NOFOLLOW_LINKS)
+/**
+ * path은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val path = trustedRoot.resolve(relativePath).normalize()
             if (path.parent != trustedRoot || Files.isSymbolicLink(path)) {
                 throw TicketHighContentionArtifactException("journal escaped its trusted artifact root")
             }
+/**
+ * createdChannel은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             var createdChannel: FileChannel? = null
             return try {
+/**
+ * channel은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val channel = FileChannel.open(path, CREATE_NEW, WRITE, APPEND, DSYNC)
                 createdChannel = channel
+/**
+ * realPath은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val realPath = path.toRealPath(NOFOLLOW_LINKS)
                 if (!realPath.startsWith(trustedRoot)) {
                     throw TicketHighContentionArtifactException("journal escaped its trusted artifact root")
@@ -302,6 +597,11 @@ internal class TicketHighContentionJournal private constructor(
             }
         }
 
+/**
+ * read은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun read(path: Path): List<TicketHighContentionJournalRecord> {
             val absolute = path.toAbsolutePath().normalize()
             if (Files.isSymbolicLink(absolute)) {
@@ -327,6 +627,11 @@ internal class TicketHighContentionJournal private constructor(
             return decodeCompleteLines(bytes)
         }
 
+/**
+ * decodeCompleteLines은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun decodeCompleteLines(bytes: ByteArray): List<TicketHighContentionJournalRecord> {
             val completeLength = bytes.indexOfLast { it == NEWLINE.single() }
             val suffix = bytes.copyOfRange(completeLength + 1, bytes.size)
@@ -399,6 +704,11 @@ internal class TicketHighContentionJournal private constructor(
             }
         }
 
+/**
+ * isCompleteJsonDocument은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun isCompleteJsonDocument(bytes: ByteArray): Boolean =
             try {
                 Jackson.defaultJsonMapper
@@ -410,6 +720,11 @@ internal class TicketHighContentionJournal private constructor(
                 false
             }
 
+/**
+ * verifyRedaction은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun verifyRedaction(evidence: String) {
             val normalized = evidence.lowercase()
             REDACTION_SENTINELS.forEach { sentinel ->
@@ -419,12 +734,27 @@ internal class TicketHighContentionJournal private constructor(
             }
         }
 
+/**
+ * sha256은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun sha256(bytes: ByteArray): String =
             MessageDigest.getInstance("SHA-256")
                 .digest(bytes)
                 .joinToString("") { "%02x".format(it) }
 
+/**
+ * NEWLINE은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NEWLINE = byteArrayOf('\n'.code.toByte())
+/**
+ * REDACTION_SENTINELS은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REDACTION_SENTINELS = setOf(
             "postgresql://",
             "redis://",
@@ -433,17 +763,52 @@ internal class TicketHighContentionJournal private constructor(
             "credential",
             "authorization",
         )
+/**
+ * MAX_JOURNAL_BYTES은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_JOURNAL_BYTES = 16L * 1024 * 1024
     }
 }
 
+/**
+ * PersistedTicketHighContentionJournalRecord 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private data class PersistedTicketHighContentionJournalRecord(
+/**
+ * sequence은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sequence: Long,
+/**
+ * previousRecordSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val previousRecordSha256: String,
+/**
+ * payloadSha256은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val payloadSha256: String,
+/**
+ * payload은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val payload: TicketHighContentionJournalPayload,
 )
 
+/**
+ * writeFully은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun FileChannel.writeFully(buffer: ByteBuffer) {
     while (buffer.hasRemaining()) {
         write(buffer)

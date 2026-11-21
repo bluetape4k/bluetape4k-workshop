@@ -12,15 +12,32 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
+/** durable 상태 변경별 outbox event, bounded claim, stable logical ID, backlog 관측을 검증한다. */
+/** durable 상태 변경별 outbox event, bounded claim, stable logical ID, backlog 관측을 검증한다. */
 @Tag("integration")
 class JobOutboxRepositoryTest {
 
     companion object: KLogging() {
+/**
+ * NOW은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-21T00:00:00Z")
+/**
+ * SCOPE은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val SCOPE = DemoCallerScope("tenant-a", "submitter-a")
     }
 
     @Test
+/**
+ * 이 시나리오는 "each durable change notifies both job and queue snapshot consumers" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `each durable change notifies both job and queue snapshot consumers`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -38,6 +55,12 @@ class JobOutboxRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "claim is bounded and failed publication can be retried with stable event id" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `claim is bounded and failed publication can be retried with stable event id`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -59,6 +82,11 @@ class JobOutboxRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "oldest unpublished age is observable without exposing payload" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `oldest unpublished age is observable without exposing payload`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -70,6 +98,11 @@ class JobOutboxRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "durable job and outbox identities use UUID version seven" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `durable job and outbox identities use UUID version seven`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()

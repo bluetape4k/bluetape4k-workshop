@@ -9,11 +9,21 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import java.time.Instant
 
+/**
+ * OperatorVoucherWebIntegrationTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OperatorVoucherWebIntegrationTest: AbstractVoucherIntegrationTest() {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "campaign create and activate enforce preconditions and replay" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `campaign create and activate enforce preconditions and replay`() {
         val tenant = randomIdentifier()
         val campaignId = Uuid.V7.nextId()
@@ -66,6 +76,11 @@ internal class OperatorVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "stale campaign revision is a closed precondition failure" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stale campaign revision is a closed precondition failure`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -97,6 +112,11 @@ internal class OperatorVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "paused allocation recovers with the same key and then replays exactly" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `paused allocation recovers with the same key and then replays exactly`() {
         val tenant = randomIdentifier()
         val principal = "principal-paused"
@@ -178,6 +198,11 @@ internal class OperatorVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "manual reconciliation returns an exactly replayable bounded descriptor" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `manual reconciliation returns an exactly replayable bounded descriptor`() {
         val tenant = randomIdentifier()
         val key = randomIdentifier()

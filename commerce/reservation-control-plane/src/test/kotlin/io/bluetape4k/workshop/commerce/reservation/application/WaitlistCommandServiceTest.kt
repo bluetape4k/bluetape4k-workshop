@@ -18,14 +18,35 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 
+/**
+ * WaitlistCommandServiceTest 테스트 묶음은 예약 제어 플레인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class WaitlistCommandServiceTest {
 
     companion object: KLogging()
 
+/**
+ * now은 예약 제어 플레인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val now = Instant.parse("2026-07-19T00:00:00Z")
+/**
+ * credentialService은 예약 제어 플레인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val credentialService = ReservationCredentialService("0123456789abcdef0123456789abcdef")
 
     @Test
+/**
+ * 이 시나리오는 "promotion offers only the oldest WAITING entry with the configured TTL on PostgreSQL"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `promotion offers only the oldest WAITING entry with the configured TTL on PostgreSQL`() {
         withTables(TestDB.POSTGRESQL, *reservationTables) {
             val resource = CapacityResourceRepository().create("promotion-room", capacity = 1, policyVersion = 1)
@@ -47,6 +68,12 @@ class WaitlistCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "accept requires the offer owner expected revision and a non-expired ACTIVE offer on
+ * PostgreSQL" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `accept requires the offer owner expected revision and a non-expired ACTIVE offer on PostgreSQL`() {
         withTables(TestDB.POSTGRESQL, *reservationTables) {
             val resource = CapacityResourceRepository().create("accept-room", capacity = 1, policyVersion = 1)
@@ -76,6 +103,12 @@ class WaitlistCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "accept rejects an expired offer without changing either aggregate on PostgreSQL" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `accept rejects an expired offer without changing either aggregate on PostgreSQL`() {
         withTables(TestDB.POSTGRESQL, *reservationTables) {
             val resource = CapacityResourceRepository().create("expired-room", capacity = 1, policyVersion = 1)
@@ -111,6 +144,11 @@ class WaitlistCommandServiceTest {
         }
     }
 
+/**
+ * service은 예약 제어 플레인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun service(
         waitlists: WaitlistEntryRepository,
         offers: ReservationOfferRepository,

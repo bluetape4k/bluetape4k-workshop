@@ -21,6 +21,33 @@ test-backed verification. They prove sanitized errors, fallback semantics,
 structured response mapping, and budget enforcement; a local native run still
 depends on the installed Tesseract language packs.
 
+## Reader mental model
+
+Treat this module as the boundary around an expensive, optional capability. The
+caller submits bytes and asks for text; the service decides whether the bytes
+are admissible, whether the configured engine can provide the requested level
+of detail, and whether the result stays within a bounded response. `COMPLETED`
+means an engine returned text. `UNAVAILABLE` means the input was valid but the
+native capability was intentionally disabled or unavailable; it is not the same
+as malformed input. A `400`/`422` problem means the request or processing
+budget could not be accepted.
+
+## Business requirements and design decisions
+
+| Requirement | Decision in this example | Proof to read |
+|---|---|---|
+| Accept only bounded, decodable input | Validate MIME/magic bytes, encoded size, decoded pixels, and TIFF metadata before OCR | `ImageOcrServiceImpl`, `ImageOcrServiceImplTest` |
+| Run without a native dependency in CI or a laptop | Return deterministic `UNAVAILABLE` when native OCR is disabled; enable it explicitly | `NativeOcrDisabledContextTest`, `ImageOcrServiceImplTest` |
+| Do not invent precision | Preserve nullable `confidence` and `boundingBox`; report the actual `effectiveStructuredDetail` | `ImageOcrModels`, structured mapping tests |
+| Keep structured output useful across engines | Use `StructuredOcrEngine` only when the runtime capability exists, otherwise fall back to `PLAIN_TEXT` | `ImageOcrServiceImplTest` capability cases |
+| Process TIFF pages safely | Require structured capability, preserve page order, and enforce page/total/result budgets before returning a partial response | TIFF order/limit tests in `ImageOcrServiceImplTest` |
+| Avoid leaking native or user data | Map failures to sanitized `reason`, `phase`, and optional `pageIndex`; never log bytes or OCR text | `ImageOcrControllerTest`, sanitized failure tests |
+
+The plain-text path is therefore a compatibility contract, not a promise that
+every engine can provide boxes or confidence. Native Tesseract is an opt-in
+implementation detail; the HTTP response remains understandable when it is
+absent.
+
 ## Overview
 
 **image-processing-ocr-api** is a Spring Boot 4 multipart API example for
@@ -249,6 +276,22 @@ completed responses, so the deterministic suite does not require native
 Tesseract. They verify structured mapping, capability fallback, three-page TIFF
 ordering, preflight/result budgets, sanitized failure mapping, language
 normalization, timeout, and cancellation propagation.
+
+Read the tests as executable business documentation:
+
+| Test area | Boundary explained |
+|---|---|
+| `ImageOcrServiceImplTest` validation cases | An upload is rejected before native work when bytes, subtype, pixels, or TIFF budgets are invalid. |
+| `ImageOcrServiceImplTest` capability cases | Plain engines cannot be made structured by wishful mapping; the response records the fallback. |
+| `ImageOcrServiceImplTest` TIFF cases | Three pages are returned in input order and page/total/result limits stop partial output. |
+| `ImageOcrServiceImplTest` timeout/cancellation cases | Timeouts become a bounded service result while coroutine cancellation remains cancellation. |
+| `ImageOcrControllerTest` | Multipart fields and sanitized `ProblemDetail` fields are verified at the HTTP boundary. |
+| `NativeOcrDisabledContextTest` / `ImageOcrPropertiesTest` | The default is reproducible without Tesseract, and invalid configuration fails early. |
+
+The native-option command is an environment check as well as a test: it needs
+Tesseract and the requested trained data. A passing fake-engine test is the
+portable contract; a passing native test additionally proves the local engine
+installation.
 
 ## Dependency Note
 

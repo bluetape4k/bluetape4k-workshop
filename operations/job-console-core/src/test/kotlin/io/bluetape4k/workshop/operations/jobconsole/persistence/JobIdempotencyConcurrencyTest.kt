@@ -11,12 +11,19 @@ import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
+/** 동시에 도착한 동일·상이한 제출이 one-owner 및 단조 enqueue sequence로 수렴하는지 검증한다. */
+/** 동시에 도착한 동일·상이한 제출이 one-owner 및 단조 enqueue sequence로 수렴하는지 검증한다. */
 @Tag("integration")
 class JobIdempotencyConcurrencyTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "concurrent identical submit creates one owner and one job" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent identical submit creates one owner and one job`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -51,6 +58,12 @@ class JobIdempotencyConcurrencyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent distinct submits allocate unique enqueue sequences for one tenant" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent distinct submits allocate unique enqueue sequences for one tenant`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()

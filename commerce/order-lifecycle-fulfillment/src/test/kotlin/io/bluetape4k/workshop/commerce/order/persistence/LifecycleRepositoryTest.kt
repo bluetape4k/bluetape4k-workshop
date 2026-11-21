@@ -13,15 +13,40 @@ import io.bluetape4k.workshop.commerce.order.domain.ProviderMode
 import org.junit.jupiter.api.Test
 import java.util.*
 
+/**
+ * LifecycleRepositoryTest 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class LifecycleRepositoryTest {
 
     companion object: KLogging()
 
+/**
+ * orders은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val orders = OrderRepository()
+/**
+ * payments은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val payments = PaymentAttemptRepository()
+/**
+ * audits은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val audits = LifecycleAuditRepository()
 
     @Test
+/**
+ * 이 시나리오는 "aggregate repositories keep revisions independent in PostgreSQL" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `aggregate repositories keep revisions independent in PostgreSQL`() {
         val orderId = UUID.fromString("019c6e50-0180-7b3f-a021-65f8f58bdb30")
         val paymentId = UUID.fromString("019c6e50-0180-7b3f-a021-65f8f58bdb31")

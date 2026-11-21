@@ -20,6 +20,31 @@ hardening은 이 workshop의 경계 밖에 있습니다.
 budget 적용을 증명하며, 로컬 native 실행은 설치된 Tesseract language pack에
 의존합니다.
 
+## 처음 읽는 사람을 위한 mental model
+
+이 모듈은 비용이 큰 선택적 capability를 감싸는 경계입니다. 호출자는 bytes를
+보내고 text를 요청하지만, service는 bytes를 받아도 되는지, 설정된 engine이
+원하는 상세 수준을 제공하는지, 결과가 제한된 크기 안에 있는지를 판단합니다.
+`COMPLETED`는 engine이 text를 반환했다는 뜻입니다. `UNAVAILABLE`은 입력은
+유효하지만 native capability가 의도적으로 꺼져 있거나 사용할 수 없다는
+뜻이며 malformed input과 다릅니다. `400`/`422` problem은 요청 또는 processing
+budget을 수락할 수 없다는 의미입니다.
+
+## 업무 요구 사항과 설계 결정
+
+| 요구 사항 | 이 예제의 결정 | 읽어 볼 근거 |
+|---|---|---|
+| 제한되고 decode 가능한 입력만 수락 | MIME/magic byte, encoded size, decoded pixel, TIFF metadata를 OCR 전에 검증 | `ImageOcrServiceImpl`, `ImageOcrServiceImplTest` |
+| CI나 개발 PC에 native dependency 없이 실행 | native OCR이 꺼져 있으면 결정적인 `UNAVAILABLE` 반환, 필요할 때만 명시적으로 활성화 | `NativeOcrDisabledContextTest`, `ImageOcrServiceImplTest` |
+| 정밀도를 지어내지 않기 | `confidence`와 `boundingBox`의 nullable 상태 보존, 실제 반환 상세를 `effectiveStructuredDetail`에 기록 | `ImageOcrModels`, structured mapping tests |
+| 서로 다른 engine에서도 구조화 결과를 유용하게 유지 | runtime capability가 있을 때만 `StructuredOcrEngine` 사용, 아니면 `PLAIN_TEXT` fallback | `ImageOcrServiceImplTest` capability cases |
+| TIFF 페이지를 안전하게 처리 | structured capability를 요구하고 페이지 순서를 보존하며 page/total/result budget을 partial response 전에 검사 | `ImageOcrServiceImplTest` TIFF order/limit tests |
+| native 오류나 사용자 data를 노출하지 않기 | `reason`, `phase`, 선택적 `pageIndex`만 sanitized mapping하고 bytes/OCR text는 log에 남기지 않음 | `ImageOcrControllerTest`, sanitized failure tests |
+
+따라서 plain-text 경로는 호환성 계약이지 모든 engine이 box나 confidence를
+제공한다는 약속이 아닙니다. Native Tesseract는 opt-in 구현 세부 사항이고,
+그것이 없어도 HTTP response는 이해할 수 있는 형태를 유지합니다.
+
 ## 개요
 
 **image-processing-ocr-api**는 `bluetape4k-images-ocr`를 Spring Boot 4
@@ -245,6 +270,21 @@ queueing, audit workflow, PII 관리, 운영용 upload hardening이 없습니다
 Tesseract가 없어도 결정적으로 실행됩니다. 구조화 매핑, capability fallback, 3-page TIFF
 순서, preflight/result budget, sanitized failure mapping, language normalization,
 timeout, cancellation propagation을 검증합니다.
+
+테스트를 실행 가능한 업무 문서로 읽을 수 있습니다.
+
+| 테스트 영역 | 설명하는 경계 |
+|---|---|
+| `ImageOcrServiceImplTest` validation cases | bytes, subtype, pixel, TIFF budget이 잘못되면 native 작업 전에 upload를 거부합니다. |
+| `ImageOcrServiceImplTest` capability cases | plain engine을 억지로 structured로 만들지 않고 response에 fallback을 기록합니다. |
+| `ImageOcrServiceImplTest` TIFF cases | 세 페이지를 입력 순서로 반환하고 page/total/result 제한이 partial output을 막습니다. |
+| `ImageOcrServiceImplTest` timeout/cancellation cases | timeout은 제한된 service 결과가 되지만 coroutine cancellation은 cancellation으로 남습니다. |
+| `ImageOcrControllerTest` | multipart field와 sanitized `ProblemDetail` field를 HTTP 경계에서 확인합니다. |
+| `NativeOcrDisabledContextTest` / `ImageOcrPropertiesTest` | 기본값은 Tesseract 없이 재현되고 잘못된 설정은 조기에 실패합니다. |
+
+native-option 명령은 test이면서 환경 확인이기도 합니다. Tesseract와 요청한
+trained data가 필요합니다. fake-engine test가 통과하면 portable 계약을 증명하고,
+native test가 통과하면 여기에 local engine 설치까지 증명합니다.
 
 ## 의존성 메모
 

@@ -25,14 +25,34 @@ import java.util.concurrent.Executors
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * EventStorePostgresIntegrationTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class EventStorePostgresIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * fixture은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixture = EventStoreDatabaseFixture()
+/**
+ * repository은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = EventStoreRepository()
 
     @Test
+/**
+ * 이 시나리오는 "append validates expected version and preserves a hash chain" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `append validates expected version and preserves a hash chain`() {
         fixture.reset()
         val stream = StreamKey("tenant-a", "Usage", "usage-1")
@@ -62,6 +82,11 @@ class EventStorePostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "recorded time comes from PostgreSQL instead of the application clock" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `recorded time comes from PostgreSQL instead of the application clock`() {
         fixture.reset()
         val applicationTime = Instant.EPOCH
@@ -79,6 +104,11 @@ class EventStorePostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "tenant is mandatory when loading a stream" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `tenant is mandatory when loading a stream`() {
         fixture.reset()
         val tenantA = StreamKey("tenant-a", "Usage", "same-id")
@@ -101,6 +131,11 @@ class EventStorePostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "multi-stream append locks and returns streams in canonical order" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `multi-stream append locks and returns streams in canonical order`() {
         fixture.reset()
         val later = StreamKey("tenant-a", "Usage", "z-stream")
@@ -119,6 +154,11 @@ class EventStorePostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "only one of twenty writers can append the same expected version" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `only one of twenty writers can append the same expected version`() {
         fixture.reset()
         val stream = StreamKey("tenant-a", "Usage", "contended")
@@ -151,6 +191,11 @@ class EventStorePostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "generic repository mutation is blocked for stored events" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `generic repository mutation is blocked for stored events`() {
         fixture.reset()
         val stream = StreamKey("tenant-a", "Usage", "immutable")
@@ -166,6 +211,11 @@ class EventStorePostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "global position keyset tolerates sequence gaps" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `global position keyset tolerates sequence gaps`() {
         fixture.reset()
         val firstStream = StreamKey("tenant-a", "Usage", "first")
@@ -194,6 +244,11 @@ class EventStorePostgresIntegrationTest {
         later.globalPosition.shouldBeGreaterThan(first.globalPosition + 1)
     }
 
+/**
+ * event은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun event(sourceId: String): NewEvent =
         NewEvent(
             eventId = UUID.randomUUID(),
@@ -209,6 +264,11 @@ class EventStorePostgresIntegrationTest {
             occurredAt = Instant.parse("2026-07-01T00:00:00Z"),
         )
 
+/**
+ * sourceId은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun String.sourceId(): String =
         substringAfter("sourceEventId\":\"")
             .substringBefore('"')

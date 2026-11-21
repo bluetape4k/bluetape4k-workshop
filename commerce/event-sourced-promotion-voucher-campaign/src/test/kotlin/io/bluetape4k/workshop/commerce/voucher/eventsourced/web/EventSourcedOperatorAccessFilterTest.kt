@@ -19,17 +19,57 @@ import org.springframework.mock.web.MockFilterChain
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 
+/**
+ * EventSourcedOperatorAccessFilterTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventSourcedOperatorAccessFilterTest {
 
     private companion object: KLogging() {
+/**
+ * PORT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PORT = 8080
+/**
+ * SHA_256_HEX_LENGTH은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val SHA_256_HEX_LENGTH = 64
+/**
+ * SECRET은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val SECRET = "operator-secret"
+/**
+ * GUARD은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val GUARD = "operator-guard"
+/**
+ * PRINCIPAL은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PRINCIPAL = "operator-principal"
+/**
+ * ORIGIN은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val ORIGIN = "http://127.0.0.1:$PORT"
     }
 
+/**
+ * filter은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val filter = EventSourcedOperatorAccessFilter(
         properties = EventSourcedOperatorProperties(SECRET, GUARD),
         mapper = Jackson.defaultJsonMapper,
@@ -39,6 +79,11 @@ internal class EventSourcedOperatorAccessFilterTest {
     )
 
     @Test
+/**
+ * 이 시나리오는 "operator properties retain only validated normalized values" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator properties retain only validated normalized values`() {
         val properties = EventSourcedOperatorProperties(
             secret = SECRET,
@@ -66,6 +111,11 @@ internal class EventSourcedOperatorAccessFilterTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "valid same origin mutation forwards only the actor surrogate" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `valid same origin mutation forwards only the actor surrogate`() {
         val request = validRequest()
         val response = MockHttpServletResponse()
@@ -86,6 +136,11 @@ internal class EventSourcedOperatorAccessFilterTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "actor surrogate is tenant separated" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `actor surrogate is tenant separated`() {
         val tenantA = validRequest(tenant = "tenant-a")
         val tenantB = validRequest(tenant = "tenant-b")
@@ -98,6 +153,12 @@ internal class EventSourcedOperatorAccessFilterTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator trust boundary rejects each unsafe request before dispatch without reflecting
+ * credentials" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator trust boundary rejects each unsafe request before dispatch without reflecting credentials`() {
         val unsafeMutations: List<(MockHttpServletRequest) -> Unit> = listOf(
             { request -> request.remoteAddr = "192.0.2.10" },
@@ -132,6 +193,11 @@ internal class EventSourcedOperatorAccessFilterTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "safe operator GET accepts the explicit workshop origin fallback" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `safe operator GET accepts the explicit workshop origin fallback`() {
         val request = validRequest(method = "GET").apply {
             removeHeader("Origin")
@@ -146,6 +212,11 @@ internal class EventSourcedOperatorAccessFilterTest {
         chain.request.shouldNotBeNull()
     }
 
+/**
+ * validRequest은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validRequest(
         method: String = "POST",
         tenant: String = "tenant-a",
@@ -163,6 +234,11 @@ internal class EventSourcedOperatorAccessFilterTest {
             addHeader(OPERATOR_ROLE_HEADER, "OPERATOR")
         }
 
+/**
+ * replaceHeader은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun MockHttpServletRequest.replaceHeader(
         name: String,
         value: String,

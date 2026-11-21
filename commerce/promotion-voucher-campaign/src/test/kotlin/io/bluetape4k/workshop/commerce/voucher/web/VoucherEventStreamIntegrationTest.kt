@@ -18,19 +18,44 @@ import java.net.http.HttpResponse
 import java.time.Duration
 
 @TestPropertySource(properties = ["workshop.voucher.sse.heartbeat-interval=100ms"])
+/**
+ * VoucherEventStreamIntegrationTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest() {
 
     private companion object: KLogging() {
+/**
+ * STREAM_TIMEOUT은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val STREAM_TIMEOUT: Duration = 5.seconds()
+/**
+ * HTTP_CLIENT은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val HTTP_CLIENT: HttpClient = HttpClient.newBuilder()
             .connectTimeout(STREAM_TIMEOUT)
             .build()
     }
 
     @Autowired
+/**
+ * streams은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var streams: VoucherEventStream
 
     @Test
+/**
+ * 이 시나리오는 "stream starts with an authoritative campaign snapshot" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stream starts with an authoritative campaign snapshot`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -67,6 +92,11 @@ internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "closing the last subscription uses one cleanup path" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `closing the last subscription uses one cleanup path`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -84,6 +114,11 @@ internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "retention gap emits snapshot then authoritative reset" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `retention gap emits snapshot then authoritative reset`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -99,6 +134,11 @@ internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "cross tenant cursor is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cross tenant cursor is rejected`() {
         val firstTenant = randomIdentifier()
         val firstCampaign = createActiveCampaign(firstTenant)
@@ -116,6 +156,11 @@ internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "resume cursor starts from a fresh snapshot without reset" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `resume cursor starts from a fresh snapshot without reset`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -133,6 +178,11 @@ internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "delayed event fixture leaves a cursor that can resume" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `delayed event fixture leaves a cursor that can resume`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -156,6 +206,11 @@ internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "future cursor is rejected before the stream starts" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `future cursor is rejected before the stream starts`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -172,6 +227,11 @@ internal class VoucherEventStreamIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "future revision without an audit id is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `future revision without an audit id is rejected`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)

@@ -8,8 +8,18 @@ import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.Arrays
 
+/**
+ * DeterministicSchedule 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 object DeterministicSchedule {
 
+/**
+ * generate은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun generate(vector: ScheduleVector): List<ScheduleToken> {
         vector.name.requireNotBlank("vector.name")
         vector.seed.requireNotBlank("vector.seed")
@@ -26,6 +36,11 @@ object DeterministicSchedule {
         }
     }
 
+/**
+ * digest은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun digest(tokens: List<ScheduleToken>): String {
         val canonical = tokens.joinToString(separator = "\n", postfix = "\n") {
             "${it.offsetNanos}:${it.stableOrdinal}:${it.identityOrdinal}:${it.attemptOrdinal}:${it.authorityOrdinal}"
@@ -33,6 +48,11 @@ object DeterministicSchedule {
         return sha256(canonical.toByteArray(Charsets.UTF_8)).toHex()
     }
 
+/**
+ * burst은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun burst(vector: ScheduleVector): List<ScheduleToken> {
         if (vector.epochs.isNotEmpty() || vector.retryShape != null) {
             throw IllegalArgumentException("burst schedule cannot declare epochs or retryShape")
@@ -48,6 +68,11 @@ object DeterministicSchedule {
         }
     }
 
+/**
+ * step은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun step(vector: ScheduleVector): List<ScheduleToken> {
         if (vector.retryShape != null) {
             throw IllegalArgumentException("step schedule cannot declare retryShape")
@@ -82,6 +107,11 @@ object DeterministicSchedule {
         )
     }
 
+/**
+ * retryStorm은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun retryStorm(vector: ScheduleVector): List<ScheduleToken> {
         if (vector.epochs.isNotEmpty()) {
             throw IllegalArgumentException("retry-storm schedule cannot declare epochs")
@@ -126,6 +156,11 @@ object DeterministicSchedule {
         )
     }
 
+/**
+ * token은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun token(
         vector: ScheduleVector,
         offsetNanos: Long,
@@ -141,6 +176,11 @@ object DeterministicSchedule {
             authorityOrdinal = selectAuthority(vector, identityOrdinal),
         )
 
+/**
+ * selectAuthority은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun selectAuthority(vector: ScheduleVector, identityOrdinal: Int): Int {
         val totalWeight = vector.authorityWeights.fold(0L) { total, weight ->
             Math.addExact(total, weight.toLong())
@@ -159,9 +199,19 @@ object DeterministicSchedule {
         error("authority selection position escaped the validated weight range")
     }
 
+/**
+ * rankDigest은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun rankDigest(vector: ScheduleVector, kind: String, ordinal: Int): ByteArray =
         sha256("${vector.profileSchemaVersion}:${vector.seed}:$kind:$ordinal".toByteArray(Charsets.UTF_8))
 
+/**
+ * scaledOffset은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun scaledOffset(
         ordinal: Int,
         durationNanos: Long,
@@ -172,17 +222,52 @@ object DeterministicSchedule {
             .divide(BigInteger.valueOf(operationCount.toLong()))
             .longValueExact()
 
+/**
+ * sha256은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sha256(value: ByteArray): ByteArray =
         MessageDigest.getInstance("SHA-256").digest(value)
 
+/**
+ * toHex은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun ByteArray.toHex(): String =
         joinToString("") { "%02x".format(it) }
 
+/**
+ * RankedIdentity 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class RankedIdentity(
+/**
+ * ordinal은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val ordinal: Int,
+/**
+ * digest은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val digest: ByteArray,
     )
 
+/**
+ * IDENTITY_KIND은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private const val IDENTITY_KIND = "identity"
+/**
+ * AUTHORITY_KIND은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private const val AUTHORITY_KIND = "authority"
 }

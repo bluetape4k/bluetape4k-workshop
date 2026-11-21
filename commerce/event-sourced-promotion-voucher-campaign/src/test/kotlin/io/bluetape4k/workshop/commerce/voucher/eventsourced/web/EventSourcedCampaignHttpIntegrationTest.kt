@@ -65,35 +65,145 @@ import javax.sql.DataSource
     properties = ["voucher.projection.worker.enabled=false"],
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * EventSourcedCampaignHttpIntegrationTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
+/**
+ * registration은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val registration: EventSourcedExposedDatabaseRegistration,
     dataSource: DataSource,
+/**
+ * clock은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val clock: Clock,
+/**
+ * sseProperties은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val sseProperties: EventSourcedSseProperties,
+/**
+ * identities은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val identities: SubjectIdentityService,
     @LocalServerPort port: Int,
 ) {
 
     companion object: KLogging() {
+/**
+ * POSTGRES은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val POSTGRES by lazy { PostgreSQLServer.Launcher.postgres }
+/**
+ * HTTP_TIMEOUT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val HTTP_TIMEOUT: Duration = 60.seconds()
+/**
+ * SSE_EVENT_TIMEOUT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val SSE_EVENT_TIMEOUT: Duration = 5.seconds()
+/**
+ * TENANT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val TENANT = "tenant-a"
+/**
+ * PROJECTION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val PROJECTION = "voucher-lifecycle"
+/**
+ * GENERATION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val GENERATION = 1L
+/**
+ * EVENT_CREATED_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val EVENT_CREATED_ID = "0198a1b2-c3d4-7e5f-8123-456789abc301"
+/**
+ * EVENT_ACTIVATED_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val EVENT_ACTIVATED_ID = "0198a1b2-c3d4-7e5f-8123-456789abc302"
+/**
+ * POISON_EVENT_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val POISON_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc303"
+/**
+ * POISON_READY_AGE_SECONDS은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val POISON_READY_AGE_SECONDS = 20L
+/**
+ * OPERATOR_SECRET은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val OPERATOR_SECRET = "workshop-operator-secret"
+/**
+ * OPERATOR_GUARD은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val OPERATOR_GUARD = "workshop-operator-guard"
+/**
+ * CAMPAIGN_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc300")
+/**
+ * CREATE_CAMPAIGN_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc399")
+/**
+ * SECOND_CREATE_CAMPAIGN_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val SECOND_CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc398")
+/**
+ * NOW은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-23T00:00:00Z")
 
         @JvmStatic
         @DynamicPropertySource
+/**
+ * postgresProperties은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun postgresProperties(registry: DynamicPropertyRegistry) {
             registry.add("spring.datasource.url") { POSTGRES.jdbcUrl }
             registry.add("spring.datasource.username") { POSTGRES.username.shouldNotBeNull() }
@@ -103,14 +213,39 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
         }
     }
 
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val database get() = registration.database
+/**
+ * client은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val client: WebTestClient
+/**
+ * operatorOrigin은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val operatorOrigin: String
+/**
+ * serverPort은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val serverPort: Int = port
 
     init {
         check(dataSource is HikariDataSource) { "live HTTP integration must use Spring's Hikari DataSource" }
         operatorOrigin = "http://127.0.0.1:$port"
+/**
+ * httpClient은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
 
         client = WebTestClient
@@ -175,6 +310,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live campaign GET preserves the compatible body and adds projection headers" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live campaign GET preserves the compatible body and adds projection headers`() {
         getCampaign(minimumPosition = 2)
             .exchange()
@@ -193,6 +334,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live campaign GET bounds read your writes wait and returns retry metadata" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live campaign GET bounds read your writes wait and returns retry metadata`() {
         getCampaign(minimumPosition = 3)
             .exchange()
@@ -207,6 +353,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live campaign create commits once and replays the original receipt" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live campaign create commits once and replays the original receipt`() {
         postCampaign(CREATE_CAMPAIGN_ID, "create-key-001")
             .exchange()
@@ -246,6 +397,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live campaign create rejects same key with a different fingerprint" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live campaign create rejects same key with a different fingerprint`() {
         postCampaign(CREATE_CAMPAIGN_ID, "create-key-002")
             .exchange()
@@ -261,6 +417,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "identity erasure preserves immutable history and re-registration creates a new
+ * surrogate" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `identity erasure preserves immutable history and re-registration creates a new surrogate`() {
         postCampaign(CREATE_CAMPAIGN_ID, "erase-key-001")
             .exchange()
@@ -294,6 +456,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "idempotent replay fails closed when its retained HMAC key is unavailable" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `idempotent replay fails closed when its retained HMAC key is unavailable`() {
         postCampaign(CREATE_CAMPAIGN_ID, "replay-key-001")
             .exchange()
@@ -316,6 +483,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live campaign create maps stream conflict and validation without leaking internals" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live campaign create maps stream conflict and validation without leaking internals`() {
         postCampaign(CAMPAIGN_ID, "existing-key-001")
             .exchange()
@@ -334,6 +507,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live campaign create maps malformed JSON and incompatible body types to redacted client
+ * errors" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live campaign create maps malformed JSON and incompatible body types to redacted client errors`(
         @Autowired runtimeWorkers: EventSourcedRuntimeWorkers,
     ) {
@@ -373,6 +552,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live rebuild start replays the same request and rejects a stale active token" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live rebuild start replays the same request and rejects a stale active token`() {
         startRebuild("rebuild-start-001", expectedToken = 1)
             .exchange()
@@ -400,6 +585,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live rebuild status and cancel enforce the latest generation token" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live rebuild status and cancel enforce the latest generation token`() {
         startRebuild("rebuild-start-002", expectedToken = 1)
             .exchange()
@@ -429,6 +619,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live rebuild rejects cancellation after the generation is active" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live rebuild rejects cancellation after the generation is active`() {
         postRebuildAction(
             generation = 1,
@@ -443,6 +638,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live rebuild resumes only a retryable failed generation with a fresh token" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live rebuild resumes only a retryable failed generation with a fresh token`() {
         transaction(database) {
             val rebuilds = ProjectionRebuildRepository()
@@ -464,6 +665,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live poison retry resolves the event atomically and replays its audit receipt" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live poison retry resolves the event atomically and replays its audit receipt`() {
         appendCapacityChangeAndPoison(clock.instant().minusSeconds(POISON_READY_AGE_SECONDS))
 
@@ -500,6 +707,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live poison retry exposes bounded backoff without leaking internals" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live poison retry exposes bounded backoff without leaking internals`() {
         appendCapacityChangeAndPoison(clock.instant())
 
@@ -513,6 +725,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live reconciliation reports durable positions and fences stale tokens" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live reconciliation reports durable positions and fences stale tokens`() {
         reconcile("reconciliation-001", expectedToken = 1)
             .exchange()
@@ -539,6 +756,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live operator boundary rejects ambient credentials and untrusted origins before
+ * dispatch" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live operator boundary rejects ambient credentials and untrusted origins before dispatch`() {
         client
             .post()
@@ -567,6 +790,12 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
     }
 
     @Test
+/**
+ * 이 시나리오는 "live SSE starts with snapshot and reconnects with separate position cursor" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live SSE starts with snapshot and reconnects with separate position cursor`() {
         sseProperties.heartbeatInterval shouldBeEqualTo 100.millis()
 
@@ -584,6 +813,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
         resumed.single { line -> line.startsWith("id:") }.substringAfter("id:") shouldBeEqualTo cursor
     }
 
+/**
+ * firstSseEvent은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun firstSseEvent(lastEventId: String? = null): List<String> =
         Socket("127.0.0.1", serverPort).use { socket ->
             socket.soTimeout = SSE_EVENT_TIMEOUT.toMillis().toInt()
@@ -598,12 +832,22 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
                 flush()
             }
             socket.getInputStream().bufferedReader().let { reader ->
+/**
+ * responseHeaders은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val responseHeaders = generateSequence(reader::readLine).takeWhile(String::isNotEmpty).toList()
                 responseHeaders.first().contains(" 200 ").shouldBeTrue()
                 generateSequence(reader::readLine).takeWhile(String::isNotEmpty).toList()
             }
         }
 
+/**
+ * getCampaign은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun getCampaign(minimumPosition: Long): WebTestClient.RequestHeadersSpec<*> =
         client
             .get()
@@ -612,6 +856,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
             .header(PRINCIPAL_HEADER, "principal-a")
             .header(MIN_STREAM_POSITION_HEADER, minimumPosition.toString())
 
+/**
+ * postCampaign은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun postCampaign(
         campaignId: UUID,
         idempotencyKey: String,
@@ -639,6 +888,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
                 """.trimIndent(),
             )
 
+/**
+ * startRebuild은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun startRebuild(
         idempotencyKey: String,
         expectedToken: Long,
@@ -650,6 +904,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
             .rebuildHeaders(idempotencyKey, expectedToken)
             .bodyValue("""{"targetPosition":2}""")
 
+/**
+ * getRebuild은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun getRebuild(
         generation: Long,
         idempotencyKey: String,
@@ -660,6 +919,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
             .uri("/operator/api/v1/projections/$PROJECTION/rebuilds/$generation")
             .rebuildHeaders(idempotencyKey, expectedToken)
 
+/**
+ * postRebuildAction은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun postRebuildAction(
         generation: Long,
         action: String,
@@ -672,6 +936,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
             .contentType(MediaType.APPLICATION_JSON)
             .rebuildHeaders(idempotencyKey, expectedToken)
 
+/**
+ * retryPoison은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun retryPoison(
         idempotencyKey: String,
         expectedToken: Long,
@@ -685,6 +954,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
             .contentType(MediaType.APPLICATION_JSON)
             .rebuildHeaders(idempotencyKey, expectedToken)
 
+/**
+ * reconcile은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun reconcile(
         idempotencyKey: String,
         expectedToken: Long,
@@ -695,6 +969,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
             .contentType(MediaType.APPLICATION_JSON)
             .rebuildHeaders(idempotencyKey, expectedToken)
 
+/**
+ * appendCapacityChangeAndPoison은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun appendCapacityChangeAndPoison(poisonedAt: Instant) {
         val eventStore = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
         transaction(database) {
@@ -743,6 +1022,11 @@ internal class EventSourcedCampaignHttpIntegrationTest @Autowired constructor(
             .header(OPERATOR_ROLE_HEADER, "OPERATOR")
             .header("Origin", operatorOrigin)
 
+/**
+ * event은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun event(
         eventId: String,
         eventType: String,

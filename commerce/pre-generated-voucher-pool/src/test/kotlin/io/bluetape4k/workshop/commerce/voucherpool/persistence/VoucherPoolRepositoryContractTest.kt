@@ -11,11 +11,21 @@ import java.nio.file.Files
 import java.nio.file.Path
 import javax.sql.DataSource
 
+/**
+ * VoucherPoolRepositoryContractTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolRepositoryContractTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "repository boundary does not expose JDBC connections" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `repository boundary does not expose JDBC connections`() {
         val connectionMethods = VoucherPoolRepository::class.java.declaredMethods
             .filter { method -> Connection::class.java in method.parameterTypes }
@@ -26,6 +36,11 @@ internal class VoucherPoolRepositoryContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "repository implementation is stateless and does not own a data source" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `repository implementation is stateless and does not own a data source`() {
         val dataSourceParameters = JdbcVoucherPoolRepository::class.java.declaredConstructors
             .flatMap { constructor -> constructor.parameterTypes.toList() }
@@ -36,6 +51,11 @@ internal class VoucherPoolRepositoryContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "crypto storage boundary does not expose JDBC connections" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `crypto storage boundary does not expose JDBC connections`() {
         val connectionMethods = VoucherCryptoStorage::class.java.declaredMethods
             .filter { method -> Connection::class.java in method.parameterTypes }
@@ -46,6 +66,11 @@ internal class VoucherPoolRepositoryContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "일반 voucher CRUD CAS 조회는 Exposed를 사용하고 PostgreSQL 특수 SQL은 문서화한다" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `일반 voucher CRUD CAS 조회는 Exposed를 사용하고 PostgreSQL 특수 SQL은 문서화한다`() {
         val repositorySource = sourceFile(
             "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
@@ -98,6 +123,11 @@ internal class VoucherPoolRepositoryContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "consumer command and worker paths use Exposed for generic persistence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `consumer command and worker paths use Exposed for generic persistence`() {
         val idempotencySource = sourceFile(
             "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
@@ -158,6 +188,11 @@ internal class VoucherPoolRepositoryContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "key guards and tenant cleanup use Exposed for ordinary persistence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `key guards and tenant cleanup use Exposed for ordinary persistence`() {
         val migrationSource = sourceFile(
             "commerce/pre-generated-voucher-pool/src/main/kotlin/" +
@@ -215,6 +250,11 @@ internal class VoucherPoolRepositoryContractTest {
             }
     }
 
+/**
+ * section은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun section(source: String, start: String, end: String): String {
         val startIndex = source.indexOf(start).also { check(it >= 0) { "missing source marker: $start" } }
         val endIndex = source.indexOf(end, startIndex + start.length)
@@ -222,6 +262,11 @@ internal class VoucherPoolRepositoryContractTest {
         return source.substring(startIndex, endIndex)
     }
 
+/**
+ * sourceFile은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sourceFile(relativePath: String): String {
         val current = Path.of("").toAbsolutePath().normalize()
         val path = generateSequence(current) { it.parent }

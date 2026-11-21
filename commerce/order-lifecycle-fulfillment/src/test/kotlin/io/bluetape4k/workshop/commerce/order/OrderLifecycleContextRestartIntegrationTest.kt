@@ -44,13 +44,29 @@ import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * OrderLifecycleContextRestartIntegrationTest 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OrderLifecycleContextRestartIntegrationTest {
 
     companion object: KLogging() {
+/**
+ * postgres은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
     }
 
     @Test
+/**
+ * 이 시나리오는 "state failed publication and provider inbox survive context restart and replay" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `state failed publication and provider inbox survive context restart and replay`() {
         val schema = "restart_${Base58.randomString(12).lowercase()}"
         createSchema(schema)
@@ -74,6 +90,11 @@ internal class OrderLifecycleContextRestartIntegrationTest {
         }
     }
 
+/**
+ * createFailedPublication은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createFailedPublication(context: ConfigurableApplicationContext): RestartEvidence {
         val commands = context.getBean<OrderCommandService>()
         val paymentEvents = context.getBean<PaymentEventService>()
@@ -112,15 +133,50 @@ internal class OrderLifecycleContextRestartIntegrationTest {
         return RestartEvidence(submitted.orderId, submitted.paymentAttemptId, providerEventId)
     }
 
+/**
+ * verifyAutomaticReplay은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun verifyAutomaticReplay(
         context: ConfigurableApplicationContext,
         evidence: RestartEvidence,
     ) {
+/**
+ * orders은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val orders = context.getBean<OrderRepository>()
+/**
+ * payments은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val payments = context.getBean<PaymentAttemptRepository>()
+/**
+ * reservations은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reservations = context.getBean<InventoryReservationRepository>()
+/**
+ * fulfillments은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val fulfillments = context.getBean<FulfillmentGroupRepository>()
+/**
+ * inbox은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val inbox = context.getBean<ProviderEventInboxRepository>()
+/**
+ * publications은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val publications = context.getBean<EventPublicationRepository>()
 
         read(context) {
@@ -142,6 +198,11 @@ internal class OrderLifecycleContextRestartIntegrationTest {
         }
     }
 
+/**
+ * startContext은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun startContext(schema: String): ConfigurableApplicationContext =
         SpringApplicationBuilder(OrderLifecycleApplication::class.java)
             .web(WebApplicationType.NONE)
@@ -154,14 +215,29 @@ internal class OrderLifecycleContextRestartIntegrationTest {
                 "--spring.main.banner-mode=off"
             )
 
+/**
+ * read은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <T: Any> read(
         context: ConfigurableApplicationContext,
         crossinline block: () -> T,
     ): T {
+/**
+ * transactions은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val transactions = TransactionTemplate(context.getBean<PlatformTransactionManager>())
         return transactions.execute { block() }.shouldNotBeNull()
     }
 
+/**
+ * validOrder은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validOrder() =
         SubmitOrder(
             tenantId = "tenant-restart",
@@ -173,16 +249,31 @@ internal class OrderLifecycleContextRestartIntegrationTest {
             )
         )
 
+/**
+ * createSchema은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createSchema(schema: String) =
         postgresConnection().use { connection ->
             connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
         }
 
+/**
+ * dropSchema은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun dropSchema(schema: String) =
         postgresConnection().use { connection ->
             connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
         }
 
+/**
+ * postgresConnection은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun postgresConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,
@@ -190,14 +281,39 @@ internal class OrderLifecycleContextRestartIntegrationTest {
             postgres.password.shouldNotBeNull(),
         )
 
+/**
+ * schemaJdbcUrl은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun schemaJdbcUrl(schema: String): String {
         val separator = if ('?' in postgres.jdbcUrl) '&' else '?'
         return "${postgres.jdbcUrl}${separator}currentSchema=$schema"
     }
 
+/**
+ * RestartEvidence 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class RestartEvidence(
+/**
+ * orderId은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val orderId: UUID,
+/**
+ * paymentAttemptId은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val paymentAttemptId: UUID,
+/**
+ * providerEventId은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val providerEventId: String,
     )
 }

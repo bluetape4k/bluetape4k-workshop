@@ -29,14 +29,37 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
+/**
+ * OrderRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class OrderRepository: UUIDAuditableJdbcRepository<OrderRecord, OrderTable> {
 
     companion object: KLogging()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     override val table = OrderTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: OrderRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): OrderRecord = OrderRecord(
         id = this[table.id].value,
         tenantId = this[table.tenantId],
@@ -51,6 +74,15 @@ internal class OrderRepository: UUIDAuditableJdbcRepository<OrderRecord, OrderTa
         updatedAt = this[table.updatedAt]
     )
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: OrderRecord): OrderRecord {
         table.insert {
             it[id] = record.id
@@ -64,6 +96,19 @@ internal class OrderRepository: UUIDAuditableJdbcRepository<OrderRecord, OrderTa
         return findById(record.id)
     }
 
+    /**
+     * transition은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param id 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param expectedRevision 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param from 업무 처리에 필요한 from 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param to 업무 처리에 필요한 to 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param reason 업무 처리에 필요한 reason 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun transition(
         id: UUID,
         expectedRevision: Long,
@@ -81,14 +126,38 @@ internal class OrderRepository: UUIDAuditableJdbcRepository<OrderRecord, OrderTa
 }
 
 @Repository
+/**
+ * PaymentAttemptRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class PaymentAttemptRepository: UUIDAuditableJdbcRepository<PaymentAttemptRecord, PaymentAttemptTable> {
 
     companion object: KLogging()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     override val table = PaymentAttemptTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: PaymentAttemptRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): PaymentAttemptRecord = PaymentAttemptRecord(
         id = this[table.id].value,
         orderId = this[table.orderId],
@@ -101,6 +170,15 @@ internal class PaymentAttemptRepository: UUIDAuditableJdbcRepository<PaymentAtte
         updatedAt = this[table.updatedAt]
     )
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: PaymentAttemptRecord): PaymentAttemptRecord {
         table.insert {
             it[id] = record.id
@@ -112,6 +190,15 @@ internal class PaymentAttemptRepository: UUIDAuditableJdbcRepository<PaymentAtte
         return findById(record.id)
     }
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(orderId: UUID): PaymentAttemptRecord? =
         table
             .selectAll()
@@ -121,6 +208,19 @@ internal class PaymentAttemptRepository: UUIDAuditableJdbcRepository<PaymentAtte
             .firstOrNull()
             ?.let { with(this) { it.toEntity() } }
 
+    /**
+     * transition은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param id 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param expectedRevision 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param from 업무 처리에 필요한 from 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param to 업무 처리에 필요한 to 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param providerRef 업무 처리에 필요한 providerRef 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun transition(
         id: UUID,
         expectedRevision: Long,
@@ -138,15 +238,39 @@ internal class PaymentAttemptRepository: UUIDAuditableJdbcRepository<PaymentAtte
 }
 
 @Repository
+/**
+ * InventoryReservationRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의
+ * 규칙에 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class InventoryReservationRepository:
     UUIDAuditableJdbcRepository<InventoryReservationRecord, InventoryReservationTable> {
 
     companion object: KLogging()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     override val table = InventoryReservationTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: InventoryReservationRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): InventoryReservationRecord = InventoryReservationRecord(
         id = this[table.id].value,
         orderId = this[table.orderId],
@@ -159,6 +283,15 @@ internal class InventoryReservationRepository:
         updatedAt = this[table.updatedAt]
     )
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: InventoryReservationRecord): InventoryReservationRecord {
         table.insert {
             it[id] = record.id
@@ -170,6 +303,15 @@ internal class InventoryReservationRepository:
         return findById(record.id)
     }
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(orderId: UUID): InventoryReservationRecord? =
         table
             .selectAll()
@@ -177,6 +319,19 @@ internal class InventoryReservationRepository:
             .firstOrNull()
             ?.let { with(this) { it.toEntity() } }
 
+    /**
+     * transition은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param id 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param expectedRevision 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param from 업무 처리에 필요한 from 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param to 업무 처리에 필요한 to 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param reason 업무 처리에 필요한 reason 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun transition(
         id: UUID,
         expectedRevision: Long,
@@ -194,14 +349,38 @@ internal class InventoryReservationRepository:
 }
 
 @Repository
+/**
+ * FulfillmentGroupRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class FulfillmentGroupRepository: UUIDAuditableJdbcRepository<FulfillmentGroupRecord, FulfillmentGroupTable> {
 
     companion object: KLogging()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     override val table = FulfillmentGroupTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: FulfillmentGroupRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): FulfillmentGroupRecord = FulfillmentGroupRecord(
         id = this[table.id].value,
         orderId = this[table.orderId],
@@ -215,6 +394,15 @@ internal class FulfillmentGroupRepository: UUIDAuditableJdbcRepository<Fulfillme
         updatedAt = this[table.updatedAt]
     )
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: FulfillmentGroupRecord): FulfillmentGroupRecord {
         table.insert {
             it[id] = record.id
@@ -227,6 +415,15 @@ internal class FulfillmentGroupRepository: UUIDAuditableJdbcRepository<Fulfillme
         return findById(record.id)
     }
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(orderId: UUID): List<FulfillmentGroupRecord> =
         table
             .selectAll()
@@ -234,6 +431,19 @@ internal class FulfillmentGroupRepository: UUIDAuditableJdbcRepository<Fulfillme
             .orderBy(table.groupReference)
             .map { with(this) { it.toEntity() } }
 
+    /**
+     * transition은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param id 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param expectedRevision 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param from 업무 처리에 필요한 from 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param to 업무 처리에 필요한 to 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param reason 업무 처리에 필요한 reason 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun transition(
         id: UUID,
         expectedRevision: Long,
@@ -251,11 +461,35 @@ internal class FulfillmentGroupRepository: UUIDAuditableJdbcRepository<Fulfillme
 }
 
 @Repository
+/**
+ * CancellationCaseRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class CancellationCaseRepository: UUIDAuditableJdbcRepository<CancellationCaseRecord, CancellationCaseTable> {
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     override val table = CancellationCaseTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: CancellationCaseRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): CancellationCaseRecord = CancellationCaseRecord(
         id = this[table.id].value,
         orderId = this[table.orderId],
@@ -270,6 +504,15 @@ internal class CancellationCaseRepository: UUIDAuditableJdbcRepository<Cancellat
         updatedAt = this[table.updatedAt]
     )
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: CancellationCaseRecord): CancellationCaseRecord {
         table.insert {
             it[id] = record.id
@@ -283,6 +526,15 @@ internal class CancellationCaseRepository: UUIDAuditableJdbcRepository<Cancellat
         return findById(record.id)
     }
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(orderId: UUID): List<CancellationCaseRecord> =
         table
             .selectAll()
@@ -290,6 +542,18 @@ internal class CancellationCaseRepository: UUIDAuditableJdbcRepository<Cancellat
             .orderBy(table.createdAt)
             .map { it.toEntity() }
 
+    /**
+     * transition은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param id 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param expectedRevision 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param from 업무 처리에 필요한 from 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param to 업무 처리에 필요한 to 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun transition(
         id: UUID,
         expectedRevision: Long,
@@ -305,11 +569,34 @@ internal class CancellationCaseRepository: UUIDAuditableJdbcRepository<Cancellat
 }
 
 @Repository
+/**
+ * RefundCaseRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class RefundCaseRepository: UUIDAuditableJdbcRepository<RefundCaseRecord, RefundCaseTable> {
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     override val table = RefundCaseTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: RefundCaseRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): RefundCaseRecord = RefundCaseRecord(
         id = this[table.id].value,
         orderId = this[table.orderId],
@@ -322,6 +609,15 @@ internal class RefundCaseRepository: UUIDAuditableJdbcRepository<RefundCaseRecor
         updatedAt = this[table.updatedAt]
     )
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: RefundCaseRecord): RefundCaseRecord {
         table.insert {
             it[id] = record.id
@@ -333,6 +629,15 @@ internal class RefundCaseRepository: UUIDAuditableJdbcRepository<RefundCaseRecor
         return findById(record.id)
     }
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(orderId: UUID): List<RefundCaseRecord> =
         table
             .selectAll()
@@ -340,6 +645,18 @@ internal class RefundCaseRepository: UUIDAuditableJdbcRepository<RefundCaseRecor
             .orderBy(table.createdAt)
             .map { it.toEntity() }
 
+    /**
+     * transition은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param id 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param expectedRevision 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param from 업무 처리에 필요한 from 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param to 업무 처리에 필요한 to 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun transition(
         id: UUID,
         expectedRevision: Long,
@@ -355,11 +672,34 @@ internal class RefundCaseRepository: UUIDAuditableJdbcRepository<RefundCaseRecor
 }
 
 @Repository
+/**
+ * OrderLineRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class OrderLineRepository: LongAuditableJdbcRepository<OrderLineRecord, OrderLineTable> {
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     override val table = OrderLineTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: OrderLineRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity(): OrderLineRecord = OrderLineRecord(
         id = this[table.id].value,
         lineId = this[table.lineId],
@@ -374,6 +714,15 @@ internal class OrderLineRepository: LongAuditableJdbcRepository<OrderLineRecord,
         updatedAt = this[table.updatedAt]
     )
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: OrderLineRecord): OrderLineRecord {
         val id = table.insertAndGetId {
             it[lineId] = record.lineId
@@ -386,6 +735,15 @@ internal class OrderLineRepository: LongAuditableJdbcRepository<OrderLineRecord,
         return findById(id)
     }
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(orderId: UUID): List<OrderLineRecord> =
         table
             .selectAll()
@@ -393,6 +751,15 @@ internal class OrderLineRepository: LongAuditableJdbcRepository<OrderLineRecord,
             .orderBy(table.id)
             .map { it.toEntity() }
 
+    /**
+     * findByLineId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를 추정하지
+     * 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lineId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByLineId(lineId: UUID): OrderLineRecord? =
         table
             .selectAll()
@@ -400,6 +767,14 @@ internal class OrderLineRepository: LongAuditableJdbcRepository<OrderLineRecord,
             .firstOrNull()
             ?.toEntity()
 
+    /**
+     * cancel은 주문 라이프사이클과 fulfillment의 취소·보상·종료 전이를 허용된 terminal 규칙에 따라 적용하고, 이미 처리된 요청은 멱등하게 유지합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lineId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param quantity 업무 처리에 필요한 quantity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun cancel(
         lineId: UUID,
         quantity: Int,
@@ -412,10 +787,25 @@ internal class OrderLineRepository: LongAuditableJdbcRepository<OrderLineRecord,
 }
 
 @Repository
+/**
+ * FulfillmentLineRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class FulfillmentLineRepository {
 
     companion object: KLogging()
 
+    /**
+     * save은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun save(record: FulfillmentLineRecord): Boolean =
         FulfillmentLineTable.insertIgnore {
             it[fulfillmentGroupId] = record.fulfillmentGroupId
@@ -423,6 +813,15 @@ internal class FulfillmentLineRepository {
             it[quantity] = record.quantity
         }.insertedCount == 1
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(orderId: UUID): List<FulfillmentLineRecord> {
         val groupIds = FulfillmentGroupTable
             .selectAll()
@@ -438,11 +837,30 @@ internal class FulfillmentLineRepository {
             .map(::toRecord)
     }
 
+    /**
+     * findByLineId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를 추정하지
+     * 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lineId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByLineId(lineId: UUID): List<FulfillmentLineRecord> =
         FulfillmentLineTable.selectAll()
             .where { FulfillmentLineTable.lineId eq lineId }
             .map(::toRecord)
 
+    /**
+     * cancel은 주문 라이프사이클과 fulfillment의 취소·보상·종료 전이를 허용된 terminal 규칙에 따라 적용하고, 이미 처리된 요청은 멱등하게 유지합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lineId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param cancellableGroupIds 업무 처리에 필요한 cancellableGroupIds 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야
+     * 합니다.
+     * @param cancelledQuantity 업무 처리에 필요한 cancelledQuantity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun cancel(
         lineId: UUID,
         cancellableGroupIds: Set<UUID>,
@@ -480,6 +898,14 @@ internal class FulfillmentLineRepository {
         return remaining == 0
     }
 
+    /**
+     * toRecord은 주문 라이프사이클과 fulfillment 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록
+     * 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param row 업무 처리에 필요한 row 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun toRecord(row: ResultRow): FulfillmentLineRecord =
         FulfillmentLineRecord(
             fulfillmentGroupId = row[FulfillmentLineTable.fulfillmentGroupId],
@@ -489,14 +915,38 @@ internal class FulfillmentLineRepository {
 }
 
 @Repository
+/**
+ * LifecycleAuditRepository은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class LifecycleAuditRepository: LongJdbcRepository<LifecycleAuditRecord> {
 
     companion object: KLogging()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     override val table = LifecycleAuditTable
 
+    /**
+     * extractId은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param entity 업무 처리에 필요한 entity 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     override fun extractId(entity: LifecycleAuditRecord) = entity.id
 
+    /**
+     * toEntity은 주문 라이프사이클과 fulfillment 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+     * 필드를 함께 보존합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun ResultRow.toEntity() = LifecycleAuditRecord(
         id = this[table.id].value,
         eventId = this[table.eventId],
@@ -511,6 +961,16 @@ internal class LifecycleAuditRepository: LongJdbcRepository<LifecycleAuditRecord
         occurredAt = this[table.occurredAt]
     )
 
+    /**
+     * append은 주문 라이프사이클과 fulfillment 변경을 outbox·이벤트 계약으로 전달하되 commit 순서, partition key, 중복 소비 방지와
+     * 재전송 결과를
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param record 주문 라이프사이클과 fulfillment 상태 변경을 나타내는 이벤트 또는 저장 레코드입니다. 순서·revision·중복 여부를 보존해야
+     * 합니다.
+     */
     fun append(record: LifecycleAuditRecord): LifecycleAuditRecord {
         val id = table.insertAndGetId {
             it[eventId] = record.eventId
@@ -527,6 +987,16 @@ internal class LifecycleAuditRepository: LongJdbcRepository<LifecycleAuditRecord
         return findById(id)
     }
 
+    /**
+     * findByOrderId은 주문 라이프사이클과 fulfillment의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재
+     * 상태를
+     * 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param afterId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun findByOrderId(
         orderId: UUID,
         afterId: Long = 0,

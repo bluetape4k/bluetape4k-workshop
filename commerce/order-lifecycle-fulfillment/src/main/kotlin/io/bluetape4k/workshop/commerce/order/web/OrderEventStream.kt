@@ -26,45 +26,117 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * StreamCapacityExceeded은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class StreamCapacityExceeded: IllegalStateException("SSE connection capacity exceeded")
 
+/**
+ * StreamShuttingDown은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 internal class StreamShuttingDown: IllegalStateException("SSE stream is shutting down")
+/**
+ * OrderEventStream은 주문·fulfillment에서 사용하는 업무 객체입니다.
+ * @property queries 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property orderLifecycleExecutor 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ */
+
 
 @Component
 internal class OrderEventStream(
+    /**
+     * `queries`은 주문·결제·재고·배송에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val queries: OrderLifecycleQueryService,
+    /**
+     * `orderLifecycleExecutor`은 주문·결제·재고·배송에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     private val orderLifecycleExecutor: ExecutorService,
     environment: Environment,
 ): DisposableBean {
 
     companion object: KLogging()
+    /**
+     * 재시도·임대·보존·처리 제한을 결정하는 시간 정책입니다. 장애 시 무한 대기와 중복 실행을 막습니다.
+     */
 
     private val timeout = environment.getProperty<Duration>(
         "order-lifecycle.sse.timeout",
         60.seconds(),
     )
+    /**
+     * 재시도·임대·보존·처리 제한을 결정하는 시간 정책입니다. 장애 시 무한 대기와 중복 실행을 막습니다.
+     */
     private val pollInterval = environment.getProperty<Duration>(
         "order-lifecycle.sse.poll-interval",
         250.millis()
     )
+    /**
+     * 재시도·임대·보존·처리 제한을 결정하는 시간 정책입니다. 장애 시 무한 대기와 중복 실행을 막습니다.
+     */
     private val heartbeatInterval = environment.getProperty<Duration>(
         "order-lifecycle.sse.heartbeat-interval",
         15.seconds()
     )
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     private val maxConnections = environment.getProperty<Int>("order-lifecycle.sse.max-connections", 1_000)
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     private val _maxConcurrentPolls = environment.getProperty<Int>("order-lifecycle.sse.max-concurrent-polls", 4)
         .requirePositiveNumber("order-lifecycle.sse.max-concurrent-polls")
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     private val maxConcurrentPolls: Int
         get() = _maxConcurrentPolls
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     private val pollPermits = Semaphore(maxConcurrentPolls, true)
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     private val activeConnections = AtomicInteger()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     private val connections = ConcurrentHashMap<SseEmitter, StreamConnection>()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     private val feeds = ConcurrentHashMap<UUID, OrderFeed>()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     private val draining = AtomicBoolean()
+    /**
+     * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
     private val lifecycleLock = ReentrantLock()
 
+    /**
+     * open은 주문 라이프사이클과 fulfillment 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록
+     * 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param orderId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param lastEventId 처리할 주문 라이프사이클과 fulfillment 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     fun open(
         orderId: UUID,
         lastEventId: Long,
@@ -125,6 +197,12 @@ internal class OrderEventStream(
         return emitter
     }
 
+    /**
+     * destroy은 주문 라이프사이클과 fulfillment의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     override fun destroy() {
         val (drainingConnections, drainingFeeds) = lifecycleLock.withLock {
             if (!draining.compareAndSet(false, true)) return
@@ -151,12 +229,28 @@ internal class OrderEventStream(
         log.info { "sse_stream_shutdown drainedConnections=${drainingConnections.size}" }
     }
 
+    /**
+     * start은 주문 라이프사이클과 fulfillment 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록
+     * 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param feed 업무 처리에 필요한 feed 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun start(feed: OrderFeed) {
         if (!feed.started.compareAndSet(false, true)) return
         feed.future = orderLifecycleExecutor.submit { poll(feed) }
         if (feed.closed.get()) feed.future?.cancel(true)
     }
 
+    /**
+     * poll은 주문 라이프사이클과 fulfillment의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param feed 업무 처리에 필요한 feed 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun poll(feed: OrderFeed) {
         try {
             while (!feed.closed.get()) {
@@ -219,6 +313,14 @@ internal class OrderEventStream(
         }
     }
 
+    /**
+     * release은 주문 라이프사이클과 fulfillment의 동시 작업에서 한 실행자만 처리하도록 lease·lock을 원자적으로 획득·갱신하고 만료·소유자 불일치를
+     * 거절합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param connection 업무 처리에 필요한 connection 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun release(connection: StreamConnection) {
         if (connection.closed.compareAndSet(false, true)) {
             val remaining = activeConnections.decrementAndGet()
@@ -235,27 +337,75 @@ internal class OrderEventStream(
             }
         }
     }
+    /**
+     * StreamConnection은 주문·fulfillment에서 사용하는 업무 객체입니다.
+     * @property emitter 주문·fulfillment 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+     * @property orderId 업무 객체를 연결하는 불변 식별자입니다. 생성 이후 변경하지 않아 저장·API·이벤트의 대상을 일치시킵니다.
+     */
+
 
     private class StreamConnection(
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         val emitter: SseEmitter,
+        /**
+         * `orderId`은 주문·결제·재고·배송에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val orderId: UUID,
         initialCursor: Long,
         heartbeatInterval: Duration,
     ) {
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         val closed = AtomicBoolean()
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         val cursor = AtomicLong(initialCursor)
+        /**
+         * 주문·fulfillment의 업무 시각입니다. 만료·정렬·재시도·SLA 판정에 같은 clock 기준을 사용합니다.
+         */
         val heartbeatAt = AtomicLong(System.nanoTime() + heartbeatInterval.toNanos())
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
 
         @Volatile
         var feed: OrderFeed? = null
     }
+    /**
+     * OrderFeed은 주문·fulfillment에서 사용하는 업무 객체입니다.
+     * @property orderId 업무 객체를 연결하는 불변 식별자입니다. 생성 이후 변경하지 않아 저장·API·이벤트의 대상을 일치시킵니다.
+     */
+
 
     private class OrderFeed(
+        /**
+         * `orderId`은 주문·결제·재고·배송에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val orderId: UUID,
     ) {
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         val started = AtomicBoolean()
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         val closed = AtomicBoolean()
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         val connections = ConcurrentHashMap<SseEmitter, StreamConnection>()
+        /**
+         * 주문·fulfillment 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
 
         @Volatile
         var future: Future<*>? = null

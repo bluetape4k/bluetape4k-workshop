@@ -6,6 +6,30 @@ This Spring Boot MVC reference application shows how a high-contention voucher c
 
 > Workshop boundary: the server binds to loopback and uses local headers instead of production IAM, OAuth, or CSRF infrastructure. Never expose the operator routes or workshop secrets on a non-loopback interface.
 
+## Business requirements and design decisions
+
+Treat a voucher as scarce inventory, not as a string returned by a controller.
+The campaign may receive the same request several times, a review may finish
+after allocation, and an operator must be able to explain every capacity
+change. The specification
+`docs/superpowers/specs/2026-07-19-issue-534-promotion-voucher-campaign-design.md`
+therefore makes these rules explicit:
+
+| Business requirement | Design direction | Recovery meaning |
+|---|---|---|
+| One campaign capacity must not be spent twice | Lock campaign capacity before the voucher row and commit the allocation with its revision | Redis admission/Bloom signals may reduce load but never authorize allocation |
+| A lost HTTP response must be safe to retry | Acquire an owner-scoped receipt from `Idempotency-Key`; store a digest and closed response descriptor | Same request replays the original status/body; a different payload is a conflict |
+| Review and code delivery must be observable | Separate allocated, review-pending, approved, acknowledged, redeemed, released, expired, and revoked states | A delayed review or failed delivery is a durable state to resume, not an implicit retry loop |
+| Asynchronous publication must not hide a capacity error | Persist an outbox/inbox or durable delivery record and reconcile from PostgreSQL | Replayed events are deduplicated; reconciliation reports drift instead of inventing vouchers |
+| Operators must recover boundedly | Expose authenticated, loopback-only commands with limits, audit records, and safe redaction | A worker restart or Redis outage changes throughput/lag, not the PostgreSQL decision |
+
+The README's curl walkthrough is intentionally paired with
+`VoucherEndToEndIntegrationTest`, `VoucherConcurrencyIntegrationTest`,
+`VoucherContextRestartIntegrationTest`, and `RedisUnavailableBootIntegrationTest`.
+Together they prove the customer journey, competing allocation, response-loss
+replay, process restart, and advisory Redis degradation. They do not prove
+production IAM, a real provider, or internet-scale throughput.
+
 ## What This Teaches
 
 - Run Tomcat MVC on Java 25 virtual threads while limiting HikariCP to 16 connections.

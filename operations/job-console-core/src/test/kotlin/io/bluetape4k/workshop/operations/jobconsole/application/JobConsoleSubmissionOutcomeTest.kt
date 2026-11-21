@@ -25,10 +25,20 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*
 
+/**
+ * service outcome을 HTTP response로 매핑하는 경계를 검증한다.
+ * 최초 owner, replay, conflict, bounded wait timeout/overflow, readiness와
+ * shutdown admission이 호출자에게 안정적인 status/code/header로 보이는지 확인한다.
+ */
 class JobConsoleSubmissionOutcomeTest {
 
     companion object: KLogging()
 
+/**
+ * snapshot은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val snapshot = JobSnapshot(
         jobId = UUID.fromString("0198af23-7b9c-7000-8000-000000000001"),
         jobType = JobType.DOCUMENT_EXPORT,
@@ -41,6 +51,8 @@ class JobConsoleSubmissionOutcomeTest {
     )
 
     @Test
+    /** owner와 replay는 body를 공유하고 replay 여부만 명시적인 header로 구분한다. */
+    /** owner와 replay는 body를 공유하고 replay 여부만 명시적인 header로 구분한다. */
     fun `owner and replay preserve body and differ only in replay header`() {
         val owner = JobSubmissionHttpMapper.map(JobSubmissionOutcome.OwnerCompleted(snapshot), requestId = "owner-id")
         val replay = JobSubmissionHttpMapper.map(JobSubmissionOutcome.Replayed(snapshot), requestId = "replay-id")
@@ -57,6 +69,8 @@ class JobConsoleSubmissionOutcomeTest {
     }
 
     @Test
+    /** 각 실패 outcome의 stable problem code와 호출자 backoff용 retry header를 검증한다. */
+    /** 각 실패 outcome의 stable problem code와 호출자 backoff용 retry header를 검증한다. */
     fun `problem matrix uses stable codes and retry headers`() {
         val cases = listOf(
             JobSubmissionOutcome.Conflict to Triple(409, JobProblemCode.IDEMPOTENCY_KEY_REUSED, null),
@@ -92,6 +106,8 @@ class JobConsoleSubmissionOutcomeTest {
 
     @Test
     @Tag("integration")
+    /** 같은 canonical request를 재전송해도 job/outbox/history durable row가 중복되지 않는다. */
+    /** 같은 canonical request를 재전송해도 job/outbox/history durable row가 중복되지 않는다. */
     fun `service returns a stable replay outcome without duplicating durable rows`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -118,6 +134,8 @@ class JobConsoleSubmissionOutcomeTest {
 
     @Test
     @Tag("integration")
+    /** policy fingerprint가 맞지 않거나 admission을 닫으면 신규 submission을 fail closed한다. */
+    /** policy fingerprint가 맞지 않거나 admission을 닫으면 신규 submission을 fail closed한다. */
     fun `readiness exposes policy mismatch and closed admission rejects new submissions`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()

@@ -68,14 +68,39 @@ import kotlin.concurrent.write
     JobConsoleSpringOperationsController::class,
     JobConsoleProblemHandler::class,
 )
+/**
+ * SpringJobConsoleProfileApplication 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class SpringJobConsoleProfileApplication
 
+/**
+ * SpringReplacementOutcome 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal sealed interface SpringReplacementOutcome {
+/**
+ * Claimed 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     data class Claimed(val job: ClaimedJob): SpringReplacementOutcome
 
+/**
+ * Completed 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     data object Completed: SpringReplacementOutcome
 }
 
+/**
+ * awaitSpringReplacement은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 internal fun awaitSpringReplacement(
     timeout: Duration,
     pollInterval: Duration,
@@ -91,19 +116,61 @@ internal fun awaitSpringReplacement(
             ?: if (isCompleted()) SpringReplacementOutcome.Completed else null
     }
 
+/**
+ * `SpringJobConsoleProfileAction`은 업무 분기용 제한된 값 집합입니다.
+ * 현재 상태와 aggregate revision을 검증한 뒤 허용된 전이만 실행하는 명령·신호 계약입니다.
+ */
 internal enum class SpringJobConsoleProfileAction(
+/**
+ * profileId은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val profileId: String,
 ) {
+    /**
+     * `SpringJobConsoleProfileAction.BURST`은 `burst` 업무 상황을 나타냅니다. 현재 상태와 aggregate revision을 검증한
+     * 뒤 허용된 전이만 실행합니다.
+     */
     BURST("burst"),
+    /**
+     * `SpringJobConsoleProfileAction.DUPLICATE_STORM`은 `duplicate storm` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     DUPLICATE_STORM("duplicate-storm"),
+    /**
+     * `SpringJobConsoleProfileAction.REDIS_PATH_OUTAGE`은 `redis path outage` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     REDIS_PATH_OUTAGE("redis-path-outage"),
+    /**
+     * `SpringJobConsoleProfileAction.REDIS_KEY_LOSS`은 `redis key loss` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     REDIS_KEY_LOSS("redis-key-loss"),
+    /**
+     * `SpringJobConsoleProfileAction.SLOW_PROVIDER`은 `slow provider` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     SLOW_PROVIDER("slow-provider"),
+    /**
+     * `SpringJobConsoleProfileAction.WORKER_RESTART`은 `worker restart` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     WORKER_RESTART("worker-restart"),
+    /**
+     * `SpringJobConsoleProfileAction.DUPLICATE_DELIVERY`은 `duplicate delivery` 업무 상황을 나타냅니다. 현재
+     * 상태와 aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     DUPLICATE_DELIVERY("duplicate-delivery"),
     ;
 
     companion object {
+/**
+ * resolve은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun resolve(profileId: String): SpringJobConsoleProfileAction {
             val validProfileId = profileId.requireNotBlank("profileId")
             return entries.singleOrNull { it.profileId == validProfileId }
@@ -112,69 +179,285 @@ internal enum class SpringJobConsoleProfileAction(
     }
 }
 
+/**
+ * SpringJobConsoleStaleAttemptEvidence 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class SpringJobConsoleStaleAttemptEvidence(
+/**
+ * pausedConnections은 테스트 fixture가 보관하는 pausedConnections 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val pausedConnections: Int,
+/**
+ * pausedTransactions은 테스트 fixture가 보관하는 pausedTransactions 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val pausedTransactions: Int,
+/**
+ * pausedLocks은 테스트 fixture가 보관하는 pausedLocks 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val pausedLocks: Int,
+/**
+ * oldLeaseToken은 테스트 fixture가 보관하는 oldLeaseToken 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val oldLeaseToken: String,
+/**
+ * pendingCompletedChunk은 테스트 fixture가 보관하는 pendingCompletedChunk 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val pendingCompletedChunk: Long,
+/**
+ * staleErrorCode은 테스트 fixture가 보관하는 staleErrorCode 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val staleErrorCode: JobProblemCode,
+/**
+ * contextExecutorStopped은 테스트 fixture가 보관하는 contextExecutorStopped 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val contextExecutorStopped: Boolean,
+/**
+ * lateEffectCount은 테스트 fixture가 보관하는 lateEffectCount 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val lateEffectCount: Long,
+/**
+ * lateReceiptCount은 테스트 fixture가 보관하는 lateReceiptCount 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val lateReceiptCount: Long,
 )
 
+/**
+ * SpringRedisPathEvidence 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class SpringRedisPathEvidence(
+/**
+ * effectiveEndpointRoutedThroughProxy은 테스트 fixture가 보관하는 effectiveEndpointRoutedThroughProxy 업무
+ * 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val effectiveEndpointRoutedThroughProxy: Boolean,
+/**
+ * oldConnectionFailureObserved은 테스트 fixture가 보관하는 oldConnectionFailureObserved 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val oldConnectionFailureObserved: Boolean,
+/**
+ * newConnectionFailureObserved은 테스트 fixture가 보관하는 newConnectionFailureObserved 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val newConnectionFailureObserved: Boolean,
+/**
+ * recovered은 테스트 fixture가 보관하는 recovered 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val recovered: Boolean,
+/**
+ * durableCancelsDuringOutage은 테스트 fixture가 보관하는 durableCancelsDuringOutage 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val durableCancelsDuringOutage: Int,
 )
 
+/**
+ * SpringRedisKeyLossEvidence 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class SpringRedisKeyLossEvidence(
+/**
+ * deletedKeyCount은 테스트 fixture가 보관하는 deletedKeyCount 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val deletedKeyCount: Int,
+/**
+ * durableCancelsAfterKeyLoss은 테스트 fixture가 보관하는 durableCancelsAfterKeyLoss 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val durableCancelsAfterKeyLoss: Int,
 )
 
+/**
+ * SpringJobConsoleLiveAdapter 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class SpringJobConsoleLiveAdapter private constructor(
+/**
+ * runId은 테스트 fixture가 보관하는 runId 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val runId: String,
+/**
+ * profile은 테스트 fixture가 보관하는 profile 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val profile: HighContentionProfile,
+/**
+ * fixture은 테스트 fixture가 보관하는 fixture 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val fixture: JobConsoleContainerFixture,
+/**
+ * topology은 테스트 fixture가 보관하는 topology 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val topology: JobConsoleProxiedTopology,
+/**
+ * journal은 테스트 fixture가 보관하는 journal 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val journal: HighContentionJournal,
+/**
+ * journalRoot은 테스트 fixture가 보관하는 journalRoot 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val journalRoot: Path,
 ): JobConsoleLiveProfileAdapter {
 
+/**
+ * action은 테스트 fixture가 보관하는 action 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val action = SpringJobConsoleProfileAction.resolve(profile.profileId)
+/**
+ * lifecycleLock은 테스트 fixture가 보관하는 lifecycleLock 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val lifecycleLock = ReentrantReadWriteLock(true)
+/**
+ * winners은 테스트 fixture가 보관하는 winners 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val winners = ConcurrentHashMap<Int, Boolean>()
+/**
+ * jobIdsByIdentity은 테스트 fixture가 보관하는 jobIdsByIdentity 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val jobIdsByIdentity = ConcurrentHashMap<Int, UUID>()
+/**
+ * scenariosByIdentity은 테스트 fixture가 보관하는 scenariosByIdentity 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val scenariosByIdentity = ConcurrentHashMap<Int, JobConsoleScenario>()
+/**
+ * deliveredEventIds은 테스트 fixture가 보관하는 deliveredEventIds 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val deliveredEventIds = ConcurrentHashMap.newKeySet<UUID>()
+/**
+ * restartStarted은 테스트 fixture가 보관하는 restartStarted 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val restartStarted = AtomicBoolean()
+/**
+ * slowProviderStarted은 테스트 fixture가 보관하는 slowProviderStarted 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val slowProviderStarted = AtomicBoolean()
+/**
+ * outageActive은 테스트 fixture가 보관하는 outageActive 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val outageActive = AtomicBoolean()
+/**
+ * durableCancelsDuringOutage은 테스트 fixture가 보관하는 durableCancelsDuringOutage 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val durableCancelsDuringOutage = AtomicInteger()
+/**
+ * durableCancelsAfterKeyLoss은 테스트 fixture가 보관하는 durableCancelsAfterKeyLoss 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val durableCancelsAfterKeyLoss = AtomicInteger()
+/**
+ * ownedRedisNamespace은 테스트 fixture가 보관하는 ownedRedisNamespace 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val ownedRedisNamespace =
         "hc:v1:$runId:job-spring:redis-key-loss:"
 
     @Volatile
+/**
+ * measuredBaseline은 테스트 fixture가 보관하는 measuredBaseline 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private var measuredBaseline: JobConsoleAuthorityBaseline? = null
 
     @Volatile
+/**
+ * application은 테스트 fixture가 보관하는 application 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private var application: RunningSpringJobConsole = startApplication()
 
     @Volatile
+/**
+ * staleAttemptEvidence은 테스트 fixture가 보관하는 staleAttemptEvidence 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     var staleAttemptEvidence: SpringJobConsoleStaleAttemptEvidence? = null
         private set
 
     @Volatile
+/**
+ * redisPathEvidence은 테스트 fixture가 보관하는 redisPathEvidence 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     var redisPathEvidence: SpringRedisPathEvidence? = null
         private set
 
     @Volatile
+/**
+ * redisKeyLossEvidence은 테스트 fixture가 보관하는 redisKeyLossEvidence 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     var redisKeyLossEvidence: SpringRedisKeyLossEvidence? = null
         private set
 
@@ -190,6 +473,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * warmUp은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun warmUp(identity: WorkloadIdentity) {
         lifecycleLock.read {
             val scenario = JobConsoleScenario.fromSeed(identity.namespace, identity.ordinal, workUnits = 1)
@@ -199,6 +487,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * snapshotBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun snapshotBaseline(): String =
         lifecycleLock.write {
             authorityBaseline().also { measuredBaseline = it }.encode().also {
@@ -208,6 +501,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             }
         }
 
+/**
+ * execute은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun execute(
         token: ScheduleToken,
         identity: WorkloadIdentity,
@@ -238,6 +536,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             else -> lifecycleLock.read { executeLiveAction(token, identity) }
         }
 
+/**
+ * injectDeclaredFailure은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun injectDeclaredFailure() {
         when (action) {
             SpringJobConsoleProfileAction.REDIS_PATH_OUTAGE -> injectRedisPathOutage()
@@ -246,6 +549,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * authorityDelta은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun authorityDelta(): JobConsoleAuthorityBaseline {
         val baseline = checkNotNull(measuredBaseline) { "measured baseline was not captured" }
         val current = lifecycleLock.read { authorityBaseline() }
@@ -256,9 +564,19 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         )
     }
 
+/**
+ * winner은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun winner(token: ScheduleToken): Boolean =
         winners[token.stableOrdinal] == true
 
+/**
+ * profileEvidence은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun profileEvidence(): String =
         lifecycleLock.read {
             val profileEvidence = when (action) {
@@ -290,6 +608,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                     "redisProxy=${application.redisUri == topology.redisUri}$profileEvidence"
         }
 
+/**
+ * assertProfileInvariants은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun assertProfileInvariants(delta: JobConsoleAuthorityBaseline) {
         check(delta.jobs > 0) { "measured workload did not create durable Job authority" }
         check(delta.effects > 0) { "measured workload did not create durable history" }
@@ -356,6 +679,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * close은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun close() {
         var failure: Throwable? = null
         listOf<() -> Unit>(
@@ -374,6 +702,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         failure?.let { throw it }
     }
 
+/**
+ * executeLiveAction은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun executeLiveAction(
         token: ScheduleToken,
         identity: WorkloadIdentity,
@@ -429,6 +762,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * submitAndComplete은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun submitAndComplete(
         token: ScheduleToken,
         identity: WorkloadIdentity,
@@ -442,6 +780,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         return WorkloadTerminalDisposition.COMPLETED
     }
 
+/**
+ * completeThroughOwnedWorker은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun completeThroughOwnedWorker(jobId: UUID) {
         val deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos()
         do {
@@ -452,6 +795,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         error("context-owned worker did not complete job[$jobId]")
     }
 
+/**
+ * runFencedAttemptScenario은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runFencedAttemptScenario(
         restartApplication: Boolean,
         identity: WorkloadIdentity,
@@ -530,6 +878,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * awaitReplacement은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitReplacement(
         tenantId: String,
         jobId: UUID,
@@ -541,6 +894,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             isCompleted = { application.repository.load(jobId)?.state?.terminal == true },
         )
 
+/**
+ * assertStaleAttemptEvidence은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertStaleAttemptEvidence() {
         val evidence = checkNotNull(staleAttemptEvidence)
         check(evidence.pausedConnections == 0)
@@ -554,6 +912,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         check(evidence.lateReceiptCount == 0L)
     }
 
+/**
+ * injectRedisPathOutage은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun injectRedisPathOutage() {
         val oldConnection = topology.openRedisConnection()
         check(oldConnection.ping() == "PONG")
@@ -585,6 +948,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         )
     }
 
+/**
+ * awaitRedisRecovery은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitRedisRecovery(): Boolean {
         return runCatching {
             HighContentionAwait.condition(
@@ -600,6 +968,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }.getOrDefault(false)
     }
 
+/**
+ * seedOwnedRedisKeys은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun seedOwnedRedisKeys() {
         RedisClient.create(topology.redisUri).use { client ->
             client.connect().use { connection ->
@@ -610,6 +983,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * deleteOwnedRedisKeys은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun deleteOwnedRedisKeys() {
         RedisClient.create(topology.redisUri).use { client ->
             client.connect().use { connection ->
@@ -628,6 +1006,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * startApplication은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun startApplication(): RunningSpringJobConsole {
         val context = SpringApplication(SpringJobConsoleProfileApplication::class.java).apply {
             setAdditionalProfiles("demo")
@@ -672,6 +1055,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * closeApplication은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun closeApplication(running: RunningSpringJobConsole) {
         try {
             if (!running.context.isActive) return
@@ -688,6 +1076,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * createProfileOwnedDataSource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createProfileOwnedDataSource(): HikariDataSource =
         HikariDataSource(
             HikariConfig().apply {
@@ -700,24 +1093,59 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             },
         )
 
+/**
+ * authorityBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun authorityBaseline(): JobConsoleAuthorityBaseline =
         JobConsoleAuthorityQueries.baseline(application.dataSource)
 
+/**
+ * authorityBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun authorityBaseline(jobId: UUID): JobConsoleAuthorityBaseline =
         JobConsoleAuthorityQueries.baseline(application.dataSource, jobId)
 
+/**
+ * duplicateOutboxLogicalEventCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun duplicateOutboxLogicalEventCount(): Long =
         JobConsoleAuthorityQueries.duplicateOutboxLogicalEventCount(application.dataSource)
 
+/**
+ * burstQueueViolationCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun burstQueueViolationCount(): Long =
         JobConsoleAuthorityQueries.burstQueueViolationCount(application.dataSource)
 
+/**
+ * activeJobCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activeJobCount(): Long =
         JobConsoleAuthorityQueries.activeJobCount(application.dataSource)
 
+/**
+ * queueVersionDivergenceCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun queueVersionDivergenceCount(): Long =
         JobConsoleAuthorityQueries.queueVersionDivergenceCount(application.dataSource)
 
+/**
+ * scenarioFor은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun scenarioFor(
         token: ScheduleToken,
         identity: WorkloadIdentity,
@@ -739,6 +1167,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     }
 
     companion object {
+/**
+ * create은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun create(
             runId: String,
             profile: HighContentionProfile,
@@ -792,6 +1225,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             }
         }
 
+/**
+ * dockerResources은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun dockerResources(
             runId: String,
             profileId: String,
@@ -802,6 +1240,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 toxiproxy = dockerResource(runId, profileId, "spring-redis-toxiproxy", "container"),
             )
 
+/**
+ * dockerResource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun dockerResource(
             runId: String,
             profileId: String,
@@ -821,31 +1264,116 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     }
 }
 
+/**
+ * RunningSpringJobConsole 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class RunningSpringJobConsole(
+/**
+ * context은 테스트 fixture가 보관하는 context 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val context: ConfigurableApplicationContext,
+/**
+ * dataSource은 테스트 fixture가 보관하는 dataSource 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val dataSource: HikariDataSource,
+/**
+ * repository은 테스트 fixture가 보관하는 repository 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val repository: JobRepository,
+/**
+ * outboxRepository은 테스트 fixture가 보관하는 outboxRepository 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val outboxRepository: JobOutboxRepository,
+/**
+ * workerEngine은 테스트 fixture가 보관하는 workerEngine 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val workerEngine: JobWorkerEngine,
+/**
+ * workerExecutor은 테스트 fixture가 보관하는 workerExecutor 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val workerExecutor: ExecutorService,
+/**
+ * cancelSignal은 테스트 fixture가 보관하는 cancelSignal 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val cancelSignal: CancelSignal,
+/**
+ * redisUri은 테스트 fixture가 보관하는 redisUri 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val redisUri: String,
+/**
+ * http은 테스트 fixture가 보관하는 http 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val http: SpringJobConsoleHttpClient,
 )
 
+/**
+ * SpringJobConsoleHttpSnapshot 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class SpringJobConsoleHttpSnapshot(
+/**
+ * jobId은 테스트 fixture가 보관하는 jobId 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val jobId: UUID,
+/**
+ * state은 테스트 fixture가 보관하는 state 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     val state: String,
 )
 
+/**
+ * SpringJobConsoleHttpClient 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class SpringJobConsoleHttpClient(
+/**
+ * baseUri은 테스트 fixture가 보관하는 baseUri 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val baseUri: URI,
+/**
+ * client은 테스트 fixture가 보관하는 client 업무 값입니다.
+ *
+ * 저장소·이벤트·API 응답에서 같은 의미를 유지해야 하며, 재시도와 복구 시에도 임의로 변경하지 않습니다.
+ */
     private val client: HttpClient = HttpClient.newBuilder()
         .proxy(ProxySelector.of(null))
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
 ) {
 
+/**
+ * submit은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun submit(scenario: JobConsoleScenario): SpringJobConsoleHttpSnapshot =
         request(
             method = "POST",
@@ -856,6 +1384,11 @@ private class SpringJobConsoleHttpClient(
             expectedStatus = 202,
         ).toSnapshot()
 
+/**
+ * snapshot은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun snapshot(
         jobId: UUID,
         scenario: JobConsoleScenario,
@@ -867,6 +1400,11 @@ private class SpringJobConsoleHttpClient(
             expectedStatus = 200,
         ).toSnapshot()
 
+/**
+ * cancel은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun cancel(
         jobId: UUID,
         scenario: JobConsoleScenario,
@@ -878,6 +1416,11 @@ private class SpringJobConsoleHttpClient(
             expectedStatus = 200,
         ).toSnapshot()
 
+/**
+ * verifyHeartbeat은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun verifyHeartbeat(
         jobId: UUID,
         scenario: JobConsoleScenario,
@@ -896,6 +1439,11 @@ private class SpringJobConsoleHttpClient(
         }
     }
 
+/**
+ * request은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun request(
         method: String,
         path: String,
@@ -919,6 +1467,11 @@ private class SpringJobConsoleHttpClient(
         }
     }
 
+/**
+ * requestBuilder은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun requestBuilder(
         path: String,
         scenario: JobConsoleScenario,
@@ -937,11 +1490,20 @@ private class SpringJobConsoleHttpClient(
     }
 
     private companion object {
+        /** Spring 프로필 HTTP 응답에서 안정적인 job 식별자를 추출하는 정규식입니다. */
+        /** Spring 프로필 HTTP 응답에서 안정적인 job 식별자를 추출하는 정규식입니다. */
         val JOB_ID = Regex("\\\"jobId\\\":\\\"([^\\\"]+)")
+        /** Spring 프로필 HTTP 응답에서 권위 있는 현재 job 상태를 추출하는 정규식입니다. */
+        /** Spring 프로필 HTTP 응답에서 권위 있는 현재 job 상태를 추출하는 정규식입니다. */
         val STATE = Regex("\\\"state\\\":\\\"([^\\\"]+)")
     }
 }
 
+/**
+ * fails은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private inline fun fails(action: () -> Unit): Boolean =
     try {
         action()
@@ -950,6 +1512,11 @@ private inline fun fails(action: () -> Unit): Boolean =
         true
     }
 
+/**
+ * deleteDirectory은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun deleteDirectory(directory: Path) {
     Files.list(directory).use { paths ->
         paths.forEach(Files::deleteIfExists)

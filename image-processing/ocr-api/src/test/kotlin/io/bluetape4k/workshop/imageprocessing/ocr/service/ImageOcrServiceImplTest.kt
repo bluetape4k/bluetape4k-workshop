@@ -48,19 +48,55 @@ import javax.imageio.ImageIO
 import kotlin.time.Duration.Companion.seconds
 import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
 
+/**
+ * FakeStructuredOcrEngine 테스트 묶음은 이미지 처리의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class FakeStructuredOcrEngine(
+/**
+ * structuredResult은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val structuredResult: OcrStructuredResult,
 ): StructuredOcrEngine {
+/**
+ * recognizeCalls은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     var recognizeCalls: Int = 0
+/**
+ * structuredCalls은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     var structuredCalls: Int = 0
+/**
+ * lastOptions은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     lateinit var lastOptions: OcrOptions
 
+/**
+ * recognize은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ * 예: `POST /api/ocr`는 허용된 이미지 bytes만 OCR provider에 전달하고, oversized input은 native 호출 전에 거절합니다.
+ */
     override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult {
         recognizeCalls++
         lastOptions = options
         return OcrResult(structuredResult.text, options)
     }
 
+/**
+ * recognizeStructured은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult {
         structuredCalls++
         lastOptions = options
@@ -72,10 +108,24 @@ private class FakeStructuredOcrEngine(
 }
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * OCR service의 plain/structured/TIFF 업무 계약을 검증합니다.
+ *
+ * native disabled fallback, fake engine completed 응답, LINE/WORD metadata,
+ * nullable confidence/bounding box, 다중 페이지 순서, TIFF page/pixel/result
+ * budget, sanitized failure, language normalization, timeout과 cancellation을
+ * 확인합니다. fake engine을 사용하므로 Tesseract 설치 여부와 무관하게
+ * application 계약을 재현할 수 있습니다.
+ */
 class ImageOcrServiceImplTest {
 
     private companion object: KLogging()
 
+/**
+ * previousOcrEnabled은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var previousOcrEnabled: String? = null
 
     @BeforeEach
@@ -90,8 +140,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "native disabled validates image then returns unavailable without OCR" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `native disabled validates image then returns unavailable without OCR`() = runSuspendIO {
+/**
+ * invoked은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val invoked = AtomicBoolean(false)
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = false),
             engine = { _, options ->
@@ -100,6 +165,11 @@ class ImageOcrServiceImplTest {
             },
         )
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.recognize(
             ImageOcrRequest(
                 bytes = tinyPng(),
@@ -123,7 +193,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "native disabled rejects corrupt image before fallback" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `native disabled rejects corrupt image before fallback`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(properties = properties(nativeEnabled = false))
 
         assertFailsWith<IllegalArgumentException> {
@@ -132,7 +212,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "fake native engine returns normalized completed response" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fake native engine returns normalized completed response`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true),
             engine = { _, options ->
@@ -140,6 +230,11 @@ class ImageOcrServiceImplTest {
             },
         )
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.recognize(
             ImageOcrRequest(
                 bytes = tinyPng(),
@@ -159,8 +254,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "LINE detail uses structured engine and preserves nullable metadata" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `LINE detail uses structured engine and preserves nullable metadata`() = runSuspendIO {
+/**
+ * engine은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val engine = FakeStructuredOcrEngine(structuredResult())
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service(properties(nativeEnabled = true), engine = engine)
             .recognize(request(structuredDetail = OcrStructuredDetail.LINE))
 
@@ -178,8 +288,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "WORD detail maps pages blocks lines and words" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `WORD detail maps pages blocks lines and words`() = runSuspendIO {
+/**
+ * engine은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val engine = FakeStructuredOcrEngine(structuredResult())
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service(properties(nativeEnabled = true), engine = engine)
             .recognize(request(structuredDetail = OcrStructuredDetail.WORD))
 
@@ -194,8 +319,24 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "multi-page TIFF uses suspend structured OCR and preserves input page order" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `multi-page TIFF uses suspend structured OCR and preserves input page order`() = runSuspendIO {
+/**
+ * engine은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val engine = FakeStructuredOcrEngine(structuredResult())
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service(properties(nativeEnabled = true), engine = engine)
             .recognize(
                 request(
@@ -217,8 +358,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "multi-page TIFF preflight rejects page limit before invoking engine" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `multi-page TIFF preflight rejects page limit before invoking engine`() = runSuspendIO {
+/**
+ * engine은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val engine = FakeStructuredOcrEngine(structuredResult())
+/**
+ * error은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val error = assertFailsWith<TiffMultiPageOcrValidationException> {
             service(
                 properties(
@@ -236,8 +392,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "multi-page TIFF result limit fails without returning partial response" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `multi-page TIFF result limit fails without returning partial response`() = runSuspendIO {
+/**
+ * engine은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val engine = FakeStructuredOcrEngine(structuredResult())
+/**
+ * error은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val error = assertFailsWith<TiffMultiPageOcrValidationException> {
             service(
                 properties(
@@ -255,8 +426,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "native disabled validates TIFF header without invoking OCR" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `native disabled validates TIFF header without invoking OCR`() = runSuspendIO {
+/**
+ * invoked은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val invoked = AtomicBoolean(false)
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = false),
             engine = { _, options ->
@@ -265,6 +451,11 @@ class ImageOcrServiceImplTest {
             },
         )
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.recognize(request(bytes = threePageTiff(), contentType = "image/tiff"))
 
         log.debug { "response=$response" }
@@ -274,13 +465,34 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "multi-page TIFF cancellation is rethrown" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `multi-page TIFF cancellation is rethrown`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true),
             engine = object: StructuredOcrEngine {
+/**
+ * recognize은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ * 예: `POST /api/ocr`는 허용된 이미지 bytes만 OCR provider에 전달하고, oversized input은 native 호출 전에 거절합니다.
+ */
                 override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
                     OcrResult("plain", options)
 
+/**
+ * recognizeStructured은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
                 override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult =
                     throw CancellationException("tiff cancelled")
             },
@@ -292,7 +504,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "plain engine returns legacy line fallback for structured request" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `plain engine returns legacy line fallback for structured request`() = runSuspendIO {
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service(
             properties = properties(nativeEnabled = true),
             engine = { _, options -> OcrResult("first\nsecond", options) },
@@ -310,7 +532,18 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "configuration exception maps to unavailable without leaking native details" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `configuration exception maps to unavailable without leaking native details`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true, tessdataPath = "/secret/tessdata"),
             engine = { _, _ ->
@@ -318,6 +551,11 @@ class ImageOcrServiceImplTest {
             },
         )
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.recognize(request())
 
         log.debug { "response=$response" }
@@ -331,7 +569,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "generic OCR exception maps to failed without stack trace" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `generic OCR exception maps to failed without stack trace`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true),
             engine = { _, _ ->
@@ -339,6 +587,11 @@ class ImageOcrServiceImplTest {
             },
         )
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.recognize(request())
 
         log.debug { "response=$response" }
@@ -352,7 +605,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "invalid languages are rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `invalid languages are rejected`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(properties(nativeEnabled = false))
 
         assertFailsWith<IllegalArgumentException> {
@@ -361,8 +624,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "empty bytes are rejected before OCR" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `empty bytes are rejected before OCR`() = runSuspendIO {
+/**
+ * invoked은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val invoked = AtomicBoolean(false)
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true),
             engine = { _, options ->
@@ -378,7 +656,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "oversized bytes are rejected before OCR" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `oversized bytes are rejected before OCR`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true, maxUploadBytes = 2),
             engine = { _, options -> OcrResult("should not run", options) },
@@ -390,7 +678,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "corrupt image bytes with image content type are rejected before OCR" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `corrupt image bytes with image content type are rejected before OCR`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true),
             engine = { _, options -> OcrResult("should not run", options) },
@@ -402,7 +700,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "spoofed declared content type is rejected before OCR" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `spoofed declared content type is rejected before OCR`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = false),
             engine = { _, options -> OcrResult("should not run", options) },
@@ -414,7 +722,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "decoded images above pixel limit are rejected before OCR" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `decoded images above pixel limit are rejected before OCR`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true, maxImagePixels = 1),
             engine = { _, options -> OcrResult("should not run", options) },
@@ -426,8 +744,23 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "oversized PNG dimensions are rejected before full decode" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `oversized PNG dimensions are rejected before full decode`() = runSuspendIO {
+/**
+ * invoked은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val invoked = AtomicBoolean(false)
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true, maxImagePixels = 12_000_000),
             engine = { _, options ->
@@ -443,10 +776,35 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "blocking OCR timeout releases the native lane" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `blocking OCR timeout releases the native lane`() = runSuspendIO {
+/**
+ * firstEntered은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val firstEntered = AtomicBoolean(false)
+/**
+ * secondEntered은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val secondEntered = AtomicBoolean(false)
+/**
+ * neverReleased은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val neverReleased = CountDownLatch(1)
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true, timeout = Duration.ofMillis(500)),
             engine = { _, options ->
@@ -459,7 +817,17 @@ class ImageOcrServiceImplTest {
             },
         )
 
+/**
+ * timedOut은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val timedOut = service.recognize(request())
+/**
+ * completed은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val completed = service.recognize(request())
 
         log.debug { "timedOut=$timedOut" }
@@ -475,14 +843,41 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "structured OCR timeout returns failed response and preserves plain metadata" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `structured OCR timeout returns failed response and preserves plain metadata`() = runSuspendIO {
+/**
+ * entered은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val entered = CountDownLatch(1)
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true, timeout = Duration.ofMillis(500)),
             engine = object: StructuredOcrEngine {
+/**
+ * recognize은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ * 예: `POST /api/ocr`는 허용된 이미지 bytes만 OCR provider에 전달하고, oversized input은 native 호출 전에 거절합니다.
+ */
                 override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
                     OcrResult("plain fallback", options)
 
+/**
+ * recognizeStructured은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
                 override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult {
                     entered.countDown()
                     CountDownLatch(1).await(2.seconds)
@@ -491,6 +886,11 @@ class ImageOcrServiceImplTest {
             },
         )
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service.recognize(request(structuredDetail = OcrStructuredDetail.WORD))
 
         entered.await(1.seconds).shouldBeTrue()
@@ -503,7 +903,17 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cancellation is rethrown" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cancellation is rethrown`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true),
             engine = { _, _ -> throw CancellationException("cancelled") },
@@ -515,13 +925,34 @@ class ImageOcrServiceImplTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "structured OCR cancellation is rethrown" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `structured OCR cancellation is rethrown`() = runSuspendIO {
+/**
+ * service은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val service = service(
             properties = properties(nativeEnabled = true),
             engine = object: StructuredOcrEngine {
+/**
+ * recognize은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ * 예: `POST /api/ocr`는 허용된 이미지 bytes만 OCR provider에 전달하고, oversized input은 native 호출 전에 거절합니다.
+ */
                 override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
                     OcrResult("plain", options)
 
+/**
+ * recognizeStructured은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
                 override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult =
                     throw CancellationException("structured cancelled")
             },
@@ -532,6 +963,11 @@ class ImageOcrServiceImplTest {
         }
     }
 
+/**
+ * service은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun service(
         properties: ImageOcrProperties,
         engine: OcrEngine? = null,
@@ -542,6 +978,11 @@ class ImageOcrServiceImplTest {
             requestIdGenerator = { "ocr-test-request" },
         )
 
+/**
+ * properties은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun properties(
         nativeEnabled: Boolean,
         maxUploadBytes: Long = 5_242_880,
@@ -560,6 +1001,11 @@ class ImageOcrServiceImplTest {
             tiff = tiff,
         )
 
+/**
+ * request은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun request(
         bytes: ByteArray = tinyPng(),
         contentType: String = "image/png",
@@ -573,6 +1019,11 @@ class ImageOcrServiceImplTest {
             structuredDetail = structuredDetail,
         )
 
+/**
+ * structuredResult은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun structuredResult(): OcrStructuredResult =
         OcrStructuredResult(
             text = "Bluetape OCR",
@@ -604,6 +1055,11 @@ class ImageOcrServiceImplTest {
             ),
         )
 
+/**
+ * tinyPng은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun tinyPng(): ByteArray {
         val image = BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB)
         image.useGraphics { graphics ->
@@ -616,8 +1072,23 @@ class ImageOcrServiceImplTest {
         }
     }
 
+/**
+ * threePageTiff은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun threePageTiff(): ByteArray = runBlocking {
+/**
+ * pages은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pages = listOf("PAGE ONE", "PAGE TWO", "PAGE THREE").map { label ->
+/**
+ * image은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val image = BufferedImage(64, 32, BufferedImage.TYPE_INT_RGB)
             image.useGraphics { graphics ->
                 graphics.color = Color.WHITE
@@ -633,6 +1104,11 @@ class ImageOcrServiceImplTest {
         }
     }
 
+/**
+ * pngHeader은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun pngHeader(width: Int, height: Int): ByteArray {
         val bytes = ByteArray(33)
         val signature = byteArrayOf(
@@ -658,6 +1134,11 @@ class ImageOcrServiceImplTest {
         return bytes
     }
 
+/**
+ * writeUInt32BE은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun ByteArray.writeUInt32BE(offset: Int, value: Int) {
         this[offset] = (value ushr 24).toByte()
         this[offset + 1] = (value ushr 16).toByte()

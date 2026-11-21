@@ -32,9 +32,19 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * TicketHighContentionContractTest 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionContractTest {
 
     private companion object: KLogging() {
+/**
+ * PROFILE_IDS은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val PROFILE_IDS = listOf(
             "burst",
             "duplicate-storm",
@@ -47,6 +57,12 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "profile application exposes production services from a Hikari backed Spring context" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `profile application exposes production services from a Hikari backed Spring context`() {
         TicketHighContentionProfileApplication.start(RedisServer.Launcher.redis.url).use { application ->
             application.dataSource.maximumPoolSize shouldBeEqualTo 20
@@ -59,6 +75,11 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Ticket Redis path cuts old and new proxy connections then recovers" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Ticket Redis path cuts old and new proxy connections then recovers`(@TempDir tempDir: Path) {
         val artifacts = TicketHighContentionArtifactStore.create(tempDir.toRealPath(), "topology-contract")
         artifacts.createJournal().use { journal ->
@@ -95,6 +116,12 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "topology crash cutpoints preserve intent and clean every labeled Docker object" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `topology crash cutpoints preserve intent and clean every labeled Docker object`(@TempDir tempDir: Path) {
         listOf(
             TicketTopologyCutpoint.Phase.BEFORE_CREATE to "before",
@@ -127,6 +154,12 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Ticket independently loads every profile and matches every golden schedule vector" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Ticket independently loads every profile and matches every golden schedule vector`() {
         val contract = TicketHighContentionContractLoader()
             .load(contractRoot(), TicketHighContentionMode.CI_CORRECTNESS)
@@ -140,6 +173,11 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate and unknown fields fail closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate and unknown fields fail closed`(@TempDir tempDir: Path) {
         val duplicateRoot = copyContract(tempDir.resolve("duplicate"))
         val duplicateManifest = duplicateRoot.resolve("suite-manifest.json")
@@ -171,6 +209,11 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "symbolic links and identity replacement are rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `symbolic links and identity replacement are rejected`(@TempDir tempDir: Path) {
         val linkedRoot = tempDir.resolve("linked")
         Files.createSymbolicLink(linkedRoot, contractRoot())
@@ -197,18 +240,38 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "warm-up precedes baseline and stays outside measured conservation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `warm-up precedes baseline and stays outside measured conservation`() {
         val events = mutableListOf<String>()
         val adapter = object: TicketHighContentionWorkloadAdapter {
+/**
+ * warmUp은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun warmUp(identity: TicketWorkloadIdentity) {
                 events += "warmup:${identity.namespace}:${identity.ordinal}"
             }
 
+/**
+ * snapshotBaseline은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun snapshotBaseline(): String {
                 events += "baseline"
                 return "baseline-1"
             }
 
+/**
+ * execute은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun execute(
                 token: TicketScheduleToken,
                 identity: TicketWorkloadIdentity,
@@ -249,6 +312,11 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "schedule threshold fault observer overlaps measured work" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `schedule threshold fault observer overlaps measured work`() {
         val entered = CountDownLatch(2)
         val release = CountDownLatch(1)
@@ -256,10 +324,25 @@ internal class TicketHighContentionContractTest {
         val observerCompletedCount = AtomicInteger(-1)
 
         val adapter = object: TicketHighContentionWorkloadAdapter {
+/**
+ * warmUp은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun warmUp(identity: TicketWorkloadIdentity) = Unit
 
+/**
+ * snapshotBaseline은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun snapshotBaseline(): String = "baseline"
 
+/**
+ * execute은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun execute(
                 token: TicketScheduleToken,
                 identity: TicketWorkloadIdentity,
@@ -292,6 +375,11 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "end of schedule fault observer starts after measured work completes" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `end of schedule fault observer starts after measured work completes`() {
         val entered = CountDownLatch(2)
         val release = CountDownLatch(1)
@@ -299,10 +387,25 @@ internal class TicketHighContentionContractTest {
         val completed = AtomicInteger()
         val observerCompletedCount = AtomicInteger(-1)
         val adapter = object: TicketHighContentionWorkloadAdapter {
+/**
+ * warmUp은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun warmUp(identity: TicketWorkloadIdentity) = Unit
 
+/**
+ * snapshotBaseline은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun snapshotBaseline(): String = "baseline"
 
+/**
+ * execute은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun execute(
                 token: TicketScheduleToken,
                 identity: TicketWorkloadIdentity,
@@ -345,11 +448,31 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "overlapping warm-up namespace and invalid realization fail closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `overlapping warm-up namespace and invalid realization fail closed`() {
         val schedule = burstSchedule(operationCount = 2)
         val adapter = object: TicketHighContentionWorkloadAdapter {
+/**
+ * warmUp은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun warmUp(identity: TicketWorkloadIdentity) = Unit
+/**
+ * snapshotBaseline은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun snapshotBaseline(): String = "baseline"
+/**
+ * execute은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun execute(
                 token: TicketScheduleToken,
                 identity: TicketWorkloadIdentity,
@@ -397,6 +520,11 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "artifact reports are create-new contained complete and redacted" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `artifact reports are create-new contained complete and redacted`(@TempDir tempDir: Path) {
         val trustedRoot = tempDir.toRealPath()
         val store = TicketHighContentionArtifactStore.create(trustedRoot, "artifact-contract")
@@ -451,6 +579,12 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "parent-owned Ticket artifact store opens only an existing trusted run root" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `parent-owned Ticket artifact store opens only an existing trusted run root`(@TempDir tempDir: Path) {
         val trustedRoot = tempDir.toRealPath()
         Files.createDirectory(trustedRoot.resolve("parent-run"))
@@ -480,6 +614,11 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "journal validates its chain and ignores only a torn final record" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `journal validates its chain and ignores only a torn final record`(@TempDir tempDir: Path) {
         val store = TicketHighContentionArtifactStore.create(tempDir.toRealPath(), "journal-contract")
         val path = store.journalPath
@@ -503,6 +642,11 @@ internal class TicketHighContentionContractTest {
         }
     }
 
+/**
+ * burstSchedule은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun burstSchedule(operationCount: Int): List<TicketScheduleToken> =
         TicketDeterministicSchedule.generate(
             TicketScheduleVector(
@@ -519,6 +663,11 @@ internal class TicketHighContentionContractTest {
             ),
         )
 
+/**
+ * terminalReport은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun terminalReport(): Map<String, Any?> =
         linkedMapOf(
             "reportSchemaVersion" to 1,
@@ -545,6 +694,11 @@ internal class TicketHighContentionContractTest {
             "knownLimitations" to emptyList<String>(),
         )
 
+/**
+ * assertNoDockerObjects은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertNoDockerObjects(runId: String) {
         val docker = DockerClientFactory.instance().client()
         val labels = mapOf(TicketDockerResource.RUN_LABEL to runId)
@@ -559,6 +713,11 @@ internal class TicketHighContentionContractTest {
             .exec().shouldBeEmpty()
     }
 
+/**
+ * copyContract은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun copyContract(target: Path): Path {
         val source = contractRoot()
         Files.walk(source).use { paths ->
@@ -574,6 +733,11 @@ internal class TicketHighContentionContractTest {
         return target
     }
 
+/**
+ * contractRoot은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun contractRoot(): Path =
         Path.of(
             System.getProperty("highContentionContractRoot")
@@ -581,4 +745,9 @@ internal class TicketHighContentionContractTest {
         )
 }
 
+/**
+ * ExpectedTicketCutpointException 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class ExpectedTicketCutpointException: RuntimeException()

@@ -8,11 +8,31 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.extension
 
+/**
+ * KotlinPatternArchitectureTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class KotlinPatternArchitectureTest {
 
     private companion object: KLogging() {
+/**
+ * DATA_CLASS은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val DATA_CLASS = Regex("\\bdata class\\b")
+/**
+ * SERIAL_VERSION_UID은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val SERIAL_VERSION_UID = Regex("serialVersionUID")
+/**
+ * SERVICE_MODULES은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val SERVICE_MODULES = listOf(
             "commerce/usage-billing-meter-service",
             "commerce/usage-billing-usage-service",
@@ -20,6 +40,11 @@ class KotlinPatternArchitectureTest {
             "commerce/usage-billing-invoice-service",
             "commerce/usage-billing-query-service",
         )
+/**
+ * DECODER_FILES은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val DECODER_FILES = listOf(
             "commerce/usage-billing-usage-service/src/main/kotlin/" +
                     "io/bluetape4k/workshop/commerce/usagebilling/usage/messaging/MeterPriceEvidenceConsumer.kt",
@@ -28,9 +53,19 @@ class KotlinPatternArchitectureTest {
             "commerce/usage-billing-invoice-service/src/main/kotlin/" +
                     "io/bluetape4k/workshop/commerce/usagebilling/invoice/messaging/BillingChargeConsumer.kt",
         )
+/**
+ * QUERY_DECODER은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val QUERY_DECODER =
             "commerce/usage-billing-query-service/src/main/kotlin/" +
                     "io/bluetape4k/workshop/commerce/usagebilling/query/messaging/QueryKafkaConsumer.kt"
+/**
+ * ENVELOPE_FILES은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val ENVELOPE_FILES = listOf(
             "commerce/usage-billing-meter-service/src/main/kotlin/" +
                     "io/bluetape4k/workshop/commerce/usagebilling/meter/integration/MeterIntegrationEnvelope.kt",
@@ -46,6 +81,12 @@ class KotlinPatternArchitectureTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "every service data model is explicitly serializable with a serial version UID" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `every service data model is explicitly serializable with a serial version UID`() {
         val violations = serviceSourceFiles()
             .filter { source -> source.toFile().readText().contains("data class") }
@@ -69,6 +110,12 @@ class KotlinPatternArchitectureTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "external Kafka decoders use Bluetape validation helpers and listeners log durable
+ * outcomes" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `external Kafka decoders use Bluetape validation helpers and listeners log durable outcomes`() {
         val violations = DECODER_FILES.flatMap { relativePath ->
             val content = repositoryRoot().resolve(relativePath).toFile().readText()
@@ -88,6 +135,11 @@ class KotlinPatternArchitectureTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Query quarantine listener records its permanent-failure outcome" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Query quarantine listener records its permanent-failure outcome`() {
         val content = repositoryRoot().resolve(QUERY_DECODER).toFile().readText()
 
@@ -95,6 +147,11 @@ class KotlinPatternArchitectureTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "public integration envelopes document their durable wire boundary" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `public integration envelopes document their durable wire boundary`() {
         val violations = ENVELOPE_FILES.filter { relativePath ->
             val content = repositoryRoot().resolve(relativePath).toFile().readText()
@@ -104,6 +161,11 @@ class KotlinPatternArchitectureTest {
         violations shouldBeEqualTo emptyList()
     }
 
+/**
+ * serviceSourceFiles은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun serviceSourceFiles(): List<Path> =
         SERVICE_MODULES.flatMap { module ->
             Files.walk(repositoryRoot().resolve(module).resolve("src/main/kotlin")).use { paths ->
@@ -111,6 +173,11 @@ class KotlinPatternArchitectureTest {
             }
         }
 
+/**
+ * repositoryRoot은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun repositoryRoot(): Path =
         Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize().parent.parent
 

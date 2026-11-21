@@ -46,11 +46,21 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * RuntimeContractTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class RuntimeContractTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "runtime uses Java 25 virtual threads and excludes the JDK21 provider" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `runtime uses Java 25 virtual threads and excludes the JDK21 provider`() {
         Runtime.version().feature() shouldBeEqualTo 25
         VirtualThreads.runtimeName() shouldBeEqualTo "jdk25"
@@ -79,6 +89,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor activates synchronization and signals after commit" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor activates synchronization and signals after commit`() {
         val committed = AtomicBoolean()
         val manager = RecordingTransactionManager()
@@ -96,6 +111,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor never signals after commit hook on rollback" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor never signals after commit hook on rollback`() {
         val committed = AtomicBoolean()
         val manager = RecordingTransactionManager()
@@ -115,6 +135,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor owns independent acquisition lock and transaction budgets" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor owns independent acquisition lock and transaction budgets`() {
         val executor = VoucherPoolJdbcExecutor(
             DatabasePermitGate.default(16),
@@ -136,6 +161,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC timeout configuration maps and validates the SSE lane" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC timeout configuration maps and validates the SSE lane`() {
         val timeouts =
             VoucherPoolJdbcTimeouts(
@@ -154,6 +184,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor maps timeout phases and records low cardinality metrics" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor maps timeout phases and records low cardinality metrics`() {
         val metrics = RecordingJdbcMetrics()
         val executor =
@@ -189,6 +224,12 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor maps Exposed acquisition cause chains and records one metric" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor maps Exposed acquisition cause chains and records one metric`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
@@ -204,6 +245,12 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor maps nested Exposed lock cause chains and records one metric" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor maps nested Exposed lock cause chains and records one metric`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
@@ -219,6 +266,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor maps generic acquisition wrappers and records one metric" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor maps generic acquisition wrappers and records one metric`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
@@ -240,6 +292,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor maps SQL timeout to transaction and records one metric" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor maps SQL timeout to transaction and records one metric`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
@@ -255,6 +312,12 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor maps PostgreSQL query cancellation to transaction and records one metric"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor maps PostgreSQL query cancellation to transaction and records one metric`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
@@ -270,6 +333,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor preserves unknown generic wrapper identity without metrics" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor preserves unknown generic wrapper identity without metrics`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
@@ -284,6 +352,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC timeout configuration rejects sub-millisecond lock timeout" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC timeout configuration rejects sub-millisecond lock timeout`() {
         assertFailsWith<IllegalArgumentException> {
             VoucherPoolJdbcTimeouts(foregroundLock = 1.nanos())
@@ -291,6 +364,11 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "JDBC executor maps permit timeout and records one metric" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor maps permit timeout and records one metric`() {
         val gate = DatabasePermitGate(
             hikariMaximumPoolSize = 4,
@@ -330,6 +408,12 @@ internal class RuntimeContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "SSE JDBC lane is isolated from foreground permits and reports SSE timeout metrics" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `SSE JDBC lane is isolated from foreground permits and reports SSE timeout metrics`() {
         val gate = DatabasePermitGate(
             hikariMaximumPoolSize = 4,
@@ -370,6 +454,11 @@ internal class RuntimeContractTest {
 
     @Test
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
+/**
+ * 이 시나리오는 "JDBC executor bounds unknown cyclic cause traversal" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `JDBC executor bounds unknown cyclic cause traversal`() {
         val metrics = RecordingJdbcMetrics()
         val executor = jdbcExecutor(metrics = metrics)
@@ -387,6 +476,11 @@ internal class RuntimeContractTest {
         metrics.timeouts.shouldBeEmpty()
     }
 
+/**
+ * applicationProperties은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun applicationProperties(): PropertySourcesPropertyResolver {
         val sources = MutablePropertySources().apply {
             YamlPropertySourceLoader()
@@ -396,15 +490,40 @@ internal class RuntimeContractTest {
         return PropertySourcesPropertyResolver(sources)
     }
 
+/**
+ * failConnectionAcquisition은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun failConnectionAcquisition(): Nothing = throw SQLTransientConnectionException("acquisition")
 
+/**
+ * failLockAcquisition은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun failLockAcquisition(): Nothing = throw SQLException("lock", "55P03")
 
+/**
+ * failTransactionDeadline은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun failTransactionDeadline(): Nothing = throw TransactionTimedOutException("deadline")
 
+/**
+ * exposedFailure은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun exposedFailure(cause: Throwable): ExposedSQLException =
         ExposedSQLException(cause, emptyList(), mockk(relaxed = true))
 
+/**
+ * jdbcExecutor은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun jdbcExecutor(
         gate: DatabasePermitGate = DatabasePermitGate.default(16),
         metrics: VoucherPoolJdbcMetrics,
@@ -415,29 +534,79 @@ internal class RuntimeContractTest {
             metrics = metrics,
         )
 
+/**
+ * RecordingTransactionManager 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RecordingTransactionManager: AbstractPlatformTransactionManager() {
+/**
+ * commits은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var commits: Int = 0
+/**
+ * rollbacks은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var rollbacks: Int = 0
 
+/**
+ * doGetTransaction은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun doGetTransaction(): Any = Any()
 
+/**
+ * doBegin은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun doBegin(
             transaction: Any,
             definition: TransactionDefinition,
         ) = Unit
 
+/**
+ * doCommit은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun doCommit(status: DefaultTransactionStatus) {
             commits++
         }
 
+/**
+ * doRollback은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun doRollback(status: DefaultTransactionStatus) {
             rollbacks++
         }
     }
 
+/**
+ * RecordingJdbcMetrics 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RecordingJdbcMetrics: VoucherPoolJdbcMetrics {
+/**
+ * timeouts은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val timeouts = ConcurrentLinkedQueue<Pair<JdbcExecutionLane, JdbcTimeoutPhase>>()
 
+/**
+ * timedOut은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun timedOut(
             lane: JdbcExecutionLane,
             phase: JdbcTimeoutPhase,
@@ -446,6 +615,11 @@ internal class RuntimeContractTest {
         }
     }
 
+/**
+ * RepositoryRuntimeException 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RepositoryRuntimeException(
         message: String,
         cause: Throwable,

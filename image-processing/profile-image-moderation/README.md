@@ -28,6 +28,48 @@ The module test command is the test-backed verification for this story. It
 covers pending/approved/rejected/failed/no-image states, stale completion,
 private URL denial, cleanup, metadata redaction, payload safety, and metrics.
 
+## Business requirements and state machine
+
+The product requirement is not simply “moderate an image.” It is: always show
+the user a safe effective image, never publish the original, and let a newer
+upload win even if an older moderation job finishes later. The state returned
+by the API is the answer a profile page can act on:
+
+| Status | Meaning for the product | Effective URL |
+|---|---|---|
+| `NO_IMAGE` | The user has not uploaded an image | Stable default image |
+| `PENDING_MODERATION` | The current upload is stored and awaiting a decision | Public blurred derivative, with `Cache-Control: no-store` in local mode |
+| `APPROVED` | The current `userId + uploadId` passed policy | Public approved derivative |
+| `REJECTED` | The policy found banned content | Stable default image; reason is safe, bounded text |
+| `MODERATION_FAILED` | Provider, timeout, or derivative processing failed | Stable default image |
+
+The permitted transition is `NO_IMAGE → PENDING_MODERATION → APPROVED`,
+`REJECTED`, or `MODERATION_FAILED`. A compare-and-set on `userId + uploadId`
+prevents a stale worker from publishing an older upload after a newer one has
+become current. The pending image is a UX compromise for responsiveness; it is
+not evidence that the content is safe. The original remains private in every
+state.
+
+## Upload lifecycle for a newcomer
+
+1. `POST /api/users/{userId}/profile-image` validates the multipart image before
+   storage. Invalid input returns `400` and does not create a moderation job.
+2. The service stores `private/original/*`, creates privacy-safe derivatives,
+   and returns `202 Accepted` with `PENDING_MODERATION`. The response's
+   `effectiveUrl` is the blurred derivative, never the original key.
+3. `ProfileImageModerationRunner` calls the policy adapter with bounded
+   concurrency. A real deployment would put the cloud provider behind the same
+   seam; the filename-marker provider exists only to make this workshop
+   deterministic.
+4. The completion is accepted only for the current `userId + uploadId`.
+   Approval publishes the approved derivative; rejection or failure points to
+   the default image and cleans up objects according to the storage boundary.
+5. `GET /api/users/{userId}/profile-image` is safe to poll. It returns the
+   current status and effective URL, not private storage details.
+
+This ordering explains why a `202` response is useful: the upload is accepted,
+but moderation is not being misrepresented as complete.
+
 ![Profile image moderation architecture](../../docs/images/readme-diagrams/profile-image-moderation-readme-architecture-01.png)
 
 ![Profile image moderation sequence](../../docs/images/readme-diagrams/profile-image-moderation-readme-sequence-01.png)
@@ -182,3 +224,18 @@ Local storage defaults to `${java.io.tmpdir}/bluetape4k-profile-images`. Remove 
 ```
 
 The tests cover pending/approved/rejected/failed/no-image states, stale moderation completion, private URL denial, cleanup after storage failure, strict privacy metadata verification, orientation/redaction report geometry, payload round trips and defensive copies, stable codec failures, caller-owned streams, source-reader fail-closed handling, JPEG derivative signatures, no-store pending responses, and low-cardinality metrics.
+
+The tests are business-contract documentation as well as regression checks:
+
+| Test area | Boundary it proves |
+|---|---|
+| `ProfileImageServiceTest` state cases | Pending, approval, rejection, provider failure, timeout, and no-image responses choose the correct effective URL. |
+| `ProfileImageServiceTest` stale/cleanup cases | A completion for an older upload cannot overwrite the current upload, and partial storage is cleaned up. |
+| `ProfileImageProcessorTest` | Public derivatives are re-encoded, orientation-normalized, and stripped of disallowed metadata; a reader failure fails closed. |
+| `PublicProfileImageControllerTest` | Private original keys are not publicly readable and pending responses carry `no-store`. |
+| `ProfileImageMetricsTest` | Metrics use bounded, low-cardinality labels rather than user ids or raw provider text. |
+| `ProfileImageModerationPolicyProviderTest` | The demo policy mapping is deterministic and its filename markers are not a production moderation guarantee. |
+
+The test suite proves this state machine and privacy boundary. It cannot prove
+the recall/precision of a cloud moderation model, an S3 bucket policy, or an
+authentication rule that is intentionally outside the workshop module.

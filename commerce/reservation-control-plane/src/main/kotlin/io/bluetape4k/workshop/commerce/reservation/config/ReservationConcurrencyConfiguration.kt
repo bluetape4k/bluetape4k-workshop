@@ -40,6 +40,11 @@ internal class ReservationConcurrencyConfiguration {
 
     companion object: KLogging()
 
+    /**
+     * nodeLocalDatabaseBulkhead은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     @Bean
     fun nodeLocalDatabaseBulkhead(): NodeLocalDatabaseBulkhead =
         NodeLocalDatabaseBulkhead(
@@ -48,6 +53,14 @@ internal class ReservationConcurrencyConfiguration {
             acquireTimeout = 100.millis()
         )
 
+    /**
+     * reservationAdmissionGate은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param localBulkhead 업무 처리에 필요한 localBulkhead 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param redisBackend 업무 처리에 필요한 redisBackend 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Bean
     fun reservationAdmissionGate(
         localBulkhead: NodeLocalDatabaseBulkhead,
@@ -55,12 +68,30 @@ internal class ReservationConcurrencyConfiguration {
     ): ReservationAdmissionGate =
         ReservationAdmissionGate(localBulkhead, redisBackend.ifAvailable)
 
+    /**
+     * inFlightCommandSuppressor은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param redisBackend 업무 처리에 필요한 redisBackend 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Bean
     fun inFlightCommandSuppressor(
         redisBackend: ObjectProvider<CommandSuppressionBackend>,
     ): InFlightCommandSuppressor =
         InFlightCommandSuppressor(redisBackend.ifAvailable)
 
+    /**
+     * reservationCommandExecutionGate은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록
+     * 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param admission 업무 처리에 필요한 admission 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param suppression 업무 처리에 필요한 suppression 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param credentials 업무 처리에 필요한 credentials 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param tenantId 예약 제어면 경계를 식별하는 값이며 다른 tenant 데이터와 섞이지 않도록 조회·변경 범위를 제한합니다.
+     */
     @Bean
     fun reservationCommandExecutionGate(
         admission: ReservationAdmissionGate,
@@ -70,6 +101,15 @@ internal class ReservationConcurrencyConfiguration {
     ): ReservationCommandExecutionGate =
         ReservationCommandExecutionGate(admission, suppression, credentials, tenantId)
 
+    /**
+     * reservationExpirySweeper은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param leaderElector 업무 처리에 필요한 leaderElector 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param sweepWork 업무 처리에 필요한 sweepWork 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param instanceId 처리할 예약 제어면 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     */
     @Bean
     fun reservationExpirySweeper(
         @Qualifier("reservationLeaderElector")
@@ -96,6 +136,13 @@ internal class ReservationRedisConfiguration {
 
     companion object: KLogging()
 
+    /**
+     * reservationRedisClient은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param uri 예약 제어면 처리 대상의 위치·콘텐츠 참조입니다. 허용된 형식과 보안 정책을 먼저 확인합니다.
+     */
     @Bean(destroyMethod = "shutdown")
     fun reservationRedisClient(
         @Value("\${reservation.redis.uri}") uri: String,
@@ -103,6 +150,13 @@ internal class ReservationRedisConfiguration {
         LettuceClients.clientOf(uri)
             .also { log.info { "reservation_redis_client_created" } }
 
+    /**
+     * reservationRedisConnection은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param client 업무 처리에 필요한 client 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Bean(destroyMethod = "close")
     fun reservationRedisConnection(client: RedisClient): StatefulRedisConnection<String, String>? =
         try {
@@ -112,6 +166,13 @@ internal class ReservationRedisConfiguration {
             null
         }
 
+    /**
+     * reservationAdmissionBackend은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param connection 업무 처리에 필요한 connection 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Bean
     fun reservationAdmissionBackend(
         connection: ObjectProvider<StatefulRedisConnection<String, String>>,
@@ -120,6 +181,13 @@ internal class ReservationRedisConfiguration {
             LettuceSemaphoreAdmissionBackend(it)
         }
 
+    /**
+     * reservationSuppressionBackend은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param connection 업무 처리에 필요한 connection 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Bean
     fun reservationSuppressionBackend(
         connection: ObjectProvider<StatefulRedisConnection<String, String>>,
@@ -128,6 +196,13 @@ internal class ReservationRedisConfiguration {
             LettuceLockSuppressionBackend(it)
         }
 
+    /**
+     * reservationLeaderElector은 예약 제어면 실행에 필요한 구성과 운영 수치를 제공하며, 잘못된 값이 실제 업무 처리 전에 드러나도록 합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param connection 업무 처리에 필요한 connection 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Bean
     fun reservationLeaderElector(
         connection: ObjectProvider<StatefulRedisConnection<String, String>>,

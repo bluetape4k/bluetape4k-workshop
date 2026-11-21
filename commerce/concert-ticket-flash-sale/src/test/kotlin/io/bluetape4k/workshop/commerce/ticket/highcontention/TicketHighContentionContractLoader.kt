@@ -24,24 +24,69 @@ import java.nio.file.StandardOpenOption.READ
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 
+/**
+ * TicketHighContentionContractException 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionContractException(
     message: String,
     cause: Throwable? = null,
 ): IllegalArgumentException(message, cause)
 
+/**
+ * TicketContractReadObserver 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal fun interface TicketContractReadObserver {
+/**
+ * afterRead은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun afterRead(path: Path)
 }
 
+/**
+ * TicketHighContentionContractLoader 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionContractLoader(
+/**
+ * observer은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val observer: TicketContractReadObserver = TicketContractReadObserver {},
 ) {
 
     private companion object: KLogging() {
+/**
+ * TICKET_IMPLEMENTATION은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TICKET_IMPLEMENTATION = "ticket-spring"
+/**
+ * MAX_DOCUMENT_BYTES은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val MAX_DOCUMENT_BYTES = 1_048_576L
+/**
+ * SCHEDULE_ALGORITHM은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val SCHEDULE_ALGORITHM = "hc-v1-sha256-unsigned-rank"
 
+/**
+ * IMPLEMENTATIONS은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val IMPLEMENTATIONS = listOf(
             "job-core",
             "job-spring",
@@ -49,6 +94,11 @@ internal class TicketHighContentionContractLoader(
             TICKET_IMPLEMENTATION
         )
 
+/**
+ * PROFILE_IDS은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val PROFILE_IDS = listOf(
             "burst",
             "duplicate-storm",
@@ -60,7 +110,17 @@ internal class TicketHighContentionContractLoader(
         )
     }
 
+/**
+ * mapper은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val mapper = Jackson.defaultJsonMapper
+/**
+ * strictFactory은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val strictFactory = JsonFactory.builder()
         .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
         .streamReadConstraints(
@@ -75,6 +135,11 @@ internal class TicketHighContentionContractLoader(
         )
         .build()
 
+/**
+ * load은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun load(
         contractRoot: Path,
         mode: TicketHighContentionMode,
@@ -94,17 +159,52 @@ internal class TicketHighContentionContractLoader(
             throw TicketHighContentionContractException("invalid Ticket high-contention contract", error)
         }
 
+/**
+ * loadValidated은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun loadValidated(
         contractRoot: Path,
         mode: TicketHighContentionMode,
         profileId: String?,
         implementation: String,
     ): LoadedTicketHighContentionContract {
+/**
+ * root은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val root = validateRoot(contractRoot)
+/**
+ * profileContract은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val profileContract = read(root, "profile-contract.json", TicketProfileContract::class.java)
+/**
+ * reportContract은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reportContract = read(root, "report-contract.json", TicketReportContract::class.java)
+/**
+ * descriptorContract은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val descriptorContract = read(root, "child-descriptor-contract.json", TicketChildDescriptorContract::class.java)
+/**
+ * vectors은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val vectors = read(root, "schedule-vectors.json", TicketScheduleVectorDocument::class.java)
+/**
+ * suite은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val suite = read(root, "suite-manifest.json", TicketHighContentionSuite::class.java)
 
         validateVersions(suite, profileContract, reportContract, descriptorContract, vectors)
@@ -112,11 +212,21 @@ internal class TicketHighContentionContractLoader(
         validateVectors(vectors)
         require(implementation in suite.implementations) { "unsupported implementation: $implementation" }
 
+/**
+ * selections은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val selections = suite.entries.asSequence()
             .filter { it.mode == mode }
             .filter { profileId == null || it.profileId == profileId }
             .filter { implementation in it.implementations }
             .map { entry ->
+/**
+ * profile은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val profile = read(root, entry.profileFile, TicketHighContentionProfile::class.java)
                 validateProfile(profile, entry, profileContract)
                 TicketHighContentionSelection(profile, implementation)
@@ -133,6 +243,11 @@ internal class TicketHighContentionContractLoader(
         )
     }
 
+/**
+ * validateRoot은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateRoot(contractRoot: Path): Path {
         val normalized = contractRoot.toAbsolutePath().normalize()
         rejectSymlinkComponents(normalized)
@@ -142,6 +257,11 @@ internal class TicketHighContentionContractLoader(
         return normalized.toRealPath(NOFOLLOW_LINKS)
     }
 
+/**
+ * rejectSymlinkComponents은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun rejectSymlinkComponents(path: Path) {
         var current = path.root
         path.forEach { component ->
@@ -152,6 +272,11 @@ internal class TicketHighContentionContractLoader(
         }
     }
 
+/**
+ * read은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <T> read(root: Path, relativePath: String, type: Class<T>): T {
         val path = resolveTrustedFile(root, relativePath)
         val before = Files.readAttributes(path, BasicFileAttributes::class.java, NOFOLLOW_LINKS)
@@ -173,6 +298,11 @@ internal class TicketHighContentionContractLoader(
         }
     }
 
+/**
+ * resolveTrustedFile은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun resolveTrustedFile(root: Path, relativePath: String): Path {
         val relative = Path.of(relativePath.requireNotBlank("relativePath"))
         if (relative.isAbsolute || relative.normalize() != relative || relative.nameCount == 0 || relative.startsWith("..")) {
@@ -195,6 +325,11 @@ internal class TicketHighContentionContractLoader(
         return normalized
     }
 
+/**
+ * readBounded은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun readBounded(path: Path, before: BasicFileAttributes): ByteArray {
         if (before.size() !in 1..MAX_DOCUMENT_BYTES) {
             throw TicketHighContentionContractException("$path exceeds the document bound")
@@ -216,6 +351,11 @@ internal class TicketHighContentionContractLoader(
         }
     }
 
+/**
+ * sameIdentity은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sameIdentity(before: BasicFileAttributes, after: BasicFileAttributes): Boolean =
         before.isRegularFile &&
                 after.isRegularFile &&
@@ -224,6 +364,11 @@ internal class TicketHighContentionContractLoader(
                 before.size() == after.size() &&
                 before.lastModifiedTime() == after.lastModifiedTime()
 
+/**
+ * validateVersions은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateVersions(
         suite: TicketHighContentionSuite,
         profileContract: TicketProfileContract,
@@ -245,6 +390,11 @@ internal class TicketHighContentionContractLoader(
         vectors.algorithm.requireEquals(SCHEDULE_ALGORITHM, "schedule algorithm")
     }
 
+/**
+ * validateSuite은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateSuite(suite: TicketHighContentionSuite) {
         suite.implementations.requireEquals(IMPLEMENTATIONS, "implementations")
         suite.runDeadlineMs.requirePositiveNumber("runDeadlineMs")
@@ -263,6 +413,11 @@ internal class TicketHighContentionContractLoader(
         }
     }
 
+/**
+ * validateVectors은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateVectors(document: TicketScheduleVectorDocument) {
         document.vectors.requireNotEmpty("schedule vectors")
         val canonical = document.vectors.joinToString(",", "[", "]", transform = ::canonicalVector)
@@ -272,6 +427,11 @@ internal class TicketHighContentionContractLoader(
         }
     }
 
+/**
+ * validateProfile은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateProfile(
         profile: TicketHighContentionProfile,
         entry: TicketHighContentionSuiteEntry,
@@ -282,6 +442,11 @@ internal class TicketHighContentionContractLoader(
         profile.mode.requireEquals(entry.mode, "mode")
         profile.seed.requireNotBlank("seed")
 
+/**
+ * limits은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val limits = contract.limits[profile.mode.wireValue].requireNotNull { "missing mode limits" }
         profile.operationCount.requireInRange(1, limits.maxOperationCount, "operationCount")
         profile.concurrency.requireInRange(1, limits.maxConcurrency, "concurrency")
@@ -304,6 +469,11 @@ internal class TicketHighContentionContractLoader(
         }
     }
 
+/**
+ * canonicalVector은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun canonicalVector(vector: TicketScheduleVector): String =
         buildString {
             append("{\"authorityWeights\":")
@@ -330,6 +500,11 @@ internal class TicketHighContentionContractLoader(
             append(",\"seed\":${mapper.writeValueAsString(vector.seed)}}")
         }
 
+/**
+ * sha256은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sha256(value: String): String =
         MessageDigest.getInstance("SHA-256")
             .digest(value.toUtf8Bytes())

@@ -18,12 +18,27 @@ import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * VoucherReconciliationWorkerTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherReconciliationWorkerTest {
 
     private companion object {
+/**
+ * redis은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
     }
 
+/**
+ * properties은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val properties = VoucherWorkerProperties(
         batchSize = 50,
         runDeadline = 10.seconds(),
@@ -32,6 +47,11 @@ internal class VoucherReconciliationWorkerTest {
     )
 
     @Test
+/**
+ * 이 시나리오는 "elected leader runs the bounded reconciliation service" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `elected leader runs the bounded reconciliation service`() {
         val service = mockk<VoucherReconciliationService>()
         val expected = ReconciliationResult(3, 1, 0, "cursor", false)
@@ -47,6 +67,11 @@ internal class VoucherReconciliationWorkerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Lettuce leader stamps the configured instance id" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Lettuce leader stamps the configured instance id`() {
         val redisProperties = VoucherRedisProperties(
             enabled = true,
@@ -64,6 +89,11 @@ internal class VoucherReconciliationWorkerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "leader skip and backend failure are advisory" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `leader skip and backend failure are advisory`() {
         val service = mockk<VoucherReconciliationService>()
         val skipped = VoucherReconciliationWorker(service, properties, { LeaderRunResult.Skipped })
@@ -79,6 +109,11 @@ internal class VoucherReconciliationWorkerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "manual and scheduled overlap use one local single flight" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `manual and scheduled overlap use one local single flight`() {
         val service = mockk<VoucherReconciliationService>()
         val entered = CountDownLatch(1)
@@ -113,6 +148,11 @@ internal class VoucherReconciliationWorkerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Spring scheduler delegates to the shared scheduled path" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Spring scheduler delegates to the shared scheduled path`() {
         val worker = mockk<VoucherReconciliationWorker>()
         every { worker.runScheduled() } returns WorkerRunResult.LeaderSkipped

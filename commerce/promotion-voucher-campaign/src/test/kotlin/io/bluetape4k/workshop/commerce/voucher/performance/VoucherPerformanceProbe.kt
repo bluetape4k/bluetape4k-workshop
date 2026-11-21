@@ -28,28 +28,84 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.sql.DataSource
 import kotlin.math.ceil
 
+/**
+ * VoucherStressEvidence 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class VoucherStressEvidence(
+/**
+ * jsonPath은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val jsonPath: Path,
+/**
+ * jfrPath은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val jfrPath: Path,
+/**
+ * hikariActiveMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val hikariActiveMax: Int,
+/**
+ * databasePermitMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val databasePermitMax: Int,
+/**
+ * deterministicLockTimeoutContractPassed은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val deterministicLockTimeoutContractPassed: Boolean,
+/**
+ * resourceLeaks은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val resourceLeaks: Int,
+/**
+ * capacityInvariant은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val capacityInvariant: Boolean,
 )
 
 /** repository code를 바꾸지 않고 JDBC connection과 statement execution boundary를 계산합니다. */
+/** repository code를 바꾸지 않고 JDBC connection과 statement execution boundary를 계산합니다. */
 @Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
 internal class VoucherJdbcProbeDataSource(
+/**
+ * delegate은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val delegate: DataSource,
 ): DataSource by delegate {
 
     private companion object: KLogging() {
+/**
+ * STATEMENT_FACTORIES은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val STATEMENT_FACTORIES = setOf(
             "createStatement",
             "prepareStatement",
             "prepareCall"
         )
+/**
+ * EXECUTION_METHODS은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val EXECUTION_METHODS = setOf(
             "execute",
             "executeQuery",
@@ -60,21 +116,56 @@ internal class VoucherJdbcProbeDataSource(
         )
     }
 
+/**
+ * connectionAcquisitions은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val connectionAcquisitions = AtomicLong()
+/**
+ * statementExecutions은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val statementExecutions = AtomicLong()
 
+/**
+ * getConnection은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun getConnection(): Connection = observed(delegate.connection)
 
+/**
+ * getConnection은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun getConnection(
         username: String,
         password: String,
     ): Connection =
         observed(delegate.getConnection(username, password))
 
+/**
+ * connectionAcquisitions은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun connectionAcquisitions(): Long = connectionAcquisitions.get()
 
+/**
+ * statementExecutions은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun statementExecutions(): Long = statementExecutions.get()
 
+/**
+ * observed은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun observed(connection: Connection): Connection {
         connectionAcquisitions.incrementAndGet()
         return proxy(connection, Connection::class.java) { method, result ->
@@ -82,6 +173,11 @@ internal class VoucherJdbcProbeDataSource(
         }
     }
 
+/**
+ * observed은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun observed(statement: Statement): Statement =
         proxy(statement, statementContract(statement)) { method, result ->
             if (method.name in EXECUTION_METHODS) statementExecutions.incrementAndGet()
@@ -89,16 +185,31 @@ internal class VoucherJdbcProbeDataSource(
         }
 
     @Suppress("UNCHECKED_CAST")
+/**
+ * proxy은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <T: Any> proxy(
         target: T,
         contract: Class<*>,
         afterInvocation: (Method, Any?) -> Any?,
     ): T =
         Proxy.newProxyInstance(contract.classLoader, arrayOf(contract)) { _, method, arguments ->
+/**
+ * result은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val result = invoke(target, method, arguments)
             afterInvocation(method, result)
         } as T
 
+/**
+ * statementContract은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun statementContract(statement: Statement): Class<out Statement> =
         when (statement) {
             is CallableStatement -> CallableStatement::class.java
@@ -106,6 +217,11 @@ internal class VoucherJdbcProbeDataSource(
             else -> Statement::class.java
         }
 
+/**
+ * invoke은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun invoke(
         target: Any,
         method: Method,
@@ -126,42 +242,202 @@ internal class VoucherJdbcProbeDataSource(
  * capacity, permit, leak, deterministic lock-timeout contract를 사용합니다.
  */
 internal class VoucherPerformanceProbe(
+/**
+ * reportDirectory은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val reportDirectory: Path,
+/**
+ * profile은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val profile: String,
+/**
+ * concurrency은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val concurrency: Int,
+/**
+ * redisMode은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val redisMode: String,
+/**
+ * seed은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val seed: Long,
+/**
+ * containerImage은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val containerImage: String,
+/**
+ * hikari은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val hikari: HikariDataSource,
+/**
+ * databasePermits은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val databasePermits: DatabasePermitGate,
+/**
+ * jdbc은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val jdbc: VoucherJdbcProbeDataSource,
+/**
+ * pgStatDataSource은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val pgStatDataSource: DataSource,
+/**
+ * applicationName은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val applicationName: String,
 ): AutoCloseable {
 
     companion object: KLogging() {
+/**
+ * SAMPLE_INTERVAL은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val SAMPLE_INTERVAL = 10L
+/**
+ * EXPECTED_STATUSES은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val EXPECTED_STATUSES = listOf(200, 201, 409, 429, 503)
     }
 
+/**
+ * running은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val running = AtomicBoolean(true)
+/**
+ * finished은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val finished = AtomicBoolean()
+/**
+ * samples은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val samples = ConcurrentLinkedQueue<OperationSample>()
+/**
+ * pgSamples은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val pgSamples = ConcurrentLinkedQueue<PgActivitySample>()
+/**
+ * hikariActiveMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val hikariActiveMax = AtomicInteger()
+/**
+ * hikariIdleMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val hikariIdleMax = AtomicInteger()
+/**
+ * hikariPendingMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val hikariPendingMax = AtomicInteger()
+/**
+ * permitMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val permitMax = AtomicInteger()
+/**
+ * laneActiveMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val laneActiveMax = DatabaseLane.entries.associateWith { AtomicInteger() }
+/**
+ * laneWaitMax은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val laneWaitMax = DatabaseLane.entries.associateWith { AtomicInteger() }
+/**
+ * redisCommands은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val redisCommands = AtomicLong()
+/**
+ * redisSucceeded은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val redisSucceeded = AtomicLong()
+/**
+ * redisFailed은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val redisFailed = AtomicLong()
+/**
+ * redisLatencyNanos은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val redisLatencyNanos = AtomicLong()
+/**
+ * startedAt은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val startedAt = System.nanoTime()
+/**
+ * jfrPath은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val jfrPath = reportDirectory.resolve("$profile.jfr")
+/**
+ * jsonPath은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val jsonPath = reportDirectory.resolve("$profile.json")
+/**
+ * recording은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val recording = createRecording()
+/**
+ * sampler은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val sampler = Thread.ofPlatform().name("voucher-stress-probe-$profile").start {
         while (running.get()) {
             sampleRuntime()
@@ -179,6 +455,11 @@ internal class VoucherPerformanceProbe(
         recording.start()
     }
 
+/**
+ * recordOperation은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun recordOperation(
         operation: String,
         status: Int,
@@ -187,6 +468,11 @@ internal class VoucherPerformanceProbe(
         samples += OperationSample(operation, status, latencyNanos.coerceAtLeast(0))
     }
 
+/**
+ * recordRedisCommand은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun recordRedisCommand(
         succeeded: Boolean,
         latencyNanos: Long,
@@ -196,6 +482,11 @@ internal class VoucherPerformanceProbe(
         redisLatencyNanos.addAndGet(latencyNanos.coerceAtLeast(0))
     }
 
+/**
+ * finish은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun finish(
         expectedOperations: Map<String, Int>,
         capacityInvariant: Boolean,
@@ -209,22 +500,67 @@ internal class VoucherPerformanceProbe(
         recording.dump(jfrPath)
         recording.close()
 
+/**
+ * jfr은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val jfr = readJfr(jfrPath)
+/**
+ * operationCounts은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val operationCounts = samples.groupingBy(OperationSample::operation).eachCount().toSortedMap()
 
         check(operationCounts == expectedOperations) {
             "operation matrix mismatch: expected=$expectedOperations actual=$operationCounts"
         }
+/**
+ * statusCounts은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val statusCounts = (EXPECTED_STATUSES + samples.map { it.status })
             .associateWith { status -> samples.count { it.status == status } }
             .mapKeys { (status, _) -> status.toString() }
             .toSortedMap()
+/**
+ * latencies은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val latencies = samples.map(OperationSample::latencyNanos).sorted()
+/**
+ * elapsedNanos은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val elapsedNanos = (System.nanoTime() - startedAt).coerceAtLeast(1)
+/**
+ * pool은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pool = hikari.hikariPoolMXBean
+/**
+ * resourceLeaks은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val resourceLeaks = databasePermits.inUsePermits() + pool.activeConnections
+/**
+ * maxConsecutiveWaitSamples은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val maxConsecutiveWaitSamples = maxConsecutiveWaitSamples(pgSamples.toList())
 
+/**
+ * evidence은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val evidence = VoucherStressEvidence(
             jsonPath = jsonPath,
             jfrPath = jfrPath,
@@ -234,6 +570,11 @@ internal class VoucherPerformanceProbe(
             resourceLeaks = resourceLeaks,
             capacityInvariant = capacityInvariant,
         )
+/**
+ * document은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val document = linkedMapOf<String, Any>(
             "schemaVersion" to "1.0",
             "gitSha" to gitSha(),
@@ -311,6 +652,11 @@ internal class VoucherPerformanceProbe(
         return evidence
     }
 
+/**
+ * close은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun close() {
         if (finished.compareAndSet(false, true)) {
             stopSampling()
@@ -319,6 +665,11 @@ internal class VoucherPerformanceProbe(
         }
     }
 
+/**
+ * sampleRuntime은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sampleRuntime() {
         val pool = hikari.hikariPoolMXBean ?: return
         hikariActiveMax.accumulateAndGet(pool.activeConnections, ::maxOf)
@@ -334,6 +685,11 @@ internal class VoucherPerformanceProbe(
         samplePgActivity()
     }
 
+/**
+ * samplePgActivity은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun samplePgActivity() {
         val waits = mutableListOf<String>()
         try {
@@ -362,6 +718,11 @@ internal class VoucherPerformanceProbe(
         pgSamples += PgActivitySample(Instant.now().toString(), waits.sorted())
     }
 
+/**
+ * stopSampling은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun stopSampling() {
         running.set(false)
         sampler.interrupt()
@@ -369,6 +730,11 @@ internal class VoucherPerformanceProbe(
         sampleRuntime()
     }
 
+/**
+ * createRecording은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createRecording(): Recording =
         Recording().apply {
             name = "voucher-stress-$profile"
@@ -379,6 +745,11 @@ internal class VoucherPerformanceProbe(
             enable("jdk.GCPhasePause").withThreshold(Duration.ZERO)
         }
 
+/**
+ * readJfr은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun readJfr(path: Path): JfrEvidence {
         var allocationBytes = 0L
         var gcPauseCount = 0L
@@ -409,16 +780,31 @@ internal class VoucherPerformanceProbe(
         )
     }
 
+/**
+ * percentile은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun percentile(
         values: List<Long>,
         percentile: Double,
     ): Long {
         if (values.isEmpty()) return 0
+/**
+ * index은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val index = (ceil(values.size * percentile).toInt() - 1).coerceIn(values.indices)
 
         return values[index]
     }
 
+/**
+ * maxConsecutiveWaitSamples은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun maxConsecutiveWaitSamples(samples: List<PgActivitySample>): Int {
         var current = 0
         var maximum = 0
@@ -429,6 +815,11 @@ internal class VoucherPerformanceProbe(
         return maximum
     }
 
+/**
+ * gitSha은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun gitSha(): String =
         runCatching {
             ProcessBuilder("git", "rev-parse", "HEAD")
@@ -440,15 +831,55 @@ internal class VoucherPerformanceProbe(
                 }
         }.getOrElse { "unknown" }
 
+/**
+ * OperationSample 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class OperationSample(val operation: String, val status: Int, val latencyNanos: Long)
 
+/**
+ * PgActivitySample 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class PgActivitySample(val timestamp: String, val waits: List<String>)
 
+/**
+ * JfrEvidence 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class JfrEvidence(
+/**
+ * allocationBytes은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val allocationBytes: Long,
+/**
+ * gcPauseCount은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val gcPauseCount: Long,
+/**
+ * gcPauseNanos은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val gcPauseNanos: Long,
+/**
+ * threadParks은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val threadParks: Long,
+/**
+ * monitorEnters은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val monitorEnters: Long,
     )
 

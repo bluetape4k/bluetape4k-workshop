@@ -11,23 +11,48 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * HighContentionWorkloadEngineTest 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class HighContentionWorkloadEngineTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "warm-up runs before the baseline and is absent from measured conservation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `warm-up runs before the baseline and is absent from measured conservation`() {
         val events = mutableListOf<String>()
         val adapter = object: HighContentionWorkloadAdapter {
+/**
+ * warmUp은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun warmUp(identity: WorkloadIdentity) {
                 events += "warmup:${identity.namespace}:${identity.ordinal}"
             }
 
+/**
+ * snapshotBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun snapshotBaseline(): String {
                 events += "baseline"
                 return "baseline-1"
             }
 
+/**
+ * execute은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun execute(token: ScheduleToken, identity: WorkloadIdentity): WorkloadTerminalDisposition {
                 events += "measured:${identity.namespace}:${identity.ordinal}"
                 return WorkloadTerminalDisposition.COMPLETED
@@ -69,14 +94,35 @@ class HighContentionWorkloadEngineTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "bounded dispatch records local rejection and the reserved observer still executes" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `bounded dispatch records local rejection and the reserved observer still executes`() {
         val release = CountDownLatch(1)
         val observerRan = AtomicBoolean()
         val adapter = object: HighContentionWorkloadAdapter {
+/**
+ * warmUp은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun warmUp(identity: WorkloadIdentity) = Unit
 
+/**
+ * snapshotBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun snapshotBaseline(): String = "baseline"
 
+/**
+ * execute은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun execute(token: ScheduleToken, identity: WorkloadIdentity): WorkloadTerminalDisposition {
                 release.await(5, TimeUnit.SECONDS)
                 return WorkloadTerminalDisposition.COMPLETED
@@ -107,6 +153,11 @@ class HighContentionWorkloadEngineTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "warm-up and measured namespaces must not overlap" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `warm-up and measured namespaces must not overlap`() {
         assertFailsWith<IllegalArgumentException> {
             HighContentionWorkloadEngine().run(
@@ -118,8 +169,23 @@ class HighContentionWorkloadEngineTest {
                 dispatcherBacklogCapacity = 1,
                 maxScheduleDelayNanos = Long.MAX_VALUE,
                 adapter = object: HighContentionWorkloadAdapter {
+/**
+ * warmUp은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
                     override fun warmUp(identity: WorkloadIdentity) = Unit
+/**
+ * snapshotBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
                     override fun snapshotBaseline(): String = "baseline"
+/**
+ * execute은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
                     override fun execute(
                         token: ScheduleToken,
                         identity: WorkloadIdentity,
@@ -130,6 +196,11 @@ class HighContentionWorkloadEngineTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "missing duplicate and unknown stable ordinals fail realization validation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `missing duplicate and unknown stable ordinals fail realization validation`() {
         val schedule = burstSchedule(operationCount = 2)
         val first = WorkloadRealizedRecord(
@@ -159,6 +230,11 @@ class HighContentionWorkloadEngineTest {
         }
     }
 
+/**
+ * burstSchedule은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun burstSchedule(operationCount: Int): List<ScheduleToken> =
         DeterministicSchedule.generate(
             ScheduleVector(

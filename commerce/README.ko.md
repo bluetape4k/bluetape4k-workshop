@@ -28,6 +28,57 @@ state machine, ledger, event-sourcing 예제에서는 PostgreSQL이 상태 전�
 이 검증은 적은 계약과 장애 시나리오를 확인하며 production 부하, credential,
 외부 provider 가용성까지 증명하지는 않습니다.
 
+## 업무를 처음 보는 독자를 위한 학습 순서
+
+이 예제들을 controller 모음이 아니라 업무 계약으로 읽어야 합니다. 각
+workflow를 볼 때 다음 네 가지 질문을 순서대로 던져 보세요. **잃어버리면
+안 되는 업무 사실은 무엇인가? 그것을 결정할 권위 저장소는 무엇인가? 응답이나
+의존성이 실패하면 어떻게 복구하는가? 그 규칙을 어떤 test가 증명하는가?**
+framework class의 이름보다 이 답이 더 중요합니다.
+
+| 업무 질문 | 먼저 볼 모듈 | 정확성 권위 | 실패·복구에서 배울 점 | 실행할 증거 |
+|---|---|---|---|---|
+| 두 고객이 같은 scarce seat/resource를 동시에 hold할 수 있는가? | [`reservation-control-plane`](reservation-control-plane/) | PostgreSQL row·revision·capacity transaction | command 재시도, durable expiry/waitlist 승격, Redis는 accelerator일 뿐임 | `ReservationWebIntegrationTest`, `LettuceReservationCoordinationIntegrationTest` |
+| 유한한 voucher capacity를 campaign에서 정확히 한 번만 쓸 수 있는가? | [`promotion-voucher-campaign`](promotion-voucher-campaign/) | PostgreSQL campaign/voucher 상태와 idempotency record | 유실 응답, Redis outage, 늦은 review, reconciliation을 명시적 상태로 처리 | `VoucherEndToEndIntegrationTest`, `VoucherConcurrencyIntegrationTest` |
+| 대량 pre-generated code pool을 import하고 안전하게 공개하려면? | [`pre-generated-voucher-pool`](pre-generated-voucher-pool/) | PostgreSQL entry reservation·revision·unique constraint | `FOR UPDATE SKIP LOCKED`, bounded ingest checkpoint, 일회 reveal replacement, key recovery | `VoucherPoolConcurrencyIntegrationTest`, `VoucherBatchIngestIntegrationTest` |
+| order·payment·inventory·fulfillment를 하나의 status column으로 합치면 안 되는 이유는? | [`order-lifecycle-fulfillment`](order-lifecycle-fulfillment/) | aggregate별 PostgreSQL revision과 durable event publication | provider의 unknown/duplicate/out-of-order 결과를 replay와 operator review로 복구 | `OrderLifecycleIntegrationTest`, `OrderLifecycleWebIntegrationTest` |
+| queue나 payment provider를 믿지 않고 flash sale에서 scarce ticket을 판매하려면? | [`concert-ticket-flash-sale`](concert-ticket-flash-sale/) | PostgreSQL sale·purchase·inventory·ticket-effect row | admission은 advisory, payment `UNKNOWN`·refund·ticket revoke·restock은 복구 가능한 workflow | `TicketEndToEndIntegrationTest`, `TicketHostileConcurrencyIntegrationTest` |
+| append-only history의 비용을 projection/replay 이득과 바꿀 만한 때는? | [`event-sourced-promotion-voucher-campaign`](event-sourced-promotion-voucher-campaign/) | PostgreSQL event stream과 expected stream version | shadow projection rebuild, stale worker fencing, poison event quarantine, 설명 가능한 read | `EventStoreAppendIntegrationTest`, `ProjectionRebuildWorkerIntegrationTest` |
+| usage와 price가 서로 다른 시점에 도착해도 billing period를 닫으려면? | [`usage-metering-billing-ledger`](usage-metering-billing-ledger/) | PostgreSQL normalized workflow와 immutable ledger/invoice fact | checkpoint 단위 close, crash 후 retry, 늦은 usage의 debit/credit adjustment append | `MeteringEndToEndIntegrationTest`, `BillingCloseStressTest` |
+| event sourcing·upcasting·online read-model 교체를 함께 운영하려면? | [`usage-metering-billing-event-sourcing`](usage-metering-billing-event-sourcing/) | append-only event stream; projection은 rebuild 가능한 read model | hash 검증·replay/upcast·poison quarantine·fencing이 있는 generation switch | `EventStorePostgresIntegrationTest`, `ProjectionRecoveryPostgresIntegrationTest` |
+| service를 분리했을 때 어떤 새로운 failure boundary가 생기는가? | [`usage-billing-microservices-composition-tests`](usage-billing-microservices-composition-tests/) | 서비스별 local PostgreSQL transaction | Kafka는 at-least-once이므로 outbox/inbox·digest conflict·ordering·quarantine·redrive가 retry를 안전하게 함 | `UsageBillingMicroserviceCompositionIntegrationTest`, `PoisonIntegrationTest` |
+
+### 예제 전체에서 반복되는 용어
+
+- **Aggregate와 revision**: aggregate는 invariant를 함께 바꿔야 하는 가장
+  작은 업무 객체입니다. revision은 compare-and-set guard이므로 revision 4를
+  읽은 command가 revision 5를 조용히 덮어쓰지 못합니다.
+- **Idempotency**: timeout 뒤 caller가 같은 key로 재시도하는 상황입니다.
+  server는 key와 request의 digest를 저장하고 같은 request면 원래 결과를
+  replay하며, 다른 request면 conflict를 반환합니다. 업무 effect 중복은
+  막지만 network exactly-once를 보장한다는 뜻은 아닙니다.
+- **Outbox/inbox**: outbox는 local fact와 delivery 의도를 한 transaction에
+  기록하고, inbox는 수신 event를 처리했다는 사실을 기록합니다. 둘 다
+  at-least-once 전달을 위한 durable checkpoint이며 Kafka나 외부 provider와
+  PostgreSQL이 하나의 transaction이라는 주장은 아닙니다.
+- **Projection과 replay**: projection은 권위 fact에서 파생한 query용 복사본입니다.
+  replay로 event부터 재생성하므로 projection이 늦거나 실패해도 source of
+  truth가 되지 않습니다.
+- **Reconciliation과 correction**: reconciliation은 서로 독립적인 fact를
+  비교해 finding을 기록합니다. correction은 원래 payment·usage·ledger fact를
+  수정하지 않고 새 debit/credit 또는 adjustment를 append합니다.
+
+### Spec에서 코드로 읽는 순서
+
+실행 가능한 module은 일반적인 CRUD tutorial이 아니라
+`docs/superpowers/specs`의 설계 결정을 구현합니다. 먼저 대응하는 spec의
+해당 section을 읽고, README의 architecture와 failure section, 마지막으로
+이름이 나온 test를 읽으세요. 특히 spec은 Redis/Kafka가 왜 의도적으로
+비권위인지, lock ordering을 왜 문서화했는지, operator recovery가 왜 업무
+계약인지 설명합니다. 아래 command에 `--max-workers=1`을 붙인 이유는 공용
+database fixture를 직렬화해 재현 가능한 correctness를 얻기 위해서이며,
+성능 측정이라는 뜻은 아닙니다.
+
 usage-billing 서비스 경계는 아래 그림과 같습니다. 각 서비스는 로컬
 PostgreSQL 권위를 소유하고 Kafka topic으로 서비스 경계를 넘습니다. 이 그림은
 처리량 chart가 아니라 소스 코드에 근거한 소유권 구조를 보여 줍니다.

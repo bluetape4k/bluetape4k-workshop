@@ -33,22 +33,53 @@ import tools.jackson.databind.ObjectMapper
 @Import(OperatorAccessFilterTestConfiguration::class)
 @ExtendWith(OutputCaptureExtension::class)
 @Suppress("VarCouldBeVal")
+/**
+ * OperatorAccessFilterIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrationTest() {
 
     companion object: KLogging()
 
+/**
+ * origin은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun origin(): String = "http://127.0.0.1:$port"
 
     @org.springframework.beans.factory.annotation.Autowired
+/**
+ * operatorAccessFilter은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var operatorAccessFilter: OperatorAccessFilter
 
     @org.springframework.beans.factory.annotation.Autowired
+/**
+ * properties은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var properties: VoucherPoolProperties
 
     @org.springframework.beans.factory.annotation.Autowired
+/**
+ * mapper은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var mapper: ObjectMapper
 
     @Test
+/**
+ * 이 시나리오는 "operator trust boundary failures are uniform not found and redact credentials" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator trust boundary failures are uniform not found and redact credentials`() {
         val path = "/operator/test/probe"
         val secret = "wrong-secret-that-must-not-leak"
@@ -86,6 +117,12 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator routes reject origin content type preflight and oversized tenant before
+ * dispatch" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator routes reject origin content type preflight and oversized tenant before dispatch`() {
         val path = "/operator/test/probe"
 
@@ -125,6 +162,12 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator routes accept same origin GET and JSON POST with valid credentials" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator routes accept same origin GET and JSON POST with valid credentials`() {
         webTestClient.get()
             .uri("/operator/test/probe")
@@ -145,6 +188,11 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator authentication attempts use bounded admission quota" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator authentication attempts use bounded admission quota`() {
         val boundedFilter = OperatorAccessFilter(
             properties = properties,
@@ -171,6 +219,12 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
     }
 
     @Test
+/**
+ * 이 시나리오는 "remote and Host checks use servlet connection metadata instead of forwarding headers"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `remote and Host checks use servlet connection metadata instead of forwarding headers`() {
         val remoteResponse = directFilterRequest(
             remoteAddress = "198.51.100.10",
@@ -188,6 +242,11 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
     }
 
     @Test
+/**
+ * 이 시나리오는 "access logs omit credential body and query values" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `access logs omit credential body and query values`(output: CapturedOutput) {
         operatorPost(
             "/operator/test/probe?token=$QUERY_SECRET",
@@ -206,6 +265,12 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
     }
 
     @Test
+/**
+ * 이 시나리오는 "configured public bind rejects operator even when the connection is loopback" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `configured public bind rejects operator even when the connection is loopback`() {
         val publicBindFilter = OperatorAccessFilter(
             properties = properties,
@@ -222,6 +287,12 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
     }
 
     @Test
+/**
+ * 이 시나리오는 "missing short and long credentials always compare two fixed length digests" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `missing short and long credentials always compare two fixed length digests`() {
         listOf(null, "short", "x".repeat(4_096))
             .forEach { candidate ->
@@ -242,12 +313,22 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
             }
     }
 
+/**
+ * directFilterRequest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun directFilterRequest(
         remoteAddress: String,
         serverName: String,
         filter: OperatorAccessFilter = operatorAccessFilter,
         includeForwardingHeaders: Boolean = false,
     ): MockHttpServletResponse {
+/**
+ * request은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val request = MockHttpServletRequest("POST", "/operator/test/probe")
 
         request.remoteAddr = remoteAddress
@@ -266,12 +347,22 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
             request.addHeader("X-Forwarded-Host", "127.0.0.1:$port")
             request.addHeader("X-Forwarded-Proto", "http")
         }
+/**
+ * response은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = MockHttpServletResponse()
         filter.doFilter(request, response, MockFilterChain())
         return response
     }
 
     @Suppress("LongParameterList")
+/**
+ * operatorPost은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun operatorPost(
         path: String,
         tenant: String,
@@ -293,12 +384,27 @@ internal class OperatorAccessFilterIntegrationTest: AbstractVoucherPoolIntegrati
 }
 
 @TestConfiguration(proxyBeanMethods = false)
+/**
+ * OperatorAccessFilterTestConfiguration 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OperatorAccessFilterTestConfiguration {
     @Bean
+/**
+ * operatorProbeController은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun operatorProbeController(): OperatorProbeController = OperatorProbeController()
 
     @Bean
     @Primary
+/**
+ * operatorAccessTestAdmissionGate은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun operatorAccessTestAdmissionGate(): VoucherPoolAdmissionGate =
         VoucherPoolAdmissionGate(
             backend = null,
@@ -307,18 +413,62 @@ internal class OperatorAccessFilterTestConfiguration {
 }
 
 @RestController
+/**
+ * operator 전용 경로의 인증·가드·응답 계약을 검증하기 위한 테스트 전용 controller입니다.
+ */
 internal class OperatorProbeController {
+    /**
+     * operator 조회 요청이 access filter를 통과할 때만 정상 응답을 반환하는지 확인합니다.
+     *
+     * 예: GET /operator/test/probe는 유효한 operator credential에서만 status=ok를 반환해야 합니다.
+     */
     @GetMapping("/operator/test/probe")
     fun get(): Map<String, String> = mapOf("status" to "ok")
 
+    /**
+     * operator 명령 본문이 필터를 통과한 뒤 업무 필드 수와 함께 반환되는지 확인합니다.
+     *
+     * 예: curl -X POST -H 'Content-Type: application/json' -d '{"action":"pause"}'
+     * /operator/test/probe
+     */
     @PostMapping("/operator/test/probe")
     fun post(@RequestBody body: Map<String, String>): Map<String, String> =
         mapOf("status" to "ok", "acceptedFields" to body.size.toString())
 }
 
+/**
+ * OPERATOR_SECRET은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private const val OPERATOR_SECRET = "test-operator-secret-0000000000000001"
+/**
+ * OPERATOR_GUARD은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private const val OPERATOR_GUARD = "test-voucher-pool-operator-guard"
+/**
+ * QUERY_SECRET은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private const val QUERY_SECRET = "query-sensitive-marker"
+/**
+ * BODY_SECRET은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private const val BODY_SECRET = "body-sensitive-marker"
+/**
+ * HEADER_SECRET은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private const val HEADER_SECRET = "header-sensitive-marker"
+/**
+ * GUARD_SECRET은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private const val GUARD_SECRET = "guard-sensitive-marker"

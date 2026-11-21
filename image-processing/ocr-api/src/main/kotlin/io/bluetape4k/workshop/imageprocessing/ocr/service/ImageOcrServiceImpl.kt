@@ -43,16 +43,46 @@ import io.bluetape4k.images.ocr.OcrWord as SourceOcrWord
 
 /**
  * 워크숍 API용 기본 OCR 서비스 구현입니다.
+ * @property properties 이미지 처리 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property ocrEngineProvider 이미지 처리 업무 흐름을 구성하는 값입니다. 명령 검증·영속화·이벤트 변환에서 의미를 보존합니다.
+ * @property requestIdGenerator 이미지 처리 경계의 전달 데이터입니다. 스키마·크기·무결성을 검증한 뒤 저장하거나 발행합니다.
  */
 @Service
 class ImageOcrServiceImpl(
+    /**
+     * `properties`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val properties: ImageOcrProperties,
+    /**
+     * `ocrEngineProvider`은 이미지 업로드·파생 처리에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val ocrEngineProvider: OcrEngineProvider,
+    /**
+     * `requestIdGenerator`은 이미지 업로드·파생 처리에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val requestIdGenerator: RequestIdGenerator,
 ): ImageOcrService {
+    /**
+     * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+     */
 
     private val nativeSemaphore = Semaphore(permits = 1)
 
+    /**
+     * recognize은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param request 이미지 업로드·검수·파생물 처리 명령의 입력입니다. 스키마·필수값·중복 키를 검증한 뒤 부작용을 시작합니다.
+     * 예: `POST /api/ocr`는 허용된 이미지 bytes만 OCR provider에 전달하고, oversized input은 native 호출 전에 거절합니다.
+     */
     override suspend fun recognize(request: ImageOcrRequest): ImageOcrResponse {
         val startedAtNanos = System.nanoTime()
         val requestId = requestIdGenerator.nextId()
@@ -169,6 +199,17 @@ class ImageOcrServiceImpl(
         }
     }
 
+    /**
+     * recordOutcome은 이미지 업로드·검수·파생물 처리 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록
+     * 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param response 업무 처리에 필요한 response 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param nativeEnabled 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param failureCategory 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param startedAtNanos 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     private fun recordOutcome(
         response: ImageOcrResponse,
         nativeEnabled: Boolean,
@@ -184,6 +225,15 @@ class ImageOcrServiceImpl(
         return response
     }
 
+    /**
+     * completed은 이미지 업로드·검수·파생물 처리의 재고·할당량·금액을 검증한 뒤 한 번만 상태 전이시키고, 충돌·재시도·보상 결과를 감사 가능한 형태로 남깁니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param requestId 처리할 이미지 업로드·검수·파생물 처리 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param languages 업무 처리에 필요한 languages 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param text 업무 처리에 필요한 text 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun completed(requestId: String, languages: List<String>, text: String): ImageOcrResponse =
         ImageOcrResponse(
             requestId = requestId,
@@ -202,6 +252,15 @@ class ImageOcrServiceImpl(
             warnings = listOf("Confidence is not available from the current OCR engine."),
         )
 
+    /**
+     * completed은 이미지 업로드·검수·파생물 처리의 재고·할당량·금액을 검증한 뒤 한 번만 상태 전이시키고, 충돌·재시도·보상 결과를 감사 가능한 형태로 남깁니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param requestId 처리할 이미지 업로드·검수·파생물 처리 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param languages 업무 처리에 필요한 languages 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param result 허용된 업무 상태 또는 처리 결과입니다. 임의의 문자열을 다음 전이 기준으로 사용하지 않습니다.
+     */
     private fun completed(requestId: String, languages: List<String>, result: OcrStructuredResult): ImageOcrResponse =
         ImageOcrResponse(
             requestId = requestId,
@@ -218,6 +277,17 @@ class ImageOcrServiceImpl(
             words = result.words.map { it.toModel() },
         )
 
+    /**
+     * plainFallback은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param requestId 처리할 이미지 업로드·검수·파생물 처리 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param languages 업무 처리에 필요한 languages 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param requestedDetail 이미지 업로드·검수·파생물 처리 명령의 입력입니다. 스키마·필수값·중복 키를 검증한 뒤 부작용을 시작합니다.
+     * @param text 업무 처리에 필요한 text 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun plainFallback(
         requestId: String,
         languages: List<String>,
@@ -235,6 +305,16 @@ class ImageOcrServiceImpl(
             ),
         )
 
+    /**
+     * unavailable은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param requestId 처리할 이미지 업로드·검수·파생물 처리 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param languages 업무 처리에 필요한 languages 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param warning 업무 처리에 필요한 warning 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun unavailable(requestId: String, languages: List<String>, warning: String): ImageOcrResponse =
         ImageOcrResponse(
             requestId = requestId,
@@ -247,6 +327,16 @@ class ImageOcrServiceImpl(
             warnings = listOf(warning),
         )
 
+    /**
+     * failed은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param requestId 처리할 이미지 업로드·검수·파생물 처리 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param languages 업무 처리에 필요한 languages 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param warning 업무 처리에 필요한 warning 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun failed(requestId: String, languages: List<String>, warning: String): ImageOcrResponse =
         ImageOcrResponse(
             requestId = requestId,
@@ -259,6 +349,12 @@ class ImageOcrServiceImpl(
             warnings = listOf(warning),
         )
 
+    /**
+     * toModel은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     private fun SourceOcrPage.toModel(): OcrPage =
         OcrPage(
             pageIndex = pageIndex,
@@ -267,6 +363,14 @@ class ImageOcrServiceImpl(
             boundingBox = boundingBox?.toModel(),
         )
 
+    /**
+     * toModel은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param index 업무 처리에 필요한 index 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun SourceOcrTextBlock.toModel(index: Int): OcrTextBlock =
         OcrTextBlock(
             index = index,
@@ -276,6 +380,12 @@ class ImageOcrServiceImpl(
             boundingBox = boundingBox?.toModel(),
         )
 
+    /**
+     * toModel은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     private fun SourceOcrTextLine.toModel(): OcrTextLine =
         OcrTextLine(
             pageIndex = pageIndex,
@@ -284,6 +394,12 @@ class ImageOcrServiceImpl(
             boundingBox = boundingBox?.toModel(),
         )
 
+    /**
+     * toModel은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     private fun SourceOcrWord.toModel(): OcrWord =
         OcrWord(
             pageIndex = pageIndex,
@@ -292,6 +408,12 @@ class ImageOcrServiceImpl(
             boundingBox = boundingBox?.toModel(),
         )
 
+    /**
+     * toModel은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     private fun SourceOcrBoundingBox.toModel(): OcrBoundingBox =
         OcrBoundingBox(
             x = x,
@@ -300,11 +422,28 @@ class ImageOcrServiceImpl(
             height = height,
         )
 
+    /**
+     * validateBytes은 이미지 업로드·검수·파생물 처리 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와 부분 저장을
+     * 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun validateBytes(bytes: ByteArray) {
         bytes.size.requirePositiveNumber("bytes.size")
         bytes.size.toLong().requireInRange(1L, properties.maxUploadBytes, "bytes.size")
     }
 
+    /**
+     * validateContentType은 이미지 업로드·검수·파생물 처리 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와
+     * 부분 저장을
+     * 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param contentType 이미지 업로드·검수·파생물 처리 처리 대상의 위치·콘텐츠 참조입니다. 허용된 형식과 보안 정책을 먼저 확인합니다.
+     */
     private fun validateContentType(contentType: String?): String {
         val declaredContentType = requireNotNull(contentType) {
             "Unsupported image content type. Use JPEG, PNG, WebP, or TIFF."
@@ -315,6 +454,16 @@ class ImageOcrServiceImpl(
         return declaredContentType
     }
 
+    /**
+     * decodeAndValidateImage은 이미지 업로드·검수·파생물 처리 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태
+     * 전이와 부분
+     * 저장을 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param declaredContentType 이미지 업로드·검수·파생물 처리 처리 대상의 위치·콘텐츠 참조입니다. 허용된 형식과 보안 정책을 먼저 확인합니다.
+     */
     private fun decodeAndValidateImage(bytes: ByteArray, declaredContentType: String): ImmutableImage {
         val detectedContentType = detectContentType(bytes)
         require(
@@ -335,6 +484,15 @@ class ImageOcrServiceImpl(
         return image
     }
 
+    /**
+     * detectContentType은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를
+     * 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun detectContentType(bytes: ByteArray): String {
         if (bytes.isTiffHeader()) {
             return "image/tiff"
@@ -373,6 +531,15 @@ class ImageOcrServiceImpl(
         throw IllegalArgumentException("Undecodable image upload")
     }
 
+    /**
+     * validateTiffInput은 이미지 업로드·검수·파생물 처리 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와 부분
+     * 저장을 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param declaredContentType 이미지 업로드·검수·파생물 처리 처리 대상의 위치·콘텐츠 참조입니다. 허용된 형식과 보안 정책을 먼저 확인합니다.
+     */
     private fun validateTiffInput(bytes: ByteArray, declaredContentType: String) {
         require(bytes.isTiffHeader()) { "Undecodable TIFF upload" }
         val detectedContentType = detectContentType(bytes)
@@ -381,6 +548,12 @@ class ImageOcrServiceImpl(
         }
     }
 
+    /**
+     * toTiffLimits은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+     */
     private fun ImageOcrProperties.toTiffLimits(): TiffMultiPageOcrLimits =
         TiffMultiPageOcrLimits(
             maxEncodedBytes = tiff.maxEncodedBytes,
@@ -393,6 +566,16 @@ class ImageOcrServiceImpl(
             maxResultEntries = tiff.maxResultEntries,
         )
 
+    /**
+     * readDimensions은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된
+     * 응답으로
+     * 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param contentType 이미지 업로드·검수·파생물 처리 처리 대상의 위치·콘텐츠 참조입니다. 허용된 형식과 보안 정책을 먼저 확인합니다.
+     */
     private fun readDimensions(bytes: ByteArray, contentType: String): ImageDimensions =
         when (contentType) {
             "image/png" -> readPngDimensions(bytes)
@@ -401,6 +584,15 @@ class ImageOcrServiceImpl(
             else -> throw IllegalArgumentException("Unsupported image content type. Use JPEG, PNG, or WebP.")
         }
 
+    /**
+     * readPngDimensions은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를
+     * 계약된 응답으로
+     * 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun readPngDimensions(bytes: ByteArray): ImageDimensions {
         require(bytes.size >= 24) { "Undecodable image upload" }
         require(
@@ -418,6 +610,15 @@ class ImageOcrServiceImpl(
         )
     }
 
+    /**
+     * readJpegDimensions은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를
+     * 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun readJpegDimensions(bytes: ByteArray): ImageDimensions {
         var offset = 2
         while (offset + 3 < bytes.size) {
@@ -451,6 +652,15 @@ class ImageOcrServiceImpl(
         throw IllegalArgumentException("Undecodable image upload")
     }
 
+    /**
+     * readWebpDimensions은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를
+     * 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param bytes 업무 처리에 필요한 bytes 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun readWebpDimensions(bytes: ByteArray): ImageDimensions {
         require(bytes.size >= 16) { "Undecodable image upload" }
         return when {
@@ -487,12 +697,31 @@ class ImageOcrServiceImpl(
         }
     }
 
+    /**
+     * validateDecodedPixels은 이미지 업로드·검수·파생물 처리 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태
+     * 전이와 부분 저장을
+     * 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param width 업무 처리에 필요한 width 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param height 업무 처리에 필요한 height 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun validateDecodedPixels(width: Long, height: Long) {
         width.requirePositiveNumber("width")
         height.requirePositiveNumber("height")
         width.requireInRange(1L, properties.maxImagePixels / height, "width")
     }
 
+    /**
+     * normalizeLanguages은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를
+     * 계약된
+     * 응답으로 매핑합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param rawLanguages 업무 처리에 필요한 rawLanguages 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun normalizeLanguages(rawLanguages: List<String>): List<String> {
         val normalized = rawLanguages
             .flatMap { it.split(",") }
@@ -511,10 +740,22 @@ class ImageOcrServiceImpl(
     }
 
     companion object: KLogging() {
+        /**
+         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         private const val DISABLED_ENGINE = "disabled"
+        /**
+         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         private const val NATIVE_ENGINE = "tesseract"
+        /**
+         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
 
         private val LANGUAGE_PATTERN = Regex("[A-Za-z][A-Za-z0-9_+-]*")
+        /**
+         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
+         */
         private val JPEG_DIMENSION_MARKERS = setOf(
             0xC0,
             0xC1,
@@ -530,6 +771,9 @@ class ImageOcrServiceImpl(
             0xCE,
             0xCF,
         )
+        /**
+         * 이미지 처리의 상태·분류·오류 코드를 나타냅니다. 허용된 전이와 재시도·응답 분기를 선택하는 기준입니다.
+         */
         private val SUPPORTED_CONTENT_TYPES = setOf(
             "image/jpeg",
             "image/jpg",
@@ -539,43 +783,117 @@ class ImageOcrServiceImpl(
             "image/tif",
             "image/x-tiff",
         )
+        /**
+         * 이미지 처리의 상태·분류·오류 코드를 나타냅니다. 허용된 전이와 재시도·응답 분기를 선택하는 기준입니다.
+         */
         private val TIFF_CONTENT_TYPES = setOf("image/tiff", "image/tif", "image/x-tiff")
     }
 }
+/**
+ * ImageDimensions은 이미지 처리에서 사용하는 업무 객체입니다.
+ * @property width 처리량·할당량·크기 또는 진척도입니다. 음수와 상한을 검증하고 경쟁 요청에서 원자적으로 갱신합니다.
+ * @property height 처리량·할당량·크기 또는 진척도입니다. 음수와 상한을 검증하고 경쟁 요청에서 원자적으로 갱신합니다.
+ */
+
 
 private class ImageDimensions(
+    /**
+     * `width`은 이미지 업로드·파생 처리에서 한도·할당·정산·처리 진척을 계산하는 업무 수치입니다.
+     *
+     * 음수·상한·단위와 반올림 규칙을 검증하고 경쟁 요청에서도 원자적으로 갱신합니다.
+     */
     val width: Long,
+    /**
+     * `height`은 이미지 업로드·파생 처리에서 한도·할당·정산·처리 진척을 계산하는 업무 수치입니다.
+     *
+     * 음수·상한·단위와 반올림 규칙을 검증하고 경쟁 요청에서도 원자적으로 갱신합니다.
+     */
     val height: Long,
 )
 
+/**
+ * readUInt16BE은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+ * 매핑합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param offset 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+ */
 private fun ByteArray.readUInt16BE(offset: Int): Long =
     ((this[offset].toInt() and 0xFF) shl 8 or
             (this[offset + 1].toInt() and 0xFF)).toLong()
 
+/**
+ * readUInt16LE은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+ * 매핑합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param offset 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+ */
 private fun ByteArray.readUInt16LE(offset: Int): Long =
     ((this[offset].toInt() and 0xFF) or
             ((this[offset + 1].toInt() and 0xFF) shl 8)).toLong()
 
+/**
+ * readUInt24LE은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+ * 매핑합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param offset 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+ */
 private fun ByteArray.readUInt24LE(offset: Int): Long =
     ((this[offset].toInt() and 0xFF) or
             ((this[offset + 1].toInt() and 0xFF) shl 8) or
             ((this[offset + 2].toInt() and 0xFF) shl 16)).toLong()
 
+/**
+ * readUInt32BE은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+ * 매핑합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param offset 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+ */
 private fun ByteArray.readUInt32BE(offset: Int): Long =
     ((this[offset].toLong() and 0xFF) shl 24) or
             ((this[offset + 1].toLong() and 0xFF) shl 16) or
             ((this[offset + 2].toLong() and 0xFF) shl 8) or
             (this[offset + 3].toLong() and 0xFF)
 
+/**
+ * readUInt32LE은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+ * 매핑합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param offset 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+ */
 private fun ByteArray.readUInt32LE(offset: Int): Long =
     (this[offset].toLong() and 0xFF) or
             ((this[offset + 1].toLong() and 0xFF) shl 8) or
             ((this[offset + 2].toLong() and 0xFF) shl 16) or
             ((this[offset + 3].toLong() and 0xFF) shl 24)
 
+/**
+ * hasAscii은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+ * 매핑합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param offset 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+ * @param value 업무 처리에 필요한 value 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+ */
 private fun ByteArray.hasAscii(offset: Int, value: String): Boolean =
     size >= offset + value.length && value.indices.all { index -> this[offset + index] == value[index].code.toByte() }
 
+/**
+ * isTiffHeader은 이미지 업로드·검수·파생물 처리의 애플리케이션 경계에서 인증·tenant scope·입력 형식을 확인하고 성공 결과와 업무 오류를 계약된 응답으로
+ * 매핑합니다.
+ *
+ * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+ */
 private fun ByteArray.isTiffHeader(): Boolean =
     size >= 4 &&
             ((this[0] == 'I'.code.toByte() && this[1] == 'I'.code.toByte() &&

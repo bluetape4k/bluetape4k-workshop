@@ -46,17 +46,48 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
+/**
+ * JobSubmissionIdempotencyRepository은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이
+ * 타입의
+ * 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal interface JobSubmissionIdempotencyRepository {
+    /**
+     * reserve은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun reserve(command: JobSubmissionCommand, now: Instant): Reservation
 
+    /**
+     * registerWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param ownership 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun registerWaiter(ownership: InFlightOwnership, now: Instant): WaiterRegistration
 
+    /**
+     * registerWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun registerWaiter(
         ownership: InFlightOwnership,
         now: Instant,
         waiterTtl: Duration,
     ): WaiterRegistration = registerWaiter(ownership, now)
 
+    /**
+     * registerWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun registerWaiter(
         ownership: InFlightOwnership,
         now: Instant,
@@ -64,10 +95,33 @@ internal interface JobSubmissionIdempotencyRepository {
         deadlineAt: Instant,
     ): WaiterRegistration = registerWaiter(ownership, now, waiterTtl)
 
+    /**
+     * removeWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param keyHash 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param generation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param waiterToken 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun removeWaiter(scope: DemoCallerScope, keyHash: String, generation: Long, waiterToken: UUID): Boolean
 
+    /**
+     * poll은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param keyHash 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param generation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun poll(scope: DemoCallerScope, keyHash: String, generation: Long, now: Instant): PollResult
 
+    /**
+     * poll은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun poll(
         scope: DemoCallerScope,
         keyHash: String,
@@ -76,14 +130,30 @@ internal interface JobSubmissionIdempotencyRepository {
         statementTimeout: Duration,
     ): PollResult = poll(scope, keyHash, generation, now)
 
+/**
+ * withTransaction은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     fun <T> withTransaction(block: (Connection) -> T): T
 
+    /**
+     * finalizeOwner은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun finalizeOwner(
         ownership: JobSubmissionOwnership,
         prepared: PreparedJobSubmission,
         now: Instant,
     ): ReplayableJobSubmission
 
+    /**
+     * finalizeOwner은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun finalizeOwner(
         connection: Connection,
         ownership: JobSubmissionOwnership,
@@ -91,8 +161,23 @@ internal interface JobSubmissionIdempotencyRepository {
         now: Instant,
     ): ReplayableJobSubmission
 
+    /**
+     * abandon은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param ownership 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param reason 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun abandon(ownership: JobSubmissionOwnership, reason: AbandonReason, now: Instant): Boolean
 
+    /**
+     * cleanupExpired은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchSize 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun cleanupExpired(now: Instant, batchSize: Int = 100): CleanupReport
 }
 
@@ -102,9 +187,25 @@ internal interface JobSubmissionIdempotencyRepository {
  * 이후 provider가 반환한 connection도 닫습니다.
  */
 internal class BoundedConnectionAcquirer(
+    /**
+     * `dataSource`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val dataSource: DataSource,
+    /**
+     * `executor`은 작업 운영 콘솔에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val executor: ExecutorService = ForkJoinPool.commonPool(),
 ) {
+    /**
+     * acquire은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param timeout 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun acquire(timeout: Duration): Connection? {
         if (timeout.isZero || timeout.isNegative) return null
         val handoff = Handoff()
@@ -136,6 +237,13 @@ internal class BoundedConnectionAcquirer(
         }
     }
 
+    /**
+     * cancel은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param handoff 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param future 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun cancel(handoff: Handoff, future: java.util.concurrent.Future<Connection>) {
         synchronized(handoff) {
             handoff.timedOut = true
@@ -147,31 +255,101 @@ internal class BoundedConnectionAcquirer(
         future.cancel(true)
     }
 
+    /**
+     * Handoff은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private class Handoff {
+        /**
+         * `timedOut`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         var timedOut = false
+        /**
+         * `handedOff`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         var handedOff = false
+        /**
+         * `connection`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         var connection: Connection? = null
     }
 
+    /**
+     * LateConnection은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+     * 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private class LateConnection : RuntimeException()
 }
 
 /** 모든 상태 전이의 기준을 request row에 두는 JDBC 구현입니다. */
+/** 모든 상태 전이의 기준을 request row에 두는 JDBC 구현입니다. */
 internal class JdbcJobSubmissionIdempotencyRepository(
+    /**
+     * `dataSource`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val dataSource: DataSource,
+    /**
+     * `jobRepository`은 작업 운영 콘솔에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val jobRepository: JobRepository,
+    /**
+     * `policy`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val policy: JobSubmissionIdempotencyPolicy = JobSubmissionIdempotencyPolicy(),
+    /**
+     * `snapshotPolicy`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val snapshotPolicy: JobSubmissionSnapshotPolicy = JobSubmissionSnapshotPolicy(policy),
+    /**
+     * `executor`은 작업 운영 콘솔에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val executor: ExecutorService = ForkJoinPool.commonPool(),
 ) : JobSubmissionIdempotencyRepository, AutoCloseable {
+    /**
+     * `boundedConnectionAcquirer`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val boundedConnectionAcquirer = BoundedConnectionAcquirer(dataSource, executor)
+    /**
+     * `jdbc`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val jdbc = JobJdbcExecutor(dataSource)
 
+    /** Exposed database manager를 bounded-wait service lifecycle과 함께 해제합니다. */
     /** Exposed database manager를 bounded-wait service lifecycle과 함께 해제합니다. */
     override fun close() {
         jdbc.close()
     }
 
+    /**
+     * reserve은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun reserve(command: JobSubmissionCommand, now: Instant): Reservation {
         var attempt = 0
         while (true) {
@@ -199,6 +377,8 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     }
 
     /** commit 이후 waiter deadline 기준을 맞추기 위한 PostgreSQL clock 조회입니다. */
+    /** commit 이후 waiter deadline 기준을 맞추기 위한 PostgreSQL clock 조회입니다. */
+    /** commit 직후에도 기존 transaction connection을 재사용하여 단일 pool을 보호합니다. */
     /** commit 직후에도 기존 transaction connection을 재사용하여 단일 pool을 보호합니다. */
     private fun currentDatabaseTimestamp(connection: Connection): Instant {
         val timeoutMillis = policy.statementTimeout.toMillis().coerceAtLeast(1L).coerceAtMost(Int.MAX_VALUE.toLong())
@@ -212,15 +392,32 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
+    /**
+     * registerWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param ownership 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun registerWaiter(ownership: InFlightOwnership, now: Instant): WaiterRegistration =
         registerWaiterInTransaction(ownership, now, policy.waiterTimeout, null)
 
+    /**
+     * registerWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun registerWaiter(
         ownership: InFlightOwnership,
         now: Instant,
         waiterTtl: Duration,
     ): WaiterRegistration = registerWaiterInTransaction(ownership, now, waiterTtl, null)
 
+    /**
+     * registerWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun registerWaiter(
         ownership: InFlightOwnership,
         now: Instant,
@@ -228,6 +425,11 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         deadlineAt: Instant,
     ): WaiterRegistration = registerWaiterInTransaction(ownership, now, waiterTtl, deadlineAt)
 
+    /**
+     * registerWaiterInTransaction은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun registerWaiterInTransaction(
         ownership: InFlightOwnership,
         now: Instant,
@@ -271,6 +473,15 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         return result ?: WaiterRegistration.DeadlineExceeded
     }
 
+    /**
+     * removeWaiter은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param keyHash 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param generation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param waiterToken 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun removeWaiter(scope: DemoCallerScope, keyHash: String, generation: Long, waiterToken: UUID): Boolean =
         inTransaction(connectionTimeout = policy.connectionAcquireTimeout) { _ ->
             JobRequestWaiterTable.deleteWhere {
@@ -282,9 +493,23 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             } == 1
         }
 
+    /**
+     * poll은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param keyHash 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param generation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun poll(scope: DemoCallerScope, keyHash: String, generation: Long, now: Instant): PollResult =
         poll(scope, keyHash, generation, now, policy.statementTimeout)
 
+    /**
+     * poll은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun poll(
         scope: DemoCallerScope,
         keyHash: String,
@@ -293,12 +518,22 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         statementTimeout: Duration,
     ): PollResult =
         try {
+            /**
+             * `deadlineNanos`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+             *
+             * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+             */
             val deadlineNanos = Math.addExact(System.nanoTime(), statementTimeout.toNanos())
             inTransaction(
                 statementTimeout = statementTimeout,
                 connectionTimeout = minOf(policy.connectionAcquireTimeout, statementTimeout),
                 deadlineNanos = deadlineNanos,
             ) { connection ->
+                /**
+                 * `request`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                 *
+                 * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                 */
                 val request = loadRequest(connection, scope, keyHash, forUpdate = false) ?: return@inTransaction PollResult.StillInFlight
                 if (request.generation != generation) return@inTransaction PollResult.StillInFlight
                 when (request.state) {
@@ -313,6 +548,11 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             PollResult.StillInFlight
         }
 
+    /**
+     * finalizeOwner은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun finalizeOwner(
         ownership: JobSubmissionOwnership,
         prepared: PreparedJobSubmission,
@@ -320,6 +560,11 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     ): ReplayableJobSubmission =
         withTransaction { connection -> finalizeOwner(connection, ownership, prepared, now) }
 
+    /**
+     * finalizeOwner은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun finalizeOwner(
         connection: Connection,
         ownership: JobSubmissionOwnership,
@@ -378,6 +623,14 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         )
     }
 
+    /**
+     * abandon은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param ownership 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param reason 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun abandon(ownership: JobSubmissionOwnership, reason: AbandonReason, now: Instant): Boolean =
         inTransaction(connectionTimeout = policy.connectionAcquireTimeout) { connection ->
             // lease/abandonment 경계는 애플리케이션 clock이 아니라 DB clock으로 계산합니다.
@@ -399,6 +652,13 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             }
         }
 
+    /**
+     * cleanupExpired은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchSize 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun cleanupExpired(now: Instant, batchSize: Int): CleanupReport {
         require(batchSize > 0) { "batchSize must be positive" }
         /**
@@ -477,6 +737,13 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
+    /**
+     * reserveInTransaction은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun reserveInTransaction(connection: Connection, command: JobSubmissionCommand): Reservation {
         val request = loadRequest(connection, command.scope, command.keyHash, forUpdate = true)
         if (request == null) {
@@ -508,6 +775,13 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
+    /**
+     * insertInFlightRequest은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun insertInFlightRequest(connection: Connection, command: JobSubmissionCommand): JobSubmissionOwnership {
         val jobId = Uuid.V7.nextId()
         val ownerToken = UUID.randomUUID()
@@ -537,6 +811,11 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         return JobSubmissionOwnership(command.scope, command.keyHash, row.first, jobId, ownerToken, row.second)
     }
 
+    /**
+     * takeOver은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun takeOver(
         connection: Connection,
         request: RequestRow,
@@ -576,6 +855,11 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         return JobSubmissionOwnership(command.scope, command.keyHash, row.first, jobId, ownerToken, row.second)
     }
 
+    /**
+     * loadRequest은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun loadRequest(
         connection: Connection,
         scope: DemoCallerScope,
@@ -626,6 +910,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     }
 
     /** metadata가 없는 test double은 Exposed transaction을 열 수 없어 읽기 전용 probe 경로를 유지합니다. */
+    /** metadata가 없는 test double은 Exposed transaction을 열 수 없어 읽기 전용 probe 경로를 유지합니다. */
     private fun loadRequestLegacy(
         connection: Connection,
         scope: DemoCallerScope,
@@ -674,6 +959,15 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             }
         }
 
+    /**
+     * activeWaiterCount은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param _connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param keyHash 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param generation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun activeWaiterCount(_connection: Connection, scope: DemoCallerScope, keyHash: String, generation: Long): Int =
         JobRequestWaiterTable
             .select(JobRequestWaiterTable.waiterToken.count())
@@ -687,6 +981,15 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             .single()[JobRequestWaiterTable.waiterToken.count()]
             .toInt()
 
+    /**
+     * deleteExpiredWaiters은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param _connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param keyHash 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param generation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun deleteExpiredWaiters(_connection: Connection, scope: DemoCallerScope, keyHash: String, generation: Long) {
         JobRequestWaiterTable.deleteWhere {
             (JobRequestWaiterTable.tenantId eq scope.tenantId) and
@@ -697,6 +1000,12 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
+/**
+ * ownership은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun RequestRow.ownership(): JobSubmissionOwnership =
         JobSubmissionOwnership(
             scope = scope,
@@ -707,6 +1016,12 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             leaseExpiresAt = requireNotNull(ownerLeaseExpiresAt),
         )
 
+/**
+ * snapshot은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun RequestRow.snapshot(connection: Connection): ReplayableJobSubmission {
         if (responseStatus != null && responseBody != null && responseContentType != null && enqueueSequence != null) {
             return ReplayableJobSubmission(
@@ -724,6 +1039,13 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         return materializeLegacySnapshot(connection, this)
     }
 
+    /**
+     * materializeLegacySnapshot은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param request 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun materializeLegacySnapshot(connection: Connection, request: RequestRow): ReplayableJobSubmission {
         val stored = jobRepository.loadInCurrentTransaction(request.jobId)
             ?: throw JobRepositoryException(JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED)
@@ -784,9 +1106,21 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         )
     }
 
+/**
+ * withTransaction은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     override fun <T> withTransaction(block: (Connection) -> T): T =
         inTransaction(connectionTimeout = policy.connectionAcquireTimeout, block = block)
 
+/**
+ * inTransaction은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private inline fun <T> inTransaction(
         statementTimeout: Duration = policy.statementTimeout,
         connectionTimeout: Duration? = null,
@@ -794,14 +1128,29 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         afterCommit: (Connection, T) -> T = { _, result -> result },
         crossinline block: (Connection) -> T,
     ): T {
+        /**
+         * `acquisitionTimeout`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val acquisitionTimeout =
             if (deadlineNanos == null || connectionTimeout == null) {
                 connectionTimeout
             } else {
+                /**
+                 * `remaining`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                 *
+                 * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                 */
                 val remaining = deadlineNanos - System.nanoTime()
                 if (remaining <= 0L) throw TransactionDeadlineExceeded()
                 minOf(connectionTimeout, remaining.nanos())
             }
+        /**
+         * `connection`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val connection =
             if (acquisitionTimeout == null) {
                 dataSource.connection
@@ -815,10 +1164,20 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             }
         return connection.use {
             try {
+                /**
+                 * `effectiveStatementTimeout`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+                 *
+                 * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+                 */
                 val effectiveStatementTimeout =
                     if (deadlineNanos == null) {
                         statementTimeout
                     } else {
+                        /**
+                         * `remaining`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                         *
+                         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                         */
                         val remaining = deadlineNanos - System.nanoTime()
                         if (remaining <= 0L) throw TransactionDeadlineExceeded()
                         minOf(statementTimeout, remaining.nanos())
@@ -827,24 +1186,49 @@ internal class JdbcJobSubmissionIdempotencyRepository(
                 setNetworkTimeout(connection, effectiveStatementTimeout)
                 applyStatementTimeout(connection, effectiveStatementTimeout)
                 if (deadlineNanos != null) {
+                    /**
+                     * `remainingAfterSetup`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                     *
+                     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                     */
                     val remainingAfterSetup = deadlineNanos - System.nanoTime()
                     if (remainingAfterSetup <= 0L || remainingAfterSetup.nanos().toMillis() <= 0L) {
                         throw TransactionDeadlineExceeded()
                     }
                     setNetworkTimeout(connection, remainingAfterSetup.nanos())
                 }
+                /**
+                 * `result`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                 *
+                 * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                 */
                 val result = if (supportsExposed(connection)) {
                     jdbc.transaction(connection) { block(connection) }
                 } else {
                     legacyTransaction(connection, block)
                 }
                 if (deadlineNanos != null) {
+                    /**
+                     * `remaining`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                     *
+                     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                     */
                     val remaining = deadlineNanos - System.nanoTime()
                     if (remaining <= 0L) throw TransactionDeadlineExceeded()
                 }
                 afterCommit(connection, result)
             } catch (failure: SQLException) {
+                /**
+                 * `hardExpired`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                 *
+                 * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                 */
                 val hardExpired = deadlineNanos != null && System.nanoTime() >= deadlineNanos
+                /**
+                 * `deadlineFailure`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+                 *
+                 * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+                 */
                 val deadlineFailure =
                     deadlineNanos != null &&
                         (hardExpired || failure.sqlState == QUERY_CANCELED_SQL_STATE)
@@ -870,6 +1254,12 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     private fun supportsExposed(connection: Connection): Boolean =
         runCatching { connection.metaData != null }.getOrDefault(false)
 
+/**
+ * legacyTransaction은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private inline fun <T> legacyTransaction(connection: Connection, block: (Connection) -> T): T {
         connection.autoCommit = false
         return try {
@@ -880,6 +1270,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
+    /** 만료 waiter 삭제와 admission count를 동일한 Exposed transaction으로 묶습니다. */
     /** 만료 waiter 삭제와 admission count를 동일한 Exposed transaction으로 묶습니다. */
     private fun cleanupAndCountActiveWaiters(
         _connection: Connection,
@@ -907,6 +1298,12 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             .toInt()
     }
 
+/**
+ * inBoundedTransaction은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun <T> inBoundedTransaction(
         deadlineNanos: Long,
         block: (Connection, Long) -> T,
@@ -954,6 +1351,13 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
+    /**
+     * configureRegistrationBudget은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param deadlineNanos 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun configureRegistrationBudget(connection: Connection, deadlineNanos: Long): Long {
         val remaining = deadlineNanos - System.nanoTime()
         if (remaining < MIN_REGISTRATION_STATEMENT_BUDGET_NANOS) throw RegistrationDeadlineExceeded()
@@ -968,32 +1372,74 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         return statementBudgetNanos
     }
 
+    /**
+     * refreshNetworkTimeout은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun refreshNetworkTimeout(
         connection: Connection,
         deadlineNanos: Long,
         maximumTimeoutNanos: Long = Long.MAX_VALUE,
     ) {
+        /**
+         * `remaining`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val remaining = deadlineNanos - System.nanoTime()
         if (remaining <= 0L) throw RegistrationDeadlineExceeded()
+        /**
+         * `timeoutNanos`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val timeoutNanos = minOf(remaining, maximumTimeoutNanos)
+        /**
+         * `timeoutMillis`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val timeoutMillis = timeoutNanos.nanos().toMillis().coerceAtMost(Int.MAX_VALUE.toLong())
         if (timeoutMillis <= 0L) throw RegistrationDeadlineExceeded()
         setNetworkTimeout(connection, timeoutMillis.millis())
     }
 
+    /**
+     * setNetworkTimeout은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param timeout 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun setNetworkTimeout(connection: Connection, timeout: Duration) {
         val timeoutMillis = timeout.toMillis().coerceAtLeast(1L).coerceAtMost(Int.MAX_VALUE.toLong())
         connection.setNetworkTimeout(executor, timeoutMillis.toInt())
     }
 
+    /**
+     * checkRegistrationStatementBudget은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param deadlineNanos 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param statementBudgetNanos 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun checkRegistrationStatementBudget(deadlineNanos: Long, statementBudgetNanos: Long) {
         if (deadlineNanos - System.nanoTime() <= 0L || statementBudgetNanos <= 0L) throw RegistrationDeadlineExceeded()
     }
 
+    /**
+     * checkRegistrationDeadline은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param deadlineNanos 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun checkRegistrationDeadline(deadlineNanos: Long) {
         if (System.nanoTime() >= deadlineNanos) throw RegistrationDeadlineExceeded()
     }
 
+    /** PostgreSQL transaction-local timeout 설정은 Exposed DSL로 대체할 수 없는 제어 SQL입니다. */
     /** PostgreSQL transaction-local timeout 설정은 Exposed DSL로 대체할 수 없는 제어 SQL입니다. */
     private fun applyStatementTimeout(connection: Connection, statementTimeout: Duration = policy.statementTimeout) {
         connection.createStatement().use { statement ->
@@ -1002,6 +1448,12 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         }
     }
 
+    /**
+     * boundedRegistrationTtl은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param waiterTtl 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun boundedRegistrationTtl(waiterTtl: Duration): Duration {
         val boundedTtl = waiterTtl.coerceAtMost(policy.waiterTimeout)
         require(boundedTtl >= MIN_REGISTRATION_TTL) {
@@ -1013,14 +1465,31 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         return boundedTtl
     }
 
+    /**
+     * encodeHeaders은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param headers 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun encodeHeaders(headers: Map<String, List<String>>): String =
         if (headers.isEmpty()) "{}" else jsonMapper.writeValueAsString(headers.toSortedMap())
 
+    /**
+     * decodeHeaders은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param headers 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun decodeHeaders(headers: String?): Map<String, List<String>> =
         if (headers.isNullOrBlank()) {
             emptyMap()
         } else {
             runCatching {
+                /**
+                 * `node`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                 *
+                 * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                 */
                 val node = jsonMapper.readTree(headers)
                 if (!node.isObject) throw IllegalArgumentException("response headers must be an object")
                 buildMap<String, List<String>> {
@@ -1028,6 +1497,11 @@ internal class JdbcJobSubmissionIdempotencyRepository(
                         if (!values.isArray || values.any { !it.isString }) {
                             throw IllegalArgumentException("response header values must be string arrays")
                         }
+                        /**
+                         * `strings`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                         *
+                         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                         */
                         val strings = buildList<String> {
                             for (value in values) {
                                 add(value.stringValue())
@@ -1039,45 +1513,217 @@ internal class JdbcJobSubmissionIdempotencyRepository(
             }.getOrElse { throw JobRepositoryException(JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED) }
         }
 
+    /**
+     * RequestRow은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private data class RequestRow(
+        /**
+         * `scope`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val scope: DemoCallerScope,
+        /**
+         * `keyHash`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+         *
+         * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+         */
         val keyHash: String,
+        /**
+         * `requestFingerprint`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+         *
+         * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+         */
         val requestFingerprint: String,
+        /**
+         * `jobId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val jobId: UUID,
+        /**
+         * `enqueueSequence`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+         *
+         * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+         */
         val enqueueSequence: Long?,
+        /**
+         * `state`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         val state: RequestState,
+        /**
+         * `generation`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+         *
+         * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+         */
         val generation: Long,
+        /**
+         * `ownerToken`은 작업 운영 콘솔에서 권한과 데이터 범위를 판정하는 호출 주체 또는 소유자 정보입니다.
+         *
+         * 인증·인가 경계를 통과한 값만 사용하고 다른 tenant의 상태·payload가 섞이지 않도록 합니다.
+         */
         val ownerToken: UUID?,
+        /**
+         * `ownerLeaseExpiresAt`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val ownerLeaseExpiresAt: Instant?,
+        /**
+         * `responseStatus`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         val responseStatus: Int?,
+        /**
+         * `responseBody`은 작업 운영 콘솔에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+         *
+         * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+         */
         val responseBody: ByteArray?,
+        /**
+         * `responseContentType`은 작업 운영 콘솔에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+         *
+         * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+         */
         val responseContentType: String?,
+        /**
+         * `responseHeaders`은 작업 운영 콘솔에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+         *
+         * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+         */
         val responseHeaders: String?,
+        /**
+         * `abandonedUntil`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val abandonedUntil: Instant?,
+        /**
+         * `databaseNow`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val databaseNow: Instant,
+        /**
+         * `leaseExpired`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+         *
+         * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+         */
         val leaseExpired: Boolean,
+        /**
+         * `retentionExpired`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val retentionExpired: Boolean,
     )
 
+    /**
+     * RequestState은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private enum class RequestState {
+        /**
+         * `RequestState.IN_FLIGHT`은 RequestState 업무 상태의 `IN_FLIGHT` 단계입니다. 허용된 상태 전이와 재시도·보상·응답
+         * 분기를 선택하는 기준으로
+         * 사용합니다.
+         */
         IN_FLIGHT,
+        /**
+         * `RequestState.TERMINAL`은 RequestState 업무 상태의 `TERMINAL` 단계입니다. 허용된 상태 전이와 재시도·보상·응답 분기를
+         * 선택하는 기준으로
+         * 사용합니다.
+         */
         TERMINAL,
+        /**
+         * `RequestState.ABANDONED`은 RequestState 업무 상태의 `ABANDONED` 단계입니다. 허용된 상태 전이와 재시도·보상·응답
+         * 분기를 선택하는 기준으로
+         * 사용합니다.
+         */
         ABANDONED,
     }
 
+    /**
+     * ConnectionAcquireDeadlineExceeded은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행
+     * 계약을 이 타입의
+     * 규칙에 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private class ConnectionAcquireDeadlineExceeded : RuntimeException()
+    /**
+     * TransactionDeadlineExceeded은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이
+     * 타입의 규칙에 맞춰
+     * 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private class TransactionDeadlineExceeded : RuntimeException()
+    /**
+     * RegistrationDeadlineExceeded은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이
+     * 타입의 규칙에
+     * 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private class RegistrationDeadlineExceeded : RuntimeException()
 
     private companion object: KLogging() {
+        /**
+         * `UNIQUE_VIOLATION_SQL_STATE`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         const val UNIQUE_VIOLATION_SQL_STATE = "23505"
+        /**
+         * `QUERY_CANCELED_SQL_STATE`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         const val QUERY_CANCELED_SQL_STATE = "57014"
+        /**
+         * `MAX_RESERVE_RETRIES`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         const val MAX_RESERVE_RETRIES = 2
+        /**
+         * `REGISTRATION_STATEMENT_COUNT`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         const val REGISTRATION_STATEMENT_COUNT = 5
+        /**
+         * `MIN_REGISTRATION_STATEMENT_BUDGET_NANOS`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         const val MIN_REGISTRATION_STATEMENT_BUDGET_NANOS = REGISTRATION_STATEMENT_COUNT * 1_000_000L
+        /**
+         * `MIN_REGISTRATION_TTL`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val MIN_REGISTRATION_TTL: Duration = 25.millis()
+        /**
+         * `jsonMapper`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val jsonMapper = Jackson.defaultJsonMapper
 
+        /**
+         * normalizedSubmitterHash은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+         *
+         * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+         * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+         */
         fun normalizedSubmitterHash(value: String): String =
             if (value.matches(Regex("[0-9a-f]{64}"))) {
                 value

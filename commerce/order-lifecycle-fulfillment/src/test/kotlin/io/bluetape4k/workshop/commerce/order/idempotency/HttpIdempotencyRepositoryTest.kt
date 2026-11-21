@@ -29,15 +29,45 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * HttpIdempotencyRepositoryTest 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class HttpIdempotencyRepositoryTest {
 
     companion object: KLogging() {
+/**
+ * postgres은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
     }
 
+/**
+ * repository은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = HttpIdempotencyRepository()
+/**
+ * now은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val now = Instant.parse("2026-07-18T00:00:00Z")
+/**
+ * scope은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val scope = IdempotencyScope("tenant-a", "submit-order", IdempotencyFingerprint.key("key-a"))
+/**
+ * fingerprint은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fingerprint = IdempotencyFingerprint.request("sku-a=1")
 
     @BeforeAll
@@ -63,6 +93,11 @@ internal class HttpIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same key and payload replays terminal response" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same key and payload replays terminal response`() {
         val owner = UUID.randomUUID()
         val acquired = transaction { acquire(owner) } as AcquireResult.Acquired
@@ -83,6 +118,11 @@ internal class HttpIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same key and different payload returns deterministic conflict" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same key and different payload returns deterministic conflict`() {
         transaction { acquire(UUID.randomUUID()) }
 
@@ -100,6 +140,11 @@ internal class HttpIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "expired owner is replaced and stale finalize is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expired owner is replaced and stale finalize is rejected`() {
         val staleOwner = UUID.randomUUID()
         val first = transaction { acquire(staleOwner) } as AcquireResult.Acquired
@@ -127,6 +172,11 @@ internal class HttpIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent requests acquire one owner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent requests acquire one owner`() {
         val workers = 4
         val barrier = CyclicBarrier(workers)
@@ -145,6 +195,12 @@ internal class HttpIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cleanup deletes only expired terminal records and preserves in progress owners" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cleanup deletes only expired terminal records and preserves in progress owners`() {
         val expiredSucceeded = IdempotencyScope(
             "tenant-a",
@@ -186,6 +242,11 @@ internal class HttpIdempotencyRepositoryTest {
         }
     }
 
+/**
+ * acquire은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun acquire(owner: UUID): AcquireResult =
         repository.acquire(
             scope = scope,
@@ -196,6 +257,11 @@ internal class HttpIdempotencyRepositoryTest {
             retention = 1.days()
         )
 
+/**
+ * acquireScope은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun acquireScope(
         targetScope: IdempotencyScope,
         retention: Duration,
@@ -209,11 +275,21 @@ internal class HttpIdempotencyRepositoryTest {
             retention = retention
         )
 
+/**
+ * acquireAndFinalize은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun acquireAndFinalize(
         targetScope: IdempotencyScope,
         retention: Duration,
         failed: Boolean,
     ) {
+/**
+ * acquired은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val acquired = acquireScope(targetScope, retention).shouldBeInstanceOf<AcquireResult.Acquired>()
         
         repository.finalize(

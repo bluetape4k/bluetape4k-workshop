@@ -6,6 +6,27 @@ This Spring Boot 4 / Kotlin example models the failure-prone core of a concert f
 
 The design is a Spring Modulith modular monolith. It uses JetBrains Exposed through Bluetape4k's exact `ExposedJdbcRepository` contract for normal database work. Direct JDBC is restricted to the versioned startup migration runner. Redis uses `bluetape4k-lettuce` for temporary coordination; it is never the durable source of sold inventory or payment truth.
 
+## Business requirements and test evidence
+
+The design in `docs/superpowers/specs/2026-07-21-concert-ticket-flash-sale-design.md`
+starts from a customer-visible promise: a ticket is sold at most once, and an
+ambiguous payment or external ticket call must not make the system guess. The
+workflow therefore separates four responsibilities:
+
+| Requirement | Authority or design rule | What the tests demonstrate |
+|---|---|---|
+| Admit demand without making the queue authoritative | Redis waiting-room grant and rate/in-flight leases are temporary; purchase revalidates the sale policy and inventory in PostgreSQL | Admission and hostile-concurrency tests show that losing the grant or Redis does not create inventory |
+| Keep one purchase attempt deterministic | Buyer/IP guards, idempotency digest, and PostgreSQL lock ordering are committed with the purchase state | `PurchaseServiceIntegrationTest` and `PurchaseConcurrencyIntegrationTest` prove one winner and safe replay |
+| Never infer payment success from a timeout | `APPROVED`, `DECLINED`, and `UNKNOWN` are distinct; provider claims are fenced by operation/revision | `PaymentReconciliationIntegrationTest` covers unknown, late approval, cancellation, and retry |
+| Restock only after a durable ticket decision | Ticket issue/revoke effects are deduplicated; only `NEVER_ISSUED` or `REVOKED` can release stock | `TicketEffectIntegrationTest` and `RefundRaceIntegrationTest` protect restock/refund races |
+| Give operations bounded recovery | Reconciliation accepts a limit, records redacted outcomes, and quarantines unresolved effects | `OperatorAccessIntegrationTest` and the web contract tests prove access and response redaction |
+
+Read the domain transitions before the browser walkthrough: the browser is a
+convenient client, not the owner of the state machine. The deterministic fake
+payment provider, loopback binding, and local identity headers are workshop
+substitutes; they do not cover a real PSP, trusted proxy deployment, or ticket
+issuer SLA.
+
 ![Spring Modulith architecture](../../docs/images/readme-diagrams/commerce-concert-ticket-flash-sale-architecture-01.png)
 
 ## Prerequisites and Java 25

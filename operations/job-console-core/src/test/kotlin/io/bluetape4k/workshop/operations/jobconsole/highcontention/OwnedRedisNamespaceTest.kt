@@ -17,14 +17,34 @@ import java.security.MessageDigest
 import java.util.UUID
 import kotlin.collections.ArrayDeque
 
+/**
+ * OwnedRedisNamespaceTest 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class OwnedRedisNamespaceTest {
 
     private companion object: KLogging() {
+/**
+ * CANONICAL_VECTOR_DIGEST은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val CANONICAL_VECTOR_DIGEST = "406278bff9c644546cadea9ffc9919a36f1066d5958043fc196269faa6c8a774"
+/**
+ * JSON_MAPPER은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val JSON_MAPPER = Jackson.createDefaultJsonMapper()
     }
 
     @Test
+/**
+ * 이 시나리오는 "job owner parser consumes every golden vector case and canonical digest" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `job owner parser consumes every golden vector case and canonical digest`() {
         val document = redisVectorDocument()
         canonicalDigest(document.get("vectors")) shouldBeEqualTo document.get("vectorsSha256").stringValue()
@@ -46,6 +66,11 @@ class OwnedRedisNamespaceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "empty unknown and non-terminal namespace components fail closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `empty unknown and non-terminal namespace components fail closed`() {
         listOf(
             "",
@@ -62,6 +87,11 @@ class OwnedRedisNamespaceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "writer is paused while all candidates are validated before bounded unlink" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `writer is paused while all candidates are validated before bounded unlink`() {
         val namespaceValue = "hc:v1:run-1:job-core:redis-key-loss:"
         val commands = RecordingRedisKeyCommands(
@@ -90,6 +120,11 @@ class OwnedRedisNamespaceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "foreign candidates and delete upper bound fail before unlink" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `foreign candidates and delete upper bound fail before unlink`() {
         val namespaceValue = "hc:v1:run-1:job-core:redis-key-loss:"
         listOf(
@@ -109,6 +144,11 @@ class OwnedRedisNamespaceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "incomplete scan and post-unlink non-convergence fail closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `incomplete scan and post-unlink non-convergence fail closed`() {
         val namespaceValue = "hc:v1:run-1:job-core:redis-key-loss:"
         val incomplete = RecordingRedisKeyCommands(
@@ -147,6 +187,11 @@ class OwnedRedisNamespaceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "real Redis scan unlinks only the run owned namespace" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `real Redis scan unlinks only the run owned namespace`() {
         val redis = RedisServer.Launcher.redis
         val client = LettuceClients.clientOf(redis.url)
@@ -175,6 +220,11 @@ class OwnedRedisNamespaceTest {
         }
     }
 
+/**
+ * redisVectorDocument은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun redisVectorDocument(): JsonNode {
         val contractRoot = Path.of(
             System.getProperty("highContentionContractRoot").requireNotNull("highContentionContractRoot"),
@@ -184,11 +234,21 @@ class OwnedRedisNamespaceTest {
         }
     }
 
+/**
+ * canonicalDigest은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun canonicalDigest(node: JsonNode): String =
         MessageDigest.getInstance("SHA-256")
             .digest(canonicalJson(node).toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
 
+/**
+ * canonicalJson은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun canonicalJson(node: JsonNode): String =
         when {
             node.isArray -> node.joinToString(
@@ -206,13 +266,43 @@ class OwnedRedisNamespaceTest {
         }
 }
 
+/**
+ * RecordingRedisKeyCommands 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class RecordingRedisKeyCommands(
+/**
+ * pages은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val pages: ArrayDeque<OwnedRedisScanPage> = ArrayDeque(),
+/**
+ * repeatLastPage은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repeatLastPage: Boolean = false,
 ): OwnedRedisKeyCommands {
+/**
+ * unlinked은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val unlinked = mutableListOf<List<String>>()
+/**
+ * lastPage은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var lastPage = OwnedRedisScanPage("0", emptyList())
 
+/**
+ * scan은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun scan(
         cursor: String,
         pattern: String,
@@ -226,6 +316,11 @@ private class RecordingRedisKeyCommands(
         return lastPage
     }
 
+/**
+ * unlink은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun unlink(keys: List<String>): Long {
         unlinked += keys
         return keys.size.toLong()

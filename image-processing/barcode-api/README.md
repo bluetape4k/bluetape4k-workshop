@@ -26,6 +26,83 @@ virus-scanning, or moderation policy.
 cover formats, limits, malformed input, provider failure, cancellation, and the
 HTTP contract rather than claiming scanner accuracy for every camera or label.
 
+## Business scenario and requirements
+
+The business case is a parcel, ticket, or product-label upload: the caller
+wants the decoded value, but the service must first decide whether it is safe to
+spend decoder CPU on the file. A reader who is new to the example can follow
+the request as four decisions:
+
+1. Is the multipart payload present, non-empty, and within the encoded-byte
+   budget?
+2. Do the declared content type and image header agree, and are the decoded
+   dimensions/pixels bounded?
+3. Can the provider-neutral `BarcodeReader` inspect the already-bounded image?
+4. Should the result be a barcode list, an explicit no-result response, or a
+   stable error?
+
+The application service owns decisions 1, 2, and 4. ZXing is only one adapter
+for decision 3. That separation means a provider replacement cannot silently
+change the HTTP size contract, and a camera image that contains no barcode is a
+valid scan outcome rather than a server failure.
+
+## Request and response examples
+
+Run the application and send an actual image:
+
+```bash
+curl -i -F "file=@label.png;type=image/png" \
+  http://localhost:8080/api/barcodes/extract
+```
+
+A successful response has a stable provider-neutral shape (the exact decoded
+value depends on the input):
+
+```json
+{
+  "barcodes": [
+    { "format": "QR_CODE", "text": "https://example.com/order/42" }
+  ]
+}
+```
+
+An image with no readable code returns an explicit empty result. Unsupported,
+malformed, or over-budget input is rejected before an unrestricted decoder call;
+the service's own encoded-size preflight maps that boundary to HTTP `413`.
+The deterministic fixtures make those outcomes easy to inspect:
+
+```bash
+curl http://localhost:8080/api/barcodes/sample
+curl http://localhost:8080/api/barcodes/no-result
+curl http://localhost:8080/api/barcodes/malformed
+```
+
+The fixture routes are not a substitute for authentication, virus scanning,
+content retention, or a camera-quality SLA.
+
+## Failure and boundary table
+
+| Boundary | Observable result | Why it exists |
+|---|---|---|
+| Empty multipart | `400 Bad Request` | Do not invoke image decoding for an unusable upload. |
+| Unsupported multipart content type | `415 Unsupported Media Type` | Reject the declared media type before reading/decoding the body. |
+| Encoded bytes exceed the service budget | `413 Payload Too Large` | Protect request memory and I/O before decoding. |
+| Unknown/oversized dimensions or pixels | `413 Payload Too Large` | Protect decoder CPU and heap from decompression-bomb-like input. |
+| Malformed image after preflight | `400 Bad Request` | A header that looks plausible is not a decodable image. |
+| Provider returns no barcode | `200 OK` with `barcodes=[]` | “No code found” is a normal scan result. |
+| Provider fails | Provider-neutral `BarcodeException` mapping | Keep the application contract independent of ZXing. |
+| Coroutine cancellation | Cancellation is rethrown | A disconnected client must not be converted into a false business failure. |
+
+## Test contracts
+
+| Test | Contract it teaches |
+|---|---|
+| `BarcodeExtractionServiceTest` format cases | PNG, JPEG, and WebP reach the provider-neutral reader with bounded input. |
+| `BarcodeExtractionServiceTest` size/dimension cases | Encoded bytes, decoded sides, and pixel budgets fail before provider work. |
+| `BarcodeExtractionServiceTest` malformed/provider cases | Bad images become stable errors; provider errors remain distinguishable from no-result. |
+| `BarcodeExtractionServiceTest` cancellation cases | Structured concurrency is preserved rather than swallowed by a broad catch. |
+| `BarcodeApiApplicationTest` | Multipart binding, fixture routes, success/no-result, and HTTP error mapping are visible at the wire boundary. |
+
 ## What it demonstrates
 
 - `ImmutableImage.extractBarcodes(reader)` with `BarcodeReader` and `BarcodeResult`.

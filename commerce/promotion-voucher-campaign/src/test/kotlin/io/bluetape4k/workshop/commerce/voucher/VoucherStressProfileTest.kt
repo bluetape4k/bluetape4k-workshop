@@ -43,29 +43,99 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Semaphore
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * `RedisMode`은 동작 모드입니다.
+ * provider 또는 실행 정책을 선택하는 값이며 테스트·운영 시나리오의 분기 기준입니다.
+ */
 internal enum class RedisMode {
+    /**
+     * `RedisMode.HEALTHY`은 `healthy` 업무 상황을 나타냅니다. provider 또는 실행 시나리오를 선택하며 실제 업무 상태와 혼동하지 않습니다.
+     */
     HEALTHY,
+    /**
+     * `RedisMode.TIMEOUT`은 허용된 시간 예산을 초과해 결과가 미확정인 값입니다. 재시도 전 중복 side effect 여부를 확인해야 합니다.
+     */
     TIMEOUT,
 }
 
+/**
+ * StressProfile 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class StressProfile(
+/**
+ * concurrency은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val concurrency: Int,
+/**
+ * redisMode은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val redisMode: RedisMode,
 ) {
+/**
+ * id은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val id: String = "c${concurrency}-${redisMode.name.lowercase()}-hotspot"
 }
 
+/**
+ * VoucherStressProfileTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
 
     companion object: KLogging() {
+/**
+ * CAPACITY은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val CAPACITY = 100
+/**
+ * ALLOCATIONS은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val ALLOCATIONS = 500
+/**
+ * REDEMPTIONS은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val REDEMPTIONS = 500
+/**
+ * redis은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val redis: RedisServer = RedisServer.Launcher.redis
+/**
+ * expectedProfiles은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val expectedProfiles = stressProfiles().mapTo(sortedSetOf(), StressProfile::id)
+/**
+ * executedProfiles은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val executedProfiles = java.util.concurrent.ConcurrentSkipListSet<String>()
 
         @JvmStatic
+/**
+ * stressProfiles은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun stressProfiles(): List<StressProfile> = listOf(
             StressProfile(64, RedisMode.HEALTHY),
             StressProfile(64, RedisMode.TIMEOUT),
@@ -94,6 +164,11 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
     @Tag("stress")
     @ParameterizedTest(name = "{0}")
     @MethodSource("stressProfiles")
+/**
+ * 이 시나리오는 "capacity hotspot records bounded evidence without a wall clock CI gate" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `capacity hotspot records bounded evidence without a wall clock CI gate`(profile: StressProfile) {
         val reportRoot = Path.of(System.getProperty("voucher.stress.report-directory")!!)
         val seed = profile.concurrency.toLong() * 10_000L + profile.redisMode.ordinal
@@ -143,15 +218,35 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         executedProfiles += profile.id
     }
 
+/**
+ * runAllocations은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runAllocations(
         profile: StressProfile,
         campaignId: java.util.UUID,
         redis: StressRedisHarness,
         probe: VoucherPerformanceProbe,
     ): List<AllocationResult> {
+/**
+ * successes은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val successes = ConcurrentLinkedQueue<AllocationResult>()
         runConcurrent(ALLOCATIONS, profile.concurrency) { index ->
+/**
+ * started은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val started = System.nanoTime()
+/**
+ * status은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val status =
                 try {
                     when (redis.admission.decide("v1:${profile.id}:$index")) {
@@ -187,6 +282,11 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         return successes.toList()
     }
 
+/**
+ * runRedemptions은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runRedemptions(
         profile: StressProfile,
         allocations: List<AllocationResult>,
@@ -194,8 +294,23 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
     ) {
         check(allocations.isNotEmpty()) { "stress profile must allocate at least one voucher" }
         runConcurrent(REDEMPTIONS, profile.concurrency) { index ->
+/**
+ * allocation은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val allocation = allocations[index % allocations.size]
+/**
+ * started은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val started = System.nanoTime()
+/**
+ * status은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val status = try {
                 claimCommands.redeem(
                     RedeemVoucherCommand(
@@ -223,13 +338,28 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         }
     }
 
+/**
+ * runConcurrent은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runConcurrent(
         operations: Int,
         concurrency: Int,
         action: (Int) -> Unit,
     ) {
+/**
+ * permits은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val permits = Semaphore(concurrency, true)
         VirtualThreads.executorService().use { executor ->
+/**
+ * futures은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val futures = List(operations) { index ->
                 executor.submit {
                     permits.acquire()
@@ -244,9 +374,19 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         }
     }
 
+/**
+ * contributingClaims은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun contributingClaims(campaignId: java.util.UUID): Long =
         contributingClaimCount(campaignId)
 
+/**
+ * hikariDataSource은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun hikariDataSource(applicationName: String): HikariDataSource =
         HikariDataSource(
             HikariConfig().apply {
@@ -262,19 +402,54 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
             },
         )
 
+/**
+ * redisHarness은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun redisHarness(
         mode: RedisMode,
         probe: VoucherPerformanceProbe,
     ): StressRedisHarness {
+/**
+ * uri은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val uri = RedisURI.create(redis.url).apply { timeout = 25.millis() }
+/**
+ * client은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val client = LettuceClients.clientOf(uri)
+/**
+ * connection은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val connection = LettuceClients.connect(client)
+/**
+ * limiter은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val limiter =
             object: RateLimiter<String> {
+/**
+ * consume은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
                 override fun consume(
                     key: String,
                     numToken: Long,
                 ): RateLimitResult {
+/**
+ * started은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                     val started = System.nanoTime()
                     return try {
                         when (mode) {
@@ -307,10 +482,20 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         return StressRedisHarness(client, connection, VoucherAdmissionGate(limiter))
     }
 
+/**
+ * assertEvidenceSchema은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertEvidenceSchema(
         jsonPath: Path,
         profile: StressProfile,
     ) {
+/**
+ * root은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val root = Jackson.defaultJsonMapper.readTree(jsonPath.toFile())
         root.path("schemaVersion").stringValue() shouldBeEqualTo "1.0"
         root.path("profile").stringValue() shouldBeEqualTo profile.id
@@ -326,11 +511,36 @@ internal class VoucherStressProfileTest: VoucherCommandTestSupport() {
         root.path("probeSources").isArray.shouldBeTrue()
     }
 
+/**
+ * StressRedisHarness 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class StressRedisHarness(
+/**
+ * client은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val client: RedisClient,
+/**
+ * connection은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val connection: StatefulRedisConnection<String, String>,
+/**
+ * admission은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val admission: VoucherAdmissionGate,
     ): AutoCloseable {
+/**
+ * close은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun close() {
             connection.close()
             LettuceClients.shutdown(client)

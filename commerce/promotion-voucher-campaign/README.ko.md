@@ -6,6 +6,30 @@
 
 > Workshop 경계: 서버는 loopback에 bind하고 production IAM, OAuth, CSRF 인프라 대신 local header를 사용합니다. Operator route와 workshop secret을 non-loopback interface에 노출하면 안 됩니다.
 
+## 업무 요구사항과 설계 결정
+
+바우처를 controller가 반환하는 문자열이 아니라 한정된 재고로 읽어야
+합니다. campaign에는 같은 request가 여러 번 도착할 수 있고, allocation
+뒤에 review가 끝날 수 있으며, operator는 모든 capacity 변화를 설명할 수
+있어야 합니다. 따라서
+`docs/superpowers/specs/2026-07-19-issue-534-promotion-voucher-campaign-design.md`
+는 다음 규칙을 명시합니다.
+
+| 업무 요구사항 | 설계 방향 | 복구 의미 |
+|---|---|---|
+| campaign capacity를 두 번 쓰지 않기 | voucher row보다 먼저 campaign capacity를 lock하고 revision과 함께 allocation commit | Redis admission/Bloom signal은 부하만 줄이며 allocation을 승인하지 않음 |
+| 유실된 HTTP 응답을 안전하게 retry하기 | `Idempotency-Key`에서 owner-scoped receipt를 획득하고 digest와 closed response descriptor를 저장 | 같은 request는 원래 status/body를 replay하고 다른 payload는 conflict |
+| review와 code delivery를 관찰 가능하게 만들기 | allocated·review-pending·approved·acknowledged·redeemed·released·expired·revoked를 분리 | 늦은 review나 delivery 실패는 암묵적인 retry loop가 아니라 재개할 durable 상태 |
+| 비동기 publication이 capacity 오류를 숨기지 않게 하기 | outbox/inbox 또는 durable delivery record를 PostgreSQL에 기록하고 그 기준으로 reconciliation | replay된 event는 deduplicate하고 drift는 보고하며 새 voucher를 발명하지 않음 |
+| operator가 bounded하게 복구하게 하기 | limit·audit record·redaction이 있는 인증된 loopback-only command 제공 | worker restart나 Redis outage는 처리량/lag만 바꾸고 PostgreSQL 판단은 바꾸지 않음 |
+
+README의 curl walkthrough는
+`VoucherEndToEndIntegrationTest`, `VoucherConcurrencyIntegrationTest`,
+`VoucherContextRestartIntegrationTest`, `RedisUnavailableBootIntegrationTest`와
+함께 읽어야 합니다. 네 test는 고객 여정, 경쟁 allocation, 응답 유실 replay,
+process restart, Redis advisory 경로의 degradation을 각각 증명합니다. production
+IAM, 실제 provider, internet-scale throughput을 증명하는 것은 아닙니다.
+
 ## 학습 목표
 
 - Java 25 virtual thread에서 Tomcat MVC를 실행하되 HikariCP connection은 16개로 제한합니다.

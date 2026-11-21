@@ -29,14 +29,38 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
+/**
+ * provider-neutral barcode service의 입력/결과 계약을 검증합니다.
+ *
+ * QR 성공, barcode 없는 유효 image, JPEG/WebP, primary probe 실패 시 bounded
+ * metadata fallback, encoded/decoded size 초과, malformed input, strict loader,
+ * provider failure, coroutine cancellation을 구분합니다. 따라서 `no-result`를
+ * server error로 취급하지 않고, 위험한 bytes는 ZXing 호출 전에 차단하는 이유를
+ * 테스트 이름만 읽어도 알 수 있습니다.
+ */
 class BarcodeExtractionServiceTest {
 
     private companion object: KLogging()
 
+/**
+ * fixtures은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixtures = BarcodeExampleFixtures()
 
     @Test
+/**
+ * 이 시나리오는 "extracts QR fixture through provider neutral API" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `extracts QR fixture through provider neutral API`() = runTest {
+/**
+ * result은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val result = BarcodeExtractionService(
             reader = ZxingBarcodeReader(),
             properties = BarcodeExampleProperties(),
@@ -50,7 +74,17 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "returns empty result for a valid image without barcode" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `returns empty result for a valid image without barcode`() = runTest {
+/**
+ * result은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val result = BarcodeExtractionService(
             reader = ZxingBarcodeReader(),
             properties = BarcodeExampleProperties(),
@@ -61,15 +95,40 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "accepts JPEG and WebP uploads" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `accepts JPEG and WebP uploads`() = runTest {
+/**
+ * jpeg은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val jpeg = jpegBytes()
+/**
+ * webp은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val webp = webpBytes()
+/**
+ * uploads은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val uploads = listOf(
             "image/jpeg" to jpeg,
             "image/webp" to webp,
         )
 
         uploads.forEach { (contentType, bytes) ->
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val response = service().extract(multipart(contentType, bytes))
 
             log.debug { "response=$response" }
@@ -81,9 +140,24 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "uses bounded metadata dimensions when primary WebP probe is unavailable" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `uses bounded metadata dimensions when primary WebP probe is unavailable`() = runTest {
+/**
+ * webp은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val webp = webpBytes()
 
+/**
+ * response은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = service(dimensionProbe = { null })
             .extract(multipart("image/webp", webp))
 
@@ -92,7 +166,17 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "rejects empty unsupported and missing content type uploads" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rejects empty unsupported and missing content type uploads`() = runTest {
+/**
+ * empty은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val empty = assertFailsWith<BarcodeRequestException> {
             service().extract(multipart("image/png", ByteArray(0)))
         }
@@ -101,6 +185,11 @@ class BarcodeExtractionServiceTest {
         empty.error shouldBeEqualTo "empty_input"
 
         listOf("text/plain", null).forEach { contentType ->
+/**
+ * error은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val error = assertFailsWith<BarcodeRequestException> {
                 service().extract(multipart(contentType, byteArrayOf(1)))
             }
@@ -111,21 +200,56 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "rejects reported and actual encoded byte overflow before decode" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rejects reported and actual encoded byte overflow before decode`() = runTest {
+/**
+ * readerCalls은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val readerCalls = AtomicInteger()
+/**
+ * reader은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
         }
+/**
+ * bytes은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val bytes = fixtures.bytes(BarcodeExampleFixture.SAMPLE)
+/**
+ * properties은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val properties = BarcodeExampleProperties(maxInputBytes = bytes.size.toLong() - 1)
 
+/**
+ * multipartError은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val multipartError = assertFailsWith<BarcodeRequestException> {
             service(reader, properties).extract(multipart("image/png", bytes))
         }
         log.debug { "multipartError=$multipartError" }
         multipartError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
+/**
+ * byteArrayError은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val byteArrayError = assertFailsWith<BarcodeRequestException> {
             service(reader, properties).extract(bytes)
         }
@@ -135,14 +259,39 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "rejects decoded side and pixel overflow before provider invocation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rejects decoded side and pixel overflow before provider invocation`() = runTest {
+/**
+ * readerCalls은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val readerCalls = AtomicInteger()
+/**
+ * reader은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
         }
+/**
+ * bytes은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val bytes = fixtures.bytes(BarcodeExampleFixture.SAMPLE)
 
+/**
+ * sideError은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val sideError = assertFailsWith<BarcodeRequestException> {
             service(
                 reader = reader,
@@ -152,6 +301,11 @@ class BarcodeExtractionServiceTest {
         log.debug { "sideError=$sideError" }
         sideError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
+/**
+ * pixelError은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pixelError = assertFailsWith<BarcodeRequestException> {
             service(
                 reader = reader,
@@ -164,14 +318,39 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "strict loader rechecks dimensions after injected probes" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `strict loader rechecks dimensions after injected probes`() = runTest {
+/**
+ * readerCalls은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val readerCalls = AtomicInteger()
+/**
+ * reader은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
         }
+/**
+ * webp은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val webp = webpBytes()
 
+/**
+ * error은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val error = assertFailsWith<BarcodeException> {
             service(
                 reader = reader,
@@ -187,17 +366,42 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "normalizes malformed bytes and unknown dimensions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `normalizes malformed bytes and unknown dimensions`() = runTest {
+/**
+ * readerCalls은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val readerCalls = AtomicInteger()
+/**
+ * reader은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reader = BarcodeReader { _, _ ->
             readerCalls.incrementAndGet()
             emptyList()
         }
+/**
+ * malformed은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val malformed = assertFailsWith<BarcodeException> {
             service(reader).extract(fixtures.bytes(BarcodeExampleFixture.MALFORMED))
         }
         malformed.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
 
+/**
+ * unknownDimensions은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val unknownDimensions = assertFailsWith<BarcodeException> {
             service(
                 reader = reader,
@@ -212,15 +416,35 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "preserves provider neutral failures" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `preserves provider neutral failures`() = runTest {
         listOf(
             BarcodeFailureReason.UNSUPPORTED_FORMAT,
             BarcodeFailureReason.PROVIDER_UNAVAILABLE,
             BarcodeFailureReason.DECODE_FAILED,
         ).forEach { reason ->
+/**
+ * expected은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val expected = BarcodeException(reason, "provider detail")
+/**
+ * reader은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val reader = BarcodeReader { _, _ -> throw expected }
 
+/**
+ * actual은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val actual = assertFailsWith<BarcodeException> {
                 service(reader).extract(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
             }
@@ -229,10 +453,30 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "rethrows cancellation unchanged" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rethrows cancellation unchanged`() = runTest {
+/**
+ * expected은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val expected = CancellationException("cancel extraction")
+/**
+ * reader은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reader = BarcodeReader { _, _ -> throw expected }
 
+/**
+ * actual은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val actual = assertFailsWith<CancellationException> {
             service(reader).extract(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
         }
@@ -241,7 +485,17 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "normalizes malformed bytes without exposing input detail" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `normalizes malformed bytes without exposing input detail`() = runTest {
+/**
+ * exception은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val exception = assertFailsWith<BarcodeException> {
             BarcodeExtractionService(
                 reader = ZxingBarcodeReader(),
@@ -255,7 +509,17 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "rejects unsupported multipart input before decoding" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rejects unsupported multipart input before decoding`() = runTest {
+/**
+ * exception은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val exception = assertFailsWith<BarcodeRequestException> {
             BarcodeExtractionService(
                 reader = ZxingBarcodeReader(),
@@ -274,6 +538,11 @@ class BarcodeExtractionServiceTest {
         exception.status shouldBeEqualTo HttpStatus.UNSUPPORTED_MEDIA_TYPE
     }
 
+/**
+ * service은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun service(
         reader: BarcodeReader = ZxingBarcodeReader(),
         properties: BarcodeExampleProperties = BarcodeExampleProperties(),
@@ -291,9 +560,19 @@ class BarcodeExtractionServiceTest {
         metadataDimensionProbe = metadataDimensionProbe,
     )
 
+/**
+ * multipart은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun multipart(contentType: String?, bytes: ByteArray): MockMultipartFile =
         MockMultipartFile("file", "upload.bin", contentType, bytes)
 
+/**
+ * jpegBytes은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun jpegBytes(): ByteArray {
         val image = ImageIO.read(ByteArrayInputStream(fixtures.bytes(BarcodeExampleFixture.SAMPLE)))
         return ByteArrayOutputStream().use { output ->
@@ -302,6 +581,11 @@ class BarcodeExtractionServiceTest {
         }
     }
 
+/**
+ * webpBytes은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun webpBytes(): ByteArray =
         Base64.getDecoder()
             .decode(
