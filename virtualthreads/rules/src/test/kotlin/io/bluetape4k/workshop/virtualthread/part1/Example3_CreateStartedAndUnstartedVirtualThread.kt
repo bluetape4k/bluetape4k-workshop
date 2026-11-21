@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -29,7 +30,7 @@ class Example3_CreateStartedAndUnstartedVirtualThread: AbstractVirtualThreadTest
             thread.isAlive.shouldBeTrue()
         } finally {
             allowFinish.countDown()
-            thread.join()
+            thread.joinWithinTimeout()
         }
         thread.state shouldBeEqualTo Thread.State.TERMINATED
     }
@@ -53,8 +54,19 @@ class Example3_CreateStartedAndUnstartedVirtualThread: AbstractVirtualThreadTest
             thread.isAlive.shouldBeTrue()
         } finally {
             allowFinish.countDown()
-            thread.join()
+            thread.joinWithinTimeout()
         }
         thread.state shouldBeEqualTo Thread.State.TERMINATED
     }
 }
+
+private fun Thread.joinWithinTimeout() {
+    join(JOIN_TIMEOUT_MILLIS)
+    if (isAlive) {
+        interrupt()
+        join(JOIN_TIMEOUT_MILLIS)
+    }
+    isAlive.shouldBeFalse()
+}
+
+private const val JOIN_TIMEOUT_MILLIS = 1_000L

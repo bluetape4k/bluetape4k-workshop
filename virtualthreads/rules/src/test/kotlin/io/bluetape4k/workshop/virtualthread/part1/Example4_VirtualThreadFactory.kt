@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.virtualthread.part1
 
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.VT
 import io.bluetape4k.junit5.coroutines.runSuspendTest
@@ -47,7 +48,7 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
             thread.isAlive.shouldBeTrue()
         } finally {
             allowFinish.countDown()
-            thread.join()
+            thread.joinWithinTimeout()
         }
         thread.state shouldBeEqualTo Thread.State.TERMINATED
     }
@@ -85,3 +86,14 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
         executedCounter.get() shouldBeEqualTo 100_000
     }
 }
+
+private fun Thread.joinWithinTimeout() {
+    join(JOIN_TIMEOUT_MILLIS)
+    if (isAlive) {
+        interrupt()
+        join(JOIN_TIMEOUT_MILLIS)
+    }
+    isAlive.shouldBeFalse()
+}
+
+private const val JOIN_TIMEOUT_MILLIS = 1_000L

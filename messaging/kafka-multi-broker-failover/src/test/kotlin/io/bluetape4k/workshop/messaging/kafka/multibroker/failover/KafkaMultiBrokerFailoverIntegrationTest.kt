@@ -15,6 +15,7 @@ import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.Kafka
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverDeadline
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverEvidence
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverEvidenceWriter
+import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverGroupObservation
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverGroupState
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPartitionState
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPerformance
@@ -25,7 +26,6 @@ import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.Kafka
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
 import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
-import org.apache.kafka.common.errors.GroupIdNotFoundException
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -259,7 +259,7 @@ class KafkaMultiBrokerFailoverIntegrationTest {
                     ),
                 )
                 terminalWritten = true
-            } catch (error: Throwable) {
+            } catch (error: Exception) {
                 primaryFailure = error
                 throw error
             } finally {
@@ -743,34 +743,31 @@ class KafkaMultiBrokerFailoverIntegrationTest {
         predicate: (KafkaFailoverGroupState) -> Boolean,
     ): KafkaFailoverGroupState {
         var last: KafkaFailoverGroupState? = null
+        var lastError: Throwable? = null
         while (deadline.remainingNanos() > 0L) {
             // group 등록/중지된 coordinator 때문에 AdminClient request 하나가 전체
             // deadline까지 blocking될 수 있습니다. 각 observation을 제한해 제한된
             // window 안에서 retry하고 오래된 request 하나에 전체 window를 소모하지
             // 않도록 합니다.
-            val state = runCatching {
+            val state = try {
                 admin.groupState(
                     KafkaFailoverKafkaConfiguration.GROUP_ID,
                     deadline.child(2.seconds),
                 )
-            }.getOrElse { error ->
-                if (!error.isTransientGroupObservationFailure()) throw error
+            } catch (error: Throwable) {
+                if (!KafkaFailoverGroupObservation.isTransient(error)) throw error
+                lastError = error
                 null
             }
             last = state
             if (state != null && predicate(state)) return state
             Thread.sleep(minOf(200L, deadline.remainingNanos().nanos().inMillis().coerceAtLeast(1L)))
         }
-        error("$failureDescription; last=$last")
+        throw IllegalStateException(
+            "$failureDescription; last=$last; lastError=${lastError?.message}",
+            lastError,
+        )
     }
-
-    private fun Throwable.isTransientGroupObservationFailure(): Boolean =
-        this is GroupIdNotFoundException ||
-                this is org.apache.kafka.common.errors.RetriableException ||
-                this is org.apache.kafka.common.errors.DisconnectException ||
-                this is org.apache.kafka.common.errors.TimeoutException ||
-                this is java.util.concurrent.TimeoutException ||
-                cause?.isTransientGroupObservationFailure() == true
 
     private fun moduleDeadline(): KafkaFailoverDeadline =
         MODULE_DEADLINE ?: KafkaFailoverDeadline.fromNow(KafkaFailoverDeadline.MODULE_TIMEOUT)
