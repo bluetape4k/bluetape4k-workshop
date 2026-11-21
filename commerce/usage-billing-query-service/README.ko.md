@@ -30,6 +30,15 @@ projection을 financial source of truth로 바꾸는 검증은 아닙니다.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)
 
+## 업무 요구사항과 테스트 증거
+
+Query는 의도적으로 read boundary입니다. poison event가 관련 없는 fact를
+막아서는 안 되고, redrive는 source event를 수정하지 않으면서 audit 가능해야
+합니다. `QueryServiceApplicationContractTest`는 decoder/security/metrics 계약을,
+`QueryProjectionPostgresIntegrationTest`는 durable checkpoint·deduplication·
+quarantine·recovery audit을 증명합니다. Projection은 financial authority가
+아닙니다.
+
 ## 책임
 
 - `PriceActivated`, `UsageAccepted`, `UsageCorrected`, `ChargeRated`,

@@ -15,18 +15,54 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*
 
+/**
+ * UsageBillingWireContractTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class UsageBillingWireContractTest {
 
     private companion object: KLogging() {
+/**
+ * NOW은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val NOW: Instant = Instant.parse("2026-07-23T00:00:00Z")
     }
 
+/**
+ * meterPriceEvidenceDecoder은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val meterPriceEvidenceDecoder = MeterPriceEvidenceDecoder()
+/**
+ * billingDecoder은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val billingDecoder = BillingInboundEventDecoder()
+/**
+ * invoiceDecoder은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val invoiceDecoder = BillingChargeDecoder()
+/**
+ * queryDecoder은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val queryDecoder = QueryInboundEventDecoder()
 
     @Test
+/**
+ * 이 시나리오는 "Meter price wire contract is independently understood by Usage Billing and Query" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Meter price wire contract is independently understood by Usage Billing and Query`() {
         val event = MeterIntegrationEnvelope.create(
             eventId = UUID.fromString("018f4a40-7d3e-7b3a-8c5b-7f0f9b2e1a01"),
@@ -51,6 +87,12 @@ class UsageBillingWireContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Usage acceptance wire contract preserves rating evidence for Billing and Query" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Usage acceptance wire contract preserves rating evidence for Billing and Query`() {
         val event = UsageIntegrationEnvelope.create(
             eventId = UUID.fromString("018f4a40-7d3e-7b3a-8c5b-7f0f9b2e1a02"),
@@ -74,6 +116,12 @@ class UsageBillingWireContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Billing charge wire contract is independently understood by Invoice and Query" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Billing charge wire contract is independently understood by Invoice and Query`() {
         val event = BillingIntegrationEnvelope.create(
             eventId = UUID.fromString("018f4a40-7d3e-7b3a-8c5b-7f0f9b2e1a03"),

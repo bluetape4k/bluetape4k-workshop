@@ -31,23 +31,88 @@ import kotlin.time.Duration.Companion.seconds
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * ProjectionRebuildRepositoryIntegrationTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class ProjectionRebuildRepositoryIntegrationTest {
 
     private companion object: KLogging() {
+/**
+ * postgres은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
 
+/**
+ * PROJECTION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val PROJECTION = "voucher-lifecycle"
+/**
+ * FIRST_POSITION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val FIRST_POSITION = 1L
+/**
+ * TARGET_POSITION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val TARGET_POSITION = 2L
+/**
+ * AWAIT_TIMEOUT_SECONDS은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val AWAIT_TIMEOUT_SECONDS = 5L
+/**
+ * CANONICAL_DIGEST은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val CANONICAL_DIGEST = ReceiptDigest.sha256("voucher-projection-generation-v1")
+/**
+ * CORRUPT_DIGEST은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val CORRUPT_DIGEST = ReceiptDigest.sha256("voucher-projection-generation-corrupt-v1")
+/**
+ * NOW은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-23T13:00:00Z")
     }
 
+/**
+ * repository은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = ProjectionRebuildRepository()
+/**
+ * maintenance은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val maintenance = ProjectionRebuildMaintenance()
+/**
+ * postgresDatabase은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
 
     @BeforeAll
@@ -76,6 +141,12 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "validated candidate activates only when the expected active pointer revision still
+ * matches" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `validated candidate activates only when the expected active pointer revision still matches`() {
         val active = transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
@@ -124,6 +195,11 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "corrupt validation digest cannot activate a completed candidate" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `corrupt validation digest cannot activate a completed candidate`() {
         val active = transaction(database) {
             repository.initializeActive(PROJECTION, NOW)
@@ -170,6 +246,11 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent activation attempts commit one active pointer transition" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent activation attempts commit one active pointer transition`() {
         val active = transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
@@ -204,6 +285,12 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cancellation increments the token and stale completion cannot change the candidate" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cancellation increments the token and stale completion cannot change the candidate`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
@@ -222,6 +309,11 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "stale cancellation revision cannot advance an otherwise current candidate" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stale cancellation revision cannot advance an otherwise current candidate`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) {
@@ -246,6 +338,11 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "restart recovery converges a cancelling candidate to cancelled" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `restart recovery converges a cancelling candidate to cancelled`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) {
@@ -266,6 +363,12 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "only retryable failure resumes the same candidate with a new fencing token" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `only retryable failure resumes the same candidate with a new fencing token`() {
         transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) {
@@ -289,6 +392,12 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "retention removes only retired generations without changing the active pointer" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `retention removes only retired generations without changing the active pointer`() {
         val active = transaction(database) { repository.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
@@ -327,9 +436,19 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
         transaction(database) { findActive(PROJECTION) }?.generation shouldBeEqualTo candidate.key.generation
     }
 
+/**
+ * activeAsKey은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activeAsKey(active: ActiveProjectionGeneration): ProjectionKey =
         ProjectionKey(active.projection, active.generation)
 
+/**
+ * validate은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validate(candidate: ProjectionGeneration) {
         transaction(database) {
             repository.advance(
@@ -352,6 +471,11 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
         }
     }
 
+/**
+ * cursor은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun cursor(
         candidate: ProjectionGeneration,
         cancellationRevision: Long = candidate.cancellationRevision,

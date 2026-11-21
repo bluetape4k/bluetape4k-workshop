@@ -20,6 +20,9 @@ import javax.sql.DataSource
 internal class JobJdbcExecutor(
     dataSource: DataSource,
 ) : AutoCloseable {
+    /**
+     * 운영 작업 콘솔 경계의 전달 데이터입니다. 스키마·크기·무결성을 검증한 뒤 저장하거나 발행합니다.
+     */
     private val database = Database.connect(
         datasource = dataSource,
         databaseConfig = DatabaseConfig {
@@ -27,10 +30,25 @@ internal class JobJdbcExecutor(
         },
     )
 
+    /**
+     * transaction은 운영 작업 콘솔 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param block 업무 처리에 필요한 block 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun <T> transaction(block: (Connection) -> T): T = transaction(database) {
         block(connection.connection as Connection)
     }
 
+    /**
+     * exposedTransaction은 운영 작업 콘솔 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param block 업무 처리에 필요한 block 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun <T> exposedTransaction(block: JdbcTransaction.() -> T): T = transaction(database) {
         block()
     }
@@ -53,6 +71,13 @@ internal class JobJdbcExecutor(
         }
     }
 
+    /**
+     * nonClosing은 운영 작업 콘솔 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param connection 업무 처리에 필요한 connection 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     private fun nonClosing(connection: Connection): Connection =
         Proxy.newProxyInstance(
             Connection::class.java.classLoader,
@@ -69,6 +94,7 @@ internal class JobJdbcExecutor(
             }
         } as Connection
 
+    /** DataSource가 닫히기 전에 Exposed의 manager 등록을 해제합니다. */
     /** DataSource가 닫히기 전에 Exposed의 manager 등록을 해제합니다. */
     override fun close() {
         TransactionManager.closeAndUnregister(database)

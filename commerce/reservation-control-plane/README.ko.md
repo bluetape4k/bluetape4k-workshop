@@ -4,6 +4,29 @@
 
 이 Spring Boot 예제는 한정된 용량을 안전하게 예약하는 application-owned 제어 플레인을 구현합니다. 정합성의 최종 권한은 PostgreSQL에 있으며, Redis는 중복 작업 억제·만료 sweeper 조정·best-effort admission control에만 사용합니다.
 
+## 업무 요구사항과 설계 결정
+
+업무 문제는 단순히 “reservation을 insert한다”가 아닙니다. resource에는
+유한한 capacity가 있고, 고객은 응답을 받지 못한 뒤 retry할 수 있으며,
+다른 요청이 hold를 confirm하려는 순간 기존 hold가 만료될 수 있습니다. 이
+설계는 위험을 다음 요구사항으로 명시합니다.
+
+| 요구사항 | 설계 규칙 | 처음 읽는 사람이 확인할 점 |
+|---|---|---|
+| capacity를 초과 판매하지 않기 | PostgreSQL resource row를 lock하고 `revision`·`policyVersion`을 검증한 뒤 occupancy와 hold 상태를 한 transaction에서 변경 | Redis admission은 작업을 일찍 거절할 수 있지만 hold를 만들거나 capacity 존재 여부를 결정하지 않음 |
+| timeout을 안전하게 처리하기 | `Idempotency-Key` 아래 owner-scoped request digest와 response descriptor를 저장 | 같은 key·payload는 replay하고, 다른 owner/payload는 conflict로 처리하며, 진행 중 lease는 retryable 상태임 |
+| waitlist에 공정한 기회 주기 | PostgreSQL에 FIFO sequence를 보존하고 반환된 capacity를 하나의 bounded offer로 전환 | `OFFERED`는 해당 entry에 slot을 계속 예약했다는 뜻이며, 같은 expiry sweep이 두 번 승격하지 않음 |
+| 방치된 작업 복구하기 | leader-guarded sweeper가 compare-and-set 전이를 사용하고 durable notification delivery 하나를 기록 | Redis가 사라지면 최적화/leader 작업은 느려지지만 bounded manual sweep은 가능함 |
+| operator를 안전하게 만들기 | force-release와 sweep endpoint는 operator mode/key를 요구하고 bounded 결과를 반환 | 복구는 감사 가능한 command이며 무제한 “전부 고치기” 버튼이 아님 |
+
+대응하는 설계 문서는
+`docs/superpowers/specs/2026-07-18-issue-533-reservation-control-plane-design.md`입니다.
+문서의 authority boundary, state model, HTTP idempotency, runbook section을
+`ReservationCommandService`, `WaitlistCommandService`,
+`ReservationExpirySweeper`와 함께 읽으세요. 이 예제는 payment, calendar
+billing, production identity provider를 구현 범위에서 제외합니다. 이런
+항목은 숨겨진 가정이 아니라 별도의 integration boundary입니다.
+
 ## 예제 시나리오
 
 1. 두 브라우저에서 `http://localhost:8080`을 열고 같은 resource revision으로 hold를 시도합니다. PostgreSQL row lock과 revision 검사가 유효한 전이 하나만 허용합니다.

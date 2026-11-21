@@ -92,22 +92,77 @@ import kotlin.time.Duration.Companion.seconds
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 @Suppress("LargeClass")
+/**
+ * VoucherBatchIngestIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherBatchIngestIntegrationTest {
 
     companion object: KLogging() {
+/**
+ * postgres은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
+/**
+ * POSTGRES_ROUNDING_INSTANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val POSTGRES_ROUNDING_INSTANT = Instant.parse("2026-07-21T13:47:39.999999789Z")
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val TENANT = "tenant-ingest"
+/**
+ * TERMINAL_RACE_THREAD은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val TERMINAL_RACE_THREAD = "failing-create-terminal-race"
     }
 
+/**
+ * voucherSchema은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val voucherSchema = "voucher_ingest_${Base58.randomString(8).lowercase()}"
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val dataSource = postgres.getHikariDataSource {
         schema = voucherSchema
     }
+/**
+ * database은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val database = Database.connect(dataSource)
+/**
+ * digests은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var digests: VoucherDigestService
+/**
+ * service은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var service: JdbcCampaignBatchCommandService
+/**
+ * crypto은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var crypto: VoucherEnvelopeCrypto
 
     @BeforeAll
@@ -153,6 +208,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "import checkpoint commits ordinal digest and counts then resumes after restart" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `import checkpoint commits ordinal digest and counts then resumes after restart`() {
         val fixture = campaignAndBatch("resume", expected = 6, initial = codes(0, 2))
         val first = fixture.batch
@@ -208,6 +269,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "every campaign and batch mutation replays a safe descriptor without fabricating a
+ * snapshot" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `every campaign and batch mutation replays a safe descriptor without fabricating a snapshot`() {
         val createCampaign = createCampaignCommand("all-mutations")
         val draft = service.createCampaign(createCampaign).applied()
@@ -319,6 +386,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "import expected revision participates in the idempotency fingerprint" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `import expected revision participates in the idempotency fingerprint`() {
         val fixture = campaignAndBatch("import-revision-fingerprint", expected = 2, initial = listOf("IMPORT-FP-0"))
         val command = ImportChunkCommand(
@@ -350,6 +422,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "generation expected revision participates in the idempotency fingerprint" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `generation expected revision participates in the idempotency fingerprint`() {
         val campaign = createCampaign("generate-revision-fingerprint")
         val batch = createBatch(
@@ -377,6 +454,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same import revision admits one concurrent chunk and rejects the other as stale" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same import revision admits one concurrent chunk and rejects the other as stale`() {
         val fixture = campaignAndBatch("concurrent-import-revision", expected = 3, initial = listOf("IMPORT-INITIAL"))
         val commands = listOf(
@@ -417,6 +500,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same generation revision admits one concurrent chunk and rejects the other as stale" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same generation revision admits one concurrent chunk and rejects the other as stale`() {
         val campaign = createCampaign("concurrent-generate-revision")
         val batch = createBatch(
@@ -464,6 +553,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same key conflict and active owner prevent a second campaign effect" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same key conflict and active owner prevent a second campaign effect`() {
         val command = createCampaignCommand("idempotency-conflict")
         service.createCampaign(command).applied()
@@ -493,6 +587,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "business effect rolls back when idempotency finalize fails and same key can retry" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `business effect rolls back when idempotency finalize fails and same key can retry`() {
         val command = createCampaignCommand("finalize-rollback")
         installFinalizeFailureTrigger()
@@ -508,6 +608,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "policy updates are allowed only in draft and paused states" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `policy updates are allowed only in draft and paused states`() {
         val draft = service.createCampaign(createCampaignCommand("policy-states")).applied()
 
@@ -556,6 +661,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "activation rejects a tampered persisted canonical checkpoint" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `activation rejects a tampered persisted canonical checkpoint`() {
         val fixture = campaignAndBatch("tampered-checkpoint", expected = 2, initial = codes(20, 2))
 
@@ -577,6 +687,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "validation failure records only bounded evidence and blocks activation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `validation failure records only bounded evidence and blocks activation`() {
         val fixture = campaignAndBatch("invalid", expected = 3, initial = listOf("VALID-0"))
         val before = batchRow(fixture.batch.batchId)
@@ -623,6 +738,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "initial mixed rejection creates only a terminal batch and terminal replay" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `initial mixed rejection creates only a terminal batch and terminal replay`() {
         val campaign = createCampaign("initial-invalid")
         val command = createBatchCommand(campaign, "initial-invalid", 2, listOf("INITIAL-VALID", "bad\ninitial"))
@@ -658,6 +778,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "crypto rejection terminalizes atomically with bounded evidence replay and expiry" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `crypto rejection terminalizes atomically with bounded evidence replay and expiry`() {
         val fixture = campaignAndBatch("crypto-rejection", expected = 2, initial = listOf("CRYPTO-VALID"))
         val before = batchRow(fixture.batch.batchId)
@@ -715,6 +841,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "transaction crash rolls back a chunk and exact ordinal resumes" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `transaction crash rolls back a chunk and exact ordinal resumes`() {
         val fixture = campaignAndBatch("crash", expected = 4, initial = codes(0, 2))
         installOrdinalFailureTrigger(3)
@@ -733,6 +864,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "tenant lifetime digest rejects duplicate codes across campaigns" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `tenant lifetime digest rejects duplicate codes across campaigns`() {
         val first = campaignAndBatch("duplicate-a", expected = 1, initial = listOf("GLOBAL-CODE"))
         first.batch.acceptedCount shouldBeEqualTo 1
@@ -760,6 +896,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate create with a new key cannot mutate the existing batch" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate create with a new key cannot mutate the existing batch`() {
         val campaign = createCampaign("create-replay-authority")
         val original = createBatchCommand(
@@ -805,6 +946,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent exact campaign and batch creates with different keys converge on one effect"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent exact campaign and batch creates with different keys converge on one effect`() {
         service = newService(repository = BarrierCreateRepository(JdbcVoucherPoolRepository()))
         val campaignCommand = createCampaignCommand("concurrent-create")
@@ -869,6 +1016,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "failed create terminal recovery cannot corrupt a different authority winner" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `failed create terminal recovery cannot corrupt a different authority winner`() {
         val campaign = createCampaign("terminal-authority-race")
         val failingCommand = createBatchCommand(
@@ -924,6 +1077,12 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "named nonce collision is retryable while unknown integrity authority fails closed" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `named nonce collision is retryable while unknown integrity authority fails closed`() {
         service = newService(envelopeCrypto = FixedNonceCrypto(crypto))
         val fixture = campaignAndBatch("nonce-collision", expected = 2, initial = listOf("NONCE-0"))
@@ -977,10 +1136,20 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "generation rollback regenerates codes without persisting a seed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `generation rollback regenerates codes without persisting a seed`() {
         val generated = ArrayDeque(listOf("GEN-A", "GEN-B", "GEN-C", "GEN-D"))
         val source = object: GeneratedVoucherCodeSource {
             override val deterministic: Boolean = true
+/**
+ * nextCode은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun nextCode(): String = generated.removeFirst()
         }
         service = newService(source, VoucherPoolRuntimeProfile.LOOPBACK_TEST)
@@ -1029,6 +1198,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "activation requires exact count no gap and no unresolved failure" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `activation requires exact count no gap and no unresolved failure`() {
         val fixture = campaignAndBatch("activation", expected = 3, initial = codes(0, 2))
         assertFailsWith<BatchCommandException> {
@@ -1075,6 +1249,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "ten thousand entry batch finalizes through bounded chunks" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `ten thousand entry batch finalizes through bounded chunks`() {
         val tracking = TrackingVoucherPoolRepository(JdbcVoucherPoolRepository())
         service = newService(repository = tracking)
@@ -1112,15 +1291,30 @@ internal class VoucherBatchIngestIntegrationTest {
         tracking.requestCount shouldBeEqualTo 20
     }
 
+/**
+ * campaignAndBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun campaignAndBatch(
         suffix: String,
         expected: Long,
         initial: List<String>,
     ): Fixture {
+/**
+ * campaign은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaign = createCampaign(suffix)
         return Fixture(campaign, createBatch(campaign, suffix, expected, initial))
     }
 
+/**
+ * createCampaign은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createCampaign(suffix: String): CampaignSnapshot {
         val campaign = service.createCampaign(createCampaignCommand(suffix)).applied()
 
@@ -1134,6 +1328,11 @@ internal class VoucherBatchIngestIntegrationTest {
         ).applied()
     }
 
+/**
+ * createCampaignCommand은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createCampaignCommand(suffix: String): CreateCampaignCommand =
         CreateCampaignCommand(
             tenantId = TENANT,
@@ -1144,6 +1343,11 @@ internal class VoucherBatchIngestIntegrationTest {
             idempotencyKey = key("create-campaign-$suffix"),
         )
 
+/**
+ * createBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createBatch(
         campaign: CampaignSnapshot,
         suffix: String,
@@ -1153,6 +1357,11 @@ internal class VoucherBatchIngestIntegrationTest {
     ): BatchSnapshot =
         service.createImportBatch(createBatchCommand(campaign, suffix, expected, initial, sourceKind)).applied()
 
+/**
+ * createBatchCommand은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createBatchCommand(
         campaign: CampaignSnapshot,
         suffix: String,
@@ -1172,6 +1381,11 @@ internal class VoucherBatchIngestIntegrationTest {
         idempotencyKey = key("create-batch-$suffix"),
     )
 
+/**
+ * withActivatesAt은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun CreateImportBatchCommand.withActivatesAt(activatesAt: Instant) =
         CreateImportBatchCommand(
             tenantId = tenantId,
@@ -1187,6 +1401,11 @@ internal class VoucherBatchIngestIntegrationTest {
             idempotencyKey = idempotencyKey,
         )
 
+/**
+ * import은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun import(
         fixture: Fixture,
         firstOrdinal: Long,
@@ -1203,6 +1422,11 @@ internal class VoucherBatchIngestIntegrationTest {
         key("import-${fixtureSuffix(fixture)}-$firstOrdinal"),
     )
 
+/**
+ * fixtureSuffix은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun fixtureSuffix(fixture: Fixture): String = when (fixture.batch.batchId) {
         UUID.nameUUIDFromBytes("batch-resume".toUtf8Bytes())              -> "resume"
         UUID.nameUUIDFromBytes("batch-invalid".toUtf8Bytes())             -> "invalid"
@@ -1213,12 +1437,22 @@ internal class VoucherBatchIngestIntegrationTest {
         else                                                              -> error("unknown fixture")
     }
 
+/**
+ * newService은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun newService(
         source: GeneratedVoucherCodeSource = SecureRandomVoucherCodeSource(),
         runtimeProfile: VoucherPoolRuntimeProfile = VoucherPoolRuntimeProfile.PRODUCTION,
         envelopeCrypto: VoucherEnvelopeCrypto = crypto,
         repository: VoucherPoolRepository = JdbcVoucherPoolRepository(),
     ): JdbcCampaignBatchCommandService {
+/**
+ * manager은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val manager = SpringTransactionManager(dataSource, DatabaseConfig {}, false)
 
         return JdbcCampaignBatchCommandService(
@@ -1232,11 +1466,21 @@ internal class VoucherBatchIngestIntegrationTest {
         )
     }
 
+/**
+ * transactionExecutor은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun transactionExecutor(): VoucherPoolJdbcExecutor {
         val manager = SpringTransactionManager(dataSource, DatabaseConfig {}, false)
         return VoucherPoolJdbcExecutor(DatabasePermitGate.default(32), manager)
     }
 
+/**
+ * digestService은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digestService(): VoucherDigestService =
         VoucherDigestService(
             stableDedupKey = DigestKey.of(7, keyBytes(7)),
@@ -1249,12 +1493,27 @@ internal class VoucherBatchIngestIntegrationTest {
             ),
         )
 
+/**
+ * manifest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun manifest(suffix: String): DigestValue = DigestValue.of(
         MessageDigest.getInstance("SHA-256").digest("manifest-$suffix".toUtf8Bytes()),
     )
 
+/**
+ * codes은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun codes(offset: Int, count: Int): List<String> = List(count) { "CODE-${offset + it}" }
 
+/**
+ * batchRow은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun batchRow(batchId: UUID): BatchSnapshot = transaction(database) {
         VoucherPoolBatchTable
             .selectAll()
@@ -1277,6 +1536,11 @@ internal class VoucherBatchIngestIntegrationTest {
             }
     }
 
+/**
+ * entryCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun entryCount(batchId: UUID): Long = transaction(database) {
         VoucherPoolEntryTable
             .selectAll()
@@ -1284,6 +1548,11 @@ internal class VoucherBatchIngestIntegrationTest {
             .count()
     }
 
+/**
+ * dedupCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun dedupCount(batchId: UUID): Long = transaction(database) {
         VoucherPoolCodeDedupTable
             .selectAll()
@@ -1291,6 +1560,11 @@ internal class VoucherBatchIngestIntegrationTest {
             .count()
     }
 
+/**
+ * campaignCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun campaignCount(campaignId: UUID): Long = transaction(database) {
         VoucherPoolCampaignTable
             .selectAll()
@@ -1298,6 +1572,11 @@ internal class VoucherBatchIngestIntegrationTest {
             .count()
     }
 
+/**
+ * campaignRevision은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun campaignRevision(campaignId: UUID): Long = transaction(database) {
         VoucherPoolCampaignTable
             .selectAll()
@@ -1305,6 +1584,11 @@ internal class VoucherBatchIngestIntegrationTest {
             .single()[VoucherPoolCampaignTable.revision]
     }
 
+/**
+ * rawStorageContains은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun rawStorageContains(value: String): Boolean {
         val needle = value.toByteArray(Charsets.UTF_8)
         return transaction(database) {
@@ -1316,6 +1600,11 @@ internal class VoucherBatchIngestIntegrationTest {
         }
     }
 
+/**
+ * containsBytes은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun ByteArray.containsBytes(needle: ByteArray): Boolean {
         return when {
             needle.isEmpty() -> true
@@ -1326,12 +1615,22 @@ internal class VoucherBatchIngestIntegrationTest {
         }
     }
 
+/**
+ * execute은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun execute(sql: String) {
         dataSource.connection.use {
             it.createStatement().execute(sql)
         }
     }
 
+/**
+ * installOrdinalFailureTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun installOrdinalFailureTrigger(ordinal: Long) {
         execute(
             """CREATE FUNCTION fail_ingest_ordinal() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1340,10 +1639,20 @@ internal class VoucherBatchIngestIntegrationTest {
         )
     }
 
+/**
+ * dropOrdinalFailureTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun dropOrdinalFailureTrigger() {
         execute("DROP TRIGGER IF EXISTS fail_ingest_ordinal ON voucher_pool_entries; DROP FUNCTION IF EXISTS fail_ingest_ordinal()")
     }
 
+/**
+ * installFinalizeFailureTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun installFinalizeFailureTrigger() {
         execute(
             """CREATE FUNCTION fail_idempotency_finalize() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1353,6 +1662,11 @@ internal class VoucherBatchIngestIntegrationTest {
         )
     }
 
+/**
+ * dropFinalizeFailureTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun dropFinalizeFailureTrigger() {
         execute(
             "DROP TRIGGER IF EXISTS fail_idempotency_finalize ON voucher_pool_http_idempotency; " +
@@ -1361,6 +1675,11 @@ internal class VoucherBatchIngestIntegrationTest {
     }
 
     @Suppress("SameParameterValue")
+/**
+ * installUnknownIntegrityTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun installUnknownIntegrityTrigger(ordinal: Long) {
         execute(
             """CREATE FUNCTION fail_unknown_integrity() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1372,6 +1691,11 @@ internal class VoucherBatchIngestIntegrationTest {
         )
     }
 
+/**
+ * dropUnknownIntegrityTrigger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun dropUnknownIntegrityTrigger() {
         execute(
             "DROP TRIGGER IF EXISTS fail_unknown_integrity ON voucher_pool_entries; " +
@@ -1379,6 +1703,11 @@ internal class VoucherBatchIngestIntegrationTest {
         )
     }
 
+/**
+ * createCampaignFingerprint은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createCampaignFingerprint(command: CreateCampaignCommand): CommandFingerprint =
         VoucherPoolFingerprint.command(
             "campaign-create",
@@ -1393,13 +1722,28 @@ internal class VoucherBatchIngestIntegrationTest {
             ),
         )
 
+/**
+ * keyBytes은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun keyBytes(seed: Int) = ByteArray(32) { (seed + it).toByte() }
 
+/**
+ * key은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun key(suffix: String): String = "voucher-ingest-$suffix"
 
     private fun <T> MutationResult<T>.applied(): T = (this as MutationResult.Applied<T>).value
 
     private fun MutationResult<*>.shouldReplay(effectId: UUID, revision: Long, outcome: String) {
+/**
+ * replay은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val replay = this as MutationResult.Replay
         log.debug { "replay: $replay" }
         replay.descriptor.effectId shouldBeEqualTo effectId
@@ -1407,11 +1751,26 @@ internal class VoucherBatchIngestIntegrationTest {
         replay.descriptor.outcome shouldBeEqualTo outcome
     }
 
+/**
+ * executeConcurrently은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <T> executeConcurrently(
         commands: List<T>,
         crossinline action: (T) -> BatchSnapshot,
     ): List<Any> {
+/**
+ * pool은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val pool = Executors.newFixedThreadPool(commands.size)
+/**
+ * start은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val start = CyclicBarrier(commands.size)
 
         return try {
@@ -1431,6 +1790,11 @@ internal class VoucherBatchIngestIntegrationTest {
         }
     }
 
+/**
+ * adminConnection은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adminConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,
@@ -1438,17 +1802,47 @@ internal class VoucherBatchIngestIntegrationTest {
             postgres.password ?: PostgreSQLServer.PASSWORD,
         )
 
+/**
+ * Fixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class Fixture(
+/**
+ * campaign은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaign: CampaignSnapshot,
+/**
+ * batch은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batch: BatchSnapshot,
     )
 
+/**
+ * BoundaryCheckingCrypto 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class BoundaryCheckingCrypto(private val delegate: VoucherEnvelopeCrypto): VoucherEnvelopeCrypto {
+/**
+ * encrypt은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun encrypt(entryIdentity: EntryIdentity, code: CanonicalVoucherCode): EncryptedVoucherCode {
             TransactionManager.currentOrNull().shouldBeNull()
             return delegate.encrypt(entryIdentity, code)
         }
 
+/**
+ * decryptAndVerify은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun decryptAndVerify(
             entryIdentity: EntryIdentity,
             encrypted: EncryptedVoucherCode,
@@ -1456,7 +1850,17 @@ internal class VoucherBatchIngestIntegrationTest {
         ): CanonicalVoucherCode = delegate.decryptAndVerify(entryIdentity, encrypted, expectedStableDedup)
     }
 
+/**
+ * FixedNonceCrypto 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class FixedNonceCrypto(private val delegate: VoucherEnvelopeCrypto): VoucherEnvelopeCrypto {
+/**
+ * encrypt은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun encrypt(
             entryIdentity: EntryIdentity,
             code: CanonicalVoucherCode,
@@ -1466,6 +1870,11 @@ internal class VoucherBatchIngestIntegrationTest {
                 wrapNonce = ByteArray(12) { 12 },
             )
 
+/**
+ * decryptAndVerify은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun decryptAndVerify(
             entryIdentity: EntryIdentity,
             encrypted: EncryptedVoucherCode,
@@ -1474,10 +1883,25 @@ internal class VoucherBatchIngestIntegrationTest {
             delegate.decryptAndVerify(entryIdentity, encrypted, expectedStableDedup)
     }
 
+/**
+ * RejectingCrypto 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RejectingCrypto(private val delegate: VoucherEnvelopeCrypto): VoucherEnvelopeCrypto {
+/**
+ * encrypt은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun encrypt(entryIdentity: EntryIdentity, code: CanonicalVoucherCode): EncryptedVoucherCode =
             throw VoucherCryptoException(VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
 
+/**
+ * decryptAndVerify은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun decryptAndVerify(
             entryIdentity: EntryIdentity,
             encrypted: EncryptedVoucherCode,
@@ -1486,14 +1910,39 @@ internal class VoucherBatchIngestIntegrationTest {
             delegate.decryptAndVerify(entryIdentity, encrypted, expectedStableDedup)
     }
 
+/**
+ * TrackingVoucherPoolRepository 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class TrackingVoucherPoolRepository(
+/**
+ * delegate은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val delegate: VoucherPoolRepository,
     ): VoucherPoolRepository by delegate {
+/**
+ * maximumRequestedCount은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var maximumRequestedCount: Int = 0
             private set
+/**
+ * requestCount은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var requestCount: Int = 0
             private set
 
+/**
+ * committedOrdinalDigests은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun committedOrdinalDigests(
             tenantId: String,
             batchId: UUID,
@@ -1506,30 +1955,90 @@ internal class VoucherBatchIngestIntegrationTest {
         }
     }
 
+/**
+ * BarrierCreateRepository 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class BarrierCreateRepository(
+/**
+ * delegate은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val delegate: VoucherPoolRepository,
     ): VoucherPoolRepository by delegate {
+/**
+ * campaignBarrier은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val campaignBarrier = CyclicBarrier(2)
+/**
+ * batchBarrier은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val batchBarrier = CyclicBarrier(2)
 
+/**
+ * createCampaign은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun createCampaign(campaign: CampaignRecord): CampaignRecord {
             campaignBarrier.await(10.seconds)
             return delegate.createCampaign(campaign)
         }
 
+/**
+ * createBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun createBatch(batch: BatchRecord): BatchRecord {
             batchBarrier.await(10.seconds)
             return delegate.createBatch(batch)
         }
     }
 
+/**
+ * TerminalRecoveryRaceRepository 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class TerminalRecoveryRaceRepository(
+/**
+ * delegate은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val delegate: VoucherPoolRepository,
     ): VoucherPoolRepository by delegate {
+/**
+ * terminalRecoveryStarted은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val terminalRecoveryStarted = CountDownLatch(1)
+/**
+ * winnerCommitted은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val winnerCommitted = CountDownLatch(1)
+/**
+ * campaignLockCalls은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val campaignLockCalls = ThreadLocal.withInitial { 0 }
 
+/**
+ * lockCampaignForShare은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun lockCampaignForShare(tenantId: String, campaignId: UUID): CampaignRecord {
             if (Thread.currentThread().name == TERMINAL_RACE_THREAD) {
                 val call = campaignLockCalls.get() + 1
@@ -1542,8 +2051,18 @@ internal class VoucherBatchIngestIntegrationTest {
             return delegate.lockCampaignForShare(tenantId, campaignId)
         }
 
+/**
+ * awaitTerminalRecovery은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun awaitTerminalRecovery(): Boolean = terminalRecoveryStarted.await(10.seconds)
 
+/**
+ * releaseTerminalRecovery은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun releaseTerminalRecovery() = winnerCommitted.countDown()
     }
 }

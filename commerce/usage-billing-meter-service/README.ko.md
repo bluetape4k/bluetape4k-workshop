@@ -26,6 +26,16 @@ broker 가용성이나 production 가격 정책까지 증명하지는 않습니�
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)
 
+## 업무 요구사항과 테스트 증거
+
+Meter는 price authority입니다. 핵심 약속은 “현재 가격을 반환한다”가 아니라
+“downstream service가 사용해도 되는 price version의 durable evidence를
+발행한다”입니다. local fact와 `PENDING` outbox row를 함께 commit하고 Kafka
+전달은 retry 가능하게 둡니다. `MeterServiceApplicationContractTest`는
+command/envelope/idempotency 계약을, `MeterOutboxPostgresIntegrationTest`는
+uniqueness·atomic local write·fenced publisher 완료를 증명합니다. 어느 test도
+broker transaction을 증명하지는 않습니다.
+
 ## 책임
 
 - tenant, meter, currency, unit price, effective time을 포함한

@@ -39,13 +39,28 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.seconds
 
 @Tag("high-contention")
+/**
+ * TicketHighContentionProfileTest 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class TicketHighContentionProfileTest {
 
     private companion object: KLogging() {
+/**
+ * IMPLEMENTATION은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val IMPLEMENTATION = "ticket-spring"
     }
 
     @Test
+/**
+ * 이 시나리오는 "run selected Ticket high contention profile" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `run selected Ticket high contention profile`() {
         TicketHighContentionWorkerPid.publishIfConfigured()
         Runtime.version().feature() shouldBeEqualTo requiredProperty("highContentionExpectedJavaVersion").toInt()
@@ -143,18 +158,38 @@ internal class TicketHighContentionProfileTest {
         Files.isRegularFile(reportPath).shouldBeTrue()
     }
 
+/**
+ * requiredProperty은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun requiredProperty(name: String): String =
         System.getProperty(name).requireNotNull(name)
 
 }
 
+/**
+ * finalizeAfterSuccessfulCleanup은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun finalizeAfterSuccessfulCleanup(
     report: Map<String, Any?>,
     startedNanos: Long,
     profileDeadline: Duration,
     completedNanos: Long = System.nanoTime(),
 ): Map<String, Any?> {
+/**
+ * actualDurationNanos은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val actualDurationNanos = (completedNanos - startedNanos).coerceAtLeast(0L)
+/**
+ * expired은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val expired = actualDurationNanos > profileDeadline.toNanos()
 
     return report + mapOf(
@@ -179,38 +214,133 @@ private fun finalizeAfterSuccessfulCleanup(
     )
 }
 
+/**
+ * TicketAuthoritySnapshot 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private data class TicketAuthoritySnapshot(
+/**
+ * attempts은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val attempts: Long,
+/**
+ * effects은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val effects: Long,
+/**
+ * receipts은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val receipts: Long,
 )
 
+/**
+ * TicketLiveProfileAdapter 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class TicketLiveProfileAdapter(
+/**
+ * runId은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val runId: String,
+/**
+ * profile은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val profile: TicketHighContentionProfile,
+/**
+ * topology은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val topology: TicketProxiedTopology,
 ): TicketHighContentionWorkloadAdapter, AutoCloseable {
+/**
+ * application은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val application = TicketHighContentionProfileApplication.start(
         redisUri = topology.redisUri,
         databasePermitTimeout = profile.operationTimeoutMs.millis(),
     )
+/**
+ * measuredSale은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val measuredSale = application.createSale(
         namespace = "hc:$runId:${profile.profileId}:measured",
         inventory = measuredInventory(),
     )
+/**
+ * commands은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val commands = ConcurrentHashMap<Int, StartPurchase>()
+/**
+ * duplicateCommands은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val duplicateCommands = ConcurrentHashMap<Int, StartPurchase>()
+/**
+ * startedCommands은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val startedCommands = ConcurrentHashMap<Int, StartPurchase>()
+/**
+ * winnerOrdinals은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val winnerOrdinals = ConcurrentHashMap.newKeySet<Int>()
+/**
+ * winnerAttemptIds은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val winnerAttemptIds = ConcurrentHashMap.newKeySet<UUID>()
+/**
+ * injected은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val injected = AtomicBoolean()
 
     @Volatile
+/**
+ * baseline은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var baseline: TicketAuthoritySnapshot? = null
 
     @Volatile
+/**
+ * evidence은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var evidence: Map<String, Any?> = emptyMap()
 
+/**
+ * warmUp은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun warmUp(identity: TicketWorkloadIdentity) {
         val sale = application.createSale(
             namespace = "${identity.namespace}${identity.ordinal}",
@@ -226,6 +356,11 @@ private class TicketLiveProfileAdapter(
         )
     }
 
+/**
+ * snapshotBaseline은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun snapshotBaseline(): String =
         authoritySnapshot().also { baseline = it }.let {
             "${it.attempts}:${it.effects}:${it.receipts}"
@@ -255,10 +390,20 @@ private class TicketLiveProfileAdapter(
         }
     }
 
+/**
+ * execute은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun execute(
         token: TicketScheduleToken,
         identity: TicketWorkloadIdentity,
     ): TicketWorkloadDisposition {
+/**
+ * command은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val command = if (profile.failure.kind == TicketFailureKind.DUPLICATE_SUBMISSION) {
             duplicateCommands[identity.ordinal] ?: error("prepared duplicate Ticket command is missing")
         } else {
@@ -284,6 +429,11 @@ private class TicketLiveProfileAdapter(
         }
     }
 
+/**
+ * injectDeclaredFailure은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun injectDeclaredFailure() {
         if (!injected.compareAndSet(false, true)) {
             return
@@ -301,6 +451,11 @@ private class TicketLiveProfileAdapter(
         }
     }
 
+/**
+ * assertProfileInvariants은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun assertProfileInvariants() {
         check(injected.get()) { "declared Ticket failure was not observed" }
         val inventory = application.committedInventoryQuantity(measuredSale.saleId)
@@ -336,6 +491,11 @@ private class TicketLiveProfileAdapter(
         }
     }
 
+/**
+ * authorityDelta은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun authorityDelta(): TicketAuthoritySnapshot {
         val before = baseline.requireNotNull { "Ticket baseline was not captured" }
         val current = authoritySnapshot()
@@ -347,10 +507,25 @@ private class TicketLiveProfileAdapter(
         )
     }
 
+/**
+ * isWinner은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun isWinner(token: TicketScheduleToken): Boolean = token.stableOrdinal in winnerOrdinals
 
+/**
+ * profileEvidence은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun profileEvidence(): Map<String, Any?> = evidence.toSortedMap()
 
+/**
+ * injectRedisPathOutage은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun injectRedisPathOutage() {
         val oldConnection = topology.openConnection()
         try {
@@ -394,6 +569,11 @@ private class TicketLiveProfileAdapter(
         }
     }
 
+/**
+ * injectRedisKeyLoss은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun injectRedisKeyLoss() {
         val prefix = "hc:v1:$runId:ticket-spring:redis-key-loss:"
         val commands = application.redisResources.commands()
@@ -430,6 +610,11 @@ private class TicketLiveProfileAdapter(
         )
     }
 
+/**
+ * injectSlowProvider은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun injectSlowProvider() {
         val command = application.command(measuredSale, profile.operationCount + 1)
         application.purchases.start(command)
@@ -468,6 +653,11 @@ private class TicketLiveProfileAdapter(
         )
     }
 
+/**
+ * injectWorkerRestart은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun injectWorkerRestart() {
         val command = application.command(measuredSale, profile.operationCount + 2)
         application.purchases.start(command)
@@ -518,6 +708,11 @@ private class TicketLiveProfileAdapter(
         )
     }
 
+/**
+ * injectDuplicateDelivery은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun injectDuplicateDelivery() {
         val command = application.command(measuredSale, profile.operationCount + 3)
         application.purchases.start(command)
@@ -538,9 +733,19 @@ private class TicketLiveProfileAdapter(
         )
     }
 
+/**
+ * firstIdentityOrdinal은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun firstIdentityOrdinal(command: StartPurchase): Int =
         commands.entries.single { it.value.attemptId == command.attemptId }.key
 
+/**
+ * firstStartedCommand은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun firstStartedCommand(): StartPurchase =
         TicketHighContentionAwait.value(
             timeout = 5.seconds(),
@@ -550,6 +755,11 @@ private class TicketLiveProfileAdapter(
             startedCommands.values.firstOrNull()
         }
 
+/**
+ * measuredInventory은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun measuredInventory(): Int =
         when (profile.failure.kind) {
             TicketFailureKind.NONE -> profile.contentionShape.authorityCount
@@ -557,6 +767,11 @@ private class TicketLiveProfileAdapter(
             else                   -> profile.operationCount + 8
         }
 
+/**
+ * authoritySnapshot은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun authoritySnapshot(): TicketAuthoritySnapshot =
         TicketAuthoritySnapshot(
             attempts = application.purchaseAttemptCount(),
@@ -564,12 +779,27 @@ private class TicketLiveProfileAdapter(
             receipts = receiptCount(),
         )
 
+/**
+ * effectCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun effectCount(): Long =
         application.effectOperationCount()
 
+/**
+ * receiptCount은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun receiptCount(): Long =
         application.effectReceiptCount()
 
+/**
+ * awaitFailure은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitFailure(block: () -> Unit) {
         TicketHighContentionAwait.failure(
             timeout = 5.seconds(),
@@ -579,6 +809,11 @@ private class TicketLiveProfileAdapter(
         )
     }
 
+/**
+ * awaitPaymentClaim은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitPaymentClaim(
         worker: PaymentWorker,
         operationId: UUID,
@@ -592,15 +827,30 @@ private class TicketLiveProfileAdapter(
             worker.claim(operationId)
         }
 
+/**
+ * close은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun close() {
         application.close()
     }
 
     private companion object {
+/**
+ * CLAIM_TTL은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val CLAIM_TTL: Duration = 25.millis()
     }
 }
 
+/**
+ * scheduleVector은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun TicketHighContentionProfile.scheduleVector(): TicketScheduleVector =
     TicketScheduleVector(
         name = profileId,
@@ -619,6 +869,11 @@ private fun TicketHighContentionProfile.scheduleVector(): TicketScheduleVector =
         expectedTokens = emptyList(),
     )
 
+/**
+ * report은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun TicketHighContentionProfile.report(
     contract: LoadedTicketHighContentionContract,
     runId: String,
@@ -628,9 +883,29 @@ private fun TicketHighContentionProfile.report(
     workload: TicketWorkloadResult,
     adapter: TicketLiveProfileAdapter,
 ): Map<String, Any?> {
+/**
+ * duration은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val duration = System.nanoTime() - startedNanos
+/**
+ * delta은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val delta = adapter.authorityDelta()
+/**
+ * profileEvidence은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val profileEvidence = adapter.profileEvidence()
+/**
+ * dispositions은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val dispositions = workload.realizedRecords.groupingBy { record ->
         if (adapter.isWinner(record.token)) "SUCCEEDED" else "DUPLICATE_SUPPRESSED"
     }.eachCount().toSortedMap()
@@ -691,15 +966,30 @@ private fun TicketHighContentionProfile.report(
     )
 }
 
+/**
+ * measuredObservations은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun TicketHighContentionProfile.measuredObservations(
     workload: TicketWorkloadResult,
     delta: TicketAuthoritySnapshot,
     profileEvidence: Map<String, Any?>,
 ): Map<String, Any> {
+/**
+ * sortedLatencies은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sortedLatencies = workload.realizedRecords
         .filter { it.disposition != TicketWorkloadDisposition.LOCALLY_REJECTED }
         .map(TicketWorkloadRecord::latencyNanos)
         .sorted()
+/**
+ * durationNanos은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val durationNanos = workload.actualDurationNanos.coerceAtLeast(1L)
     return observationFields.associateWith { field ->
         when (field) {
@@ -731,6 +1021,11 @@ private fun List<Long>.ticketPercentile(percentile: Double): Long {
     if (isEmpty()) {
         return 0L
     }
+/**
+ * index은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val index = ((size - 1) * percentile).toInt().coerceIn(indices)
     return this[index]
 }

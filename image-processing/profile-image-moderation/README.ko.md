@@ -28,6 +28,46 @@ guard를 검증합니다.
 rejected/failed/no-image 상태, stale completion, private URL 거부, cleanup,
 metadata redaction, payload 안전성, metrics를 확인합니다.
 
+## 업무 요구 사항과 상태 머신
+
+제품의 요구 사항은 단순히 “이미지를 moderation한다”가 아닙니다. 항상
+사용자에게 안전한 effective image를 보여 주고, 원본은 절대 공개하지 않으며,
+이전 upload의 moderation job이 늦게 끝나도 최신 upload가 이기게 해야 합니다.
+API status는 profile page가 바로 사용할 수 있는 답입니다.
+
+| Status | 제품에서의 의미 | Effective URL |
+|---|---|---|
+| `NO_IMAGE` | 사용자가 아직 이미지를 올리지 않음 | 안정적인 기본 이미지 |
+| `PENDING_MODERATION` | 현재 upload를 저장했고 판정을 기다림 | public blurred derivative, local mode에서는 `Cache-Control: no-store` |
+| `APPROVED` | 현재 `userId + uploadId`가 policy 통과 | public approved derivative |
+| `REJECTED` | policy가 금지 콘텐츠를 발견 | 안정적인 기본 이미지, reason은 안전하고 제한된 text |
+| `MODERATION_FAILED` | provider, timeout, derivative processing이 실패 | 안정적인 기본 이미지 |
+
+허용된 전이는 `NO_IMAGE → PENDING_MODERATION → APPROVED`, `REJECTED`, 또는
+`MODERATION_FAILED`입니다. `userId + uploadId`에 대한 compare-and-set이 있어
+오래된 worker가 최신 upload 뒤에 이전 upload를 공개하지 못합니다. Pending
+image는 빠른 UX를 위한 절충일 뿐 안전하다는 증거가 아닙니다. 원본은 모든
+상태에서 private으로 남습니다.
+
+## 처음 읽는 사람을 위한 업로드 생명주기
+
+1. `POST /api/users/{userId}/profile-image`가 storage 전에 multipart image를
+   검증합니다. 잘못된 입력은 `400`이고 moderation job을 만들지 않습니다.
+2. Service가 `private/original/*`에 원본을 저장하고 privacy-safe derivative를
+   만든 뒤 `PENDING_MODERATION`과 함께 `202 Accepted`를 반환합니다. 응답의
+   `effectiveUrl`은 blurred derivative이며 원본 key가 아닙니다.
+3. `ProfileImageModerationRunner`가 제한된 concurrency로 policy adapter를
+   호출합니다. 운영에서는 같은 seam 뒤에 cloud provider를 둘 수 있고,
+   filename-marker provider는 이 workshop을 결정적으로 실행하기 위한 데모입니다.
+4. 완료 결과는 현재 `userId + uploadId`일 때만 반영됩니다. 승인하면 approved
+   derivative를 공개하고, 반려나 실패면 기본 이미지로 가리키며 storage 경계에
+   따라 객체를 정리합니다.
+5. `GET /api/users/{userId}/profile-image`를 안전하게 polling할 수 있습니다.
+   private storage 세부 정보가 아니라 현재 status와 effective URL만 반환합니다.
+
+이 순서 때문에 `202`가 유용합니다. upload는 접수되었지만 moderation 완료로
+잘못 표현하지 않기 때문입니다.
+
 ![Profile image moderation architecture](../../docs/images/readme-diagrams/profile-image-moderation-readme-architecture-01.png)
 
 ![Profile image moderation sequence](../../docs/images/readme-diagrams/profile-image-moderation-readme-sequence-01.png)
@@ -182,3 +222,18 @@ Local storage 기본 경로는 `${java.io.tmpdir}/bluetape4k-profile-images`입�
 ```
 
 테스트는 pending/approved/rejected/failed/no-image 상태, stale moderation completion, private URL denial, storage failure cleanup, strict privacy metadata verification, orientation/redaction report geometry, payload round trip과 defensive copy, stable codec failure, caller-owned stream, source-reader fail-closed 처리, JPEG derivative signature, pending 응답의 no-store cache, low-cardinality metrics를 검증합니다.
+
+테스트는 회귀 확인이면서 업무 계약 문서이기도 합니다.
+
+| 테스트 영역 | 증명하는 경계 |
+|---|---|
+| `ProfileImageServiceTest` state cases | pending, approval, rejection, provider failure, timeout, no-image 응답이 올바른 effective URL을 선택합니다. |
+| `ProfileImageServiceTest` stale/cleanup cases | 이전 upload의 완료가 현재 upload를 덮지 못하고 partial storage가 정리됩니다. |
+| `ProfileImageProcessorTest` | public derivative를 다시 encode하고 orientation을 정규화하며 금지 metadata를 제거하고, reader 오류에서는 fail-closed합니다. |
+| `PublicProfileImageControllerTest` | private original key는 공개로 읽을 수 없고 pending 응답은 `no-store`를 가집니다. |
+| `ProfileImageMetricsTest` | metric label이 user id나 원본 provider text가 아닌 제한된 낮은 cardinality를 사용합니다. |
+| `ProfileImageModerationPolicyProviderTest` | 데모 policy mapping이 결정적이며 filename marker가 운영 moderation 보장이 아님을 전제로 합니다. |
+
+테스트 모음은 이 상태 머신과 privacy 경계를 증명합니다. 의도적으로 범위 밖에
+둔 cloud moderation model의 정밀도/재현율, S3 bucket policy, authentication
+규칙까지 증명하지는 않습니다.

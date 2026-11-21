@@ -56,17 +56,51 @@ import javax.sql.DataSource
 @Import(EventSourcingHttpIntegrationTest.TestUsers::class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * event-sourced usage billing의 HTTP 계약과 projection consistency 경계를 실제
+ * Spring Boot random-port와 PostgreSQL에서 확인합니다.
+ *
+ * command idempotency, stream/projection position header, wait-for-position, tenant
+ * authorization, rebuild/readiness를 고객과 operator 관점에서 검증합니다. 내부
+ * table 모양보다 외부 계약과 replay 가능한 event authority를 증명하는 test이며,
+ * projection lag이 항상 0이라는 성능 주장은 하지 않습니다.
+ */
 class EventSourcingHttpIntegrationTest {
 
     companion object: KLogging() {
+/**
+ * TENANT_A은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val TENANT_A = "tenant-a"
+/**
+ * PASSWORD은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val PASSWORD = "test-secret"
+/**
+ * HTTP_TIMEOUT은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val HTTP_TIMEOUT = 30.seconds()
 
+/**
+ * postgres은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
         @DynamicPropertySource
+/**
+ * postgresProperties은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun postgresProperties(registry: DynamicPropertyRegistry) {
             registry.add("spring.datasource.url") { postgres.jdbcUrl }
             registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
@@ -80,38 +114,93 @@ class EventSourcingHttpIntegrationTest {
 
     @LocalServerPort
     @Suppress("VarCouldBeVal")
+/**
+ * port은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var port: Int = 0
 
     @Autowired
     @Suppress("VarCouldBeVal")
+/**
+ * dataSource은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var dataSource: DataSource
 
     @Autowired
     @Suppress("VarCouldBeVal")
+/**
+ * projectionWorker은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var projectionWorker: ProjectionWorker
 
     @Autowired
     @Suppress("VarCouldBeVal")
+/**
+ * projectionScheduler은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var projectionScheduler: ProjectionScheduler
 
     @Autowired
     @Suppress("VarCouldBeVal")
+/**
+ * healthIndicator은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var healthIndicator: EventSourcingHealthIndicator
 
     @Autowired
     @Suppress("VarCouldBeVal")
+/**
+ * meterRegistry은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var meterRegistry: MeterRegistry
 
     @Autowired
     @Suppress("VarCouldBeVal")
+/**
+ * eventStore은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var eventStore: EventStore
 
     @Autowired
     @Suppress("VarCouldBeVal")
+/**
+ * objectMapper은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var objectMapper: ObjectMapper
 
+/**
+ * executor은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var executor: MeteringEventsJdbcExecutor
+/**
+ * client은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val client: WebTestClient by lazy {
+/**
+ * httpClient은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
         WebTestClient.bindToServer(JdkClientHttpConnector(httpClient))
             .baseUrl("http://127.0.0.1:$port")
@@ -137,6 +226,11 @@ class EventSourcingHttpIntegrationTest {
     fun disconnectExposed() = executor.close()
 
     @Test
+/**
+ * 이 시나리오는 "live HTTP preserves the shared business contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `live HTTP preserves the shared business contract`() {
         UsageBillingHttpContract.verifyRegistrationAndRetry { path, username, idempotencyKey, body ->
             val response = client
@@ -162,6 +256,11 @@ class EventSourcingHttpIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "command event metadata preserves receipt correlation causation and actor" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `command event metadata preserves receipt correlation causation and actor`() {
         client.post()
             .uri("/api/v1/tenants/$TENANT_A/meters")
@@ -187,6 +286,11 @@ class EventSourcingHttpIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "query exposes consistency headers and bounded wait timeout" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `query exposes consistency headers and bounded wait timeout`() {
         executor.transaction { ProjectionGenerationRepository().createInitialActive("billing", 1, Instant.now()) }
 
@@ -209,6 +313,11 @@ class EventSourcingHttpIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator routes reject tenant authority and allow operator role" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator routes reject tenant authority and allow operator role`() {
         executor.transaction {
             ProjectionGenerationRepository()
@@ -260,6 +369,11 @@ class EventSourcingHttpIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator starts one idempotent rebuild and inspects its generation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator starts one idempotent rebuild and inspects its generation`() {
         executor.transaction {
             ProjectionGenerationRepository().createInitialActive("billing", 1, Instant.now())
@@ -330,6 +444,11 @@ class EventSourcingHttpIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "worker uses fenced lease and actuator health reports projection state" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `worker uses fenced lease and actuator health reports projection state`() {
         val appendCountBefore = meterRegistry.timer("billing.event.append", "outcome", "success").count()
         val replayCountBefore = meterRegistry.counter("billing.event.replay", "outcome", "success").count()
@@ -413,8 +532,18 @@ class EventSourcingHttpIntegrationTest {
     }
 
     @TestConfiguration(proxyBeanMethods = false)
+/**
+ * TestUsers 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     class TestUsers {
         @Bean
+/**
+ * userDetailsService은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun userDetailsService(): UserDetailsService =
             InMemoryUserDetailsManager(
                 User

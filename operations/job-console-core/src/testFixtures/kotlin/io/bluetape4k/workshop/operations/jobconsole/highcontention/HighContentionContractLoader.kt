@@ -21,20 +21,55 @@ import java.nio.file.StandardOpenOption.READ
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 
+/**
+ * HighContentionContractException 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class HighContentionContractException(
     message: String,
     cause: Throwable? = null,
 ): IllegalArgumentException(message, cause)
 
+/**
+ * HighContentionFileReadObserver 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 fun interface HighContentionFileReadObserver {
+/**
+ * afterRead은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun afterRead(path: Path)
 }
 
+/**
+ * HighContentionContractLoader 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class HighContentionContractLoader(
+/**
+ * fileReadObserver은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fileReadObserver: HighContentionFileReadObserver = HighContentionFileReadObserver {},
 ) {
 
+/**
+ * mapper은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val mapper = Jackson.createDefaultJsonMapper()
+/**
+ * strictJsonFactory은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val strictJsonFactory = JsonFactory.builder()
         .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
         .streamReadConstraints(
@@ -49,6 +84,11 @@ class HighContentionContractLoader(
         )
         .build()
 
+/**
+ * load은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun load(
         contractRoot: Path,
         mode: HighContentionMode,
@@ -65,24 +105,69 @@ class HighContentionContractLoader(
             throw HighContentionContractException("high-contention contract arithmetic overflow", error)
         }
 
+/**
+ * loadValidated은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun loadValidated(
         contractRoot: Path,
         mode: HighContentionMode,
         profileId: String?,
         implementation: String?,
     ): LoadedHighContentionContract {
+/**
+ * validProfileId은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val validProfileId = profileId?.requireNotBlank("profileId")
+/**
+ * validImplementation은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val validImplementation = implementation?.requireNotBlank("implementation")
+/**
+ * root은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val root = validateContractRoot(contractRoot)
 
+/**
+ * profileContract은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val profileContract = read(root, "profile-contract.json", HighContentionProfileContract::class.java)
+/**
+ * reportContract은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reportContract = read(root, "report-contract.json", HighContentionReportContract::class.java)
+/**
+ * descriptorContract은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val descriptorContract = read(
             root,
             "child-descriptor-contract.json",
             HighContentionChildDescriptorContract::class.java,
         )
+/**
+ * scheduleVectors은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val scheduleVectors = read(root, "schedule-vectors.json", ScheduleVectorDocument::class.java)
+/**
+ * manifest은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val manifest = read(root, "suite-manifest.json", HighContentionSuiteManifest::class.java)
 
         validateDocumentVersions(profileContract, reportContract, descriptorContract, scheduleVectors, manifest)
@@ -96,11 +181,21 @@ class HighContentionContractLoader(
             throw IllegalArgumentException("unknown profileId for ${mode.wireValue}: $validProfileId")
         }
 
+/**
+ * selections은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val selections = manifest.entries
             .asSequence()
             .filter { it.mode == mode }
             .filter { validProfileId == null || it.profileId == validProfileId }
             .flatMap { entry ->
+/**
+ * profile은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val profile = read(root, entry.profileFile, HighContentionProfile::class.java)
                 validateProfile(profile, entry, profileContract)
                 entry.implementations
@@ -123,6 +218,11 @@ class HighContentionContractLoader(
         )
     }
 
+/**
+ * validateContractRoot은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateContractRoot(contractRoot: Path): Path {
         val normalized = contractRoot.toAbsolutePath().normalize()
         if (Files.isSymbolicLink(normalized) || !Files.isDirectory(normalized, NOFOLLOW_LINKS)) {
@@ -131,6 +231,11 @@ class HighContentionContractLoader(
         return normalized.toRealPath(NOFOLLOW_LINKS)
     }
 
+/**
+ * read은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <T> read(root: Path, relativePath: String, type: Class<T>): T {
         val path = resolveTrustedFile(root, relativePath)
         val before = Files.readAttributes(path, BasicFileAttributes::class.java, NOFOLLOW_LINKS)
@@ -155,6 +260,11 @@ class HighContentionContractLoader(
         }
     }
 
+/**
+ * resolveTrustedFile은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun resolveTrustedFile(root: Path, relativePath: String): Path {
         val validRelativePath = relativePath.requireNotBlank("relativePath")
         val relative = Path.of(validRelativePath)
@@ -185,6 +295,11 @@ class HighContentionContractLoader(
         return normalized
     }
 
+/**
+ * readBounded은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun readBounded(path: Path, before: BasicFileAttributes): ByteArray {
         if (before.size() !in 1..MAX_DOCUMENT_BYTES) {
             throw HighContentionContractException("$path exceeds the bounded document size")
@@ -207,6 +322,11 @@ class HighContentionContractLoader(
         }
     }
 
+/**
+ * sameFileIdentity은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sameFileIdentity(before: BasicFileAttributes, after: BasicFileAttributes): Boolean =
         before.isRegularFile &&
                 after.isRegularFile &&
@@ -215,6 +335,11 @@ class HighContentionContractLoader(
                 before.size() == after.size() &&
                 before.lastModifiedTime() == after.lastModifiedTime()
 
+/**
+ * validateDocumentVersions은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateDocumentVersions(
         profileContract: HighContentionProfileContract,
         reportContract: HighContentionReportContract,
@@ -258,6 +383,11 @@ class HighContentionContractLoader(
         )
     }
 
+/**
+ * validateManifest은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateManifest(manifest: HighContentionSuiteManifest) {
         manifest.implementations.requireEquals(IMPLEMENTATIONS, "implementations")
         manifest.runDeadlineMs.requirePositiveNumber("runDeadlineMs")
@@ -303,6 +433,11 @@ class HighContentionContractLoader(
         matrix.size.requireEquals(expectedEntries.size * IMPLEMENTATIONS.size, "matrix tuple count")
     }
 
+/**
+ * validateProfile은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateProfile(
         profile: HighContentionProfile,
         entry: HighContentionSuiteEntry,
@@ -312,6 +447,11 @@ class HighContentionContractLoader(
         profile.profileId.requireEquals(entry.profileId, "profileId")
         profile.mode.requireEquals(entry.mode, "profile mode")
         profile.seed.requireNotBlank("seed")
+/**
+ * limits은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val limits = contract.limits[profile.mode.wireValue]
             ?: throw HighContentionContractException("missing limits for ${profile.mode.wireValue}")
 
@@ -344,11 +484,21 @@ class HighContentionContractLoader(
                 if (profile.retryShape != null) {
                     throw HighContentionContractException("step profiles cannot declare retryShape")
                 }
+/**
+ * operationTotal은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val operationTotal = profile.epochs.fold(0) { total, epoch ->
                     epoch.durationMs.requirePositiveNumber("epoch.durationMs")
                     epoch.operationCount.requirePositiveNumber("epoch.operationCount")
                     Math.addExact(total, epoch.operationCount)
                 }
+/**
+ * durationTotal은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val durationTotal = profile.epochs.fold(0L) { total, epoch -> Math.addExact(total, epoch.durationMs) }
                 operationTotal.requireEquals(profile.operationCount, "step operation count")
                 durationTotal.requireEquals(profile.workloadDurationMs, "step workload duration")
@@ -358,6 +508,11 @@ class HighContentionContractLoader(
                 if (profile.epochs.isNotEmpty()) {
                     throw HighContentionContractException("retry-storm profiles cannot declare epochs")
                 }
+/**
+ * retry은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val retry = profile.retryShape
                     ?: throw HighContentionContractException("retry-storm profiles require retryShape")
                 retry.identityCount.requirePositiveNumber("retry identity count")
@@ -403,6 +558,11 @@ class HighContentionContractLoader(
         profile.observationFields.requireNotEmpty("observationFields")
         profile.knownLimitations.requireNotEmpty("knownLimitations")
 
+/**
+ * requiredCleanupReserve은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val requiredCleanupReserve =
             Math.addExact(profile.cleanupActionBudgetsMs.total(), profile.reportFinalizeReserveMs)
         if (profile.cleanupReserveMs < requiredCleanupReserve) {
@@ -413,6 +573,11 @@ class HighContentionContractLoader(
         }
     }
 
+/**
+ * validateScheduleVectors은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validateScheduleVectors(document: ScheduleVectorDocument) {
         document.vectors.requireNotEmpty("schedule vectors")
         val canonical = document.vectors.joinToString(separator = ",", prefix = "[", postfix = "]") {
@@ -430,6 +595,11 @@ class HighContentionContractLoader(
         }
     }
 
+/**
+ * canonicalVector은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun canonicalVector(vector: ScheduleVector): String =
         buildString {
             append("{\"authorityWeights\":")
@@ -469,24 +639,84 @@ class HighContentionContractLoader(
             append("}")
         }
 
+/**
+ * quoted은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun quoted(value: String): String = mapper.writeValueAsString(value)
 
+/**
+ * sha256은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sha256(value: String): String =
         MessageDigest.getInstance("SHA-256")
             .digest(value.toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
 
     companion object {
+/**
+ * MAX_DOCUMENT_BYTES은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_DOCUMENT_BYTES = 1_048_576L
+/**
+ * MAX_DOCUMENT_DEPTH은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_DOCUMENT_DEPTH = 32
+/**
+ * MAX_STRING_LENGTH은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_STRING_LENGTH = 65_536
+/**
+ * MAX_NAME_LENGTH은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_NAME_LENGTH = 128
+/**
+ * MAX_NUMBER_LENGTH은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_NUMBER_LENGTH = 32
+/**
+ * MAX_TOKEN_COUNT은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MAX_TOKEN_COUNT = 100_000L
+/**
+ * SCHEDULE_ALGORITHM은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val SCHEDULE_ALGORITHM = "hc-v1-sha256-unsigned-rank"
 
+/**
+ * IMPLEMENTATIONS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val IMPLEMENTATIONS = listOf("job-core", "job-spring", "job-ktor", "ticket-spring")
+/**
+ * REPORT_RESULTS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REPORT_RESULTS = listOf("PASS", "FAIL", "ERROR", "UNAVAILABLE")
+/**
+ * REPORT_ERROR_CODES은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REPORT_ERROR_CODES = listOf(
             "NONE",
             "INVALID_PROFILE",
@@ -503,6 +733,11 @@ class HighContentionContractLoader(
             "PARENT_CLEANUP_ERROR",
             "PREFLIGHT_UNAVAILABLE",
         )
+/**
+ * REPORT_SUBMISSION_DISPOSITIONS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REPORT_SUBMISSION_DISPOSITIONS = listOf(
             "SUCCEEDED",
             "FAILED_CLOSED",
@@ -513,14 +748,34 @@ class HighContentionContractLoader(
             "DUPLICATE_SUPPRESSED",
             "IGNORED_FENCED",
         )
+/**
+ * REPORT_FAILURE_POINTS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REPORT_FAILURE_POINTS = listOf(
             "NONE",
             "BEFORE_AUTHORITY",
             "AFTER_AUTHORITY",
             "UNKNOWN",
         )
+/**
+ * REPORT_SCHEDULE_OBSERVATIONS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REPORT_SCHEDULE_OBSERVATIONS = listOf("ON_TIME", "MISSED_DEADLINE")
+/**
+ * REPORT_CLEANUP_RESULTS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REPORT_CLEANUP_RESULTS = listOf("PASS", "FAIL")
+/**
+ * REPORT_REQUIRED_TOP_LEVEL_FIELDS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val REPORT_REQUIRED_TOP_LEVEL_FIELDS = listOf(
             "reportSchemaVersion",
             "suiteSchemaVersion",
@@ -545,6 +800,11 @@ class HighContentionContractLoader(
             "cleanup",
             "knownLimitations",
         )
+/**
+ * PROFILE_IDS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val PROFILE_IDS = listOf(
             "burst",
             "duplicate-storm",

@@ -50,29 +50,100 @@ import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * ReconciliationPostgresIntegrationTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class ReconciliationPostgresIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * fixture은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixture = MeteringDatabaseFixture()
+/**
+ * clock은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val clock = Clock.fixed(Instant.parse("2026-07-04T00:00:00Z"), ZoneOffset.UTC)
+/**
+ * properties은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val properties = MeteringProperties()
+/**
+ * meters은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val meters = MeterRepository()
+/**
+ * prices은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val prices = PriceVersionRepository()
+/**
+ * periods은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val periods = BillingPeriodRepository()
+/**
+ * runs은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val runs = CloseRunRepository()
+/**
+ * ledger은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val ledger = LedgerEntryRepository()
+/**
+ * usageEvents은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val usageEvents = UsageEventRepository()
+/**
+ * adjustments은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val adjustments = AdjustmentService(ledger, prices, clock)
+/**
+ * reconciliation은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val reconciliation = ReconciliationService(properties, prices, adjustments, clock)
 
     @AfterAll
     fun close(): Unit = fixture.close()
 
 
+/**
+ * transaction은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <T> transaction(block: () -> T): T = fixture.executor.transaction { block() }
 
     @Test
+/**
+ * 이 시나리오는 "reconciliation records all six immutable finding categories without repairing
+ * authority" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reconciliation records all six immutable finding categories without repairing authority`() {
         val scenario = transaction { finalizedScenario() }
         val beforeCount = transaction { LedgerEntries.selectAll().count() }
@@ -98,6 +169,11 @@ class ReconciliationPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "late usage repair rejects a stale finding after one append" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `late usage repair rejects a stale finding after one append`() {
         val scenario = transaction { finalizedScenario() }
         transaction {
@@ -146,6 +222,11 @@ class ReconciliationPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "keyset scan reaches a finding after a full page of normal authority rows" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `keyset scan reaches a finding after a full page of normal authority rows`() {
         val scenario = transaction { finalizedScenario() }
         transaction {
@@ -178,6 +259,11 @@ class ReconciliationPostgresIntegrationTest {
         result.hasMore.shouldBeFalse()
     }
 
+/**
+ * finalizedScenario은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun finalizedScenario(): FinalizedScenario {
         val seed = fixture.resetAndSeed()
         val tenant = TenantId(seed.tenantId)
@@ -224,6 +310,11 @@ class ReconciliationPostgresIntegrationTest {
         )
     }
 
+/**
+ * newUsage은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun newUsage(
         seed: MeteringSeed,
         sourceId: String,
@@ -244,10 +335,40 @@ class ReconciliationPostgresIntegrationTest {
         }
 }
 
+/**
+ * FinalizedScenario 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private data class FinalizedScenario(
+/**
+ * seed은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val seed: MeteringSeed,
+/**
+ * period은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val period: BillingPeriodEntity,
+/**
+ * cutoff은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val cutoff: Instant,
+/**
+ * charge은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val charge: LedgerEntryEntity,
+/**
+ * invoiceLine은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val invoiceLine: InvoiceLineEntity,
 )

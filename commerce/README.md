@@ -27,6 +27,57 @@ and `scripts/smoke-validate.sh commerce` in **Run** provide the test-backed
 verification path; they prove the listed contracts and failure cases, not
 production load, credentials, or external-provider availability.
 
+## A newcomer-friendly learning path
+
+Read these examples as business contracts, not as a collection of controllers.
+For every workflow, ask four questions in this order: **what business fact must
+not be lost, which store is allowed to decide it, what happens when a response
+or dependency fails, and which test proves the rule?** The answer is more
+important than the framework class that happens to implement it.
+
+| Business question | Start here | Correctness authority | Failure or recovery lesson | Evidence to run |
+|---|---|---|---|---|
+| Can two customers hold the same scarce seat/resource? | [`reservation-control-plane`](reservation-control-plane/) | PostgreSQL row, revision, and capacity transaction | Retry the command; expiry and waitlist promotion are durable, while Redis is only an accelerator | `ReservationWebIntegrationTest`, `LettuceReservationCoordinationIntegrationTest` |
+| How does a campaign spend a finite voucher capacity exactly once? | [`promotion-voucher-campaign`](promotion-voucher-campaign/) | PostgreSQL campaign/voucher state and idempotency record | Lost response, Redis outage, delayed review, and reconciliation are explicit states | `VoucherEndToEndIntegrationTest`, `VoucherConcurrencyIntegrationTest` |
+| How is a large pre-generated code pool imported and revealed safely? | [`pre-generated-voucher-pool`](pre-generated-voucher-pool/) | PostgreSQL entry reservation, revision, and unique constraints | `FOR UPDATE SKIP LOCKED`, bounded ingest checkpoints, one-time reveal replacement, and key recovery | `VoucherPoolConcurrencyIntegrationTest`, `VoucherBatchIngestIntegrationTest` |
+| Why are order, payment, inventory, and fulfillment not one status column? | [`order-lifecycle-fulfillment`](order-lifecycle-fulfillment/) | Each aggregate's PostgreSQL revision and durable event publication | Unknown/duplicate/out-of-order provider outcomes need replay and operator review | `OrderLifecycleIntegrationTest`, `OrderLifecycleWebIntegrationTest` |
+| How can a flash sale sell scarce tickets without trusting a queue or payment provider? | [`concert-ticket-flash-sale`](concert-ticket-flash-sale/) | PostgreSQL sale, purchase, inventory, and ticket-effect rows | Admission is advisory; payment `UNKNOWN`, refund, ticket revoke, and restock are recoverable workflows | `TicketEndToEndIntegrationTest`, `TicketHostileConcurrencyIntegrationTest` |
+| When is append-only history worth the projection/replay cost? | [`event-sourced-promotion-voucher-campaign`](event-sourced-promotion-voucher-campaign/) | PostgreSQL event stream and expected stream version | Rebuild a shadow projection, fence stale workers, quarantine poison events, and keep reads explainable | `EventStoreAppendIntegrationTest`, `ProjectionRebuildWorkerIntegrationTest` |
+| How do we close a usage bill when usage and prices arrive at different times? | [`usage-metering-billing-ledger`](usage-metering-billing-ledger/) | PostgreSQL normalized workflow plus immutable ledger/invoice facts | Close by checkpoint, retry after a crash, and append late debit/credit adjustments | `MeteringEndToEndIntegrationTest`, `BillingCloseStressTest` |
+| How do event sourcing, upcasting, and online read-model replacement work together? | [`usage-metering-billing-event-sourcing`](usage-metering-billing-event-sourcing/) | Append-only event streams; projections are rebuildable read models | Validate hashes, replay/upcast, quarantine poison events, and switch generations only with fencing | `EventStorePostgresIntegrationTest`, `ProjectionRecoveryPostgresIntegrationTest` |
+| What new failure boundaries appear after service extraction? | [`usage-billing-microservices-composition-tests`](usage-billing-microservices-composition-tests/) | Each service's local PostgreSQL transaction | Kafka is at-least-once; outbox/inbox, digest conflict, ordering, quarantine, and redrive make retries safe | `UsageBillingMicroserviceCompositionIntegrationTest`, `PoisonIntegrationTest` |
+
+### Terms that appear throughout the examples
+
+- **Aggregate and revision**: an aggregate is the smallest business object
+  whose invariants must change together. Its revision is a compare-and-set
+  guard: a command that read revision 4 cannot silently overwrite revision 5.
+- **Idempotency**: the caller sends the same key after a timeout. The server
+  stores a digest of the key and request, then replays the original result for
+  the same request or returns a conflict for a different request. It prevents
+  duplicate business effects; it does not make a network exactly-once.
+- **Outbox/inbox**: an outbox records a local fact and the delivery intent in
+  one transaction. An inbox records that a received event was handled. Both
+  are durable checkpoints for at-least-once delivery, not a claim that Kafka or
+  an external provider is transactional with PostgreSQL.
+- **Projection and replay**: a projection is a query-oriented copy derived
+  from authoritative facts. Replay rebuilds it from events; therefore a
+  projection may lag or fail without becoming the source of truth.
+- **Reconciliation and correction**: reconciliation compares independent facts
+  and records a finding. A correction appends a new debit/credit or adjustment;
+  it never edits the original payment, usage, or ledger fact.
+
+### Spec-to-code reading order
+
+The runnable modules are implementations of the design decisions in
+`docs/superpowers/specs`, not generic CRUD tutorials. Read the matching spec
+section first, then the README's architecture and failure sections, then the
+named test. In particular, the specs explain why Redis/Kafka are deliberately
+non-authoritative, why lock ordering is documented, and why operator recovery
+is part of the business contract. The command examples below intentionally use
+`--max-workers=1` because the shared test fixtures serialize database-backed
+examples; this is a reproducible correctness run, not a performance claim.
+
 The usage-billing service boundaries are summarized below. Each service owns a
 local PostgreSQL authority and crosses service boundaries through Kafka topics;
 the diagram is a source-backed ownership view, not a throughput chart.

@@ -12,6 +12,25 @@
 
 각 decoder는 required envelope field에 Bluetape validation helper를 사용하고, durable boundary payload type은 명시적인 serialization ID를 둔다. debug outcome log에는 event ID, event type, quarantine reason처럼 안정적인 운영 필드만 기록하며 raw financial payload는 남기지 않는다.
 
+## 업무 요구사항과 테스트 증거
+
+`docs/superpowers/specs/2026-07-22-issue-555-usage-billing-microservices-design.md`는
+모든 application을 나누라는 문서가 아니라 extraction guide입니다. ownership,
+deployment, scaling이 독립적이고 새 failure mode를 운영할 수 있을 때만 물리적
+경계를 둡니다.
+
+| 요구사항 | 경계 규칙 | 증거와 운영 의미 |
+|---|---|---|
+| 각 service를 financial 관점에서 독립적으로 유지 | service가 local fact와 `PENDING` outbox row를 하나의 local PostgreSQL transaction에 commit | composition test가 다섯 database를 띄우며 shared table을 통해 우연히 통과할 수 없음 |
+| Kafka at-least-once delivery 수용 | relay는 owner/lease fencing을 사용하고 receiver는 local effect 전에 `(tenantId, eventId, payloadDigest)`를 inbox에 기록 | `RestartIntegrationTest`, `OutageIntegrationTest`, `BrokerPathRecoveryIntegrationTest`가 중복 money 없이 retry 수렴을 증명 |
+| contract drift를 안전하게 거절 | unknown schema·invalid envelope·digest가 다른 동일 event ID는 durable quarantine으로 이동 | `PoisonIntegrationTest`, `SchemaEvolutionIntegrationTest`가 다른 record의 진행과 redrive audit을 보존 |
+| ordering과 correction 의미 보존 | aggregate version/partition key와 명시적 correction event를 topic 사이에 유지 | `OrderingIntegrationTest`, `CorrectionIntegrationTest`가 deferral과 append-only correction을 검증 |
+| tenant 경계 보호 | local query와 wire envelope마다 tenant identity를 담고 Query는 read-only로 유지 | `TenantIsolationIntegrationTest`가 cross-tenant read/apply 차단을 확인 |
+
+먼저 각 service의 local test를 실행한 뒤 composition suite를 실행하세요. 전자는
+한 service 계약을, 후자는 새 network/database 경계를 증명합니다. 이 test들은
+Kafka EOS·XA·tax/accounting compliance·production capacity를 보장하지 않습니다.
+
 ## 핵심 원칙
 
 | 질문 | 답 |

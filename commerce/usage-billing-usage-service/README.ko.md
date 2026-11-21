@@ -26,6 +26,15 @@ exactly once라고 주장하는 검증은 아닙니다.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)
 
+## 업무 요구사항과 테스트 증거
+
+Usage는 local price evidence를 확인한 뒤에만 외부 측정값을 billable fact로
+받아들입니다. 누락된 가격을 추측하거나 Meter database를 동기 조회하지
+않습니다. `UsageServiceApplicationContractTest`는 decoder·envelope·idempotency·
+publisher 계약을 설명하고, `UsageAcceptancePostgresIntegrationTest`는
+price-evidence inbox deduplication과 atomic usage/outbox persistence를
+증명합니다. Kafka redelivery는 여전히 at-least-once 경계입니다.
+
 ## 책임
 
 - `meter.events.v1`의 `PriceActivated`를 로컬 가격 근거로 소비합니다.

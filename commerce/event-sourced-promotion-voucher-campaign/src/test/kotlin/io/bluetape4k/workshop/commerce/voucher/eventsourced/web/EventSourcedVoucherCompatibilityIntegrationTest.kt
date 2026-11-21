@@ -58,6 +58,11 @@ import kotlin.time.Duration.Companion.seconds
     properties = ["voucher.projection.worker.enabled=false"],
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * EventSourcedVoucherCompatibilityIntegrationTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constructor(
     registration: EventSourcedExposedDatabaseRegistration,
     dataSource: DataSource,
@@ -65,15 +70,50 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
 ) {
 
     companion object: KLogging() {
+/**
+ * POSTGRES은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val POSTGRES by lazy { PostgreSQLServer.Launcher.postgres }
+/**
+ * HTTP_TIMEOUT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val HTTP_TIMEOUT: Duration = 60.seconds()
+/**
+ * NOW은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-23T00:00:00Z")
+/**
+ * PROJECTION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val PROJECTION = "voucher-lifecycle"
+/**
+ * OPERATOR_SECRET은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val OPERATOR_SECRET = "workshop-operator-secret"
+/**
+ * OPERATOR_GUARD은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val OPERATOR_GUARD = "workshop-operator-guard"
 
         @JvmStatic
         @DynamicPropertySource
+/**
+ * postgresProperties은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun postgresProperties(registry: DynamicPropertyRegistry) {
             registry.add("spring.datasource.url") { POSTGRES.jdbcUrl }
             registry.add("spring.datasource.username") { POSTGRES.username.shouldNotBeNull() }
@@ -82,8 +122,23 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
         }
     }
 
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val database = registration.database
+/**
+ * origin은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val origin = "http://127.0.0.1:$port"
+/**
+ * client은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val client: WebTestClient
 
     init {
@@ -107,6 +162,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "event sourced adapter satisfies the shared normalized campaign contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event sourced adapter satisfies the shared normalized campaign contract`() {
         VoucherCampaignBlackBoxContract.scenarios.forEach { scenario ->
             client
@@ -122,6 +182,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "event sourced adapter satisfies the shared campaign activation contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event sourced adapter satisfies the shared campaign activation contract`() {
         val scenario = VoucherCampaignBlackBoxContract.activateAndReplay
 
@@ -139,6 +204,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "event sourced adapter satisfies the shared voucher allocation contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event sourced adapter satisfies the shared voucher allocation contract`() {
         val scenario = VoucherCampaignBlackBoxContract.allocateAndReplay
 
@@ -160,6 +230,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "event sourced adapter satisfies the shared voucher lifecycle contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event sourced adapter satisfies the shared voucher lifecycle contract`() {
         VoucherCampaignBlackBoxContract.lifecycleScenarios.forEach { scenario ->
             val allocation = createAllocation(scenario)
@@ -170,6 +245,12 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "allocation replay preserves the terminal outcome while rendering current voucher state"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `allocation replay preserves the terminal outcome while rendering current voucher state`() {
         val scenario = VoucherCampaignBlackBoxContract.lifecycleScenarios.first()
         val allocation = createAllocation(scenario)
@@ -188,6 +269,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "event sourced adapter satisfies the shared allocation failure contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event sourced adapter satisfies the shared allocation failure contract`() {
         VoucherCampaignBlackBoxContract.allocationFailures.forEach { scenario ->
             scenario.campaign?.let { campaign ->
@@ -214,6 +300,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent final capacity allocation has one authoritative winner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent final capacity allocation has one authoritative winner`() {
         val create = createCapacityRaceCampaign()
         val campaignId = create.campaignId
@@ -261,6 +352,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
         }
     }
 
+/**
+ * createCapacityRaceCampaign은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createCapacityRaceCampaign(): VoucherCampaignBlackBoxRequest {
         val now = Instant.now()
         val create = VoucherCampaignBlackBoxRequest(
@@ -288,6 +384,12 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     }
 
     @Test
+/**
+ * 이 시나리오는 "event sourced adapter satisfies the shared voucher lifecycle failure contract" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `event sourced adapter satisfies the shared voucher lifecycle failure contract`() {
         VoucherCampaignBlackBoxContract.lifecycleFailures.forEach { scenario ->
             val allocation = createAllocation(scenario.allocation)
@@ -323,13 +425,28 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
         }
     }
 
+/**
+ * createAllocation은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createAllocation(
         scenario: VoucherLifecycleBlackBoxScenario,
     ): VoucherAllocationHttpResponse = createAllocation(scenario.allocation)
 
+/**
+ * createAllocation은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createAllocation(
         allocation: VoucherAllocationBlackBoxScenario,
     ): VoucherAllocationHttpResponse {
+/**
+ * campaign은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaign = allocation.campaign
 
         client
@@ -348,16 +465,36 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
             .returnResult().responseBody.shouldNotBeNull()
     }
 
+/**
+ * postLifecycle은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun postLifecycle(
         scenario: VoucherLifecycleBlackBoxScenario,
         allocation: VoucherAllocationHttpResponse,
     ): WebTestClient.RequestHeadersSpec<*> {
+/**
+ * request은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val request = scenario.allocation.first
+/**
+ * path은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val path = when (scenario.action) {
             VoucherLifecycleAction.REDEEM  -> "/api/v1/claims/${allocation.claimId}/redeem"
             VoucherLifecycleAction.RELEASE -> "/api/v1/claims/${allocation.claimId}/release"
         }
 
+/**
+ * body은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val body = when (scenario.action) {
             VoucherLifecycleAction.REDEEM  ->
                 mapOf(
@@ -378,6 +515,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
             .bodyValue(body)
     }
 
+/**
+ * testClient은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun testClient(): WebTestClient {
         val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
 
@@ -391,11 +533,21 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
     private fun WebTestClient.RequestHeadersSpec<*>.assertNormalizedLifecycle(
         expected: NormalizedVoucherLifecycleResult,
     ) {
+/**
+ * response은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = exchange().expectStatus().isEqualTo(expected.status)
         expected.replayed?.let {
             response.expectHeader().valueEquals("Idempotency-Replayed", it.toString())
         }
 
+/**
+ * body은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val body = response.expectBody()
         expected.code?.let { body.jsonPath("$.code").isEqualTo(it) }
         expected.state?.let { body.jsonPath("$.state").isEqualTo(it) }
@@ -403,6 +555,11 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest @Autowired constr
         expected.policyVersion?.let { body.jsonPath("$.policyVersion").isEqualTo(it) }
     }
 
+/**
+ * operatorAccess은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun operatorAccess(): OperatorContractAccess =
         OperatorContractAccess(origin, OPERATOR_SECRET, OPERATOR_GUARD)
 

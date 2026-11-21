@@ -30,13 +30,28 @@ import java.util.*
 @Tag("integration")
 @SpringBootTest
 @Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
+/**
+ * BillingInboxPostgresIntegrationTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class BillingInboxPostgresIntegrationTest {
 
     private companion object: KLogging() {
+/**
+ * postgres은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
         @JvmStatic
         @DynamicPropertySource
+/**
+ * postgresProperties은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun postgresProperties(registry: DynamicPropertyRegistry) {
             registry.add("spring.datasource.url") { postgres.jdbcUrl }
             registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
@@ -46,27 +61,68 @@ class BillingInboxPostgresIntegrationTest {
     }
 
     @Autowired
+/**
+ * pricingEvidence은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var pricingEvidence: BillingPricingEvidenceService
 
     @Autowired
+/**
+ * inbox은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var inbox: BillingInboxService
 
     @Autowired
+/**
+ * charges은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var charges: BillingChargeRepository
 
     @Autowired
+/**
+ * outbox은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var outbox: BillingOutboxRepository
 
     @Autowired
+/**
+ * priceEvidenceInbox은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var priceEvidenceInbox: BillingPriceEvidenceInboxRepository
 
     @Autowired
+/**
+ * outboxJournal은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var outboxJournal: ExposedBillingOutboxJournal
 
     @Autowired
+/**
+ * transactionManager은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
+/**
+ * 이 시나리오는 "accepted usage event creates one append-only charge and one pending outbox event" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `accepted usage event creates one append-only charge and one pending outbox event`() {
         val meterCode = "api_calls_${UUID.randomUUID()}"
 
@@ -109,6 +165,12 @@ class BillingInboxPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "price evidence inbox absorbs duplicate delivery and quarantines payload conflicts" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `price evidence inbox absorbs duplicate delivery and quarantines payload conflicts`() {
         val event = BillingPriceEvidenceEvent(
             eventId = UUID.randomUUID(),
@@ -131,6 +193,11 @@ class BillingInboxPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Billing outbox claim and published mark remain fenced by owner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Billing outbox claim and published mark remain fenced by owner`() {
         val meterCode = "compute_${UUID.randomUUID()}"
 
@@ -167,6 +234,11 @@ class BillingInboxPostgresIntegrationTest {
         } shouldBeEqualTo "PUBLISHED"
     }
 
+/**
+ * transaction은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <T: Any> transaction(crossinline block: () -> T): T =
         TransactionTemplate(transactionManager)
             .execute { block() }.shouldNotBeNull()

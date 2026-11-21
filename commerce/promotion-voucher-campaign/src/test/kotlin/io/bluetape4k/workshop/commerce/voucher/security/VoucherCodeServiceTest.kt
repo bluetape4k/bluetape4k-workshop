@@ -16,13 +16,29 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.slf4j.LoggerFactory
 import java.util.*
 
+/**
+ * VoucherCodeServiceTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherCodeServiceTest {
 
     companion object: KLogging()
 
+/**
+ * service은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val service = VoucherCodeService(fixedKeyRing())
 
     @Test
+/**
+ * 이 시나리오는 "generated code has version payload checksum and a separate storage verifier" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `generated code has version payload checksum and a separate storage verifier`() {
         val issued = service.issue(fixedGenerationInput())
 
@@ -40,6 +56,11 @@ internal class VoucherCodeServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "fixed input has a stable golden vector" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fixed input has a stable golden vector`() {
         val issued = service.issue(fixedGenerationInput())
 
@@ -60,6 +81,11 @@ internal class VoucherCodeServiceTest {
             "V6-2JNj1cRbsKnoHUCJNpSTTmjR",
         ],
     )
+/**
+ * 이 시나리오는 "invalid code forms fail with one redacted result" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `invalid code forms fail with one redacted result`(candidate: String) {
         val captured = captureLogs {
             service.verifyExternal(candidate) shouldBeEqualTo VerificationResult.INVALID_CODE
@@ -71,6 +97,11 @@ internal class VoucherCodeServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "tenant campaign and allocation are separated generation inputs" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `tenant campaign and allocation are separated generation inputs`() {
         val input = fixedGenerationInput()
         val baseline = service.issue(input)
@@ -83,6 +114,11 @@ internal class VoucherCodeServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "active old verification key supports rotation and retirement fails closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `active old verification key supports rotation and retirement fails closed`() {
         val issued = service.issue(fixedGenerationInput())
         val rotatedRing = fixedKeyRing().copy(
@@ -100,6 +136,11 @@ internal class VoucherCodeServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "wrong verifier is rejected with constant time comparison" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `wrong verifier is rejected with constant time comparison`() {
         val issued = service.issue(fixedGenerationInput())
 
@@ -110,6 +151,11 @@ internal class VoucherCodeServiceTest {
         ).shouldBeFalse()
     }
 
+/**
+ * captureLogs은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun captureLogs(block: () -> Unit): String {
         val logger = LoggerFactory.getLogger(VoucherCodeService::class.java) as Logger
         val originalLevel = logger.level
@@ -127,6 +173,11 @@ internal class VoucherCodeServiceTest {
         }
     }
 
+/**
+ * fixedKeyRing은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun fixedKeyRing(): VoucherCodeKeyRing =
         VoucherCodeKeyRing(
             currentGenerationVersion = 5,
@@ -135,6 +186,11 @@ internal class VoucherCodeServiceTest {
             verificationKeys = mapOf(7 to "verification-secret-material-00000001".toUtf8Bytes()),
         )
 
+/**
+ * fixedGenerationInput은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun fixedGenerationInput(): VoucherGenerationInput =
         VoucherGenerationInput(
             tenantId = "tenant-a",

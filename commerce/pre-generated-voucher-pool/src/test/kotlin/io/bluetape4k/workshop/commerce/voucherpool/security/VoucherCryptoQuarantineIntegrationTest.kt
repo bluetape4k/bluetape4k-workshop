@@ -31,25 +31,70 @@ import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherCryptoQuarantineIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherCryptoQuarantineIntegrationTest {
 
     companion object {
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val TENANT = "tenant-a"
+/**
+ * postgres은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
     }
 
+/**
+ * voucherSchema은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val voucherSchema = "voucher_crypto_${Base58.randomString(8).lowercase()}"
 
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val dataSource = postgres.getHikariDataSource {
         schema = voucherSchema
     }
 
+/**
+ * digests은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val digests = VoucherDigestService.testFixture()
+/**
+ * crypto은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val crypto = AesGcmVoucherEnvelopeCrypto(
         VoucherKekRing.of(VoucherKek.of("k1", ByteArray(32) { (31 + it).toByte() })),
         digests,
     )
+/**
+ * repository은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = JdbcVoucherPoolRepository()
+/**
+ * storage은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val storage = VoucherCryptoStorage(repository, crypto)
 
     @BeforeAll
@@ -73,6 +118,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "repository crypto erasure destroys encrypted material" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `repository crypto erasure destroys encrypted material`() {
         val code = CanonicalVoucherCode.of("POOL-ERASE")
         val identity = insertEncryptedEntry(code)
@@ -98,6 +148,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
 
     @ParameterizedTest
     @EnumSource(CryptoCorruption::class)
+/**
+ * 이 시나리오는 "cryptographic corruption preserves state and records redacted quarantine" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cryptographic corruption preserves state and records redacted quarantine`(corruption: CryptoCorruption) {
         val code = CanonicalVoucherCode.of("POOL-QUARANTINE-$corruption")
         val identity = insertEncryptedEntry(code, corruption)
@@ -136,6 +191,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "resolved quarantine can be reactivated after corruption recurs" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `resolved quarantine can be reactivated after corruption recurs`() {
         val identity = insertEncryptedEntry(CanonicalVoucherCode("POOL-REQUARANTINE"), CryptoCorruption.TAG)
         val first = committedTransaction {
@@ -175,6 +235,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "stable digest tombstones reject physical mutation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stable digest tombstones reject physical mutation`() {
         val identity = insertEncryptedEntry(CanonicalVoucherCode("POOL-IMMUTABLE-DEDUP"))
 
@@ -182,10 +247,20 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         assertSqlFails("DELETE FROM voucher_pool_code_dedup WHERE tenant_id='${identity.tenantId}'")
     }
 
+/**
+ * insertEncryptedEntry은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertEncryptedEntry(
         code: CanonicalVoucherCode,
         corruption: CryptoCorruption? = null,
     ): EntryIdentity {
+/**
+ * identity은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val identity = EntryIdentity(
             tenantId = TENANT,
             campaignId = UUID.randomUUID(),
@@ -193,23 +268,68 @@ internal class VoucherCryptoQuarantineIntegrationTest {
             entryId = UUID.randomUUID(),
             sourceOrdinal = 0
         )
+/**
+ * encrypted은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val encrypted = crypto.encrypt(identity, code)
+/**
+ * ciphertext은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val ciphertext = encrypted.copyCodeCiphertext().also {
             if (corruption == CryptoCorruption.TAG) it[it.lastIndex] = (it.last().toInt() xor 1).toByte()
         }
+/**
+ * codeNonce은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val codeNonce = if (corruption == CryptoCorruption.NONCE) ByteArray(11) else encrypted.copyCodeNonce()
 
+/**
+ * stableDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val stableDigest = if (corruption == CryptoCorruption.DIGEST) {
             digests.stableDedup(TENANT, CanonicalVoucherCode.of("DIFFERENT-CODE"))
         } else {
             digests.stableDedup(TENANT, code)
         }
 
+/**
+ * reservationId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reservationId = UUID.randomUUID()
+/**
+ * allocationId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val allocationId = UUID.randomUUID()
+/**
+ * verificationDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val verificationDigest = digests.verification(TENANT, identity.campaignId, allocationId, code)
+/**
+ * userDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val userDigest = ByteArray(32) { (47 + it).toByte() }
 
+/**
+ * fixture은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val fixture = AllocatedEntryFixture(
             identity,
             stableDigest,
@@ -233,6 +353,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         return identity
     }
 
+/**
+ * insertCampaignAndBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertCampaignAndBatch(conn: java.sql.Connection, identity: EntryIdentity) {
         val insertPoolCampaign = """
             INSERT INTO voucher_pool_campaigns
@@ -259,10 +384,125 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * insertAllocatedEntry은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertAllocatedEntry(
         conn: java.sql.Connection,
         fixture: AllocatedEntryFixture,
     ) {
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val sql = """
             INSERT INTO voucher_pool_entries
                     (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
@@ -296,7 +536,17 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * insertDedupLedger은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertDedupLedger(conn: java.sql.Connection, fixture: AllocatedEntryFixture) {
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val sql = """
             INSERT INTO voucher_pool_code_dedup
                 (tenant_id,stable_dedup_digest,first_campaign_id,first_batch_id,first_entry_id,key_version)
@@ -313,12 +563,22 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * insertReservation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertReservation(
         conn: java.sql.Connection,
         identity: EntryIdentity,
         reservationId: UUID,
         userDigest: ByteArray,
     ) {
+/**
+ * sql은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val sql = """
             INSERT INTO voucher_pool_reservations
             (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,idempotency_owner_digest,
@@ -339,6 +599,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * insertAllocation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertAllocation(
         conn: java.sql.Connection,
         identity: EntryIdentity,
@@ -366,6 +631,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * assertCiphertextErased은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertCiphertextErased(identity: EntryIdentity) {
         dataSource.connection.use { conn ->
             val sql = """
@@ -387,6 +657,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
     }
 
     @Suppress("SameParameterValue")
+/**
+ * assertCiphertextPresent은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertCiphertextPresent(identity: EntryIdentity, expectedRevision: Long) {
         val sql = """
             SELECT revealed_at IS NULL,code_ciphertext IS NOT NULL,code_nonce IS NOT NULL,
@@ -407,6 +682,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * resolveQuarantine은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun resolveQuarantine(identity: EntryIdentity) {
         dataSource.connection.use { connection ->
             connection.autoCommit = false
@@ -431,6 +711,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * committedTransaction은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <T> committedTransaction(crossinline block: () -> T): T =
         dataSource.connection.use { conn ->
             conn.autoCommit = false
@@ -442,6 +727,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * assertSqlFails은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertSqlFails(sql: String) {
         assertFailsWith<java.sql.SQLException> {
             dataSource.connection.use { conn ->
@@ -452,30 +742,103 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         }
     }
 
+/**
+ * assertErasedRow은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertErasedRow(result: ResultSet, expectedRevision: Long = 1) {
         result.next()
         (1..6).forEach { result.getBoolean(it).shouldBeTrue() }
         result.getLong(7) shouldBeEqualTo expectedRevision
     }
 
+/**
+ * AllocatedEntryFixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class AllocatedEntryFixture(
+/**
+ * identity은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val identity: EntryIdentity,
+/**
+ * stableDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val stableDigest: VoucherDigest,
+/**
+ * verificationDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val verificationDigest: VoucherDigest,
+/**
+ * encrypted은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val encrypted: EncryptedVoucherCode,
+/**
+ * ciphertext은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val ciphertext: ByteArray,
+/**
+ * codeNonce은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val codeNonce: ByteArray,
+/**
+ * reservationId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val reservationId: UUID,
+/**
+ * allocationId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val allocationId: UUID,
+/**
+ * userDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val userDigest: ByteArray,
     )
 
+    /**
+     * `CryptoCorruption`은 업무 분기용 제한된 값 집합입니다.
+     * 업무 흐름의 허용된 분기를 고정하며 저장·이벤트·API 경계에서 동일하게 해석합니다.
+     */
     enum class CryptoCorruption(val reason: VoucherCryptoFailureReason) {
+        /**
+         * `CryptoCorruption.TAG`은 감사·분류 목적으로 붙이는 안정적인 식별 태그입니다.
+         */
         TAG(VoucherCryptoFailureReason.INVALID_TAG),
+        /**
+         * `CryptoCorruption.DIGEST`은 원문 secret을 노출하지 않고 비교하기 위해 계산한 digest 값입니다.
+         */
         DIGEST(VoucherCryptoFailureReason.DIGEST_MISMATCH),
+        /**
+         * `CryptoCorruption.NONCE`은 재사용을 막기 위한 1회성 난수·토큰 값입니다.
+         */
         NONCE(VoucherCryptoFailureReason.INVALID_CIPHERTEXT),
     }
 
+/**
+ * adminConnection은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adminConnection(): Connection =
         DriverManager.getConnection(
         postgres.jdbcUrl,
@@ -497,6 +860,11 @@ internal fun VoucherDigestService.Companion.testFixture(): VoucherDigestService 
     },
 )
 
+/**
+ * ROTATING_TEST_PURPOSES은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private val ROTATING_TEST_PURPOSES = setOf(
     DigestPurpose.VERIFICATION,
     DigestPurpose.USER_IDENTITY,

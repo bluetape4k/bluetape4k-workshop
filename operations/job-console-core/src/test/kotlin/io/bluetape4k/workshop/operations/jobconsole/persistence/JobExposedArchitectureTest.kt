@@ -7,9 +7,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /** 저장소의 일반 DB 경로가 Exposed transaction/DSL을 계속 사용하도록 고정합니다. */
+/** 저장소의 일반 DB 경로가 Exposed transaction/DSL을 계속 사용하도록 고정합니다. */
 class JobExposedArchitectureTest {
 
     @Test
+/**
+ * 이 시나리오는 "generic repository paths use Exposed and raw SQL is explicitly bounded" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `generic repository paths use Exposed and raw SQL is explicitly bounded`() {
         val repository = source("JobRepository.kt")
         val outbox = source("JobOutboxRepository.kt")
@@ -78,6 +84,11 @@ class JobExposedArchitectureTest {
         }
     }
 
+/**
+ * testFixtureSource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun testFixtureSource(fileName: String): String {
         var directory: Path? = Path.of(System.getProperty("user.dir")).toAbsolutePath()
         repeat(8) {
@@ -95,12 +106,22 @@ class JobExposedArchitectureTest {
         error("테스트 fixture 소스 파일을 찾을 수 없습니다: $fileName")
     }
 
+/**
+ * source은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun source(fileName: String): String {
         return workspaceSource(
             "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/persistence/$fileName",
         )
     }
 
+/**
+ * workspaceSource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun workspaceSource(relativePath: String): String {
         var directory: Path? = Path.of(System.getProperty("user.dir")).toAbsolutePath()
         repeat(8) {

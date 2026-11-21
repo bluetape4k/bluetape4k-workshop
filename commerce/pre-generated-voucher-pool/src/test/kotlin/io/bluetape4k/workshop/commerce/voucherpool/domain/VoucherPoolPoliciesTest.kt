@@ -25,6 +25,11 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 @Suppress("DEPRECATION")
+/**
+ * VoucherPoolPoliciesTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolPoliciesTest {
 
     @ParameterizedTest
@@ -36,6 +41,11 @@ internal class VoucherPoolPoliciesTest {
         "REVOKING,REVOKED,true",
         "REVOKED,DRAFT,false",
     )
+/**
+ * 이 시나리오는 "campaign transition matrix is closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `campaign transition matrix is closed`(
         from: CampaignState,
         to: CampaignState,
@@ -45,6 +55,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "campaign policy exposes only documented transitions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `campaign policy exposes only documented transitions`() {
         allowedTransitions(CampaignState.entries, CampaignPolicy::canTransition) shouldBeEqualTo
                 setOf(
@@ -67,6 +82,11 @@ internal class VoucherPoolPoliciesTest {
         "FAILED_TERMINAL,REVOKING,true",
         "EXPIRED,ACTIVE,false",
     )
+/**
+ * 이 시나리오는 "batch transition matrix follows checkpoint and terminal boundaries" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `batch transition matrix follows checkpoint and terminal boundaries`(
         from: BatchState,
         to: BatchState,
@@ -76,6 +96,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "batch policy exposes only documented transitions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `batch policy exposes only documented transitions`() {
         allowedTransitions(BatchState.entries, BatchPolicy::canTransition) shouldBeEqualTo
                 setOf(
@@ -106,6 +131,11 @@ internal class VoucherPoolPoliciesTest {
         "ALLOCATED,AVAILABLE,false",
         "REDEEMED,REVOKED,false",
     )
+/**
+ * 이 시나리오는 "entry transition matrix prevents allocated code reuse" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `entry transition matrix prevents allocated code reuse`(
         from: EntryState,
         to: EntryState,
@@ -115,6 +145,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "entry policy exposes only documented transitions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `entry policy exposes only documented transitions`() {
         allowedTransitions(EntryState.entries, EntryPolicy::canTransition) shouldBeEqualTo
                 setOf(
@@ -140,6 +175,11 @@ internal class VoucherPoolPoliciesTest {
         "ACTIVE,REVOKED,true",
         "ALLOCATED,ACTIVE,false",
     )
+/**
+ * 이 시나리오는 "reservation transition matrix closes terminal states" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reservation transition matrix closes terminal states`(
         from: ReservationState,
         to: ReservationState,
@@ -149,6 +189,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reservation policy exposes only documented transitions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reservation policy exposes only documented transitions`() {
         allowedTransitions(ReservationState.entries, ReservationPolicy::canTransition) shouldBeEqualTo
                 setOf(
@@ -160,6 +205,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "control characters and oversized voucher codes are rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `control characters and oversized voucher codes are rejected`() {
         assertFailsWith<IllegalArgumentException> {
             CanonicalVoucherCode("ABC\u0000DEF")
@@ -170,6 +220,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "unicode voucher codes are accepted without changing their value" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `unicode voucher codes are accepted without changing their value`() {
         val rawCode = "여름-할인-🎟️"
         val code = CanonicalVoucherCode(rawCode)
@@ -179,6 +234,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "supplementary unicode voucher codes honor the code point limit" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `supplementary unicode voucher codes honor the code point limit`() {
         val supplementaryCodePoint = "🎟"
 
@@ -191,6 +251,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "blank and malformed unicode voucher codes are rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `blank and malformed unicode voucher codes are rejected`() {
         assertFailsWith<IllegalArgumentException> { CanonicalVoucherCode.of("   ") }
         assertFailsWith<IllegalArgumentException> { CanonicalVoucherCode.of("ABC\uD800DEF") }
@@ -198,6 +263,12 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "voucher codes cannot be read or written through generic Java serialization" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `voucher codes cannot be read or written through generic Java serialization`() {
         val code = CanonicalVoucherCode.of(RAW_CODE_SENTINEL)
 
@@ -212,6 +283,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Jackson serialization never exposes a raw voucher code" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Jackson serialization never exposes a raw voucher code`() {
         val mapper =
             Jackson.defaultJsonMapper
@@ -223,6 +299,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "valid policy retains bounded lifetime values" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `valid policy retains bounded lifetime values`() {
         val policy =
             VoucherPoolPolicy.of(
@@ -241,6 +322,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "valid policy survives Java serialization roundtrip" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `valid policy survives Java serialization roundtrip`() {
         val policy = validPolicy()
 
@@ -248,6 +334,12 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Java deserialization rejects a policy whose serialized state bypasses the factory" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Java deserialization rejects a policy whose serialized state bypasses the factory`() {
         val policy = validPolicy()
         val limitField = VoucherPoolPolicy::class.java.getDeclaredField("perUserLimit")
@@ -260,6 +352,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "non-positive limits and TTL values are rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `non-positive limits and TTL values are rejected`() {
         assertFailsWith<IllegalArgumentException> {
             VoucherPoolPolicy(
@@ -288,6 +385,11 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "infinite TTL values are rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `infinite TTL values are rejected`() {
         assertFailsWith<IllegalArgumentException> {
             VoucherPoolPolicy(
@@ -309,6 +411,11 @@ internal class VoucherPoolPoliciesTest {
 
     @ParameterizedTest
     @CsvSource("-1", "2")
+/**
+ * 이 시나리오는 "replacement allowance cannot exceed the single lifetime recovery" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `replacement allowance cannot exceed the single lifetime recovery`(replacementAllowance: Int) {
         assertFailsWith<IllegalArgumentException> {
             VoucherPoolPolicy(
@@ -322,6 +429,11 @@ internal class VoucherPoolPoliciesTest {
 
     @ParameterizedTest(name = "{0} has stable error semantics")
     @MethodSource("errorCatalogCases")
+/**
+ * 이 시나리오는 "error catalog closes every public error code" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `error catalog closes every public error code`(case: ErrorCatalogCase) {
         val semantics = VoucherPoolErrorCatalog[case.code]
         val expected = case.semantics
@@ -336,11 +448,21 @@ internal class VoucherPoolPoliciesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "error catalog contains exactly every public error code" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `error catalog contains exactly every public error code`() {
         VoucherPoolErrorCatalog.codes shouldBeEqualTo VoucherPoolErrorCode.entries.toSet()
     }
 
     @Test
+/**
+ * 이 시나리오는 "expected error cases contain every public code exactly once" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expected error cases contain every public code exactly once`() {
         val expectedCodes = expectedErrorCases().map(ErrorCatalogCase::code)
 
@@ -350,6 +472,11 @@ internal class VoucherPoolPoliciesTest {
         }
     }
 
+/**
+ * allowedTransitions은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun <S> allowedTransitions(
         states: List<S>,
         canTransition: (S, S) -> Boolean,
@@ -359,6 +486,11 @@ internal class VoucherPoolPoliciesTest {
             .filter { (from, to) -> canTransition(from, to) }
             .toSet()
 
+/**
+ * validPolicy은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validPolicy(): VoucherPoolPolicy =
         VoucherPoolPolicy.of(
             perUserLimit = 1,
@@ -367,19 +499,44 @@ internal class VoucherPoolPoliciesTest {
             replacementAllowance = 1,
         )
 
+/**
+ * serialize은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun serialize(value: Any): ByteArray =
         BinarySerializers.JdkUnfiltered.serialize(value)
 
+/**
+ * deserialize은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <reified T: Any> deserialize(serialized: ByteArray): T =
         BinarySerializers.JdkUnfiltered.deserialize<T>(serialized).shouldNotBeNull()
 
     companion object: KLogging() {
 
+/**
+ * RAW_CODE_SENTINEL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val RAW_CODE_SENTINEL = "raw-voucher-code-must-not-leak"
 
         @JvmStatic
+/**
+ * errorCatalogCases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun errorCatalogCases(): Stream<ErrorCatalogCase> = expectedErrorCases().stream()
 
+/**
+ * expectedErrorCases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun expectedErrorCases(): List<ErrorCatalogCase> = buildList {
             addAll(commandCases())
             addAll(capacityCases())
@@ -388,6 +545,11 @@ internal class VoucherPoolPoliciesTest {
             addAll(protectionCases())
         }
 
+/**
+ * commandCases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun commandCases(): List<ErrorCatalogCase> = listOf(
             case(
                 VoucherPoolErrorCode.COMMAND_IN_PROGRESS,
@@ -413,6 +575,11 @@ internal class VoucherPoolPoliciesTest {
             ),
         )
 
+/**
+ * capacityCases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun capacityCases(): List<ErrorCatalogCase> = buildList {
             addAll(
                 cases(
@@ -441,6 +608,11 @@ internal class VoucherPoolPoliciesTest {
             )
         }
 
+/**
+ * stateCases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun stateCases(): List<ErrorCatalogCase> = buildList {
             addAll(
                 cases(
@@ -468,6 +640,11 @@ internal class VoucherPoolPoliciesTest {
             )
         }
 
+/**
+ * resourceCases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun resourceCases(): List<ErrorCatalogCase> = buildList {
             addAll(
                 cases(
@@ -489,6 +666,11 @@ internal class VoucherPoolPoliciesTest {
             )
         }
 
+/**
+ * protectionCases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun protectionCases(): List<ErrorCatalogCase> = buildList {
             add(
                 case(
@@ -525,6 +707,11 @@ internal class VoucherPoolPoliciesTest {
             )
         }
 
+/**
+ * terminal은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun terminal(recovery: CallerRecovery): VoucherPoolErrorSemantics =
             semantics(
                 httpStatus = 409,
@@ -533,6 +720,11 @@ internal class VoucherPoolPoliciesTest {
                 recovery = recovery,
             )
 
+/**
+ * semantics은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun semantics(
             httpStatus: Int,
             retryable: Boolean = false,
@@ -548,12 +740,22 @@ internal class VoucherPoolPoliciesTest {
                 callerRecovery = recovery
             )
 
+/**
+ * cases은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun cases(
             semantics: VoucherPoolErrorSemantics,
             vararg codes: VoucherPoolErrorCode,
         ): List<ErrorCatalogCase> =
             codes.map { case(it, semantics) }
 
+/**
+ * case은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun case(
             code: VoucherPoolErrorCode,
             semantics: VoucherPoolErrorSemantics,
@@ -562,7 +764,22 @@ internal class VoucherPoolPoliciesTest {
     }
 }
 
+/**
+ * ErrorCatalogCase 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class ErrorCatalogCase(
+/**
+ * code은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val code: VoucherPoolErrorCode,
+/**
+ * semantics은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val semantics: VoucherPoolErrorSemantics,
 )

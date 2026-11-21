@@ -28,10 +28,24 @@ import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * 사전 생성 voucher pool의 가장 중요한 경쟁 조건을 PostgreSQL에서 직접 검증합니다.
+ *
+ * virtual thread allocator들이 동시에 서로 다른 entry를 reserve하는지, 한 user limit이
+ * 경쟁 요청을 직렬화하는지, campaign/batch progress가 정확한지, reserve/release와
+ * redeem/revoke race가 deadlock 없이 terminal winner 하나로 수렴하는지를 확인합니다.
+ * `FOR UPDATE SKIP LOCKED`와 unique/revision 제약의 correctness를 증명하지만 실제
+ * 대규모 throughput이나 production KMS 성능을 측정하는 test는 아닙니다.
+ */
 internal class VoucherPoolConcurrencyIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * harness은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val harness = LifecycleHarness("concurrency")
 
     @BeforeAll
@@ -46,6 +60,11 @@ internal class VoucherPoolConcurrencyIntegrationTest {
     fun reset() = harness.reset()
 
     @Test
+/**
+ * 이 시나리오는 "concurrent reservations select distinct entries" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent reservations select distinct entries`() {
         val fixture = harness.activePool("distinct", List(64) { "CONCURRENT-$it" })
 
@@ -65,6 +84,11 @@ internal class VoucherPoolConcurrencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same user concurrent reservations are serialized by user limit" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same user concurrent reservations are serialized by user limit`() {
         val fixture = harness.activePool("user-limit", List(8) { "LIMIT-$it" })
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
@@ -89,6 +113,12 @@ internal class VoucherPoolConcurrencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same campaign reservations retain concurrent campaign and batch shared progress" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same campaign reservations retain concurrent campaign and batch shared progress`() {
         val fixture = harness.activePool("shared-progress", List(4) { "SHARED-$it" })
         val probe = harness.installReservationGuardProbe(4)
@@ -114,6 +144,12 @@ internal class VoucherPoolConcurrencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "opposing reserve and release transitions keep depth exact without deadlock" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `opposing reserve and release transitions keep depth exact without deadlock`() {
         val fixture = harness.activePool("opposing-depth", List(16) { "OPPOSING-$it" })
         val existing = List(8) { index ->
@@ -154,6 +190,11 @@ internal class VoucherPoolConcurrencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "redeem and revoke race has exactly one terminal winner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `redeem and revoke race has exactly one terminal winner`() {
         val fixture = harness.activePool("terminal-race", listOf("TERMINAL-RACE"))
         val reservation = harness.reservations.reserve(harness.reserve(fixture, "racer", "race-reserve")).applied()
@@ -207,6 +248,11 @@ internal class VoucherPoolConcurrencyIntegrationTest {
         }
     }
 
+/**
+ * reserveWithAdmissionRetry은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun reserveWithAdmissionRetry(block: () -> ReservationSnapshot): ReservationSnapshot {
         repeat(50) {
             try {

@@ -12,14 +12,29 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 
+/**
+ * HighContentionReportTest 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class HighContentionReportTest {
 
     companion object: KLogging()
 
     @TempDir
+/**
+ * tempDir은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     lateinit var tempDir: Path
 
     @Test
+/**
+ * 이 시나리오는 "terminal result vocabulary and submission conservation are closed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `terminal result vocabulary and submission conservation are closed`() {
         HighContentionTerminalResult(
             terminalStatus = HighContentionTerminalStatus.PASS,
@@ -112,6 +127,12 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "percentiles expose partial sample status and saturation uses left-closed intervals" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `percentiles expose partial sample status and saturation uses left-closed intervals`() {
         val percentiles = HighContentionMeasurements.percentiles((1L..20L).toList())
 
@@ -153,6 +174,11 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "terminal report cross-validates operation and cleanup evidence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `terminal report cross-validates operation and cleanup evidence`() {
         report().validate()
 
@@ -204,6 +230,12 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "execution failure preserves disposition failure point and terminal error evidence" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `execution failure preserves disposition failure point and terminal error evidence`() {
         val base = report()
         val baseWorkload = base.workload.requireNotNull("base workload")
@@ -260,6 +292,11 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "preflight unavailable preserves an honestly not-evaluated result" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `preflight unavailable preserves an honestly not-evaluated result`() {
         val unavailable = report().copy(
             workload = null,
@@ -287,6 +324,12 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "successful cleanup finalization cannot preserve PASS after the profile deadline" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `successful cleanup finalization cannot preserve PASS after the profile deadline`() {
         val original = report()
         val deadline = original.deadlines.single()
@@ -306,6 +349,12 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "artifact store validates run paths redacts sentinels and never replaces reports" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `artifact store validates run paths redacts sentinels and never replaces reports`() {
         val store = HighContentionArtifactStore.create(tempDir, "run-01")
         val report = report()
@@ -347,6 +396,11 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "parent-owned artifact store opens only an existing trusted run root" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `parent-owned artifact store opens only an existing trusted run root`() {
         Files.createDirectory(tempDir.resolve("parent-run"))
         val store = HighContentionArtifactStore.create(
@@ -371,6 +425,11 @@ class HighContentionReportTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "serialization failure is preserved as a redacted fallback journal record" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `serialization failure is preserved as a redacted fallback journal record`() {
         val journalPath = tempDir.resolve("journal.jsonl")
         val store = HighContentionArtifactStore.create(
@@ -402,6 +461,11 @@ class HighContentionReportTest {
         )
     }
 
+/**
+ * report은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun report(): HighContentionTerminalReport =
         HighContentionTerminalReport(
             reportSchemaVersion = 1,
@@ -491,6 +555,11 @@ class HighContentionReportTest {
             knownLimitations = listOf("developer-or-ci-reference"),
         )
 
+/**
+ * attempt은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun attempt(
         stableOrdinal: Int,
         identityOrdinal: Int,
@@ -510,9 +579,19 @@ class HighContentionReportTest {
             receiptWinnerCount = winners,
         )
 
+/**
+ * dispositionCounts은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun dispositionCounts(
         vararg counts: Pair<HighContentionTerminalDisposition, Int>,
     ): Map<HighContentionTerminalDisposition, Int> {
+/**
+ * overrides은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val overrides = counts.toMap()
         return HighContentionTerminalDisposition.entries.associateWith { overrides[it] ?: 0 }
     }

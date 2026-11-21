@@ -6,6 +6,76 @@ Java 25 core는 프레임워크에 독립적인 작업 계약, PostgreSQL migrat
 큐, lease, checkpoint, 종료 전이, 제한된 ETA projection, outbox polling,
 취소 signal, 어댑터 공용 test fixture를 담당합니다.
 
+## Core가 해결하는 문제
+
+Core는 두 HTTP adapter 뒤의 업무 계층입니다. 고객은 긴 export를 실행하면서
+HTTP 연결을 계속 유지할 필요가 없어야 하고, 운영자는 worker가 재시작된
+뒤에도 대기 순서·진행률·ETA·최종 결과를 설명할 수 있어야 합니다. 따라서
+job row, enqueue 순서, revision, lease, checkpoint, history, idempotency
+request, outbox row처럼 process와 framework가 바뀌어도 보존해야 하는 사실을
+core가 소유합니다.
+
+어댑터는 header, JSON, HTTP status, SSE만 이 계약으로 변환합니다. Core를 먼저
+읽으면 Redis나 브라우저 event가 correctness를 결정할 수 없는 이유가
+명확해집니다.
+
+## 계약 지도
+
+| 업무 규칙 | Core 소유자 | 내구성 있는 증거 |
+|---|---|---|
+| 중복 제출은 하나의 request여야 함 | `JobSubmissionIdempotencyCoordinator`와 repository | canonical request digest와 저장 response snapshot |
+| tenant 내부 FIFO 보장 | `JobRepository`, `QueueProjectionService` | enqueue sequence와 제한된 queue projection |
+| 현재 worker만 기록 가능 | `JobLease`, lease token, revision 검사 | 조건부 checkpoint/terminal update |
+| retry와 취소는 명시적 전이 | `JobTransitions`, `JobWorkerEngine` | state history와 attempt/revision |
+| 알림은 재시도 가능해야 함 | `JobOutboxRepository`, `JobOutboxPoller` | stable logical event id와 published marker |
+| ETA는 추정치여야 함 | `EtaEstimator` | duration sample, confidence, sample size |
+
+Core는 authentication, production policy engine, exactly-once 실행을 담당하지
+않습니다. 이 경계는 Core를 사용하는 application이 소유합니다.
+
+## 최소 API 예제
+
+framework 없이도 request와 outcome 계약을 직접 실행할 수 있습니다.
+
+```kotlin
+val request = SubmitJobRequest(
+    jobType = JobType.DOCUMENT_EXPORT,
+    workUnits = 3,
+    failureMode = FailureMode.RETRY_ONCE,
+)
+val first = service.submit(DemoCallerScope("tenant-a", "submitter-a"), "export-1", request)
+val replay = service.submit(DemoCallerScope("tenant-a", "submitter-a"), "export-1", request)
+
+check(first is JobSubmissionOutcome.OwnerCompleted)
+check(replay is JobSubmissionOutcome.Replayed)
+check(first.snapshot == replay.snapshot)
+```
+
+`OwnerCompleted`와 `Replayed`는 의도적으로 같은 snapshot을 전달하고,
+HTTP 계층은 `Idempotency-Replayed` header만 추가합니다. 호출자는 첫 response를
+저장하고 중단하거나 timeout 뒤 완전히 같은 request를 안전하게 재시도할 수
+있습니다.
+
+## 테스트가 계약을 증명하는 순서
+
+다음 순서로 읽으면 요구 사항과 assertion을 연결하기 쉽습니다.
+
+1. `JobTransitionsTest` — 닫힌 상태 전이표와 stale revision 거부.
+2. `JobApiModelsTest`, `JobConsoleSubmissionOutcomeTest` — redacted wire 형태,
+   stable problem code, replay header, retry 안내.
+3. `JobSubmissionIdempotencyRepositoryTest`, `JobIdempotencyConcurrencyTest` —
+   replay와 동시 owner 상황에서 하나의 내구성 request row.
+4. `JobClaimConcurrencyTest`, `JobLeaseRecoveryTest`, `JobCancellationRaceTest` —
+   FIFO, fencing, checkpoint, 취소 race.
+5. `JobFailureMatrixIntegrationTest`, `JobRetryExhaustionTest` — retryable,
+   non-retryable, dead-letter 결과.
+6. `JobOutboxRepositoryTest`, `JobEventFanoutTest`, 어댑터 conformance fixture —
+   REST 권위를 바꾸지 않는 at-least-once 알림.
+
+Container 기반 테스트는 PostgreSQL/Redis 자원을 공유하므로 순차 실행합니다.
+고경합 profile은 barrier와 여러 worker scheduling을 추가하지만, 결과는
+production capacity 수치가 아니라 불변식 보존 증거입니다.
+
 ## 권위 경계
 
 PostgreSQL이 권위를 갖습니다. Redis 취소 publish와 SSE fan-out은 best
@@ -104,3 +174,13 @@ Lease, fencing, checkpoint, deduplication, 종료 상태의 권위는 PostgreSQL
 계속 가집니다. Toxiproxy는 기존 connection과 새 connection을 포함한 Redis
 경로의 단절·복구에만 사용하며 PostgreSQL 권위나 database failover를
 대체하지 않습니다.
+
+## 사양 추적성
+
+전체 업무 요구 사항, 상태 머신, 장애 매트릭스, adapter parity, acceptance
+기준은
+[`2026-07-21-issue-520-job-operations-console-design.md`](../../docs/superpowers/specs/2026-07-21-issue-520-job-operations-console-design.md)에
+있습니다. 후속
+[`2026-11-18-issue-1052-operations-exposed-design.md`](../../docs/superpowers/specs/2026-11-18-issue-1052-operations-exposed-design.md)는
+일반 typed query와 migration·`EXPLAIN`·lock·retention·backup/restore·compatibility
+probe처럼 SQL 자체가 검증 대상인 raw 경계를 구분합니다.

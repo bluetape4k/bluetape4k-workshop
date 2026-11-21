@@ -36,22 +36,92 @@ import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * ProjectionRepositoryIntegrationTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class ProjectionRepositoryIntegrationTest {
 
     private companion object: KLogging() {
+/**
+ * postgres은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
 
+/**
+ * PROJECTION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val PROJECTION = "voucher-lifecycle"
+/**
+ * GENERATION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val GENERATION = 1L
+/**
+ * STREAM_TYPE은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val STREAM_TYPE = "voucher"
+/**
+ * RETRY_SECONDS은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val RETRY_SECONDS = 1L
+/**
+ * LEASE_TAKEOVER_SECONDS은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val LEASE_TAKEOVER_SECONDS = 16L
+/**
+ * FIRST_EVENT_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val FIRST_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc101"
+/**
+ * SECOND_EVENT_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val SECOND_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc102"
+/**
+ * NOW은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-23T13:00:00Z")
+/**
+ * RETRY_AT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val RETRY_AT = NOW.plusSeconds(RETRY_SECONDS)
+/**
+ * TAKEOVER_AT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val TAKEOVER_AT = NOW.plusSeconds(LEASE_TAKEOVER_SECONDS)
+/**
+ * KEY은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val KEY = ProjectionKey(PROJECTION, GENERATION)
+/**
+ * TABLES은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val TABLES =
             arrayOf(
                 ProjectionLeases,
@@ -63,9 +133,29 @@ internal class ProjectionRepositoryIntegrationTest {
             )
     }
 
+/**
+ * leases은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val leases = ProjectionLeaseRepository()
+/**
+ * repository은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = ProjectionRepository(leases)
+/**
+ * postgresDatabase은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
 
     @BeforeAll
@@ -90,6 +180,11 @@ internal class ProjectionRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate and delayed delivery converge to one latest stream read model" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate and delayed delivery converge to one latest stream read model`() {
         val streamId = Uuid.V7.nextUUID()
         val lease = acquireLease()
@@ -117,6 +212,11 @@ internal class ProjectionRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "stale lease cannot mutate projection state after a takeover" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stale lease cannot mutate projection state after a takeover`() {
         val streamId = Uuid.V7.nextUUID()
         val first = acquireLease()
@@ -146,6 +246,12 @@ internal class ProjectionRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "interrupted handler transaction rolls back event identity read model and checkpoint
+ * together" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `interrupted handler transaction rolls back event identity read model and checkpoint together`() {
         val streamId = Uuid.V7.nextUUID()
         val lease = acquireLease()
@@ -164,6 +270,12 @@ internal class ProjectionRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "campaign events update the semantic read model in the fenced projection transaction" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `campaign events update the semantic read model in the fenced projection transaction`() {
         val campaignId = Uuid.V7.nextUUID()
         val lease = acquireLease()
@@ -203,6 +315,11 @@ internal class ProjectionRepositoryIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "poison records retry metadata without advancing the checkpoint" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `poison records retry metadata without advancing the checkpoint`() {
         val lease = acquireLease()
         val event = event(FIRST_EVENT_ID, Uuid.V7.nextUUID(), 1L, 1L)
@@ -224,11 +341,21 @@ internal class ProjectionRepositoryIntegrationTest {
         }
     }
 
+/**
+ * acquireLease은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun acquireLease(): ProjectionLease =
         transaction(database) {
             leases.acquire(PROJECTION, GENERATION, "owner-a", NOW).shouldNotBeNull()
         }
 
+/**
+ * event은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun event(
         eventId: String,
         streamId: UUID,
@@ -250,6 +377,11 @@ internal class ProjectionRepositoryIntegrationTest {
             payload = EventPayload("{}"),
         )
 
+/**
+ * campaignEvent은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun campaignEvent(
         campaignId: UUID,
         identity: CampaignEventIdentity,
@@ -270,10 +402,35 @@ internal class ProjectionRepositoryIntegrationTest {
             payload = EventPayload(payload),
         )
 
+/**
+ * CampaignEventIdentity 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class CampaignEventIdentity(
+/**
+ * eventId은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val eventId: String,
+/**
+ * streamVersion은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val streamVersion: Long,
+/**
+ * globalPosition은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val globalPosition: Long,
+/**
+ * eventType은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val eventType: String,
     ): Serializable
 }

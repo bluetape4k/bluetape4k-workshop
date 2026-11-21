@@ -35,13 +35,28 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
 @Suppress("SqlResolve")
+/**
+ * VoucherPoolBackupRestoreIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolBackupRestoreIntegrationTest {
 
     private companion object: KLogging() {
+/**
+ * RESTORE_TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val RESTORE_TENANT = "restore-tenant"
     }
 
     @Test
+/**
+ * 이 시나리오는 "restore preflight validates every key before database import" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `restore preflight validates every key before database import`() {
         val imported = AtomicInteger()
         val complete = availableKeys()
@@ -73,6 +88,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "restore rejects a manifest that omits keys referenced by backup content" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `restore rejects a manifest that omits keys referenced by backup content`() {
         val imported = AtomicInteger()
         val complete = manifest()
@@ -100,6 +120,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "restore retains command tombstone replay fence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `restore retains command tombstone replay fence`() {
         val effectCount = AtomicInteger(1)
         val coordinator = VoucherPoolRestoreCoordinator(availableKeys())
@@ -120,6 +145,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
 
     @Suppress("DEPRECATION")
     @Test
+/**
+ * 이 시나리오는 "backup manifest remains a stable serializable recovery contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `backup manifest remains a stable serializable recovery contract`() {
         val original = manifest()
         val bytes = BinarySerializers.JdkUnfiltered.serialize(original)
@@ -130,6 +160,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "restore smoke fails closed when any recovery invariant is absent" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `restore smoke fails closed when any recovery invariant is absent`() {
         val coordinator = VoucherPoolRestoreCoordinator(availableKeys())
 
@@ -148,6 +183,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "logical backup restore proves every persisted recovery invariant" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `logical backup restore proves every persisted recovery invariant`() {
         val schema = "voucher_restore_${Base58.randomString(8).lowercase()}"
         VOUCHER_POOL_TASK_12_POSTGRES.createSchema(schema)
@@ -171,6 +211,12 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "rollback selects only proven previous binary or rehearsed verified restore" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rollback selects only proven previous binary or rehearsed verified restore`() {
         VoucherPoolRollbackPolicy.select(
             previousBinaryCompatible = true,
@@ -193,6 +239,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         }
     }
 
+/**
+ * manifest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun manifest(): BackupKeyManifest =
         BackupKeyManifest(
             kekVersions = setOf("kek-v1"),
@@ -204,6 +255,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             signatureVersions = setOf("7"),
         )
 
+/**
+ * availableKeys은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun availableKeys(kekVersions: Set<String> = setOf("kek-v1")): VoucherPoolAvailableKeys =
         VoucherPoolAvailableKeys(
             kekVersions = kekVersions,
@@ -215,6 +271,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             signatureVersions = setOf("7"),
         )
 
+/**
+ * backupInventory은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun backupInventory(): VoucherPoolBackupKeyInventory =
         VoucherPoolBackupKeyInventory(
             kekVersions = setOf("kek-v1"),
@@ -226,6 +287,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             signatureVersions = setOf("7"),
         )
 
+/**
+ * passingSmoke은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun passingSmoke(): VoucherPoolRestoreSmokeResult =
         VoucherPoolRestoreSmokeResult(
             ciphertextReadableOrQuarantined = true,
@@ -236,6 +302,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             exactlyOnceRevealRetained = true,
         )
 
+/**
+ * restoreLogicalBackup은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun restoreLogicalBackup(
         dataSource: DataSource,
         fixture: RestoreFixture,
@@ -244,6 +315,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         restoreRecoveryAuthority(dataSource, fixture)
     }
 
+/**
+ * restoreVoucherAuthority은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun restoreVoucherAuthority(dataSource: DataSource, fixture: RestoreFixture) {
         execute(
             dataSource,
@@ -279,6 +355,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         )
     }
 
+/**
+ * restoreRecoveryAuthority은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun restoreRecoveryAuthority(dataSource: DataSource, fixture: RestoreFixture) {
         execute(
             dataSource,
@@ -321,10 +402,20 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         )
     }
 
+/**
+ * inspectRestoredData은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun inspectRestoredData(
         dataSource: DataSource,
         fixture: RestoreFixture,
     ): VoucherPoolRestoreSmokeResult {
+/**
+ * priorCursor은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val priorCursor = queryLong(
             dataSource,
             "SELECT max(id) FROM voucher_pool_audits WHERE tenant_id='$RESTORE_TENANT'",
@@ -346,6 +437,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
                   ,6
                   )""".trimIndent(),
         )
+/**
+ * takeoverCount은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val takeoverCount = executeUpdate(
             dataSource,
             """UPDATE voucher_pool_worker_claims SET owner_id='restore-smoke',
@@ -353,7 +449,17 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
                 WHERE tenant_id='$RESTORE_TENANT' AND scope_id='${fixture.workerScopeId}'
                   AND claim_until<statement_timestamp()""".trimIndent(),
         )
+/**
+ * replayDecisions은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val replayDecisions = List(2) { restoredReplayDecision(dataSource, fixture) }
+/**
+ * replayFenceRetained은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val replayFenceRetained = replayDecisions.all {
             it == IdempotencyDecision.Expired(fixture.effectId, null)
         }
@@ -384,6 +490,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         )
     }
 
+/**
+ * restoredReplayDecision은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun restoredReplayDecision(dataSource: DataSource, fixture: RestoreFixture): IdempotencyDecision {
         val database = Database.connect(dataSource)
         val repository = JdbcVoucherPoolIdempotencyRepository(fixture.digests)
@@ -393,6 +504,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         }
     }
 
+/**
+ * execute은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun execute(dataSource: DataSource, sql: String) {
         dataSource.connection.use { connection ->
             connection.createStatement().use {
@@ -401,6 +517,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         }
     }
 
+/**
+ * executeUpdate은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun executeUpdate(dataSource: DataSource, sql: String): Int =
         dataSource.connection.use { connection ->
             connection.createStatement().use {
@@ -408,6 +529,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             }
         }
 
+/**
+ * queryLong은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun queryLong(dataSource: DataSource, sql: String): Long =
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
@@ -417,6 +543,11 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             }
         }
 
+/**
+ * restoredCiphertextIsReadable은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun restoredCiphertextIsReadable(dataSource: DataSource, fixture: RestoreFixture): Boolean =
         dataSource.connection.use { connection ->
             connection.prepareStatement(
@@ -429,11 +560,21 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
 
                 statement.executeQuery().use { result ->
                     check(result.next())
+/**
+ * digest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                     val digest = VoucherDigest(
                         purpose = DigestPurpose.STABLE_DEDUP,
                         keyVersion = 1,
                         value = result.getBytes("stable_dedup_digest")
                     )
+/**
+ * encrypted은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                     val encrypted = EncryptedVoucherCode(
                         codeCiphertext = result.getBytes("code_ciphertext"),
                         codeNonce = result.getBytes("code_nonce"),
@@ -450,30 +591,110 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
             }
         }
 
+/**
+ * RestoreFixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RestoreFixture(
+/**
+ * campaignId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaignId: UUID = UUID.randomUUID(),
+/**
+ * batchId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batchId: UUID = UUID.randomUUID(),
+/**
+ * entryId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val entryId: UUID = UUID.randomUUID(),
+/**
+ * effectId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val effectId: UUID = UUID.randomUUID(),
+/**
+ * workerScopeId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val workerScopeId: UUID = UUID.randomUUID(),
     ) {
+/**
+ * identity은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val identity = EntryIdentity(RESTORE_TENANT, campaignId, batchId, entryId, 0)
+/**
+ * code은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val code = CanonicalVoucherCode.of("POOL-RESTORE-SMOKE")
+/**
+ * digests은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val digests = VoucherDigestService.testFixture()
+/**
+ * crypto은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val crypto: VoucherEnvelopeCrypto = AesGcmVoucherEnvelopeCrypto(
             kekRing = VoucherKekRing(VoucherKek("kek-v1", ByteArray(32) { (31 + it).toByte() })),
             digests = digests,
         )
+/**
+ * stableDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val stableDigest = digests.stableDedup(RESTORE_TENANT, code)
+/**
+ * encrypted은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val encrypted = crypto.encrypt(identity, code)
+/**
+ * commandScope은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val commandScope = CommandScope(RESTORE_TENANT, "reveal")
+/**
+ * rawIdempotencyKey은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val rawIdempotencyKey = "restore-reveal-key"
 
+/**
+ * fingerprint은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val fingerprint = VoucherPoolFingerprint.command(
             operation = "reveal",
             fields = mapOf("entryId" to entryId.toString())
         )
 
+/**
+ * scopedKeyDigest은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val scopedKeyDigest = digests
             .commandTombstone(
                 tenantId = RESTORE_TENANT,

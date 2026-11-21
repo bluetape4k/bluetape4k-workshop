@@ -26,18 +26,56 @@ import java.time.Instant
 import java.util.*
 
 @Repository
+/**
+ * EventInboxRepository은 프로모션 바우처 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal class EventInboxRepository(
+    /**
+     * `gate`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val gate: DatabasePermitGate,
 ): LongAuditableJdbcRepository<EventInboxRecord, EventInboxTable> {
 
     companion object: KLogging() {
+        /**
+         * `TERMINAL_OUTCOMES`은 바우처·프로모션에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+         *
+         * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+         */
         private val TERMINAL_OUTCOMES = setOf(InboxStatus.APPLIED, InboxStatus.IGNORED, InboxStatus.CONFLICT)
+        /**
+         * `BACKLOG_STATUSES`은 바우처·프로모션에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         private val BACKLOG_STATUSES = listOf(InboxStatus.PENDING, InboxStatus.CLAIMED, InboxStatus.FAILED)
     }
 
+    /**
+     * `table`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     override val table = EventInboxTable
+    /**
+     * extractId은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param entity 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun extractId(entity: EventInboxRecord): Long = entity.id
 
+/**
+ * toEntity은 프로모션 바우처 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     override fun ResultRow.toEntity(): EventInboxRecord = EventInboxRecord(
         id = this[table.id].value,
         tenantId = this[table.tenantId],
@@ -57,6 +95,12 @@ internal class EventInboxRepository(
         updatedAt = this[table.updatedAt],
     )
 
+    /**
+     * insert은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param record 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun insert(record: EventInboxRecord): EventInboxRecord {
         gate.requireHeld()
         val id = table.insertAndGetId {
@@ -75,6 +119,7 @@ internal class EventInboxRepository(
         return findById(id)
     }
 
+    /** tenant/event id별로 한 번 insert하고, unique-key race 뒤 durable winner를 반환합니다. */
     /** tenant/event id별로 한 번 insert하고, unique-key race 뒤 durable winner를 반환합니다. */
     fun insertIfAbsent(record: EventInboxRecord): InboxInsertResult {
         gate.requireHeld()
@@ -97,6 +142,12 @@ internal class EventInboxRepository(
         return InboxInsertResult(durable, inserted)
     }
 
+    /**
+     * findById은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param id 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun findById(id: Long): EventInboxRecord {
         gate.requireHeld()
         return table
@@ -106,6 +157,11 @@ internal class EventInboxRepository(
             .toEntity()
     }
 
+    /**
+     * findEvent은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun findEvent(
         tenantId: String,
         eventId: UUID,
@@ -118,6 +174,11 @@ internal class EventInboxRepository(
             ?.toEntity()
     }
 
+    /**
+     * findBacklogPage은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun findBacklogPage(
         tenantId: String,
         afterId: Long?,
@@ -138,6 +199,7 @@ internal class EventInboxRepository(
             .map { it.toEntity() }
     }
 
+    /** 다른 worker가 이미 소유한 row 뒤에서 기다리지 않고 due row 하나를 claim합니다. */
     /** 다른 worker가 이미 소유한 row 뒤에서 기다리지 않고 due row 하나를 claim합니다. */
     fun claimNext(
         now: Instant,
@@ -169,6 +231,7 @@ internal class EventInboxRepository(
     }
 
     /** 관련 없는 backlog를 선택하지 않고 방금 insert한 row를 synchronous acceptance 용도로 claim합니다. */
+    /** 관련 없는 backlog를 선택하지 않고 방금 insert한 row를 synchronous acceptance 용도로 claim합니다. */
     fun claimById(
         id: Long,
         now: Instant,
@@ -195,6 +258,7 @@ internal class EventInboxRepository(
     }
 
     /** 별도 authority table을 추가하지 않고 한 tenant/aggregate의 decision을 직렬화합니다. */
+    /** 별도 authority table을 추가하지 않고 한 tenant/aggregate의 decision을 직렬화합니다. */
     fun lockAggregate(record: EventInboxRecord) {
         gate.requireHeld()
         val material = "${record.tenantId}:${record.aggregateType}:${record.aggregateId}"
@@ -203,6 +267,12 @@ internal class EventInboxRepository(
         TransactionManager.current().exec("SELECT pg_advisory_xact_lock($lockKey)")
     }
 
+    /**
+     * latestAppliedSequence은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param record 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun latestAppliedSequence(record: EventInboxRecord): Long? {
         gate.requireHeld()
         return table
@@ -219,6 +289,11 @@ internal class EventInboxRepository(
             ?.get(table.observedSequence)
     }
 
+    /**
+     * complete은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun complete(
         id: Long,
         outcome: InboxStatus,
@@ -237,6 +312,11 @@ internal class EventInboxRepository(
         return findById(id)
     }
 
+    /**
+     * retry은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun retry(
         record: EventInboxRecord,
         now: Instant,
@@ -260,7 +340,22 @@ internal class EventInboxRepository(
     }
 }
 
+/**
+ * InboxInsertResult은 프로모션 바우처 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal data class InboxInsertResult(
+    /**
+     * `record`은 바우처·프로모션에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+     *
+     * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+     */
     val record: EventInboxRecord,
+    /**
+     * `inserted`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val inserted: Boolean,
 )

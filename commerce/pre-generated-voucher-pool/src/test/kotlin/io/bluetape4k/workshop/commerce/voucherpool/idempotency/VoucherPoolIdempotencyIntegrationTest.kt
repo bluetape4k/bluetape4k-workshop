@@ -59,23 +59,68 @@ import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherPoolIdempotencyIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolIdempotencyIntegrationTest {
 
     companion object: KLogging() {
+/**
+ * postgres은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
 
+/**
+ * LEASE은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val LEASE = 30.seconds()
+/**
+ * COMMAND_TIMEOUT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val COMMAND_TIMEOUT = 1.minutes()
+/**
+ * RETENTION은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val RETENTION = 24.hours()
     }
 
+/**
+ * voucherSchema은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val voucherSchema = "voucher_idempotency_${Base58.randomString(8).lowercase()}"
 
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val dataSource: HikariDataSource = postgres.getHikariDataSource {
         schema = voucherSchema
     }
 
+/**
+ * database은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
+/**
+ * repository은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var repository: JdbcVoucherPoolIdempotencyRepository
 
     @BeforeAll
@@ -126,6 +171,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same key and fingerprint replays while a different fingerprint conflicts" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same key and fingerprint replays while a different fingerprint conflicts`() {
         val fixture = fixture("same-replay")
         val owner =
@@ -150,6 +200,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "active owner blocks duplicate execution and stale owner is taken over" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `active owner blocks duplicate execution and stale owner is taken over`() {
         val fixture = fixture("stale-takeover")
         val first = tx {
@@ -180,6 +235,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "retryable release allows the same fingerprint to acquire a fresh owner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `retryable release allows the same fingerprint to acquire a fresh owner`() {
         val fixture = fixture("retryable-release")
         val first =
@@ -193,6 +253,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "business marker descriptor and tombstone commit atomically" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `business marker descriptor and tombstone commit atomically`() {
         val fixture = fixture("same-transaction")
         val owner = tx {
@@ -214,6 +279,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "commit loss rolls back business marker descriptor and tombstone together" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `commit loss rolls back business marker descriptor and tombstone together`() {
         val fixture = fixture("commit-loss")
         val owner = tx {
@@ -239,6 +309,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "elapsed deadline inside one business transaction rejects finalize and rolls back its
+ * marker" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `elapsed deadline inside one business transaction rejects finalize and rolls back its marker`() {
         val shortRepository = JdbcVoucherPoolIdempotencyRepository(
             digests = digestService(),
@@ -270,6 +346,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "descriptor purge retains a replay fence and existing effect reference" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `descriptor purge retains a replay fence and existing effect reference`() {
         val fixture = fixture("purge-fence")
         val owner = tx {
@@ -295,6 +376,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "purge refuses descriptor deletion when a completed row has no durable tombstone" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `purge refuses descriptor deletion when a completed row has no durable tombstone`() {
         val fixture = fixture("missing-tombstone")
         val owner = tx {
@@ -308,6 +395,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "command tombstones reject update and delete for tenant lifetime" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `command tombstones reject update and delete for tenant lifetime`() {
         val fixture = fixture("immutable-tombstone")
         val owner = tx {
@@ -330,6 +422,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "tombstone key version mismatch fails closed during finalize lookup and purge" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `tombstone key version mismatch fails closed during finalize lookup and purge`() {
         val fixture = fixture("wrong-key-version")
         val owner = tx {
@@ -361,6 +459,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "stored descriptors require exact fields and JSON types" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stored descriptors require exact fields and JSON types`() {
         val effectId = UUID.randomUUID()
         val malformed = listOf(
@@ -394,6 +497,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "purge skips a descriptor while its tombstone row is locked" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `purge skips a descriptor while its tombstone row is locked`() {
         val fixture = fixture("locked-tombstone")
         val owner = tx {
@@ -423,6 +531,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent first acquire grants exactly one owner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent first acquire grants exactly one owner`() {
         val fixture = fixture("concurrent-acquire")
         val barrier = CyclicBarrier(9)
@@ -443,6 +556,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "concurrent purge and retry never grants a second execution" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `concurrent purge and retry never grants a second execution`() {
         val fixture = fixture("concurrent-purge")
         val owner = tx {
@@ -483,6 +601,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "terminal error replay fence retains only bounded code after descriptor purge" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `terminal error replay fence retains only bounded code after descriptor purge`() {
         val fixture = fixture("terminal-error")
         val owner = tx {
@@ -510,6 +634,12 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "storage excludes raw keys owner capabilities and arbitrary response bodies" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `storage excludes raw keys owner capabilities and arbitrary response bodies`() {
         val fixture = fixture("raw-storage", rawKey = "never-store-this-idempotency-key")
         val owner = tx {
@@ -544,6 +674,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "raw idempotency key rejects control characters before persistence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `raw idempotency key rejects control characters before persistence`() {
         val fixture = fixture("invalid-key", rawKey = "request-key\ninvalid")
 
@@ -554,6 +689,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "safe descriptor rejects retryable errors and invalid success statuses" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `safe descriptor rejects retryable errors and invalid success statuses`() {
         assertFailsWith<IllegalArgumentException> {
             SafeResponseDescriptor.terminal(status = 503, terminalCode = VoucherPoolErrorCode.POOL_BUSY)
@@ -568,6 +708,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * fixture은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun fixture(suffix: String, rawKey: String = "request-key-$suffix") = Fixture(
         scope = CommandScope("tenant-$suffix", "reserve"),
         rawKey = rawKey,
@@ -575,9 +720,19 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         effectId = UUID.randomUUID(),
     )
 
+/**
+ * descriptor은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun descriptor(effectId: UUID): SafeResponseDescriptor =
         SafeResponseDescriptor.success(status = 201, outcome = "RESERVED", effectId = effectId, revision = 1)
 
+/**
+ * expireLease은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun expireLease(owner: IdempotencyOwner) {
         updateOwnerRow(
             owner,
@@ -591,6 +746,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         )
     }
 
+/**
+ * expireDescriptor은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun expireDescriptor(owner: IdempotencyOwner) {
         updateOwnerRow(
             owner,
@@ -604,6 +764,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         )
     }
 
+/**
+ * completeWithoutTombstone은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun completeWithoutTombstone(owner: IdempotencyOwner, descriptorJson: String) {
         dataSource.connection.use { conn ->
             conn.prepareStatement(
@@ -626,6 +791,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * mutateTombstone은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun mutateTombstone(owner: IdempotencyOwner, mutation: String) {
         dataSource.connection.use { conn ->
             conn.prepareStatement(
@@ -637,6 +807,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * insertTombstone은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertTombstone(owner: IdempotencyOwner, effectId: UUID, keyVersion: Int) {
         dataSource.connection.use { conn ->
             conn.prepareStatement(
@@ -657,6 +832,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * replaceDescriptor은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun replaceDescriptor(owner: IdempotencyOwner, descriptorJson: String) {
         updateOwnerRow(
             owner,
@@ -673,9 +853,19 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * descriptorJson은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun descriptorJson(effectId: UUID): String =
         """{"status":201,"outcome":"RESERVED","effectId":"$effectId","revision":1}"""
 
+/**
+ * updateOwnerRow은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun updateOwnerRow(
         owner: IdempotencyOwner,
         sql: String,
@@ -692,12 +882,22 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * bindScope은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun IdempotencyOwner.bindScope(statement: java.sql.PreparedStatement, start: Int = 1) {
         statement.setString(start, scope.tenantId)
         statement.setString(start + 1, scope.operation)
         statement.setBytes(start + 2, copyScopedKeyDigest())
     }
 
+/**
+ * insertEffect은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun insertEffect(effectId: UUID, marker: String) {
         val sql = "INSERT INTO voucher_pool_test_effects(effect_id,marker) VALUES (?,?)"
 
@@ -709,11 +909,21 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * currentConnection은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun currentConnection(): Connection =
         TransactionManager.currentOrNull()
             ?.connection
             ?.connection as? Connection ?: error("Expected a connection")
 
+/**
+ * effectCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun effectCount(effectId: UUID): Int {
         return transaction(database) {
             VoucherPoolTestEffectTable
@@ -724,6 +934,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * tombstoneCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun tombstoneCount(owner: IdempotencyOwner): Int {
         return transaction(database) {
             VoucherPoolCommandTombstoneTable
@@ -738,6 +953,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * descriptorCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun descriptorCount(owner: IdempotencyOwner): Int {
         return transaction(database) {
             VoucherPoolHttpIdempotencyTable
@@ -753,16 +973,31 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         }
     }
 
+/**
+ * idempotencyCount은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun idempotencyCount(): Int {
         return transaction(database) { VoucherPoolHttpIdempotencyTable.selectAll().count().toInt() }
     }
 
+/**
+ * tx은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <T> tx(crossinline block: () -> T): T {
         return transaction(database) {
             block()
         }
     }
 
+/**
+ * digestService은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digestService(): VoucherDigestService =
         VoucherDigestService(
             stableDedupKey = DigestKey.of(7, keyBytes(7)),
@@ -775,9 +1010,19 @@ internal class VoucherPoolIdempotencyIntegrationTest {
             ),
         )
 
+/**
+ * keyBytes은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun keyBytes(seed: Int): ByteArray =
         ByteArray(32) { (seed + it).toByte() }
 
+/**
+ * adminConnection은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adminConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,
@@ -785,19 +1030,69 @@ internal class VoucherPoolIdempotencyIntegrationTest {
             postgres.password ?: PostgreSQLServer.PASSWORD,
         )
 
+/**
+ * Fixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class Fixture(
+/**
+ * scope은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val scope: CommandScope,
+/**
+ * rawKey은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val rawKey: String,
+/**
+ * fingerprint은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val fingerprint: CommandFingerprint,
+/**
+ * effectId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val effectId: UUID,
     )
 
+/**
+ * SimulatedCommitLoss 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class SimulatedCommitLoss: RuntimeException()
 
 }
 
+/**
+ * VoucherPoolTestEffectTable 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private object VoucherPoolTestEffectTable: Table("voucher_pool_test_effects") {
+/**
+ * effectId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val effectId = javaUUID("effect_id")
+/**
+ * marker은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val marker = varchar("marker", 64)
+/**
+ * primaryKey은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     override val primaryKey = PrimaryKey(effectId)
 }

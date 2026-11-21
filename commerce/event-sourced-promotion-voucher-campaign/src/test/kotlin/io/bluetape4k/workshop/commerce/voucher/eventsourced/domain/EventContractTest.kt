@@ -8,11 +8,21 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*
 
+/**
+ * EventContractTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventContractTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "envelope accepts uuid v7 and produces a stable checksum" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `envelope accepts uuid v7 and produces a stable checksum`() {
         val event = EventEnvelope(
             eventId = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abcdef"),
@@ -38,6 +48,11 @@ internal class EventContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "envelope rejects a non v7 identifier and fixture pins one schema step" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `envelope rejects a non v7 identifier and fixture pins one schema step`() {
         assertFailsWith<IllegalArgumentException> {
             EventEnvelope(
@@ -69,6 +84,11 @@ internal class EventContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "registry upcasts only a complete bounded chain" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `registry upcasts only a complete bounded chain`() {
         val registry = EventSchemaRegistry(
             schemas = setOf(EventSchema("voucher.issued", currentVersion = 2) { it.canonicalJson }),
@@ -95,6 +115,11 @@ internal class EventContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "payload bounds reject raw sensitive field names and excessive depth" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `payload bounds reject raw sensitive field names and excessive depth`() {
         listOf(
             "voucherCode",

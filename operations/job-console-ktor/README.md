@@ -84,3 +84,108 @@ PostgreSQL remains authoritative for leases, fencing, checkpoints,
 deduplication, and terminal state. Toxiproxy cuts and restores only the advisory
 Redis path, including old and newly opened connections; it does not replace
 PostgreSQL authority or database failover.
+
+## Business scenario and learning goals
+
+Imagine a customer submitting a document export that takes longer than a
+normal HTTP request. A browser can retry after a lost response, an operator can
+inspect the tenant queue while a worker restarts, and an SSE connection can
+disappear without warning. This module shows how Ktor exposes the same durable
+job contract as Spring while keeping blocking JDBC and worker calls off the
+event-loop dispatcher.
+
+After reading this adapter, a reader should be able to explain:
+
+1. why `POST /v1/jobs` stores a PostgreSQL request row before returning;
+2. why an exact retry with the same `Idempotency-Key` replays the saved
+   response, while a different payload is a conflict;
+3. why an SSE event is only a refresh hint and `GET /v1/jobs/{jobId}` is the
+   source of truth;
+4. how Ktor's application-owned coroutine scope starts the outbox poller and
+   worker, then closes them during `ApplicationStopped`; and
+5. why `CancellationException` is rethrown instead of being converted to a
+   generic `503` response.
+
+The demo headers and `JOB_CONSOLE_DEMO=true` make the example easy to run. They
+are trusted workshop inputs, not production authentication or authorization.
+
+## Ktor boundary and request flow
+
+| Concern | Ktor adapter does | Core/PostgreSQL does |
+|---|---|---|
+| HTTP input | validates one caller scope, one idempotency key, UTF-8 JSON, and the 64 KiB body limit | canonicalizes the request and decides owner, replay, or conflict |
+| Blocking work | runs JDBC/service calls on `Dispatchers.IO` or an interruptible boundary | claims FIFO work, fences leases, checkpoints progress, and commits outcomes |
+| Notifications | sends bounded SSE heartbeats/events and closes the subscription in `finally` | writes durable outbox rows that can be published again |
+| Shutdown | closes admission, waits up to five seconds, cancels background jobs, and closes resources | allows abandoned owners to be reclaimed by a later worker |
+| Error/cancellation mapping | maps stable problem codes to HTTP status and rethrows coroutine cancellation | keeps the committed state and retry/recovery semantics authoritative |
+
+The application-owned scope starts an outbox cycle about every 100 ms and a
+worker cycle about every 50 ms. The intervals are teaching defaults, not a
+capacity promise. `Channel(capacity = 16)` and heartbeat timeouts make slow or
+disconnected clients bounded; neither SSE nor Redis is allowed to become the
+source of job correctness.
+
+## A realistic HTTP walkthrough
+
+Start Ktor with `JOB_CONSOLE_DEMO=true`, then submit and observe one export:
+
+```bash
+curl -i -X POST http://localhost:8080/v1/jobs \
+  -H 'Content-Type: application/json' \
+  -H 'X-Demo-Tenant: tenant-a' \
+  -H 'X-Demo-Submitter: submitter-a' \
+  -H 'Idempotency-Key: ktor-export-2026-001' \
+  -d '{"jobType":"document_export","workUnits":3,"failureMode":"none"}'
+
+# If the response is lost, replay the exact request.
+curl -i -X POST http://localhost:8080/v1/jobs \
+  -H 'Content-Type: application/json' \
+  -H 'X-Demo-Tenant: tenant-a' \
+  -H 'X-Demo-Submitter: submitter-a' \
+  -H 'Idempotency-Key: ktor-export-2026-001' \
+  -d '{"jobType":"document_export","workUnits":3,"failureMode":"none"}'
+
+# Reconcile the current durable state after an SSE event or reconnect.
+curl -s http://localhost:8080/v1/jobs/<job-id> \
+  -H 'X-Demo-Tenant: tenant-a' -H 'X-Demo-Submitter: submitter-a'
+
+# SSE gives notification and heartbeat, not replayable history.
+curl -N http://localhost:8080/v1/jobs/<job-id>/events \
+  -H 'X-Demo-Tenant: tenant-a' -H 'X-Demo-Submitter: submitter-a'
+```
+
+An owner or replay returns `202`. A key reused for a different request returns
+`409`; an in-flight timeout returns `409` plus `Retry-After: 1`; waiter
+overflow returns `429` plus `Retry-After: 2`; an abandoned owner or dependency
+failure returns `503`. Retry the same key and canonical body only when the
+response contract calls for it.
+
+## Test-to-contract map
+
+Read these tests as requirements for a Ktor deployment:
+
+| Requirement | Representative Ktor evidence |
+|---|---|
+| exact header/body validation and stable problem responses | `JobConsoleKtorSubmissionHttpTest` |
+| bounded-wait replay parity with the core fixture | `KtorBoundedWaitHttpIdempotencyConformanceTest` |
+| route JSON/status/SSE and cancellation behavior | `KtorJobConsoleHttpTest`, `KtorJobConsoleHttpClientRetryTest` |
+| coroutine startup, cancellation, and resource ownership | `KtorJobConsoleHttpTest` and the application lifecycle assertions in the Ktor fixture |
+| high contention preserves queue and lease invariants | `KtorJobConsoleHighContentionProfileTest`, `KtorJobConsoleHighContentionSelectionTest` |
+
+The Ktor tests intentionally reuse the core black-box contract. HTTP tests
+prove adapter mapping; PostgreSQL/Redis container tests prove claim, fencing,
+checkpoint, cancellation, outbox, and recovery. Do not interpret a local
+profile report as a production throughput benchmark.
+
+## Specification traceability
+
+The design specification calls for a framework-neutral core with Ktor Netty,
+SSE, coroutine lifecycle, PostgreSQL authority, advisory Redis cancellation,
+and Spring/Ktor black-box parity. See
+[`2026-07-21-issue-520-job-operations-console-design.md`](../../docs/superpowers/specs/2026-07-21-issue-520-job-operations-console-design.md),
+especially the module boundary, HTTP/SSE, worker cancellation, failure matrix,
+and acceptance sections. The follow-up
+[`2026-11-18-issue-1052-operations-exposed-design.md`](../../docs/superpowers/specs/2026-11-18-issue-1052-operations-exposed-design.md)
+documents the typed Exposed query boundary and the raw SQL probes retained for
+migration, `EXPLAIN`, lock, retention, backup/restore, and compatibility
+semantics.

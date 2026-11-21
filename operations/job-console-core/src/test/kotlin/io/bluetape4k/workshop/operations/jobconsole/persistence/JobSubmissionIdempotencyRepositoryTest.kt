@@ -36,14 +36,26 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
+/** PostgreSQL request row의 owner/waiter/replay, lease takeover, retention, clock 권위를 검증한다. */
+/** PostgreSQL request row의 owner/waiter/replay, lease takeover, retention, clock 권위를 검증한다. */
 @Tag("integration")
 class JobSubmissionIdempotencyRepositoryTest {
 
     private companion object: KLogging() {
+/**
+ * NOW은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val NOW: Instant = Instant.parse("2026-07-21T00:00:00Z")
     }
 
     @Test
+/**
+ * 이 시나리오는 "reserve classifies owner waiter conflict and terminal replay" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reserve classifies owner waiter conflict and terminal replay`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -85,6 +97,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "unsafe or oversized replay headers fail before job insertion" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `unsafe or oversized replay headers fail before job insertion`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -118,6 +135,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "test-only synthetic snapshot policy reaches jdbc finalize and replay" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `test-only synthetic snapshot policy reaches jdbc finalize and replay`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -151,6 +173,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter registration is bounded and abandoned state is observable" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter registration is bounded and abandoned state is observable`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -221,6 +248,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "expired owner lease is taken over without changing generation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expired owner lease is taken over without changing generation`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -249,6 +281,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "expired owner cannot finalize after lease boundary" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expired owner cannot finalize after lease boundary`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -275,6 +312,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "owner lease and abandonment use database clock rather than caller clock" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `owner lease and abandonment use database clock rather than caller clock`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -308,6 +350,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "lease clock is sampled after lock wait even when another request exists" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `lease clock is sampled after lock wait even when another request exists`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -363,6 +410,12 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "waiter reserve with a single connection pool reuses the committed connection" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `waiter reserve with a single connection pool reuses the committed connection`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -392,6 +445,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cleanup deletes expired abandoned requests in bounded batches" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cleanup deletes expired abandoned requests in bounded batches`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -426,6 +484,12 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "legacy terminal row lazily snapshots and retention creates a new generation" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `legacy terminal row lazily snapshots and retention creates a new generation`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -465,6 +529,11 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "stale owner cannot finalize a request after abandonment" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `stale owner cannot finalize a request after abandonment`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -489,9 +558,29 @@ class JobSubmissionIdempotencyRepositoryTest {
         }
     }
 
+/**
+ * command은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun command(policy: JobSubmissionIdempotencyPolicy = JobSubmissionIdempotencyPolicy()): JobSubmissionCommand {
+/**
+ * scope은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val scope = DemoCallerScope("tenant-a", "submitter-a")
+/**
+ * request은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val request = SubmitJobRequest(JobType.DOCUMENT_EXPORT, 10, FailureMode.NONE)
+/**
+ * canonicalizer은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val canonicalizer = JobSubmissionCanonicalizer()
         return JobSubmissionCommand(
             scope = scope,
@@ -502,6 +591,11 @@ class JobSubmissionIdempotencyRepositoryTest {
         )
     }
 
+/**
+ * sha256은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sha256(value: String): String =
         MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()).toHexString()
 

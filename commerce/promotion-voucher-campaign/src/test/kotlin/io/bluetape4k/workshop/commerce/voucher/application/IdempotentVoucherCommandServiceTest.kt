@@ -24,11 +24,31 @@ import java.time.ZoneOffset
 import java.util.*
 import java.util.function.Supplier
 
+/**
+ * IdempotentVoucherCommandServiceTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class IdempotentVoucherCommandServiceTest {
 
     companion object: KLogging() {
+/**
+ * NOW은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW = Instant.parse("2026-07-19T10:00:00Z")
+/**
+ * OWNER은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val OWNER = OwnerToken(ByteArray(32) { 7 })
+/**
+ * SCOPE은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val SCOPE = IdempotencyScope(
             tenantId = "tenant-a",
             principalDigest = Digest.sha256("principal-a"),
@@ -36,7 +56,17 @@ internal class IdempotentVoucherCommandServiceTest {
             resourceId = "campaign-1",
             keyDigest = Digest.sha256("raw-key"),
         )
+/**
+ * COMMAND은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val COMMAND = IdempotentVoucherCommand(SCOPE, Digest.sha256("request"))
+/**
+ * RESPONSE은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val RESPONSE = StoredHttpResponse(
             responseKind = VoucherResponseKind.ALLOCATION_ACCEPTED,
             status = 201,
@@ -47,6 +77,11 @@ internal class IdempotentVoucherCommandServiceTest {
             generationKeyVersion = 5,
             verificationKeyVersion = 7,
         )
+/**
+ * RETRYABLE은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val RETRYABLE = RESPONSE.copy(
             responseKind = VoucherResponseKind.RATE_LIMITED,
             status = 429,
@@ -58,6 +93,11 @@ internal class IdempotentVoucherCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Spring creates the service without failure injection function beans" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Spring creates the service without failure injection function beans`() {
         AnnotationConfigApplicationContext().use { context ->
             context.registerBean(VoucherIdempotencyStore::class.java, Supplier { FakeStore() })
@@ -73,6 +113,12 @@ internal class IdempotentVoucherCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "replay lookup admission acquire and atomic business finalize follow permit boundaries"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `replay lookup admission acquire and atomic business finalize follow permit boundaries`() {
         val events = mutableListOf<String>()
         val transactions = RecordingTransactions(events)
@@ -108,6 +154,11 @@ internal class IdempotentVoucherCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "commit after response loss replays without a second business effect" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `commit after response loss replays without a second business effect`() {
         val store = FakeStore()
         var effects = 0
@@ -136,6 +187,11 @@ internal class IdempotentVoucherCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "retryable admission rejection never creates an owner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `retryable admission rejection never creates an owner`() {
         val store = FakeStore()
         val result = service(store, RecordingTransactions())
@@ -146,6 +202,11 @@ internal class IdempotentVoucherCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "retryable business failure releases owner for same key recovery" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `retryable business failure releases owner for same key recovery`() {
         val store = FakeStore()
         val service = service(store, RecordingTransactions())
@@ -160,6 +221,11 @@ internal class IdempotentVoucherCommandServiceTest {
                 IdempotentCommandResult.Completed(RESPONSE, replayed = false)
     }
 
+/**
+ * service은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun service(
         store: FakeStore,
         transactions: RecordingTransactions,
@@ -173,11 +239,31 @@ internal class IdempotentVoucherCommandServiceTest {
             cutPoint = cutPoint,
         )
 
+/**
+ * RecordingTransactions 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RecordingTransactions(
+/**
+ * events은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val events: MutableList<String> = mutableListOf(),
     ): VoucherTransactionRunner {
+/**
+ * active은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var active = false
 
+/**
+ * foregroundTransaction은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun <T> foregroundTransaction(block: () -> T): T {
             events += "tx:start"
             active = true
@@ -190,16 +276,61 @@ internal class IdempotentVoucherCommandServiceTest {
         }
     }
 
+/**
+ * FakeStore 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class FakeStore(
+/**
+ * events은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val events: MutableList<String> = mutableListOf(),
+/**
+ * transactionActive은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val transactionActive: () -> Boolean = { true },
     ): VoucherIdempotencyStore {
+/**
+ * terminal은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private var terminal: StoredHttpResponse? = null
+/**
+ * owned은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private var owned = false
+/**
+ * acquireCalled은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var acquireCalled = false
+/**
+ * released은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var released = false
+/**
+ * businessFinalizeSharedTransaction은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var businessFinalizeSharedTransaction = false
 
+/**
+ * lookup은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun lookup(
             scope: IdempotencyScope,
             fingerprint: Digest,
@@ -208,6 +339,11 @@ internal class IdempotentVoucherCommandServiceTest {
             return terminal?.let(IdempotencyAcquireResult::Replay)
         }
 
+/**
+ * acquire은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun acquire(
             scope: IdempotencyScope,
             fingerprint: Digest,
@@ -224,6 +360,11 @@ internal class IdempotentVoucherCommandServiceTest {
             return IdempotencyAcquireResult.Owner(ownerToken, now.plus(lease))
         }
 
+/**
+ * isOwner은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun isOwner(
             scope: IdempotencyScope,
             ownerToken: OwnerToken,
@@ -233,6 +374,11 @@ internal class IdempotentVoucherCommandServiceTest {
             return owned
         }
 
+/**
+ * finalize은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun finalize(
             scope: IdempotencyScope,
             ownerToken: OwnerToken,
@@ -246,14 +392,29 @@ internal class IdempotentVoucherCommandServiceTest {
             return true
         }
 
+/**
+ * release은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun release(scope: IdempotencyScope, ownerToken: OwnerToken): Boolean {
             released = true
             owned = false
             return true
         }
 
+/**
+ * find은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun find(scope: IdempotencyScope): IdempotencyRecord? = null
 
+/**
+ * cleanupExpired은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun cleanupExpired(now: Instant, limit: Int): Int = 0
     }
 }

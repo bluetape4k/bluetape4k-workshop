@@ -43,57 +43,232 @@ import java.sql.Connection
 import java.time.Instant
 import java.util.*
 
+/**
+ * WorkerChunkOutcome은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal data class WorkerChunkOutcome(
+    /**
+     * `claim`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val claim: WorkerClaim?,
+    /**
+     * `processed`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val processed: Int,
+    /**
+     * `effects`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val effects: Int,
+    /**
+     * `completed`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val completed: Boolean,
 )
 
+/**
+ * WorkerRunState은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal enum class WorkerRunState {
+    /**
+     * `WorkerRunState.COMPLETED`은 WorkerRunState 업무 상태의 `COMPLETED` 단계입니다. 허용된 상태 전이와 재시도·보상·응답
+     * 분기를 선택하는
+     * 기준으로 사용합니다.
+     */
     COMPLETED,
+    /**
+     * `WorkerRunState.NOT_ACQUIRED`은 WorkerRunState 업무 상태의 `NOT_ACQUIRED` 단계입니다. 허용된 상태 전이와
+     * 재시도·보상·응답 분기를
+     * 선택하는 기준으로 사용합니다.
+     */
     NOT_ACQUIRED,
+    /**
+     * `WorkerRunState.CANCELLED`은 WorkerRunState 업무 상태의 `CANCELLED` 단계입니다. 허용된 상태 전이와 재시도·보상·응답
+     * 분기를 선택하는
+     * 기준으로 사용합니다.
+     */
     CANCELLED,
+    /**
+     * `WorkerRunState.RETRYABLE`은 WorkerRunState 업무 상태의 `RETRYABLE` 단계입니다. 허용된 상태 전이와 재시도·보상·응답
+     * 분기를 선택하는
+     * 기준으로 사용합니다.
+     */
     RETRYABLE,
+    /**
+     * `WorkerRunState.POISONED`은 WorkerRunState 업무 상태의 `POISONED` 단계입니다. 허용된 상태 전이와 재시도·보상·응답 분기를
+     * 선택하는
+     * 기준으로 사용합니다.
+     */
     POISONED,
+    /**
+     * `WorkerRunState.LOST`은 WorkerRunState 업무 상태의 `LOST` 단계입니다. 허용된 상태 전이와 재시도·보상·응답 분기를 선택하는
+     * 기준으로 사용합니다.
+     */
     LOST,
 }
 
+/**
+ * WorkerRunOutcome은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal data class WorkerRunOutcome(
+    /**
+     * `state`은 바우처·프로모션에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     val state: WorkerRunState,
+    /**
+     * `processed`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val processed: Int,
+    /**
+     * `effects`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val effects: Int,
+    /**
+     * `claim`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val claim: WorkerClaimSnapshot?,
+    /**
+     * `reasonCode`은 바우처·프로모션에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+     *
+     * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+     */
     val reasonCode: String? = null,
 )
 
+/**
+ * WorkerRunRequest은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal data class WorkerRunRequest(
+    /**
+     * `tenantId`은 바우처·프로모션에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val tenantId: String,
+    /**
+     * `kind`은 바우처·프로모션에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+     *
+     * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+     */
     val kind: WorkerKind,
+    /**
+     * `scopeId`은 바우처·프로모션에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val scopeId: UUID,
+    /**
+     * `owner`은 바우처·프로모션에서 권한과 데이터 범위를 판정하는 호출 주체 또는 소유자 정보입니다.
+     *
+     * 인증·인가 경계를 통과한 값만 사용하고 다른 tenant의 상태·payload가 섞이지 않도록 합니다.
+     */
     val owner: String,
+    /**
+     * `requestedLimit`은 바우처·프로모션에서 한도·할당·정산·처리 진척을 계산하는 업무 수치입니다.
+     *
+     * 음수·상한·단위와 반올림 규칙을 검증하고 경쟁 요청에서도 원자적으로 갱신합니다.
+     */
     val requestedLimit: Int = DEFAULT_WORKER_LIMIT,
 )
 
+/**
+ * VoucherPoolWorkers은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal interface VoucherPoolWorkers {
+    /**
+     * runChunk은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param requestedLimit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun runChunk(claim: WorkerClaim, requestedLimit: Int = DEFAULT_WORKER_LIMIT): WorkerChunkOutcome
+    /**
+     * run은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun run(
         request: WorkerRunRequest,
         continueRunning: () -> Boolean = { !Thread.currentThread().isInterrupted },
     ): WorkerRunOutcome
 
+    /**
+     * completeCampaignRevocation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun completeCampaignRevocation(tenantId: String, campaignId: UUID): Boolean
 }
 
+/**
+ * JdbcVoucherPoolWorkers은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal class JdbcVoucherPoolWorkers(
+    /**
+     * `executor`은 바우처·프로모션에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val executor: VoucherPoolJdbcExecutor,
+    /**
+     * `claims`은 바우처·프로모션에서 업무 집합 또는 조회 결과입니다.
+     *
+     * 빈 집합·중복·정렬·페이지 경계를 정의하고 기준 저장소의 순서를 그대로 보존합니다.
+     */
     private val claims: JdbcVoucherPoolWorkerRepository,
+    /**
+     * `repository`은 바우처·프로모션에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val repository: VoucherPoolRepository,
 ): VoucherPoolWorkers {
 
     companion object: KLogging()
 
     @Suppress("ReturnCount")
+    /**
+     * run은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param request 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param continueRunning 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun run(request: WorkerRunRequest, continueRunning: () -> Boolean): WorkerRunOutcome {
         var activeClaim = claims.claim(request.tenantId, request.kind, request.scopeId, request.owner)
             ?: return WorkerRunOutcome(
@@ -137,6 +312,13 @@ internal class JdbcVoucherPoolWorkers(
         }
     }
 
+    /**
+     * runChunk은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param requestedLimit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun runChunk(claim: WorkerClaim, requestedLimit: Int): WorkerChunkOutcome {
         require(claim.kind != WorkerKind.PURGE) { "purge retention belongs to Task 12" }
         val limit = requestedLimit.coerceAtMost(maximumLimit(claim.kind))
@@ -149,6 +331,13 @@ internal class JdbcVoucherPoolWorkers(
         }
     }
 
+    /**
+     * runEntryChunk은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun runEntryChunk(claim: WorkerClaim, limit: Int): WorkerChunkOutcome {
         var activeClaim = prepareBatchState(claim)
         val candidates = scanCandidates(activeClaim, limit)
@@ -171,6 +360,11 @@ internal class JdbcVoucherPoolWorkers(
         return WorkerChunkOutcome(activeClaim, candidates.size, effects, completed = false)
     }
 
+    /**
+     * failedRun은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun failedRun(
         claim: WorkerClaim,
         processed: Int,
@@ -188,6 +382,11 @@ internal class JdbcVoucherPoolWorkers(
         lostRun(claim, processed, effects, stale.redactedReasonCode())
     }
 
+    /**
+     * lostRun은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lostRun(
         claim: WorkerClaim,
         processed: Int,
@@ -202,11 +401,25 @@ internal class JdbcVoucherPoolWorkers(
             reasonCode = reasonCode,
         )
 
+    /**
+     * completeCampaignRevocation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun completeCampaignRevocation(tenantId: String, campaignId: UUID): Boolean =
         executor.workerTransaction {
             completeCampaignRevocationInTransaction(tenantId, campaignId)
         }
 
+    /**
+     * runCampaignRevoke은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun runCampaignRevoke(claim: WorkerClaim, limit: Int): WorkerChunkOutcome = executor.workerTransaction {
         val connection = currentConnection()
         claims.requireCurrentInTransaction(connection, claim)
@@ -234,6 +447,13 @@ internal class JdbcVoucherPoolWorkers(
         }
     }
 
+    /**
+     * runReconciliation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun runReconciliation(claim: WorkerClaim, limit: Int): WorkerChunkOutcome = executor.workerTransaction {
         val connection = currentConnection()
         claims.requireCurrentInTransaction(connection, claim)
@@ -272,6 +492,12 @@ internal class JdbcVoucherPoolWorkers(
         }
     }
 
+    /**
+     * prepareBatchState은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun prepareBatchState(claim: WorkerClaim): WorkerClaim {
         val transition = when (claim.kind) {
             WorkerKind.BATCH_REVOKE -> BatchState.REVOKING
@@ -312,6 +538,13 @@ internal class JdbcVoucherPoolWorkers(
         }
     }
 
+    /**
+     * scanCandidates은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun scanCandidates(claim: WorkerClaim, limit: Int): List<WorkerEntryCandidate> =
         executor.workerTransaction {
             val connection = currentConnection()
@@ -320,6 +553,11 @@ internal class JdbcVoucherPoolWorkers(
             if (afterCursor.isNotEmpty() || claim.cursor == 0L) afterCursor else queryCandidates(claim, 0L, limit)
         }
 
+    /**
+     * queryCandidates은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun queryCandidates(
         claim: WorkerClaim,
         cursor: Long,
@@ -434,6 +672,11 @@ internal class JdbcVoucherPoolWorkers(
             }
     }
 
+    /**
+     * apply은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun apply(
         kind: WorkerKind,
         chain: LockedWorkerChain,
@@ -451,6 +694,12 @@ internal class JdbcVoucherPoolWorkers(
         else                         -> false
     }
 
+    /**
+     * finalizeIfComplete은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun finalizeIfComplete(claim: WorkerClaim): WorkerChunkOutcome =
         executor.workerTransaction {
             val connection = currentConnection()
@@ -485,6 +734,13 @@ internal class JdbcVoucherPoolWorkers(
             WorkerChunkOutcome(null, 0, 0, completed = true)
         }
 
+    /**
+     * completeCampaignRevocationInTransaction은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트
+     * 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun completeCampaignRevocationInTransaction(
         tenantId: String,
         campaignId: UUID,
@@ -502,6 +758,14 @@ internal class JdbcVoucherPoolWorkers(
         }
     }
 
+    /**
+     * campaignRevocationRemaining은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun campaignRevocationRemaining(tenantId: String, campaignId: UUID): Long =
         VoucherPoolBatchTable
             .selectAll()
@@ -512,6 +776,12 @@ internal class JdbcVoucherPoolWorkers(
             }
             .count()
 
+    /**
+     * lockBatchScope은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockBatchScope(claim: WorkerClaim): LockedBatchScope {
         val campaignId = VoucherPoolBatchTable
             .select(VoucherPoolBatchTable.campaignId)
@@ -546,6 +816,11 @@ internal class JdbcVoucherPoolWorkers(
         )
     }
 
+    /**
+     * updateBatchState은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun updateBatchState(
         claim: WorkerClaim,
         expectedRevision: Long,
@@ -562,6 +837,12 @@ internal class JdbcVoucherPoolWorkers(
         check(updated == 1)
     }
 
+    /**
+     * activeEntryCount은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun activeEntryCount(claim: WorkerClaim): Long =
         VoucherPoolEntryTable
             .selectAll()
@@ -572,6 +853,12 @@ internal class JdbcVoucherPoolWorkers(
             }
             .count()
 
+    /**
+     * poolDepthMatches은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun poolDepthMatches(claim: WorkerClaim): Boolean {
         val actualCount = VoucherPoolEntryTable.entryId.count()
         val actual = VoucherPoolEntryTable
@@ -593,6 +880,12 @@ internal class JdbcVoucherPoolWorkers(
         return actual == stored
     }
 
+    /**
+     * reconcilePoolDepth은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param claim 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun reconcilePoolDepth(claim: WorkerClaim): Int {
         val depthRows = VoucherPoolDepthTable
             .select(
@@ -633,6 +926,11 @@ internal class JdbcVoucherPoolWorkers(
         }
     }
 
+    /**
+     * lockUserLimitPage은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lockUserLimitPage(
         claim: WorkerClaim,
         campaignId: UUID,
@@ -689,6 +987,11 @@ internal class JdbcVoucherPoolWorkers(
                 )
             }
 
+    /**
+     * reconcileUserLimit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun reconcileUserLimit(
         claim: WorkerClaim,
         campaignId: UUID,
@@ -710,6 +1013,13 @@ internal class JdbcVoucherPoolWorkers(
         return true
     }
 
+    /**
+     * lockCampaignScope은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockCampaignScope(tenantId: String, campaignId: UUID): LockedCampaignScope =
         VoucherPoolCampaignTable
             .select(
@@ -731,6 +1041,11 @@ internal class JdbcVoucherPoolWorkers(
                 )
             }
 
+    /**
+     * updateCampaignState은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun updateCampaignState(
         tenantId: String,
         campaignId: UUID,
@@ -748,6 +1063,11 @@ internal class JdbcVoucherPoolWorkers(
         check(updated == 1)
     }
 
+    /**
+     * appendCampaignAudit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun appendCampaignAudit(
         tenantId: String,
         campaignId: UUID,
@@ -768,14 +1088,26 @@ internal class JdbcVoucherPoolWorkers(
         )
     }
 
+    /**
+     * maximumLimit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param kind 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun maximumLimit(kind: WorkerKind): Int =
         if (kind in setOf(WorkerKind.RECONCILIATION, WorkerKind.CAMPAIGN_REVOKE)) 50 else 100
 
+    /**
+     * currentConnection은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun currentConnection(): Connection =
         TransactionManager.currentOrNull()
             ?.connection
             ?.connection as? Connection ?: error("voucher pool worker repository requires an active JDBC transaction")
 
+    /** worker entry transition과 같은 PostgreSQL transaction snapshot을 사용해야 하므로 raw timestamp 조회를 유지합니다. */
     /** worker entry transition과 같은 PostgreSQL transaction snapshot을 사용해야 하므로 raw timestamp 조회를 유지합니다. */
     private fun transactionTime(connection: Connection): Instant =
         connection.createStatement().use { statement ->
@@ -786,49 +1118,186 @@ internal class JdbcVoucherPoolWorkers(
         }
 }
 
+/**
+ * WorkerEntryCandidate은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 private data class WorkerEntryCandidate(val authority: WorkerCandidate, val cursorAfter: Long)
 
+/**
+ * WorkerChunkExecutionException은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이
+ * 타입의
+ * 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 private class WorkerChunkExecutionException(
+    /**
+     * `claim`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val claim: WorkerClaim,
     cause: RuntimeException,
 ): RuntimeException("worker chunk failed", cause) {
+    /**
+     * `reasonCode`은 바우처·프로모션에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+     *
+     * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+     */
     val reasonCode: String = cause.redactedReasonCode()
 }
 
+/**
+ * redactedReasonCode은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
 private fun RuntimeException.redactedReasonCode(): String = when (this) {
     is StaleWorkerClaimException -> "STALE_CLAIM"
     is VoucherPoolJdbcTimeoutException -> "WORKER_TIMEOUT"
     else                         -> "WORKER_CHUNK_FAILED"
 }
 
+/**
+ * LockedBatchScope은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 private data class LockedBatchScope(
+    /**
+     * `campaignId`은 바우처·프로모션에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val campaignId: UUID,
+    /**
+     * `batchState`은 바우처·프로모션에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     val batchState: BatchState,
+    /**
+     * `batchRevision`은 바우처·프로모션에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val batchRevision: Long,
+    /**
+     * `policyVersion`은 바우처·프로모션에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val policyVersion: Long,
+    /**
+     * `expiresAt`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val expiresAt: Instant?,
 )
 
+/**
+ * LockedCampaignScope은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 private data class LockedCampaignScope(
+    /**
+     * `state`은 바우처·프로모션에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     val state: CampaignState,
+    /**
+     * `revision`은 바우처·프로모션에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val revision: Long,
+    /**
+     * `policyVersion`은 바우처·프로모션에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val policyVersion: Long,
 )
 
+/**
+ * UserLimitProjection은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 private data class UserLimitProjection(
+    /**
+     * `digest`은 바우처·프로모션에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+     *
+     * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+     */
     val digest: ByteArray,
+    /**
+     * `storedReservations`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val storedReservations: Int,
+    /**
+     * `storedAllocations`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val storedAllocations: Int,
+    /**
+     * `storedLifetime`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val storedLifetime: Int,
+    /**
+     * `revision`은 바우처·프로모션에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val revision: Long,
+    /**
+     * `actualReservations`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val actualReservations: Int,
+    /**
+     * `actualAllocations`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val actualAllocations: Int,
+    /**
+     * `actualLifetime`은 바우처·프로모션에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val actualLifetime: Int,
 ) {
+    /**
+     * matches은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun matches(): Boolean =
         storedReservations == actualReservations &&
                 storedAllocations == actualAllocations &&
                 storedLifetime == actualLifetime
 }
 
+/**
+ * `DEFAULT_WORKER_LIMIT`은 바우처·프로모션에서 한도·할당·정산·처리 진척을 계산하는 업무 수치입니다.
+ *
+ * 음수·상한·단위와 반올림 규칙을 검증하고 경쟁 요청에서도 원자적으로 갱신합니다.
+ */
 internal const val DEFAULT_WORKER_LIMIT = 100

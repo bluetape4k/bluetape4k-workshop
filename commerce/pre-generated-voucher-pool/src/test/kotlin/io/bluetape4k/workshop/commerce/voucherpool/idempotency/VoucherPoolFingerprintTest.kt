@@ -13,11 +13,21 @@ import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.util.*
 
+/**
+ * VoucherPoolFingerprintTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolFingerprintTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "semantic fields are canonical regardless of map iteration order" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `semantic fields are canonical regardless of map iteration order`() {
         val first = VoucherPoolFingerprint.command(
             operation = "reserve",
@@ -32,6 +42,11 @@ internal class VoucherPoolFingerprintTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "length prefixing separates ambiguous field material" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `length prefixing separates ambiguous field material`() {
         val first = VoucherPoolFingerprint.command("import", mapOf("ab" to "c", "d" to "e"))
         val second = VoucherPoolFingerprint.command("import", mapOf("a" to "bc", "d" to "e"))
@@ -40,6 +55,11 @@ internal class VoucherPoolFingerprintTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "operation null and omitted fields remain distinct" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operation null and omitted fields remain distinct`() {
         val presentNull = VoucherPoolFingerprint.command("reserve", mapOf("user" to null))
         val omitted = VoucherPoolFingerprint.command("reserve", emptyMap())
@@ -50,6 +70,11 @@ internal class VoucherPoolFingerprintTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "fingerprint is immutable redacted and bounded" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fingerprint is immutable redacted and bounded`() {
         val fields = linkedMapOf("campaignId" to "campaign-1")
         val fingerprint = VoucherPoolFingerprint.command("reserve", fields)
@@ -68,6 +93,11 @@ internal class VoucherPoolFingerprintTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "owner retains only defensive copies of capability digests" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `owner retains only defensive copies of capability digests`() {
         val scopedKeyDigest = ByteArray(32) { it.toByte() }
         val capabilityDigest = ByteArray(32) { (it + 1).toByte() }

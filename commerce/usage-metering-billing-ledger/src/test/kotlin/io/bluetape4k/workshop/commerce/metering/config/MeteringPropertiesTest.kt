@@ -11,11 +11,21 @@ import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
+/**
+ * MeteringPropertiesTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class MeteringPropertiesTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "defaults keep work bounded and retryable" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `defaults keep work bounded and retryable`() {
         val properties = MeteringProperties()
 
@@ -35,6 +45,11 @@ class MeteringPropertiesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "receipt limits reject unsafe durations and response sizes" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `receipt limits reject unsafe durations and response sizes`() {
         assertFailsWith<IllegalArgumentException> {
             MeteringProperties.CommandReceipt(lease = 4.seconds())
@@ -57,6 +72,11 @@ class MeteringPropertiesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "close limits reject unbounded batches and invalid cadence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `close limits reject unbounded batches and invalid cadence`() {
         assertFailsWith<IllegalArgumentException> { MeteringProperties.Close(batchSize = 0) }
         assertFailsWith<IllegalArgumentException> { MeteringProperties.Close(batchSize = 1_001) }
@@ -71,6 +91,11 @@ class MeteringPropertiesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reconciliation page is positive and capped" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reconciliation page is positive and capped`() {
         assertFailsWith<IllegalArgumentException> {
             MeteringProperties.Reconciliation(pageSize = 0)
@@ -84,6 +109,11 @@ class MeteringPropertiesTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "time horizons must be positive" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `time horizons must be positive`() {
         assertFailsWith<IllegalArgumentException> {
             MeteringProperties(allowedLateness = Duration.ZERO)

@@ -30,6 +30,16 @@ pricing policy.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)
 
+## Business requirements and test evidence
+
+Meter is the price authority. Its core promise is not “return the current
+price,” but “publish durable evidence of the price version that downstream
+services are allowed to use.” The local fact and `PENDING` outbox row commit
+together; Kafka delivery is retriable. `MeterServiceApplicationContractTest`
+covers the command/envelope/idempotency contract, while
+`MeterOutboxPostgresIntegrationTest` proves uniqueness, atomic local writes, and
+fenced publisher completion. Neither test proves a broker transaction.
+
 ## Responsibility
 
 - accept `ActivatePriceCommand` for a tenant, meter, currency, unit price, and effective time;

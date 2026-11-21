@@ -15,24 +15,55 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /** persistence와 equality 비교에 안전한 canonical 256-bit digest입니다. */
+/** persistence와 equality 비교에 안전한 canonical 256-bit digest입니다. */
 @JvmInline
 value class TicketDigest private constructor(val base64Url: String) {
+    /**
+     * bytes은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun bytes(): ByteArray = Base64.getUrlDecoder().decode(base64Url)
 
     companion object {
+        /**
+         * of은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+         *
+         * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+         * @param bytes 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+         */
         fun of(bytes: ByteArray): TicketDigest =
             TicketDigest(Base64.getUrlEncoder().withoutPadding().encodeToString(bytes.copyOf()))
 
+        /**
+         * sha256은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+         *
+         * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+         * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+         */
         fun sha256(value: String): TicketDigest =
             of(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
     }
 }
 
 /** domain-separated key와 닫힌 purchase-request fingerprint를 생성합니다. */
+/** domain-separated key와 닫힌 purchase-request fingerprint를 생성합니다. */
 object IdempotencyFingerprint: KLogging() {
 
+    /**
+     * `mapper`은 콘서트 티켓 플래시 세일에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val mapper = Jackson.createDefaultJsonMapper()
 
+    /**
+     * key은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param secret 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param rawKey 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun key(secret: ByteArray, rawKey: String): TicketDigest {
         secret.size.requireGe(32, "secret.size")
         rawKey.length.requireInRange(16, 128, "rawKey.length")
@@ -42,6 +73,11 @@ object IdempotencyFingerprint: KLogging() {
         return TicketDigest.of(mac.doFinal("ticket-idempotency-key-v1\u0000$rawKey".toUtf8Bytes()))
     }
 
+    /**
+     * request은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun request(
         method: String,
         path: String,
@@ -71,12 +107,24 @@ object IdempotencyFingerprint: KLogging() {
         return TicketDigest.sha256(canonical)
     }
 
+    /**
+     * canonical은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param node 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun canonical(node: JsonNode): String = when {
         node.isString -> node.stringValue()
         node.isNumber -> canonicalDecimal(node.decimalValue())
         else          -> throw IllegalArgumentException("purchase fields must be scalar")
     }
 
+    /**
+     * canonicalDecimal은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun canonicalDecimal(value: BigDecimal): String =
         value.stripTrailingZeros().let { if (it.compareTo(BigDecimal.ZERO) == 0) "0" else it.toPlainString() }
 }

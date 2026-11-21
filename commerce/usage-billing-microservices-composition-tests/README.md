@@ -6,6 +6,26 @@ This advanced Spring Boot 4 / Java 25 reference separates usage billing into fiv
 
 Each service owns its database and its own integration decoder. JetBrains Exposed and `bluetape4k-exposed-jdbc` are the only database access path; every concrete repository implements `ExposedJdbcRepository`. There is no shared database, raw SQL/JDBC escape hatch, XA transaction, or end-to-end exactly-once claim.
 
+## Business requirements and test evidence
+
+The design in `docs/superpowers/specs/2026-07-22-issue-555-usage-billing-microservices-design.md`
+is an extraction guide, not a reason to split every application. A physical
+boundary is justified only when ownership, deployment, or scaling is
+independent and the team can operate the resulting failure modes.
+
+| Requirement | Boundary rule | Evidence and operational meaning |
+|---|---|---|
+| Keep each service financially self-contained | A service commits its local fact and `PENDING` outbox row in one local PostgreSQL transaction | Composition tests start five databases; no test can accidentally pass through a shared table |
+| Accept at-least-once Kafka delivery | Relay uses owner/lease fencing; receiver records `(tenantId, eventId, payloadDigest)` in an inbox before local effect | `RestartIntegrationTest`, `OutageIntegrationTest`, and `BrokerPathRecoveryIntegrationTest` prove retries converge without duplicate money |
+| Reject contract drift safely | Unknown schema, invalid envelope, or same event ID with a different digest becomes durable quarantine | `PoisonIntegrationTest` and `SchemaEvolutionIntegrationTest` preserve unrelated progress and audit redrive |
+| Preserve ordering and correction meaning | Aggregate version/partition key and explicit correction events are retained across topics | `OrderingIntegrationTest` and `CorrectionIntegrationTest` prove deferral and append-only correction |
+| Protect tenant boundaries | Every local query and wire envelope carries tenant identity; Query is read-only | `TenantIsolationIntegrationTest` verifies cross-tenant data cannot be read or applied |
+
+Run the service-local tests before the composition suite. The former explains a
+single service's contract; the latter proves the new network/database boundary.
+These tests do not prove Kafka EOS, XA, tax/accounting compliance, or real
+production capacity.
+
 ![Service ownership and delivery boundaries](../../docs/images/readme-diagrams/usage-billing-microservices-architecture-01.png)
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-architecture-01.svg)

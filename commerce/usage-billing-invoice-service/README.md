@@ -29,6 +29,15 @@ do not prove tax, accounting, or external document-delivery compliance.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)
 
+## Business requirements and test evidence
+
+Invoice is an append-only customer-facing record. A correction points to the
+earlier charge; it never edits the earlier line. `InvoiceServiceApplicationContractTest`
+covers the local API/envelope contract, and `InvoiceInboxPostgresIntegrationTest`
+proves inbox uniqueness, correction materialization, atomic outbox writes, and
+publisher fencing. Tax calculation and external document delivery are outside
+this example.
+
 ## Responsibility
 
 - decode Billing-owned wire envelopes locally, without sharing producer DTOs;

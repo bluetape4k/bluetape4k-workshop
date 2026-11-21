@@ -49,16 +49,78 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.util.*
 
+/**
+ * VoucherPoolRepository은 사전 생성 바우처 풀 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal interface VoucherPoolRepository {
 
+    /**
+     * transactionTime은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun transactionTime(): Instant
+    /**
+     * createCampaign은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param campaign 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun createCampaign(campaign: CampaignRecord): CampaignRecord
+    /**
+     * lockCampaignForUpdate은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun lockCampaignForUpdate(tenantId: String, campaignId: UUID): CampaignRecord?
+    /**
+     * userIdentityKeyVersion은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun userIdentityKeyVersion(tenantId: String, campaignId: UUID): Int?
+    /**
+     * updateCampaign은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param campaign 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param expectedRevision 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun updateCampaign(campaign: CampaignRecord, expectedRevision: Long): CampaignRecord
+    /**
+     * createBatch은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param batch 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun createBatch(batch: BatchRecord): BatchRecord
+    /**
+     * lockBatchForUpdate은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun lockBatchForUpdate(tenantId: String, batchId: UUID): BatchRecord?
+    /**
+     * insertPreparedEntries은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param entries 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun insertPreparedEntries(entries: List<PreparedVoucherEntryRecord>)
+    /**
+     * committedOrdinalDigests은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun committedOrdinalDigests(
         tenantId: String,
         batchId: UUID,
@@ -66,6 +128,11 @@ internal interface VoucherPoolRepository {
         count: Int,
     ): List<CommittedOrdinalDigest>
 
+    /**
+     * updateBatchCheckpoint은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun updateBatchCheckpoint(
         batch: BatchRecord,
         nextSourceOrdinal: Long,
@@ -76,49 +143,133 @@ internal interface VoucherPoolRepository {
         lastFailureCode: String?,
     ): BatchRecord
 
+    /**
+     * markBatchTerminalFailure은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun markBatchTerminalFailure(
         batch: BatchRecord,
         rejectedCount: Long,
         failureCode: String,
     ): BatchRecord
 
+    /**
+     * batchOrdinalCoverage은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun batchOrdinalCoverage(tenantId: String, batchId: UUID): BatchOrdinalCoverage
+    /**
+     * activateBatch은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param batch 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun activateBatch(batch: BatchRecord): BatchRecord
+    /**
+     * updateBatchState은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param batch 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param state 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun updateBatchState(batch: BatchRecord, state: BatchState): BatchRecord
+    /**
+     * lockCampaignForShare은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun lockCampaignForShare(tenantId: String, campaignId: UUID): CampaignRecord
+    /**
+     * lockBatchForShare은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun lockBatchForShare(tenantId: String, batchId: UUID): BatchRecord
+    /**
+     * lockUserLimit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param userDigest 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun lockUserLimit(tenantId: String, campaignId: UUID, userDigest: ByteArray): UserLimitRecord
+    /**
+     * selectAvailableEntrySkipLocked은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun selectAvailableEntrySkipLocked(
         tenantId: String,
         campaignId: UUID,
         lockedBatchIds: List<UUID>,
     ): EntryRecord?
 
+    /**
+     * lockReservationGuards은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun lockReservationGuards(
         tenantId: String,
         campaignId: UUID,
         userDigest: ByteArray,
     ): ReservationGuards?
 
+    /**
+     * hasAvailableEligibleEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun hasAvailableEligibleEntry(
         tenantId: String,
         campaignId: UUID,
         lockedBatchIds: List<UUID>,
     ): Boolean
 
+    /**
+     * createReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun createReservation(
         reservation: ReservationRecord,
         entry: EntryRecord,
         userLimit: UserLimitRecord,
     ): ReservationRecord
 
+    /**
+     * lockReservationChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun lockReservationChain(
         tenantId: String,
         reservationId: UUID,
         userDigest: ByteArray,
     ): LockedReservationChain?
 
+    /**
+     * releaseReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param chain 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun releaseReservation(chain: LockedReservationChain): ReservationRecord
+    /**
+     * allocateReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun allocateReservation(
         chain: LockedReservationChain,
         allocation: AllocationRecord,
@@ -126,29 +277,55 @@ internal interface VoucherPoolRepository {
         verificationKeyVersion: Int,
     ): LockedAllocationChain
 
+    /**
+     * lockAllocationChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun lockAllocationChain(
         tenantId: String,
         allocationId: UUID,
         userDigest: ByteArray?,
     ): LockedAllocationChain?
 
+    /**
+     * lockReplacementChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun lockReplacementChain(
         tenantId: String,
         allocationId: UUID,
         userDigest: ByteArray,
     ): LockedReplacementChain?
 
+    /**
+     * replaceLostReveal은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun replaceLostReveal(
         chain: LockedReplacementChain,
         reservation: ReservationRecord,
     ): ReservationRecord
 
+    /**
+     * transitionAllocationTerminal은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun transitionAllocationTerminal(
         chain: LockedAllocationChain,
         state: EntryState,
         reason: String,
     ): LockedAllocationChain
 
+    /**
+     * lockReservedCryptoEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun lockReservedCryptoEntry(
         tenantId: String,
         campaignId: UUID,
@@ -158,14 +335,36 @@ internal interface VoucherPoolRepository {
         expectedRevision: Long,
     ): LockedVoucherCryptoRecord?
 
+    /**
+     * lockCanonicalChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param candidate 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun lockCanonicalChain(candidate: WorkerCandidate): LockedWorkerChain?
+    /**
+     * expireReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param chain 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun expireReservation(chain: LockedWorkerChain): Boolean
+    /**
+     * terminalizeWorkerEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun terminalizeWorkerEntry(
         chain: LockedWorkerChain,
         targetState: EntryState,
         reasonCode: String,
     ): Boolean
 
+    /**
+     * lockAllocatedCryptoEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun lockAllocatedCryptoEntry(
         tenantId: String,
         campaignId: UUID,
@@ -175,8 +374,27 @@ internal interface VoucherPoolRepository {
         expectedRevision: Long,
     ): LockedVoucherCryptoRecord?
 
+    /**
+     * eraseVoucherCiphertext은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param entryId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param expectedRevision 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun eraseVoucherCiphertext(tenantId: String, entryId: UUID, expectedRevision: Long)
+    /**
+     * advanceAllocationRevision은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param allocation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun advanceAllocationRevision(allocation: AllocationRecord): AllocationRecord
+    /**
+     * quarantineVoucherCrypto은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun quarantineVoucherCrypto(
         tenantId: String,
         entryId: UUID,
@@ -185,13 +403,20 @@ internal interface VoucherPoolRepository {
         reasonCode: String,
     )
 
+    /**
+     * appendAudit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param event 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun appendAudit(event: VoucherPoolAuditRecord)
 }
 
 /**
  * transaction-bound PostgreSQL authority repository입니다.
  *
- * bluetape4k [io.bluetape4k.exposed.jdbc.repository.JdbcRepository]처럼 caller가 active Exposed transaction을 제공합니다.
+ * bluetape4k [io.bluetape4k.exposed.jdbc.repository.JdbcRepository]처럼 caller가 active Exposed
+ * transaction을 제공합니다.
  * campaign/batch/user-limit의 일반 CRUD·CAS와 tenant-scoped 조회는 Exposed table/DSL을 사용합니다.
  * raw JDBC 잔여 경계는 다음 PostgreSQL 전용 경로뿐입니다.
  *
@@ -207,6 +432,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
 
     internal companion object: KLogging()
 
+    /**
+     * `connection`은 바우처·프로모션에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val connection: Connection
         get() = TransactionManager.currentOrNull()
             ?.connection
@@ -214,6 +444,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             ?: error("voucher pool repository requires an active JDBC transaction")
 
 
+    /** PostgreSQL transaction snapshot을 authority 시간으로 사용하므로 DSL로 대체하지 않습니다. */
     /** PostgreSQL transaction snapshot을 authority 시간으로 사용하므로 DSL로 대체하지 않습니다. */
     override fun transactionTime(): Instant =
         connection.prepareStatement("SELECT transaction_timestamp()").use { statement ->
@@ -223,6 +454,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
         }
 
+    /**
+     * createCampaign은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param campaign 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun createCampaign(campaign: CampaignRecord): CampaignRecord {
         VoucherPoolCampaignTable.insert {
             it[VoucherPoolCampaignTable.tenantId] = campaign.tenantId
@@ -241,6 +478,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return lockCampaignForUpdate(campaign.tenantId, campaign.campaignId).checkNotNull { "lock campaign for update" }
     }
 
+    /**
+     * lockCampaignForUpdate은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockCampaignForUpdate(
         tenantId: String,
         campaignId: UUID,
@@ -254,6 +496,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         .singleOrNull()
         ?.campaignRecord()
 
+    /**
+     * userIdentityKeyVersion은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun userIdentityKeyVersion(tenantId: String, campaignId: UUID): Int? =
         VoucherPoolCampaignTable
             .select(VoucherPoolCampaignTable.userIdentityKeyVersion)
@@ -264,6 +513,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.get(VoucherPoolCampaignTable.userIdentityKeyVersion)
 
+    /**
+     * updateCampaign은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun updateCampaign(
         campaign: CampaignRecord,
         expectedRevision: Long,
@@ -288,6 +542,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return lockCampaignForUpdate(campaign.tenantId, campaign.campaignId).checkNotNull { "lock campaign for update" }
     }
 
+    /**
+     * createBatch은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param batch 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun createBatch(batch: BatchRecord): BatchRecord {
         VoucherPoolBatchTable.insert {
             it[VoucherPoolBatchTable.tenantId] = batch.tenantId
@@ -312,6 +572,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .checkNotNull { "lock batch does not exist. tenantId=${batch.tenantId}, batchId=${batch.batchId}" }
     }
 
+    /**
+     * lockBatchForUpdate은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun lockBatchForUpdate(tenantId: String, batchId: UUID): BatchRecord? =
         VoucherPoolBatchTable
             .selectAll()
@@ -323,6 +590,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.batchRecord()
 
+    /**
+     * insertPreparedEntries은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param entries 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun insertPreparedEntries(entries: List<PreparedVoucherEntryRecord>) {
         entries.forEach { entry ->
             VoucherPoolCodeDedupTable.insert {
@@ -368,6 +641,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
     }
 
+    /**
+     * committedOrdinalDigests은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun committedOrdinalDigests(
         tenantId: String,
         batchId: UUID,
@@ -392,6 +670,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             )
         }
 
+    /**
+     * updateBatchCheckpoint은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun updateBatchCheckpoint(
         batch: BatchRecord,
         nextSourceOrdinal: Long,
@@ -420,6 +703,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .checkNotNull { "lock batch does not exist. tenantId=${batch.tenantId}, batchId=${batch.batchId}" }
     }
 
+    /**
+     * markBatchTerminalFailure은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun markBatchTerminalFailure(
         batch: BatchRecord,
         rejectedCount: Long,
@@ -443,6 +731,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .checkNotNull { "lock batch does not exist. tenantId=${batch.tenantId}, batchId=${batch.batchId}" }
     }
 
+    /**
+     * batchOrdinalCoverage은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun batchOrdinalCoverage(
         tenantId: String,
         batchId: UUID,
@@ -464,6 +757,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         )
     }
 
+    /**
+     * activateBatch은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param batch 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun activateBatch(batch: BatchRecord): BatchRecord {
         val updated = VoucherPoolBatchTable.update({
             (VoucherPoolBatchTable.tenantId eq batch.tenantId) and
@@ -480,6 +779,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .checkNotNull { "lock batch does not exist. tenantId=${batch.tenantId}, batchId=${batch.batchId}" }
     }
 
+    /**
+     * updateBatchState은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param batch 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param state 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun updateBatchState(batch: BatchRecord, state: BatchState): BatchRecord {
         val updated = VoucherPoolBatchTable.update({
             (VoucherPoolBatchTable.tenantId eq batch.tenantId) and
@@ -495,10 +801,18 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .checkNotNull { "lock batch does not exist. tenantId=${batch.tenantId}, batchId=${batch.batchId}" }
     }
 
+    /**
+     * lockCampaignForShare은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun lockCampaignForShare(tenantId: String, campaignId: UUID): CampaignRecord =
         lockCampaignForShareOrNull(connection, tenantId, campaignId)
             .checkNotNull { "campaign campaign campaign does not exist. tenantId=$tenantId, campaignId=$campaignId" }
 
+    /** Exposed DSL에 동등한 PostgreSQL `FOR SHARE` 표현이 없어 공유 row lock은 raw로 보존합니다. */
     /** Exposed DSL에 동등한 PostgreSQL `FOR SHARE` 표현이 없어 공유 row lock은 raw로 보존합니다. */
     private fun lockCampaignForShareOrNull(
         connection: Connection,
@@ -516,6 +830,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
         }
 
+    /**
+     * lockBatchForShare은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun lockBatchForShare(tenantId: String, batchId: UUID): BatchRecord =
         // `FOR SHARE`는 campaign/batch guard의 canonical lock ordering을 보존하기 위한 PostgreSQL 경계입니다.
         connection.prepareStatement(
@@ -529,6 +850,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
         }
 
+    /**
+     * lockUserLimit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockUserLimit(
         tenantId: String,
         campaignId: UUID,
@@ -556,6 +882,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             ?: error("user_digest does not exist. tenantId=$tenantId, campaignId=$campaignId")
     }
 
+    /**
+     * selectAvailableEntrySkipLocked은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun selectAvailableEntrySkipLocked(
         tenantId: String,
         campaignId: UUID,
@@ -582,6 +914,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
     }
 
+    /**
+     * lockReservationGuards은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockReservationGuards(
         tenantId: String,
         campaignId: UUID,
@@ -594,6 +931,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return ReservationGuards(campaign, batches, lockUserLimit(tenantId, campaignId, userDigest))
     }
 
+    /**
+     * hasAvailableEligibleEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun hasAvailableEligibleEntry(
         tenantId: String,
         campaignId: UUID,
@@ -626,6 +968,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull() != null
     }
 
+    /**
+     * createReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun createReservation(
         reservation: ReservationRecord,
         entry: EntryRecord,
@@ -654,6 +1001,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .checkNotNull { "Not found locked reservation. tenantId=${reservation.tenantId}, reservationId=${reservation.reservationId}" }
     }
 
+    /**
+     * lockReservationChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockReservationChain(
         tenantId: String,
         reservationId: UUID,
@@ -673,6 +1025,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return LockedReservationChain(campaign, batch, limit, reservation, entry)
     }
 
+    /**
+     * releaseReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param chain 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun releaseReservation(chain: LockedReservationChain): ReservationRecord {
         check(chain.reservation.state == "ACTIVE" && chain.entry.state == EntryState.RESERVED)
         updateReservationState(connection, chain.reservation, "RELEASED")
@@ -709,6 +1067,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
 
     }
 
+    /**
+     * allocateReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun allocateReservation(
         chain: LockedReservationChain,
         allocation: AllocationRecord,
@@ -774,6 +1137,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
     }
 
+    /**
+     * lockAllocationChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockAllocationChain(
         tenantId: String,
         allocationId: UUID,
@@ -792,6 +1160,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return LockedAllocationChain(campaign, batch, limit, reservation, allocation, entry)
     }
 
+    /**
+     * lockReplacementChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockReplacementChain(
         tenantId: String,
         allocationId: UUID,
@@ -827,6 +1200,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         )
     }
 
+    /**
+     * replaceLostReveal은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun replaceLostReveal(
         chain: LockedReplacementChain,
         reservation: ReservationRecord,
@@ -872,6 +1250,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
     }
 
+    /**
+     * transitionAllocationTerminal은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun transitionAllocationTerminal(
         chain: LockedAllocationChain,
         state: EntryState,
@@ -912,6 +1296,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         ).checkNotNull { "lock allocation chain does not exist. tenant_id=${chain.allocation.tenantId}, allocation_id=${chain.allocation.allocationId}" }
     }
 
+    /**
+     * lockReservedCryptoEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockReservedCryptoEntry(
         tenantId: String,
         campaignId: UUID,
@@ -932,6 +1321,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         )
 
     @Suppress("ReturnCount") // Each stale revision must stop before a lower-order row is locked.
+    /**
+     * lockCanonicalChain은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param candidate 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun lockCanonicalChain(candidate: WorkerCandidate): LockedWorkerChain? {
         val campaign = lockCampaignForUpdate(candidate) ?: return null
         val batch = lockBatchForUpdate(candidate) ?: return null
@@ -942,6 +1337,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return LockedWorkerChain(campaign, batch, entry, userLimits, reservations)
     }
 
+    /**
+     * expireReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param chain 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun expireReservation(chain: LockedWorkerChain): Boolean {
         val reservation = chain.reservations.singleOrNull() ?: return false
         val userLimit = chain.userLimits.singleOrNull() ?: return false
@@ -989,6 +1390,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return true
     }
 
+    /**
+     * terminalizeWorkerEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun terminalizeWorkerEntry(
         chain: LockedWorkerChain,
         targetState: EntryState,
@@ -1022,6 +1428,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return true
     }
 
+    /**
+     * appendAudit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param event 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun appendAudit(event: VoucherPoolAuditRecord) {
         VoucherPoolAuditTable.insert {
             it[tenantId] = event.tenantId
@@ -1039,6 +1451,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
     }
 
+    /**
+     * lockAllocatedCryptoEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun lockAllocatedCryptoEntry(
         tenantId: String,
         campaignId: UUID,
@@ -1050,6 +1467,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         connection, tenantId, campaignId, batchId, entryId, sourceOrdinal, expectedRevision, "ALLOCATED",
     )
 
+    /**
+     * lockCryptoEntry은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lockCryptoEntry(
         connection: Connection,
         tenantId: String,
@@ -1083,6 +1505,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
         }
 
+    /**
+     * eraseVoucherCiphertext은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun eraseVoucherCiphertext(
         tenantId: String,
         entryId: UUID,
@@ -1106,6 +1533,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         check(updated == 1) { "voucher ciphertext erase lost its revision" }
     }
 
+    /**
+     * advanceAllocationRevision은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun advanceAllocationRevision(
         allocation: AllocationRecord,
     ): AllocationRecord {
@@ -1121,6 +1553,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .checkNotNull { "lock allocation does not exist. tenantId=${allocation.tenantId}, allocationId=${allocation.allocationId}" }
     }
 
+    /**
+     * quarantineVoucherCrypto은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     override fun quarantineVoucherCrypto(
         tenantId: String,
         entryId: UUID,
@@ -1163,6 +1600,7 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
     }
 
     /** JDBC transaction을 직접 전달하는 외부 lock helper이므로 Exposed context 없이도 row lock을 유지합니다. */
+    /** JDBC transaction을 직접 전달하는 외부 lock helper이므로 Exposed context 없이도 row lock을 유지합니다. */
     internal fun lockEntry(connection: Connection, tenantId: String, entryId: UUID): EntryRecord =
         connection.prepareStatement("SELECT * FROM voucher_pool_entries WHERE tenant_id=? AND entry_id=? FOR UPDATE")
             .use { statement ->
@@ -1174,6 +1612,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
                 }
             }
 
+    /**
+     * selectWorkerCandidates은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     internal fun selectWorkerCandidates(
         tenantId: String,
         batchId: UUID,
@@ -1210,17 +1653,47 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
     }
 
+    /**
+     * poolDepth은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     internal fun poolDepth(tenantId: String, batchId: UUID): Map<EntryState, Long> {
         val (query, depth) = poolDepthQuery(tenantId, batchId)
         return query.associate { it[VoucherPoolDepthTable.state] to it[depth].checkNotNull("depth") }
     }
 
+    /**
+     * workerCandidatePlanQuery은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     internal fun workerCandidatePlanQuery(tenantId: String, batchId: UUID, limit: Int): Query =
         workerEntryQuery(tenantId, batchId, limit)
 
+    /**
+     * poolDepthPlanQuery은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     internal fun poolDepthPlanQuery(tenantId: String, batchId: UUID): Query =
         poolDepthQuery(tenantId, batchId).first
 
+    /**
+     * workerEntryQuery은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun workerEntryQuery(tenantId: String, batchId: UUID, limit: Int) =
         VoucherPoolEntryTable
             .select(
@@ -1241,6 +1714,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             )
             .limit(limit)
 
+    /**
+     * poolDepthQuery은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun poolDepthQuery(tenantId: String, batchId: UUID): Pair<Query, Sum<Long>> {
         val depth = VoucherPoolDepthTable.entryCount.sum()
         return VoucherPoolDepthTable
@@ -1250,6 +1730,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .orderBy(VoucherPoolDepthTable.state, SortOrder.ASC) to depth
     }
 
+    /**
+     * transitionPoolDepth은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun transitionPoolDepth(
         connection: Connection,
         tenantId: String,
@@ -1280,6 +1765,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         updatePoolDepth(connection, tenantId, batchId, to, 1)
     }
 
+    /**
+     * ensurePoolDepthRows은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param batchId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun ensurePoolDepthRows(connection: Connection, tenantId: String, batchId: UUID) {
         // depth projection의 idempotent bootstrap은 `ON CONFLICT DO NOTHING`을 보존해야 합니다.
         EntryState.entries.sortedBy(EntryState::name).forEach { state ->
@@ -1295,6 +1788,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
     }
 
+    /**
+     * transitionReplacementPoolDepth은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun transitionReplacementPoolDepth(
         connection: Connection,
         original: EntryRecord,
@@ -1325,6 +1824,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         updatePoolDepth(connection, candidate.tenantId, candidate.batchId, EntryState.RESERVED, 1)
     }
 
+    /**
+     * updatePoolDepth은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun updatePoolDepth(
         connection: Connection,
         tenantId: String,
@@ -1347,6 +1851,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         check(updated == 1) { "pool depth projection would become negative" }
     }
 
+    /**
+     * incrementPoolDepth은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun incrementPoolDepth(
         connection: Connection,
         tenantId: String,
@@ -1370,6 +1879,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
     }
 
+    /**
+     * lockExpectedUserLimits은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lockExpectedUserLimits(
         connection: Connection,
         candidate: WorkerCandidate,
@@ -1381,6 +1895,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return locked
     }
 
+    /**
+     * lockExpectedReservations은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lockExpectedReservations(
         connection: Connection,
         candidate: WorkerCandidate,
@@ -1392,6 +1911,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         return locked
     }
 
+    /**
+     * lockCampaignForUpdate은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param candidate 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockCampaignForUpdate(candidate: WorkerCandidate): CampaignRecord? =
         VoucherPoolCampaignTable
             .selectAll()
@@ -1404,6 +1929,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.campaignRecord()
 
+    /**
+     * eligibleBatchIds은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun eligibleBatchIds(tenantId: String, campaignId: UUID): List<UUID> =
         VoucherPoolBatchTable
             .select(VoucherPoolBatchTable.batchId)
@@ -1421,6 +1953,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
                 it[VoucherPoolBatchTable.batchId]
             }
 
+    /**
+     * campaignBatchIds은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param campaignId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun campaignBatchIds(connection: Connection, tenantId: String, campaignId: UUID): List<UUID> =
         VoucherPoolBatchTable
             .select(VoucherPoolBatchTable.batchId)
@@ -1431,6 +1971,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .orderBy(VoucherPoolBatchTable.batchId to SortOrder.ASC)
             .map { it[VoucherPoolBatchTable.batchId] }
 
+    /**
+     * lockEligibleBatchForShare은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lockEligibleBatchForShare(
         connection: Connection,
         tenantId: String,
@@ -1451,6 +1996,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             }
         }
 
+    /**
+     * lockBatchForUpdate은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param candidate 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockBatchForUpdate(candidate: WorkerCandidate): BatchRecord? =
         VoucherPoolBatchTable
             .selectAll()
@@ -1464,6 +2015,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.batchRecord()
 
+    /**
+     * lockExistingUserLimit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lockExistingUserLimit(
         connection: Connection,
         candidate: WorkerCandidate,
@@ -1480,6 +2036,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         .singleOrNull()
         ?.userLimitRecord()
 
+    /**
+     * lockReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun lockReservation(
         connection: Connection,
         candidate: WorkerCandidate,
@@ -1498,6 +2059,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         .singleOrNull()
         ?.reservationRecord()
 
+    /**
+     * lockEntryForUpdate은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param candidate 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockEntryForUpdate(connection: Connection, candidate: WorkerCandidate): EntryRecord? = VoucherPoolEntryTable
         .selectAll()
         .where {
@@ -1511,6 +2079,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         .singleOrNull()
         ?.entryRecord()
 
+    /**
+     * findReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param reservationId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun findReservation(connection: Connection, tenantId: String, reservationId: UUID): ReservationRecord? =
         VoucherPoolReservationTable
             .selectAll()
@@ -1521,6 +2097,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.reservationRecord()
 
+    /**
+     * lockReservationById은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param reservationId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockReservationById(connection: Connection, tenantId: String, reservationId: UUID): ReservationRecord? =
         VoucherPoolReservationTable
             .selectAll()
@@ -1532,6 +2116,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.reservationRecord()
 
+    /**
+     * findAllocation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param allocationId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun findAllocation(connection: Connection, tenantId: String, allocationId: UUID): AllocationRecord? =
         VoucherPoolAllocationTable
             .selectAll()
@@ -1542,6 +2134,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.allocationRecord()
 
+    /**
+     * lockAllocationById은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param allocationId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockAllocationById(connection: Connection, tenantId: String, allocationId: UUID): AllocationRecord? =
         VoucherPoolAllocationTable
             .selectAll()
@@ -1553,6 +2153,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             .singleOrNull()
             ?.allocationRecord()
 
+    /**
+     * insertReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param reservation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun insertReservation(connection: Connection, reservation: ReservationRecord) {
         VoucherPoolReservationTable.insert {
             it[VoucherPoolReservationTable.tenantId] = reservation.tenantId
@@ -1571,6 +2178,13 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         }
     }
 
+    /**
+     * workerEntryAudit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param chain 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param reasonCode 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun workerEntryAudit(chain: LockedWorkerChain, reasonCode: String): VoucherPoolAuditRecord =
         VoucherPoolAuditRecord(
             tenantId = chain.entry.tenantId,
@@ -1583,6 +2197,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             reasonCode = reasonCode,
         )
 
+    /**
+     * terminalizeWorkerReservation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun terminalizeWorkerReservation(
         connection: Connection,
         chain: LockedWorkerChain,
@@ -1608,6 +2228,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         )
     }
 
+    /**
+     * terminalizeWorkerAllocation은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을
+     * 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun terminalizeWorkerAllocation(
         connection: Connection,
         chain: LockedWorkerChain,
@@ -1641,6 +2267,14 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         )
     }
 
+    /**
+     * updateReservationState은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param connection 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param reservation 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param state 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun updateReservationState(connection: Connection, reservation: ReservationRecord, state: String) {
         val updated = VoucherPoolReservationTable.update({
             (VoucherPoolReservationTable.tenantId eq reservation.tenantId) and
@@ -1653,6 +2287,11 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         check(updated == 1) { "reservation transition lost its revision" }
     }
 
+    /**
+     * updateUserLimit은 사전 생성 바우처 풀 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun updateUserLimit(
         connection: Connection,
         limit: UserLimitRecord,
@@ -1677,6 +2316,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
         check(updated == 1) { "user limit transition lost its revision" }
     }
 
+/**
+ * campaignRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.campaignRecord(): CampaignRecord =
         CampaignRecord(
             tenantId = this[VoucherPoolCampaignTable.tenantId],
@@ -1695,6 +2340,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             updatedAt = this[VoucherPoolCampaignTable.updatedAt],
         )
 
+/**
+ * batchRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.batchRecord(): BatchRecord =
         BatchRecord(
             tenantId = this[VoucherPoolBatchTable.tenantId],
@@ -1718,6 +2369,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             updatedAt = this[VoucherPoolBatchTable.updatedAt],
         )
 
+/**
+ * entryRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.entryRecord(): EntryRecord =
         EntryRecord(
             tenantId = this[VoucherPoolEntryTable.tenantId],
@@ -1753,6 +2410,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             updatedAt = this[VoucherPoolEntryTable.updatedAt],
         )
 
+/**
+ * reservationRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.reservationRecord(): ReservationRecord =
         ReservationRecord(
             tenantId = this[VoucherPoolReservationTable.tenantId],
@@ -1770,6 +2433,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             revision = this[VoucherPoolReservationTable.revision],
         )
 
+/**
+ * allocationRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.allocationRecord(): AllocationRecord =
         AllocationRecord(
             tenantId = this[VoucherPoolAllocationTable.tenantId],
@@ -1786,6 +2455,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             revision = this[VoucherPoolAllocationTable.revision],
         )
 
+/**
+ * userLimitRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.userLimitRecord(): UserLimitRecord =
         UserLimitRecord(
             tenantId = this[VoucherPoolUserLimitTable.tenantId],
@@ -1797,6 +2472,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             revision = this[VoucherPoolUserLimitTable.revision],
         )
 
+/**
+ * campaignRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultSet.campaignRecord(): CampaignRecord =
         CampaignRecord(
             tenantId = getString("tenant_id"),
@@ -1815,6 +2496,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             updatedAt = getTimestamp("updated_at").toInstant(),
         )
 
+/**
+ * batchRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultSet.batchRecord(): BatchRecord =
         BatchRecord(
             tenantId = getString("tenant_id"),
@@ -1838,6 +2525,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             updatedAt = getTimestamp("updated_at").toInstant(),
         )
 
+/**
+ * entryRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultSet.entryRecord(): EntryRecord =
         EntryRecord(
             tenantId = getString("tenant_id"),
@@ -1873,6 +2566,12 @@ internal class JdbcVoucherPoolRepository: VoucherPoolRepository {
             updatedAt = getTimestamp("updated_at").toInstant(),
         )
 
+/**
+ * lockedVoucherCryptoRecord은 사전 생성 바우처 풀 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultSet.lockedVoucherCryptoRecord(): LockedVoucherCryptoRecord =
         LockedVoucherCryptoRecord(
             state = EntryState.valueOf(getString("state")),

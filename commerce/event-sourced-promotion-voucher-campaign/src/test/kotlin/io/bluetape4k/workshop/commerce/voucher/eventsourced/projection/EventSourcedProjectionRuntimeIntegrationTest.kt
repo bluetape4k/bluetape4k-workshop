@@ -53,19 +53,74 @@ import kotlin.time.Duration.Companion.seconds
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * EventSourcedProjectionRuntimeIntegrationTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventSourcedProjectionRuntimeIntegrationTest {
 
     private companion object: KLogging() {
+/**
+ * postgres은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
 
+/**
+ * INITIAL_TARGET_POSITION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val INITIAL_TARGET_POSITION = 2L
+/**
+ * FINAL_TARGET_POSITION은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val FINAL_TARGET_POSITION = 3L
+/**
+ * FIRST_EVENT_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val FIRST_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc401"
+/**
+ * SECOND_EVENT_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val SECOND_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc402"
+/**
+ * THIRD_EVENT_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val THIRD_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc403"
+/**
+ * STREAM_ID은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val STREAM_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc400")
+/**
+ * RUNTIME_TIMEOUT은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val RUNTIME_TIMEOUT: kotlin.time.Duration = 10.seconds
+/**
+ * RUNTIME_INTERVAL은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val RUNTIME_INTERVAL: kotlin.time.Duration = 100.milliseconds
+/**
+ * TABLES은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val TABLES =
             arrayOf(
                 EventLog,
@@ -83,7 +138,17 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
     }
 
 
+/**
+ * postgresDatabase은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
 
     @BeforeAll
@@ -108,6 +173,12 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "runtime projects active events validates a rebuild and recovers cancellation" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `runtime projects active events validates a rebuild and recovers cancellation`() {
         appendEvents()
         val leases = ProjectionLeaseRepository()
@@ -148,6 +219,12 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "runtime degrades projection health on a failed tick and recovers after a successful
+ * retry" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `runtime degrades projection health on a failed tick and recovers after a successful retry`() {
         appendEvents()
         val leases = ProjectionLeaseRepository()
@@ -186,6 +263,12 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "runtime keeps rebuild poison degraded without inflating the failed poison gauge" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `runtime keeps rebuild poison degraded without inflating the failed poison gauge`() {
         appendEvents()
         val leases = ProjectionLeaseRepository()
@@ -236,6 +319,11 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         }
     }
 
+/**
+ * appendThirdEvent은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun appendThirdEvent() {
         val events = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
         transaction(database) {
@@ -251,6 +339,11 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         }
     }
 
+/**
+ * appendEvents은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun appendEvents() {
         val events = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
         transaction(database) {
@@ -270,6 +363,11 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         }
     }
 
+/**
+ * runtime은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runtime(
         leases: ProjectionLeaseRepository,
         rebuilds: ProjectionRebuildRepository,
@@ -291,6 +389,11 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
             telemetry = telemetry,
         )
 
+/**
+ * runtimeWithRebuildHandler은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runtimeWithRebuildHandler(
         leases: ProjectionLeaseRepository,
         rebuilds: ProjectionRebuildRepository,
@@ -312,12 +415,22 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
             telemetry = telemetry,
         )
 
+/**
+ * awaitActiveCheckpoint은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitActiveCheckpoint(
         projections: ProjectionRepository,
         expectedPosition: Long,
     ) {
         await atMost RUNTIME_TIMEOUT withPollInterval RUNTIME_INTERVAL untilAsserted {
             transaction(database) {
+/**
+ * active은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val active = findActive(VOUCHER_LIFECYCLE_PROJECTION).shouldNotBeNull()
                 projections
                     .checkpoint(ProjectionKey(VOUCHER_LIFECYCLE_PROJECTION, active.generation))
@@ -326,6 +439,11 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         }
     }
 
+/**
+ * awaitActivated은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitActivated(candidate: ProjectionGeneration) {
         await atMost RUNTIME_TIMEOUT withPollInterval RUNTIME_INTERVAL untilAsserted {
             transaction(database) {
@@ -338,14 +456,29 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         }
     }
 
+/**
+ * requestCancellation은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun requestCancellation(rebuilds: ProjectionRebuildRepository): ProjectionKey =
         transaction(database) {
+/**
+ * generation은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val generation =
                 rebuilds.start(VOUCHER_LIFECYCLE_PROJECTION, FINAL_TARGET_POSITION, Clock.systemUTC().instant())
             rebuilds.requestCancellation(generation.key, Clock.systemUTC().instant())
             generation.key
         }
 
+/**
+ * awaitCancelled은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitCancelled(cancelled: ProjectionKey) {
         await atMost RUNTIME_TIMEOUT withPollInterval RUNTIME_INTERVAL untilAsserted {
             transaction(database) {
@@ -354,6 +487,11 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         }
     }
 
+/**
+ * event은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun event(
         eventId: String,
         eventType: String,
@@ -366,12 +504,42 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         )
 }
 
+/**
+ * RecoverableProjectionEventReader 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class RecoverableProjectionEventReader: ProjectionEventReader {
+/**
+ * failureObserved은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val failureObserved = CountDownLatch(1)
+/**
+ * allowRecovery은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val allowRecovery = CountDownLatch(1)
+/**
+ * first은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val first = AtomicBoolean(true)
+/**
+ * delegate은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val delegate = ExposedProjectionEventReader()
 
+/**
+ * loadAfter은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun loadAfter(globalPosition: Long): CommittedProjectionBatch {
         if (first.compareAndSet(true, false)) {
             failureObserved.countDown()

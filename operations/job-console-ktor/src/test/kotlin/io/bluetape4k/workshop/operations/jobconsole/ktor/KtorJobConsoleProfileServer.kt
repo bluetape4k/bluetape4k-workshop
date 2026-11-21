@@ -52,19 +52,61 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
+/**
+ * `KtorJobConsoleProfileAction`은 업무 분기용 제한된 값 집합입니다.
+ * 현재 상태와 aggregate revision을 검증한 뒤 허용된 전이만 실행하는 명령·신호 계약입니다.
+ */
 internal enum class KtorJobConsoleProfileAction(
+/**
+ * profileId은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val profileId: String,
 ) {
+    /**
+     * `KtorJobConsoleProfileAction.BURST`은 `burst` 업무 상황을 나타냅니다. 현재 상태와 aggregate revision을 검증한 뒤
+     * 허용된 전이만 실행합니다.
+     */
     BURST("burst"),
+    /**
+     * `KtorJobConsoleProfileAction.DUPLICATE_STORM`은 `duplicate storm` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     DUPLICATE_STORM("duplicate-storm"),
+    /**
+     * `KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE`은 `redis path outage` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     REDIS_PATH_OUTAGE("redis-path-outage"),
+    /**
+     * `KtorJobConsoleProfileAction.REDIS_KEY_LOSS`은 `redis key loss` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     REDIS_KEY_LOSS("redis-key-loss"),
+    /**
+     * `KtorJobConsoleProfileAction.SLOW_PROVIDER`은 `slow provider` 업무 상황을 나타냅니다. 현재 상태와 aggregate
+     * revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     SLOW_PROVIDER("slow-provider"),
+    /**
+     * `KtorJobConsoleProfileAction.WORKER_RESTART`은 `worker restart` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     WORKER_RESTART("worker-restart"),
+    /**
+     * `KtorJobConsoleProfileAction.DUPLICATE_DELIVERY`은 `duplicate delivery` 업무 상황을 나타냅니다. 현재 상태와
+     * aggregate revision을 검증한 뒤 허용된 전이만 실행합니다.
+     */
     DUPLICATE_DELIVERY("duplicate-delivery"),
     ;
 
     companion object {
+/**
+ * resolve은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun resolve(profileId: String): KtorJobConsoleProfileAction {
             val validProfileId = profileId.requireNotBlank("profileId")
             return entries.singleOrNull { it.profileId == validProfileId }
@@ -73,74 +115,304 @@ internal enum class KtorJobConsoleProfileAction(
     }
 }
 
+/**
+ * KtorStaleAttemptEvidence 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class KtorStaleAttemptEvidence(
+/**
+ * pausedConnections은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val pausedConnections: Int,
+/**
+ * pausedTransactions은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val pausedTransactions: Int,
+/**
+ * pausedLocks은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val pausedLocks: Int,
+/**
+ * oldLeaseToken은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val oldLeaseToken: String,
+/**
+ * pendingCompletedChunk은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val pendingCompletedChunk: Long,
+/**
+ * staleErrorCode은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val staleErrorCode: JobProblemCode,
+/**
+ * serverJobsStopped은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val serverJobsStopped: Boolean,
+/**
+ * oldPortReleased은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val oldPortReleased: Boolean,
+/**
+ * lateEffectCount은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val lateEffectCount: Long,
+/**
+ * lateReceiptCount은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val lateReceiptCount: Long,
 )
 
+/**
+ * KtorRedisPathEvidence 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class KtorRedisPathEvidence(
+/**
+ * effectiveEndpointRoutedThroughProxy은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val effectiveEndpointRoutedThroughProxy: Boolean,
+/**
+ * oldConnectionFailureObserved은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val oldConnectionFailureObserved: Boolean,
+/**
+ * newConnectionFailureObserved은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val newConnectionFailureObserved: Boolean,
+/**
+ * recovered은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val recovered: Boolean,
+/**
+ * durableCancelsDuringOutage은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val durableCancelsDuringOutage: Int,
 )
 
+/**
+ * KtorRedisKeyLossEvidence 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class KtorRedisKeyLossEvidence(
+/**
+ * deletedKeyCount은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val deletedKeyCount: Int,
+/**
+ * durableCancelsAfterKeyLoss은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val durableCancelsAfterKeyLoss: Int,
 )
 
+/**
+ * KtorJobConsoleLiveAdapter 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class KtorJobConsoleLiveAdapter private constructor(
+/**
+ * runId은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val runId: String,
+/**
+ * profile은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val profile: HighContentionProfile,
+/**
+ * fixture은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixture: JobConsoleContainerFixture,
+/**
+ * topology은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val topology: JobConsoleProxiedTopology,
+/**
+ * journal은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val journal: HighContentionJournal,
+/**
+ * journalRoot은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val journalRoot: Path,
 ): JobConsoleLiveProfileAdapter {
 
+/**
+ * action은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val action = KtorJobConsoleProfileAction.resolve(profile.profileId)
+/**
+ * lifecycleLock은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val lifecycleLock = ReentrantReadWriteLock(true)
+/**
+ * winners은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val winners = ConcurrentHashMap<Int, Boolean>()
+/**
+ * jobIdsByIdentity은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val jobIdsByIdentity = ConcurrentHashMap<Int, UUID>()
+/**
+ * scenariosByIdentity은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val scenariosByIdentity = ConcurrentHashMap<Int, JobConsoleScenario>()
+/**
+ * deliveredEventIds은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val deliveredEventIds = ConcurrentHashMap.newKeySet<UUID>()
+/**
+ * restartStarted은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val restartStarted = AtomicBoolean()
+/**
+ * slowProviderStarted은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val slowProviderStarted = AtomicBoolean()
+/**
+ * slowProviderReady은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val slowProviderReady = CompletableFuture<Unit>()
+/**
+ * outageActive은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val outageActive = AtomicBoolean()
+/**
+ * durableCancelsDuringOutage은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val durableCancelsDuringOutage = AtomicInteger()
+/**
+ * durableCancelsAfterKeyLoss은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val durableCancelsAfterKeyLoss = AtomicInteger()
+/**
+ * ownedRedisNamespace은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val ownedRedisNamespace = "hc:v1:$runId:job-ktor:redis-key-loss:"
 
     @Volatile
+/**
+ * measuredBaseline은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var measuredBaseline: JobConsoleAuthorityBaseline? = null
 
     @Volatile
+/**
+ * application은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var application: RunningKtorJobConsole = startApplication()
 
     @Volatile
+/**
+ * staleAttemptEvidence은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var staleAttemptEvidence: KtorStaleAttemptEvidence? = null
 
     @Volatile
+/**
+ * redisPathEvidence은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var redisPathEvidence: KtorRedisPathEvidence? = null
 
     @Volatile
+/**
+ * redisKeyLossEvidence은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var redisKeyLossEvidence: KtorRedisKeyLossEvidence? = null
 
     init {
         check(application.redisUri == topology.redisUri) {
             "Ktor Redis endpoint differs from the proxied endpoint"
         }
+/**
+ * redisSignal은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val redisSignal = checkNotNull(application.runtime.redisSignal) {
             "Ktor did not create the Lettuce cancel signal"
         }
@@ -152,6 +424,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * warmUp은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun warmUp(identity: WorkloadIdentity) {
         lifecycleLock.read {
             val scenario = JobConsoleScenario.fromSeed(identity.namespace, identity.ordinal, workUnits = 1)
@@ -161,6 +438,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * snapshotBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun snapshotBaseline(): String =
         lifecycleLock.write {
             authorityBaseline().also { measuredBaseline = it }.encode().also {
@@ -170,6 +452,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             }
         }
 
+/**
+ * execute은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun execute(
         token: ScheduleToken,
         identity: WorkloadIdentity,
@@ -191,6 +478,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             else -> lifecycleLock.read { executeLiveAction(token, identity) }
         }
 
+/**
+ * injectDeclaredFailure은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun injectDeclaredFailure() {
         when (action) {
             KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE -> injectRedisPathOutage()
@@ -199,6 +491,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * authorityDelta은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun authorityDelta(): JobConsoleAuthorityBaseline {
         val baseline = checkNotNull(measuredBaseline) { "measured baseline was not captured" }
         val current = lifecycleLock.read { authorityBaseline() }
@@ -209,11 +506,26 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         )
     }
 
+/**
+ * winner은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun winner(token: ScheduleToken): Boolean =
         winners[token.stableOrdinal] == true
 
+/**
+ * profileEvidence은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun profileEvidence(): String =
         lifecycleLock.read {
+/**
+ * actionEvidence은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val actionEvidence = when (action) {
                 KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE ->
                     redisPathEvidence?.let {
@@ -240,7 +552,17 @@ internal class KtorJobConsoleLiveAdapter private constructor(
 
                 else                                          -> ""
             }
+/**
+ * retrySummary은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val retrySummary = application.http.retrySummary()
+/**
+ * retryStatusEvidence은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val retryStatusEvidence = retrySummary.statusCounts.entries
                 .joinToString(separator = ";") { (status, count) -> "$status:$count" }
             "hikari=true,maxPool=${application.dataSource.maximumPoolSize}," +
@@ -251,6 +573,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                     "retryDelayMillis=${retrySummary.cumulativeDelay.toMillis()}$actionEvidence"
         }
 
+/**
+ * assertProfileInvariants은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun assertProfileInvariants(delta: JobConsoleAuthorityBaseline) {
         check(delta.jobs > 0) { "measured workload did not create durable Job authority" }
         check(delta.effects > 0) { "measured workload did not create durable history" }
@@ -317,6 +644,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * close은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun close() {
         var failure: Throwable? = null
         listOf<() -> Unit>(
@@ -335,13 +667,33 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         failure?.let { throw it }
     }
 
+/**
+ * executeLiveAction은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun executeLiveAction(
         token: ScheduleToken,
         identity: WorkloadIdentity,
     ): WorkloadTerminalDisposition {
+/**
+ * scenario은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val scenario = scenarioFor(token, identity)
         scenariosByIdentity.putIfAbsent(identity.ordinal, scenario)
+/**
+ * submitted은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val submitted = application.http.submit(scenario)
+/**
+ * winner은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val winner = jobIdsByIdentity.putIfAbsent(identity.ordinal, submitted.jobId) == null
         winners[token.stableOrdinal] = winner
         check(jobIdsByIdentity.getValue(identity.ordinal) == submitted.jobId) {
@@ -350,6 +702,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
 
         when (action) {
             KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE -> {
+/**
+ * beganDuringOutage은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val beganDuringOutage = outageActive.get()
                 application.http.cancel(submitted.jobId, scenario)
                 if (beganDuringOutage) durableCancelsDuringOutage.incrementAndGet()
@@ -363,6 +720,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             KtorJobConsoleProfileAction.DUPLICATE_DELIVERY -> {
                 if (winner) {
                     completeThroughOwnedWorker(submitted.jobId)
+/**
+ * claim은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                     val claim = application.runtime.outboxRepository.claim(16, Duration.ofSeconds(5))
                     claim.events.forEach { event ->
                         check(application.runtime.outboxRepository.markPublished(claim.token, event.eventId))
@@ -386,19 +748,44 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         return WorkloadTerminalDisposition.COMPLETED
     }
 
+/**
+ * submitAndComplete은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun submitAndComplete(
         token: ScheduleToken,
         identity: WorkloadIdentity,
     ): WorkloadTerminalDisposition {
+/**
+ * scenario은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val scenario = JobConsoleScenario.fromSeed(profile.seed, identity.ordinal, workUnits = 1)
         scenariosByIdentity.putIfAbsent(identity.ordinal, scenario)
+/**
+ * submitted은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val submitted = application.http.submit(scenario)
+/**
+ * winner은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val winner = jobIdsByIdentity.putIfAbsent(identity.ordinal, submitted.jobId) == null
         winners[token.stableOrdinal] = winner
         if (winner) completeThroughOwnedWorker(submitted.jobId)
         return WorkloadTerminalDisposition.COMPLETED
     }
 
+/**
+ * executeSlowProvider은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun executeSlowProvider(
         token: ScheduleToken,
         identity: WorkloadIdentity,
@@ -423,6 +810,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         return WorkloadTerminalDisposition.COMPLETED
     }
 
+/**
+ * awaitSlowProviderBoundary은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitSlowProviderBoundary() {
         try {
             slowProviderReady.get(profile.workloadJoinDeadlineMs, TimeUnit.MILLISECONDS)
@@ -434,6 +826,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * completeThroughOwnedWorker은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun completeThroughOwnedWorker(jobId: UUID) {
         val deadline = System.nanoTime() + Duration.ofMillis(profile.recoveryDeadlineMs).toNanos()
         do {
@@ -444,22 +841,67 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         error("application-owned Ktor worker did not complete job[$jobId]")
     }
 
+/**
+ * runFencedAttemptScenario은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runFencedAttemptScenario(
         restartApplication: Boolean,
         identity: WorkloadIdentity,
     ) {
+/**
+ * scenario은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val scenario = JobConsoleScenario.fromSeed(profile.seed, identity.ordinal, workUnits = 1)
         scenariosByIdentity.putIfAbsent(identity.ordinal, scenario)
+/**
+ * submitted은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val submitted = application.http.submit(scenario)
         jobIdsByIdentity.putIfAbsent(identity.ordinal, submitted.jobId)
+/**
+ * oldClaim은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val oldClaim = checkNotNull(
             application.runtime.repository.claimNext(scenario.scope.tenantId, Duration.ofMillis(10)),
         )
+/**
+ * staleDataSource은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val staleDataSource = createProfileOwnedDataSource()
+/**
+ * staleRepository은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val staleRepository = JobRepository(staleDataSource)
+/**
+ * barrier은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val barrier = JobConsoleBarrier(1)
+/**
+ * staleExecutor은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val staleExecutor = VirtualThreads.executorService()
         try {
+/**
+ * staleAttempt은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val staleAttempt = staleExecutor.submit<JobProblemCode> {
                 check(barrier.readyAndAwait(Duration.ofMillis(profile.failureDetectionDeadlineMs))) {
                     "stale Ktor attempt barrier timed out"
@@ -474,11 +916,36 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             check(barrier.awaitReady(Duration.ofMillis(profile.failureDetectionDeadlineMs))) {
                 "stale Ktor attempt did not reach its transaction-free pause"
             }
+/**
+ * pausedConnections은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val pausedConnections = staleDataSource.hikariPoolMXBean.activeConnections
+/**
+ * oldLeaseToken은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val oldLeaseToken = oldClaim.lease.token.toString()
+/**
+ * serverJobsStopped은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             var serverJobsStopped = true
+/**
+ * oldPortReleased은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             var oldPortReleased = true
             if (restartApplication) {
+/**
+ * oldApplication은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val oldApplication = application
                 closeApplication(oldApplication)
                 serverJobsStopped = oldApplication.runtime.backgroundJobsStopped
@@ -486,20 +953,50 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                 application = startApplication()
             }
 
+/**
+ * replacement은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val replacement = awaitReplacementClaim(scenario.scope.tenantId)
+/**
+ * checkpoint은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val checkpoint = application.runtime.repository.checkpoint(
                 replacement.lease,
                 completedChunk = 1,
                 progress = 100,
             )
             application.runtime.repository.complete(checkpoint.lease, JobSignal.SUCCESS)
+/**
+ * converged은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val converged = application.http.snapshot(submitted.jobId, scenario)
             check(converged.state == "succeeded")
+/**
+ * beforeRelease은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val beforeRelease = authorityBaseline(submitted.jobId)
 
             barrier.release()
+/**
+ * staleCode은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val staleCode = staleAttempt.get(profile.recoveryDeadlineMs, TimeUnit.MILLISECONDS)
             check(staleCode == JobProblemCode.LEASE_LOST)
+/**
+ * afterRelease은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val afterRelease = authorityBaseline(submitted.jobId)
             staleAttemptEvidence = KtorStaleAttemptEvidence(
                 pausedConnections = pausedConnections,
@@ -519,6 +1016,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * awaitReplacementClaim은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitReplacementClaim(
         tenantId: String,
     ): io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob {
@@ -531,6 +1033,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * assertStaleAttemptEvidence은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertStaleAttemptEvidence() {
         val evidence = checkNotNull(staleAttemptEvidence)
         check(evidence.pausedConnections == 0)
@@ -545,6 +1052,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         check(evidence.lateReceiptCount == 0L)
     }
 
+/**
+ * injectRedisPathOutage은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun injectRedisPathOutage() {
         val oldConnection = topology.openRedisConnection()
         check(oldConnection.ping() == "PONG")
@@ -576,6 +1088,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         )
     }
 
+/**
+ * awaitRedisRecovery은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun awaitRedisRecovery(): Boolean {
         return runCatching {
             HighContentionAwait.condition(
@@ -592,6 +1109,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }.getOrDefault(false)
     }
 
+/**
+ * seedOwnedRedisKeys은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun seedOwnedRedisKeys() {
         RedisClient.create(topology.redisUri).use { client ->
             client.connect().use { connection ->
@@ -602,6 +1124,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * deleteOwnedRedisKeys은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun deleteOwnedRedisKeys() {
         RedisClient.create(topology.redisUri).use { client ->
             client.connect().use { connection ->
@@ -618,6 +1145,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * startApplication은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun startApplication(): RunningKtorJobConsole {
         val dataSource = createProfileOwnedDataSource("job-ktor-${Uuid.V7.nextId()}")
         val workerGate = CompletableDeferred<Unit>()
@@ -653,6 +1185,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         }
     }
 
+/**
+ * closeApplication은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun closeApplication(running: RunningKtorJobConsole) {
         if (!running.dataSource.isClosed) {
             running.stop()
@@ -662,6 +1199,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         check(canBind(running.port)) { "Ktor port[${running.port}] remained bound after stop" }
     }
 
+/**
+ * createProfileOwnedDataSource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun createProfileOwnedDataSource(
         poolName: String = "job-ktor-stale-attempt",
     ): HikariDataSource =
@@ -676,32 +1218,77 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             },
         )
 
+/**
+ * authorityBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun authorityBaseline(): JobConsoleAuthorityBaseline =
         JobConsoleAuthorityQueries.baseline(application.dataSource)
 
+/**
+ * authorityBaseline은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun authorityBaseline(jobId: UUID): JobConsoleAuthorityBaseline =
         JobConsoleAuthorityQueries.baseline(application.dataSource, jobId)
 
+/**
+ * duplicateOutboxLogicalEventCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun duplicateOutboxLogicalEventCount(): Long =
         JobConsoleAuthorityQueries.duplicateOutboxLogicalEventCount(application.dataSource)
 
+/**
+ * burstQueueViolationCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun burstQueueViolationCount(): Long =
         JobConsoleAuthorityQueries.burstQueueViolationCount(application.dataSource)
 
+/**
+ * activeJobCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activeJobCount(): Long =
         JobConsoleAuthorityQueries.activeJobCount(application.dataSource)
 
+/**
+ * queueVersionDivergenceCount은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun queueVersionDivergenceCount(): Long =
         JobConsoleAuthorityQueries.queueVersionDivergenceCount(application.dataSource)
 
+/**
+ * scenarioFor은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun scenarioFor(
         token: ScheduleToken,
         identity: WorkloadIdentity,
     ): JobConsoleScenario {
+/**
+ * identityScenario은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val identityScenario = JobConsoleScenario.fromSeed(profile.seed, identity.ordinal, workUnits = 1)
         if (action != KtorJobConsoleProfileAction.BURST) {
             return identityScenario
         }
+/**
+ * authorityScope은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val authorityScope = JobConsoleScenario.fromSeed(
             seed = "${profile.seed}:authority",
             ordinal = token.authorityOrdinal,
@@ -715,18 +1302,58 @@ internal class KtorJobConsoleLiveAdapter private constructor(
     }
 
     companion object {
+/**
+ * create은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun create(
             runId: String,
             profile: HighContentionProfile,
         ): KtorJobConsoleLiveAdapter {
+/**
+ * validRunId은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val validRunId = runId.requireNotBlank("runId")
+/**
+ * journalRoot은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val journalRoot = Files.createTempDirectory("job-ktor-high-contention-")
+/**
+ * journal은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val journal = HighContentionJournal.open(journalRoot, Path.of("topology.ndjson"))
+/**
+ * resources은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val resources = dockerResources(validRunId, profile.profileId)
+/**
+ * topology은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             var topology: JobConsoleProxiedTopology? = null
+/**
+ * fixture은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             var fixture: JobConsoleContainerFixture? = null
             return try {
                 topology = JobConsoleContainerFixture.proxiedRedis(journal, resources)
+/**
+ * postgres은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val postgres = PostgreSQLServer.Launcher.postgres
                 fixture = JobConsoleContainerFixture(
                     jdbcUrl = postgres.jdbcUrl,
@@ -768,6 +1395,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             }
         }
 
+/**
+ * dockerResources은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun dockerResources(
             runId: String,
             profileId: String,
@@ -778,6 +1410,11 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                 toxiproxy = dockerResource(runId, profileId, "ktor-redis-toxiproxy", "container"),
             )
 
+/**
+ * dockerResource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         private fun dockerResource(
             runId: String,
             profileId: String,
@@ -797,44 +1434,189 @@ internal class KtorJobConsoleLiveAdapter private constructor(
     }
 }
 
+/**
+ * RunningKtorJobConsole 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class RunningKtorJobConsole(
+/**
+ * dataSource은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val dataSource: HikariDataSource,
+/**
+ * runtime은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val runtime: JobConsoleKtorRuntime,
+/**
+ * redisUri은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val redisUri: String,
+/**
+ * port은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val port: Int,
+/**
+ * http은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val http: KtorJobConsoleHttpClient,
+/**
+ * stop은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val stop: () -> Unit,
 )
 
+/**
+ * KtorJobConsoleHttpSnapshot 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class KtorJobConsoleHttpSnapshot(
+/**
+ * jobId은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val jobId: UUID,
+/**
+ * state은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val state: String,
+/**
+ * retryAttempts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val retryAttempts: Int = 0,
+/**
+ * retryStatuses은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val retryStatuses: List<Int> = emptyList(),
+/**
+ * retryDelay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val retryDelay: Duration = Duration.ZERO,
 )
 
+/**
+ * KtorJobConsoleRetrySummary 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal data class KtorJobConsoleRetrySummary(
+/**
+ * requestCount은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val requestCount: Int,
+/**
+ * retryCount은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val retryCount: Int,
+/**
+ * statusCounts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val statusCounts: Map<Int, Int>,
+/**
+ * cumulativeDelay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val cumulativeDelay: Duration,
 )
 
+/**
+ * KtorJobConsoleHttpResult 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private data class KtorJobConsoleHttpResult(
+/**
+ * response은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val response: HttpResponse<String>,
+/**
+ * retryAttempts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val retryAttempts: Int,
+/**
+ * retryStatuses은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val retryStatuses: List<Int>,
+/**
+ * retryDelay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val retryDelay: Duration,
 )
 
+/**
+ * KtorJobConsoleRetryAccumulator 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class KtorJobConsoleRetryAccumulator {
+/**
+ * requestCount은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var requestCount: Int = 0
+/**
+ * retryCount은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var retryCount: Int = 0
+/**
+ * statusCounts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val statusCounts: MutableMap<Int, Int> = mutableMapOf()
+/**
+ * cumulativeDelay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var cumulativeDelay: Duration = Duration.ZERO
 
     @Synchronized
+/**
+ * record은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun record(result: KtorJobConsoleHttpResult) {
         requestCount++
         retryCount += result.retryAttempts
@@ -845,6 +1627,11 @@ private class KtorJobConsoleRetryAccumulator {
     }
 
     @Synchronized
+/**
+ * snapshot은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun snapshot(): KtorJobConsoleRetrySummary =
         KtorJobConsoleRetrySummary(
             requestCount = requestCount,
@@ -854,21 +1641,61 @@ private class KtorJobConsoleRetryAccumulator {
         )
 }
 
+/**
+ * KtorJobConsoleHttpClient 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class KtorJobConsoleHttpClient(
+/**
+ * baseUri은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val baseUri: URI,
+/**
+ * client은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val client: HttpClient = HttpClient.newBuilder()
         .proxy(ProxySelector.of(null))
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
+/**
+ * sendRequest은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val sendRequest: ((HttpRequest) -> HttpResponse<String>)? = null,
+/**
+ * delay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val delay: (Duration) -> Unit = { duration ->
         TimeUnit.NANOSECONDS.sleep(duration.toNanos())
     },
 ) {
+/**
+ * retryAccumulator은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val retryAccumulator = KtorJobConsoleRetryAccumulator()
 
+/**
+ * retrySummary은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     internal fun retrySummary(): KtorJobConsoleRetrySummary = retryAccumulator.snapshot()
 
+/**
+ * submit은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun submit(scenario: JobConsoleScenario): KtorJobConsoleHttpSnapshot =
         request(
             method = "POST",
@@ -880,6 +1707,11 @@ internal class KtorJobConsoleHttpClient(
             retryOnTransientSubmissionFailure = true,
         ).toSnapshot()
 
+/**
+ * snapshot은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun snapshot(
         jobId: UUID,
         scenario: JobConsoleScenario,
@@ -891,6 +1723,11 @@ internal class KtorJobConsoleHttpClient(
             expectedStatus = 200,
         ).toSnapshot()
 
+/**
+ * cancel은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun cancel(
         jobId: UUID,
         scenario: JobConsoleScenario,
@@ -902,17 +1739,37 @@ internal class KtorJobConsoleHttpClient(
             expectedStatus = 200,
         ).toSnapshot()
 
+/**
+ * verifyHeartbeat은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun verifyHeartbeat(
         jobId: UUID,
         scenario: JobConsoleScenario,
     ) {
+/**
+ * request은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val request = requestBuilder("/v1/jobs/$jobId/events", scenario)
             .header("Accept", "text/event-stream")
             .GET()
             .build()
+/**
+ * response은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val response = client.send(request, HttpResponse.BodyHandlers.ofInputStream())
         check(response.statusCode() == 200)
         response.body().bufferedReader().use { reader ->
+/**
+ * lines은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val lines = generateSequence(reader::readLine).take(3).toList()
             check(lines.any { it.replace(" ", "") == "event:heartbeat" }) {
                 "Ktor SSE heartbeat was not observed"
@@ -920,6 +1777,11 @@ internal class KtorJobConsoleHttpClient(
         }
     }
 
+/**
+ * request은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun request(
         method: String,
         path: String,
@@ -929,10 +1791,30 @@ internal class KtorJobConsoleHttpClient(
         expectedStatus: Int,
         retryOnTransientSubmissionFailure: Boolean = false,
     ): KtorJobConsoleHttpResult {
+/**
+ * attempt은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var attempt = 0
+/**
+ * cumulativeDelay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var cumulativeDelay = Duration.ZERO
+/**
+ * statuses은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val statuses = ArrayList<Int>(MAX_SUBMISSION_RETRIES + 1)
         while (true) {
+/**
+ * builder은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val builder = requestBuilder(path, scenario)
             idempotencyKey?.let { builder.header("Idempotency-Key", it) }
             if (body == null) {
@@ -941,7 +1823,17 @@ internal class KtorJobConsoleHttpClient(
                 builder.header("Content-Type", "application/json")
                     .method(method, HttpRequest.BodyPublishers.ofString(body))
             }
+/**
+ * request은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val request = builder.build()
+/**
+ * response은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val response = sendRequest?.invoke(request)
                 ?: client.send(request, HttpResponse.BodyHandlers.ofString())
             statuses += response.statusCode()
@@ -950,11 +1842,21 @@ internal class KtorJobConsoleHttpClient(
                 attempt < MAX_SUBMISSION_RETRIES
             ) {
                 attempt++
+/**
+ * retryDelay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val retryDelay = response.retryAfter()
                 cumulativeDelay = cumulativeDelay.plus(retryDelay)
                 delay(retryDelay)
                 continue
             }
+/**
+ * result은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val result = KtorJobConsoleHttpResult(
                 response = response,
                 retryAttempts = attempt,
@@ -973,6 +1875,11 @@ internal class KtorJobConsoleHttpClient(
     }
 
     private fun HttpResponse<String>.retryAfter(): Duration {
+/**
+ * headerDelay은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val headerDelay = headers()
             .firstValue("Retry-After")
             .orElse(null)
@@ -987,6 +1894,11 @@ internal class KtorJobConsoleHttpClient(
         }
     }
 
+/**
+ * requestBuilder은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun requestBuilder(
         path: String,
         scenario: JobConsoleScenario,
@@ -996,6 +1908,11 @@ internal class KtorJobConsoleHttpClient(
             .header("X-Demo-Tenant", scenario.scope.tenantId)
             .header("X-Demo-Submitter", scenario.scope.submitterHash)
 
+/**
+ * toSnapshot은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun KtorJobConsoleHttpResult.toSnapshot(): KtorJobConsoleHttpSnapshot {
         val jobId = JOB_ID.find(response.body())?.groupValues?.get(1)
             ?: error("Ktor response omitted jobId")
@@ -1011,19 +1928,69 @@ internal class KtorJobConsoleHttpClient(
     }
 
     internal companion object {
+/**
+ * TOO_MANY_REQUESTS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TOO_MANY_REQUESTS = 429
+/**
+ * SERVICE_UNAVAILABLE은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val SERVICE_UNAVAILABLE = 503
+/**
+ * MAX_SUBMISSION_RETRIES은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val MAX_SUBMISSION_RETRIES = 8
+/**
+ * MAX_RETRY_AFTER_SECONDS은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val MAX_RETRY_AFTER_SECONDS = 30L
+/**
+ * RETRYABLE_SUBMISSION_STATUSES은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val RETRYABLE_SUBMISSION_STATUSES = setOf(TOO_MANY_REQUESTS, SERVICE_UNAVAILABLE)
+/**
+ * DEFAULT_TOO_MANY_REQUESTS_RETRY_AFTER은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val DEFAULT_TOO_MANY_REQUESTS_RETRY_AFTER = Duration.ofSeconds(2)
+/**
+ * DEFAULT_SERVICE_UNAVAILABLE_RETRY_AFTER은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val DEFAULT_SERVICE_UNAVAILABLE_RETRY_AFTER = Duration.ofMillis(100)
+/**
+ * JOB_ID은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val JOB_ID = Regex("\"jobId\":\"([^\"]+)")
+/**
+ * STATE은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val STATE = Regex("\"state\":\"([^\"]+)")
     }
 }
 
 
+/**
+ * fails은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private inline fun fails(action: () -> Unit): Boolean =
     try {
         action()
@@ -1032,6 +1999,11 @@ private inline fun fails(action: () -> Unit): Boolean =
         true
     }
 
+/**
+ * canBind은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun canBind(port: Int): Boolean =
     try {
         ServerSocket().use { socket ->
@@ -1043,6 +2015,11 @@ private fun canBind(port: Int): Boolean =
         false
     }
 
+/**
+ * deleteDirectory은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun deleteDirectory(directory: Path) {
     Files.list(directory).use { paths ->
         paths.forEach(Files::deleteIfExists)

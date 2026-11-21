@@ -9,11 +9,18 @@ import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import org.junit.jupiter.api.Test
 
+/** replay snapshot이 안전한 status/content type/header/body만 저장하도록 fail closed하는지 검증한다. */
+/** replay snapshot이 안전한 status/content type/header/body만 저장하도록 fail closed하는지 검증한다. */
 class JobSubmissionSnapshotPolicyTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "empty response header set is the only default replay header contract" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `empty response header set is the only default replay header contract`() {
         val prepared = prepared(body = "accepted".toUtf8Bytes())
         val validated = JobSubmissionSnapshotPolicy(JobSubmissionIdempotencyPolicy()).validate(prepared)
@@ -26,6 +33,11 @@ class JobSubmissionSnapshotPolicyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "sensitive reserved demo and arbitrary headers are rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `sensitive reserved demo and arbitrary headers are rejected`() {
         val headers = listOf(
             mapOf("authorization" to listOf("Bearer secret")),
@@ -45,6 +57,12 @@ class JobSubmissionSnapshotPolicyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "status content type body count and control character bounds fail before persistence" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `status content type body count and control character bounds fail before persistence`() {
         val policy = JobSubmissionSnapshotPolicy(JobSubmissionIdempotencyPolicy(maxReplayBytes = 4))
 
@@ -63,6 +81,12 @@ class JobSubmissionSnapshotPolicyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "production snapshots are 202 json while synthetic fixtures may use bounded statuses" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `production snapshots are 202 json while synthetic fixtures may use bounded statuses`() {
         val production = JobSubmissionSnapshotPolicy(JobSubmissionIdempotencyPolicy())
         assertFailsWith<IllegalArgumentException> {
@@ -82,6 +106,11 @@ class JobSubmissionSnapshotPolicyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "header value control and size bounds are checked before replay allowlist" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `header value control and size bounds are checked before replay allowlist`() {
         val policy = JobSubmissionSnapshotPolicy(JobSubmissionIdempotencyPolicy())
 
@@ -107,6 +136,11 @@ class JobSubmissionSnapshotPolicyTest {
         aggregate.message shouldBeEqualTo "response headers exceed aggregate replay limit"
     }
 
+/**
+ * prepared은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun prepared(
         responseStatus: Int = 202,
         body: ByteArray = "ok".toUtf8Bytes(),

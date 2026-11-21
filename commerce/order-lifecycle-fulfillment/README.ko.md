@@ -8,6 +8,28 @@ Modulith가 application event publication을 영속화합니다. 외부 결제 �
 대신 deterministic payment provider를 사용해 성공, 실패, 중복, 순서 역전
 시나리오를 반복해서 재현합니다.
 
+## 업무 요구사항과 테스트 증거
+
+주문은 하나의 status column이 아니라 업무 process입니다. payment provider는
+timeout 뒤 응답할 수 있고, payment가 확정되지 않은 동안 inventory가 hold될
+수 있으며, 하나의 주문이 여러 fulfillment group으로 나뉠 수 있습니다.
+`docs/superpowers/specs/2026-07-18-issue-532-order-lifecycle-design.md`의
+설계는 이를 독립적인 aggregate lifecycle로 구현합니다.
+
+| 요구사항 | 설계 방향 | 확인할 증거 |
+|---|---|---|
+| “payment 성공”과 “order 배송”을 혼동하지 않기 | order·payment attempt·inventory reservation·fulfillment·cancellation·refund가 각각 status와 revision을 소유 | `OrderLifecycleIntegrationTest`가 전역 status 하나가 아닌 aggregate 간 유효한 handoff를 검증 |
+| provider retry를 안전하게 만들기 | command idempotency와 provider-event identity를 저장하고 중복은 reject 또는 replay | `OrderValidationContractTest`와 `OrderLifecycleIntegrationTest`의 중복·순서 역전 case |
+| unknown outcome을 숨기지 않기 | timeout/unknown provider 결과를 reconciliation 또는 manual-review 상태로 매핑 | `OrderLifecycleWebIntegrationTest`가 성공을 발명하지 않고 상태를 노출 |
+| 실패한 publication을 복구하기 | Spring Modulith durable publication을 replay 가능하게 두고 bounded operator action을 관찰 가능하게 함 | `OrderLifecycleContextRestartIntegrationTest`의 restart/replay 확인 |
+| tenant/customer 데이터를 보호하기 | customer read는 owner-scoped이고 log에는 payment secret 대신 안정적인 식별자만 남김 | web·validation test의 input/authorization 경계 |
+
+이 예제는 deterministic provider와 local publication storage를 의도적으로
+사용합니다. lifecycle과 recovery 계약을 가르치며 실제 payment network,
+warehouse, tax engine, exactly-once delivery를 주장하지 않습니다.
+`application/OrderLifecycleIntegrationTest.kt`부터 읽은 뒤 대응하는
+controller test에서 domain invariant가 HTTP response가 되는 과정을 따라가세요.
+
 ## 학습 목표
 
 - 하나의 전역 주문 상태 대신 각 생명주기에 독립적인 status와 revision을 둡니다.

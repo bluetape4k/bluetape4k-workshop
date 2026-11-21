@@ -51,39 +51,179 @@ import java.time.Instant
 import java.util.*
 
 @Tag("stress")
+/**
+ * BillingEventSourcingStressTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class BillingEventSourcingStressTest {
 
     companion object: KLogging() {
+/**
+ * TENANT은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TENANT = "tenant-stress"
+/**
+ * METER은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val METER = "api_calls"
+/**
+ * PERIOD은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PERIOD = "2026-07"
+/**
+ * CURRENCY은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val CURRENCY = "USD"
+/**
+ * PROJECTION은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PROJECTION = "billing"
+/**
+ * USAGE_COUNT은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val USAGE_COUNT = 10_000
+/**
+ * APPEND_BATCH_SIZE은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val APPEND_BATCH_SIZE = 250
+/**
+ * CLOSE_BATCH_SIZE은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val CLOSE_BATCH_SIZE = 1_000
+/**
+ * PROJECTION_BATCH_SIZE은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PROJECTION_BATCH_SIZE = 100
+/**
+ * QUERY_PAGE_SIZE은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val QUERY_PAGE_SIZE = 1_000
+/**
+ * REDUCER_VERSION은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val REDUCER_VERSION = 1
+/**
+ * SHA256_HEX_LENGTH은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val SHA256_HEX_LENGTH = 64
+/**
+ * MILLIS_PER_SECOND은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val MILLIS_PER_SECOND = 1_000.0
+/**
+ * START은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val START: Instant = Instant.parse("2026-07-01T00:00:00Z")
+/**
+ * END은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val END: Instant = START + 3_600.seconds()
+/**
+ * UNIT_PRICE은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val UNIT_PRICE: BigDecimal = BigDecimal("0.10")
+/**
+ * EXPECTED_TOTAL은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val EXPECTED_TOTAL: BigDecimal = BigDecimal("1000.00")
+/**
+ * LEASE_DURATION은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val LEASE_DURATION: Duration = 30.minutes()
     }
 
+/**
+ * fixture은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixture = EventStoreDatabaseFixture()
+/**
+ * eventStore은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val eventStore = EventStoreRepository()
+/**
+ * codec은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val codec = DomainEventJsonCodec()
+/**
+ * generations은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val generations = ProjectionGenerationRepository()
+/**
+ * checkpoints은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val checkpoints = ProjectionCheckpointRepository()
+/**
+ * readModels은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val readModels = BillingReadModelRepository()
+/**
+ * handlers은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val handlers = ProjectionHandlers(readModels)
+/**
+ * coordinator은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val coordinator = ProjectionCoordinator(checkpoints)
 
     @Test
+/**
+ * 이 시나리오는 "ten thousand usage events survive close replay and generation rebuild" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `ten thousand usage events survive close replay and generation rebuild`() {
         fixture.reset()
         val startedAt = System.nanoTime()
@@ -123,6 +263,11 @@ class BillingEventSourcingStressTest {
         reportThroughput(startedAt)
     }
 
+/**
+ * seedAuthority은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun seedAuthority() {
         val meters = MeterCommandService(eventStore, codec)
         val billing = BillingLifecycleCommandService(eventStore, codec)
@@ -135,6 +280,11 @@ class BillingEventSourcingStressTest {
         }
     }
 
+/**
+ * appendUsageEvents은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun appendUsageEvents() {
         (0 until USAGE_COUNT).chunked(APPEND_BATCH_SIZE).forEach { indexes ->
             val events = indexes.map { index ->
@@ -160,6 +310,11 @@ class BillingEventSourcingStressTest {
         }
     }
 
+/**
+ * closeBillingPeriod은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun closeBillingPeriod() {
         val closer = BillingCloseService(eventStore, codec)
         var batches = 0
@@ -175,6 +330,11 @@ class BillingEventSourcingStressTest {
         batches shouldBeEqualTo USAGE_COUNT / CLOSE_BATCH_SIZE
     }
 
+/**
+ * verifySnapshotReplay은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun verifySnapshotReplay() {
         val meterStream = StreamKey(TENANT, "Meter", METER)
         val meterEvents = fixture.executor.transaction { eventStore.load(meterStream) }
@@ -207,6 +367,11 @@ class BillingEventSourcingStressTest {
         replayed.streamVersion shouldBeEqualTo meterEvents.size.toLong()
     }
 
+/**
+ * rebuildAndSwitch은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun rebuildAndSwitch(highWatermark: Long) {
         fixture.executor.transaction {
             generations.createInitialActive(PROJECTION, 1, END)
@@ -220,11 +385,21 @@ class BillingEventSourcingStressTest {
         }
     }
 
+/**
+ * projectGeneration은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun projectGeneration(
         generation: Int,
         highWatermark: Long,
         release: Boolean = true,
     ): io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionLease {
+/**
+ * lease은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val lease = fixture.executor.transaction {
             checkpoints.acquireLease(
                 projectionName = PROJECTION,
@@ -239,12 +414,32 @@ class BillingEventSourcingStressTest {
                 }
         }
         while (true) {
+/**
+ * applied은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val applied = fixture.executor.transaction {
+/**
+ * checkpoint은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val checkpoint = checkpoints.requireOwnership(lease).checkpoint
+/**
+ * page은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 val page = eventStore.loadAfterGlobalPosition(checkpoint, PROJECTION_BATCH_SIZE)
 
                 page.forEach { persisted ->
                     coordinator.apply(lease, persisted.eventId, persisted.globalPosition) {
+/**
+ * event은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                         val event = codec.registry.decode(
                             eventType = persisted.eventType,
                             schemaVersion = persisted.schemaVersion,
@@ -276,6 +471,11 @@ class BillingEventSourcingStressTest {
     }
 
     @Suppress("SameParameterValue")
+/**
+ * loadAll은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun loadAll(eventType: String): List<PersistedEvent> {
         val events = mutableListOf<PersistedEvent>()
         var cursor: OccurredEventCursor? = null
@@ -298,6 +498,11 @@ class BillingEventSourcingStressTest {
         return events
     }
 
+/**
+ * lastGlobalPosition은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun lastGlobalPosition(): Long {
         var position = 0L
         while (true) {
@@ -310,6 +515,11 @@ class BillingEventSourcingStressTest {
         }
     }
 
+/**
+ * reportThroughput은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun reportThroughput(startedAt: Long) {
         val elapsed = (System.nanoTime() - startedAt).nanos()
         val throughput = USAGE_COUNT.toDouble() / elapsed.toMillis().coerceAtLeast(1) * MILLIS_PER_SECOND

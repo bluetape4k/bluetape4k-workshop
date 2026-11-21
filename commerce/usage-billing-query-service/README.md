@@ -30,6 +30,15 @@ persistence. They do not turn the projection into a financial source of truth.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)
 
+## Business requirements and test evidence
+
+Query is deliberately a read boundary: a poison event must not stop unrelated
+facts, and a redrive must be auditable without editing the source event. Its
+tests are split accordingly: `QueryServiceApplicationContractTest` covers
+decoder/security/metrics contracts, while `QueryProjectionPostgresIntegrationTest`
+proves durable checkpoint, deduplication, quarantine, and recovery audit. A
+projection is never financial authority.
+
 ## Responsibility
 
 - decode `PriceActivated`, `UsageAccepted`, `UsageCorrected`, `ChargeRated`,

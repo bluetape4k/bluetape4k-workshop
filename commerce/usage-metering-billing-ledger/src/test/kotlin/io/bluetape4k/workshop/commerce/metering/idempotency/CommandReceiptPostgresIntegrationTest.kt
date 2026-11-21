@@ -29,19 +29,49 @@ import java.util.concurrent.Executors
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * CommandReceiptPostgresIntegrationTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class CommandReceiptPostgresIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * fixture은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixture = MeteringDatabaseFixture()
+/**
+ * repository은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val repository = CommandReceiptRepository()
+/**
+ * clock은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val clock = MutableClock(Instant.parse("2026-07-22T00:00:00Z"))
+/**
+ * service은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val service = CommandReceiptService(repository, MeteringProperties(), clock)
 
     @AfterAll
     fun close(): Unit = fixture.close()
 
     @Test
+/**
+ * 이 시나리오는 "same request replays while a different fingerprint conflicts" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same request replays while a different fingerprint conflicts`() {
         fixture.resetAndSeed()
         val scope = scope("replay")
@@ -70,6 +100,11 @@ class CommandReceiptPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "expired owner can be replaced and stale owner cannot complete" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expired owner can be replaced and stale owner cannot complete`() {
         fixture.resetAndSeed()
         val scope = scope("takeover")
@@ -97,6 +132,12 @@ class CommandReceiptPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "terminal response is bounded and cleanup never removes in progress receipts" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `terminal response is bounded and cleanup never removes in progress receipts`() {
         fixture.resetAndSeed()
 
@@ -132,6 +173,11 @@ class CommandReceiptPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "twenty contenders elect one receipt owner" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `twenty contenders elect one receipt owner`() {
         fixture.resetAndSeed()
         val scope = scope("twenty-contenders")
@@ -153,6 +199,11 @@ class CommandReceiptPostgresIntegrationTest {
         }
     }
 
+/**
+ * scope은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun scope(suffix: String): CommandReceiptScope =
         CommandReceiptScope(
             tenantId = "tenant-a",
@@ -160,20 +211,60 @@ class CommandReceiptPostgresIntegrationTest {
             keyDigest = CommandFingerprint.key("key-$suffix").value
         )
 
+/**
+ * transaction은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <T> transaction(crossinline block: () -> T): T =
         fixture.executor.transaction { block() }
 }
 
+/**
+ * MutableClock 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 private class MutableClock(
+/**
+ * current은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private var current: Instant,
+/**
+ * zone은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val zone: ZoneId = ZoneOffset.UTC,
 ): Clock() {
+/**
+ * getZone은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun getZone(): ZoneId = zone
 
+/**
+ * withZone은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun withZone(zone: ZoneId): Clock = MutableClock(current, zone)
 
+/**
+ * instant은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     override fun instant(): Instant = current
 
+/**
+ * advance은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun advance(duration: Duration) {
         current = current.plus(duration)
     }

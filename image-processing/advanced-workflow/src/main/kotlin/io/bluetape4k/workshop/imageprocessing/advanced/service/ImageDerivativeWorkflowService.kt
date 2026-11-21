@@ -55,28 +55,114 @@ import kotlin.time.toKotlinDuration
  */
 @Service
 class ImageDerivativeWorkflowService(
+    /**
+     * `storage`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val storage: ImageStorage,
+    /**
+     * `validator`은 이미지 업로드·파생 처리에서 업무 규칙의 허용 여부를 나타내는 flag입니다.
+     *
+     * true와 false 각각의 분기를 명시적으로 처리하고 기본값이 안전한 거부인지 확인합니다.
+     */
     private val validator: UploadImageValidator,
+    /**
+     * `processor`은 이미지 업로드·파생 처리에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val processor: DerivativeProcessor,
+    /**
+     * `keyFactory`은 이미지 업로드·파생 처리에서 권한과 데이터 범위를 판정하는 호출 주체 또는 소유자 정보입니다.
+     *
+     * 인증·인가 경계를 통과한 값만 사용하고 다른 tenant의 상태·payload가 섞이지 않도록 합니다.
+     */
     private val keyFactory: ImageKeyFactory,
+    /**
+     * `urlResolver`은 이미지 업로드·파생 처리에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val urlResolver: PublicImageUrlResolver,
+    /**
+     * `properties`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val properties: ImageProcessingAdvancedProperties,
+    /**
+     * `meterRegistry`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val meterRegistry: MeterRegistry,
+    /**
+     * `persistenceService`은 이미지 업로드·파생 처리에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val persistenceService: ImagePersistenceService,
 ) {
 
     companion object: KLogging() {
+        /**
+         * `METRIC_UPLOAD_ACCEPTED`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         const val METRIC_UPLOAD_ACCEPTED = "workshop.images.upload.accepted"
+        /**
+         * `METRIC_PROCESSING_DURATION`은 이미지 업로드·파생 처리에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         const val METRIC_PROCESSING_DURATION = "workshop.images.processing.duration"
+        /**
+         * `METRIC_PROCESSING_FAILURES`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         const val METRIC_PROCESSING_FAILURES = "workshop.images.processing.failures"
+        /**
+         * `METRIC_VARIANT_GENERATED`은 이미지 업로드·파생 처리에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         const val METRIC_VARIANT_GENERATED = "workshop.images.variant.generated"
+        /**
+         * `METRIC_METADATA_READ`은 이미지 업로드·파생 처리에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         const val METRIC_METADATA_READ = "workshop.images.storage.metadata.read"
+        /**
+         * `METRIC_METADATA_UNAVAILABLE`은 이미지 업로드·파생 처리에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         const val METRIC_METADATA_UNAVAILABLE = "workshop.images.storage.metadata.unavailable"
     }
 
+    /**
+     * `requestSemaphore`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val requestSemaphore = Semaphore(properties.requestConcurrency)
+    /**
+     * `metadataReader`은 이미지 업로드·파생 처리에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val metadataReader = storage as? ImageObjectMetadataReader
 
+    /**
+     * processUpload은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param file 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     suspend fun processUpload(file: MultipartFile): ImageProcessingResponse {
         val sample = Timer.start(meterRegistry)
         var resultTag = "failure"
@@ -113,6 +199,12 @@ class ImageDerivativeWorkflowService(
         }
     }
 
+    /**
+     * processUploadInternal은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param file 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private suspend fun processUploadInternal(file: MultipartFile): ImageProcessingResponse {
         val started = System.nanoTime()
 
@@ -297,6 +389,13 @@ class ImageDerivativeWorkflowService(
         }
     }
 
+    /**
+     * cleanupUploaded은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param keys 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param original 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private suspend fun cleanupUploaded(keys: List<ImageObjectKey>, original: Throwable) {
         if (keys.isEmpty()) return
         withContext(NonCancellable) {
@@ -354,14 +453,55 @@ class ImageDerivativeWorkflowService(
         )
     }
 
+    /**
+     * ResolvedStorageMetadata은 프로모션 바우처 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의
+     * 규칙에 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private data class ResolvedStorageMetadata(
+        /**
+         * `key`은 이미지 업로드·파생 처리에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+         *
+         * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+         */
         val key: ImageObjectKey,
+        /**
+         * `sizeBytes`은 이미지 업로드·파생 처리에서 한도·할당·정산·처리 진척을 계산하는 업무 수치입니다.
+         *
+         * 음수·상한·단위와 반올림 규칙을 검증하고 경쟁 요청에서도 원자적으로 갱신합니다.
+         */
         val sizeBytes: Long,
+        /**
+         * `contentType`은 이미지 업로드·파생 처리에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+         *
+         * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+         */
         val contentType: String,
+        /**
+         * `etag`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val etag: String?,
+        /**
+         * `lastModified`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val lastModified: Instant?,
+        /**
+         * `available`은 이미지 업로드·파생 처리에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val available: Boolean,
     ) {
+        /**
+         * toEventPayload은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+         *
+         * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+         */
         fun toEventPayload(): Map<String, Any?> = mapOf(
             "key" to key.fullKey,
             "available" to available,
@@ -372,6 +512,7 @@ class ImageDerivativeWorkflowService(
         )
     }
 
+    /** 정상 경로의 최선 노력 이벤트 발행입니다. 취소가 아닌 예외는 삼킵니다. */
     /** 정상 경로의 최선 노력 이벤트 발행입니다. 취소가 아닌 예외는 삼킵니다. */
     private suspend fun safeAppendEvent(
         jobId: Long,
@@ -410,6 +551,11 @@ class ImageDerivativeWorkflowService(
         }
     }
 
+    /**
+     * buildCachedResponse은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun buildCachedResponse(
         imageId: String,
         original: ImageObjectDTO?,
@@ -448,10 +594,22 @@ class ImageDerivativeWorkflowService(
         )
     }
 
+    /**
+     * recordFailure은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param stage 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun recordFailure(stage: String) {
         meterRegistry.counter(METRIC_PROCESSING_FAILURES, "stage", stage).increment()
     }
 
+    /**
+     * computeChecksum은 프로모션 바우처 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param bytes 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun computeChecksum(bytes: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(bytes).joinToString("") { "%02x".format(it) }

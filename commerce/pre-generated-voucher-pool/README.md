@@ -8,6 +8,30 @@ This Spring Boot MVC workshop shows how to import or generate encrypted voucher 
 
 The module uses Java 25 virtual threads, a fixed 16-connection Hikari pool, and database permits split into 11 foreground, 1 worker, and 3 SSE lanes. Voucher plaintext appears only in the import request and the first committed reveal response. Snapshots, metrics, diagnostics, audit rows, and application logs remain code-free.
 
+## Business requirements and design decisions
+
+This module models the operationally awkward case where a business buys or
+generates voucher codes before customers claim them. The pool must be ingestible
+in bounded work, safe under many allocators, and recoverable when a one-time
+reveal response is lost. The source design is
+`docs/superpowers/specs/2026-07-20-issue-537-pre-generated-voucher-pool-design.md`.
+
+| Requirement | Design decision | Why it matters in a real operation |
+|---|---|---|
+| Do not allocate one entry twice | Reserve an eligible entry with `FOR UPDATE SKIP LOCKED`, revision/CAS, and a unique entitlement root | Concurrent requests converge on different winners without holding the whole campaign row |
+| Import large batches without one huge transaction | Stage the batch, process bounded chunks, and persist a checkpoint | A crash resumes from the last committed chunk; it does not roll back or re-read millions of codes blindly |
+| Protect codes before and after reveal | Envelope-encrypt each entry before persistence; after a committed one-time reveal, retain digest/audit proof rather than ciphertext | Database dumps and diagnostics cannot become a second code-delivery channel |
+| Recover a lost reveal response explicitly | Never replay the plaintext; require loss confirmation, revoke the exposed entry, and create at most one replacement under the entitlement root | Customer support can distinguish “not revealed” from “revealed but response lost” |
+| Keep derived counters repairable | Reconciliation recalculates pool depth and user limits from authoritative rows | A counter repair cannot invent a reservation or silently spend capacity |
+
+The README walkthroughs map to `VoucherBatchIngestIntegrationTest`,
+`VoucherPoolConcurrencyIntegrationTest`, `VoucherPoolIdempotencyIntegrationTest`,
+`VoucherCryptoQuarantineIntegrationTest`, and
+`VoucherPoolExpiredReplayWebIntegrationTest`. They prove bounded ingest,
+distinct concurrent winners, retry semantics, code quarantine, and explicit
+expired/reveal recovery. They do not prove a production KMS, IAM, or external
+inventory import service.
+
 ## Architecture
 
 ![Pre-generated voucher pool architecture](../../docs/images/readme-diagrams/commerce-pre-generated-voucher-pool-readme-architecture-01.png)

@@ -22,14 +22,29 @@ import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 @Tag("integration")
+/**
+ * JobConsoleProxiedTopologyTest 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class JobConsoleProxiedTopologyTest {
 
     companion object: KLogging()
 
     @field:TempDir
+/**
+ * tempDir은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     lateinit var tempDir: Path
 
     @Test
+/**
+ * 이 시나리오는 "Docker resource snapshots the parent issued label set" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Docker resource snapshots the parent issued label set`() {
         val labels = resources().redis.labels.toMutableMap()
         val resource = HighContentionDockerResource(
@@ -46,6 +61,12 @@ class JobConsoleProxiedTopologyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "existing and new Redis connections fail on the real proxy path and recover
+ * independently" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `existing and new Redis connections fail on the real proxy path and recover independently`() {
         val resources = resources()
         HighContentionJournal.open(tempDir, Path.of("redis-path.jsonl")).use { journal ->
@@ -85,6 +106,11 @@ class JobConsoleProxiedTopologyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "create intents and returned ids are journaled in strict order" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `create intents and returned ids are journaled in strict order`() {
         val resources = resources()
         val journalPath = tempDir.resolve("create-order.jsonl")
@@ -115,16 +141,36 @@ class JobConsoleProxiedTopologyTest {
         assertNoDockerObjects(resources)
     }
 
+/**
+ * assertDockerObjectsCarryLabels은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertDockerObjectsCarryLabels(
         records: List<HighContentionJournalRecord>,
         resources: JobConsoleDockerResources,
     ) {
+/**
+ * docker은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val docker = DockerClientFactory.instance().client()
         resources.all.forEach { resource ->
+/**
+ * id은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val id = records.single {
                 it.payload.event == HighContentionJournalEvent.DOCKER_RESOURCE_CREATED &&
                         it.payload.fields["resourceKey"] == resource.resourceKey
             }.payload.fields.getValue("dockerObjectId")
+/**
+ * actualLabels은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
             val actualLabels = if (resource.resourceType == "network") {
                 docker.inspectNetworkCmd().withNetworkId(id).exec().labels
             } else {
@@ -139,6 +185,12 @@ class JobConsoleProxiedTopologyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "failure after intent but before create leaves no Docker object and close stays
+ * idempotent" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `failure after intent but before create leaves no Docker object and close stays idempotent`() {
         val resources = resources()
         val journalPath = tempDir.resolve("before-create.jsonl")
@@ -162,6 +214,12 @@ class JobConsoleProxiedTopologyTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "failure after create return but before id fsync cleans the partially started topology"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `failure after create return but before id fsync cleans the partially started topology`() {
         val resources = resources()
         val journalPath = tempDir.resolve("after-create.jsonl")
@@ -186,6 +244,11 @@ class JobConsoleProxiedTopologyTest {
         assertNoDockerObjects(resources)
     }
 
+/**
+ * resources은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun resources(): JobConsoleDockerResources {
         val runId = UUID.randomUUID().toString()
         val profileId = "redis-path-outage"
@@ -196,6 +259,11 @@ class JobConsoleProxiedTopologyTest {
         )
     }
 
+/**
+ * resource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun resource(
         runId: String,
         profileId: String,
@@ -213,6 +281,11 @@ class JobConsoleProxiedTopologyTest {
             ),
         )
 
+/**
+ * assertNoDockerObjects은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun assertNoDockerObjects(resources: JobConsoleDockerResources) {
         val docker = DockerClientFactory.instance().client()
         resources.all.forEach { resource ->

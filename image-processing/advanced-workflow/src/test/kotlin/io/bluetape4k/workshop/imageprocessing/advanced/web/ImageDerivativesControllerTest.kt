@@ -24,11 +24,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.request
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 /**
- * [ImageDerivativesController] GET 엔드포인트 slice 테스트입니다.
+ * [ImageDerivativesController]의 GET 엔드포인트와 upload 응답 경계 테스트입니다.
  *
  * `@WebMvcTest`로 모의 서비스가 포함된 웹 계층만 로드합니다.
  * 코루틴 기반 suspend 핸들러에는 async-dispatch 패턴이 필요합니다.
- * `perform(get(...)).andExpect(request().asyncStarted()).andReturn()` → `perform(asyncDispatch(...))`.
+ * `perform(get(...)).andExpect(request().asyncStarted()).andReturn()` →
+ * `perform(asyncDispatch(...))`.
+ * asset이 있으면 `200`, 알 수 없는 id면 `404`이며 history는 saga 단계가
+ * 실제 응답으로 노출되는지 확인합니다.
  */
 @WebMvcTest(controllers = [ImageDerivativesController::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -37,13 +40,24 @@ class ImageDerivativesControllerTest {
     private companion object: KLogging()
 
     @Autowired
+/**
+ * mockMvc은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var mockMvc: MockMvc
 
+    /** GET 전용 테스트에서 직접 사용하지 않아도 context에 필요합니다. */
     /** GET 전용 테스트에서 직접 사용하지 않아도 context에 필요합니다. */
     @MockkBean
     private lateinit var workflowService: ImageDerivativeWorkflowService
 
     @MockkBean
+/**
+ * persistenceService은 이미지 처리 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var persistenceService: ImagePersistenceService
 
     // -------------------------------------------------------------------------
@@ -51,6 +65,11 @@ class ImageDerivativesControllerTest {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "GET asset detail returns 200 with body when asset exists" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `GET asset detail returns 200 with body when asset exists`() {
         val imageId = "test-image-id"
         every { persistenceService.findAssetByExternalId(imageId) } returns buildDetailResponse(imageId)
@@ -68,6 +87,11 @@ class ImageDerivativesControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "GET asset detail returns 404 when asset not found" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `GET asset detail returns 404 when asset not found`() {
         val imageId = "missing-id"
         every { persistenceService.findAssetByExternalId(imageId) } returns null
@@ -85,6 +109,11 @@ class ImageDerivativesControllerTest {
     // -------------------------------------------------------------------------
 
     @Test
+/**
+ * 이 시나리오는 "GET asset history returns 200 with body when asset exists" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `GET asset history returns 200 with body when asset exists`() {
         val imageId = "test-image-id"
         every { persistenceService.findAssetHistory(imageId) } returns ImageAssetHistoryResponse(
@@ -104,6 +133,11 @@ class ImageDerivativesControllerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "GET asset history returns 404 when asset not found" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `GET asset history returns 404 when asset not found`() {
         val imageId = "missing-id"
         every { persistenceService.findAssetHistory(imageId) } returns null
@@ -120,6 +154,11 @@ class ImageDerivativesControllerTest {
     // 헬퍼
     // -------------------------------------------------------------------------
 
+/**
+ * buildDetailResponse은 이미지 처리 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun buildDetailResponse(imageId: String): ImageAssetDetailResponse =
         ImageAssetDetailResponse(
             imageId = imageId,

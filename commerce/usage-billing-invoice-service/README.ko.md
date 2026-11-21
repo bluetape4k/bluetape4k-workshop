@@ -28,6 +28,14 @@ outbox 쓰기와 publisher fencing을 확인하며, tax·accounting·외부 문�
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)
 
+## 업무 요구사항과 테스트 증거
+
+Invoice는 고객에게 보이는 append-only record입니다. correction은 앞선 charge를
+가리키며 이전 line을 수정하지 않습니다. `InvoiceServiceApplicationContractTest`는
+local API/envelope 계약을, `InvoiceInboxPostgresIntegrationTest`는 inbox
+uniqueness·correction materialization·atomic outbox write·publisher fencing을
+증명합니다. tax 계산과 외부 document delivery는 이 예제 범위가 아닙니다.
+
 ## 책임
 
 - producer DTO를 공유하지 않고 Billing wire envelope를 로컬에서 decode합니다.

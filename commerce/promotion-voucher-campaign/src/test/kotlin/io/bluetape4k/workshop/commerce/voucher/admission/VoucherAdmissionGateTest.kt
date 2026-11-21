@@ -22,16 +22,31 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * VoucherAdmissionGateTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherAdmissionGateTest {
 
     private companion object: KLogging() {
 
+/**
+ * consumed은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun consumed(): RateLimitResult = RateLimitResult.consumed(
             consumedTokens = 1,
             availableTokens = 9,
             diagnostics = RateLimitDiagnostics.EMPTY
         )
 
+/**
+ * rejected은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun rejected(): RateLimitResult = RateLimitResult.rejected(
             availableTokens = 0,
             diagnostics = RateLimitDiagnostics.rejected(
@@ -41,11 +56,22 @@ internal class VoucherAdmissionGateTest {
             ),
         )
 
+/**
+ * failure은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun failure(): RateLimitResult =
             RateLimitResult.error(IllegalStateException("redis unavailable"))
     }
 
     @Test
+/**
+ * 이 시나리오는 "rate quota rejection exposes retry after without returning a consumed token" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rate quota rejection exposes retry after without returning a consumed token`() {
         val limiter = RecordingRateLimiter(rejected())
         val gate = VoucherAdmissionGate(limiter)
@@ -56,6 +82,12 @@ internal class VoucherAdmissionGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "three failures degrade and three successful probes recover with hysteresis" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `three failures degrade and three successful probes recover with hysteresis`() {
         val clock = MutableTestClock()
         val limiter = RecordingRateLimiter(
@@ -82,6 +114,11 @@ internal class VoucherAdmissionGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "a recovering probe failure returns the gate to degraded" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `a recovering probe failure returns the gate to degraded`() {
         val clock = MutableTestClock()
         val limiter = RecordingRateLimiter(failure(), failure(), failure(), consumed(), failure())
@@ -98,6 +135,12 @@ internal class VoucherAdmissionGateTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "degraded recovery probe is single flight while callers continue to PostgreSQL" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `degraded recovery probe is single flight while callers continue to PostgreSQL`() {
         val clock = MutableTestClock()
         val limiter = BlockingRecoveryRateLimiter()
@@ -129,10 +172,30 @@ internal class VoucherAdmissionGateTest {
         gate.state() shouldBeEqualTo AdmissionState.RECOVERING
     }
 
+/**
+ * RecordingRateLimiter 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class RecordingRateLimiter(vararg initial: RateLimitResult): RateLimiter<String> {
+/**
+ * results은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val results = ArrayDeque(initial.toList())
+/**
+ * keys은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val keys = mutableListOf<String>()
 
+/**
+ * consume은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun consume(
             key: String,
             numToken: Long,
@@ -142,11 +205,36 @@ internal class VoucherAdmissionGateTest {
         }
     }
 
+/**
+ * BlockingRecoveryRateLimiter 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class BlockingRecoveryRateLimiter: RateLimiter<String> {
+/**
+ * calls은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val calls = AtomicInteger()
+/**
+ * probeEntered은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val probeEntered = CountDownLatch(1)
+/**
+ * releaseProbe은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val releaseProbe = CountDownLatch(1)
 
+/**
+ * consume은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun consume(
             key: String,
             numToken: Long,
@@ -160,15 +248,45 @@ internal class VoucherAdmissionGateTest {
             }
     }
 
+/**
+ * MutableTestClock 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private class MutableTestClock(
+/**
+ * current은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private var current: Instant = Instant.parse("2026-07-19T10:00:00Z"),
     ): Clock() {
+/**
+ * getZone은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun getZone(): ZoneId = ZoneOffset.UTC
 
+/**
+ * withZone은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun withZone(zone: ZoneId): Clock = this
 
+/**
+ * instant은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         override fun instant(): Instant = current
 
+/**
+ * advance은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
         fun advance(duration: Duration) {
             current = current.plus(duration)
         }

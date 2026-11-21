@@ -10,24 +10,74 @@ import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
+/**
+ * JobConsoleLiveProfileAdapter 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 interface JobConsoleLiveProfileAdapter : HighContentionWorkloadAdapter, AutoCloseable {
+/**
+ * injectDeclaredFailure은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun injectDeclaredFailure()
 
+/**
+ * authorityDelta은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun authorityDelta(): JobConsoleAuthorityBaseline
 
+/**
+ * winner은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun winner(token: ScheduleToken): Boolean
 
+/**
+ * profileEvidence은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun profileEvidence(): String
 
+/**
+ * assertProfileInvariants은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun assertProfileInvariants(delta: JobConsoleAuthorityBaseline)
 }
 
+/**
+ * JobConsoleLiveProfileRunner 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class JobConsoleLiveProfileRunner(
     implementation: String,
+/**
+ * adapterFactory은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val adapterFactory: (String, HighContentionProfile) -> JobConsoleLiveProfileAdapter,
 ) {
+/**
+ * implementation은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val implementation = implementation.requireNotBlank("implementation")
 
+/**
+ * run은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     fun run() {
         HighContentionWorkerPid.publishIfConfigured()
         Runtime.version().feature().shouldBeEqualTo(
@@ -117,10 +167,20 @@ class JobConsoleLiveProfileRunner(
         Files.isRegularFile(reportPath).shouldBeTrue()
     }
 
+/**
+ * requiredProperty은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun requiredProperty(name: String): String =
         System.getProperty(name).requireNotNull(name)
 }
 
+/**
+ * jobConsoleScheduleVector은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun HighContentionProfile.jobConsoleScheduleVector(): ScheduleVector =
     ScheduleVector(
         name = profileId,
@@ -145,6 +205,11 @@ private fun HighContentionProfile.jobConsoleScheduleVector(): ScheduleVector =
         expectedTokens = emptyList(),
     )
 
+/**
+ * jobConsoleReport은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun HighContentionProfile.jobConsoleReport(
     contract: LoadedHighContentionContract,
     runId: String,
@@ -156,9 +221,29 @@ private fun HighContentionProfile.jobConsoleReport(
     adapter: JobConsoleLiveProfileAdapter,
     delta: JobConsoleAuthorityBaseline,
 ): HighContentionTerminalReport {
+/**
+ * endedAt은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val endedAt = Instant.now()
+/**
+ * actualDurationNanos은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val actualDurationNanos = System.nanoTime() - startedNanos
+/**
+ * attempts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val attempts = workload.realizedRecords.map { record ->
+/**
+ * winner은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val winner = adapter.winner(record.token)
         HighContentionAttemptEvidence(
             stableOrdinal = record.token.stableOrdinal,
@@ -175,11 +260,31 @@ private fun HighContentionProfile.jobConsoleReport(
             receiptWinnerCount = if (winner) 1 else 0,
         )
     }
+/**
+ * attemptsByIdentity은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val attemptsByIdentity = attempts.groupBy(HighContentionAttemptEvidence::identityOrdinal)
+/**
+ * dispositionCounts은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val dispositionCounts = HighContentionTerminalDisposition.entries.associateWith { disposition ->
         attempts.count { it.terminalDisposition == disposition }
     }
+/**
+ * invariantIds은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val invariantIds = expectedInvariants.job.map { it.lowercase().replace('_', '-') }
+/**
+ * boundaryEvidence은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val boundaryEvidence = adapter.profileEvidence()
 
     return HighContentionTerminalReport(
@@ -275,16 +380,36 @@ private fun HighContentionProfile.jobConsoleReport(
     )
 }
 
+/**
+ * measuredProfileObservations은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun HighContentionProfile.measuredProfileObservations(
     workload: HighContentionWorkloadResult,
     delta: JobConsoleAuthorityBaseline,
     boundaryEvidence: String,
 ): Map<String, Any> {
+/**
+ * sortedLatencies은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val sortedLatencies = workload.realizedRecords
         .filter { it.disposition != WorkloadTerminalDisposition.LOCALLY_REJECTED }
         .map(WorkloadRealizedRecord::latencyNanos)
         .sorted()
+/**
+ * durationNanos은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val durationNanos = workload.actualDurationNanos.coerceAtLeast(1L)
+/**
+ * deletedOwnedKeys은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val deletedOwnedKeys = Regex("""deletedOwnedKeys=(\d+)""")
         .find(boundaryEvidence)
         ?.groupValues
@@ -316,6 +441,11 @@ private fun List<Long>.percentile(percentile: Double): Long {
     if (isEmpty()) {
         return 0L
     }
+/**
+ * index은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     val index = ((size - 1) * percentile).toInt().coerceIn(indices)
     return this[index]
 }

@@ -33,19 +33,54 @@ import java.util.*
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.minutes
 
+/**
+ * CustomerVoucherPoolWebIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegrationTest() {
 
     private companion object: KLogging() {
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val TENANT = "tenant-customer-web"
+/**
+ * PRINCIPAL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val PRINCIPAL = "principal-customer-web"
+/**
+ * OTHER_TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val OTHER_TENANT = "tenant-customer-web-other"
+/**
+ * OTHER_PRINCIPAL은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         const val OTHER_PRINCIPAL = "principal-customer-web-other"
     }
 
     @Autowired
+/**
+ * campaigns은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var campaigns: CampaignBatchCommandService
 
     @Autowired
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var dataSource: DataSource
 
     @BeforeEach
@@ -64,6 +99,11 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "customer lifecycle exposes safe snapshots and one time code only once" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `customer lifecycle exposes safe snapshots and one time code only once`() {
         val fixture = activePool("lifecycle", listOf("CUSTOMER-LIFECYCLE-A", "CUSTOMER-LIFECYCLE-B"))
 
@@ -144,6 +184,12 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "replacement requires explicit confirmation and release remains owner scoped" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `replacement requires explicit confirmation and release remains owner scoped`() {
         val fixture = activePool(
             "replacement",
@@ -205,6 +251,12 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "reveal recovery advertises escalation when campaign policy forbids replacement" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reveal recovery advertises escalation when campaign policy forbids replacement`() {
         val fixture = activePool("replacement-unavailable", listOf("NO-REPLACEMENT-A"), replacementAllowance = 0)
         val reservation = reserve(fixture.campaignId, "reserve-no-replacement").createdReservation()
@@ -234,6 +286,12 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "preconditions replays and ownership mismatches use the bounded HTTP vocabulary" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `preconditions replays and ownership mismatches use the bounded HTTP vocabulary`() {
         val fixture = activePool("guards", listOf("CUSTOMER-GUARDS-A", "CUSTOMER-GUARDS-B"))
 
@@ -356,6 +414,12 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
     }
 
     @Test
+/**
+ * 이 시나리오는 "post purge retry through the customer route returns the retained replay fence" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `post purge retry through the customer route returns the retained replay fence`() {
         val fixture = activePool("post-purge", listOf("CUSTOMER-POST-PURGE-A"))
         val idempotencyKey = "reserve-post-purge"
@@ -393,14 +457,39 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
             .jsonPath("$.effectId").isEqualTo(reservation.reservationId.toString())
     }
 
+/**
+ * activePool은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun activePool(
         name: String,
         codes: List<String>,
         replacementAllowance: Int = 1,
     ): CustomerFixture {
+/**
+ * now은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val now = Instant.now()
+/**
+ * campaignId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val campaignId = UUID.randomUUID()
+/**
+ * batchId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batchId = UUID.randomUUID()
+/**
+ * created은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val created = campaigns.createCampaign(
             CreateCampaignCommand(
                 tenantId = TENANT,
@@ -421,6 +510,11 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
             ),
         ).applied()
 
+/**
+ * batch은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val batch = campaigns.createImportBatch(
             CreateImportBatchCommand(
                 tenantId = TENANT,
@@ -449,11 +543,21 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         return CustomerFixture(campaignId)
     }
 
+/**
+ * reserve은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun reserve(
         campaignId: UUID,
         key: String,
         ifNoneMatch: String? = "*",
     ): WebTestClient.RequestHeadersSpec<*> {
+/**
+ * request은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         var request = webTestClient.post()
             .uri("/api/v1/campaigns/$campaignId/reservations")
             .contentType(MediaType.APPLICATION_JSON)
@@ -466,6 +570,11 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         return request
     }
 
+/**
+ * mutation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun mutation(
         path: String,
         key: String,
@@ -474,6 +583,11 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         tenant: String = TENANT,
         principal: String = PRINCIPAL,
     ): WebTestClient.RequestHeadersSpec<*> {
+/**
+ * request은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val request = webTestClient.post()
             .uri(path)
             .header(IDEMPOTENCY_HEADER, key)
@@ -488,6 +602,11 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         }
     }
 
+/**
+ * customerMutation은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun customerMutation(
         path: String,
         key: String,
@@ -496,6 +615,11 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         tenant: String = TENANT,
         principal: String = PRINCIPAL,
     ): WebTestClient.RequestHeadersSpec<*> {
+/**
+ * request은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val request = webTestClient.post()
             .uri(path)
             .header(IDEMPOTENCY_HEADER, key)
@@ -506,6 +630,11 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
         return if (body != null) request.contentType(MediaType.APPLICATION_JSON).bodyValue(body) else request
     }
 
+/**
+ * customerGet은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun customerGet(
         path: String,
         tenant: String = TENANT,
@@ -532,8 +661,18 @@ internal class CustomerVoucherPoolWebIntegrationTest: AbstractVoucherPoolIntegra
             .expectBody<RevealResponse>()
             .returnResult().responseBody ?: error("reveal response is required")
 
+/**
+ * digest은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun digest(seed: Int): DigestValue =
         DigestValue(ByteArray(32) { index -> (seed + index).toByte() })
 
+/**
+ * CustomerFixture 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
     private data class CustomerFixture(val campaignId: UUID)
 }

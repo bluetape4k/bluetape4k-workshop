@@ -8,11 +8,21 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*
 
+/**
+ * BillingEnvelopeCodecRegistryTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class BillingEnvelopeCodecRegistryTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "wire payload retains the envelope identity and payload digest" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `wire payload retains the envelope identity and payload digest`() {
         val envelope = billingEnvelope("ChargeRated", 1)
 
@@ -24,12 +34,22 @@ class BillingEnvelopeCodecRegistryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "billing event uses a tenant aggregate partition key" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `billing event uses a tenant aggregate partition key`() {
         val envelope = billingEnvelope("ChargeRated", 1)
         envelope.partitionKey() shouldBeEqualTo "tenant-a|BillingPeriod|period-july"
     }
 
     @Test
+/**
+ * 이 시나리오는 "unsupported billing envelope is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `unsupported billing envelope is rejected`() {
         assertFailsWith<UnsupportedBillingEnvelopeVersion> {
             BillingEnvelopeCodecRegistry().validate(
@@ -39,6 +59,11 @@ class BillingEnvelopeCodecRegistryTest {
     }
 
     @Suppress("SameParameterValue")
+/**
+ * billingEnvelope은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun billingEnvelope(
         eventType: String,
         schemaVersion: Int,

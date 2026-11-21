@@ -25,11 +25,28 @@ import java.time.Instant
 import java.util.*
 
 @Repository
+/**
+ * ProjectionGenerationRepository은 사용량 과금 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의
+ * 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 class ProjectionGenerationRepository
     : EventSourcingExposedJdbcRepository<ProjectionGenerationEntity, UUID>(ProjectionGenerationEntity::class) {
 
     companion object: KLogging()
 
+    /**
+     * createInitialActive은 사용량 계량·청구 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록
+     * 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun createInitialActive(projectionName: String, generation: Int, now: Instant) {
         validateProjectionIdentity(projectionName, generation)
 
@@ -49,6 +66,16 @@ class ProjectionGenerationRepository
         )
     }
 
+    /**
+     * createBuilding은 사용량 계량·청구 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param highWatermark 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun createBuilding(projectionName: String, generation: Int, highWatermark: Long, now: Instant) {
         validateProjectionIdentity(projectionName, generation)
         highWatermark.requireZeroOrPositiveNumber("highWatermark")
@@ -62,6 +89,16 @@ class ProjectionGenerationRepository
         )
     }
 
+    /**
+     * createNextBuilding은 사용량 계량·청구 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록
+     * 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param highWatermark 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun createNextBuilding(projectionName: String, highWatermark: Long, now: Instant): ProjectionGeneration {
         highWatermark.requireZeroOrPositiveNumber("highWatermark")
 
@@ -94,9 +131,24 @@ class ProjectionGenerationRepository
         return get(projectionName, nextGeneration).checkNotNull("ProjectionGeneration($nextGeneration)")
     }
 
+    /**
+     * get은 사용량 계량·청구의 commit된 source-of-truth를 읽어 호출자에게 반환하며, 알림이나 캐시만으로 현재 상태를 추정하지 않습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun get(projectionName: String, generation: Int): ProjectionGeneration? =
         projectionGenerationRow(projectionName, generation)?.toProjectionGeneration()
 
+    /**
+     * active은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun active(projectionName: String): ProjectionGeneration? {
         val generation = ProjectionAliases
             .selectAll()
@@ -107,6 +159,16 @@ class ProjectionGenerationRepository
         return generation?.let { get(projectionName, it) }
     }
 
+    /**
+     * switchActive은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param expectedActiveGeneration 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun switchActive(lease: ProjectionLease, expectedActiveGeneration: Int, now: Instant): Boolean {
         val candidate = lockedProjectionGenerationRow(lease.projectionName, lease.generation)
             ?.toProjectionGeneration()
@@ -133,6 +195,16 @@ class ProjectionGenerationRepository
         return true
     }
 
+    /**
+     * rollbackActive은 사용량 계량·청구의 실패·지연 데이터를 복구할 때 원본 revision과 중복 키를 확인하고, 재시도 가능한 항목만 안전하게 재처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param expectedCurrentGeneration 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param targetGeneration 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun rollbackActive(
         projectionName: String,
         expectedCurrentGeneration: Int,
@@ -156,6 +228,18 @@ class ProjectionGenerationRepository
         return true
     }
 
+    /**
+     * insertGeneration은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param state 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param highWatermark 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     private fun insertGeneration(
         projectionName: String,
         generation: Int,
@@ -175,6 +259,16 @@ class ProjectionGenerationRepository
         }
     }
 
+    /**
+     * transition은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param state 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     private fun transition(
         projectionName: String,
         generation: Int,
@@ -187,6 +281,15 @@ class ProjectionGenerationRepository
         }
     }
 
+    /**
+     * updateAlias은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     private fun updateAlias(projectionName: String, generation: Int, now: Instant) {
         ProjectionAliases.update({ ProjectionAliases.projectionName eq projectionName }) {
             it[activeGeneration] = generation
@@ -196,9 +299,23 @@ class ProjectionGenerationRepository
 }
 
 @Repository
+/**
+ * ProjectionGenerationQueryRepository은 사용량 과금 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이
+ * 타입의
+ * 규칙에 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 class ProjectionGenerationQueryRepository
     : EventSourcingExposedJdbcRepository<ProjectionGenerationEntity, UUID>(ProjectionGenerationEntity::class) {
 
+    /**
+     * building은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun building(projectionName: String): ProjectionGeneration? = ProjectionGenerations.selectAll()
         .where {
             (ProjectionGenerations.projectionName eq projectionName) and
@@ -211,9 +328,27 @@ class ProjectionGenerationQueryRepository
 }
 
 @Repository
+/**
+ * ProjectionCheckpointRepository은 사용량 과금 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의
+ * 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 이 설명은 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이의 업무 계약을 함께 이해하기 위한 것입니다.
+ */
 class ProjectionCheckpointRepository
     : EventSourcingExposedJdbcRepository<ProjectionGenerationEntity, UUID>(ProjectionGenerationEntity::class) {
 
+    /**
+     * acquireLease은 사용량 계량·청구의 동시 작업에서 한 실행자만 처리하도록 lease·lock을 원자적으로 획득·갱신하고 만료·소유자 불일치를 거절합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param ownerToken 명령을 수행한 주체 또는 lease 소유자입니다. 권한·감사·동시성 검증에 사용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param duration 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun acquireLease(
         projectionName: String,
         generation: Int,
@@ -245,6 +380,15 @@ class ProjectionCheckpointRepository
         )
     }
 
+    /**
+     * renewLease은 사용량 계량·청구의 동시 작업에서 한 실행자만 처리하도록 lease·lock을 원자적으로 획득·갱신하고 만료·소유자 불일치를 거절합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param duration 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun renewLease(lease: ProjectionLease, now: Instant, duration: Duration): ProjectionLease {
         duration.requirePositiveDuration("duration")
 
@@ -255,6 +399,14 @@ class ProjectionCheckpointRepository
         return lease.copy(leaseUntil = renewedUntil)
     }
 
+    /**
+     * releaseLease은 사용량 계량·청구의 동시 작업에서 한 실행자만 처리하도록 lease·lock을 원자적으로 획득·갱신하고 만료·소유자 불일치를 거절합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun releaseLease(lease: ProjectionLease, now: Instant) {
         fencedUpdate(lease, now) {
             it[ProjectionGenerations.ownerToken] = null
@@ -262,6 +414,13 @@ class ProjectionCheckpointRepository
         }
     }
 
+    /**
+     * requireOwnership은 사용량 계량·청구 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와 부분 저장을 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     fun requireOwnership(lease: ProjectionLease): ProjectionGeneration {
         val generation = lockedProjectionGenerationRow(lease.projectionName, lease.generation)
             ?.toProjectionGeneration()
@@ -271,6 +430,17 @@ class ProjectionCheckpointRepository
         return generation
     }
 
+    /**
+     * insertAppliedEvent은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를
+     * 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param eventId 처리할 사용량 계량·청구 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
+     * @param globalPosition 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun insertAppliedEvent(lease: ProjectionLease, eventId: UUID, globalPosition: Long, now: Instant): Boolean {
         globalPosition.requirePositiveNumber("globalPosition")
 
@@ -284,6 +454,16 @@ class ProjectionCheckpointRepository
         }.insertedCount == 1
     }
 
+    /**
+     * advanceCheckpoint은 사용량 계량·청구 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와 부분 저장을
+     * 막습니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param globalPosition 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun advanceCheckpoint(lease: ProjectionLease, globalPosition: Long, now: Instant) {
         val current = requireOwnership(lease)
 
@@ -294,6 +474,16 @@ class ProjectionCheckpointRepository
         }
     }
 
+    /**
+     * raiseHighWatermark은 사용량 계량·청구 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록
+     * 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param observedHighWatermark 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun raiseHighWatermark(lease: ProjectionLease, observedHighWatermark: Long, now: Instant) {
         val current = requireOwnership(lease)
         require(observedHighWatermark >= current.highWatermark) { "projection_high_watermark_regression" }
@@ -303,6 +493,16 @@ class ProjectionCheckpointRepository
         }
     }
 
+    /**
+     * markFailed은 사용량 계량·청구 업무 명령을 접수해 입력을 검증하고, 저장소의 확정 상태와 후속 이벤트가 같은 revision을 가리키도록 처리합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param failedPosition 낙관적 동시성 또는 이벤트 순서를 확인하는 기대값입니다. 불일치하면 오래된 명령으로 처리합니다.
+     * @param failureDigest 재전송·멱등성·무결성 확인에 사용하는 값입니다. 원문 비밀이나 개인정보를 로그에 남기지 않습니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     */
     fun markFailed(lease: ProjectionLease, failedPosition: Long, failureDigest: String, now: Instant) {
         requireOwnership(lease)
         require(failedPosition > 0 && failureDigest.isNotBlank()) { "projection_failure_invalid" }
@@ -314,6 +514,16 @@ class ProjectionCheckpointRepository
         }
     }
 
+    /**
+     * fencedUpdate은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께
+     * 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param lease 업무 처리에 필요한 lease 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     * @param now 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+     * @param body 사용량 계량·청구 명령의 입력입니다. 스키마·필수값·중복 키를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun fencedUpdate(
         lease: ProjectionLease,
         now: Instant,
@@ -333,21 +543,55 @@ class ProjectionCheckpointRepository
     }
 }
 
+/**
+ * projectionGenerationRow은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를
+ * 함께 보존합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+ * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+ */
 private fun projectionGenerationRow(projectionName: String, generation: Int): ResultRow? =
     ProjectionGenerations.selectAll()
         .where { projectionGenerationIdentity(projectionName, generation) }
         .singleOrNull()
 
+/**
+ * lockedProjectionGenerationRow은 사용량 계량·청구의 동시 작업에서 한 실행자만 처리하도록 lease·lock을 원자적으로 획득·갱신하고 만료·소유자
+ * 불일치를 거절합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+ * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+ */
 private fun lockedProjectionGenerationRow(projectionName: String, generation: Int): ResultRow? =
     ProjectionGenerations.selectAll()
         .where { projectionGenerationIdentity(projectionName, generation) }
         .forUpdate()
         .singleOrNull()
 
+/**
+ * projectionGenerationIdentity은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사
+ * 필드를
+ * 함께 보존합니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+ * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+ */
 private fun projectionGenerationIdentity(projectionName: String, generation: Int) =
     (ProjectionGenerations.projectionName eq projectionName) and
             (ProjectionGenerations.generation eq generation)
 
+/**
+ * toProjectionGeneration은 사용량 계량·청구 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를
+ * 함께 보존합니다.
+ *
+ * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
+ */
 private fun ResultRow.toProjectionGeneration(): ProjectionGeneration =
     ProjectionGeneration(
         projectionName = this[ProjectionGenerations.projectionName],
@@ -361,6 +605,15 @@ private fun ResultRow.toProjectionGeneration(): ProjectionGeneration =
         failureDigest = this[ProjectionGenerations.failureDigest],
     )
 
+/**
+ * validateProjectionIdentity은 사용량 계량·청구 명령의 불변조건과 tenant·revision 범위를 부작용 전에 검증하여 잘못된 상태 전이와 부분
+ * 저장을 막습니다.
+ *
+ * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ *
+ * @param projectionName 업무 처리에 필요한 projectionName 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+ * @param generation 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
+ */
 private fun validateProjectionIdentity(projectionName: String, generation: Int) {
     require(projectionName.isNotBlank() && generation > 0) { "projection_identity_invalid" }
 }

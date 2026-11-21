@@ -19,7 +19,6 @@ import org.springframework.transaction.support.TransactionTemplate
  * 각 메서드는 프로그래밍 방식의 [TransactionTemplate]으로 자체 `REQUIRES_NEW`
  * 트랜잭션에서 실행됩니다. 이 인터페이스나 구현에는 `@Transactional`을 두지
  * 않으므로 호출자는 외부 트랜잭션에 참여한다고 가정하면 안 됩니다.
- *
  * ## 감사 사용자
  * 모든 쓰기 메서드는 [UserContext.withUser] 블록 안에서 호출해야 합니다.
  * 구현은 메서드 본문 전체를 감싸므로 호출자가 직접 사용자 컨텍스트를

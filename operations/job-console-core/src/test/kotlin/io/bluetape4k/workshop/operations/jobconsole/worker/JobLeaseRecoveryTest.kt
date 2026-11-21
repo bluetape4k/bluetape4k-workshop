@@ -22,11 +22,18 @@ import java.time.Duration
 import java.time.Instant
 
 @Tag("integration")
+/**
+ * worker crash/lease expiry 복구 계약을 PostgreSQL server time으로 검증한다.
+ * 새 worker가 reclaim한 뒤 stale token의 checkpoint가 거부되고 마지막 durable
+ * checkpoint부터 재개되는지가 핵심이다.
+ */
 class JobLeaseRecoveryTest {
 
     companion object: KLogging()
 
     @Test
+    /** 만료된 lease는 stale checkpoint를 거부하여 오래된 worker가 결과를 덮지 못하게 한다. */
+    /** 만료된 lease는 stale checkpoint를 거부하여 오래된 worker가 결과를 덮지 못하게 한다. */
     fun `expired lease rejects stale checkpoint before another worker reclaims it`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -53,6 +60,8 @@ class JobLeaseRecoveryTest {
     }
 
     @Test
+    /** running cancel이 lease 만료와 겹쳐도 cancelled 상태를 다시 queued로 부활시키지 않는다. */
+    /** running cancel이 lease 만료와 겹쳐도 cancelled 상태를 다시 queued로 부활시키지 않는다. */
     fun `expired cancel request converges to cancelled without reviving the job`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -79,6 +88,8 @@ class JobLeaseRecoveryTest {
     }
 
     @Test
+    /** reclaim은 새 token과 마지막 checkpoint를 발급하고 stale token은 계속 거부한다. */
+    /** reclaim은 새 token과 마지막 checkpoint를 발급하고 stale token은 계속 거부한다. */
     fun `expired lease is reclaimed and stale worker cannot checkpoint`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()

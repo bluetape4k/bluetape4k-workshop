@@ -29,20 +29,71 @@ import java.util.*
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * ProjectionRecoveryPostgresIntegrationTest 테스트 묶음은 사용량·청구의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class ProjectionRecoveryPostgresIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * fixture은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fixture = EventStoreDatabaseFixture()
+/**
+ * generations은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val generations = ProjectionGenerationRepository()
+/**
+ * checkpoints은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val checkpoints = ProjectionCheckpointRepository()
+/**
+ * readModels은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val readModels = BillingReadModelRepository()
+/**
+ * failures은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val failures = ProjectionFailureRepository()
+/**
+ * coordinator은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val coordinator = ProjectionCoordinator(checkpoints)
+/**
+ * handlers은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val handlers = ProjectionHandlers(readModels)
+/**
+ * now은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val now = Instant.parse("2026-07-01T00:00:00Z")
 
     @Test
+/**
+ * 이 시나리오는 "financial read models are deterministic and isolated by tenant and generation" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `financial read models are deterministic and isolated by tenant and generation`() {
         fixture.reset()
         fixture.executor.transaction {
@@ -80,6 +131,12 @@ class ProjectionRecoveryPostgresIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "poison event records bounded evidence and fails only its building generation" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `poison event records bounded evidence and fails only its building generation`() {
         fixture.reset()
         fixture.executor.transaction {
@@ -125,6 +182,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
     }
 
     @Suppress("SameParameterValue")
+/**
+ * project은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun project(
         lease: ProjectionLease,
         eventId: UUID,
@@ -132,6 +194,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
         tenantId: String,
         event: DomainEvent,
     ) {
+/**
+ * context은 사용량·청구 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val context = ProjectionEventContext(
             lease.projectionName,
             lease.generation,
@@ -147,6 +214,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
         }
     }
 
+/**
+ * acquire은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun acquire(generation: Int): ProjectionLease =
         fixture.executor.transaction {
             checkpoints.acquireLease(
@@ -158,6 +230,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
             )
         } ?: error("lease must be acquired")
 
+/**
+ * usage은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun usage(): UsageAccepted =
         UsageAccepted(
             sourceSystem = "gateway",
@@ -167,6 +244,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
             occurredAt = now
         )
 
+/**
+ * rated은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun rated(): UsageRated =
         UsageRated(
             usageEventId = "source-1",
@@ -177,6 +259,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
             currency = "USD",
         )
 
+/**
+ * invoice은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun invoice(): InvoiceIssued =
         InvoiceIssued(
             invoiceId = "invoice-1",
@@ -184,6 +271,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
             currency = "USD"
         )
 
+/**
+ * adjustment은 사용량·청구 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adjustment(): AdjustmentPosted =
         AdjustmentPosted(
             direction = AdjustmentDirection.CREDIT,

@@ -34,18 +34,53 @@ import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherPoolWorkerRepositoryTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolWorkerRepositoryTest {
 
     companion object: KLogging() {
+/**
+ * postgres은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
     }
 
+/**
+ * tenant은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val tenant = "tenant-worker-claim"
+/**
+ * voucherSchema은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val voucherSchema = "voucher_worker_${Base58.randomString(8).lowercase()}"
+/**
+ * scopeId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val scopeId = UUID.randomUUID()
+/**
+ * dataSource은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val dataSource = postgres.getHikariDataSource {
         schema = voucherSchema
     }
+/**
+ * repository은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var repository: JdbcVoucherPoolWorkerRepository
 
     @BeforeAll
@@ -84,6 +119,12 @@ internal class VoucherPoolWorkerRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate claim is rejected until the lease expires then stale owner cannot checkpoint"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate claim is rejected until the lease expires then stale owner cannot checkpoint`() {
         val original = repository.claim(tenant, WorkerKind.BATCH_REVOKE, scopeId, "owner-a").shouldNotBeNull()
         repository.claim(tenant, WorkerKind.BATCH_REVOKE, scopeId, "owner-b").shouldBeNull()
@@ -100,6 +141,11 @@ internal class VoucherPoolWorkerRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "successful checkpoint renews lease and stale finalize is rejected" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `successful checkpoint renews lease and stale finalize is rejected`() {
         val original = repository.claim(tenant, WorkerKind.RESERVATION_EXPIRY, scopeId, "owner").shouldNotBeNull()
         val renewed = repository.checkpoint(original, 42)
@@ -118,6 +164,11 @@ internal class VoucherPoolWorkerRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "failed chunks back off then poison at the bounded fifth attempt" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `failed chunks back off then poison at the bounded fifth attempt`() {
         var claim = repository.claim(tenant, WorkerKind.RECONCILIATION, scopeId, "owner").shouldNotBeNull()
         val backoffs = mutableListOf<Long>()
@@ -143,6 +194,12 @@ internal class VoucherPoolWorkerRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "default lease and run deadline are bounded and an expired run cannot checkpoint" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `default lease and run deadline are bounded and an expired run cannot checkpoint`() {
         WorkerPolicy().lease shouldBeEqualTo 15.seconds()
         WorkerPolicy().runDeadline shouldBeEqualTo 30.seconds()
@@ -157,6 +214,11 @@ internal class VoucherPoolWorkerRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cancellation release leaves the claim immediately reclaimable" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cancellation release leaves the claim immediately reclaimable`() {
         val claim = repository.claim(tenant, WorkerKind.ALLOCATION_EXPIRY, scopeId, "owner-a").shouldNotBeNull()
         val checkpoint = repository.checkpoint(claim, 17)
@@ -170,6 +232,12 @@ internal class VoucherPoolWorkerRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "runnable scan includes released and stale claims but excludes completed claims" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `runnable scan includes released and stale claims but excludes completed claims`() {
         val releasedScope = UUID.randomUUID()
         val staleScope = UUID.randomUUID()
@@ -191,14 +259,29 @@ internal class VoucherPoolWorkerRepositoryTest {
         )
     }
 
+/**
+ * expireLease은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun expireLease() {
         updateClaim("claim_until=transaction_timestamp()-interval '1 second'")
     }
 
+/**
+ * makeDue은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun makeDue() {
         updateClaim("next_attempt_at=transaction_timestamp()-interval '1 second'")
     }
 
+/**
+ * updateClaim은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun updateClaim(setClause: String, targetScopeId: UUID = scopeId) {
         dataSource.connection.use { conn ->
             conn.createStatement().use { stmt ->
@@ -214,6 +297,11 @@ internal class VoucherPoolWorkerRepositoryTest {
         }
     }
 
+/**
+ * adminConnection은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adminConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,

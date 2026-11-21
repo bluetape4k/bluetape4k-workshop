@@ -22,6 +22,43 @@ checks deterministic workflow behavior and the opt-in run checks native VIPS
 integration when Java 25 and libvips are available. Those tests prove the
 documented contract, not the policy or availability of a production bucket.
 
+## Business scenario and learning path
+
+Imagine a product page that accepts a customer photo. The browser sends one
+original file, but the storefront needs a small thumbnail, a card image, and a
+larger detail image. The business also needs to answer three operational
+questions: *Was this upload accepted? Which objects belong to it? What happened
+when derivative generation failed?* This module is the complete answer to that
+small workflow, including the parts that are normally hidden in a queue worker.
+
+A newcomer can read the example in this order:
+
+1. Start with `POST /api/images/derivatives` and the response below. `imageId`
+   identifies one logical asset; `original` and `variants` identify its stored
+   objects.
+2. Read **Processing Flow** and **Persistence Model**. The event steps are an
+   audit trail, not progress text invented by the controller.
+3. Read **Validation and Limits** before changing a limit. Encoded bytes,
+   decoded pixels, concurrency, and timeout protect different resources.
+4. Read **Object metadata boundary** and **S3 Public URL Setup** before using
+   this sample for private images. This workshop intentionally returns unsigned
+   URLs, which is convenient for a demo but not an access-control decision.
+
+## Business requirements mapped to code and proof
+
+| Requirement | Design decision | Code and test evidence |
+|---|---|---|
+| Reject an unsafe or expensive upload before native work | Allowlist JPEG/PNG/WebP, check MIME/magic bytes, and enforce byte/pixel budgets | `UploadImageValidator`, `ImageProcessingAdvancedProperties`, `UploadImageValidatorTest` |
+| Do not create two assets for the same content | Persist a checksum and short-circuit a `READY` duplicate | `ImageDerivativeWorkflowService`, `ImageAssetRepositoryTest`, `ImageDerivativeWorkflowServiceTest` |
+| Produce predictable delivery objects | Generate `thumb-128`, `card-320`, and `detail-1024` WebP keys | `ImageKeyFactory`, `FfmVipsDerivativeProcessor`, `FfmVipsDerivativeProcessorTest` |
+| Keep storage and database state explainable after a partial failure | Record each step and delete already-uploaded objects before marking the job failed | `ImageProcessingEventStatus`, `ImagePersistenceServiceImplTest`, `ImageDerivativeWorkflowServiceTest` |
+| Support local development and S3/CDN deployment | Depend on `ImageStorage` and resolve URLs separately from persistence | `ImageStorage`, `PublicImageUrlResolverTest`, `ImageProcessingAdvancedPropertiesTest` |
+| Capture object facts without downloading the original again | Use the optional `ImageObjectMetadataReader`; fall back explicitly when absent | `ImageObjectMetadataReader`, `ImageDerivativeWorkflowServiceTest` metadata cases |
+
+The final column is deliberately part of the design. A README statement is a
+requirement only when a reader can find the class and a test that protects the
+boundary.
+
 ## Overview
 
 **image-processing-advanced-workflow** is a Spring Boot 4 upload workflow that validates an image,
@@ -210,6 +247,34 @@ Configuration values, public URL components, variant WebP contracts, and pixel l
 | Concurrent variants per request | 2 |
 | Processing timeout | 30 seconds |
 
+## API walkthrough and failure semantics
+
+Create one logical asset:
+
+```bash
+curl -i -F "file=@photo.jpg;type=image/jpeg" \
+  http://localhost:8080/api/images/derivatives
+```
+
+The successful response contains `imageId`, the original object metadata, and
+the generated variant metadata. A repeated upload with the same checksum may
+return the existing `READY` asset; that is the idempotency behavior, not an
+error. `GET /api/images/{imageId}` returns the current asset and `GET
+/api/images/{imageId}/history` returns the job/event history used to explain a
+failure:
+
+```bash
+curl http://localhost:8080/api/images/2bb4f9c9-7133-46f2-bcc8-71a7e43ec1c4
+curl http://localhost:8080/api/images/2bb4f9c9-7133-46f2-bcc8-71a7e43ec1c4/history
+```
+
+An unknown `imageId` is `404`; it must not be confused with a failed job. A
+validation problem is rejected before storage/native processing, while a
+processing or storage error is represented by a failed asset/job and a
+cleanup attempt. The sample has no authentication, signed URL, retry queue,
+or production bucket policy, so an unsigned URL must not be copied into a
+private-content product without adding those boundaries.
+
 ## Tests
 
 ```bash
@@ -221,3 +286,19 @@ Configuration values, public URL components, variant WebP contracts, and pixel l
 ```
 
 Local storage defaults to `${java.io.tmpdir}/bluetape4k-workshop-images`. Remove that directory when you want a clean local run.
+
+The tests are organized around the business contracts rather than only the
+happy path:
+
+| Test area | What a newcomer should learn |
+|---|---|
+| `UploadImageValidatorTest` | Declared content type, magic bytes, encoded size, and decoded pixel limits are independent gates. |
+| `ImageKeyFactoryTest` | User filenames are sanitized; object keys are stable and never used as an authorization mechanism. |
+| `ImageDerivativeWorkflowServiceTest` | Duplicate checksums are idempotent, native/storage failures clean up partial objects, and metadata capability/fallback is explicit. |
+| `ImagePersistenceServiceImplTest` / `ImageProcessingJobRepositoryTest` | Saga steps and statuses survive transaction boundaries so history can explain what happened. |
+| `ImageDerivativesControllerTest` | HTTP upload, detail, history, and not-found behavior map to the service contract. |
+| `FfmVipsDerivativeProcessorTest` | The native path produces bounded WebP variants; it runs only with `-Dvips.enabled=true`. |
+
+Run the deterministic suite first, then opt into native tests only when the
+local runtime prerequisites are present. A green native test proves the local
+VIPS integration, not S3 permissions or CDN policy.

@@ -9,9 +9,19 @@ import io.bluetape4k.logging.KLogging
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 
+/**
+ * VoucherMetricsContractTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherMetricsContractTest {
 
     private companion object: KLogging() {
+/**
+ * REQUIRED_NAMES은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val REQUIRED_NAMES = setOf(
             "voucher.command.duration",
             "voucher.db.bulkhead.rejected",
@@ -24,6 +34,11 @@ internal class VoucherMetricsContractTest {
             "voucher.sse.rejected",
             "voucher.leader.state",
         )
+/**
+ * FORBIDDEN_TAGS은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val FORBIDDEN_TAGS = setOf(
             "tenant",
             "campaign",
@@ -36,6 +51,11 @@ internal class VoucherMetricsContractTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "metric names and tags stay bounded while operational paths update values" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `metric names and tags stay bounded while operational paths update values`() {
         val registry = SimpleMeterRegistry()
         val metrics = VoucherMetrics(registry)

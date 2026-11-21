@@ -28,6 +28,16 @@ writes, and replay; they do not claim that Kafka delivery is exactly once.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.svg)
 
+## Business requirements and test evidence
+
+Usage turns an external measurement into a billable fact only after the local
+price evidence is known. It never guesses a missing price or reads Meter's
+database synchronously. `UsageServiceApplicationContractTest` explains the
+decoder, envelope, idempotency, and publisher contracts;
+`UsageAcceptancePostgresIntegrationTest` proves price-evidence inbox
+deduplication and atomic usage/outbox persistence. Kafka redelivery remains an
+at-least-once boundary.
+
 ## Responsibility
 
 - consume `PriceActivated` from `meter.events.v1` into local price evidence;

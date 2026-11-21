@@ -17,11 +17,21 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * HighContentionLifecycleTest 테스트 묶음은 운영 작업 콘솔의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 class HighContentionLifecycleTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "deadline composition preserves cleanup and report reserves" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `deadline composition preserves cleanup and report reserves`() {
         val now = AtomicLong(1_000)
         val deadlines = HighContentionDeadlines.start(
@@ -55,6 +65,11 @@ class HighContentionLifecycleTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "resources are acquired before start and cleaned in reverse exactly once" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `resources are acquired before start and cleaned in reverse exactly once`() {
         val transitions = mutableListOf<HighContentionResourceTransition>()
         val cleanupOrder = mutableListOf<String>()
@@ -89,6 +104,12 @@ class HighContentionLifecycleTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "fail-open barriers release and cleanup errors are suppressed under the primary failure"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fail-open barriers release and cleanup errors are suppressed under the primary failure`() {
         val barrier = CountDownLatch(1)
         val lifecycle = HighContentionLifecycle(
@@ -111,6 +132,11 @@ class HighContentionLifecycleTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "transition persistence failure does not skip remaining cleanup" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `transition persistence failure does not skip remaining cleanup`() {
         val cleanupOrder = mutableListOf<String>()
         val lifecycle = HighContentionLifecycle(
@@ -139,6 +165,11 @@ class HighContentionLifecycleTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "blocking cleanup is daemon bounded and preserves caller interrupt status" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `blocking cleanup is daemon bounded and preserves caller interrupt status`() {
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
@@ -169,6 +200,11 @@ class HighContentionLifecycleTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "interrupt-ignoring cleanup remains visible to the zero-live gate" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `interrupt-ignoring cleanup remains visible to the zero-live gate`() {
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)

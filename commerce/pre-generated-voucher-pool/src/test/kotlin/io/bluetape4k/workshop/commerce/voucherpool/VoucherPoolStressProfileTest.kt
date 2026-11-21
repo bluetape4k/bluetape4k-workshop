@@ -25,15 +25,45 @@ import java.util.*
 
 @Tag("stress")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * VoucherPoolStressProfileTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolStressProfileTest {
 
+/**
+ * runId은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val runId = System.getProperty("voucherPool.stressRun", "dev")
+/**
+ * outputRoot은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val outputRoot = Path.of("build", "voucher-pool-stress")
+/**
+ * probe은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val probe = VoucherPoolPerformanceProbe(PostgreSQLServer.Launcher.postgres, outputRoot)
+/**
+ * profiles은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val profiles = linkedSetOf<String>()
 
     @ParameterizedTest(name = "{0} clients with Redis {1}")
     @CsvSource("64,HEALTHY", "64,UNAVAILABLE", "128,HEALTHY", "128,UNAVAILABLE")
+/**
+ * 이 시나리오는 "virtual client matrix preserves hard resource bounds" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `virtual client matrix preserves hard resource bounds`(clients: Int, redis: RedisMode) {
         val evidence = probe.runProfile(
             runId = runId,
@@ -50,6 +80,11 @@ internal class VoucherPoolStressProfileTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "Hikari acquisition timeout is retryable and never terminal" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `Hikari acquisition timeout is retryable and never terminal`() {
         val timeout = probe.acquisitionTimeoutSemantics()
         timeout.status shouldBeEqualTo 503
@@ -74,12 +109,22 @@ internal class VoucherPoolStressProfileTest {
         checksums.forEach { checksum -> manifest shouldContain checksum }
     }
 
+/**
+ * sha256은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun sha256(path: Path): String =
         MessageDigest.getInstance("SHA-256")
             .digest(Files.readAllBytes(path))
             .joinToString("") { "%02x".format(Locale.ROOT, it) }
 
     companion object: KLogging() {
+/**
+ * EXPECTED_PROFILES은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val EXPECTED_PROFILES = linkedSetOf(
             "64-healthy",
             "64-unavailable",
@@ -89,9 +134,20 @@ internal class VoucherPoolStressProfileTest {
     }
 }
 
+/**
+ * VoucherPoolStressHardGateTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolStressHardGateTest {
 
     @Test
+/**
+ * 이 시나리오는 "hard gates require observed samples and reject a scheduler-inclusive over-limit wait"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `hard gates require observed samples and reject a scheduler-inclusive over-limit wait`() {
         val passing = passingHardGateEvidence()
         assertVoucherPoolStressHardGates(passing)
@@ -120,6 +176,11 @@ internal class VoucherPoolStressHardGateTest {
         }
     }
 
+/**
+ * passingHardGateEvidence은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun passingHardGateEvidence(): VoucherPoolStressEvidence =
         VoucherPoolStressEvidence(
             runId = "controlled-hard-gate",
@@ -154,6 +215,11 @@ internal class VoucherPoolStressHardGateTest {
         )
 }
 
+/**
+ * assertVoucherPoolStressHardGates은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun assertVoucherPoolStressHardGates(evidence: VoucherPoolStressEvidence) {
     assertMaximum("Hikari active connections", evidence.hikariActiveMax.toLong(), 16, "connections")
     evidence.hikariAcquisitionWaitSamples shouldBeGreaterThan 0
@@ -187,10 +253,20 @@ private fun assertVoucherPoolStressHardGates(evidence: VoucherPoolStressEvidence
     evidence.counterDrift shouldBeEqualTo 0L
 }
 
+/**
+ * assertMaximum은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
 private fun assertMaximum(name: String, actual: Long, maximum: Long, unit: String) {
     if (actual > maximum) {
         throw AssertionError("$name exceeded hard limit: actual=$actual $unit maximum=$maximum $unit")
     }
 }
 
+/**
+ * FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
 private const val FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS = 500L

@@ -41,12 +41,32 @@ import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherPoolWorkerIntegrationTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherPoolWorkerIntegrationTest {
 
     companion object: KLogging()
 
+/**
+ * harness은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val harness = LifecycleHarness("workers")
+/**
+ * claims은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var claims: JdbcVoucherPoolWorkerRepository
+/**
+ * workers은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var workers: JdbcVoucherPoolWorkers
 
     @BeforeAll
@@ -63,6 +83,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reservation and allocation expiry apply exact deltas once" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reservation and allocation expiry apply exact deltas once`() {
         val fixture = harness.activePool("expiry", listOf("RESERVATION-EXPIRY", "ALLOCATION-EXPIRY"))
         val reservation = harness.reservations.reserve(
@@ -95,6 +120,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "batch revoke terminalizes active entries with exact counters and depth" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `batch revoke terminalizes active entries with exact counters and depth`() {
         val fixture = harness.activePool("batch-revoke", listOf("AVAILABLE", "RESERVED", "ALLOCATED"))
         val reserved = harness.reservations.reserve(harness.reserve(fixture, "reserved-user", "reserved-key")).applied()
@@ -116,6 +146,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "batch expiry preserves redeemed entries while expiring remaining capacity" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `batch expiry preserves redeemed entries while expiring remaining capacity`() {
         val fixture = harness.activePool("batch-expiry", listOf("REDEEMED", "ALLOCATED", "EXPIRE-ME"))
         val reservation =
@@ -156,6 +191,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "batch expiry rejects a batch whose database expiry is not due" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `batch expiry rejects a batch whose database expiry is not due`() {
         val fixture = harness.activePool("batch-not-due", listOf("NOT-DUE"))
         val claim = claims.claim(
@@ -174,6 +214,12 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "released claim resumes at its durable cursor and duplicate terminalization is harmless"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `released claim resumes at its durable cursor and duplicate terminalization is harmless`() {
         val fixture = harness.activePool("restart", listOf("RESTART-1", "RESTART-2", "RESTART-3"))
         val original = claims.claim(
@@ -217,6 +263,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "postgres dispatcher resumes durable work without Redis" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `postgres dispatcher resumes durable work without Redis`() {
         val fixture = harness.activePool("postgres-dispatch", listOf("DISPATCH-1", "DISPATCH-2", "DISPATCH-3"))
         harness.expireBatch(fixture.batch.batchId)
@@ -244,6 +295,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cursor wrap around rechecks earlier active rows" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cursor wrap around rechecks earlier active rows`() {
         val fixture = harness.activePool("wrap", listOf("WRAP-1", "WRAP-2"))
         harness.expireBatch(fixture.batch.batchId)
@@ -264,6 +320,12 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "reconciliation repairs pool depth and user counters from authoritative rows" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `reconciliation repairs pool depth and user counters from authoritative rows`() {
         val fixture = harness.activePool("reconcile", listOf("RECONCILE-1", "RECONCILE-2"))
         val reservation = harness.reservations.reserve(
@@ -293,6 +355,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "failed production run releases claim with durable backoff" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `failed production run releases claim with durable backoff`() {
         val fixture = harness.activePool("runner-failure", listOf("RUNNER-FAILURE"))
         val reservation = harness.reservations.reserve(
@@ -321,6 +388,12 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "cooperative cancellation commits one chunk then releases the latest checkpoint" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `cooperative cancellation commits one chunk then releases the latest checkpoint`() {
         val fixture = harness.activePool("runner-cancel", listOf("CANCEL-1", "CANCEL-2", "CANCEL-3"))
         var checks = 0
@@ -355,6 +428,11 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "campaign revoke fans out through batch claims then reaches terminal state" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `campaign revoke fans out through batch claims then reaches terminal state`() {
         val fixture = harness.activePool("campaign-revoke", listOf("CAMPAIGN-1", "CAMPAIGN-2"))
 
@@ -375,6 +453,12 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "allocation and revoke worker converge without reverse lock deadlock or counter drift"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `allocation and revoke worker converge without reverse lock deadlock or counter drift`() {
         val fixture = harness.activePool("allocation-race", listOf("ALLOCATION-RACE"))
         val reservation = harness.reservations.reserve(
@@ -421,6 +505,12 @@ internal class VoucherPoolWorkerIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "lost reveal replacement and revoke worker preserve capacity and lock order" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `lost reveal replacement and revoke worker preserve capacity and lock order`() {
         val fixture = harness.activePool("replacement-race", listOf("LOST", "REPLACEMENT", "SPARE"))
         val reservation = harness.reservations.reserve(
@@ -477,10 +567,20 @@ internal class VoucherPoolWorkerIntegrationTest {
         harness.poolDepth(fixture.batch.batchId, EntryState.REVOKED) shouldBeEqualTo 3L
     }
 
+/**
+ * runToCompletion은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runToCompletion(kind: WorkerKind, scopeId: java.util.UUID) {
         runToCompletion(claims.claim(harness.tenant, kind, scopeId, "test-owner")!!)
     }
 
+/**
+ * runToCompletion은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runToCompletion(initial: WorkerClaim) {
         var claim = initial
         repeat(10) {

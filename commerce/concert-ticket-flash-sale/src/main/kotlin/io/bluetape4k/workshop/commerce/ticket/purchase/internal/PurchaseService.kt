@@ -62,64 +62,176 @@ import java.time.Clock
 import java.time.Instant
 import java.util.*
 
+/**
+ * `PurchaseEventPublisher`은 콘서트 티켓 플래시 세일 실무 예제에서 업무 경계와 협력 계약을 표현하는 타입입니다.
+ *
+ * 입력 검증, 권한·멱등성 확인, 상태 전이, 저장소 확정, 이벤트 발행 사이의 책임을 이 타입의 계약으로 명확히 하여 운영자가 현재 상태와 다음 조치를 추적할 수 있게
+ * 합니다.
+ */
 fun interface PurchaseEventPublisher {
+    /**
+     * publish은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param event 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun publish(event: AuthorizationRequested)
 }
 
+/**
+ * ActivePurchaseExists은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class ActivePurchaseExists: IllegalStateException("active_purchase_exists") {
     companion object {
         @Serial
+        /**
+         * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+         *
+         * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+         */
         private const val serialVersionUID: Long = 1L
     }
 }
 
+/**
+ * InventoryUnavailable은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class InventoryUnavailable: IllegalStateException("inventory_unavailable") {
     companion object {
         @Serial
+        /**
+         * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+         *
+         * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+         */
         private const val serialVersionUID: Long = 1L
     }
 }
 
+/**
+ * PurchaseLimitExceeded은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class PurchaseLimitExceeded: IllegalStateException("purchase_limit_exceeded") {
     companion object {
         @Serial
+        /**
+         * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+         *
+         * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+         */
         private const val serialVersionUID: Long = 1L
     }
 }
 
+/**
+ * PurchaseNotFound은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class PurchaseNotFound: IllegalStateException("purchase_not_found") {
     companion object {
         @Serial
+        /**
+         * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+         *
+         * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+         */
         private const val serialVersionUID: Long = 1L
     }
 }
 
+/**
+ * InvalidPurchaseCommand은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의
+ * 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class InvalidPurchaseCommand: IllegalArgumentException("invalid_purchase_command") {
     companion object {
         @Serial
+        /**
+         * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+         *
+         * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+         */
         private const val serialVersionUID: Long = 1L
     }
 }
 
+/**
+ * IdempotencyOwnershipLost은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의
+ * 규칙에
+ * 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class IdempotencyOwnershipLost: IllegalStateException("idempotency_ownership_lost") {
     companion object {
         @Serial
+        /**
+         * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+         *
+         * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+         */
         private const val serialVersionUID: Long = 1L
     }
 }
 
 /** Bluetape4k [TicketExposedJdbcRepository] 위에 구현한 purchase aggregate persistence입니다. */
+/** Bluetape4k [TicketExposedJdbcRepository] 위에 구현한 purchase aggregate persistence입니다. */
 class TicketPurchaseRepository(
+    /**
+     * `jdbcExecutor`은 콘서트 티켓 플래시 세일에서 업무 규칙을 위임하는 저장소·외부 시스템 협력자입니다.
+     *
+     * 기준 데이터와 재시도·timeout 정책을 숨기지 않고 호출자가 결과를 복구할 수 있게 합니다.
+     */
     private val jdbcExecutor: TicketJdbcExecutor,
+    /**
+     * `sale`은 콘서트 티켓 플래시 세일에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val sale: SalePurchaseAuthority,
+    /**
+     * `admission`은 콘서트 티켓 플래시 세일에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val admission: TransactionalAdmissionCommands,
+    /**
+     * `clock`은 콘서트 티켓 플래시 세일에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     private val clock: Clock,
 ): TicketExposedJdbcRepository<TicketPurchaseAttemptEntity, UUID>(TicketPurchaseAttemptEntity::class) {
 
     companion object: KLogging()
 
+    /**
+     * `inventories`은 콘서트 티켓 플래시 세일에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val inventories = TicketInventoryRepository(jdbcExecutor)
 
+    /**
+     * owned은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param buyerSubjectId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot? =
         jdbcExecutor.transaction {
             TicketPurchaseAttemptEntity.find {
@@ -131,6 +243,12 @@ class TicketPurchaseRepository(
                 ?.snapshot()
         }
 
+    /**
+     * start은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun start(command: StartPurchase): PurchaseCommit = jdbcExecutor.transaction {
         val now = clock.instant()
         val policy = sale.requireOpen(this, command.policy, now)
@@ -168,6 +286,12 @@ class TicketPurchaseRepository(
         )
     }
 
+    /**
+     * cancel은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun cancel(command: CancelPurchase): PurchaseSnapshot = jdbcExecutor.transaction {
         val candidate = findAttempt(command.attemptId) ?: throw PurchaseNotFound()
         if (candidate.buyerSubjectId != command.buyerSubjectId) throw PurchaseNotFound()
@@ -197,6 +321,12 @@ class TicketPurchaseRepository(
         }
     }
 
+    /**
+     * applyPaymentOutcome은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult = jdbcExecutor.transaction {
         val candidate = findAttempt(command.attemptId) ?: return@transaction ApplyResult.STALE
 
@@ -229,6 +359,12 @@ class TicketPurchaseRepository(
         ApplyResult.APPLIED
     }
 
+    /**
+     * applyTicketOutcome은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot = jdbcExecutor.transaction {
         acquire(TicketLockRank.ATTEMPT_ORDER)
         val order = TicketOrders.selectAll()
@@ -294,6 +430,12 @@ class TicketPurchaseRepository(
         attempt.snapshot()
     }
 
+/**
+ * `lockIdempotency`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketJdbcTransaction.lockIdempotency(command: StartPurchase): UUID? {
         acquire(TicketLockRank.IDEMPOTENCY)
         val row = TicketHttpIdempotencies.selectAll()
@@ -317,6 +459,7 @@ class TicketPurchaseRepository(
     }
 
     /** All transactions that mutate inventory must acquire the sale root first. */
+    /** All transactions that mutate inventory must acquire the sale root first. */
     private fun TicketJdbcTransaction.lockSale(saleId: UUID) {
         acquire(TicketLockRank.SALE)
         TicketSales.selectAll()
@@ -326,6 +469,12 @@ class TicketPurchaseRepository(
             ?: throw PurchaseNotFound()
     }
 
+/**
+ * `lockGuard`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketJdbcTransaction.lockGuard(
         saleId: UUID,
         kind: IdentityKind,
@@ -355,6 +504,12 @@ class TicketPurchaseRepository(
         if (activeAttempt != null && activeAttempt != expectedAttempt) throw ActivePurchaseExists()
     }
 
+/**
+ * `lockBuyer`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketJdbcTransaction.lockBuyer(
         saleId: UUID,
         buyerId: UUID,
@@ -386,6 +541,12 @@ class TicketPurchaseRepository(
         }
     }
 
+/**
+ * `lockExistingBuyer`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketJdbcTransaction.lockExistingBuyer(saleId: UUID, buyerId: UUID) {
         acquire(TicketLockRank.BUYER)
         val rows = TicketBuyerSaleStates.selectAll()
@@ -395,6 +556,12 @@ class TicketPurchaseRepository(
         check(rows != null) { "buyer state not found" }
     }
 
+/**
+ * `insertAttempt`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketJdbcTransaction.insertAttempt(
         command: StartPurchase,
         policyVersion: Long,
@@ -420,16 +587,32 @@ class TicketPurchaseRepository(
     }
 
     @Suppress("UnusedReceiverParameter")
+/**
+ * `applyInventoryDelta`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketJdbcTransaction.applyInventoryDelta(
         inventory: InventoryRecord,
         heldDelta: Int,
         soldDelta: Int = 0,
     ) {
+        /**
+         * `whereOp`은 콘서트 티켓 플래시 세일에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val whereOp = {
             (TicketInventories.saleId eq inventory.saleId) and
                     (TicketInventories.grade eq inventory.grade) and
                     (TicketInventories.revision eq inventory.revision)
         }
+        /**
+         * `updatedCount`은 콘서트 티켓 플래시 세일에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val updatedCount = TicketInventories.update(where = whereOp) {
             it[heldQuantity] = heldQuantity + heldDelta
             it[soldQuantity] = soldQuantity + soldDelta
@@ -438,6 +621,12 @@ class TicketPurchaseRepository(
         check(updatedCount == 1) { "inventory revision changed while locked" }
     }
 
+/**
+ * `insertPaymentOperation`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketJdbcTransaction.insertPaymentOperation(command: StartPurchase, now: Instant) {
         acquire(TicketLockRank.EFFECT)
         TicketPaymentOperations.insert {
@@ -454,6 +643,12 @@ class TicketPurchaseRepository(
         }
     }
 
+    /**
+     * ownsPaymentClaim은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun ownsPaymentClaim(command: ApplyPaymentOutcome): Boolean =
         TicketPaymentOperations.select(TicketPaymentOperations.id)
             .where {
@@ -466,6 +661,13 @@ class TicketPurchaseRepository(
             .forUpdate()
             .singleOrNull() != null
 
+    /**
+     * completePaymentOperation은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param nextState 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun completePaymentOperation(command: ApplyPaymentOutcome, nextState: PurchaseState) {
         val status = when (command.outcome) {
             PaymentOutcome.UNKNOWN -> "unknown"
@@ -490,6 +692,14 @@ class TicketPurchaseRepository(
         check(affected == 1) { "payment claim changed while locked: $nextState" }
     }
 
+    /**
+     * incrementPurchased은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param saleId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param buyerId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param quantity 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun incrementPurchased(saleId: UUID, buyerId: UUID, quantity: Int) {
         val whereOp = {
             (TicketBuyerSaleStates.saleId eq saleId) and
@@ -502,6 +712,14 @@ class TicketPurchaseRepository(
         check(affected == 1)
     }
 
+    /**
+     * insertOrder은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attempt 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param authorizationOperationId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param disposition 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun insertOrder(attempt: AttemptRecord, authorizationOperationId: UUID, disposition: TicketDisposition) {
         val now = clock.instant()
         val orderId = Uuid.V7.nextId()
@@ -558,6 +776,11 @@ class TicketPurchaseRepository(
         }
     }
 
+    /**
+     * insertGuard은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun insertGuard(
         saleId: UUID,
         kind: IdentityKind,
@@ -574,6 +797,14 @@ class TicketPurchaseRepository(
         }
     }
 
+    /**
+     * bindIdempotency은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param ownerId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun bindIdempotency(ownerId: Long, attemptId: UUID, now: Instant) {
         val whereOp = {
             (TicketHttpIdempotencies.id eq ownerId) and
@@ -590,9 +821,22 @@ class TicketPurchaseRepository(
         }
     }
 
+    /**
+     * findAttempt은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun findAttempt(attemptId: UUID): AttemptRecord? =
         findById(attemptId).orElse(null)?.toRecord()
 
+    /**
+     * lockAttempt은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param buyerId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun lockAttempt(attemptId: UUID, buyerId: UUID): AttemptRecord {
         return TicketPurchaseAttemptEntity
             .find {
@@ -603,9 +847,22 @@ class TicketPurchaseRepository(
             ?: throw PurchaseNotFound()
     }
 
+    /**
+     * loadSnapshot은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun loadSnapshot(attemptId: UUID): PurchaseSnapshot =
         findAttempt(attemptId)?.snapshot() ?: throw IdempotencyOwnershipLost()
 
+    /**
+     * updateAttemptState은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param state 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun updateAttemptState(attemptId: UUID, state: PurchaseState) {
         val affected = TicketPurchaseAttempts.update({ TicketPurchaseAttempts.id eq attemptId }) {
             it[TicketPurchaseAttempts.state] = state.code
@@ -615,10 +872,22 @@ class TicketPurchaseRepository(
         check(affected == 1)
     }
 
+    /**
+     * releaseGuards은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun releaseGuards(attemptId: UUID) {
         TicketActiveIdentityGuards.deleteWhere { activeAttemptId eq attemptId }
     }
 
+/**
+ * `toRecord`은 콘서트 티켓 플래시 세일 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun TicketPurchaseAttemptEntity.toRecord(): AttemptRecord =
         AttemptRecord(
             attemptId = id.value,
@@ -632,13 +901,35 @@ class TicketPurchaseRepository(
             updatedAt = updatedAt,
         )
 
+    /**
+     * stableOperationId은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param kind 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param orderId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun stableOperationId(kind: String, orderId: UUID): UUID =
         UUID.nameUUIDFromBytes("ticket-$kind-v1:$orderId".toUtf8Bytes())
 
+    /**
+     * effectDigest은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param operationId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param disposition 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun effectDigest(operationId: UUID, disposition: TicketDisposition): ByteArray =
         MessageDigest.getInstance("SHA-256")
             .digest("ticket-effect-v1:$operationId:${disposition.code}".toUtf8Bytes())
 
+    /**
+     * guardAdvisoryKey은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param saleId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param kind 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param subjectId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun guardAdvisoryKey(saleId: UUID, kind: IdentityKind, subjectId: UUID): Long {
         val digest = MessageDigest.getInstance("SHA-256").digest(
             "ticket-active-guard-v1\u0000$saleId\u0000${kind.name}\u0000$subjectId".toUtf8Bytes(),
@@ -646,24 +937,93 @@ class TicketPurchaseRepository(
         return ByteBuffer.wrap(digest, 0, Long.SIZE_BYTES).long
     }
 
+    /**
+     * PurchaseCommit은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+     * 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     data class PurchaseCommit(val snapshot: PurchaseSnapshot, val event: AuthorizationRequested?): Serializable {
         companion object {
             @Serial
+            /**
+             * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+             *
+             * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+             */
             private const val serialVersionUID: Long = 1L
         }
     }
 
+    /**
+     * AttemptRecord은 콘서트 티켓 플래시 세일 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+     * 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private data class AttemptRecord(
+        /**
+         * `attemptId`은 콘서트 티켓 플래시 세일에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val attemptId: UUID,
+        /**
+         * `saleId`은 콘서트 티켓 플래시 세일에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val saleId: UUID,
+        /**
+         * `buyerSubjectId`은 콘서트 티켓 플래시 세일에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val buyerSubjectId: UUID,
+        /**
+         * `ipSubjectId`은 콘서트 티켓 플래시 세일에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val ipSubjectId: UUID,
+        /**
+         * `grade`은 콘서트 티켓 플래시 세일에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val grade: String,
+        /**
+         * `quantity`은 콘서트 티켓 플래시 세일에서 한도·할당·정산·처리 진척을 계산하는 업무 수치입니다.
+         *
+         * 음수·상한·단위와 반올림 규칙을 검증하고 경쟁 요청에서도 원자적으로 갱신합니다.
+         */
         val quantity: Int,
+        /**
+         * `state`은 콘서트 티켓 플래시 세일에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         val state: PurchaseState,
+        /**
+         * `revision`은 콘서트 티켓 플래시 세일에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+         *
+         * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+         */
         val revision: Long,
+        /**
+         * `updatedAt`은 콘서트 티켓 플래시 세일에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         val updatedAt: Instant,
     ): Serializable {
+        /**
+         * snapshot은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+         *
+         * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+         * @param nextState 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+         * @param at 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+         */
         fun snapshot(nextState: PurchaseState = state, at: Instant = updatedAt): PurchaseSnapshot =
             PurchaseSnapshot(
                 attemptId = attemptId,
@@ -674,13 +1034,24 @@ class TicketPurchaseRepository(
 
         companion object {
             @Serial
+            /**
+             * `serialVersionUID`은 콘서트 티켓 플래시 세일에서 Java 직렬화 호환성을 유지하는 기술 메타데이터입니다.
+             *
+             * 도메인 상태가 아니므로 값을 바꾸거나 업무 식별자로 사용하지 않습니다.
+             */
             private const val serialVersionUID: Long = 1L
         }
     }
 
+    /**
+     * `InventoryRecord`은 콘서트 티켓 플래시 세일에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+     *
+     * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+     */
     private val InventoryRecord.available: Int get() = total - held - sold
 }
 
+/** application service입니다. 모든 database work는 [TicketPurchaseRepository]에 위임합니다. */
 /** application service입니다. 모든 database work는 [TicketPurchaseRepository]에 위임합니다. */
 @Transactional
 class PurchaseService(
@@ -688,7 +1059,17 @@ class PurchaseService(
     sale: SalePurchaseAuthority,
     admission: TransactionalAdmissionCommands,
     clock: Clock,
+    /**
+     * `events`은 콘서트 티켓 플래시 세일에서 서비스 경계와 교환하는 내구성 메시지 또는 업무 사실입니다.
+     *
+     * at-least-once 전달과 중복·순서 뒤바뀜을 고려해 digest·idempotency·quarantine 규칙을 적용합니다.
+     */
     private val events: PurchaseEventPublisher,
+    /**
+     * `purchases`은 콘서트 티켓 플래시 세일에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val purchases: TicketPurchaseRepository = TicketPurchaseRepository(jdbcExecutor, sale, admission, clock),
 ): PurchaseCommands,
    PurchaseQueries,
@@ -696,6 +1077,12 @@ class PurchaseService(
 
     companion object: KLogging()
 
+    /**
+     * start은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun start(command: StartPurchase): PurchaseSnapshot {
         validate(command)
         val committed = purchases.start(command)
@@ -703,19 +1090,50 @@ class PurchaseService(
         return committed.snapshot
     }
 
+    /**
+     * cancel은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun cancel(command: CancelPurchase): PurchaseSnapshot =
         purchases.cancel(command)
 
+    /**
+     * applyPaymentOutcome은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult =
         purchases.applyPaymentOutcome(command)
 
+    /**
+     * applyTicketOutcome은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot =
         purchases.applyTicketOutcome(command)
 
     @Transactional(readOnly = true)
+    /**
+     * owned은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param attemptId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param buyerSubjectId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     override fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot? =
         purchases.owned(attemptId, buyerSubjectId)
 
+    /**
+     * validate은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param command 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun validate(command: StartPurchase) {
         val isInvalid = command.idempotencyOwnerId <= 0 ||
                 command.grade.isBlank() ||

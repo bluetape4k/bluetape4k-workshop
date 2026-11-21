@@ -13,14 +13,26 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
+/** legacy V001 제출 경로가 동일 key replay와 다른 request conflict를 안정적으로 보존하는지 검증한다. */
+/** legacy V001 제출 경로가 동일 key replay와 다른 request conflict를 안정적으로 보존하는지 검증한다. */
 @Tag("integration")
 class JobSubmissionRepositoryTest {
 
     companion object: KLogging() {
+/**
+ * NOW은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val NOW: Instant = Instant.parse("2026-07-21T00:00:00Z")
     }
 
     @Test
+/**
+ * 이 시나리오는 "same key and request replays the existing job without new rows" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same key and request replays the existing job without new rows`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -45,6 +57,11 @@ class JobSubmissionRepositoryTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same key and different request returns stable conflict" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same key and different request returns stable conflict`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()

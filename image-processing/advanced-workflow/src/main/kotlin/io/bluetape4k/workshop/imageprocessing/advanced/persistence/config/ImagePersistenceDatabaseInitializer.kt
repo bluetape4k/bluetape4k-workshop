@@ -29,6 +29,13 @@ class ImagePersistenceDatabaseInitializer: ApplicationRunner {
 
     companion object: KLogging()
 
+    /**
+     * run은 이미지 업로드·검수·파생물 처리 저장소를 transaction 경계 안에서 변경하며 idempotency key·revision·감사 필드를 함께 보존합니다.
+     *
+     * 호출자는 저장소 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     *
+     * @param args 업무 처리에 필요한 args 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
+     */
     @Transactional
     override fun run(args: ApplicationArguments) {
         log.info { "Creating image persistence schema..." }

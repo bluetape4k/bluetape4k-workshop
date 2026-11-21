@@ -4,6 +4,29 @@
 
 This Java 25 and Spring Boot 4 example keeps campaign and voucher history in an append-only PostgreSQL event store. Commands use expected stream versions and idempotency receipts; independently leased projections build the public read model and can be rebuilt without replacing the event authority.
 
+## Business requirements and test evidence
+
+The event-sourced variant exists for a specific business need: a campaign must
+answer not only “what is true now?” but also “which facts and command version
+made it true, and can we rebuild a new read model without rewriting history?”
+The specification is
+`docs/superpowers/specs/2026-07-22-issue-538-event-sourced-promotion-voucher-campaign-design.md`.
+
+| Requirement | Design direction | Failure/recovery rule |
+|---|---|---|
+| Preserve an auditable campaign/claim history | Append immutable envelopes with stream version, global position, schema version, checksum, and bounded metadata | Changed payload/order, unknown schema, or missing upcast fails closed |
+| Prevent concurrent commands from inventing a second fact | Replay the stream, require the expected version, and commit the idempotency receipt with the append | A stale writer retries against the latest stream; it never overwrites an event |
+| Keep reads available while changing the read model | Build a `BUILDING` projection generation from a captured high watermark, then fence and switch it to `ACTIVE` | A poison event fails only the shadow generation; the healthy `ACTIVE` view remains readable |
+| Make recovery explainable | Store lease/checkpoint/poison/quarantine/operator-audit records in PostgreSQL | A stale lease owner cannot checkpoint or switch a generation; rebuild is resumable |
+
+The named evidence is deliberately layered: `EventStoreAppendIntegrationTest`
+proves append-only and optimistic concurrency, `ProjectionWorkerIntegrationTest`
+and `ProjectionRebuildWorkerIntegrationTest` prove leases/checkpoints/fencing,
+`EventSourcedCampaignHttpIntegrationTest` proves the position-aware HTTP/SSE
+contract, and the compatibility test compares the public command/error shape
+with the normalized campaign. None of these tests claim zero lag, production
+SLA, or a migration of old #534 rows into an event stream.
+
 ## Architecture
 
 ![Event-sourced voucher architecture](../../docs/images/readme-diagrams/event-sourced-promotion-voucher-architecture-01.png)

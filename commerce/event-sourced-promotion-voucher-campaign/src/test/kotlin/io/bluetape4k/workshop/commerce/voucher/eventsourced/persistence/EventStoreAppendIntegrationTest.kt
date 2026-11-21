@@ -37,14 +37,39 @@ import kotlin.time.Duration.Companion.seconds
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+/**
+ * EventStoreAppendIntegrationTest 테스트 묶음은 이벤트 기반 프로모션 바우처 캠페인의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class EventStoreAppendIntegrationTest {
 
     companion object: KLogging() {
+/**
+ * postgres은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres by lazy { PostgreSQLServer.Launcher.postgres }
     }
 
+/**
+ * postgresDatabase은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
+/**
+ * database은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var database: Database
+/**
+ * store은 이벤트 기반 프로모션 바우처 캠페인 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var store: EventStoreRepository
 
     @BeforeAll
@@ -71,6 +96,12 @@ internal class EventStoreAppendIntegrationTest {
     fun dropSchema() = transaction(database) { SchemaUtils.drop(EventLog, StreamHeads, AppendFences) }
 
     @Test
+/**
+ * 이 시나리오는 "append assigns contiguous stream and global positions then load returns the committed
+ * tail" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `append assigns contiguous stream and global positions then load returns the committed tail`() {
         val stream = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
 
@@ -106,6 +137,11 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "expected version conflict leaves every requested stream unchanged" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `expected version conflict leaves every requested stream unchanged`() {
         val campaign = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
         val voucher = StreamKey(TenantId("tenant-a"), "voucher", UUID.randomUUID())
@@ -141,6 +177,11 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "rolled back append does not leave a global position gap" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `rolled back append does not leave a global position gap`() {
         val abandoned = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
 
@@ -177,6 +218,11 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same expected version race commits exactly one event" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same expected version race commits exactly one event`() {
         val stream = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
         val barrier = CyclicBarrier(2)
@@ -208,6 +254,11 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate event identifier is returned as a domain result" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate event identifier is returned as a domain result`() {
         val eventId = "0198a1b2-c3d4-7e5f-8123-456789abc030"
 
@@ -240,6 +291,12 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "simultaneous duplicate event identifiers return a domain result without a SQL failure"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `simultaneous duplicate event identifiers return a domain result without a SQL failure`() {
         val eventId = "0198a1b2-c3d4-7e5f-8123-456789abc031"
         val barrier = CyclicBarrier(2)
@@ -270,6 +327,11 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "multi stream append commits every stream in one contiguous range" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `multi stream append commits every stream in one contiguous range`() {
         val campaign = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
         val voucher = StreamKey(TenantId("tenant-a"), "voucher", UUID.randomUUID())
@@ -293,6 +355,11 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "same client UUID remains isolated across tenant and stream type" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `same client UUID remains isolated across tenant and stream type`() {
         val sharedId = UUID.randomUUID()
         val tenantCampaign = StreamKey(TenantId("tenant-a"), "campaign", sharedId)
@@ -330,6 +397,12 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "foreground event reads reject before waiting on Hikari when their permit is occupied"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `foreground event reads reject before waiting on Hikari when their permit is occupied`() {
         val permits = EventSourcedDatabasePermitGate(
             budget =
@@ -373,6 +446,11 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "thirty two independent streams receive unique contiguous positions" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `thirty two independent streams receive unique contiguous positions`() {
         val streams = ConcurrentLinkedQueue(List(32) {
             StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
@@ -405,6 +483,11 @@ internal class EventStoreAppendIntegrationTest {
         positions shouldBeEqualTo (1L..32L).toList()
     }
 
+/**
+ * event은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun event(eventId: String): EventToAppend =
         EventToAppend(
             eventId = UUID.fromString(eventId),
@@ -413,6 +496,11 @@ internal class EventStoreAppendIntegrationTest {
             payload = EventPayload("{}"),
         )
 
+/**
+ * nextV7EventId은 이벤트 기반 프로모션 바우처 캠페인 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun nextV7EventId(): String =
         "0198a1b2-c3d4-7e5f-8123-${UUID.randomUUID().toString().substringAfterLast('-')}"
 }

@@ -8,6 +8,28 @@ Spring Modulith persists application-event publications, and a deterministic
 payment provider makes success, failure, duplicate, and out-of-order scenarios
 repeatable without an external payment dependency.
 
+## Business requirements and test evidence
+
+An order is a business process, not a single status column. A payment provider
+can answer after a timeout, inventory can be held while payment is unresolved,
+and one order can split into fulfillment groups. The design in
+`docs/superpowers/specs/2026-07-18-issue-532-order-lifecycle-design.md` is
+implemented as independent aggregate lifecycles:
+
+| Requirement | Design direction | Proof to look for |
+|---|---|---|
+| Never confuse “payment succeeded” with “order shipped” | Order, payment attempt, inventory reservation, fulfillment, cancellation, and refund each own status and revision | `OrderLifecycleIntegrationTest` asserts valid cross-aggregate handoffs rather than one global status |
+| Make provider retries safe | Persist command idempotency and provider-event identity; reject or replay duplicates | `OrderValidationContractTest` and the duplicate/out-of-order cases in `OrderLifecycleIntegrationTest` |
+| Keep unknown outcomes visible | Map timeout/unknown provider results to reconciliation or manual-review states | `OrderLifecycleWebIntegrationTest` exposes the state without inventing success |
+| Recover failed publication | Spring Modulith's durable publication remains replayable and bounded operator actions are observable | `OrderLifecycleContextRestartIntegrationTest` checks restart/replay behavior |
+| Protect tenant/customer data | Customer reads are owner-scoped and logs contain stable identifiers, not payment secrets | Web and validation tests cover the input/authorization boundary |
+
+The example intentionally uses a deterministic provider and local publication
+storage. It teaches lifecycle and recovery contracts; it does not claim a real
+payment network, warehouse, tax engine, or exactly-once delivery. Start with
+`application/OrderLifecycleIntegrationTest.kt`, then follow the corresponding
+controller test to see how the domain invariant becomes an HTTP response.
+
 ## What This Teaches
 
 - Model each lifecycle with its own status and revision instead of one global order state.

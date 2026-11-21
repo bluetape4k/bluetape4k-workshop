@@ -4,6 +4,27 @@
 
 이 저장소 내부 모듈은 commerce 예제 사이에서 공유하는 compatibility contract와 fixture를 제공합니다. production service, persistence, adapter, migration은 소유하지 않습니다.
 
+## 업무 요구사항과 테스트 증거
+
+shared boundary는 각 예제의 database와 delivery 권위를 local로 유지하면서도
+producer·consumer 계약이 서로 달라지는 일을 막기 위해 존재합니다. 원 설계는
+`docs/superpowers/specs/2026-08-16-issue-573-commerce-shared-boundary-design.md`이며,
+payload digest 보완은
+`docs/superpowers/specs/2026-11-17-issue-1044-commerce-shared-digest-design.md`에
+있습니다.
+
+| 요구사항 | 이 모듈이 소유하는 것 | 의도적으로 소유하지 않는 것 |
+|---|---|---|
+| voucher 예제가 같은 업무 scenario를 비교하기 | `VoucherCampaignBlackBoxContract` request/result/replay/lifecycle fixture | database·campaign state machine·HTTP adapter·transport |
+| usage-billing service가 우발 손상 탐지 규칙에 합의하기 | `PayloadDigest` canonical UTF-8 SHA-256과 `AggregatePartitionKey` 형식 | 인증: digest는 MAC/signature가 아님 |
+| contract test를 독립적으로 유지하기 | provider-neutral fixture와 독립 JDK digest oracle | 양쪽이 같은 bug를 반복하게 만드는 숨은 shared runtime 동작 |
+
+`CommerceIntegrationContractsTest`와 `VoucherCampaignBlackBoxContractTest`가
+실행 가능한 map입니다. canonical input, digest 형식, partition key 안정성,
+normalized/event-sourced scenario 호환성을 증명합니다. Consumer integration
+test는 각자의 PostgreSQL·Kafka·idempotency·recovery를 별도로 증명해야 하며,
+shared test가 통과했다고 service가 durable하다는 뜻은 아닙니다.
+
 ## 이 모듈이 필요한 이유
 
 Voucher와 usage-billing 예제는 event identity, replay 입력, partition key,

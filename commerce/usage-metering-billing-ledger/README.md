@@ -6,6 +6,27 @@ This Java 25 Spring Boot example accepts continuously arriving usage, applies th
 
 The module uses Kotlin, JetBrains Exposed JDBC, `bluetape4k-exposed-jdbc`, and PostgreSQL. Redis, leader election, and a broker are deliberately absent from baseline correctness. Every concrete repository implements Bluetape `ExposedJdbcRepository`; production and test fixture data access use only Exposed DAO/DSL.
 
+## Business requirements and test evidence
+
+The baseline answers a common SaaS billing question: how can finance reproduce
+the amount charged when usage, price changes, retries, and period close happen
+at different times? The design in
+`docs/superpowers/specs/2026-07-22-issue-552-usage-metering-billing-ledger-design.md`
+chooses normalized workflow state plus an append-only financial ledger.
+
+| Requirement | Design direction | Test evidence and meaning |
+|---|---|---|
+| Rate usage with the historical price | Select the half-open price window by `occurredAt`, while the server owns `receivedAt` | `MeteringEndToEndIntegrationTest` proves the selected `priceVersionId` is retained in ledger/invoice provenance |
+| Absorb HTTP and producer duplicates separately | Store command-key/fingerprint receipts and a source-event uniqueness guard | `CommandReceiptPostgresIntegrationTest` and repository tests prove replay/conflict without a second charge |
+| Close a period safely across worker crashes | `OPEN → CLOSING → FINALIZED`; process bounded keyset batches and commit checkpoint plus ledger together | `BillingCloseStressTest` exercises restartable close; a failed validation remains visible as `FAILED_VALIDATION` |
+| Never rewrite posted money | Use `CHARGE`, `DEBIT_ADJUSTMENT`, and `CREDIT_ADJUSTMENT` entries linked to the original fact | `ReconciliationPostgresIntegrationTest` proves findings and correction provenance rather than destructive updates |
+| Make invoices explainable | Finalize only from a ready close run and link each invoice line to exactly one ledger entry | `MeteringHttpIntegrationTest` checks stable error/status and read boundaries |
+
+This is the recommended starting point before the event-sourced and
+microservice variants. It demonstrates the business invariants with one
+PostgreSQL authority; it does not promise broker delivery, tax compliance, or
+an external accounting integration.
+
 ![Architecture](../../docs/images/readme-diagrams/usage-metering-billing-architecture-01.png)
 
 ## Three rules to remember

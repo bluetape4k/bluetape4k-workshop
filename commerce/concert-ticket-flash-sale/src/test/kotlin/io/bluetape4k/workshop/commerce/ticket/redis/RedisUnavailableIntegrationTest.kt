@@ -15,13 +15,28 @@ import io.bluetape4k.workshop.commerce.ticket.config.TicketRedisResources
 import io.lettuce.core.RedisException
 import org.junit.jupiter.api.Test
 
+/**
+ * RedisUnavailableIntegrationTest 테스트 묶음은 콘서트 티켓 플래시 세일의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class RedisUnavailableIntegrationTest {
 
     companion object: KLogging() {
+/**
+ * redis은 콘서트 티켓 플래시 세일 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         val redis by lazy { RedisServer.Launcher.redis }
     }
 
     @Test
+/**
+ * 이 시나리오는 "distributed route limit rejects excess calls independently of the lease" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `distributed route limit rejects excess calls independently of the lease`() {
         val cleanupClient = LettuceClients.clientOf(redis.url)
         try {
@@ -47,6 +62,12 @@ internal class RedisUnavailableIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "new purchase fails closed while existing database workflow remains runnable" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `new purchase fails closed while existing database workflow remains runnable`() {
         val unavailable = MultiKeyLeasePort { throw RedisException("redis unavailable") }
         val gate = ForegroundLeaseGate(unavailable)
@@ -60,6 +81,11 @@ internal class RedisUnavailableIntegrationTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "busy lease is a conflict instead of a redis outage" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `busy lease is a conflict instead of a redis outage`() {
         val busy = MultiKeyLeasePort { LeaseDecision.Busy }
 
@@ -68,6 +94,11 @@ internal class RedisUnavailableIntegrationTest {
         }
     }
 
+/**
+ * request은 콘서트 티켓 플래시 세일 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun request(): LeaseRequest =
         LeaseRequest(
             keys = LeaseKeys("ticket:{sale}:inflight:ip:ip", "ticket:{sale}:inflight:user:user"),

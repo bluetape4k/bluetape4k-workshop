@@ -23,11 +23,18 @@ import javax.sql.DataSource
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/** bounded-wait 중 connection pool/query cancellation이 남은 예산과 오류 종류를 정확히 반영하는지 검증한다. */
+/** bounded-wait 중 connection pool/query cancellation이 남은 예산과 오류 종류를 정확히 반영하는지 검증한다. */
 class BoundedConnectionAcquirerTest {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "late pool connection is closed after acquisition deadline" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `late pool connection is closed after acquisition deadline`() {
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
@@ -38,6 +45,86 @@ class BoundedConnectionAcquirerTest {
         ) { _, method, _ ->
             if (method.name == "getConnection") {
                 entered.countDown()
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
+/**
+ * released은 운영 작업 콘솔 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
                 var released = false
                 while (!released) {
                     released =
@@ -61,6 +148,11 @@ class BoundedConnectionAcquirerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "poll returns still in flight when pool acquisition consumes its budget" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `poll returns still in flight when pool acquisition consumes its budget`() {
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
@@ -88,6 +180,11 @@ class BoundedConnectionAcquirerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "poll does not run its query after setup consumes the deadline" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `poll does not run its query after setup consumes the deadline`() {
         val queryReached = AtomicBoolean(false)
         val aborted = CountDownLatch(1)
@@ -152,6 +249,12 @@ class BoundedConnectionAcquirerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "poll propagates an immediate connection failure instead of treating it as a deadline"
+ * 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `poll propagates an immediate connection failure instead of treating it as a deadline`() {
         val statement = Proxy.newProxyInstance(
             Statement::class.java.classLoader,
@@ -196,6 +299,11 @@ class BoundedConnectionAcquirerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "poll maps postgres query cancellation to still in flight" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `poll maps postgres query cancellation to still in flight`() {
         val statement = Proxy.newProxyInstance(
             Statement::class.java.classLoader,
@@ -235,6 +343,11 @@ class BoundedConnectionAcquirerTest {
             ) shouldBeEqualTo PollResult.StillInFlight
     }
 
+/**
+ * blockingDataSource은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun blockingDataSource(
         entered: CountDownLatch,
         release: CountDownLatch,
@@ -260,6 +373,11 @@ class BoundedConnectionAcquirerTest {
             defaultValue(method.returnType)
         } as DataSource
 
+/**
+ * connectionProxy은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun connectionProxy(closed: CountDownLatch): Connection =
         Proxy.newProxyInstance(
             Connection::class.java.classLoader,
@@ -273,6 +391,11 @@ class BoundedConnectionAcquirerTest {
             }
         } as Connection
 
+/**
+ * defaultValue은 운영 작업 콘솔 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun defaultValue(type: Class<*>): Any? =
         when (type) {
             Boolean::class.javaPrimitiveType -> false

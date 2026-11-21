@@ -10,6 +10,28 @@ The module uses Java 25, Spring Boot 4, PostgreSQL, JetBrains Exposed JDBC, `blu
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-event-sourcing-architecture-01.svg)
 
+## Business requirements and test evidence
+
+Use this module only when the business needs historical reconstruction, more
+than one read model, or audited schema evolution—not merely because events are
+popular. The source design is
+`docs/superpowers/specs/2026-07-22-issue-553-event-sourced-usage-billing-design.md`.
+
+| Requirement | Design direction | Failure/recovery rule |
+|---|---|---|
+| Preserve financial facts for replay | Append an event envelope with stream version, global position, canonical payload, and hash chain | A changed hash, missing upcast, or invalid metadata stops replay rather than skipping history |
+| Keep command retries and optimistic concurrency safe | Store a receipt and append only at the expected stream version | Same key/fingerprint replays; a stale stream writer must re-read before deciding |
+| Replace read models without downtime | Build a shadow projection generation, catch it up to a high watermark, then atomically switch with a fencing token | Poison events fail the shadow generation and are quarantined; `ACTIVE` remains available |
+| Correct money without rewriting the past | Append adjustment events and derive ledger/invoice projections again | Reconciliation compares generations and records a finding, never edits an old event |
+
+Read `EventStorePostgresIntegrationTest`, `CommandServicePostgresIntegrationTest`,
+`ProjectionRecoveryPostgresIntegrationTest`, `CorrectionReconciliationIntegrationTest`,
+and `EventSourcingHttpIntegrationTest` in that order. Unit tests prove reducers,
+hashes, and upcasting; PostgreSQL tests prove uniqueness/expected-version/CAS;
+HTTP tests prove position and consistency headers; `BillingEventSourcingStressTest`
+proves bounded close/rebuild behavior for 10,000 events. None of these layers is
+a production capacity benchmark or a guarantee that a projection has zero lag.
+
 ## Choose baseline or advanced first
 
 Most teams should start with the [`usage-metering-billing-ledger`](../usage-metering-billing-ledger/) baseline. Event Sourcing is not merely an audit feature; it commits the team to operating schema evolution, replay, projections, and recovery together.

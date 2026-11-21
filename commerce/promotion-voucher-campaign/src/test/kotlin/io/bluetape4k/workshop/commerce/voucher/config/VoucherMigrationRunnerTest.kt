@@ -30,14 +30,39 @@ import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+/**
+ * VoucherMigrationRunnerTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class VoucherMigrationRunnerTest {
 
     companion object: KLogging() {
+/**
+ * MIGRATION_LOCK_KEY은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val MIGRATION_LOCK_KEY = 534001L
+/**
+ * postgres은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
     }
 
+/**
+ * voucherSchema은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var voucherSchema: String
+/**
+ * dataSource은 프로모션 바우처 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private lateinit var dataSource: HikariDataSource
 
     @BeforeEach
@@ -64,6 +89,11 @@ internal class VoucherMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "clean migration and same checksum replay are idempotent" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `clean migration and same checksum replay are idempotent`() {
         val runner = runner("db/migration/test/V001__voucher_probe.sql")
 
@@ -75,6 +105,11 @@ internal class VoucherMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "production migration creates the complete authority schema and replays" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `production migration creates the complete authority schema and replays`() {
         val runner = runner("db/migration/V001__voucher_campaign.sql")
 
@@ -95,6 +130,11 @@ internal class VoucherMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "checksum drift fails closed without mutating the applied schema" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `checksum drift fails closed without mutating the applied schema`() {
         runner("db/migration/test/V001__voucher_probe.sql").migrate()
 
@@ -107,6 +147,11 @@ internal class VoucherMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "partial statement failure rolls back schema and history" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `partial statement failure rolls back schema and history`() {
         val failure = assertFailsWith<VoucherMigrationException> {
             runner("db/migration/test/V002__voucher_partial.sql", version = "002").migrate()
@@ -126,6 +171,11 @@ internal class VoucherMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "held advisory lock fails with a sanitized lock timeout" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `held advisory lock fails with a sanitized lock timeout`() {
         adminConnection().use { blocker ->
             blocker.autoCommit = false
@@ -148,6 +198,11 @@ internal class VoucherMigrationRunnerTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "contending startup waits for the winner then rechecks the checksum" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `contending startup waits for the winner then rechecks the checksum`() {
         adminConnection().use { blocker ->
             blocker.autoCommit = false
@@ -170,6 +225,11 @@ internal class VoucherMigrationRunnerTest {
         }
     }
 
+/**
+ * runner은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun runner(
         resource: String,
         version: String = "001",
@@ -182,6 +242,11 @@ internal class VoucherMigrationRunnerTest {
             lockTimeout = lockTimeout,
         )
 
+/**
+ * queryLong은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun queryLong(sql: String): Long =
         dataSource.connection.use { conn ->
             conn.createStatement().use { stmt ->
@@ -191,6 +256,11 @@ internal class VoucherMigrationRunnerTest {
             }
         }
 
+/**
+ * queryString은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun queryString(sql: String): String? =
         dataSource.connection.use { conn ->
             conn.createStatement().use { stmt ->
@@ -200,6 +270,11 @@ internal class VoucherMigrationRunnerTest {
             }
         }
 
+/**
+ * adminConnection은 프로모션 바우처 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun adminConnection(): Connection =
         DriverManager.getConnection(
             postgres.jdbcUrl,

@@ -9,11 +9,21 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import java.util.*
 
+/**
+ * CustomerVoucherWebIntegrationTest 테스트 묶음은 프로모션 바우처의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest() {
 
     companion object: KLogging()
 
     @Test
+/**
+ * 이 시나리오는 "redemption review fixture is consumed only by redemption" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `redemption review fixture is consumed only by redemption`() {
         val tenant = randomIdentifier()
         val principal = "principal-redemption-review"
@@ -59,6 +69,11 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "fixture replay does not rearm a consumed one-shot signal" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fixture replay does not rearm a consumed one-shot signal`() {
         val tenant = randomIdentifier()
         val principal = "principal-fixture-replay"
@@ -108,6 +123,12 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "delayed event fixture returns submitted principal and authoritative acceptance
+ * evidence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `delayed event fixture returns submitted principal and authoritative acceptance evidence`() {
         val tenant = randomIdentifier()
         val principal = "principal-delayed"
@@ -130,6 +151,11 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "operator can page open reviews and inspect reconciliation backlog" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `operator can page open reviews and inspect reconciliation backlog`() {
         val tenant = randomIdentifier()
         val principal = "principal-operator-read"
@@ -170,6 +196,11 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "fixture reset is idempotent and clears tenant scoped one-shot signals" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `fixture reset is idempotent and clears tenant scoped one-shot signals`() {
         val tenant = randomIdentifier()
         val principal = "principal-fixture-reset"
@@ -233,6 +264,12 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "allocation replays the same one-time code while GET stays safe and tenant scoped" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `allocation replays the same one-time code while GET stays safe and tenant scoped`() {
         val tenant = randomIdentifier()
         val principal = "principal-a"
@@ -293,6 +330,11 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "unknown customer request property is rejected before allocation" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `unknown customer request property is rejected before allocation`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -311,6 +353,12 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "release is exactly replayed and the same raw key cannot change its fingerprint" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `release is exactly replayed and the same raw key cannot change its fingerprint`() {
         val tenant = randomIdentifier()
         val principal = "principal-release"
@@ -372,6 +420,11 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "claim ownership is hidden across principals in the same tenant" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `claim ownership is hidden across principals in the same tenant`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
@@ -398,6 +451,11 @@ internal class CustomerVoucherWebIntegrationTest: AbstractVoucherIntegrationTest
     }
 
     @Test
+/**
+ * 이 시나리오는 "review approved code acknowledgement replays only for its original key" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `review approved code acknowledgement replays only for its original key`() {
         val tenant = randomIdentifier()
         val principal = "principal-review"

@@ -44,8 +44,23 @@ import java.time.Instant
 import java.util.*
 import javax.sql.DataSource
 
+/**
+ * DemoCallerScope은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 data class DemoCallerScope(
+    /**
+     * `tenantId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val tenantId: String,
+    /**
+     * `submitterHash`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+     *
+     * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+     */
     val submitterHash: String,
 ) {
     init {
@@ -54,72 +69,286 @@ data class DemoCallerScope(
     }
 }
 
+/**
+ * SubmitJobResult은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 data class SubmitJobResult(
+    /**
+     * `jobId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val jobId: UUID,
+    /**
+     * `enqueueSequence`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val enqueueSequence: Long,
+    /**
+     * `replayed`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val replayed: Boolean,
 )
 
+/**
+ * InsertedSubmittedJob은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 internal data class InsertedSubmittedJob(
+    /**
+     * `jobId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val jobId: UUID,
+    /**
+     * `enqueueSequence`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val enqueueSequence: Long,
 )
 
+/**
+ * ClaimedJob은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 data class ClaimedJob(
+    /**
+     * `lease`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+     *
+     * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+     */
     val lease: JobLease,
+    /**
+     * `tenantId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val tenantId: String,
+    /**
+     * `jobType`은 작업 운영 콘솔에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+     *
+     * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+     */
     val jobType: JobType,
+    /**
+     * `failureMode`은 작업 운영 콘솔에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+     *
+     * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+     */
     val failureMode: FailureMode,
+    /**
+     * `workUnits`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val workUnits: Int,
+    /**
+     * `enqueueSequence`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val enqueueSequence: Long,
+    /**
+     * `completedChunk`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val completedChunk: Long,
 )
 
+/**
+ * CheckpointResult은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 data class CheckpointResult(
+    /**
+     * `lease`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+     *
+     * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+     */
     val lease: JobLease,
+    /**
+     * `completedChunk`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val completedChunk: Long,
+    /**
+     * `progress`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val progress: Int,
+    /**
+     * `state`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     val state: JobState,
 )
 
+/**
+ * StoredJob은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 data class StoredJob(
+    /**
+     * `jobId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val jobId: UUID,
+    /**
+     * `tenantId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val tenantId: String,
+    /**
+     * `submitterHash`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+     *
+     * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+     */
     val submitterHash: String,
+    /**
+     * `jobType`은 작업 운영 콘솔에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+     *
+     * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+     */
     val jobType: JobType,
+    /**
+     * `state`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     val state: JobState,
+    /**
+     * `progress`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val progress: Int,
+    /**
+     * `completedChunk`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     val completedChunk: Long,
+    /**
+     * `enqueueSequence`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val enqueueSequence: Long,
+    /**
+     * `version`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+     *
+     * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+     */
     val version: Long,
+    /**
+     * `updatedAt`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val updatedAt: Instant,
 )
 
+/**
+ * CancelJobResult은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 data class CancelJobResult(
+    /**
+     * `jobId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+     *
+     * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+     */
     val jobId: UUID,
+    /**
+     * `state`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+     *
+     * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+     */
     val state: JobState,
+    /**
+     * `notificationRequired`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     val notificationRequired: Boolean,
 )
 
+/**
+ * JobRepositoryException은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+ * 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class JobRepositoryException(
+    /**
+     * `code`은 작업 운영 콘솔에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+     *
+     * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+     */
     val code: JobProblemCode,
 ): RuntimeException(code.name)
 
+/**
+ * JobRepository은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+ *
+ * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+ */
 class JobRepository(
+    /**
+     * `dataSource`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+     *
+     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+     */
     internal val dataSource: DataSource,
 ) : AutoCloseable {
 
+    /**
+     * `jdbc`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+     *
+     * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+     */
     private val jdbc = JobJdbcExecutor(dataSource)
 
+    /** Exposed database manager를 애플리케이션 lifecycle과 함께 해제합니다. */
     /** Exposed database manager를 애플리케이션 lifecycle과 함께 해제합니다. */
     override fun close() {
         jdbc.close()
     }
 
     companion object: KLogging() {
+        /**
+         * `MAX_DURATION_SAMPLES`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+         *
+         * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+         */
         const val MAX_DURATION_SAMPLES: Int = 100
     }
 
+    /**
+     * runnableTenantIds은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun runnableTenantIds(limit: Int): List<String> {
         limit.requireInRange(1, 100, "limit")
 
@@ -143,10 +372,16 @@ class JobRepository(
     }
 
     /** 애플리케이션 테이블에 의존하지 않는 connection 생존성 확인입니다. */
+    /** 애플리케이션 테이블에 의존하지 않는 connection 생존성 확인입니다. */
     fun databaseReady(): Boolean = runCatching {
         jdbc.exposedTransaction { select(CurrentTimestamp).singleOrNull() != null }
     }.getOrDefault(false)
 
+    /**
+     * submit은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     fun submit(
         scope: DemoCallerScope,
         idempotencyKey: String,
@@ -200,6 +435,11 @@ class JobRepository(
         }
     }
 
+    /**
+     * insertSubmittedJob은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     internal fun insertSubmittedJob(
         connection: Connection,
         scope: DemoCallerScope,
@@ -215,6 +455,12 @@ class JobRepository(
         return InsertedSubmittedJob(jobId, sequence)
     }
 
+    /**
+     * nextEnqueueSequenceDsl은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun nextEnqueueSequenceDsl(tenantId: String): Long {
         val maximum = JobTable.enqueueSequence.max()
         return (JobTable
@@ -224,12 +470,23 @@ class JobRepository(
             ?.get(maximum) ?: 0L) + 1L
     }
 
+    /**
+     * enqueueSequenceDsl은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param jobId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun enqueueSequenceDsl(jobId: UUID): Long =
         JobTable
             .select(JobTable.enqueueSequence)
             .where { JobTable.jobId eq jobId }
             .single()[JobTable.enqueueSequence]
 
+    /**
+     * insertJobDsl은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun insertJobDsl(
         scope: DemoCallerScope,
         request: SubmitJobRequest,
@@ -251,6 +508,11 @@ class JobRepository(
         }
     }
 
+    /**
+     * insertRequestDsl은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private fun insertRequestDsl(
         scope: DemoCallerScope,
         keyHash: String,
@@ -271,6 +533,13 @@ class JobRepository(
         }
     }
 
+    /**
+     * insertOutboxDsl은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param jobId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun insertOutboxDsl(jobId: UUID, now: Instant) {
         listOf("job.updated", "queue.updated").forEach { eventType ->
             JobOutboxTable.insert { statement ->
@@ -284,6 +553,13 @@ class JobRepository(
         }
     }
 
+    /**
+     * insertHistoryDsl은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param jobId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun insertHistoryDsl(jobId: UUID, now: Instant) {
         JobHistoryTable.insert { statement ->
             statement[JobHistoryTable.historyId] = Uuid.V7.nextId()
@@ -296,6 +572,7 @@ class JobRepository(
         }
     }
 
+    /** PostgreSQL 제어 경로: advisory lock과 `FOR UPDATE SKIP LOCKED`로 lease 공정성을 보장합니다. */
     /** PostgreSQL 제어 경로: advisory lock과 `FOR UPDATE SKIP LOCKED`로 lease 공정성을 보장합니다. */
     fun claimNext(tenantId: String, leaseDuration: Duration): ClaimedJob? = inTransaction { connection ->
         advisoryLock(connection, "claim:$tenantId")
@@ -318,11 +595,17 @@ class JobRepository(
     }
 
     /** PostgreSQL row lock과 database clock으로 만료 lease를 직렬화하는 제어 경로입니다. */
+    /** PostgreSQL row lock과 database clock으로 만료 lease를 직렬화하는 제어 경로입니다. */
     fun reclaimExpired(tenantId: String, leaseDuration: Duration): ClaimedJob? =
         inTransaction { connection ->
             advisoryLock(connection, "claim:$tenantId")
             if (cancelExpiredLease(connection, tenantId)) return@inTransaction null
 
+            /**
+             * `candidate`은 작업 운영 콘솔에서 업무 규칙의 허용 여부를 나타내는 flag입니다.
+             *
+             * true와 false 각각의 분기를 명시적으로 처리하고 기본값이 안전한 거부인지 확인합니다.
+             */
             val candidate = connection.prepareStatement(
                 """
                     SELECT job_id, job_type, failure_mode, work_units, enqueue_sequence, version
@@ -343,6 +626,7 @@ class JobRepository(
         }
 
     /** PostgreSQL 제어 경로: CAS update는 `RETURNING`과 interval 식을 하나의 원자 연산으로 사용합니다. */
+    /** PostgreSQL 제어 경로: CAS update는 `RETURNING`과 interval 식을 하나의 원자 연산으로 사용합니다. */
     fun checkpoint(
         lease: JobLease,
         completedChunk: Long,
@@ -352,14 +636,39 @@ class JobRepository(
         inTransaction { connection ->
             require(progress in 0..100) { "progress must be between 0 and 100" }
             require(!renewalDuration.isNegative && !renewalDuration.isZero) { "renewal duration must be positive" }
+            /**
+             * `leaseState`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+             *
+             * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+             */
             val leaseState = currentLeaseState(connection, lease)
+            /**
+             * `state`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+             *
+             * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+             */
             val state = leaseState.state
+            /**
+             * `effectiveLease`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+             *
+             * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+             */
             val effectiveLease = lease.copy(revision = leaseState.version)
+            /**
+             * `nextState`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+             *
+             * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+             */
             val nextState = if (state == JobState.CANCEL_REQUESTED) {
                 JobTransitions.next(state, JobSignal.CHECKPOINT)
             } else {
                 state
             }
+            /**
+             * `updated`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+             *
+             * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+             */
             val updated = connection.prepareStatement(
                 """
                     UPDATE jobs
@@ -373,6 +682,11 @@ class JobRepository(
                     RETURNING version, lease_expires_at
                     """.trimIndent(),
             ).use { statement ->
+                /**
+                 * `terminal`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+                 *
+                 * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+                 */
                 val terminal = nextState.terminal
                 statement.setString(1, nextState.wireValue)
                 statement.setInt(2, progress)
@@ -384,6 +698,11 @@ class JobRepository(
                 statement.setLong(8, effectiveLease.revision)
                 statement.executeQuery().use { result ->
                     if (!result.next()) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
+                    /**
+                     * `expiresAt`은 작업 운영 콘솔에서 만료·재시도·SLA·정산 경계를 계산하는 업무 시각 또는 기간입니다.
+                     *
+                     * clock과 timezone 정책을 고정하고 저장·이벤트·응답에서 같은 기준으로 해석합니다.
+                     */
                     val expiresAt = result.getTimestamp("lease_expires_at")?.toInstant() ?: lease.expiresAt
                     effectiveLease.copy(revision = result.getLong("version"), expiresAt = expiresAt)
                 }
@@ -394,24 +713,60 @@ class JobRepository(
         }
 
     /** PostgreSQL 제어 경로: lease CAS와 `RETURNING`은 하나의 statement로 유지해야 합니다. */
+    /** PostgreSQL 제어 경로: lease CAS와 `RETURNING`은 하나의 statement로 유지해야 합니다. */
     fun complete(lease: JobLease, signal: JobSignal): StoredJob =
         inTransaction { connection ->
+            /**
+             * `leaseState`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+             *
+             * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+             */
             val leaseState = currentLeaseState(connection, lease)
+            /**
+             * `effectiveLease`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+             *
+             * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+             */
             val effectiveLease = lease.copy(revision = leaseState.version)
+            /**
+             * `current`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+             *
+             * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+             */
             val current = leaseState.state
+            /**
+             * `effectiveSignal`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+             *
+             * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+             */
             val effectiveSignal =
                 if (signal == JobSignal.RETRYABLE_FAILURE && leaseState.retryBudget == 0) {
                     JobSignal.RETRY_EXHAUSTED
                 } else {
                     signal
                 }
+            /**
+             * `next`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+             *
+             * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+             */
             val next = JobTransitions.next(current, effectiveSignal)
+            /**
+             * `progress`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+             *
+             * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+             */
             val progress =
                 if (next == JobState.SUCCEEDED) {
                     100
                 } else {
                     loadInCurrentTransaction(lease.jobId)?.progress ?: 0
                 }
+            /**
+             * `version`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+             *
+             * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+             */
             val version =
                 connection.prepareStatement(
                     """
@@ -439,6 +794,12 @@ class JobRepository(
             requireNotNull(loadInCurrentTransaction(effectiveLease.jobId))
         }
 
+    /**
+     * load은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param jobId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun load(jobId: UUID): StoredJob? = jdbc.exposedTransaction {
         val job = JobTable
             .selectAll()
@@ -454,6 +815,13 @@ class JobRepository(
         job.toStoredJob(completedChunk)
     }
 
+    /**
+     * load은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param jobId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun load(scope: DemoCallerScope, jobId: UUID): StoredJob {
         val stored = load(jobId) ?: throw JobRepositoryException(JobProblemCode.JOB_NOT_FOUND)
         if (stored.tenantId != scope.tenantId || stored.submitterHash != normalizedSubmitterHash(scope.submitterHash)) {
@@ -462,6 +830,12 @@ class JobRepository(
         return stored
     }
 
+    /**
+     * loadTenantJobs은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun loadTenantJobs(tenantId: String): List<StoredJob> = jdbc.exposedTransaction {
         // checkpoint를 job별로 다시 조회하지 않고 한 번의 LEFT JOIN으로 읽습니다.
         JobTable
@@ -472,6 +846,7 @@ class JobRepository(
             .map { job -> job.toStoredJob(job.getOrNull(JobCheckpointTable.completedChunk) ?: 0L) }
     }
 
+    /** PostgreSQL 제어 경로: row lock과 CAS `RETURNING`으로 cancellation 경쟁을 보호합니다. */
     /** PostgreSQL 제어 경로: row lock과 CAS `RETURNING`으로 cancellation 경쟁을 보호합니다. */
     fun cancel(scope: DemoCallerScope, jobId: UUID): CancelJobResult = inTransaction { connection ->
         val row =
@@ -522,9 +897,25 @@ class JobRepository(
         CancelJobResult(jobId, next, next == JobState.CANCEL_REQUESTED)
     }
 
+    /**
+     * queueRows은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param afterSequence 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun queueRows(tenantId: String, afterSequence: Long?, limit: Int): List<QueueRow> =
         queryQueueRows(tenantId, afterSequence, limit.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE))
 
+    /**
+     * queuePageRows은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param afterSequence 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param pageSize 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun queuePageRows(tenantId: String, afterSequence: Long?, pageSize: Int): List<QueueRow> =
         queryQueueRows(
             tenantId,
@@ -532,6 +923,14 @@ class JobRepository(
             pageSize.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE) + 1,
         )
 
+    /**
+     * queryQueueRows은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param afterSequence 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param boundedLimit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun queryQueueRows(tenantId: String, afterSequence: Long?, boundedLimit: Int): List<QueueRow> {
         return jdbc.exposedTransaction {
             JobTable
@@ -558,13 +957,31 @@ class JobRepository(
         }
     }
 
+    /**
+     * queueProjection은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param jobId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param now 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun queueProjection(tenantId: String, jobId: UUID, now: Instant): QueueProjection? =
         jdbc.exposedTransaction {
+            /**
+             * `activeStates`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+             *
+             * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+             */
             val activeStates = listOf(
                 JobState.QUEUED.wireValue,
                 JobState.RUNNING.wireValue,
                 JobState.CANCEL_REQUESTED.wireValue,
             )
+            /**
+             * `target`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+             *
+             * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+             */
             val target = JobTable
                 .select(JobTable.enqueueSequence, JobTable.queueVersion)
                 .where {
@@ -574,7 +991,17 @@ class JobRepository(
                 }
                 .singleOrNull()
                 ?: return@exposedTransaction null
+            /**
+             * `targetSequence`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+             *
+             * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+             */
             val targetSequence = target[JobTable.enqueueSequence]
+            /**
+             * `jobsAhead`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+             *
+             * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+             */
             val jobsAhead = JobTable
                 .select(JobTable.jobId)
                 .where {
@@ -596,6 +1023,14 @@ class JobRepository(
             )
         }
 
+    /**
+     * submitterQueuePageRows은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param scope 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param afterSequence 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param pageSize 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun submitterQueuePageRows(scope: DemoCallerScope, afterSequence: Long?, pageSize: Int): List<QueueRow> =
         jdbc.exposedTransaction {
             JobTable
@@ -622,6 +1057,14 @@ class JobRepository(
                 .map { it.toQueueRow() }
         }
 
+    /**
+     * recordDuration은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param jobType 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param duration 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param completedAt 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun recordDuration(jobType: JobType, duration: Duration, completedAt: Instant) {
         require(!duration.isNegative && !duration.isZero) { "duration must be positive" }
         jdbc.exposedTransaction {
@@ -633,6 +1076,14 @@ class JobRepository(
         }
     }
 
+    /**
+     * durationSamples은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param jobType 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param since 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     * @param limit 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     fun durationSamples(jobType: JobType, since: Instant, limit: Int): List<Duration> {
         val boundedLimit = limit.coerceIn(1, MAX_DURATION_SAMPLES)
         return jdbc.exposedTransaction {
@@ -651,6 +1102,12 @@ class JobRepository(
         }
     }
 
+    /**
+     * hasActiveLease은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param tenantId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun hasActiveLease(tenantId: String): Boolean =
         JobTable
             .select(JobTable.jobId)
@@ -662,6 +1119,7 @@ class JobRepository(
             .limit(1)
             .any()
 
+    /** 만료된 cancellation을 `FOR UPDATE`와 CAS `RETURNING`으로 한 번에 전이합니다. */
     /** 만료된 cancellation을 `FOR UPDATE`와 CAS `RETURNING`으로 한 번에 전이합니다. */
     private fun cancelExpiredLease(connection: Connection, tenantId: String): Boolean {
         val candidate =
@@ -714,6 +1172,7 @@ class JobRepository(
         return true
     }
 
+    /** database clock, interval, `RETURNING`이 필요한 PostgreSQL lease 제어 경로입니다. */
     /** database clock, interval, `RETURNING`이 필요한 PostgreSQL lease 제어 경로입니다. */
     private fun activateLease(
         connection: Connection,
@@ -776,6 +1235,7 @@ class JobRepository(
     }
 
     /** 유효한 lease를 `FOR UPDATE`로 잠그는 PostgreSQL 제어 경로입니다. */
+    /** 유효한 lease를 `FOR UPDATE`로 잠그는 PostgreSQL 제어 경로입니다. */
     private fun currentLeaseState(connection: Connection, lease: JobLease): LeaseState =
         connection.prepareStatement(
             "SELECT state, version, retry_budget FROM jobs " +
@@ -793,6 +1253,7 @@ class JobRepository(
             }
         }
 
+    /** PostgreSQL `ON CONFLICT`와 database clock을 보존하는 checkpoint upsert입니다. */
     /** PostgreSQL `ON CONFLICT`와 database clock을 보존하는 checkpoint upsert입니다. */
     private fun upsertCheckpoint(connection: Connection, jobId: UUID, token: UUID, chunk: Long, progress: Int) {
         connection.prepareStatement(
@@ -812,6 +1273,12 @@ class JobRepository(
         }
     }
 
+    /**
+     * checkpointChunk은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param jobId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun checkpointChunk(jobId: UUID): Long =
         JobCheckpointTable
             .select(JobCheckpointTable.completedChunk)
@@ -820,6 +1287,7 @@ class JobRepository(
             ?.get(JobCheckpointTable.completedChunk)
             ?: 0L
 
+    /** PostgreSQL `ON CONFLICT`와 `INSERT ... SELECT ... CURRENT_TIMESTAMP`를 보존하는 raw 경로입니다. */
     /** PostgreSQL `ON CONFLICT`와 `INSERT ... SELECT ... CURRENT_TIMESTAMP`를 보존하는 raw 경로입니다. */
     private fun appendTransition(
         connection: Connection,
@@ -857,6 +1325,7 @@ class JobRepository(
     }
 
     /** 현재 Exposed transaction에서 job snapshot을 읽습니다. */
+    /** 현재 Exposed transaction에서 job snapshot을 읽습니다. */
     internal fun loadInCurrentTransaction(jobId: UUID): StoredJob? {
         val job =
             JobTable
@@ -874,6 +1343,12 @@ class JobRepository(
         return job.toStoredJob(completedChunk)
     }
 
+/**
+ * toStoredJob은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.toStoredJob(completedChunk: Long): StoredJob =
         StoredJob(
             jobId = this[JobTable.jobId],
@@ -888,6 +1363,12 @@ class JobRepository(
             updatedAt = this[JobTable.updatedAt],
         )
 
+/**
+ * toQueueRow은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultRow.toQueueRow(): QueueRow =
         QueueRow(
             jobId = this[JobTable.jobId],
@@ -898,8 +1379,15 @@ class JobRepository(
             updatedAt = this[JobTable.updatedAt],
         )
 
+/**
+ * inTransaction은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun <T> inTransaction(block: (Connection) -> T): T = jdbc.transaction(block)
 
+    /** tenant/request 단위 직렬화를 위한 PostgreSQL transaction advisory lock입니다. */
     /** tenant/request 단위 직렬화를 위한 PostgreSQL transaction advisory lock입니다. */
     private fun advisoryLock(connection: Connection, value: String) {
         connection.prepareStatement("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))").use { statement ->
@@ -908,36 +1396,132 @@ class JobRepository(
         }
     }
 
+    /**
+     * normalizedSubmitterHash은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun normalizedSubmitterHash(value: String): String =
         if (value.matches(Regex("[0-9a-f]{64}"))) value else sha256(value)
 
+    /**
+     * sha256은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+     */
     private fun sha256(value: String): String =
         MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()).toHexString()
 
+/**
+ * requireNext은 운영 작업 콘솔 업무 흐름에서 입력을 검증하거나 확정 상태를 변환하는 단계입니다.
+ *
+ * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
+ * 처리를 일관되게 수행해야 합니다.
+ */
     private fun ResultSet.requireNext() {
         check(next()) { "expected one database row" }
     }
 
+    /**
+     * ExistingRequest은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+     * 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private data class ExistingRequest(val fingerprint: String, val jobId: UUID)
 
+    /**
+     * LeaseState은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private data class LeaseState(val state: JobState, val version: Long, val retryBudget: Int)
 
+    /**
+     * CancelRow은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private data class CancelRow(
+        /**
+         * `tenantId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val tenantId: String,
+        /**
+         * `submitterHash`은 작업 운영 콘솔에서 멱등성·무결성·lease fencing을 확인하는 보호 값입니다.
+         *
+         * 원문 비밀값을 로그·일반 응답에 노출하지 않고 재시도와 오래된 worker를 안전하게 차단합니다.
+         */
         val submitterHash: String,
+        /**
+         * `state`은 작업 운영 콘솔에서 허용된 상태 전이와 terminal 여부를 선택하는 생명주기 값입니다.
+         *
+         * 임의 문자열로 해석하지 말고 전이표·재시도·보상 규칙을 함께 적용합니다.
+         */
         val state: JobState,
+        /**
+         * `version`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+         *
+         * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+         */
         val version: Long,
     )
 
+    /**
+     * ClaimCandidate은 운영 작업 콘솔 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
+     * 해석합니다.
+     *
+     * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+     */
     private data class ClaimCandidate(
+        /**
+         * `jobId`은 작업 운영 콘솔에서 업무 대상의 불변 식별자입니다.
+         *
+         * 생성 후 변경하지 않으며 API·영속화·이벤트가 같은 대상을 가리키도록 유지합니다.
+         */
         val jobId: UUID,
+        /**
+         * `jobType`은 작업 운영 콘솔에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+         *
+         * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+         */
         val jobType: JobType,
+        /**
+         * `failureMode`은 작업 운영 콘솔에서 응답·재시도·보상·운영 분기를 선택하는 안정된 업무 코드입니다.
+         *
+         * 저장값과 외부 응답에서 의미를 바꾸지 말고 호출자가 처리할 수 있는 계약으로 유지합니다.
+         */
         val failureMode: FailureMode,
+        /**
+         * `workUnits`은 작업 운영 콘솔에서 업무 흐름을 구성하는 입력 또는 결과 값입니다.
+         *
+         * 입력 검증, 권한·멱등성, 상태 전이, 영속화와 이벤트 발행 사이에서 이 의미를 보존합니다.
+         */
         val workUnits: Int,
+        /**
+         * `enqueueSequence`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+         *
+         * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+         */
         val enqueueSequence: Long,
+        /**
+         * `version`은 작업 운영 콘솔에서 낙관적 동시성과 이벤트·메시지 재생 순서를 검증하는 버전 값입니다.
+         *
+         * 기대값과 비교해 오래된 명령·중복 이벤트·잘못된 재생을 거절합니다.
+         */
         val version: Long,
     ) {
         companion object {
+            /**
+             * from은 운영 작업 콘솔 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
+             *
+             * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
+             * @param result 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
+             */
             fun from(result: ResultSet): ClaimCandidate =
                 ClaimCandidate(
                     jobId = result.getObject("job_id", UUID::class.java),

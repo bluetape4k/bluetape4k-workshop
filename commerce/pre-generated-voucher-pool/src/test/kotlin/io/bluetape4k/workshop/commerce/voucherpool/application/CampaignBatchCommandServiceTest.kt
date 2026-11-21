@@ -23,18 +23,58 @@ import java.util.*
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * CampaignBatchCommandServiceTest 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class CampaignBatchCommandServiceTest {
 
     companion object: KLogging() {
+/**
+ * TENANT은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val TENANT = "tenant-a"
+/**
+ * CAMPAIGN은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val CAMPAIGN = UUID.fromString("11111111-1111-1111-1111-111111111111")
+/**
+ * BATCH은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val BATCH = UUID.fromString("22222222-2222-2222-2222-222222222222")
+/**
+ * MANIFEST은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private val MANIFEST = DigestValue.of(ByteArray(32) { 1 })
+/**
+ * REVISION은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val REVISION = 3L
+/**
+ * IDEMPOTENCY_KEY은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
         private const val IDEMPOTENCY_KEY = "unit-idempotency-key"
     }
 
     @Test
+/**
+ * 이 시나리오는 "batch and chunk commands enforce bounded input before JDBC" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `batch and chunk commands enforce bounded input before JDBC`() {
         assertFailsWith<IllegalArgumentException> {
             importBatch(expectedCount = 10_001)
@@ -60,6 +100,11 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "lifecycle command defaults use UUID version seven" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `lifecycle command defaults use UUID version seven`() {
         AllocateVoucherCommand(
             tenantId = TENANT,
@@ -88,6 +133,11 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "import and generation commands reject invalid ordinals and empty work" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `import and generation commands reject invalid ordinals and empty work`() {
         assertFailsWith<IllegalArgumentException> {
             importChunk(firstOrdinal = -1)
@@ -137,9 +187,19 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "known deterministic generation is rejected outside loopback test mode" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `known deterministic generation is rejected outside loopback test mode`() {
         val deterministic = object: GeneratedVoucherCodeSource {
             override val deterministic: Boolean = true
+/**
+ * nextCode은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
             override fun nextCode(): String = "KNOWN-CODE"
         }
 
@@ -157,6 +217,11 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "secure generation provides at least 128 bits without exposing a seed" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `secure generation provides at least 128 bits without exposing a seed`() {
         val source = SecureRandomVoucherCodeSource()
         val generated = List(100) { source.nextCode() }
@@ -170,6 +235,12 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "constraint authority comes from nested PostgreSQL metadata and never exception text" 업무
+ * 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `constraint authority comes from nested PostgreSQL metadata and never exception text`() {
         val postgresFailure = PSQLException(
             ServerErrorMessage(
@@ -185,6 +256,11 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "retryable owner release survives bounded JDBC timeouts" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `retryable owner release survives bounded JDBC timeouts`() {
         val attempts = AtomicInteger()
 
@@ -196,6 +272,11 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+/**
+ * 이 시나리오는 "retryable owner release fails after its bounded retry budget" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `retryable owner release fails after its bounded retry budget`() {
         val attempts = AtomicInteger()
 
@@ -209,6 +290,11 @@ internal class CampaignBatchCommandServiceTest {
         attempts.get() shouldBeEqualTo MAX_OWNER_RELEASE_ATTEMPTS // 8
     }
 
+/**
+ * importBatch은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun importBatch(expectedCount: Long): CreateImportBatchCommand =
         CreateImportBatchCommand(
             tenantId = TENANT,
@@ -223,6 +309,11 @@ internal class CampaignBatchCommandServiceTest {
             idempotencyKey = IDEMPOTENCY_KEY,
         )
 
+/**
+ * importChunk은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun importChunk(
         firstOrdinal: Long = 0,
         codes: List<String> = listOf("CODE-0"),
@@ -239,6 +330,11 @@ internal class CampaignBatchCommandServiceTest {
             idempotencyKey = IDEMPOTENCY_KEY
         )
 
+/**
+ * jdbcTimeout은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun jdbcTimeout(): VoucherPoolJdbcTimeoutException =
         VoucherPoolJdbcTimeoutException(
             JdbcExecutionLane.OPERATOR,

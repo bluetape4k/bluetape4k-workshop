@@ -27,6 +27,15 @@ exactly-once를 증명하지는 않습니다.
 
 [Architecture SVG source](../../docs/images/readme-diagrams/usage-billing-service-boundaries-01.ko.svg)
 
+## 업무 요구사항과 테스트 증거
+
+Billing은 live Meter lookup이 아니라 보존된 price evidence로 rate해야
+합니다. accepted usage는 local에서 한 번 산정하고 늦은 보정은 새로운
+financial fact가 됩니다. `BillingServiceApplicationContractTest`는 service
+계약을, `BillingInboxPostgresIntegrationTest`는 inbox ordering·price-evidence
+uniqueness·atomic charge/outbox write·digest conflict·fenced publishing을
+증명합니다. tax policy나 end-to-end exactly-once를 증명하지는 않습니다.
+
 ## 책임
 
 - public topic에서 `PriceActivated`와 `UsageAccepted`를 소비합니다.

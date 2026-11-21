@@ -45,33 +45,124 @@ import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * OrderLifecycleIntegrationTest 테스트 묶음은 주문 수명주기·배송 이행의 업무 규칙과 실패 경계를 검증합니다.
+ *
+ * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
+ */
 internal class OrderLifecycleIntegrationTest(
+/**
+ * commands은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val commands: OrderCommandService,
+/**
+ * paymentEvents은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val paymentEvents: PaymentEventService,
+/**
+ * orders은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val orders: OrderRepository,
+/**
+ * payments은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val payments: PaymentAttemptRepository,
+/**
+ * providerEvents은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val providerEvents: ProviderEventInboxRepository,
+/**
+ * reservations은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val reservations: InventoryReservationRepository,
+/**
+ * fulfillments은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fulfillments: FulfillmentGroupRepository,
+/**
+ * fulfillmentLines은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val fulfillmentLines: FulfillmentLineRepository,
+/**
+ * cancellations은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val cancellations: CancellationCaseRepository,
+/**
+ * lines은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val lines: OrderLineRepository,
+/**
+ * refunds은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val refunds: RefundCaseRepository,
+/**
+ * audits은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val audits: LifecycleAuditRepository,
+/**
+ * failureSwitch은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val failureSwitch: InventoryListenerFailureSwitch,
+/**
+ * reconciliation은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val reconciliation: PublicationReconciliationService,
+/**
+ * publicationRepository은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val publicationRepository: EventPublicationRepository,
     transactionManager: PlatformTransactionManager,
 ): AbstractOrderLifecycleIntegrationTest() {
 
     companion object: KLogging()
 
+/**
+ * transactions은 주문 수명주기·배송 이행 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
+ *
+ * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
+ */
     private val transactions = TransactionTemplate(transactionManager)
 
     @AfterEach
     fun clearFailure() = failureSwitch.clear()
 
     @Test
+/**
+ * 이 시나리오는 "payment success commits inventory and creates split fulfillment without completing
+ * order" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `payment success commits inventory and creates split fulfillment without completing order`() {
         AopUtils.getTargetClass(publicationRepository).name shouldBeEqualTo
                 "io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository"
@@ -94,6 +185,12 @@ internal class OrderLifecycleIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "duplicate and out of order provider events do not reapply terminal payment" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `duplicate and out of order provider events do not reapply terminal payment`() {
         val submitted = commands.submit(validOrder(ProviderMode.OUT_OF_ORDER))
 
@@ -114,6 +211,11 @@ internal class OrderLifecycleIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "conflicting provider payload remains visible as unresolved evidence" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `conflicting provider payload remains visible as unresolved evidence`() {
         val submitted = commands.submit(validOrder(ProviderMode.DELAYED_SUCCESS))
         await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
@@ -148,6 +250,12 @@ internal class OrderLifecycleIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "failed publication remains visible and replay completes inventory exactly once" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `failed publication remains visible and replay completes inventory exactly once`() {
         val submitted = commands.submit(validOrder(ProviderMode.DELAYED_SUCCESS))
         await atMost 10.seconds withPollInterval 500.milliseconds untilAsserted {
@@ -184,6 +292,12 @@ internal class OrderLifecycleIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "delayed payment success is reconciled through a deterministic provider event" 업무 규칙을
+ * 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `delayed payment success is reconciled through a deterministic provider event`() {
         val submitted = commands.submit(validOrder(ProviderMode.DELAYED_SUCCESS))
 
@@ -204,6 +318,12 @@ internal class OrderLifecycleIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "one line split across shipped and unshipped groups can cancel only its remaining
+ * quantity" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `one line split across shipped and unshipped groups can cancel only its remaining quantity`() {
         val submitted = commands.submit(validOrder(ProviderMode.SUCCESS))
 
@@ -275,6 +395,11 @@ internal class OrderLifecycleIntegrationTest(
     }
 
     @Test
+/**
+ * 이 시나리오는 "all cancelled fulfillment groups cancel the order" 업무 규칙을 검증합니다.
+ *
+ * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
+ */
     fun `all cancelled fulfillment groups cancel the order`() {
         val submitted =
             commands.submit(
@@ -305,10 +430,20 @@ internal class OrderLifecycleIntegrationTest(
         }
     }
 
+/**
+ * readState은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private inline fun <T: Any> readState(
         crossinline block: () -> T,
     ): T = transactions.execute { block() }.shouldNotBeNull()
 
+/**
+ * validOrder은 주문 수명주기·배송 이행 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
+ *
+ * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
+ */
     private fun validOrder(mode: ProviderMode): SubmitOrder =
         SubmitOrder(
             tenantId = "tenant-a",
