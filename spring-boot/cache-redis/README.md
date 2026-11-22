@@ -48,7 +48,7 @@ fun asyncTaskExecutor(executorService: ExecutorService): AsyncTaskExecutor =
 ```
 
 Spring owns one delegate used by both `@Async` and Lettuce. Context shutdown rejects new work but does not interrupt already submitted tasks or wait indefinitely for them. The provider-defined thread name is intentional; use the `cacheRedisVirtualThreadExecutor` bean name and `VirtualThreads.runtimeName()` for observation. The shared
-`MdcTaskDecorator` captures an immutable caller snapshot, handles empty caller context, and restores the worker's previous context after success or failure. Both virtual-thread artifacts are versionless module declarations resolved by `bluetape4k-dependencies:2.1.0-SNAPSHOT`.
+`MdcTaskDecorator` captures an immutable caller snapshot, handles empty caller context, and restores the worker's previous context after success or failure. Both virtual-thread artifacts are versionless module declarations resolved by `bluetape4k-dependencies:2.1.0`.
 
 ## Redis Configuration Example
 

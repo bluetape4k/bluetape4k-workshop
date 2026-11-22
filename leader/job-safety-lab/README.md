@@ -242,7 +242,7 @@ leader and PostgreSQL fencing boundary remains explicit.
 
 ### Lease-extension observations
 
-This example also consumes the `bluetape4k-leader` 1.1.0-SNAPSHOT terminal lease-extension
+This example also consumes the `bluetape4k-leader` 1.1.0 terminal lease-extension
 contract. `JobSafetyConfiguration` registers one
 `MicrometerObservationLeaderLeaseExtensionObserver` for the process-local
 `LeaderLeaseExtensionObservers` registry. The registration is closed with the
@@ -289,7 +289,7 @@ JVM must share the process-local registration boundary.
 
 ## Leader audit export
 
-This lab also connects `bluetape4k-leader` 1.1.0-SNAPSHOT's public
+This lab also connects `bluetape4k-leader` 1.1.0's public
 `LeaderAuditExporter` to the real Redis acquire/release lifecycle. The default
 `MEMORY` transport performs no external DNS lookup, socket connection, or
 credential use at startup. It keeps only bounded, redacted JSON for the
@@ -354,7 +354,7 @@ closed/cancelled state for lifecycle verification.
 | --- | --- |
 | Leader 0.5.0 lifecycle observations and sanitized identifiers | `JobRunCoordinatorTest` |
 | Java 25 virtual threads and safe defaults | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
-| Leader 1.1.0-SNAPSHOT audit export, redaction, bounds, and trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
+| Leader 1.1.0 audit export, redaction, bounds, and trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
 | Single-owner bounded shutdown and cancellation | `JobSafetyAuditScopeTest`, `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
 | Real Redis lifecycle export while PostgreSQL remains authoritative | `JobSafetyEndToEndIntegrationTest` |
 | Opaque leader token separation | `RedisLeaderElectionAdapterTest` |

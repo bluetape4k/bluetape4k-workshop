@@ -2,7 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-This module demonstrates tenant-safe reads, writes, cache keys, lock keys, rate-limit buckets, Micrometer tags, and the `2.1.0-SNAPSHOT` tenant context carriers. It deliberately keeps runtime storage simple with H2 and in-memory helpers so the isolation contract is easy to inspect in tests.
+This module demonstrates tenant-safe reads, writes, cache keys, lock keys, rate-limit buckets, Micrometer tags, and the `2.1.0` tenant context carriers. It deliberately keeps runtime storage simple with H2 and in-memory helpers so the isolation contract is easy to inspect in tests.
 
 ## Architecture Diagram
 
@@ -72,7 +72,7 @@ tenant:tenant-alpha:lock:invoice:42
 tenant:tenant-alpha:rate-limit:reader
 ```
 
-## TenantContext carriers (2.1.0-SNAPSHOT)
+## TenantContext carriers (2.1.0)
 
 `TenantContextCarrierService` keeps the existing explicit `TenantId` repository predicates and adds a safe source for that value at each execution boundary. The module uses only the root `platform(libs.bluetape4k.dependencies)` BOM; the `bluetape4k-tenant` and `bluetape4k-tenant-reactor` aliases are versionless.
 

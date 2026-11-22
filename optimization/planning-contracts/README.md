@@ -40,15 +40,15 @@ quality evidence.
 
 | Responsibility    | Capability                                                                                                                                        |
 |-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| Version authority | `bluetape4k-dependencies:2.1.0-SNAPSHOT`                                                                                                          |
+| Version authority | `bluetape4k-dependencies:2.1.0`                                                                                                          |
 | Repositories      | `UUIDAuditableJdbcRepository`, `LongAuditableJdbcRepository`, `LongJdbcRepository` from `bluetape4k-exposed-jdbc`                                 |
 | PostgreSQL tests  | `PostgreSQLServer.Launcher.postgres` and released `bluetape4k-exposed-jdbc-tests` test support                                                    |
 | Virtual threads   | `bluetape4k-virtualthread-api` plus runtime `bluetape4k-virtualthread-jdk25`                                                                      |
 | Provider HTTP     | `productionVirtualThreadHttpClientOf`; `HttpEntity.readBodyString(64 KiB)` applies a strict byte limit and submit `POST` disables automatic retry |
 | Concurrency tests | `MultithreadingTester`                                                                                                                            |
 
-The module declares JetBrains Exposed coordinates without versions. The current `bluetape4k-dependencies:2.1.0-SNAPSHOT` resolution selects JetBrains Exposed
-`1.4.0` and Bluetape Exposed `2.1.0-SNAPSHOT`; child artifact versions are managed separately from the root BOM version.
+The module declares JetBrains Exposed coordinates without versions. The current `bluetape4k-dependencies:2.1.0` resolution selects JetBrains Exposed
+`1.4.0` and Bluetape Exposed `2.1.0`; child artifact versions are managed separately from the root BOM version.
 
 The module excludes the JDK 21 virtual-thread provider from every configuration. Redis is not needed for this first PostgreSQL-owned contract; if a later example proves that need, it must use Lettuce.
 
