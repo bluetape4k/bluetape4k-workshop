@@ -83,7 +83,7 @@ micrometer-context-propagation = "1.2.1"  # https://mvnrepository.com/artifact/i
 opentelemetry = "1.67.0"  # https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
 opentelemetry-alpha = "1.68.0-alpha"  # https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom-alpha
 opentelemetry-java-agent = "2.33.1"  # https://mvnrepository.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent
-opentelemetry-instrumentation-alpha = "2.33.1-alpha"  # https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-alpha
+opentelemetry-instrumentation-alpha = "2.34.0-alpha"  # https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-alpha
 
 caffeine = "3.3.1"  # https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
 ehcache = "3.12.0"  # https://mvnrepository.com/artifact/org.ehcache/ehcache
