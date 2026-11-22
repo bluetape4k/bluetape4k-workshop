@@ -38,4 +38,4 @@ production map, PHI, autonomous fulfillment는 문서화한 경계 밖에 둡니
 ./scripts/smoke-validate.sh optimization
 ```
 
-공개된 모든 Bluetape 모듈의 버전은 `bluetape4k-dependencies:2.1.0-SNAPSHOT`만 관리합니다. Optimization 예제는 개별 library BOM을 import하거나 Bluetape 모듈 버전을 직접 고정하지 않습니다.
+공개된 모든 Bluetape 모듈의 버전은 `bluetape4k-dependencies:2.1.0`만 관리합니다. Optimization 예제는 개별 library BOM을 import하거나 Bluetape 모듈 버전을 직접 고정하지 않습니다.

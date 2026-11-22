@@ -24,7 +24,7 @@ leader execution, follower skip, action failure, and backend-loss handoff. The
 default tests do not start Redis, ZooKeeper, Kubernetes, LocalStack, or any
 other infrastructure.
 
-The lab also adapts the `bluetape4k-leader` 1.1.0-SNAPSHOT diagnostics SPI. A
+The lab also adapts the `bluetape4k-leader` 1.1.0 diagnostics SPI. A
 `ProfiledLeaderElector` supplies the selected profile to the Spring Boot
 Actuator endpoint and wraps it with `leader-micrometer` instrumentation. The
 adapter delegates leader operations to a local elector, so the example can

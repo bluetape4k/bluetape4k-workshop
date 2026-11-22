@@ -47,7 +47,7 @@ fun asyncTaskExecutor(executorService: ExecutorService): AsyncTaskExecutor =
     }
 ```
 
-Spring이 `@Async`와 Lettuce가 함께 사용하는 delegate 하나를 소유합니다. Context shutdown은 신규 작업을 거부하지만 이미 제출된 작업을 interrupt하거나 무한히 기다리지 않습니다. Provider가 정한 thread name을 그대로 사용하며 운영 관측에는 `cacheRedisVirtualThreadExecutor` bean name과 `VirtualThreads.runtimeName()`을 사용합니다. 공용 `MdcTaskDecorator`는 immutable caller snapshot과 빈 caller context를 처리하고 성공·오류 뒤 worker의 이전 context를 복원합니다. 두 virtual-thread artifact는 module에서 version 없이 선언하고 `bluetape4k-dependencies:2.1.0-SNAPSHOT`으로 resolve합니다.
+Spring이 `@Async`와 Lettuce가 함께 사용하는 delegate 하나를 소유합니다. Context shutdown은 신규 작업을 거부하지만 이미 제출된 작업을 interrupt하거나 무한히 기다리지 않습니다. Provider가 정한 thread name을 그대로 사용하며 운영 관측에는 `cacheRedisVirtualThreadExecutor` bean name과 `VirtualThreads.runtimeName()`을 사용합니다. 공용 `MdcTaskDecorator`는 immutable caller snapshot과 빈 caller context를 처리하고 성공·오류 뒤 worker의 이전 context를 복원합니다. 두 virtual-thread artifact는 module에서 version 없이 선언하고 `bluetape4k-dependencies:2.1.0`으로 resolve합니다.
 
 ## Redis 설정 예제
 

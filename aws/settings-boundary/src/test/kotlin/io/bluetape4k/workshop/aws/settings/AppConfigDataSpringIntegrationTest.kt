@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.aws.spring.AwsClientCustomizationContext
 import io.bluetape4k.aws.spring.AwsSyncClientCustomizer
@@ -137,7 +138,7 @@ class AppConfigDataSpringIntegrationTest {
                 "feature=updated\n",
             ),
             delayPayloadIndex = 1,
-            delayMillis = 8_000,
+            delayMillis = 15_000,
         ).start()
         var context: ConfigurableApplicationContext? = null
         try {
@@ -153,9 +154,11 @@ class AppConfigDataSpringIntegrationTest {
 
             server.awaitDelayedLatest(20, TimeUnit.SECONDS).shouldBeTrue()
             (server.activeRequests.get() > 0).shouldBeTrue()
-            val startedAt = Instant.now()
+            val startedAtNanos = System.nanoTime()
             context.close()
-            (Duration.between(startedAt, Instant.now()).toMillis() <= 6_000).shouldBeTrue()
+            // lifecycle의 5초 종료 대기보다 여유를 두되, 지연된 15초 poll 응답을 기다리는 회귀는 잡는다.
+            val closeMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos)
+            closeMillis shouldBeLessThan 8_000L
             context.close()
         } finally {
             context?.close()

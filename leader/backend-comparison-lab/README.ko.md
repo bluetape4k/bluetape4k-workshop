@@ -24,7 +24,7 @@ action failure, backend-loss handoff를 결정론적인 report로 만듭니다. 
 테스트는 Redis, ZooKeeper, Kubernetes, LocalStack이나 다른 인프라를 시작하지
 않습니다.
 
-이 lab은 `bluetape4k-leader` 1.1.0-SNAPSHOT의 diagnostics SPI도 연결합니다.
+이 lab은 `bluetape4k-leader` 1.1.0의 diagnostics SPI도 연결합니다.
 `ProfiledLeaderElector`가 선택한 profile을 Spring Boot Actuator endpoint에
 제공하고 `leader-micrometer` instrumentation으로 감쌉니다. leader operation은
 local elector에 위임하므로 client를 만들거나 네트워크 연결을 열지 않고 새

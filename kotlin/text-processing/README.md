@@ -309,7 +309,7 @@ are never committed.
 ## Dependencies
 
 The module uses the repository version catalog and resolves bluetape4k modules through the single
-`bluetape4k-dependencies:2.1.0-SNAPSHOT` BOM:
+`bluetape4k-dependencies:2.1.0` BOM:
 
 ```kotlin
 dependencies {
