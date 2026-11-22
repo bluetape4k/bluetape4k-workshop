@@ -38,6 +38,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Nightly AppConfig in-flight 종료 경계](2026-11-22-nightly-appconfig-close-boundary.md)
 - [Issue #880 Ktor Exposed backend-selective health/readiness](2026-09-04-issue-880-ktor-selective-health.md)
 - [Issue #879 Kafka producer callbackFlow bridge](2026-09-04-issue-879-kafka-callbackflow.md)
 - [Issue #878 RLocalCachedMap 숫자 원자 갱신과 client 무효화](2026-09-04-issue-878-rlocalcachedmap.md)
