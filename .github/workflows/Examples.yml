@@ -544,7 +544,7 @@ jobs:
         uses: actions/checkout@v7.0.1
         with:
           repository: bluetape4k/bluetape4k-projects
-          ref: 23f60647ef53503a3dcbb9a7ac331abb83401db9
+          ref: 28ed92559d7f42bf27f20902dd545833c4c1d58e
           path: .bluetape4k-projects
           fetch-depth: 1
 
