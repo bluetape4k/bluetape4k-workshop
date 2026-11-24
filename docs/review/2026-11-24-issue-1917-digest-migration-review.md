@@ -5,8 +5,15 @@
 - 대상 저장소: `bluetape4k-workshop`, 기준 `origin/develop` `3c86c23eaf95637ee7813560858543928e1a6a6f`, 코드 검토 시점 head `5d6e30e96b5a1093b11dbe78aef99e4dd76ff592`.
 - 범위: 9개 commerce 모듈, production 29개 파일의 SHA-256 호출 35개, 두 README locale, 의존성 선언과 digest 계약 테스트.
 - 검토 방법: main session이 승인된 설계·계획 및 현재 변경 diff를 대조한 자체 7-Tier 검토다. 사용자는 1인 개발자 lane의 현재 및 향후 PR 독립 code/architecture review를 면제한다고 확인했다. 따라서 이 PR의 독립 리뷰는 `N/A`이며 독립 검토가 수행됐다고 주장하지 않는다. 사람 리뷰도 단독 개발자 lane 근거로 `N/A`다. main-session 검토, exact-head CI, 리뷰 스레드 확인은 그대로 필요하다.
-- 선행 artifact: Projects PR #1919와 Dependencies PR #291이 차례로 병합되고 `2.2.0-SNAPSHOT` 배포를 확인한 뒤 소비자 branch를 검증했다. Workshop 중앙 version catalog의 `2.2.0-SNAPSHOT` pin은 재개 전에 이미 존재하던 unstaged 변경이며, 승인된 소비 순서에 필요해 보존했다.
+- 선행 artifact: Projects PR #1919와 Dependencies PR #291이 차례로 병합되고 `2.2.0-SNAPSHOT` 배포를 확인한 뒤 소비자 branch를 검증했다. Workshop 중앙 version catalog의 `2.2.0-SNAPSHOT` pin은 재개 전에 이미 존재하던 unstaged 변경이다.
 - 설계 원본은 `bluetape4k-projects/docs/superpowers/specs/2026-11-23-shared-digester-design.md`와 `docs/superpowers/plans/2026-11-24-issue-1917-shared-digester-plan.md`다. 두 문서의 기본 API 이름은 사용자의 수정에 따라 `Digesters`다.
+
+## 사용자 후속 지시에 따른 범위 갱신
+
+- 2026-11-25 사용자 지시는 Projects와 Dependencies SNAPSHOT이 배포된 뒤 Workshop이 그 SNAPSHOT을 참조하도록 명시했다. 이에 따라 기존 계획의 “central catalog/version 변경 제외”는 이번 소비자 전달 범위에서 대체됐다.
+- 범위 변경은 `gradle/libs.versions.toml`의 `bluetape4k-dependencies-version`을 `2.1.0`에서 `2.2.0-SNAPSHOT`으로 고정하는 한 항목이다. alias와 `settings.gradle.kts`는 바꾸지 않는다. Projects PR #1919는 `28ed92559d7f42bf27f20902dd545833c4c1d58e`, Dependencies PR #291은 `78a2f525c1d12c576f80f2c8f84dbb2fbb942ede`로 병합됐고, SNAPSHOT publish run #45407764459는 해당 Dependencies head에서 성공했다.
+- 사용자는 Workshop PR 생성, assignee `debop`, Projects #1917 연결도 요청했다. 병합은 최신 PR head의 CI·리뷰 thread·mergeability 재확인 후 받는 별도 승인 경계다.
+- 독립 PR code/architecture review는 1인 개발자 lane에 대한 사용자의 현재·향후 면제로 `N/A`다. main-session 7-Tier 검토, exact-head CI와 review/thread read-back은 계속 적용하며, 독립 검토를 수행했다고 표현하지 않는다.
 
 ## 7-Tier 검토
 
