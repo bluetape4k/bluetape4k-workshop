@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.security
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -422,7 +423,7 @@ internal class VoucherCodeService(
      * @param prefix 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
      */
     private fun checksum(prefix: String): String {
-        val digest = MessageDigest.getInstance(SHA_256).digest(prefix.toUtf8Bytes())
+        val digest = Digesters.SHA256.digestUtf8(prefix)
         val checksumValue = (((digest[0].toInt() and 0xff) shl 8) or (digest[1].toInt() and 0xff)) %
                     (BASE58_ALPHABET.length * BASE58_ALPHABET.length)
 

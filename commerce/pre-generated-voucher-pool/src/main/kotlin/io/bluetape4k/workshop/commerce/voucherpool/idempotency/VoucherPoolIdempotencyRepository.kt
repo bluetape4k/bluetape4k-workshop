@@ -9,6 +9,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.idempotency
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.javatimes.hours
 import io.bluetape4k.javatimes.millis
@@ -1464,10 +1465,11 @@ private fun requireDuration(duration: Duration, name: String) {
  * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
  */
 private fun sha256(domain: String, value: ByteArray): ByteArray =
-    MessageDigest.getInstance("SHA-256").run {
+    Digesters.SHA256.newSession().run {
         update(domain.toUtf8Bytes())
         update(0)
-        digest(value)
+        update(value)
+        digest()
     }
 
 /**

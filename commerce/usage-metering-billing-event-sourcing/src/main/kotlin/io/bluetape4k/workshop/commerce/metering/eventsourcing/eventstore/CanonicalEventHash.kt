@@ -1,12 +1,11 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventHashMaterial
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
-import java.security.MessageDigest
 import java.util.*
 
 /**
@@ -42,9 +41,7 @@ object CanonicalEventHash: KLogging() {
             append(canonicalJson(material.metadata)).append('\n')
             append(material.previousHash.orEmpty())
         }
-        return MessageDigest.getInstance("SHA-256")
-            .digest(canonical.toUtf8Bytes())
-            .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
+        return Digesters.SHA256.digestHexUtf8(canonical)
     }
 
     /**

@@ -8,7 +8,7 @@ configurations {
 
 dependencies {
     implementation(libs.bluetape4k.core)
-    implementation(libs.bluetape4k.tink)
+    implementation(libs.bluetape4k.io)
 
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)

@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.javatimes.seconds
@@ -1154,7 +1155,7 @@ internal class JdbcVoucherPoolRevocationService(
                 "aggregateId" to aggregateId.toString(),
                 "confirmedAggregateId" to confirmedAggregateId.toString(),
                 "expectedRevision" to expectedRevision.toString(),
-                "previewTokenDigest" to MessageDigest.getInstance("SHA-256").digest(previewToken.toUtf8Bytes()).toHex(),
+                "previewTokenDigest" to Digesters.SHA256.digestHexUtf8(previewToken),
             ),
         )
 
@@ -1579,15 +1580,10 @@ private fun impactDigest(
         append('|').append(terminalCount)
         append('|').append(affectedCount)
     }
-    return MessageDigest.getInstance("SHA-256").digest(material.toUtf8Bytes())
+    return Digesters.SHA256.newSession().apply {
+        update(material.toUtf8Bytes())
+    }.digest()
 }
-
-/**
- * toHex은 프로모션 바우처의 업무 규칙을 한 곳에서 적용하여 검증·상태 전이·영속화 결과가 서로 어긋나지 않도록 합니다.
- *
- * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
- */
-private fun ByteArray.toHex(): String = joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 
 /**
  * fail은 프로모션 바우처의 업무 규칙을 한 곳에서 적용하여 검증·상태 전이·영속화 결과가 서로 어긋나지 않도록 합니다.

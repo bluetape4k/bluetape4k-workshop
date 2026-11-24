@@ -32,12 +32,12 @@ configurations.configureEach {
 dependencies {
     testImplementation(project(":shared"))
 
+    implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.micrometer)
-    implementation(libs.bluetape4k.tink)
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 

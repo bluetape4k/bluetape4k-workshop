@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentReducer
@@ -17,7 +17,6 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.Billin
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.security.MessageDigest
 import java.time.Instant
 import java.util.*
 
@@ -324,8 +323,6 @@ class ReconciliationService(
      * @param material 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
      */
     private fun sha256(material: String): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest(material.toUtf8Bytes())
-            .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
+        Digesters.SHA256.digestHexUtf8(material)
 
 }

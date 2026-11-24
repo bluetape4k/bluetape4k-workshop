@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.persistence
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
@@ -20,7 +21,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import java.nio.ByteBuffer
-import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -262,7 +262,7 @@ internal class EventInboxRepository(
     fun lockAggregate(record: EventInboxRecord) {
         gate.requireHeld()
         val material = "${record.tenantId}:${record.aggregateType}:${record.aggregateId}"
-        val digest = MessageDigest.getInstance("SHA-256").digest(material.toUtf8Bytes())
+        val digest = Digesters.SHA256.digestUtf8(material)
         val lockKey = ByteBuffer.wrap(digest).long
         TransactionManager.current().exec("SELECT pg_advisory_xact_lock($lockKey)")
     }

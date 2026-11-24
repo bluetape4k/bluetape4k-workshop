@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.purchase.internal
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
@@ -32,7 +33,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.io.Serial
 import java.io.Serializable
-import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
 import java.util.*
@@ -369,8 +369,7 @@ class TicketRefundRepository(
         TicketEffectReceipts.insert {
             it[consumerName] = "refund-service"
             it[operationId] = claim.operationId
-            it[payloadDigest] = MessageDigest.getInstance("SHA-256")
-                .digest("refund-effect-v1:${claim.operationId}".toUtf8Bytes())
+            it[payloadDigest] = Digesters.SHA256.digestUtf8("refund-effect-v1:${claim.operationId}")
             it[createdAt] = now
         }
         TicketPaymentOperations.update({ TicketPaymentOperations.id eq operation[TicketPaymentOperations.id] }) {

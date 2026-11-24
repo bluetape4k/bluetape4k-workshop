@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.idempotency
 
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.io.digest.Digesters
 
 /** caller idempotency key나 payload를 보존하지 않고 domain-separated SHA-256 fingerprint를 생성합니다. */
 /** caller idempotency key나 payload를 보존하지 않고 domain-separated SHA-256 fingerprint를 생성합니다. */
@@ -42,9 +42,7 @@ internal object IdempotencyFingerprint {
         domain: String,
         vararg fields: String,
     ): String =
-        TinkDigesters.SHA256.digestHex(
-            (sequenceOf(domain) + fields.asSequence()).joinToString("\u0000")
-        )
+        Digesters.SHA256.digestHexUtf8((sequenceOf(domain) + fields.asSequence()).joinToString("\u0000"))
 
     /**
      * 무결성·인증·멱등성 검증용 보안 자료입니다. 원문을 로그나 일반 응답에 노출하지 않습니다.

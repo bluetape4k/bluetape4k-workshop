@@ -44,6 +44,7 @@ dependencies {
     testImplementation(project(":shared"))
     testImplementation(testFixtures(project(":commerce-usage-metering-billing-ledger")))
 
+    implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.idgenerators)

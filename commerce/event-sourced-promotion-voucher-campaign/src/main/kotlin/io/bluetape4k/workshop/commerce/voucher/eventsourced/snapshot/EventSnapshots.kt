@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.snapshot
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireEquals
@@ -17,7 +18,6 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.security.MessageDigest
 import java.sql.SQLException
 import java.time.Instant
 import java.util.*
@@ -258,8 +258,4 @@ internal fun shouldWriteSnapshot(streamVersion: Long): Boolean =
  * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
  * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
  */
-private fun snapshotDigest(value: String): String =
-    MessageDigest
-        .getInstance("SHA-256")
-        .digest(value.toUtf8Bytes())
-        .let(HexFormat.of()::formatHex)
+private fun snapshotDigest(value: String): String = Digesters.SHA256.digestHexUtf8(value)

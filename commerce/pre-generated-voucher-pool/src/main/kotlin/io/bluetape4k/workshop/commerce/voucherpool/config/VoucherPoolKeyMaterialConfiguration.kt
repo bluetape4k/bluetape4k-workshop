@@ -8,6 +8,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import io.bluetape4k.io.digest.Digesters
 import com.sun.security.auth.module.UnixSystem
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKey
@@ -28,7 +29,6 @@ import java.nio.file.LinkOption.NOFOLLOW_LINKS
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFileAttributes
 import java.nio.file.attribute.PosixFilePermission
-import java.security.MessageDigest
 import java.util.*
 
 /**
@@ -576,7 +576,7 @@ internal class MountedSecretVoucherPoolKeyMaterialProvider(
      * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
      */
     private fun ByteArray.isKnownTestFixture(): Boolean {
-        val fingerprint = MessageDigest.getInstance("SHA-256").digest(this)
+        val fingerprint = Digesters.SHA256.digest(this)
 
         return try {
             HEX.formatHex(fingerprint) in KNOWN_TEST_FIXTURE_FINGERPRINTS

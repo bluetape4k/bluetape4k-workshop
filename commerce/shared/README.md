@@ -62,9 +62,10 @@ testImplementation(project(":commerce-shared"))
 
 ## Integration contracts
 
-`PayloadDigest` owns the usage-billing payload checksum contract. It delegates
-to `TinkDigesters.SHA256` and preserves the lowercase 64-character hexadecimal
-encoding of the UTF-8 payload. `AggregatePartitionKey` owns the deterministic
+`PayloadDigest` owns the usage-billing payload checksum contract. It uses
+`Digesters.SHA256.digestHexUtf8` and `matchesHexUtf8` from `bluetape4k-io` to
+preserve the lowercase 64-character hexadecimal encoding of the UTF-8 payload.
+`AggregatePartitionKey` owns the deterministic
 `tenantId|aggregateType|aggregateId` key shared by Kafka partitioning and local
 outbox/inbox boundaries.
 

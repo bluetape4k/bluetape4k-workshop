@@ -63,8 +63,9 @@ testImplementation(project(":commerce-shared"))
 ## Integration contract
 
 `PayloadDigest`는 usage-billing payload checksum 계약을 소유합니다.
-`TinkDigesters.SHA256`에 위임하면서 UTF-8 payload의 lowercase 64자 hex
-표현을 유지합니다. `AggregatePartitionKey`는 Kafka partition과 local
+`bluetape4k-io`의 `Digesters.SHA256.digestHexUtf8`와 `matchesHexUtf8`를
+사용해 UTF-8 payload의 lowercase 64자 hex 표현을 유지합니다.
+`AggregatePartitionKey`는 Kafka partition과 local
 outbox/inbox 경계가 공유하는 결정적인
 `tenantId|aggregateType|aggregateId` key를 소유합니다.
 

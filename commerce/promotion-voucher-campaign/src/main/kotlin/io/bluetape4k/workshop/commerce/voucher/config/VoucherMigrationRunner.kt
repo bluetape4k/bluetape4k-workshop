@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.voucher.config
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.javatimes.seconds
@@ -11,7 +12,6 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.toUtf8String
 import org.springframework.core.io.Resource
-import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration
@@ -56,7 +56,7 @@ internal data class VoucherMigration(
 
         return MigrationScript(
             version = version,
-            checksum = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString(),
+            checksum = Digesters.SHA256.digestHex(bytes),
             sql = bytes.toUtf8String(),
         )
     }

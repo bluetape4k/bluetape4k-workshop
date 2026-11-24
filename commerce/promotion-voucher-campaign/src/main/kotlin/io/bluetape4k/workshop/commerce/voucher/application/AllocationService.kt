@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.application
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -22,7 +23,6 @@ import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherTransactionRun
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherGenerationInput
 import org.springframework.stereotype.Service
-import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
 import java.util.*
@@ -510,10 +510,7 @@ internal fun digestHex(
     domain: String,
     vararg values: String,
 ): String =
-    MessageDigest
-        .getInstance("SHA-256")
-        .digest((sequenceOf(domain) + values.asSequence()).joinToString("\u0000").toUtf8Bytes())
-        .joinToString("") { "%02x".format(it) }
+    Digesters.SHA256.digestHexUtf8((sequenceOf(domain) + values.asSequence()).joinToString("\u0000"))
 
 /**
  * fail은 프로모션 바우처의 업무 규칙을 한 곳에서 적용하여 검증·상태 전이·영속화 결과가 서로 어긋나지 않도록 합니다.
