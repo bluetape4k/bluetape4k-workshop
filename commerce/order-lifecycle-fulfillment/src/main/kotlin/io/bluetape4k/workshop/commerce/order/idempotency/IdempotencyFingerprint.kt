@@ -1,8 +1,7 @@
 package io.bluetape4k.workshop.commerce.order.idempotency
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.toUtf8Bytes
-import java.security.MessageDigest
 
 /**
  * IdempotencyFingerprint은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
@@ -48,8 +47,5 @@ internal object IdempotencyFingerprint: KLogging() {
      * @param value 업무 처리에 필요한 value 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
      */
     private fun sha256(value: String): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(value.toUtf8Bytes())
-            .joinToString("") { byte -> "%02x".format(byte) }
+        Digesters.SHA256.digestHexUtf8(value)
 }

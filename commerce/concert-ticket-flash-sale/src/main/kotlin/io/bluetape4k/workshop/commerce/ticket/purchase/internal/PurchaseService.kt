@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.purchase.internal
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
@@ -57,7 +58,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.Serial
 import java.io.Serializable
 import java.nio.ByteBuffer
-import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
 import java.util.*
@@ -919,8 +919,7 @@ class TicketPurchaseRepository(
      * @param disposition 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
      */
     private fun effectDigest(operationId: UUID, disposition: TicketDisposition): ByteArray =
-        MessageDigest.getInstance("SHA-256")
-            .digest("ticket-effect-v1:$operationId:${disposition.code}".toUtf8Bytes())
+        Digesters.SHA256.digestUtf8("ticket-effect-v1:$operationId:${disposition.code}")
 
     /**
      * guardAdvisoryKey은 콘서트 티켓 플래시 세일 업무 규칙을 적용해 입력 검증, 상태 전이, 영속화 및 후속 이벤트 처리의 일관성을 보장합니다.
@@ -931,8 +930,8 @@ class TicketPurchaseRepository(
      * @param subjectId 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
      */
     private fun guardAdvisoryKey(saleId: UUID, kind: IdentityKind, subjectId: UUID): Long {
-        val digest = MessageDigest.getInstance("SHA-256").digest(
-            "ticket-active-guard-v1\u0000$saleId\u0000${kind.name}\u0000$subjectId".toUtf8Bytes(),
+        val digest = Digesters.SHA256.digestUtf8(
+            "ticket-active-guard-v1\u0000$saleId\u0000${kind.name}\u0000$subjectId",
         )
         return ByteBuffer.wrap(digest, 0, Long.SIZE_BYTES).long
     }

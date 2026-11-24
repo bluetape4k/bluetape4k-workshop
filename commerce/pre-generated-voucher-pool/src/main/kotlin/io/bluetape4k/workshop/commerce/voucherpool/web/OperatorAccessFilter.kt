@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.toUtf8Bytes
@@ -137,7 +138,9 @@ internal class OperatorAccessFilter(
      * @param remoteAddress 업무 처리에 필요한 remoteAddress 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
      */
     private fun admitted(remoteAddress: String): Boolean {
-        val digest = MessageDigest.getInstance("SHA-256").digest(remoteAddress.toUtf8Bytes())
+        val digest = Digesters.SHA256.newSession().apply {
+            update(remoteAddress.toUtf8Bytes())
+        }.digest()
         return admissionGate.admit(AdmissionNamespace.OPERATOR_AUTH, digest) in ADMITTED_DECISIONS
     }
 
@@ -267,5 +270,7 @@ internal class OperatorCredentialVerifier(
      * @param value 업무 처리에 필요한 value 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
      */
     private fun digest(value: String?): ByteArray =
-        MessageDigest.getInstance("SHA-256").digest(value.orEmpty().toUtf8Bytes())
+        Digesters.SHA256.newSession().apply {
+            update(value.orEmpty().toUtf8Bytes())
+        }.digest()
 }

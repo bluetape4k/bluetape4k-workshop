@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucher.idempotency
 
+import io.bluetape4k.io.digest.Base64Format
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.jackson3.jsonMapper
 import io.bluetape4k.support.toUtf8Bytes
 import tools.jackson.databind.JsonNode
 import java.io.Serializable
 import java.math.BigDecimal
-import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.*
 
@@ -41,7 +42,8 @@ internal value class Digest private constructor(
          * 호출자는 저장소의 확정 상태와 이벤트 결과를 확인한 뒤 다음 업무 단계를 진행해야 합니다.
          * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
          */
-        fun sha256(value: String): Digest = of(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
+        fun sha256(value: String): Digest =
+            Digest(Digesters.SHA256.digestBase64Utf8(value, Base64Format.URL_SAFE_UNPADDED))
     }
 }
 

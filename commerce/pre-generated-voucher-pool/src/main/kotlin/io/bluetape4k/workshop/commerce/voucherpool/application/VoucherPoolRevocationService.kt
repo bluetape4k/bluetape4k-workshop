@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.javatimes.seconds
@@ -1154,7 +1155,7 @@ internal class JdbcVoucherPoolRevocationService(
                 "aggregateId" to aggregateId.toString(),
                 "confirmedAggregateId" to confirmedAggregateId.toString(),
                 "expectedRevision" to expectedRevision.toString(),
-                "previewTokenDigest" to MessageDigest.getInstance("SHA-256").digest(previewToken.toUtf8Bytes()).toHex(),
+                "previewTokenDigest" to Digesters.SHA256.digestHexUtf8(previewToken),
             ),
         )
 
@@ -1579,7 +1580,9 @@ private fun impactDigest(
         append('|').append(terminalCount)
         append('|').append(affectedCount)
     }
-    return MessageDigest.getInstance("SHA-256").digest(material.toUtf8Bytes())
+    return Digesters.SHA256.newSession().apply {
+        update(material.toUtf8Bytes())
+    }.digest()
 }
 
 /**

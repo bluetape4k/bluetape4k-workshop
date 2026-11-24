@@ -27,6 +27,8 @@ class CanonicalEventHashTest {
         val reordered = material("""{"quantity":10,"meterCode":"api_calls"}""")
 
         CanonicalEventHash.sha256(reordered) shouldBeEqualTo CanonicalEventHash.sha256(first)
+        CanonicalEventHash.sha256(material("""{"quantity":10}""")) shouldBeEqualTo
+                "8169d82413c0355319a0a42f41adc49f392309da1ab94c263d5cb956e479f2eb"
     }
 
     @Test

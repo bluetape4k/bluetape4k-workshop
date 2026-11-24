@@ -32,6 +32,7 @@ configurations.configureEach {
 dependencies {
     testImplementation(project(":shared"))
 
+    implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.jackson3)

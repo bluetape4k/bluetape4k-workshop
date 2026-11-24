@@ -119,9 +119,9 @@ credential boundary is unchanged. `IdempotencyFingerprint.request` is an
 unkeyed SHA-256 checksum over a domain-separated, NUL-delimited operation and
 canonical payload that already contains an owner digest. Its purpose is replay
 conflict detection, not secrecy or authentication. The `key` helper is used by
-tests and fixtures only. Both helpers now reuse `TinkDigesters.SHA256.digestHex`
-without changing field order, separators, UTF-8 encoding, or lowercase 64-char
-storage.
+tests and fixtures only. Both helpers now use
+`Digesters.SHA256.digestHexUtf8` without changing field order, separators,
+UTF-8 encoding, or lowercase 64-char storage.
 
 An attacker with repository rows could enumerate low-entropy unkeyed inputs, so
 raw credentials and guessable secrets must never enter the request fingerprint.

@@ -1,8 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.toUtf8Bytes
-import java.security.MessageDigest
 import java.util.*
 /**
  * CommandDigest은 사용량 계량·청구에서 사용하는 업무 객체입니다.
@@ -67,8 +66,7 @@ object CommandFingerprint {
      * @param value 업무 처리에 필요한 value 값이며 관련 불변조건과 저장·이벤트 계약을 함께 만족해야 합니다.
      */
     private fun sha256(value: String): CommandDigest = CommandDigest(
-        MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes())
-            .joinToString("") { "%02x".format(Locale.ROOT, it) },
+        Digesters.SHA256.digestHexUtf8(value),
     )
     /**
      * 무결성·인증·멱등성 검증용 보안 자료입니다. 원문을 로그나 일반 응답에 노출하지 않습니다.

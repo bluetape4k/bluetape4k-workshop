@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.ticket.config
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.requirePositiveDuration
 import io.bluetape4k.javatimes.seconds
@@ -16,7 +17,6 @@ import io.bluetape4k.support.toUtf8String
 import org.springframework.core.io.Resource
 import java.io.Serial
 import java.io.Serializable
-import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration
@@ -61,7 +61,7 @@ data class TicketMigration(
 
         return TicketMigrationScript(
             version = version,
-            checksum = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString(),
+            checksum = Digesters.SHA256.digestHex(bytes),
             sql = bytes.toUtf8String(),
         )
     }

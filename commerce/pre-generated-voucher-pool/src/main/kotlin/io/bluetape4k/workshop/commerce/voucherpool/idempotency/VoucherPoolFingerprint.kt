@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool.idempotency
 
+import io.bluetape4k.io.digest.Digesters
+import io.bluetape4k.io.digest.DigestSession
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
@@ -87,7 +89,7 @@ internal object VoucherPoolFingerprint {
         require(validOperation.length <= MAX_OPERATION_LENGTH) { "operation is too long" }
         require(fields.size <= MAX_FIELD_COUNT) { "too many fingerprint fields" }
 
-        val digest = MessageDigest.getInstance("SHA-256")
+        val digest = Digesters.SHA256.newSession()
         digest.putField(DOMAIN.toUtf8Bytes())
         digest.putField(validOperation.toUtf8Bytes())
 
@@ -125,7 +127,7 @@ internal object VoucherPoolFingerprint {
  * 호출 전에는 인증 주체·tenant 범위·멱등 키·기대 버전을 확인하고, 호출 후에는 commit된 source-of-truth와 비동기 알림을 구분하여 재시도·보상·감사
  * 처리를 일관되게 수행해야 합니다.
  */
-    private fun MessageDigest.putField(value: ByteArray) {
+    private fun DigestSession.putField(value: ByteArray) {
         update(ByteBuffer.allocate(Int.SIZE_BYTES).putInt(value.size).array())
         update(value)
     }

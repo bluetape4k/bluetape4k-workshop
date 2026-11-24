@@ -8,6 +8,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
@@ -1785,7 +1786,7 @@ internal class JdbcCampaignBatchCommandService(
      * @param batch 업무 판정에 사용하는 기준 시각입니다. 테스트·재시도에서도 동일한 시간 규칙을 적용합니다.
      */
     private fun initialCheckpoint(batch: BatchRecord): DigestValue {
-        val digest = MessageDigest.getInstance("SHA-256").apply {
+        val digest = Digesters.SHA256.newSession().apply {
             update(FINAL_CHECKPOINT_DOMAIN.toUtf8Bytes())
             update(batch.provenanceDigest.copyBytes())
             update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(batch.expectedCount).array())
@@ -1803,7 +1804,7 @@ internal class JdbcCampaignBatchCommandService(
      * @param stableDigest 재전송·멱등성·무결성 확인에 사용하는 값입니다. 원문 비밀이나 개인정보를 로그에 남기지 않습니다.
      */
     private fun advanceCheckpoint(previous: DigestValue, ordinal: Long, stableDigest: DigestValue): DigestValue {
-        val digest = MessageDigest.getInstance("SHA-256")
+        val digest = Digesters.SHA256.newSession()
         digest.update(CHECKPOINT_STEP_DOMAIN.toUtf8Bytes())
         digest.update(previous.copyBytes())
         digest.update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(ordinal).array())
@@ -2413,7 +2414,7 @@ internal class JdbcCampaignBatchCommandService(
      * 호출 결과는 업무 상태와 감사·재시도 규칙을 보존한 뒤 다음 계층으로 전달해야 합니다.
      */
     private fun PreparedChunk.requestDigest(): String {
-        val digest = MessageDigest.getInstance("SHA-256")
+        val digest = Digesters.SHA256.newSession()
         digest.update(CHUNK_FINGERPRINT_DOMAIN.toUtf8Bytes())
         digest.update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(firstOrdinal).array())
         entries.forEach {
@@ -2424,7 +2425,7 @@ internal class JdbcCampaignBatchCommandService(
             digest.update(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(it.sourceOrdinal).array())
             digest.update(it.payloadDigest.copyBytes())
         }
-        return digest.digest().toHex()
+        return digest.digestHex()
     }
 /**
  * PreparedChunk은 프로모션 바우처에서 전달되는 불변 데이터 모델입니다.

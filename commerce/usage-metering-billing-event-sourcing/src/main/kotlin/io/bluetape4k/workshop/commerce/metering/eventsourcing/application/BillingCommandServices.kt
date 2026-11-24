@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AggregateReducer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingCloseStarted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodOpened
@@ -28,7 +28,6 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayP
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayTelemetry
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.security.MessageDigest
 import java.time.Instant
 import java.util.*
 /**
@@ -317,9 +316,7 @@ class UsageCommandService(
      * @param sourceEventId 처리할 사용량 계량·청구 업무 객체의 식별자입니다. 존재 여부와 호출자의 접근 범위를 함께 확인합니다.
      */
     private fun deterministicUsageId(sourceSystem: String, sourceEventId: String): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest("$sourceSystem\u0000$sourceEventId".toUtf8Bytes())
-            .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
+        Digesters.SHA256.digestHexUtf8("$sourceSystem\u0000$sourceEventId")
 }
 /**
  * BillingLifecycleCommandService은 사용량 계량·청구에서 사용하는 업무 객체입니다.

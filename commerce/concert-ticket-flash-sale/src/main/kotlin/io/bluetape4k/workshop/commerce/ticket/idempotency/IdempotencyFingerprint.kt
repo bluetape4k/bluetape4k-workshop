@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.idempotency
 
+import io.bluetape4k.io.digest.Base64Format
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -9,7 +11,6 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.toUtf8Bytes
 import tools.jackson.databind.JsonNode
 import java.math.BigDecimal
-import java.security.MessageDigest
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -42,7 +43,7 @@ value class TicketDigest private constructor(val base64Url: String) {
          * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
          */
         fun sha256(value: String): TicketDigest =
-            of(MessageDigest.getInstance("SHA-256").digest(value.toUtf8Bytes()))
+            TicketDigest(Digesters.SHA256.digestBase64Utf8(value, Base64Format.URL_SAFE_UNPADDED))
     }
 }
 

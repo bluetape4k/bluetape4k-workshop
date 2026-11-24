@@ -2,11 +2,11 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.admission
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.toUtf8Bytes
 import java.nio.ByteBuffer
-import java.security.MessageDigest
 
 /**
  * advisory Redis state를 위한 opaque하고 operation-separated된 key를 생성합니다.
@@ -43,11 +43,11 @@ internal class VoucherPoolRedisSignalKeyFactory(
     fun admissionKey(namespace: AdmissionNamespace, principalDigest: ByteArray): String {
         require(principalDigest.isNotEmpty()) { "principalDigest must not be empty" }
 
-        val digest = MessageDigest.getInstance("SHA-256")
+        val digest = Digesters.SHA256.newSession()
         digest.update(field(DOMAIN))
         digest.update(field(namespace.name))
         digest.update(field(principalDigest))
-        return "v$version:${digest.digest().toHexString()}"
+        return "v$version:${digest.digestHex()}"
     }
 
     /**

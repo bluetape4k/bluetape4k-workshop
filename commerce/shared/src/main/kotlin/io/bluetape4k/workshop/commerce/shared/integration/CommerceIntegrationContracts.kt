@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.commerce.shared.integration
 
-import io.bluetape4k.tink.digest.TinkDigesters
+import io.bluetape4k.io.digest.Digesters
 
 /**
  * commerce integration payload가 사용하는 lowercase SHA-256 checksum 계약이다.
@@ -12,11 +12,11 @@ import io.bluetape4k.tink.digest.TinkDigesters
 object PayloadDigest {
 
     /** UTF-8 payload를 canonical lowercase 64-character hexadecimal digest로 만든다. */
-    fun of(payload: String): String = TinkDigesters.SHA256.digestHex(payload)
+    fun of(payload: String): String = Digesters.SHA256.digestHexUtf8(payload)
 
     /** payload와 digest가 provider의 canonical hexadecimal 표현으로 일치하는지 확인한다. */
     fun matches(payload: String, digest: String): Boolean =
-        TinkDigesters.SHA256.matchesHex(payload, digest)
+        Digesters.SHA256.matchesHexUtf8(payload, digest)
 }
 
 /**

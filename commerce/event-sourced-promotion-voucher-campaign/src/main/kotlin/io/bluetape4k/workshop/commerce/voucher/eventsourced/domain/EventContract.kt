@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.domain
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireGe
 import io.bluetape4k.support.requireInRange
@@ -9,7 +10,6 @@ import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.support.toUtf8Bytes
 import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
 import java.time.Instant
 import java.util.*
 
@@ -347,9 +347,7 @@ internal data class EventEnvelope(
         fun checksumOf(fields: List<Any>): String =
             fields
                 .joinToString("|")
-                .toUtf8Bytes()
-                .let { MessageDigest.getInstance("SHA-256").digest(it) }
-                .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
+                .let(Digesters.SHA256::digestHexUtf8)
     }
 }
 /**

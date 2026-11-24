@@ -44,7 +44,7 @@ internal class EventContractTest {
         )
 
         log.debug { "event=$event" }
-        event.canonicalChecksum shouldBeEqualTo event.canonicalChecksum
+        event.canonicalChecksum shouldBeEqualTo "b8e8da6a87c77c533bc5663e6396e0ebebaa18df8778acf3fc34f7c7186ecdfe"
     }
 
     @Test

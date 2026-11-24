@@ -114,7 +114,7 @@ export RESERVATION_REDIS_URI=redis://localhost:6379
 ### Idempotency digest threat model
 
 Production은 caller의 raw idempotency key를 저장하지 않습니다. Production
-`keyDigest`는 `ReservationCredentialService`가 생성한 keyed HMAC이며 이 credential 경계는 변경하지 않습니다. `IdempotencyFingerprint.request`는 domain-separated, NUL-delimited operation과 canonical payload를 대상으로 하는 unkeyed SHA-256 checksum입니다. Payload에는 이미 owner digest가 포함되며 용도는 replay 충돌 탐지이지 비밀 보호나 인증이 아닙니다. `key` helper는 test와 fixture에서만 사용합니다. 두 helper는 field order, separator, UTF-8 encoding, lowercase 64자 저장 형식을 바꾸지 않고 `TinkDigesters.SHA256.digestHex`를 재사용합니다.
+`keyDigest`는 `ReservationCredentialService`가 생성한 keyed HMAC이며 이 credential 경계는 변경하지 않습니다. `IdempotencyFingerprint.request`는 domain-separated, NUL-delimited operation과 canonical payload를 대상으로 하는 unkeyed SHA-256 checksum입니다. Payload에는 이미 owner digest가 포함되며 용도는 replay 충돌 탐지이지 비밀 보호나 인증이 아닙니다. `key` helper는 test와 fixture에서만 사용합니다. 두 helper는 `Digesters.SHA256.digestHexUtf8`를 사용하며 field order, separator, UTF-8 encoding, lowercase 64자 저장 형식은 유지합니다.
 
 저장소 row를 얻은 공격자는 entropy가 낮은 unkeyed input을 offline enumeration할 수 있으므로 raw credential이나 추측 가능한 secret을 request fingerprint에 넣으면 안 됩니다. 향후 그런 값이 필요하면 key lifecycle, rotation, 저장 compatibility, backfill을 포함한 keyed migration을 별도로 검토해야 하며 persisted digest format을 조용히 교체하지 않습니다.
 

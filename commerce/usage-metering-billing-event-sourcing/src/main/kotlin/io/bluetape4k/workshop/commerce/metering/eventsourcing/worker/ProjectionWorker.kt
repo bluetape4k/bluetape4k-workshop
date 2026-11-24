@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.worker
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
-import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.DomainEventJsonCodec
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.config.EventSourcingMetrics
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -19,7 +19,6 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.Project
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
 import java.util.*
@@ -282,11 +281,7 @@ class ProjectionBatchProcessor(
      */
     private fun failureDigest(failure: Throwable): String {
         val material = "${failure::class.qualifiedName}:${failure.message.orEmpty()}"
-        return MessageDigest.getInstance("SHA-256")
-            .digest(material.toUtf8Bytes())
-            .joinToString("") { byte ->
-                "%02x".format(Locale.ROOT, byte)
-            }
+        return Digesters.SHA256.digestHexUtf8(material)
     }
 }
 /**

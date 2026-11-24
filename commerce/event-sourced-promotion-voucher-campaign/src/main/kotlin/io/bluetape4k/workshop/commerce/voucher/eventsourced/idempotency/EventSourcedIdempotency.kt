@@ -1,14 +1,13 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.support.requireBeTrue
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import java.io.Serializable
-import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Instant
 import java.util.*
@@ -74,9 +73,7 @@ internal value class ReceiptDigest private constructor(
         fun sha256(value: String): ReceiptDigest =
             value
                 .requireNotBlank("digestMaterial")
-                .toUtf8Bytes()
-                .let { MessageDigest.getInstance("SHA-256").digest(it) }
-                .let(HexFormat.of()::formatHex)
+                .let(Digesters.SHA256::digestHexUtf8)
                 .let(::ReceiptDigest)
     }
 

@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.javatimes.millis
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
@@ -28,7 +29,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.core.io.Resource
-import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration
@@ -60,7 +60,7 @@ internal data class VoucherPoolMigration(val version: String, val resource: Reso
 
         return VoucherPoolMigrationScript(
             version = version,
-            checksum = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString(),
+            checksum = Digesters.SHA256.digestHex(bytes),
             sql = bytes.toUtf8String()
         )
     }

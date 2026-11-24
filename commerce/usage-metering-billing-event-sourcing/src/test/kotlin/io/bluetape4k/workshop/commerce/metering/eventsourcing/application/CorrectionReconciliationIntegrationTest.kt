@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.javatimes.minutes
@@ -195,6 +196,7 @@ class CorrectionReconciliationIntegrationTest {
         val finding = fixture.executor.transaction {
             reconciliation.inspect(query)
         }.shouldNotBeNull()
+        finding.digest shouldBeEqualTo "a84870c4bc34776e9fed0820d725ce7d191c93a6ae1a77b71e1ca3274ba10fc2"
 
         fixture.executor.transaction {
             generations.createBuilding("billing", 2, 2, now)
