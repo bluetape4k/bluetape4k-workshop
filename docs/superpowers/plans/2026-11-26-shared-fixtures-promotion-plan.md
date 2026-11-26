@@ -85,8 +85,8 @@ issue evidence + workflow DoD
 
 ```bash
 ./gradlew :shared:testFixturesClasses --no-daemon --console=plain
-./gradlew :operations:job-console-core:test --tests '*OwnedRedisNamespaceTest' --no-daemon --console=plain
-./gradlew :commerce:concert-ticket-flash-sale:test --tests '*TicketOwnedRedisNamespaceTest' --no-daemon --console=plain
+./gradlew :operations-job-console-core:test --tests '*OwnedRedisNamespaceTest' --no-daemon --console=plain
+./gradlew :commerce-concert-ticket-flash-sale:test --tests '*TicketOwnedRedisNamespaceTest' --no-daemon --console=plain
 ```
 
 - consumer tests의 vector, fail-closed, barrier ordering, bounded scan, real Redis 결과를 읽어 확인한다.
