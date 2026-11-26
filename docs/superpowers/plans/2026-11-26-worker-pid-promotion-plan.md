@@ -158,7 +158,7 @@
   production `!!` or swallowed unexpected exceptions. Record P0/P1/P2/P3;
   no P0/P1 may remain.
 
-- [ ] **Step 3: Commit the implementation**
+- [x] **Step 3: Commit the implementation**
 
   A separate lesson file is N/A for this lane: the reusable provenance-first rule
   is already captured by the existing workspace guidance and Issue #1069 evidence;
@@ -169,7 +169,7 @@
   trailers. Keep PR creation, push, merge, tag, publication, and release out of
   scope.
 
-- [ ] **Step 4: Update Issue #1069 and complete the receipt**
+- [x] **Step 4: Update Issue #1069 and complete the receipt**
 
   Record exact feature head, receipt run/checksum, provenance, changed files,
   RED/GREEN and consumer test results, known verification gaps, and the next
