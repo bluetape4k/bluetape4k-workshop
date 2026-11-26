@@ -5,8 +5,8 @@
 - 설계: [`2026-11-26-shared-fixtures-promotion-design.md`](../specs/2026-11-26-shared-fixtures-promotion-design.md)
 - 이슈: [#1069](https://github.com/bluetape4k/bluetape4k-workshop/issues/1069)
 - 실행 브랜치: `feat/shared-fixtures-promotion`
-- 첫 단계: `OwnedRedisNamespace`만 공통 `shared` test fixture로 추출
-- 제외: `MutableClock`, `WorkerPid`, artifact/journal primitive, `bluetape4k-*` publication
+- 실행 범위: `OwnedRedisNamespace`, `MutableClock`, `WorkerPid`, artifact/journal 하부 primitive를 공통 `shared` test fixture로 추출
+- 제외: 전체 report/journal schema 통합, `bluetape4k-*` publication
 
 이 계획은 기존 두 구현의 동작을 먼저 소비자 테스트로 고정한 뒤 공통 구현으로 바꾸는 순서다. 공통 타입은 Redis client를 모르고, 소비자 wrapper만 implementation policy와 Lettuce adapter를 소유한다.
 
@@ -104,6 +104,22 @@ issue evidence + workflow DoD
 
 **증적:** issue read-back, `git diff --check`, Gradle output, workflow receipt checksum.
 
+### 7. artifact/journal primitive — RED → GREEN
+
+**대상:** `shared/src/testFixtures/kotlin/io/bluetape4k/workshop/shared/artifact/`와 두 high-contention consumer
+
+- shared 테스트에서 trusted path, symlink rejection, no-replace atomic write, redaction sentinel, hash-chain cursor, complete JSONL line/torn suffix 계약을 먼저 고정한다.
+- operations와 commerce의 report/journal schema 및 event vocabulary는 유지하고, 중복된 path/write/redaction/digest/line 처리만 shared primitive 호출로 바꾼다.
+- shared primitive는 Jackson, Lettuce, Spring, PostgreSQL을 import하지 않는다. strict JSON parser와 domain exception mapping은 각 consumer에 남긴다.
+- `HashChainCursor`는 record bytes를 쓰기 전에 digest를 준비하고, fsynced append 성공 뒤 상태를 commit해 write failure가 다음 sequence를 소비하지 않도록 한다.
+
+**증적:** shared artifact primitive tests, 두 consumer high-contention report/journal tests, `rg`로 중복 JDK algorithm 제거를 확인한다.
+
+### 8. 문서·PR·이슈 동기화
+
+- 이슈 #1069와 PR #1070에 `MutableClock` 포함 사실, 네 후보의 실제 승격 범위, 전체 schema 비통합 경계를 한국어로 read-back한다.
+- Digesters/canonical JSON/Okio/Awaitility는 각각 upstream/주제 경계 때문에 이번 shared 승격에서 제외한 근거를 유지한다.
+
 ## 실패 시 복구 지점
 
 1. RED compile 실패가 shared API 문제인지 확인한 뒤, 테스트 변경만 되돌릴 수 있다.
@@ -118,12 +134,12 @@ issue evidence + workflow DoD
 - 구현 전 RED output을 확보한다.
 - 구현 후 두 consumer의 독립 테스트를 모두 실행한다.
 - independent code review가 없는 single-developer lane에서는 이를 `N/A (single-developer lane)`으로 기록하되, exact diff, targeted tests, source inventory, workflow evidence는 생략하지 않는다.
-- 이번 계획 완료는 Phase A의 검증 완료를 뜻하며, 전체 issue #1069의 `MutableClock`, `WorkerPid`, upstream publication 완료를 의미하지 않는다.
+- 이번 계획 완료는 네 후보의 Workshop shared fixture 승격 검증 완료를 뜻한다. `bluetape4k-*` publication, BOM, ABI, tag, release는 별도 승인 범위다.
 
 ## Writer gate 기록
 
-- **SPW-01**: 독자는 Workshop 유지보수자이며, 실행 질문은 `OwnedRedisNamespace`를 두 소비자에서 공통 test fixture로 안전하게 추출하는 방법이다. 근거 source, issue, 설계 문서와 baseline gap을 명시했다.
-- **SPW-02**: 의존 순서, exact files, RED/GREEN 명령, expected evidence, rollback point, issue/workflow gate를 포함했다.
+- **SPW-01**: 독자는 Workshop 유지보수자이며, 실행 질문은 네 교차 주제 후보를 두 소비자 이상의 안정 계약으로 공통 test fixture에 승격하는 방법이다. 근거 source, issue, 설계 문서와 baseline gap을 명시했다.
+- **SPW-02**: 의존 순서, exact files, RED/GREEN 명령, artifact primitive 계약, expected evidence, rollback point, issue/workflow gate를 포함했다.
 - **SPW-03**: 한국어 기술 문체를 사용하고 명령·경로·식별자·오류 토큰은 그대로 보존했다.
 - **SPW-04**: 설계의 선택(`testFixtures`, adapter injection, policy wrapper)과 실제 Gradle/source 구조를 대조했다.
 - **SPW-05**: 계획 본문을 다시 읽고 단계 순서와 대상 파일이 설계 명세·이슈와 일치하는지 확인한 뒤 workflow `plan` evidence에 기록한다.
