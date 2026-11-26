@@ -8,12 +8,9 @@ import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.shared.time.MutableClock
 import org.junit.jupiter.api.Test
-import java.time.Clock
-import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.*
 
 /**
@@ -83,7 +80,7 @@ internal class VoucherPoolAdmissionGateTest {
  * 입력 경계에서 명령을 한 번만 적용하고, 저장소의 확정 상태·이벤트·외부 응답이 같은 불변식을 만족하는지 확인합니다.
  */
     fun `Redis failure degrades to a node local hard cap and recovers with hysteresis`() {
-        val clock = MutableTestClock()
+        val clock = MutableClock(Instant.now())
         val backend = RecordingAdmissionBackend(failure(), consumed(), consumed(), consumed())
         val limits = AdmissionLimits.defaults().withLimit(AdmissionNamespace.OPERATOR_AUTH, 3)
         val gate = VoucherPoolAdmissionGate(
@@ -155,50 +152,6 @@ internal class VoucherPoolAdmissionGateTest {
             namespaces += namespace
             keys += key
             return results.removeFirst()
-        }
-    }
-
-/**
- * MutableTestClock 테스트 묶음은 사전 생성 바우처 풀의 업무 규칙과 실패 경계를 검증합니다.
- *
- * 성공 응답만 확인하지 않고 PostgreSQL 확정 상태, 이벤트 순서, 멱등성·권한·재시도 결과가 함께 일치하는지 확인합니다.
- */
-    private class MutableTestClock(
-/**
- * current은 사전 생성 바우처 풀 테스트에서 확정 상태 또는 협력 의존성을 보관합니다.
- *
- * 테스트는 이 값이 저장소·이벤트·API 응답과 동일한 업무 의미를 유지하는지 확인합니다.
- */
-        private var current: Instant = Instant.now(),
-    ): Clock() {
-/**
- * getZone은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
- *
- * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
- */
-        override fun getZone(): ZoneId = ZoneOffset.UTC
-
-/**
- * withZone은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
- *
- * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
- */
-        override fun withZone(zone: ZoneId): Clock = this
-
-/**
- * instant은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
- *
- * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
- */
-        override fun instant(): Instant = current
-
-/**
- * advance은 사전 생성 바우처 풀 테스트 fixture의 업무 경계를 실행하거나 변환하는 메소드입니다.
- *
- * 재시도·경쟁·복구 상황에서도 source-of-truth와 관찰 가능한 결과가 일치해야 한다는 계약을 검증에 사용합니다.
- */
-        fun advance(duration: Duration) {
-            current += duration
         }
     }
 

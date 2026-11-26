@@ -17,14 +17,11 @@ import io.bluetape4k.aws.kinesis.KinesisStartingPosition
 import io.bluetape4k.aws.kinesis.consumerFlow
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import java.time.Clock
+import io.bluetape4k.workshop.shared.time.MutableClock
 import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -272,20 +269,6 @@ class KinesisConsumerFlowTest {
             releasedKeys += lease.key
             delegate.release(lease)
             activeLeases.decrementAndGet()
-        }
-    }
-
-    private class MutableClock(initial: Instant) : Clock() {
-        private val current = AtomicReference(initial)
-
-        override fun getZone(): ZoneId = ZoneOffset.UTC
-
-        override fun withZone(zone: ZoneId): Clock = this
-
-        override fun instant(): Instant = current.get()
-
-        fun advanceSeconds(seconds: Long) {
-            current.updateAndGet { it.plusSeconds(seconds) }
         }
     }
 
