@@ -29,7 +29,7 @@
   `force(true)` durability rule, rollback point, and sequential consumer proof.
   Record `SPW-01` through `SPW-05` for both artifacts.
 
-- [ ] **Step 3: Commit the artifacts before code mutation**
+- [x] **Step 3: Commit the artifacts before code mutation**
 
   Run `git diff --check` and commit only the spec/plan with Korean Lore trailers.
 
@@ -39,7 +39,7 @@
 - Create: `shared/src/test/kotlin/io/bluetape4k/workshop/shared/process/WorkerPidPublisherTest.kt`
 - Create later: `shared/src/testFixtures/kotlin/io/bluetape4k/workshop/shared/process/WorkerPidPublisher.kt`
 
-- [ ] **Step 1: Write the failing contract test**
+- [x] **Step 1: Write the failing contract test**
 
   Add JUnit 5 tests using `@TempDir` and `io.bluetape4k.assertions.assertFailsWith`:
 
@@ -54,7 +54,7 @@
   Save and restore both system properties in `@AfterEach` so tests do not leak
   configuration into other shared tests.
 
-- [ ] **Step 2: Run RED and read the failure**
+- [x] **Step 2: Run RED and read the failure**
 
   Run:
 
@@ -66,7 +66,7 @@
   `io.bluetape4k.workshop.shared.process.WorkerPidPublisher` does not exist.
   A setup error is not an acceptable RED result; repair the test and rerun.
 
-- [ ] **Step 3: Implement the minimum shared writer**
+- [x] **Step 3: Implement the minimum shared writer**
 
   Add `WorkerPidPublisher.publishIfConfigured()` with the exact contract from
   the spec. Use `requireNotBlank` for owner, `Files.isDirectory(parent,
@@ -75,7 +75,7 @@
   and a directory force that catches only `UnsupportedOperationException`.
   Keep the property names private constants and write Korean KDoc.
 
-- [ ] **Step 4: Run GREEN and fixture compilation**
+- [x] **Step 4: Run GREEN and fixture compilation**
 
   Run the RED command again and then:
 
@@ -92,14 +92,14 @@
 - Modify: `operations/job-console-core/src/testFixtures/kotlin/io/bluetape4k/workshop/operations/jobconsole/highcontention/HighContentionWorkerPid.kt`
 - Modify: `commerce/concert-ticket-flash-sale/src/test/kotlin/io/bluetape4k/workshop/commerce/ticket/highcontention/TicketHighContentionWorkerPid.kt`
 
-- [ ] **Step 1: Replace duplicated writers with delegates**
+- [x] **Step 1: Replace duplicated writers with delegates**
 
   Keep each object and `publishIfConfigured()` signature, remove local
   filesystem imports/constants, and delegate to
   `io.bluetape4k.workshop.shared.process.WorkerPidPublisher`. Keep concise
   Korean KDoc explaining that the local object preserves the consumer boundary.
 
-- [ ] **Step 2: Verify consumer compile boundaries**
+- [x] **Step 2: Verify consumer compile boundaries**
 
   Run sequentially:
 
@@ -116,7 +116,7 @@
 **Files:**
 - Test only; no additional production files.
 
-- [ ] **Step 1: Run operations high-contention contract/lifecycle tests**
+- [x] **Step 1: Run operations high-contention contract/lifecycle tests**
 
   Run the existing test source sequentially with the shared test fixture:
 
@@ -124,7 +124,7 @@
   ./gradlew :operations-job-console-core:test --tests '*HighContentionProcessProbeTest' --tests '*HighContentionLifecycleTest' --no-daemon --console=plain
   ```
 
-- [ ] **Step 2: Run commerce ticket high-contention contract tests**
+- [x] **Step 2: Run commerce ticket high-contention contract tests**
 
   Run:
 
@@ -144,21 +144,26 @@
 - Create: `docs/lessons/2026-11-26-worker-pid-promotion.md` when the review confirms a reusable lesson is present
 - Update: Issue #1069 comment
 
-- [ ] **Step 1: Run scope and static checks**
+- [x] **Step 1: Run scope and static checks**
 
   Run `git diff --check`, verify only shared test fixture, two wrapper files,
   direct contract test, spec/plan/lesson/evidence are changed, and prove that
   `VirtualClock`, production source, version catalog, BOM, and upstream library
   modules are unchanged.
 
-- [ ] **Step 2: Review Kotlin contracts**
+- [x] **Step 2: Review Kotlin contracts**
 
   Check assertion matcher choice, owner exception type, symlink boundary,
   duplicate-write behavior, force fallback, Korean KDoc, and the absence of
   production `!!` or swallowed unexpected exceptions. Record P0/P1/P2/P3;
   no P0/P1 may remain.
 
-- [ ] **Step 3: Commit the implementation and durable lesson**
+- [ ] **Step 3: Commit the implementation**
+
+  A separate lesson file is N/A for this lane: the reusable provenance-first rule
+  is already captured by the existing workspace guidance and Issue #1069 evidence;
+  the build-logic profile gap remains an issue-level follow-up rather than a
+  WorkerPid implementation lesson.
 
   Commit the implementation and any evidence-backed lesson with Korean Lore
   trailers. Keep PR creation, push, merge, tag, publication, and release out of
