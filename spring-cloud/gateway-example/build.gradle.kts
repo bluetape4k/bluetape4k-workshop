@@ -28,6 +28,7 @@ dependencies {
     implementation(enforcedPlatform(libs.resilience4j.bom))
 
     implementation(project(":shared"))
+    implementation(libs.bluetape4k.netty)
     testImplementation(libs.bluetape4k.spring.boot4.core)
 
     implementation(libs.bluetape4k.jackson3)

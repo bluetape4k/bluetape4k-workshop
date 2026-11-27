@@ -16,6 +16,7 @@ springBoot {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(libs.bluetape4k.netty)
 
     implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.jackson3)

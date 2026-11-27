@@ -24,6 +24,7 @@ configurations {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(libs.bluetape4k.netty)
     implementation(libs.spring.boot.starter.data.elasticsearch.lib)
     testImplementation(libs.spring.boot.starter.data.elasticsearch.test)
     implementation(libs.elasticsearch.rest.client)
