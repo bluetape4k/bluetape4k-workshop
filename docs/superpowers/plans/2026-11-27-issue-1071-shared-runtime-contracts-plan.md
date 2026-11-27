@@ -85,37 +85,37 @@ _Date: 2026-11-27 | Issue #1071 | Spec: `docs/superpowers/specs/2026-11-27-issue
 - 순수 policy는 Netty/Reactor 타입을 요구하지 않는다. handler 설치는 명시적
   production runtime adapter가 담당하고, 소비자별 loop/pool/SO_LINGER 값은 유지한다.
 
-## P2 — Redis runtime adapter
+## P2 — Redis runtime adapter (upstream promotion and Workshop migration)
 
 ### T5 — endpoint/owner lifecycle contract
 
 **Files**
 
-- Create: `shared/src/main/kotlin/io/bluetape4k/workshop/shared/redis/OwnedRedisRuntime.kt`
-  (`RedisEndpoint`와 lifecycle SPI 포함)
-- Test: `shared/src/test/kotlin/io/bluetape4k/workshop/shared/redis/*LifecycleTest.kt`
+- Upstream: `bluetape4k-testcontainers`의 `OwnedRedisRuntime.kt`와
+  `TestcontainersRedisRuntime.kt`
+- Workshop: local runtime source 삭제, upstream contract consumer test 유지
 
 **Acceptance**
 
 - explicit `start`, idempotent `close`, partial-start rollback, reverse close를 검증한다.
 - endpoint property key를 기존 `testcontainers.redis.*`와 호환한다.
 
-### T6 — production Testcontainers runner and Lettuce bridge
+### T6 — Workshop consumer migration and duplicate-boundary cleanup
 
 **Files**
 
-- Create: `shared/src/main/kotlin/io/bluetape4k/workshop/shared/redis/TestcontainersRedisRuntime.kt`
-- Create: `shared/src/main/kotlin/io/bluetape4k/workshop/shared/redis/LettuceRedisClientFactory.kt`
-- Modify: `shared/build.gradle.kts`
-- Test: `shared/src/test/kotlin/io/bluetape4k/workshop/shared/redis/*Test.kt`
+- Delete: `shared/src/main/kotlin/io/bluetape4k/workshop/shared/redis/OwnedRedisRuntime.kt`
+- Delete: `shared/src/main/kotlin/io/bluetape4k/workshop/shared/redis/TestcontainersRedisRuntime.kt`
+- Delete: `shared/src/main/kotlin/io/bluetape4k/workshop/shared/redis/LettuceRedisClientFactory.kt`
+- Modify: `shared/build.gradle.kts`, Redis contract tests, bilingual README
 
 **Acceptance**
 
-- upstream `RedisServer`와 `LettuceClients`를 위임 사용한다.
-- `RedisClient`, connection, `ClientResources`의 close 책임을 숨기지 않는다.
+- upstream `RedisServer`를 감싸는 runtime은 `bluetape4k-testcontainers`가 소유한다.
+- Workshop은 `LettuceClients`를 직접 사용하고 중복 factory를 만들지 않는다.
 - Testcontainers/Spring 의존성이 unrelated runtime consumer에 전이되지 않는다.
-- production main API의 외부 타입은 `compileOnlyApi`로 노출하고, 실제 사용 모듈이
-  runtime 의존성을 명시한다.
+- shared test fixture가 IO 승격 API를 사용하는 경우 해당 fixture configuration에
+  dependency를 명시한다.
 
 ## P3 — commerce fingerprint migration
 

@@ -63,15 +63,14 @@ planner 전체 알고리즘, profile authorization은 소비 모듈에 남긴다
 
 ### 4.2 Production runtime adapter와 test-fixture 경계
 
-- `shared.redis`: `RedisEndpoint`, 명시적 `OwnedRedisRuntime` 계약을
-  `shared/src/main`에서 제공한다.
-- `shared.redis.TestcontainersRedisRuntime`: `shared/src/main`의 opt-in
-  Testcontainers 기반 Redis runner. `start()`는 한 번만
-  성공하고, partial-start 실패는 이미 시작한 자원을 역순으로 정리한다. `close()`는
-  idempotent이며 interrupt 상태를 복원한다.
-- `shared.redis.LettuceRedisClientFactory`: upstream `LettuceClients`를 통해
-  client/connection을 만들고,
-  반환한 connection의 close 책임을 API에 드러낸다.
+- `bluetape4k-testcontainers`: `RedisEndpoint`, `RedisContainerHandle`,
+  `RedisRuntime`, `OwnedRedisRuntime`, `TestcontainersRedisRuntime`를 공용
+  lifecycle 계약으로 제공한다. `start()`는 한 번만 성공하고, partial-start
+  실패는 이미 시작한 자원을 역순으로 정리한다. `close()`는 idempotent이며
+  interrupt 상태를 복원한다.
+- Workshop `shared`에는 이 runtime의 local wrapper를 두지 않는다. Redis
+  client/connection은 upstream `LettuceClients`를 직접 사용하고, 기존
+  `RedisServer`/`LettuceClients` 계약과 중복되는 factory는 승격하지 않는다.
 
 기존 Spring DynamicPropertyRegistry helper는 `testFixtures`에 유지한다.
 production API에서 외부 타입을 반환할 때는 `compileOnlyApi`와 consumer runtime
@@ -97,7 +96,7 @@ production API에서 외부 타입을 반환할 때는 `compileOnlyApi`와 consu
 |---|---|
 | Redis start 중 container/network 일부만 생성 | 단계별 rollback과 역순 close |
 | close 중 interrupt | cleanup 후 현재 thread interrupt 복원 |
-| client/connection ownership 불명확 | `AutoCloseable` 반환 또는 명시적 `close` 문서 |
+| client/connection ownership 불명확 | upstream `LettuceClients`의 shutdown 계약과 runtime `AutoCloseable` 문서 |
 | fingerprint 저장값 변경 | consumer별 golden vector와 migration 없는 교체 금지 |
 | URI traversal/encoded dot/userInfo/query/fragment | base URI policy에서 조기 거부 |
 | HTTP remote URL이 insecure | loopback 예외 또는 명시적 allow flag 없이는 거부 |
