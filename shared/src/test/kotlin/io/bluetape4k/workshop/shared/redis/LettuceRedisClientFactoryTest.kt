@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.shared.redis
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.assertNotNull
 
 class LettuceRedisClientFactoryTest {
 
@@ -12,7 +12,7 @@ class LettuceRedisClientFactoryTest {
 
         val client = factory.clientOf(endpoint)
         try {
-            assertNotNull(client)
+            client.shouldNotBeNull()
         } finally {
             factory.close(client)
         }
