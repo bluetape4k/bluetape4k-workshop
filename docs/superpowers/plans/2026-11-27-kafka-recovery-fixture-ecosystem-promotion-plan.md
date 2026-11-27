@@ -272,7 +272,7 @@
 
   Expected: no stale package import or shared fixture dependency remains for these Kafka consumers; the validator command reports no terminology finding.
 
-- [ ] **Step 4: Commit upstream and Workshop changes separately**
+- [x] **Step 4: Commit upstream and Workshop changes separately**
 
   Use Korean Lore messages. Do not publish a tag, create a release, or merge a PR in this plan.
 
@@ -282,6 +282,7 @@
   unresolved reference로 실패했다.
 - GREEN: upstream `KafkaRecoveryConformanceFixtureTest` 4건 성공.
 - upstream commit: `ebbe81baf` (`feat/kafka-recovery-fixture-promotion`).
+- Workshop commit: `230d6d7e4` (`feat/shared-ecosystem-promotion`).
 - `javap -public`: fixture API가 `Duration`, Kotlin/JDK collection, fixture 타입만
   노출하며 Kafka client/Spring/Testcontainers 타입은 노출하지 않는다.
 - `testFixturesApiElements`: `No dependencies`.
