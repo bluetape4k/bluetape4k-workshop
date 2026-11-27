@@ -11,7 +11,7 @@ import io.bluetape4k.concurrent.get
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.shared.time.MutableClock
+import io.bluetape4k.junit5.time.MutableClock
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*

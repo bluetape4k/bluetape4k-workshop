@@ -15,7 +15,7 @@
 **Files:**
 - Create: `/Users/debop/work/bluetape4k/bluetape4k-projects/testing/junit5/src/test/kotlin/io/bluetape4k/junit5/time/MutableClockTest.kt`
 
-- [ ] **Step 1: Add the failing contract test**
+- [x] **Step 1: Add the failing contract test**
 
   Add the following test class. It fixes the public package, constructor, zone-sharing, negative-duration, seconds, and atomic update contract before implementation.
 
@@ -82,7 +82,7 @@
   }
   ```
 
-- [ ] **Step 2: Run the RED proof**
+- [x] **Step 2: Run the RED proof**
 
   Run from `bluetape4k-projects`:
 
@@ -97,7 +97,7 @@
 **Files:**
 - Create: `/Users/debop/work/bluetape4k/bluetape4k-projects/testing/junit5/src/main/kotlin/io/bluetape4k/junit5/time/MutableClock.kt`
 
-- [ ] **Step 1: Add the minimal implementation**
+- [x] **Step 1: Add the minimal implementation**
 
   Add this implementation and Korean KDoc. Do not add `advanceBy`, epoch-millisecond constructors, scheduler methods, or monotonic behavior.
 
@@ -136,7 +136,7 @@
   }
   ```
 
-- [ ] **Step 2: Run the GREEN proof**
+- [x] **Step 2: Run the GREEN proof**
 
   Run the targeted test and class compilation:
 
@@ -147,7 +147,7 @@
 
   Expected: all four contract tests pass and the main source compiles on Java 25.
 
-- [ ] **Step 3: Inspect the public JVM surface**
+- [x] **Step 3: Inspect the public JVM surface**
 
   Run:
 
@@ -164,15 +164,15 @@
 - Modify: `/Users/debop/work/bluetape4k/bluetape4k-projects/io/tink/src/test/kotlin/io/bluetape4k/tink/keyset/redis/RedissonVersionedKeysetStoreTest.kt`
 - Modify: `/Users/debop/work/bluetape4k/bluetape4k-projects/utils/idgenerators/src/test/kotlin/io/bluetape4k/idgenerators/flake/FlakeTest.kt`
 
-- [ ] **Step 1: Replace the two Tink test clocks**
+- [x] **Step 1: Replace the two Tink test clocks**
 
   Add `import io.bluetape4k.junit5.time.MutableClock`, replace `clock.advanceBy(Duration.ofDays(2))` with `clock.advance(Duration.ofDays(2))`, and delete each file's private `MutableClock` class plus imports used only by that class (`ZoneId` and the private clock's `Clock` override where unused). Keep Redis setup, default instant, and all assertions unchanged.
 
-- [ ] **Step 2: Replace the Flake test clock**
+- [x] **Step 2: Replace the Flake test clock**
 
   Add `import io.bluetape4k.junit5.time.MutableClock`, change `MutableClock(initialMillis)` to `MutableClock(Instant.ofEpochMilli(initialMillis))`, replace `clock.advanceBy(Duration.ofMillis(1))` with `clock.advance(Duration.ofMillis(1))`, and delete the private `MutableClock` class and its `AtomicLong`/private-zone imports. Retain `ZoneOffset.UTC` for the existing `Clock.fixed` test.
 
-- [ ] **Step 3: Compile the migrated tests**
+- [x] **Step 3: Compile the migrated tests**
 
   Run sequentially from `bluetape4k-projects`:
 
@@ -183,7 +183,7 @@
 
   Expected: no private `MutableClock` declaration remains in these three files and both test source sets compile.
 
-- [ ] **Step 4: Run focused behavior tests**
+- [x] **Step 4: Run focused behavior tests**
 
   ```bash
   ./gradlew :bluetape4k-tink:test --tests '*LettuceVersionedKeysetStoreTest' --tests '*RedissonVersionedKeysetStoreTest' --no-daemon --console=plain
@@ -206,7 +206,7 @@
 - Modify: `optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/persistence/FieldServiceOutboxFencingTest.kt`
 - Modify: affected module `build.gradle.kts` files only where `testFixtures(project(":shared"))` is no longer needed by that module
 
-- [ ] **Step 1: Make the upstream artifact resolvable for local verification**
+- [x] **Step 1: Make the upstream artifact resolvable for local verification**
 
   From `bluetape4k-projects`, publish only `bluetape4k-junit5` to Maven local:
 
@@ -216,19 +216,19 @@
 
   Keep the repository's normal resolver configuration unchanged. For Workshop verification, use a temporary Gradle init script that prepends `mavenLocal()` to project repositories; do not commit that init script or add `mavenLocal()` to `settings.gradle.kts`.
 
-- [ ] **Step 2: Change imports and the operations wrapper**
+- [x] **Step 2: Change imports and the operations wrapper**
 
   Replace `io.bluetape4k.workshop.shared.time.MutableClock` imports with `io.bluetape4k.junit5.time.MutableClock`. Keep every consumer's initial instant and method call. `JobConsoleFixtureClock` continues to extend `MutableClock` so its named test fixture and default instant remain unchanged.
 
-- [ ] **Step 3: Remove only the obsolete shared clock source/test**
+- [x] **Step 3: Remove only the obsolete shared clock source/test**
 
   Delete the shared implementation after all imports compile. Retain other `shared` tests and fixtures. The `build-logic` monotonic test clocks and operations `VirtualClock` must remain unchanged.
 
-- [ ] **Step 4: Adjust fixture dependencies conservatively**
+- [x] **Step 4: Adjust fixture dependencies conservatively**
 
   Remove `testImplementation(testFixtures(project(":shared")))` only from modules whose remaining source no longer imports any shared fixture. Keep it in modules that still use another shared contract. All affected modules already declare `libs.bluetape4k.junit5`; add it only if a module lacks that test dependency.
 
-- [ ] **Step 5: Compile the Workshop migration with the local artifact**
+- [x] **Step 5: Compile the Workshop migration with the local artifact**
 
   Run the affected compile tasks sequentially with the temporary init script:
 
@@ -244,7 +244,7 @@
 - Create: `.bluetape/inputs/mutable-clock-ecosystem-promotion-evidence.json`
 - Modify: `docs/superpowers/plans/2026-11-27-mutable-clock-ecosystem-promotion-plan.md`
 
-- [ ] **Step 1: Run scope scans**
+- [x] **Step 1: Run scope scans**
 
   Run from Workshop:
 
@@ -256,15 +256,15 @@
 
   Expected: only the upstream `io.bluetape4k.junit5.time.MutableClock` declaration remains outside excluded monotonic/`VirtualClock` implementations; the second scan confirms those excluded clocks were not changed.
 
-- [ ] **Step 2: Run the focused verification matrix**
+- [x] **Step 2: Run the focused verification matrix**
 
-  Record the exact commands, commit SHAs, local artifact version, pass/fail status, and any pre-existing failure separately. Do not treat an unpublished artifact or skipped test as a successful Workshop migration.
+  Record the exact commands, commit SHAs, local artifact version, pass/fail status, and any pre-existing failure separately. The upstream commit is `1d729cf66`; local Workshop resolution used `2.2.0-SNAPSHOT`. The focused matrix passed: AWS Kinesis 4, promotion voucher 12, pre-generated voucher pool 3, usage metering integration 4, field-service integration 1. The upstream junit5 suite baseline was 347 tests, the new clock contract was 4 tests, Tink was 28 tests, and Flake was 27 tests. The root Workshop `detekt` task remains red on existing MaxLineLength findings in `commerce/pre-generated-voucher-pool` and unrelated commerce modules; module-local `detekt` tasks are not registered for these Workshop modules. Do not treat an unpublished artifact or skipped test as a successful Workshop migration.
 
 - [ ] **Step 3: Commit the upstream and Workshop changes separately**
 
   Use Korean Lore messages. The upstream commit must explain the public test API decision; the Workshop commit must explain consumer migration and shared deletion. Do not publish a tag, create a release, or merge a PR in this plan.
 
-- [ ] **Step 4: Update this plan with evidence**
+- [x] **Step 4: Update this plan with evidence**
 
   Mark only verified steps complete and record unresolved publication or downstream resolver gaps before starting the Kafka train.
 

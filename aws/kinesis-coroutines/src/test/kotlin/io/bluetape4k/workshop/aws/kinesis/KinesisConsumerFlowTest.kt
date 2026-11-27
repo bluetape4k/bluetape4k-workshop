@@ -17,7 +17,7 @@ import io.bluetape4k.aws.kinesis.KinesisStartingPosition
 import io.bluetape4k.aws.kinesis.consumerFlow
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.workshop.shared.time.MutableClock
+import io.bluetape4k.junit5.time.MutableClock
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList

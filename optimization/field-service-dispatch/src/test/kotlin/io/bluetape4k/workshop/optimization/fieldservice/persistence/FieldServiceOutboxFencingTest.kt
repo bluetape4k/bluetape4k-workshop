@@ -6,7 +6,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
-import io.bluetape4k.workshop.shared.time.MutableClock
+import io.bluetape4k.junit5.time.MutableClock
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

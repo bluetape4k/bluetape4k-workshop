@@ -38,7 +38,6 @@ configurations.configureEach {
 
 dependencies {
     testImplementation(project(":commerce-shared"))
-    testImplementation(testFixtures(project(":shared")))
 
     implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.core)
