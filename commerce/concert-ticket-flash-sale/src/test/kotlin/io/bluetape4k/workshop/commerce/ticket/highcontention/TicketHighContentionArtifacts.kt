@@ -4,13 +4,13 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.toUtf8String
-import io.bluetape4k.workshop.shared.artifact.ArtifactPrimitiveException
 import io.bluetape4k.workshop.shared.artifact.ArtifactRedactionException
 import io.bluetape4k.workshop.shared.artifact.ArtifactRedactionGuard
-import io.bluetape4k.workshop.shared.artifact.AtomicArtifactWriter
 import io.bluetape4k.workshop.shared.artifact.HashChainCursor
 import io.bluetape4k.workshop.shared.artifact.HashChainJsonl
-import io.bluetape4k.workshop.shared.artifact.TrustedArtifactPaths
+import io.bluetape4k.io.artifact.ArtifactPrimitiveException
+import io.bluetape4k.io.artifact.AtomicArtifactWriter
+import io.bluetape4k.io.artifact.TrustedArtifactPaths
 import tools.jackson.core.ObjectReadContext
 import tools.jackson.core.StreamReadFeature
 import tools.jackson.core.json.JsonFactory
