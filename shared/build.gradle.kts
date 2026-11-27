@@ -37,6 +37,8 @@ dependencies {
 
     compileOnly(libs.bluetape4k.testcontainers)
     compileOnly(libs.bluetape4k.testcontainers.spring)
+    compileOnlyApi(libs.bluetape4k.lettuce)
+    compileOnlyApi(libs.reactor.netty)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.bluetape4k.testcontainers.spring)
     testImplementation(libs.testcontainers.lib)
