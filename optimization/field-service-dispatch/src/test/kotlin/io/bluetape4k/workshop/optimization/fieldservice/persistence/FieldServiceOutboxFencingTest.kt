@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.optimization.fieldservice.persistence
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.workshop.shared.time.MutableClock
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -14,9 +14,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.time.Clock
 import java.time.Instant
-import java.time.ZoneId
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class FieldServiceOutboxFencingTest {
@@ -26,7 +24,7 @@ internal class FieldServiceOutboxFencingTest {
     }
 
 
-    private val clock = MutableTestClock(Instant.parse("2026-08-20T00:00:00Z"))
+    private val clock = MutableClock(Instant.parse("2026-08-20T00:00:00Z"))
     private val repository = FieldServiceRepository(clock)
 
     @BeforeAll
@@ -83,12 +81,4 @@ internal class FieldServiceOutboxFencingTest {
         }
     }
 
-    private class MutableTestClock(private var current: Instant): Clock() {
-        override fun getZone(): ZoneId = ZoneId.of("UTC")
-        override fun withZone(zone: ZoneId): Clock = this
-        override fun instant(): Instant = current
-        fun advanceSeconds(seconds: Long) {
-            current += seconds.seconds()
-        }
-    }
 }

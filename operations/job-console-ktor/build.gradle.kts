@@ -44,6 +44,7 @@ dependencies {
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
     testImplementation(testFixtures(project(":operations-job-console-core")))
+    testImplementation(testFixtures(project(":shared")))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.lettuce)

@@ -14,6 +14,8 @@ configurations {
 }
 
 dependencies {
+    testImplementation(testFixtures(project(":shared")))
+
     implementation(libs.bluetape4k.aws)
     implementation(libs.bluetape4k.aws.java)
     implementation(libs.bluetape4k.core)

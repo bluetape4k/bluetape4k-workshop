@@ -18,6 +18,7 @@ configurations.configureEach {
 
 dependencies {
     implementation(project(":shared"))
+    testImplementation(testFixtures(project(":shared")))
 
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)

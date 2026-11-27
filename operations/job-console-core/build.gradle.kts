@@ -45,7 +45,7 @@ dependencies {
     implementation(libs.bluetape4k.coroutines)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    testImplementation(project(":shared"))
+    testImplementation(testFixtures(project(":shared")))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.testcontainers)
@@ -54,6 +54,7 @@ dependencies {
     testImplementation(libs.awaitility.kotlin)
     testImplementation(libs.mockk)
 
+    testFixturesImplementation(testFixtures(project(":shared")))
     testFixturesImplementation(libs.bluetape4k.assertions)
     testFixturesImplementation(libs.bluetape4k.junit5)
     testFixturesImplementation(libs.bluetape4k.jackson3)

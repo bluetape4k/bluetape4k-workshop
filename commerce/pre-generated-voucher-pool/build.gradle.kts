@@ -52,7 +52,7 @@ val compatibility by sourceSets.creating {
 }
 
 dependencies {
-    testImplementation(project(":shared"))
+    testImplementation(testFixtures(project(":shared")))
 
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.io)
