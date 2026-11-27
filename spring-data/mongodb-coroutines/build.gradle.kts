@@ -14,6 +14,7 @@ configurations {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.aspectj)
     implementation(libs.spring.boot.starter.validation)

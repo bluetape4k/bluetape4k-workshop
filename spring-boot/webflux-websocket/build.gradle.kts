@@ -21,6 +21,7 @@ configurations {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.idgenerators)
     testImplementation(libs.bluetape4k.junit5)

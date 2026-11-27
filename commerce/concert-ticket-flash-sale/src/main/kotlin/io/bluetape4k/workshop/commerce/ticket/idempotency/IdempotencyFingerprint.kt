@@ -1,7 +1,5 @@
 package io.bluetape4k.workshop.commerce.ticket.idempotency
 
-import io.bluetape4k.io.digest.Base64Format
-import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -9,11 +7,10 @@ import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireGe
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
 import tools.jackson.databind.JsonNode
 import java.math.BigDecimal
 import java.util.*
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 
 /** persistence와 equality 비교에 안전한 canonical 256-bit digest입니다. */
 /** persistence와 equality 비교에 안전한 canonical 256-bit digest입니다. */
@@ -43,7 +40,7 @@ value class TicketDigest private constructor(val base64Url: String) {
          * @param value 업무 입력입니다. 필수값·권한·멱등성 범위를 검증한 뒤 부작용을 시작합니다.
          */
         fun sha256(value: String): TicketDigest =
-            TicketDigest(Digesters.SHA256.digestBase64Utf8(value, Base64Format.URL_SAFE_UNPADDED))
+            TicketDigest.of(Base64.getUrlDecoder().decode(FingerprintEncoder.sha256Base64Url(value)))
     }
 }
 
@@ -69,9 +66,12 @@ object IdempotencyFingerprint: KLogging() {
         secret.size.requireGe(32, "secret.size")
         rawKey.length.requireInRange(16, 128, "rawKey.length")
         rawKey.all { it.code in 0x21..0x7e }.requireEquals(true, "rawKey.isVisibleAscii")
-        val mac = Mac.getInstance("HmacSHA256")
-        mac.init(SecretKeySpec(secret.copyOf(), "HmacSHA256"))
-        return TicketDigest.of(mac.doFinal("ticket-idempotency-key-v1\u0000$rawKey".toUtf8Bytes()))
+        val encoded = FingerprintEncoder.hmacSha256Base64Url(
+            secret = secret,
+            domain = "ticket-idempotency-key-v1",
+            rawKey,
+        )
+        return TicketDigest.of(Base64.getUrlDecoder().decode(encoded))
     }
 
     /**

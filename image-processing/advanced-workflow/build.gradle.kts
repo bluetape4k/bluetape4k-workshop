@@ -88,7 +88,7 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.webmvc.lib)
 
-    testImplementation(project(":shared"))
+    implementation(project(":shared"))
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
 
