@@ -281,7 +281,7 @@
 - RED: upstream fixture 타입을 추가하기 전 `compileTestKotlin`이 세 fixture 타입의
   unresolved reference로 실패했다.
 - GREEN: upstream `KafkaRecoveryConformanceFixtureTest` 4건 성공.
-- upstream commit: `ebbe81baf` (`feat/kafka-recovery-fixture-promotion`).
+- upstream commit: `76626d635` (`feat/kafka-recovery-fixture-promotion`).
 - Workshop commit: `230d6d7e4` (`feat/shared-ecosystem-promotion`).
 - `javap -public`: fixture API가 `Duration`, Kotlin/JDK collection, fixture 타입만
   노출하며 Kafka client/Spring/Testcontainers 타입은 노출하지 않는다.
