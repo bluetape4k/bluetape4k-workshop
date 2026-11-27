@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.workshop.shared.image.SafeFilenamePolicy
+import io.bluetape4k.images.spring.policy.SafeFilenamePolicy
 import org.springframework.stereotype.Component
 
 /**
