@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.idempotency
 
-import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
+import io.bluetape4k.io.digest.FingerprintEncoder
 
 /** caller idempotency key나 payload를 보존하지 않고 domain-separated SHA-256 fingerprint를 생성합니다. */
 /** caller idempotency key나 payload를 보존하지 않고 domain-separated SHA-256 fingerprint를 생성합니다. */

@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.metering.idempotency
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
-import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
+import io.bluetape4k.io.digest.FingerprintEncoder
 import java.math.BigDecimal
 import java.time.Instant
 

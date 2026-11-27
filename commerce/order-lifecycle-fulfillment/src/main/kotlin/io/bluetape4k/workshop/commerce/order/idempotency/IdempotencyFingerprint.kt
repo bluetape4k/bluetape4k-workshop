@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.order.idempotency
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
+import io.bluetape4k.io.digest.FingerprintEncoder
 
 /**
  * IdempotencyFingerprint은 주문 이행 실무 예제의 업무 경계를 표현하는 타입입니다. 입력 검증, 상태 전이, 저장·발행 계약을 이 타입의 규칙에 맞춰
