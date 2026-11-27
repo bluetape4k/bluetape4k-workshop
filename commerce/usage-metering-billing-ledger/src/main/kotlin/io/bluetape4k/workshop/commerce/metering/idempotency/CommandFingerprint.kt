@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.commerce.metering.idempotency
 
-import io.bluetape4k.io.digest.Digesters
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -30,7 +30,7 @@ value class Sha256Digest private constructor(val value: String) {
          */
         operator fun invoke(canonicalValue: String): Sha256Digest =
             Sha256Digest(
-                Digesters.SHA256.digestHexUtf8(canonicalValue),
+                FingerprintEncoder.sha256Hex(canonicalValue),
             )
 
         /**

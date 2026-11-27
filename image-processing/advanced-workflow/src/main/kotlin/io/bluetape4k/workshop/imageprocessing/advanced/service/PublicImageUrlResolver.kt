@@ -1,14 +1,9 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.service
 
-import io.bluetape4k.apache.containsIgnoreCase
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
-import io.bluetape4k.support.equalsIgnoreCase
-import io.bluetape4k.support.requireNotNull
-import io.bluetape4k.support.requireNull
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
+import io.bluetape4k.workshop.shared.image.PublicBaseUriPolicy
 import org.springframework.stereotype.Component
 import java.net.URI
 /**
@@ -27,16 +22,6 @@ class PublicImageUrlResolver(
     private val properties: ImageProcessingAdvancedProperties,
     storageProperties: ImageStorageProperties,
 ) {
-    companion object: KLogging() {
-        /**
-         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
-         */
-        private val LOOPBACK_HOSTS = setOf("localhost", "127.0.0.1", "::1", "[::1]")
-    }
-    /**
-     * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
-     */
-
     private val baseUri: URI = validateBaseUri(properties, storageProperties)
     /**
      * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
@@ -66,29 +51,12 @@ class PublicImageUrlResolver(
         properties: ImageProcessingAdvancedProperties,
         storageProperties: ImageStorageProperties,
     ): URI {
-        log.debug { "validate base url. url=${properties.publicBaseUrl}" }
-
-        val baseUri = URI.create(properties.publicBaseUrl)
-        baseUri.scheme.requireNotNull("publicBaseUrl.scheme")
-        baseUri.host.requireNotNull("publicBaseUrl.host")
-        baseUri.rawQuery.requireNull("publicBaseUrl.query")
-        baseUri.rawFragment.requireNull("publicBaseUrl.fragment")
-        baseUri.userInfo.requireNull("publicBaseUrl.userInfo")
-        require(!baseUri.path.contains("..") && baseUri.rawPath?.containsIgnoreCase("%2e") != true) {
-            "publicBaseUrl path must not include '..'"
-        }
-
-        val loopback = baseUri.host in LOOPBACK_HOSTS
-        val https = baseUri.scheme.equalsIgnoreCase("https")
-        val http = baseUri.scheme.equalsIgnoreCase("http")
-        require(https || (http && (loopback || properties.allowInsecurePublicBaseUrl))) {
-            "publicBaseUrl must use https unless it is loopback local dev or allowInsecurePublicBaseUrl=true"
-        }
-        if (storageProperties.backend == ImageStorageProperties.Backend.LOCAL && !loopback) {
-            require(properties.allowLocalStorageRemotePublicBaseUrl) {
-                "local ImageStorage with remote publicBaseUrl requires allowLocalStorageRemotePublicBaseUrl=true"
-            }
-        }
-        return baseUri
+        return PublicBaseUriPolicy(
+            allowInsecurePublicBaseUrl = properties.allowInsecurePublicBaseUrl,
+            allowLocalStorageRemotePublicBaseUrl = properties.allowLocalStorageRemotePublicBaseUrl,
+        ).validate(
+            publicBaseUrl = properties.publicBaseUrl,
+            storageBackendIsLocal = storageProperties.backend == ImageStorageProperties.Backend.LOCAL,
+        )
     }
 }

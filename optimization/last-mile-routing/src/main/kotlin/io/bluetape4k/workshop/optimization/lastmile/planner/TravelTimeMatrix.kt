@@ -1,26 +1,27 @@
 package io.bluetape4k.workshop.optimization.lastmile.planner
 
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.optimization.lastmile.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.lastmile.domain.InvalidLastMileInput
 import io.bluetape4k.workshop.optimization.lastmile.domain.LastMileLimits
-import java.security.MessageDigest
+import io.bluetape4k.workshop.shared.optimization.CoordinatePair as SharedCoordinatePair
+import io.bluetape4k.workshop.shared.optimization.TravelTimeMatrix as SharedTravelTimeMatrix
+import io.bluetape4k.workshop.shared.optimization.TravelTimeMatrixLimits
 
 data class CoordinatePair(
     val from: CoordinateId,
     val to: CoordinateId,
 )
 
+/** shared sparse matrix primitive를 last-mile 도메인 예외와 상한으로 감싸는 adapter입니다. */
 class TravelTimeMatrix(
     val revision: Long,
     coordinateIds: Set<CoordinateId>,
     edges: Map<CoordinatePair, Long>,
 ) {
-    companion object: KLogging()
-
     val coordinateIds: Set<CoordinateId> = coordinateIds.toSet()
     private val edgeMap: Map<CoordinatePair, Long> = edges.toMap()
+
+    private val commonMatrix: SharedTravelTimeMatrix<CoordinateId>
 
     init {
         require(revision >= 0L) { "matrix revision must be non-negative" }
@@ -38,27 +39,23 @@ class TravelTimeMatrix(
                 throw InvalidLastMileInput("travel time must be finite and non-negative")
             }
         }
+
+        commonMatrix = SharedTravelTimeMatrix(
+            revision = revision,
+            coordinateIds = this.coordinateIds,
+            edges = edgeMap.mapKeys { (pair, _) -> SharedCoordinatePair(pair.from, pair.to) },
+            idText = CoordinateId::value,
+            limits = TravelTimeMatrixLimits(
+                maxCoordinates = LastMileLimits.MAX_MATRIX_COORDINATES,
+                maxEdges = LastMileLimits.MAX_MATRIX_EDGES,
+                allowEmpty = false,
+            ),
+        )
     }
 
     fun lookup(from: CoordinateId, to: CoordinateId): Long? = edgeMap[CoordinatePair(from, to)]
 
     fun edgeCount(): Int = edgeMap.size
 
-    fun digest(): String = MessageDigest.getInstance("SHA-256")
-        .digest(
-            buildString {
-                append(revision)
-                coordinateIds.sortedBy { it.value }.forEach { append('|').append(it.value) }
-                edgeMap.entries
-                    .sortedWith(compareBy({ it.key.from.value }, { it.key.to.value }))
-                    .forEach { (pair, seconds) ->
-                        append('|')
-                            .append(pair.from.value)
-                            .append('>')
-                            .append(pair.to.value)
-                            .append('=')
-                            .append(seconds)
-                    }
-            }.toUtf8Bytes()
-        ).joinToString("") { "%02x".format(it) }
+    fun digest(): String = commonMatrix.digest()
 }

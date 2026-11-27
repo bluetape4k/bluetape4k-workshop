@@ -17,7 +17,7 @@ dependencies {
     implementation(platform(libs.micrometer.bom))
     implementation(platform(libs.micrometer.tracing.bom))
 
-    testImplementation(project(":shared"))
+    implementation(project(":shared"))
     testImplementation(libs.bluetape4k.spring.boot4.core)
 
     implementation(libs.bluetape4k.micrometer)

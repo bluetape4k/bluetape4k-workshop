@@ -16,6 +16,7 @@ configurations {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(platform(libs.spring.boot4.dependencies))
 
     // Bluetape4k 의존성

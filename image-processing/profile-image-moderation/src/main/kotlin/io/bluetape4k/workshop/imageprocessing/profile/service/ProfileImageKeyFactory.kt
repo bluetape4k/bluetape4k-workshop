@@ -5,6 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireMatches
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.imageprocessing.profile.model.ProfileImageKeys
+import io.bluetape4k.workshop.shared.image.SafeFilenamePolicy
 import org.springframework.stereotype.Component
 
 @Component
@@ -13,19 +14,13 @@ import org.springframework.stereotype.Component
  */
 class ProfileImageKeyFactory {
 
+    private val filenamePolicy = SafeFilenamePolicy(preserveExtension = false)
+
     private companion object: KLogging() {
         /**
          * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
          */
         private val USER_ID_REGEX = Regex("^[A-Za-z0-9._-]{1,80}$")
-        /**
-         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
-         */
-        private const val DEFAULT_FILENAME = "upload.jpg"
-        /**
-         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
-         */
-        private const val MAX_FILENAME_LENGTH = 120
     }
 
     /**
@@ -71,16 +66,5 @@ class ProfileImageKeyFactory {
      *
      * @param filename 이미지 업로드·검수·파생물 처리 처리 대상의 위치·콘텐츠 참조입니다. 허용된 형식과 보안 정책을 먼저 확인합니다.
      */
-    fun sanitizeFilename(filename: String?): String {
-        val raw = filename
-            ?.substringAfterLast('/')
-            ?.substringAfterLast('\\')
-            ?.takeIf { it.isNotBlank() }
-            ?: DEFAULT_FILENAME
-        val replaced = raw.map { char ->
-            if (char.isLetterOrDigit() || char == '.' || char == '_' || char == '-') char else '_'
-        }.joinToString("")
-        val normalized = replaced.trim('.', '_', '-').ifBlank { DEFAULT_FILENAME }
-        return if (normalized.length <= MAX_FILENAME_LENGTH) normalized else normalized.take(MAX_FILENAME_LENGTH)
-    }
+    fun sanitizeFilename(filename: String?): String = filenamePolicy.sanitize(filename)
 }

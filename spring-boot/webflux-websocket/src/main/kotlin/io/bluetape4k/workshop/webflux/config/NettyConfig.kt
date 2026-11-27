@@ -3,9 +3,9 @@ package io.bluetape4k.workshop.webflux.config
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Runtimex
+import io.bluetape4k.workshop.shared.netty.NettyTimeoutHandlers
+import io.bluetape4k.workshop.shared.netty.NettyTimeoutPolicy
 import io.netty.channel.ChannelOption
-import io.netty.handler.timeout.ReadTimeoutHandler
-import io.netty.handler.timeout.WriteTimeoutHandler
 import org.springframework.boot.reactor.netty.NettyReactiveWebServerFactory
 import org.springframework.boot.reactor.netty.NettyServerCustomizer
 import org.springframework.context.annotation.Bean
@@ -14,6 +14,7 @@ import org.springframework.http.client.ReactorResourceFactory
 import reactor.netty.http.server.HttpServer
 import reactor.netty.resources.ConnectionProvider
 import reactor.netty.resources.LoopResources
+import java.time.Duration
 
 /**
  * Webflux 에서 사용하는 Netty 관련 설정을 제공합니다.
@@ -39,8 +40,10 @@ class NettyConfig {
                 .option(ChannelOption.SO_BACKLOG, 1000)
                 .option(ChannelOption.SO_LINGER, 0)
                 .doOnConnection { conn ->
-                    conn.addHandlerLast(ReadTimeoutHandler(30))
-                    conn.addHandlerLast(WriteTimeoutHandler(30))
+                    NettyTimeoutHandlers.install(
+                        conn,
+                        NettyTimeoutPolicy(Duration.ofSeconds(30), Duration.ofSeconds(30)),
+                    )
                 }
         }
     }
