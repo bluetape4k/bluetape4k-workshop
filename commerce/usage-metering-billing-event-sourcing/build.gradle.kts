@@ -41,7 +41,7 @@ configurations.configureEach {
 }
 
 dependencies {
-    testImplementation(project(":shared"))
+    implementation(project(":shared"))
     testImplementation(testFixtures(project(":commerce-usage-metering-billing-ledger")))
 
     implementation(libs.bluetape4k.io)

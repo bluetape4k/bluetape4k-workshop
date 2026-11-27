@@ -4,8 +4,8 @@ import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Runtimex
 import io.netty.channel.ChannelOption
-import io.netty.handler.timeout.ReadTimeoutHandler
-import io.netty.handler.timeout.WriteTimeoutHandler
+import io.bluetape4k.workshop.shared.netty.NettyTimeoutHandlers
+import io.bluetape4k.workshop.shared.netty.NettyTimeoutPolicy
 import org.springframework.boot.reactor.netty.NettyReactiveWebServerFactory
 import org.springframework.boot.reactor.netty.NettyServerCustomizer
 import org.springframework.context.annotation.Bean
@@ -38,8 +38,7 @@ class NettyConfig {
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.SO_BACKLOG, 1000)
                 .doOnConnection { conn ->
-                    conn.addHandlerLast(ReadTimeoutHandler(10))
-                    conn.addHandlerLast(WriteTimeoutHandler(10))
+                    NettyTimeoutHandlers.install(conn, NettyTimeoutPolicy.DEFAULT)
                 }
         }
     }

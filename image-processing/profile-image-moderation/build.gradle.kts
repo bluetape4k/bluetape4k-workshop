@@ -17,6 +17,7 @@ configurations {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.idgenerators)

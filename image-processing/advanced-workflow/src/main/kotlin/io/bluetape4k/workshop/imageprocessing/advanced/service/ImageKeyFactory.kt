@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.workshop.shared.image.SafeFilenamePolicy
 import org.springframework.stereotype.Component
 
 /**
@@ -15,16 +16,7 @@ import org.springframework.stereotype.Component
 @Component
 class ImageKeyFactory {
 
-    companion object: KLogging() {
-        /**
-         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
-         */
-        private const val DEFAULT_FILENAME = "upload.jpg"
-        /**
-         * 이미지 처리 클래스가 유지하는 업무 상태입니다. 변경 시 관련 검증·상태 전이·동시성 규칙을 함께 적용합니다.
-         */
-        private const val MAX_FILENAME_LENGTH = 120
-    }
+    private val filenamePolicy = SafeFilenamePolicy()
 
     /**
      * `images/{imageId}/original/{safeFilename}` key를 생성합니다.
@@ -66,31 +58,7 @@ class ImageKeyFactory {
      * factory.sanitizeFilename("C:\\tmp\\holiday photo.jpg") // holiday_photo.jpg
      * ```
      */
-    fun sanitizeFilename(filename: String?): String {
-        val raw = filename
-            ?.substringAfterLast('/')
-            ?.substringAfterLast('\\')
-            ?.takeIf { it.isNotBlank() }
-            ?: DEFAULT_FILENAME
-
-        val replaced = raw.map { char ->
-            if (char.isLetterOrDigit() || char == '.' || char == '_' || char == '-') char else '_'
-        }.joinToString("")
-
-        val normalized = replaced.trim('.', '_', '-').ifBlank { DEFAULT_FILENAME }
-
-        return if (normalized.length <= MAX_FILENAME_LENGTH) {
-            normalized
-        } else {
-            val extension = normalized.substringAfterLast('.', "")
-            val extensionSuffix = extension.takeIf { it.isNotBlank() }?.let { ".$it" }.orEmpty()
-            if (extensionSuffix.length >= MAX_FILENAME_LENGTH) {
-                normalized.take(MAX_FILENAME_LENGTH).trimEnd('.', '_', '-').ifBlank { DEFAULT_FILENAME }
-            } else {
-                normalized.take(MAX_FILENAME_LENGTH - extensionSuffix.length).trimEnd('.', '_', '-') + extensionSuffix
-            }
-        }
-    }
+    fun sanitizeFilename(filename: String?): String = filenamePolicy.sanitize(filename)
 
 
 }

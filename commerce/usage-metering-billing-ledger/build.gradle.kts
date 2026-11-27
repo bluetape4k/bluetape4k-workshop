@@ -48,6 +48,7 @@ configurations.configureEach {
 }
 
 dependencies {
+    implementation(project(":shared"))
     testImplementation(testFixtures(project(":shared")))
 
     implementation(libs.bluetape4k.io)
