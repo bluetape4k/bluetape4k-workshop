@@ -26,8 +26,7 @@ dependencies {
     kover(project(":commerce-usage-billing-invoice-service"))
     kover(project(":commerce-usage-billing-query-service"))
 
-    testImplementation(project(":shared"))
-    testImplementation(testFixtures(project(":shared")))
+    testImplementation(testFixtures(libs.bluetape4k.kafka))
     testImplementation(project(":commerce-usage-billing-meter-service"))
     testImplementation(project(":commerce-usage-billing-usage-service"))
     testImplementation(project(":commerce-usage-billing-billing-service"))

@@ -23,9 +23,9 @@ import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.Kafka
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverPhase
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverResourceScope
 import io.bluetape4k.workshop.messaging.kafka.multibroker.failover.fixture.KafkaFailoverTopology
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryConformanceFixture
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryObservation
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryPath
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order

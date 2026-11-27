@@ -15,7 +15,7 @@ configurations {
 }
 
 dependencies {
-    testImplementation(testFixtures(project(":shared")))
+    testImplementation(testFixtures(libs.bluetape4k.kafka))
     implementation(libs.bluetape4k.kafka4)
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.jackson3)

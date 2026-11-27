@@ -3,9 +3,9 @@ package io.bluetape4k.workshop.messaging.kafka.multibroker.failover
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.javatimes.seconds
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryConformanceFixture
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryObservation
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryPath
 import org.junit.jupiter.api.Test
 
 class KafkaRecoveryConformanceFixtureTest {
