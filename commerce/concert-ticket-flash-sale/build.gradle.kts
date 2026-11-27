@@ -73,6 +73,7 @@ dependencies {
     testImplementation(libs.spring.security.test)
     testImplementation(libs.spring.modulith.starter.test)
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(testFixtures(libs.bluetape4k.junit5))
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.postgresql)

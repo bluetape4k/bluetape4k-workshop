@@ -57,6 +57,7 @@ dependencies {
     testFixturesImplementation(testFixtures(project(":shared")))
     testFixturesImplementation(libs.bluetape4k.assertions)
     testFixturesImplementation(libs.bluetape4k.junit5)
+    testFixturesImplementation(testFixtures(libs.bluetape4k.junit5))
     testFixturesImplementation(libs.bluetape4k.jackson3)
     testFixturesImplementation(libs.bluetape4k.lettuce)
     testFixturesImplementation(libs.bluetape4k.testcontainers)
