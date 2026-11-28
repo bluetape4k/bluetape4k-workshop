@@ -352,6 +352,7 @@ jobs:
           :leader-tenant-scheduler:test
           :operations-job-console-core:test
           :spring-modulith-module-boundaries:test
+          --refresh-dependencies
           --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -369,6 +370,7 @@ jobs:
           --no-build-cache
           --no-daemon
           --max-workers=1
+          --refresh-dependencies
           --console=plain
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -652,6 +654,7 @@ jobs:
           :commerce-usage-billing-query-service:integrationTest
           :commerce-usage-billing-microservices-composition-tests:integrationTest
           :commerce-usage-billing-microservices-composition-tests:koverXmlReport
+          --refresh-dependencies
           --continue
           --max-workers=1
         env:
@@ -671,6 +674,7 @@ jobs:
           --no-build-cache
           --no-daemon
           --max-workers=1
+          --refresh-dependencies
           --console=plain
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -688,6 +692,7 @@ jobs:
           --no-build-cache
           --no-daemon
           --max-workers=1
+          --refresh-dependencies
           --console=plain
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -705,6 +710,7 @@ jobs:
           --no-build-cache
           --no-daemon
           --max-workers=1
+          --refresh-dependencies
           --console=plain
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -724,6 +730,7 @@ jobs:
           ./scripts/with-kafka-failover-lock.sh -- ./gradlew \
             :messaging-kafka-multi-broker-failover:test \
             --tests '*KafkaMultiBrokerFailoverIntegrationTest' \
+            --refresh-dependencies \
             --max-workers=1 --console=plain \
             > >(tee "$report_root/$KAFKA_FAILOVER_RUN_ID/gradle.stdout.log") \
             2> >(tee "$report_root/$KAFKA_FAILOVER_RUN_ID/gradle.stderr.log" >&2)
@@ -905,6 +912,7 @@ jobs:
           highContentionCi
           -PhighContentionRunId=examples-${{ github.run_id }}-${{ github.run_attempt }}
           -Pkotlin.compiler.execution.strategy=in-process
+          --refresh-dependencies
           --max-workers=1
           --stacktrace
       - name: Validate and stage bounded evidence
