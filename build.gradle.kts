@@ -2,6 +2,7 @@ import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.plugin.getSupportedKotlinVersion
 import dev.detekt.gradle.report.ReportMergeTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import java.util.concurrent.TimeUnit
 
 plugins {
     base
@@ -37,6 +38,11 @@ plugins {
 val rootLibs = libs
 
 allprojects {
+    configurations.configureEach {
+        // Central SNAPSHOT 의존성은 실행마다 최신 timestamp를 확인한다.
+        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
+    }
+
     repositories {
         maven("https://central.sonatype.com/repository/maven-snapshots/")
         mavenCentral()

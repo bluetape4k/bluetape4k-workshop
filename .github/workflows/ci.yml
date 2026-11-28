@@ -77,7 +77,6 @@ jobs:
           ./gradlew build
           -x :spring-boot-cache-benchmark:build
           -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest
-          --refresh-dependencies
           --no-parallel --max-workers=1 --continue
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_25_X64 }}

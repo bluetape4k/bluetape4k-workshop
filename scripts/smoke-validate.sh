@@ -378,12 +378,10 @@ case "${1:-help}" in
     # Keep the container-backed modules in separate JVMs so Testcontainers state cannot leak between them.
     run "TESTCONTAINERS_RYUK_DISABLED=true $GRADLEW \
       :operations-job-console-core:test \
-      --refresh-dependencies \
       --no-daemon \
       --max-workers=1"
     run "TESTCONTAINERS_RYUK_DISABLED=true $GRADLEW \
       :commerce-concert-ticket-flash-sale:test \
-      --refresh-dependencies \
       --no-daemon \
       --max-workers=1"
     ;;
