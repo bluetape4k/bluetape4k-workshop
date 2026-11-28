@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
-import io.bluetape4k.images.spring.policy.PublicBaseUriPolicy
+import io.bluetape4k.workshop.shared.image.PublicBaseUriPolicy
 import org.springframework.stereotype.Component
 import java.net.URI
 /**
