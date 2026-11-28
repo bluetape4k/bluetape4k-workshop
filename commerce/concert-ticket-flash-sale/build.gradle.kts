@@ -73,7 +73,8 @@ dependencies {
     testImplementation(libs.spring.security.test)
     testImplementation(libs.spring.modulith.starter.test)
     testImplementation(libs.bluetape4k.junit5)
-    testImplementation(testFixtures(libs.bluetape4k.junit5))
+    // Central SNAPSHOT의 Gradle Module Metadata가 generic fixture 파일을 가리키므로 timestamped classifier를 선택한다.
+    testImplementation(variantOf(libs.bluetape4k.junit5) { classifier("test-fixtures") })
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
