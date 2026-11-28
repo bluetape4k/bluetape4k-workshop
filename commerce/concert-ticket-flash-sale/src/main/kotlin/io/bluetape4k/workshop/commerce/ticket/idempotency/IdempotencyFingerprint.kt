@@ -7,7 +7,7 @@ import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireGe
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.toUtf8Bytes
-import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
+import io.bluetape4k.io.digest.FingerprintEncoder
 import tools.jackson.databind.JsonNode
 import java.math.BigDecimal
 import java.util.*

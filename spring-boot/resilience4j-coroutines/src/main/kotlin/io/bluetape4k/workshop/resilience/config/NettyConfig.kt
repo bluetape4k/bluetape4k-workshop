@@ -4,8 +4,8 @@ import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Runtimex
 import io.netty.channel.ChannelOption
-import io.bluetape4k.workshop.shared.netty.NettyTimeoutHandlers
-import io.bluetape4k.workshop.shared.netty.NettyTimeoutPolicy
+import io.bluetape4k.netty.timeout.NettyTimeoutHandlers
+import io.bluetape4k.netty.timeout.NettyTimeoutPolicy
 import org.springframework.boot.reactor.netty.NettyReactiveWebServerFactory
 import org.springframework.boot.reactor.netty.NettyServerCustomizer
 import org.springframework.context.annotation.Bean

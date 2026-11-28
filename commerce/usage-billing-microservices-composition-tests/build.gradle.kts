@@ -26,8 +26,8 @@ dependencies {
     kover(project(":commerce-usage-billing-invoice-service"))
     kover(project(":commerce-usage-billing-query-service"))
 
-    testImplementation(project(":shared"))
-    testImplementation(testFixtures(project(":shared")))
+    // Central SNAPSHOT의 Gradle Module Metadata가 generic fixture 파일을 가리키므로 timestamped classifier를 선택한다.
+    testImplementation(variantOf(libs.bluetape4k.kafka) { classifier("test-fixtures") })
     testImplementation(project(":commerce-usage-billing-meter-service"))
     testImplementation(project(":commerce-usage-billing-usage-service"))
     testImplementation(project(":commerce-usage-billing-billing-service"))

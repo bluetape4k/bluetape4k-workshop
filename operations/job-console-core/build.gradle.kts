@@ -57,6 +57,9 @@ dependencies {
     testFixturesImplementation(testFixtures(project(":shared")))
     testFixturesImplementation(libs.bluetape4k.assertions)
     testFixturesImplementation(libs.bluetape4k.junit5)
+    // Central SNAPSHOT의 Gradle Module Metadata가 generic fixture 파일을 가리키므로 timestamped classifier를 선택한다.
+    testFixturesImplementation(variantOf(libs.bluetape4k.junit5) { classifier("test-fixtures") })
+    testFixturesImplementation(libs.bluetape4k.io)
     testFixturesImplementation(libs.bluetape4k.jackson3)
     testFixturesImplementation(libs.bluetape4k.lettuce)
     testFixturesImplementation(libs.bluetape4k.testcontainers)

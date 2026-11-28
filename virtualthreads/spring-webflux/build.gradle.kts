@@ -18,6 +18,7 @@ configurations {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(libs.bluetape4k.netty)
 
     // bluetape4k 의존성
     implementation(libs.bluetape4k.core)

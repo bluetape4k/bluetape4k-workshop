@@ -13,8 +13,9 @@
 - 복구 경로와 복구 소요 시간
 - leader/coordinator 이동, replacement/ISR 복구, fingerprint conflict 여부
 
-fixture는 Kafka client, Testcontainers, Spring bean, Exposed table을 만들지
-않는다. 따라서 `#555`의 Toxiproxy broker-path 장애와 `#558`의 3-broker
+upstream `bluetape4k-kafka`의 test fixture가 소유하는 것은 이 black-box
+observation assertion뿐이다. fixture는 Kafka client, Testcontainers, Spring
+bean, Exposed table을 만들지 않는다. 따라서 `#555`의 Toxiproxy broker-path 장애와 `#558`의 3-broker
 KRaft leader/coordinator 장애는 서로 독립된 설정을 유지한다.
 
 ## 경로 구분
@@ -30,10 +31,11 @@ delivery 목록에는 replay duplicate가 포함될 수 있다. `appliedEventIds
 
 ## 사용 위치
 
-공유 test-fixture 의존성만 추가한다.
+`bluetape4k-kafka`의 test fixture 의존성만 추가한다. Workshop의 redacted
+JSONL schema와 topology별 검증은 계속 Workshop validator가 소유한다.
 
 ```kotlin
-testImplementation(testFixtures(project(":shared")))
+testImplementation(testFixtures(libs.bluetape4k.kafka))
 ```
 
 `#558`는 두 실제 broker 시나리오의 terminal 관찰값을 fixture에 전달하고,

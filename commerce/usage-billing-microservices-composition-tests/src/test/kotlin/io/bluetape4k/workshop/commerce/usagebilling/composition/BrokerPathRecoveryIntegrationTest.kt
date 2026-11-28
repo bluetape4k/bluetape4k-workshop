@@ -8,9 +8,9 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.MeterOutboxState
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBillingMicroserviceFixture
 import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxStatus
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryObservation
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryPath
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryConformanceFixture
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryObservation
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryPath
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted

@@ -80,6 +80,13 @@ system property 기록을 수행하지 않습니다. `RedisTestSupport.redis`에
 접근하면 기존과 동일하게 공유 `RedisServer.Launcher.redis` singleton으로
 Redis가 시작될 수 있으므로 helper endpoint 테스트에는 Docker가 필요합니다.
 
+명시적으로 소유하는 Redis lifecycle이 필요하면
+`bluetape4k-testcontainers`의 `TestcontainersRedisRuntime` 또는 일반형
+`OwnedRedisRuntime`을 직접 사용하세요. Workshop에는 이 계약의 local wrapper를
+두지 않습니다. client는 upstream의 튜닝된
+`LettuceClients.clientOf`/`connect`를 사용하고
+`LettuceClients.shutdown`으로 종료합니다.
+
 ~~~kotlin
 import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
 import org.springframework.test.context.DynamicPropertyRegistry

@@ -15,6 +15,7 @@ configurations {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(libs.bluetape4k.netty)
     implementation(platform(libs.spring.boot4.dependencies))
     testImplementation(libs.bluetape4k.junit5)
 

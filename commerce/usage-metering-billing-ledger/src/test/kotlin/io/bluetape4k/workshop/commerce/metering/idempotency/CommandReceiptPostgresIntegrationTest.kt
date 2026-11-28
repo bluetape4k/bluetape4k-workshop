@@ -15,7 +15,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
 import io.bluetape4k.workshop.commerce.metering.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.persistence.MeteringDatabaseFixture
-import io.bluetape4k.workshop.shared.time.MutableClock
+import io.bluetape4k.junit5.time.MutableClock
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test

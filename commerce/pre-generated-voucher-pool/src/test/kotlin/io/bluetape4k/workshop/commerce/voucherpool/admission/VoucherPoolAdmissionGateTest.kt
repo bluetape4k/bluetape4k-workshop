@@ -8,7 +8,7 @@ import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.javatimes.minutes
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.shared.time.MutableClock
+import io.bluetape4k.junit5.time.MutableClock
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*

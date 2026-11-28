@@ -81,6 +81,12 @@ JVM system properties. Accessing `RedisTestSupport.redis` still uses the shared
 `RedisServer.Launcher.redis` singleton and can start Redis, so helper-based
 endpoint tests require Docker.
 
+For an explicitly owned Redis lifecycle, use `TestcontainersRedisRuntime` or
+the generic `OwnedRedisRuntime` from `bluetape4k-testcontainers`. The Workshop
+does not wrap this contract locally. Create clients with the tuned upstream
+`LettuceClients.clientOf`/`connect` APIs and close them with
+`LettuceClients.shutdown`.
+
 ~~~kotlin
 import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
 import org.springframework.test.context.DynamicPropertyRegistry

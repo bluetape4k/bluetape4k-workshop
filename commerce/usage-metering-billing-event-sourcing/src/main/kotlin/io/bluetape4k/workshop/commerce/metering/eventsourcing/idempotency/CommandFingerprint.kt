@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
+import io.bluetape4k.io.digest.FingerprintEncoder
 import java.util.*
 /**
  * CommandDigest은 사용량 계량·청구에서 사용하는 업무 객체입니다.

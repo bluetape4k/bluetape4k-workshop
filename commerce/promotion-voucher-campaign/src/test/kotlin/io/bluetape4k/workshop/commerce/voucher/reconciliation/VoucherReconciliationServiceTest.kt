@@ -15,7 +15,7 @@ import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandTestSup
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.InboxStatus
-import io.bluetape4k.workshop.shared.time.MutableClock
+import io.bluetape4k.junit5.time.MutableClock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration

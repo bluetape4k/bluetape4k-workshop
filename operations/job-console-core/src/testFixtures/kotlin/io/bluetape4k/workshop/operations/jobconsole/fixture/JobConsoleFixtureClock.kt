@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.fixture
 
-import io.bluetape4k.workshop.shared.time.MutableClock
+import io.bluetape4k.junit5.time.MutableClock
 import java.time.Instant
 
 /**

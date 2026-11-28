@@ -3,8 +3,8 @@ package io.bluetape4k.workshop.webflux.virtualthread.config
 import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Runtimex
-import io.bluetape4k.workshop.shared.netty.NettyTimeoutHandlers
-import io.bluetape4k.workshop.shared.netty.NettyTimeoutPolicy
+import io.bluetape4k.netty.timeout.NettyTimeoutHandlers
+import io.bluetape4k.netty.timeout.NettyTimeoutPolicy
 import io.netty.channel.ChannelOption
 import org.springframework.boot.reactor.netty.NettyReactiveWebServerFactory
 import org.springframework.boot.reactor.netty.NettyServerCustomizer

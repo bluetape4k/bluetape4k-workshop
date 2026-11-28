@@ -3,11 +3,11 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.toUtf8String
-import io.bluetape4k.workshop.shared.artifact.ArtifactPrimitiveException
 import io.bluetape4k.workshop.shared.artifact.ArtifactRedactionException
 import io.bluetape4k.workshop.shared.artifact.ArtifactRedactionGuard
-import io.bluetape4k.workshop.shared.artifact.AtomicArtifactWriter
-import io.bluetape4k.workshop.shared.artifact.TrustedArtifactPaths
+import io.bluetape4k.io.artifact.ArtifactPrimitiveException
+import io.bluetape4k.io.artifact.AtomicArtifactWriter
+import io.bluetape4k.io.artifact.TrustedArtifactPaths
 import java.nio.file.Path
 
 /** 운영 high-contention artifact의 domain-level 실패입니다. */

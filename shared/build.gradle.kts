@@ -12,6 +12,7 @@ configurations {
 
 dependencies {
     implementation(libs.bluetape4k.io)
+    testFixturesImplementation(libs.bluetape4k.io)
     testImplementation(libs.bluetape4k.spring.boot4.core)
 
     // Web MVC 의존성
@@ -37,7 +38,6 @@ dependencies {
 
     compileOnly(libs.bluetape4k.testcontainers)
     compileOnly(libs.bluetape4k.testcontainers.spring)
-    compileOnlyApi(libs.bluetape4k.lettuce)
     compileOnlyApi(libs.reactor.netty)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.bluetape4k.testcontainers.spring)

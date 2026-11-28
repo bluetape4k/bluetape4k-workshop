@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.shared.netty
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.netty.timeout.NettyTimeoutHandlers
+import io.bluetape4k.netty.timeout.NettyTimeoutPolicy
 import io.netty.channel.ChannelHandler
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler

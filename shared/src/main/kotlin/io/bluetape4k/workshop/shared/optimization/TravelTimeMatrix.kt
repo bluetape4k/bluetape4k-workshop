@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.shared.optimization
 
-import io.bluetape4k.workshop.shared.fingerprint.FingerprintEncoder
+import io.bluetape4k.io.digest.FingerprintEncoder
 
 /** 희소 이동시간 행렬의 방향성 있는 좌표 쌍입니다. */
 data class CoordinatePair<ID>(val from: ID, val to: ID)

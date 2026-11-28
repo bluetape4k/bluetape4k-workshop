@@ -6,7 +6,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBillingMicroserviceFixture
-import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
+import io.bluetape4k.kafka.test.conformance.KafkaRecoveryConformanceFixture
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.during

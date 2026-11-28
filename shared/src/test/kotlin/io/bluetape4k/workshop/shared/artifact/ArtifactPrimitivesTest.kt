@@ -5,6 +5,9 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.io.artifact.ArtifactPrimitiveException
+import io.bluetape4k.io.artifact.AtomicArtifactWriter
+import io.bluetape4k.io.artifact.TrustedArtifactPaths
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.channels.FileChannel

@@ -34,6 +34,7 @@ configurations {
 dependencies {
 
     implementation(project(":shared"))
+    implementation(libs.bluetape4k.netty)
     testImplementation(libs.bluetape4k.spring.boot4.core)
 
     // Spring Boot 의존성
